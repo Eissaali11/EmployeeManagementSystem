@@ -19,6 +19,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof $.fn.DataTable !== 'undefined') {
         initializeDataTables();
     }
+    
+    // Initialize Select2 for employee dropdowns if they exist
+    if (typeof $.fn.select2 !== 'undefined') {
+        initializeSelect2EmployeeDropdowns();
+    }
 
     // Initialize counter animations for dashboard
     animateCounters();
@@ -421,4 +426,93 @@ function validateExcelFile(inputElement) {
     }
     
     return true;
+}
+
+/**
+ * Initialize Select2 on employee select dropdowns for searchable functionality
+ */
+function initializeSelect2EmployeeDropdowns() {
+    // Apply Select2 to employee dropdowns
+    const employeeSelects = document.querySelectorAll('select#employee_id');
+    
+    if (employeeSelects.length > 0) {
+        employeeSelects.forEach(select => {
+            $(select).select2({
+                theme: 'bootstrap-5',
+                dir: "rtl",
+                language: "ar",
+                width: '100%',
+                placeholder: "اختر الموظف أو ابحث بالاسم أو الرقم",
+                allowClear: true,
+                escapeMarkup: function(markup) {
+                    return markup;
+                },
+                templateResult: formatEmployeeOption,
+                templateSelection: formatEmployeeSelection
+            });
+            
+            // Re-initialize after department change (if applicable)
+            const departmentSelect = document.getElementById('department_id');
+            if (departmentSelect) {
+                departmentSelect.addEventListener('change', function() {
+                    setTimeout(() => {
+                        $(select).select2('destroy');
+                        $(select).select2({
+                            theme: 'bootstrap-5',
+                            dir: "rtl",
+                            language: "ar",
+                            width: '100%',
+                            placeholder: "اختر الموظف أو ابحث بالاسم أو الرقم",
+                            allowClear: true,
+                            escapeMarkup: function(markup) {
+                                return markup;
+                            },
+                            templateResult: formatEmployeeOption,
+                            templateSelection: formatEmployeeSelection
+                        });
+                    }, 300);
+                });
+            }
+        });
+    }
+}
+
+/**
+ * Format employee dropdown options with additional styling
+ */
+function formatEmployeeOption(employee) {
+    if (!employee.id) {
+        return employee.text;
+    }
+    
+    // Extract employee ID from the text (format: Name (EMP123))
+    let empId = '';
+    const matches = employee.text.match(/\(([^)]+)\)/);
+    if (matches && matches.length > 1) {
+        empId = matches[1];
+    }
+    
+    // Create styled option with employee details
+    const $result = $(
+        '<div class="select2-employee-option d-flex justify-content-between align-items-center py-1">' +
+            '<div><i class="fas fa-user-circle me-2 text-primary"></i>' + 
+                employee.text.replace(/\([^)]+\)/, '') + 
+            '</div>' +
+            '<div class="text-muted small badge bg-light text-dark">' + 
+                (empId ? empId : '') + 
+            '</div>' +
+        '</div>'
+    );
+    
+    return $result;
+}
+
+/**
+ * Format the selected employee with styling
+ */
+function formatEmployeeSelection(employee) {
+    if (!employee.id) {
+        return employee.text;
+    }
+    return $('<span><i class="fas fa-user me-1"></i> ' + employee.text + '</span>');
 }

@@ -753,6 +753,53 @@ table {
     background-color: rgba(var(--bs-info-rgb), 0.1);
 }
 
+/* Enhanced Select2 dropdown styling */
+.select2-container--bootstrap-5 .select2-selection {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.select2-container--bootstrap-5 .select2-selection:hover {
+    border-color: var(--bs-primary);
+}
+
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    padding-right: 25px;
+}
+
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.select2-dropdown {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary);
+}
+
+.select2-employee-option {
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.select2-container--bootstrap-5 .select2-results__option--selected {
+    background-color: rgba(var(--bs-primary-rgb), 0.15);
+}
+
+/* RTL specific select2 adjustments */
+.select2-container--bootstrap-5[dir="rtl"] .select2-selection--single .select2-selection__rendered {
+    padding-left: 30px;
+    padding-right: 15px;
+}
+
 /* Pagination styling */
 .pagination {
     margin-top: 1rem;
@@ -802,4 +849,39 @@ table {
 [data-bs-theme=dark] .page-link {
     background-color: #343a40;
     color: #f8f9fa;
+}
+
+/* Select2 dark mode adjustments */
+[data-bs-theme=dark] .select2-container--bootstrap-5 .select2-selection {
+    background-color: #343a40;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f8f9fa;
+}
+
+[data-bs-theme=dark] .select2-container--bootstrap-5 .select2-dropdown {
+    background-color: #343a40;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme=dark] .select2-container--bootstrap-5 .select2-results__option {
+    color: #f8f9fa;
+}
+
+[data-bs-theme=dark] .select2-container--bootstrap-5 .select2-selection__rendered {
+    color: #f8f9fa;
+}
+
+[data-bs-theme=dark] .select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: rgba(var(--bs-primary-rgb), 0.2);
+    color: #fff;
+}
+
+[data-bs-theme=dark] .select2-container--bootstrap-5 .select2-results__option--selected {
+    background-color: rgba(var(--bs-primary-rgb), 0.3);
+    color: #fff;
+}
+
+[data-bs-theme=dark] .select2-employee-option .badge.bg-light {
+    background-color: #2b3035 !important;
+    color: #adb5bd !important;
 }
