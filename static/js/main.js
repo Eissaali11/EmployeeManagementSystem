@@ -448,7 +448,8 @@ function initializeSelect2EmployeeDropdowns() {
                     return markup;
                 },
                 templateResult: formatEmployeeOption,
-                templateSelection: formatEmployeeSelection
+                templateSelection: formatEmployeeSelection,
+                dropdownCssClass: "select2-dropdown-rtl"
             });
             
             // Re-initialize after department change (if applicable)
@@ -468,7 +469,8 @@ function initializeSelect2EmployeeDropdowns() {
                                 return markup;
                             },
                             templateResult: formatEmployeeOption,
-                            templateSelection: formatEmployeeSelection
+                            templateSelection: formatEmployeeSelection,
+                            dropdownCssClass: "select2-dropdown-rtl"
                         });
                     }, 300);
                 });
@@ -492,13 +494,17 @@ function formatEmployeeOption(employee) {
         empId = matches[1];
     }
     
+    // Check if dark mode is active
+    const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    const badgeClass = isDarkMode ? 'bg-dark' : 'bg-light text-dark';
+    
     // Create styled option with employee details
     const $result = $(
         '<div class="select2-employee-option d-flex justify-content-between align-items-center py-1">' +
             '<div><i class="fas fa-user-circle me-2 text-primary"></i>' + 
                 employee.text.replace(/\([^)]+\)/, '') + 
             '</div>' +
-            '<div class="text-muted small badge bg-light text-dark">' + 
+            '<div class="text-muted small badge ' + badgeClass + '">' + 
                 (empId ? empId : '') + 
             '</div>' +
         '</div>'
