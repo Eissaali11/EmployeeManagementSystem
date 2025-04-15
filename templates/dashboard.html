@@ -2,84 +2,114 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row">
+    <!-- Welcome Header with Date -->
+    <div class="row mb-4">
         <div class="col-12">
-            <h1 class="mb-4">لوحة التحكم</h1>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="display-6 mb-0">لوحة التحكم</h1>
+                            <p class="text-muted">مرحبًا بك في نظام إدارة الموظفين</p>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-muted" id="hijri-date">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span id="current-date"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
             
-            <!-- Stats Cards -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card dashboard-card bg-primary text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="card-title">إجمالي الموظفين</h6>
-                                    <h2 class="counter-value" data-target="{{ total_employees }}">0</h2>
-                                </div>
-                                <div class="card-icon">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                            </div>
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card dashboard-card shadow-sm border-0 mb-3">
+                <div class="card-body position-relative">
+                    <div class="card-icon-bg bg-primary-subtle position-absolute opacity-25 rounded-circle"></div>
+                    <div class="d-flex justify-content-between align-items-center position-relative">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-body-secondary">إجمالي الموظفين</h6>
+                            <h2 class="counter-value fs-1 fw-bold text-primary" data-target="{{ total_employees }}">0</h2>
                         </div>
-                        <div class="card-footer bg-transparent border-0">
-                            <a href="{{ url_for('employees.index') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                        <div class="card-icon rounded-circle bg-primary text-white">
+                            <i class="fas fa-users"></i>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-3">
-                    <div class="card dashboard-card bg-success text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="card-title">الأقسام</h6>
-                                    <h2 class="counter-value" data-target="{{ total_departments }}">0</h2>
-                                </div>
-                                <div class="card-icon">
-                                    <i class="fas fa-sitemap"></i>
-                                </div>
-                            </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{{ url_for('employees.index') }}" class="btn btn-sm btn-outline-primary w-100">
+                        عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card dashboard-card shadow-sm border-0 mb-3">
+                <div class="card-body position-relative">
+                    <div class="card-icon-bg bg-success-subtle position-absolute opacity-25 rounded-circle"></div>
+                    <div class="d-flex justify-content-between align-items-center position-relative">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-body-secondary">الأقسام</h6>
+                            <h2 class="counter-value fs-1 fw-bold text-success" data-target="{{ total_departments }}">0</h2>
                         </div>
-                        <div class="card-footer bg-transparent border-0">
-                            <a href="{{ url_for('departments.index') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                        <div class="card-icon rounded-circle bg-success text-white">
+                            <i class="fas fa-sitemap"></i>
                         </div>
                     </div>
                 </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{{ url_for('departments.index') }}" class="btn btn-sm btn-outline-success w-100">
+                        عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
                 
                 <div class="col-md-3">
-                    <div class="card dashboard-card bg-info text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
+                    <div class="card dashboard-card shadow-sm border-0 mb-3">
+                        <div class="card-body position-relative">
+                            <div class="card-icon-bg bg-info-subtle position-absolute opacity-25 rounded-circle"></div>
+                            <div class="d-flex justify-content-between align-items-center position-relative">
                                 <div>
-                                    <h6 class="card-title">حضور اليوم</h6>
-                                    <h2 class="counter-value" data-target="{{ today_attendance }}">0</h2>
+                                    <h6 class="card-subtitle mb-2 text-body-secondary">حضور اليوم</h6>
+                                    <h2 class="counter-value fs-1 fw-bold text-info" data-target="{{ today_attendance }}">0</h2>
                                 </div>
-                                <div class="card-icon">
+                                <div class="card-icon rounded-circle bg-info text-white">
                                     <i class="fas fa-calendar-check"></i>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer bg-transparent border-0">
-                            <a href="{{ url_for('attendance.index') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                            <a href="{{ url_for('attendance.index') }}" class="btn btn-sm btn-outline-info w-100">
+                                عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="card dashboard-card bg-warning text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
+                    <div class="card dashboard-card shadow-sm border-0 mb-3">
+                        <div class="card-body position-relative">
+                            <div class="card-icon-bg bg-warning-subtle position-absolute opacity-25 rounded-circle"></div>
+                            <div class="d-flex justify-content-between align-items-center position-relative">
                                 <div>
-                                    <h6 class="card-title">وثائق قاربت على الانتهاء</h6>
-                                    <h2 class="counter-value" data-target="{{ expiring_documents }}">0</h2>
+                                    <h6 class="card-subtitle mb-2 text-body-secondary">وثائق قاربت على الانتهاء</h6>
+                                    <h2 class="counter-value fs-1 fw-bold text-warning" data-target="{{ expiring_documents }}">0</h2>
                                 </div>
-                                <div class="card-icon">
+                                <div class="card-icon rounded-circle bg-warning text-white">
                                     <i class="fas fa-file-alt"></i>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer bg-transparent border-0">
-                            <a href="{{ url_for('documents.expiring') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                            <a href="{{ url_for('documents.expiring') }}" class="btn btn-sm btn-outline-warning w-100">
+                                عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
+                            </a>
                         </div>
                     </div>
                 </div>

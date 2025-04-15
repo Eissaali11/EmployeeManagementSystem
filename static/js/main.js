@@ -43,7 +43,7 @@ function initializeDataTables() {
     $('.datatable').each(function() {
         $(this).DataTable({
             language: {
-                url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/ar.json'
+                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/ar.json'
             },
             responsive: true,
             dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
@@ -55,14 +55,24 @@ function initializeDataTables() {
     });
 
     // Special configuration for employee table
-    $('#employeesTable').DataTable({
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/ar.json'
-        },
-        responsive: true,
-        columnDefs: [
-            { orderable: false, targets: -1 } // Disable sorting on action column
-        ],
+    var employeeTable = $('#employeesTable');
+    if (employeeTable.length > 0) {
+        employeeTable.DataTable({
+            language: {
+                search: "بحث:",
+                lengthMenu: "عرض _MENU_ سجلات",
+                info: "عرض _START_ إلى _END_ من _TOTAL_ سجل",
+                paginate: {
+                    first: "الأول",
+                    previous: "السابق",
+                    next: "التالي",
+                    last: "الأخير"
+                }
+            },
+            responsive: true,
+            columnDefs: [
+                { orderable: false, targets: -1 } // Disable sorting on action column
+            ],
         dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
              '<"row"<"col-sm-12"tr>>' +
              '<"row"<"col-sm-5"i><"col-sm-7"p>>',
@@ -104,8 +114,20 @@ function initializeDepartmentCharts() {
     // Department distribution chart
     const deptChartElement = document.getElementById('departmentChart');
     if (deptChartElement) {
-        const labels = JSON.parse(deptChartElement.getAttribute('data-labels') || '[]');
-        const data = JSON.parse(deptChartElement.getAttribute('data-values') || '[]');
+        let labels = [];
+        let data = [];
+        
+        try {
+            // Safely parse JSON or use empty array as fallback
+            const labelsAttr = deptChartElement.getAttribute('data-labels') || '[]';
+            const dataAttr = deptChartElement.getAttribute('data-values') || '[]';
+            
+            labels = JSON.parse(labelsAttr);
+            data = JSON.parse(dataAttr);
+        } catch (error) {
+            console.error('Error parsing chart data:', error);
+            // Keep default empty arrays
+        }
         
         new Chart(deptChartElement, {
             type: 'pie',
@@ -145,8 +167,20 @@ function initializeDepartmentCharts() {
     // Salary distribution chart
     const salaryChartElement = document.getElementById('salaryChart');
     if (salaryChartElement) {
-        const labels = JSON.parse(salaryChartElement.getAttribute('data-labels') || '[]');
-        const data = JSON.parse(salaryChartElement.getAttribute('data-values') || '[]');
+        let labels = [];
+        let data = [];
+        
+        try {
+            // Safely parse JSON or use empty array as fallback
+            const labelsAttr = salaryChartElement.getAttribute('data-labels') || '[]';
+            const dataAttr = salaryChartElement.getAttribute('data-values') || '[]';
+            
+            labels = JSON.parse(labelsAttr);
+            data = JSON.parse(dataAttr);
+        } catch (error) {
+            console.error('Error parsing salary chart data:', error);
+            // Keep default empty arrays
+        }
         
         new Chart(salaryChartElement, {
             type: 'bar',
@@ -266,7 +300,14 @@ function filterEmployeesByDepartment(departmentId) {
     
     if (employeeSelect) {
         // Get all employees
-        const allEmployees = JSON.parse(employeeSelect.getAttribute('data-employees') || '[]');
+        let allEmployees = [];
+        try {
+            const employeesData = employeeSelect.getAttribute('data-employees') || '[]';
+            allEmployees = JSON.parse(employeesData);
+        } catch (error) {
+            console.error('Error parsing employee data:', error);
+            // Keep default empty array
+        }
         
         // Clear current options
         employeeSelect.innerHTML = '<option value="">اختر الموظف</option>';
