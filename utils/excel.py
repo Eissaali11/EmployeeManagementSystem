@@ -15,8 +15,11 @@ def parse_employee_excel(file):
         List of dictionaries containing employee data
     """
     try:
-        # Read the Excel file
-        df = pd.read_excel(file)
+        # Read the Excel file explicitly using openpyxl engine
+        df = pd.read_excel(file, engine='openpyxl')
+        
+        # Print column names for debugging
+        print(f"Excel columns: {df.columns.tolist()}")
         
         # Basic validation
         required_columns = ['name', 'employee_id', 'national_id', 'mobile', 
@@ -101,16 +104,18 @@ def generate_employee_excel(employees):
         # Create DataFrame
         df = pd.DataFrame(data)
         
-        # Write to Excel
+        # Write to Excel using openpyxl engine
         output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Employees', index=False)
             
-            # Auto-adjust columns' width
+            # Auto-adjust columns' width (openpyxl method)
             worksheet = writer.sheets['Employees']
             for i, col in enumerate(df.columns):
                 column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                worksheet.set_column(i, i, column_width)
+                # For openpyxl, column dimensions are one-based
+                column_letter = chr(65 + i)  # A, B, C, ...
+                worksheet.column_dimensions[column_letter].width = column_width
         
         output.seek(0)
         return output
@@ -131,8 +136,11 @@ def parse_salary_excel(file, month, year):
         List of dictionaries containing salary data
     """
     try:
-        # Read the Excel file
-        df = pd.read_excel(file)
+        # Read the Excel file explicitly using openpyxl engine
+        df = pd.read_excel(file, engine='openpyxl')
+        
+        # Print column names for debugging
+        print(f"Salary Excel columns: {df.columns.tolist()}")
         
         # Basic validation
         required_columns = ['employee_id', 'basic_salary']
@@ -241,8 +249,11 @@ def parse_document_excel(file):
         List of dictionaries containing document data
     """
     try:
-        # Read the Excel file
-        df = pd.read_excel(file)
+        # Read the Excel file explicitly using openpyxl engine
+        df = pd.read_excel(file, engine='openpyxl')
+        
+        # Print column names for debugging
+        print(f"Document Excel columns: {df.columns.tolist()}")
         
         # Basic validation
         required_columns = ['employee_id', 'document_type', 'document_number', 
