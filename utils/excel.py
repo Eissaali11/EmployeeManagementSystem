@@ -15,143 +15,147 @@ def parse_employee_excel(file):
         List of dictionaries containing employee data
     """
     try:
+        # Reset file pointer to beginning
+        file.seek(0)
+        
         # Read the Excel file explicitly using openpyxl engine
         df = pd.read_excel(file, engine='openpyxl')
         
         # Print column names for debugging
         print(f"Excel columns: {df.columns.tolist()}")
         
-        # Convert all columns to string to handle datetime objects
+        # Clean column names - convert all to string and strip whitespace
+        clean_columns = {}
         for col in df.columns:
+            # Skip datetime objects
             if isinstance(col, datetime):
-                continue  # Skip date columns completely
+                continue
+            
+            # Clean column name
+            clean_name = str(col).strip()
+            clean_columns[col] = clean_name
+            
+        # Create a mapping for column detection
+        column_mappings = {
+            'name': ['name', 'full name', 'employee name', 'اسم', 'الاسم', 'اسم الموظف', 'full_name', 'employee_name'],
+            'employee_id': ['emp n', 'emp.n', 'emp. n', 'emp id', 'emp.id', 'emp. id', 'employee id', 'employee number', 'emp no', 'employee no', 'رقم الموظف', 'الرقم الوظيفي', 'employee_id', 'emp_id', 'emp_no'],
+            'national_id': ['id n', 'id.n', 'id. n', 'id no', 'national id', 'identity no', 'identity number', 'national number', 'هوية', 'رقم الهوية', 'الرقم الوطني', 'national_id', 'identity_no'],
+            'mobile': ['mobile', 'mobil', 'phone', 'cell', 'telephone', 'جوال', 'رقم الجوال', 'هاتف', 'mobile_no', 'phone_no'],
+            'job_title': ['job title', 'position', 'title', 'المسمى', 'المسمى الوظيفي', 'الوظيفة', 'job_title', 'job_position'],
+            'status': ['status', 'employee status', 'emp status', 'الحالة', 'حالة', 'حالة الموظف', 'employee_status'],
+            'location': ['location', 'office location', 'work location', 'موقع', 'الموقع', 'location_name'],
+            'project': ['project', 'project name', 'assigned project', 'مشروع', 'المشروع', 'project_name'],
+            'email': ['email', 'email address', 'بريد', 'البريد الإلكتروني', 'email_address']
+        }
         
-        # Manual detection of common column patterns - for Gulf/Saudi style Excel sheets
-        name_col = None
-        emp_id_col = None
-        national_id_col = None
-        mobile_col = None
-        job_title_col = None
-        status_col = None
-        location_col = None
-        project_col = None
-        
-        # Search for column names in Arabic and English with patterns
+        # Map columns to their normalized names
+        detected_columns = {}
         for col in df.columns:
             if isinstance(col, datetime):
                 continue
                 
-            col_str = str(col).lower()
+            col_str = str(col).lower().strip()
             
-            # Name
-            if col_str in ['name', 'اسم', 'الاسم', 'اسم الموظف']:
-                name_col = col
-            
-            # Employee ID
-            elif ('emp' in col_str and ('.n' in col_str or 'id' in col_str or 'no' in col_str)) or col_str in ['رقم الموظف', 'الرقم الوظيفي']:
-                emp_id_col = col
-            
-            # National ID
-            elif ('id' in col_str and ('.n' in col_str or 'no' in col_str)) or 'national' in col_str or col_str in ['هوية', 'رقم الهوية', 'الرقم الوطني']:
-                national_id_col = col
-            
-            # Mobile
-            elif col_str in ['mobile', 'mobil', 'phone', 'جوال', 'رقم الجوال', 'هاتف']:
-                mobile_col = col
-            
-            # Job Title
-            elif ('job' in col_str and 'title' in col_str) or col_str in ['title', 'المسمى', 'المسمى الوظيفي', 'الوظيفة']:
-                job_title_col = col
-            
-            # Status
-            elif col_str in ['status', 'الحالة', 'حالة', 'حالة الموظف']:
-                status_col = col
-                
-            # Location
-            elif col_str in ['location', 'موقع', 'الموقع']:
-                location_col = col
-                
-            # Project
-            elif col_str in ['project', 'مشروع', 'المشروع']:
-                project_col = col
+            # Check for exact column name or common variations
+            for field, variations in column_mappings.items():
+                if col_str in variations or any(var in col_str for var in variations):
+                    detected_columns[field] = col
+                    print(f"Detected '{field}' column: {col}")
+                    break
+                    
+        # Handle special case for Excel files with columns like 'Name', 'Emp .N', etc. - explicit mappings
+        # This is to handle the specific format mentioned in the original code
+        explicit_mappings = {
+            'Name': 'name',
+            'Emp .N': 'employee_id', 
+            'ID .N': 'national_id',
+            'Mobil': 'mobile',
+            'Job Title': 'job_title',
+            'Status': 'status',
+            'Location': 'location',
+            'Project': 'project',
+            'Email': 'email'
+        }
         
-        # Print detected columns
-        print(f"Detected columns: Name={name_col}, ID={emp_id_col}, NationalID={national_id_col}, Mobile={mobile_col}, Job={job_title_col}, Status={status_col}")
+        for excel_col, field in explicit_mappings.items():
+            if excel_col in df.columns:
+                detected_columns[field] = excel_col
+                print(f"Explicitly mapped '{excel_col}' to '{field}'")
         
-        # Force these columns if specific patterns are found 
-        # (This is for the specific file format you're using)
-        if 'Name' in df.columns:
-            name_col = 'Name'
-            
-        if 'Emp .N' in df.columns:
-            emp_id_col = 'Emp .N'
-            
-        if 'ID .N' in df.columns:
-            national_id_col = 'ID .N'
-            
-        if 'Mobil' in df.columns:
-            mobile_col = 'Mobil'
-            
-        if 'Job Title' in df.columns:
-            job_title_col = 'Job Title'
-            
-        if 'Status' in df.columns:
-            status_col = 'Status'
-            
-        if 'Location' in df.columns:
-            location_col = 'Location'
-            
-        if 'Project' in df.columns:
-            project_col = 'Project'
-                
-        # Verify we found all required columns
-        if not all([name_col, emp_id_col, national_id_col, mobile_col, job_title_col, status_col]):
-            missing = []
-            if not name_col: missing.append("Name")
-            if not emp_id_col: missing.append("Employee ID")
-            if not national_id_col: missing.append("National ID")
-            if not mobile_col: missing.append("Mobile")
-            if not job_title_col: missing.append("Job Title")
-            if not status_col: missing.append("Status")
-            
-            missing_str = ", ".join(missing)
+        # Print final column mapping
+        print(f"Final column mapping: {detected_columns}")
+        
+        # Check required columns
+        required_fields = ['name', 'employee_id', 'national_id', 'mobile', 'job_title']
+        missing_fields = [field for field in required_fields if field not in detected_columns]
+        
+        if missing_fields:
+            missing_str = ", ".join(missing_fields)
             raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
         
         # Process each row
         employees = []
         for idx, row in df.iterrows():
-            # Skip rows with empty values in important fields
-            if any(pd.isna(row[col]) for col in [name_col, emp_id_col, national_id_col, mobile_col, job_title_col]):
+            try:
+                # Skip completely empty rows
+                if row.isnull().all():
+                    continue
+                
+                # Skip rows with empty values in important fields
+                if any(pd.isna(row[detected_columns[field]]) for field in required_fields):
+                    print(f"Skipping row {idx+1} due to missing required fields")
+                    continue
+                
+                # Create employee dictionary with required fields
+                employee = {}
+                
+                # Add required fields
+                for field in required_fields:
+                    value = row[detected_columns[field]]
+                    # Convert to string and handle NaN values
+                    if pd.isna(value):
+                        raise ValueError(f"Missing required field '{field}'")
+                    employee[field] = str(value)
+                
+                # Handle status field specially
+                if 'status' in detected_columns:
+                    status_col = detected_columns['status']
+                    status_value = row[status_col]
+                    
+                    if isinstance(status_value, datetime) or pd.isna(status_value):
+                        employee['status'] = 'active'  # Default value
+                    else:
+                        # Normalize status values
+                        status_str = str(status_value).lower().strip()
+                        if status_str in ['active', 'نشط', 'فعال']:
+                            employee['status'] = 'active'
+                        elif status_str in ['inactive', 'غير نشط', 'غير فعال']:
+                            employee['status'] = 'inactive'
+                        elif status_str in ['on_leave', 'on leave', 'leave', 'إجازة', 'في إجازة']:
+                            employee['status'] = 'on_leave'
+                        else:
+                            employee['status'] = 'active'  # Default to active
+                else:
+                    employee['status'] = 'active'  # Default value
+                
+                # Add optional fields if present in the detected columns
+                optional_fields = ['location', 'project', 'email']
+                for field in optional_fields:
+                    if field in detected_columns and not pd.isna(row[detected_columns[field]]):
+                        employee[field] = str(row[detected_columns[field]])
+                
+                # Print the processed employee data for debugging
+                print(f"Processed employee: {employee.get('name', 'Unknown')}")
+                
+                employees.append(employee)
+            except Exception as e:
+                print(f"Error processing row {idx+1}: {str(e)}")
+                # Continue to next row instead of failing the entire import
                 continue
-                
-            # Default to 'active' status if it's a datetime object or empty
-            if isinstance(row[status_col], datetime) or pd.isna(row[status_col]):
-                status_value = 'active'
-            else:
-                status_value = str(row[status_col]).lower()
-                
-            # Create employee dictionary with required fields
-            employee = {
-                'name': str(row[name_col]),
-                'employee_id': str(row[emp_id_col]),
-                'national_id': str(row[national_id_col]),
-                'mobile': str(row[mobile_col]),
-                'job_title': str(row[job_title_col]),
-                'status': status_value
-            }
-            
-            # Add optional fields if present
-            if location_col is not None and not pd.isna(row[location_col]):
-                employee['location'] = str(row[location_col])
-                
-            if project_col is not None and not pd.isna(row[project_col]):
-                employee['project'] = str(row[project_col])
-            
-            # We don't have email in this Excel format, so skip it
-            
-            employees.append(employee)
-            print(f"Added employee: {employee['name']}")
         
+        if not employees:
+            raise ValueError("No valid employee records found in the Excel file")
+            
         return employees
     
     except Exception as e:
@@ -225,58 +229,168 @@ def parse_salary_excel(file, month, year):
         List of dictionaries containing salary data
     """
     try:
+        # Reset file pointer to beginning
+        file.seek(0)
+        
         # Read the Excel file explicitly using openpyxl engine
         df = pd.read_excel(file, engine='openpyxl')
         
         # Print column names for debugging
         print(f"Salary Excel columns: {df.columns.tolist()}")
         
-        # Basic validation
-        required_columns = ['employee_id', 'basic_salary']
+        # Create a mapping for column detection
+        column_mappings = {
+            'employee_id': ['employee_id', 'employee id', 'emp id', 'employee number', 'emp no', 'emp.id', 'emp.no', 'رقم الموظف', 'معرف الموظف', 'الرقم الوظيفي'],
+            'basic_salary': ['basic_salary', 'basic salary', 'salary', 'راتب', 'الراتب', 'الراتب الأساسي'],
+            'allowances': ['allowances', 'بدل', 'بدلات', 'البدلات'],
+            'deductions': ['deductions', 'خصم', 'خصومات', 'الخصومات'],
+            'bonus': ['bonus', 'مكافأة', 'علاوة', 'مكافآت'],
+            'notes': ['notes', 'ملاحظات']
+        }
         
-        for col in required_columns:
-            if col not in df.columns:
-                raise ValueError(f"Column '{col}' is missing from the Excel file")
+        # Map columns to their normalized names
+        detected_columns = {}
+        for col in df.columns:
+            if isinstance(col, datetime):
+                continue
+                
+            col_str = str(col).lower().strip()
+            
+            # Check for exact column name or common variations
+            for field, variations in column_mappings.items():
+                if col_str in variations or any(var in col_str for var in variations):
+                    detected_columns[field] = col
+                    print(f"Detected '{field}' column: {col}")
+                    break
+        
+        # Handle special case for Excel files with specific column names
+        explicit_mappings = {
+            'Employee ID': 'employee_id',
+            'Basic Salary': 'basic_salary',
+            'Allowances': 'allowances',
+            'Deductions': 'deductions',
+            'Bonus': 'bonus',
+            'Notes': 'notes'
+        }
+        
+        for excel_col, field in explicit_mappings.items():
+            if excel_col in df.columns:
+                detected_columns[field] = excel_col
+                print(f"Explicitly mapped '{excel_col}' to '{field}'")
+        
+        # Print final column mapping
+        print(f"Final salary column mapping: {detected_columns}")
+        
+        # Check required columns
+        required_fields = ['employee_id', 'basic_salary']
+        missing_fields = [field for field in required_fields if field not in detected_columns]
+        
+        if missing_fields:
+            missing_str = ", ".join(missing_fields)
+            raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
         
         # Process each row
         salaries = []
-        for _, row in df.iterrows():
-            # Skip rows where required fields are missing or invalid
-            if (pd.isna(row['employee_id']) or pd.isna(row['basic_salary']) or
-                not isinstance(row['basic_salary'], (int, float))):
+        for idx, row in df.iterrows():
+            try:
+                # Skip completely empty rows
+                if row.isnull().all():
+                    continue
+                
+                # Get employee_id field
+                emp_id_col = detected_columns['employee_id']
+                emp_id = row[emp_id_col]
+                
+                # Skip rows with missing employee_id
+                if pd.isna(emp_id):
+                    print(f"Skipping row {idx+1} due to missing employee ID")
+                    continue
+                
+                # Try to convert employee_id to integer
+                try:
+                    employee_id = int(emp_id)
+                except (ValueError, TypeError):
+                    # If not convertible to int, use as string (could be employee code)
+                    employee_id = str(emp_id).strip()
+                
+                # Get basic_salary field
+                basic_salary_col = detected_columns['basic_salary']
+                basic_salary_val = row[basic_salary_col]
+                
+                # Skip rows with missing or non-numeric basic_salary
+                if pd.isna(basic_salary_val) or not isinstance(basic_salary_val, (int, float)):
+                    print(f"Skipping row {idx+1} due to invalid basic salary")
+                    continue
+                
+                basic_salary = float(basic_salary_val)
+                
+                # Get optional fields with default values
+                allowances = 0.0
+                deductions = 0.0
+                bonus = 0.0
+                notes = ''
+                
+                # Extract allowances if column exists
+                if 'allowances' in detected_columns and not pd.isna(row[detected_columns['allowances']]):
+                    try:
+                        allowances = float(row[detected_columns['allowances']])
+                    except (ValueError, TypeError):
+                        allowances = 0.0
+                
+                # Extract deductions if column exists
+                if 'deductions' in detected_columns and not pd.isna(row[detected_columns['deductions']]):
+                    try:
+                        deductions = float(row[detected_columns['deductions']])
+                    except (ValueError, TypeError):
+                        deductions = 0.0
+                
+                # Extract bonus if column exists
+                if 'bonus' in detected_columns and not pd.isna(row[detected_columns['bonus']]):
+                    try:
+                        bonus = float(row[detected_columns['bonus']])
+                    except (ValueError, TypeError):
+                        bonus = 0.0
+                
+                # Extract notes if column exists
+                if 'notes' in detected_columns and not pd.isna(row[detected_columns['notes']]):
+                    notes = str(row[detected_columns['notes']])
+                
+                # Calculate net salary
+                net_salary = basic_salary + allowances + bonus - deductions
+                
+                # Create salary dictionary
+                salary = {
+                    'employee_id': employee_id,
+                    'month': month,
+                    'year': year,
+                    'basic_salary': basic_salary,
+                    'allowances': allowances,
+                    'deductions': deductions,
+                    'bonus': bonus,
+                    'net_salary': net_salary
+                }
+                
+                if notes:
+                    salary['notes'] = notes
+                
+                print(f"Processed salary for employee ID: {employee_id}")
+                salaries.append(salary)
+                
+            except Exception as e:
+                print(f"Error processing salary row {idx+1}: {str(e)}")
+                # Continue to next row instead of failing the entire import
                 continue
-            
-            # Get optional fields
-            allowances = row['allowances'] if 'allowances' in df.columns and not pd.isna(row['allowances']) else 0
-            deductions = row['deductions'] if 'deductions' in df.columns and not pd.isna(row['deductions']) else 0
-            bonus = row['bonus'] if 'bonus' in df.columns and not pd.isna(row['bonus']) else 0
-            
-            # Calculate net salary
-            basic_salary = float(row['basic_salary'])
-            net_salary = basic_salary + allowances + bonus - deductions
-            
-            # Create salary dictionary
-            salary = {
-                'employee_id': int(row['employee_id']),
-                'month': month,
-                'year': year,
-                'basic_salary': basic_salary,
-                'allowances': float(allowances),
-                'deductions': float(deductions),
-                'bonus': float(bonus),
-                'net_salary': float(net_salary)
-            }
-            
-            # Add notes if present
-            if 'notes' in df.columns and not pd.isna(row['notes']):
-                salary['notes'] = str(row['notes'])
-            
-            salaries.append(salary)
         
+        if not salaries:
+            raise ValueError("No valid salary records found in the Excel file")
+            
         return salaries
     
     except Exception as e:
-        raise Exception(f"Error parsing Excel file: {str(e)}")
+        import traceback
+        print(f"Error parsing salary Excel: {str(e)}")
+        print(traceback.format_exc())
+        raise Exception(f"Error parsing salary Excel file: {str(e)}")
 
 def generate_salary_excel(salaries):
     """
@@ -340,52 +454,152 @@ def parse_document_excel(file):
         List of dictionaries containing document data
     """
     try:
+        # Reset file pointer to beginning
+        file.seek(0)
+        
         # Read the Excel file explicitly using openpyxl engine
         df = pd.read_excel(file, engine='openpyxl')
         
         # Print column names for debugging
         print(f"Document Excel columns: {df.columns.tolist()}")
         
-        # Basic validation
-        required_columns = ['employee_id', 'document_type', 'document_number', 
-                           'issue_date', 'expiry_date']
+        # Create a mapping for column detection
+        column_mappings = {
+            'employee_id': ['employee_id', 'employee id', 'emp id', 'employee number', 'emp no', 'emp.id', 'emp.no', 'رقم الموظف', 'معرف الموظف', 'الرقم الوظيفي'],
+            'document_type': ['document_type', 'document type', 'type', 'doc type', 'نوع الوثيقة', 'نوع المستند', 'النوع'],
+            'document_number': ['document_number', 'document no', 'doc number', 'doc no', 'رقم الوثيقة', 'رقم المستند'],
+            'issue_date': ['issue_date', 'issue date', 'start date', 'تاريخ الإصدار', 'تاريخ البدء'],
+            'expiry_date': ['expiry_date', 'expiry date', 'end date', 'valid until', 'تاريخ الانتهاء', 'صالح حتى'],
+            'notes': ['notes', 'comments', 'remarks', 'ملاحظات', 'تعليقات']
+        }
         
-        for col in required_columns:
-            if col not in df.columns:
-                raise ValueError(f"Column '{col}' is missing from the Excel file")
+        # Map columns to their normalized names
+        detected_columns = {}
+        for col in df.columns:
+            if isinstance(col, datetime):
+                continue
+                
+            col_str = str(col).lower().strip()
+            
+            # Check for exact column name or common variations
+            for field, variations in column_mappings.items():
+                if col_str in variations or any(var in col_str for var in variations):
+                    detected_columns[field] = col
+                    print(f"Detected '{field}' column: {col}")
+                    break
+        
+        # Handle special case for Excel files with specific column names
+        explicit_mappings = {
+            'Employee ID': 'employee_id',
+            'Document Type': 'document_type',
+            'Document Number': 'document_number',
+            'Issue Date': 'issue_date',
+            'Expiry Date': 'expiry_date',
+            'Notes': 'notes'
+        }
+        
+        for excel_col, field in explicit_mappings.items():
+            if excel_col in df.columns:
+                detected_columns[field] = excel_col
+                print(f"Explicitly mapped '{excel_col}' to '{field}'")
+        
+        # Print final column mapping
+        print(f"Final document column mapping: {detected_columns}")
+        
+        # Check required columns
+        required_fields = ['employee_id', 'document_type', 'document_number', 'issue_date', 'expiry_date']
+        missing_fields = [field for field in required_fields if field not in detected_columns]
+        
+        if missing_fields:
+            missing_str = ", ".join(missing_fields)
+            raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
         
         # Process each row
         documents = []
-        for _, row in df.iterrows():
-            # Skip rows where required fields are missing
-            if (pd.isna(row['employee_id']) or pd.isna(row['document_type']) or 
-                pd.isna(row['document_number']) or pd.isna(row['issue_date']) or
-                pd.isna(row['expiry_date'])):
-                continue
-            
-            # Parse dates
+        for idx, row in df.iterrows():
             try:
-                issue_date = parse_date(str(row['issue_date']))
-                expiry_date = parse_date(str(row['expiry_date']))
-            except ValueError:
+                # Skip completely empty rows
+                if row.isnull().all():
+                    continue
+                
+                # Get employee_id field
+                emp_id_col = detected_columns['employee_id']
+                emp_id = row[emp_id_col]
+                
+                # Skip rows with missing employee_id
+                if pd.isna(emp_id):
+                    print(f"Skipping row {idx+1} due to missing employee ID")
+                    continue
+                
+                # Try to convert employee_id to integer
+                try:
+                    employee_id = int(emp_id)
+                except (ValueError, TypeError):
+                    # If not convertible to int, use as string (could be employee code)
+                    employee_id = str(emp_id).strip()
+                
+                # Get document type and number
+                doc_type_col = detected_columns['document_type']
+                doc_type = row[doc_type_col]
+                
+                doc_number_col = detected_columns['document_number']
+                doc_number = row[doc_number_col]
+                
+                # Skip rows with missing document type or number
+                if pd.isna(doc_type) or pd.isna(doc_number):
+                    print(f"Skipping row {idx+1} due to missing document type or number")
+                    continue
+                
+                # Get dates and parse them
+                issue_date_col = detected_columns['issue_date']
+                expiry_date_col = detected_columns['expiry_date']
+                
+                # Skip rows with missing dates
+                if pd.isna(row[issue_date_col]) or pd.isna(row[expiry_date_col]):
+                    print(f"Skipping row {idx+1} due to missing dates")
+                    continue
+                
+                try:
+                    # Handle different date formats and convert to datetime
+                    issue_date = parse_date(str(row[issue_date_col]))
+                    expiry_date = parse_date(str(row[expiry_date_col]))
+                    
+                    if not issue_date or not expiry_date:
+                        print(f"Skipping row {idx+1} due to invalid date format")
+                        continue
+                        
+                except (ValueError, TypeError) as e:
+                    print(f"Skipping row {idx+1} due to date parsing error: {str(e)}")
+                    continue
+                
+                # Create document dictionary
+                document = {
+                    'employee_id': employee_id,
+                    'document_type': str(doc_type).strip(),
+                    'document_number': str(doc_number).strip(),
+                    'issue_date': issue_date,
+                    'expiry_date': expiry_date
+                }
+                
+                # Add notes if present
+                if 'notes' in detected_columns and not pd.isna(row[detected_columns['notes']]):
+                    document['notes'] = str(row[detected_columns['notes']])
+                
+                print(f"Processed document for employee ID: {employee_id}, type: {document['document_type']}")
+                documents.append(document)
+                
+            except Exception as e:
+                print(f"Error processing document row {idx+1}: {str(e)}")
+                # Continue to next row instead of failing the entire import
                 continue
-            
-            # Create document dictionary
-            document = {
-                'employee_id': int(row['employee_id']),
-                'document_type': str(row['document_type']),
-                'document_number': str(row['document_number']),
-                'issue_date': issue_date,
-                'expiry_date': expiry_date
-            }
-            
-            # Add notes if present
-            if 'notes' in df.columns and not pd.isna(row['notes']):
-                document['notes'] = str(row['notes'])
-            
-            documents.append(document)
         
+        if not documents:
+            raise ValueError("No valid document records found in the Excel file")
+            
         return documents
     
     except Exception as e:
-        raise Exception(f"Error parsing Excel file: {str(e)}")
+        import traceback
+        print(f"Error parsing document Excel: {str(e)}")
+        print(traceback.format_exc())
+        raise Exception(f"Error parsing document Excel file: {str(e)}")
