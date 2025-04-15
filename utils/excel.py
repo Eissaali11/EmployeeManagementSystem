@@ -21,17 +21,55 @@ def parse_employee_excel(file):
         # Print column names for debugging
         print(f"Excel columns: {df.columns.tolist()}")
         
-        # Basic validation
+        # Standardize column names (convert to lowercase and replace spaces)
+        # Create a copy of the dataframe with standardized column names
+        df_standardized = df.copy()
+        
+        # Define column mapping for common variations
+        column_mapping = {
+            'name': ['name', 'Name', 'الاسم', 'اسم الموظف', 'employee name'],
+            'employee_id': ['employee_id', 'emp id', 'emp.id', 'empid', 'employee id', 'رقم الموظف', 'الرقم الوظيفي', 'emp .n', 'emp. n', 'emp n'],
+            'national_id': ['national_id', 'national id', 'natid', 'id number', 'رقم الهوية', 'الهوية', 'الرقم الوطني', 'id .n', 'id. n', 'id n'],
+            'mobile': ['mobile', 'phone', 'cell', 'رقم الجوال', 'الجوال', 'phone number', 'mobil'],
+            'job_title': ['job_title', 'job title', 'title', 'position', 'المسمى الوظيفي', 'الوظيفة'],
+            'status': ['status', 'state', 'emp status', 'employee status', 'الحالة', 'حالة الموظف']
+        }
+        
+        # Create a mapping from actual columns to standard columns
+        actual_to_standard = {}
+        
+        # For each standard column, find if any of its variations exist in the dataframe
+        for standard_col, variations in column_mapping.items():
+            for var in variations:
+                if var in df.columns:
+                    actual_to_standard[var] = standard_col
+                    break
+        
+        # If we couldn't find a standard column, check case-insensitive and strip spaces
+        for standard_col, variations in column_mapping.items():
+            if standard_col not in actual_to_standard.values():
+                for col in df.columns:
+                    col_clean = col.lower().strip().replace(' ', '_')
+                    if col_clean in variations or col_clean == standard_col:
+                        actual_to_standard[col] = standard_col
+                        break
+        
+        print(f"Column mapping: {actual_to_standard}")
+        
+        # Apply the mapping to rename columns
+        df_standardized = df.rename(columns=actual_to_standard)
+        
+        # Check required columns
         required_columns = ['name', 'employee_id', 'national_id', 'mobile', 
                            'job_title', 'status']
         
         for col in required_columns:
-            if col not in df.columns:
-                raise ValueError(f"Column '{col}' is missing from the Excel file")
+            if col not in df_standardized.columns:
+                raise ValueError(f"Column '{col}' is missing from the Excel file. Available columns: {df.columns.tolist()}")
         
         # Process each row
         employees = []
-        for _, row in df.iterrows():
+        for _, row in df_standardized.iterrows():
             # Skip rows where required fields are missing
             if (pd.isna(row['name']) or pd.isna(row['employee_id']) or 
                 pd.isna(row['national_id']) or pd.isna(row['mobile']) or
@@ -49,19 +87,19 @@ def parse_employee_excel(file):
             }
             
             # Add optional fields if present
-            if 'email' in df.columns and not pd.isna(row['email']):
+            if 'email' in df_standardized.columns and not pd.isna(row['email']):
                 employee['email'] = str(row['email'])
             
-            if 'location' in df.columns and not pd.isna(row['location']):
+            if 'location' in df_standardized.columns and not pd.isna(row['location']):
                 employee['location'] = str(row['location'])
             
-            if 'project' in df.columns and not pd.isna(row['project']):
+            if 'project' in df_standardized.columns and not pd.isna(row['project']):
                 employee['project'] = str(row['project'])
             
-            if 'department_id' in df.columns and not pd.isna(row['department_id']):
+            if 'department_id' in df_standardized.columns and not pd.isna(row['department_id']):
                 employee['department_id'] = int(row['department_id'])
             
-            if 'join_date' in df.columns and not pd.isna(row['join_date']):
+            if 'join_date' in df_standardized.columns and not pd.isna(row['join_date']):
                 employee['join_date'] = parse_date(str(row['join_date']))
             
             employees.append(employee)
