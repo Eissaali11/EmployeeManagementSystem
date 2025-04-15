@@ -178,33 +178,67 @@ def import_excel():
         
         if file and file.filename.endswith(('.xlsx', '.xls')):
             try:
+                print(f"Received file: {file.filename}")
+                
                 # Parse Excel file
                 employees_data = parse_employee_excel(file)
+                print(f"Parsed {len(employees_data)} employee records from Excel")
+                
                 success_count = 0
                 error_count = 0
+                error_details = []
                 
-                for data in employees_data:
+                for index, data in enumerate(employees_data):
                     try:
+                        print(f"Processing employee {index+1}: {data.get('name', 'Unknown')}")
+                        
+                        # Check if employee with same employee_id already exists
+                        existing = Employee.query.filter_by(employee_id=data['employee_id']).first()
+                        if existing:
+                            print(f"Employee with ID {data['employee_id']} already exists")
+                            error_count += 1
+                            error_details.append(f"الموظف برقم {data['employee_id']} موجود مسبقا")
+                            continue
+                            
+                        # Check if employee with same national_id already exists
+                        existing = Employee.query.filter_by(national_id=data['national_id']).first()
+                        if existing:
+                            print(f"Employee with national ID {data['national_id']} already exists")
+                            error_count += 1
+                            error_details.append(f"الموظف برقم هوية {data['national_id']} موجود مسبقا")
+                            continue
+                        
                         employee = Employee(**data)
                         db.session.add(employee)
                         db.session.commit()
                         success_count += 1
-                    except Exception:
+                        print(f"Successfully added employee: {data.get('name')}")
+                    except Exception as e:
                         db.session.rollback()
                         error_count += 1
+                        print(f"Error adding employee {index+1}: {str(e)}")
+                        error_details.append(f"خطأ في السجل {index+1}: {str(e)}")
                 
                 # Log the import
+                error_detail_str = ", ".join(error_details[:5])
+                if len(error_details) > 5:
+                    error_detail_str += f" وغيرها من الأخطاء..."
+                
+                details = f'تم استيراد {success_count} موظف بنجاح و {error_count} فشل'
+                if error_details:
+                    details += f". أخطاء: {error_detail_str}"
+                    
                 audit = SystemAudit(
                     action='import',
                     entity_type='employee',
                     entity_id=0,
-                    details=f'تم استيراد {success_count} موظف بنجاح و {error_count} فشل'
+                    details=details
                 )
                 db.session.add(audit)
                 db.session.commit()
                 
                 if error_count > 0:
-                    flash(f'تم استيراد {success_count} موظف بنجاح و {error_count} فشل', 'warning')
+                    flash(f'تم استيراد {success_count} موظف بنجاح و {error_count} فشل. {error_detail_str}', 'warning')
                 else:
                     flash(f'تم استيراد {success_count} موظف بنجاح', 'success')
                 return redirect(url_for('employees.index'))

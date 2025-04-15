@@ -221,16 +221,18 @@ def generate_salary_excel(salaries):
         # Create DataFrame
         df = pd.DataFrame(data)
         
-        # Write to Excel
+        # Write to Excel using openpyxl engine
         output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Salaries', index=False)
             
-            # Auto-adjust columns' width
+            # Auto-adjust columns' width (openpyxl method)
             worksheet = writer.sheets['Salaries']
             for i, col in enumerate(df.columns):
                 column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                worksheet.set_column(i, i, column_width)
+                # For openpyxl, column dimensions are one-based
+                column_letter = chr(65 + i)  # A, B, C, ...
+                worksheet.column_dimensions[column_letter].width = column_width
         
         output.seek(0)
         return output
