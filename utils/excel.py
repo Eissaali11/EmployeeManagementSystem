@@ -21,92 +21,143 @@ def parse_employee_excel(file):
         # Print column names for debugging
         print(f"Excel columns: {df.columns.tolist()}")
         
-        # Standardize column names (convert to lowercase and replace spaces)
-        # Create a copy of the dataframe with standardized column names
-        df_standardized = df.copy()
+        # Convert all columns to string to handle datetime objects
+        for col in df.columns:
+            if isinstance(col, datetime):
+                continue  # Skip date columns completely
         
-        # Define column mapping for common variations
-        column_mapping = {
-            'name': ['name', 'Name', 'الاسم', 'اسم الموظف', 'employee name'],
-            'employee_id': ['employee_id', 'emp id', 'emp.id', 'empid', 'employee id', 'رقم الموظف', 'الرقم الوظيفي', 'emp .n', 'emp. n', 'emp n'],
-            'national_id': ['national_id', 'national id', 'natid', 'id number', 'رقم الهوية', 'الهوية', 'الرقم الوطني', 'id .n', 'id. n', 'id n'],
-            'mobile': ['mobile', 'phone', 'cell', 'رقم الجوال', 'الجوال', 'phone number', 'mobil'],
-            'job_title': ['job_title', 'job title', 'title', 'position', 'المسمى الوظيفي', 'الوظيفة'],
-            'status': ['status', 'state', 'emp status', 'employee status', 'الحالة', 'حالة الموظف']
-        }
+        # Manual detection of common column patterns - for Gulf/Saudi style Excel sheets
+        name_col = None
+        emp_id_col = None
+        national_id_col = None
+        mobile_col = None
+        job_title_col = None
+        status_col = None
+        location_col = None
+        project_col = None
         
-        # Create a mapping from actual columns to standard columns
-        actual_to_standard = {}
+        # Search for column names in Arabic and English with patterns
+        for col in df.columns:
+            if isinstance(col, datetime):
+                continue
+                
+            col_str = str(col).lower()
+            
+            # Name
+            if col_str in ['name', 'اسم', 'الاسم', 'اسم الموظف']:
+                name_col = col
+            
+            # Employee ID
+            elif ('emp' in col_str and ('.n' in col_str or 'id' in col_str or 'no' in col_str)) or col_str in ['رقم الموظف', 'الرقم الوظيفي']:
+                emp_id_col = col
+            
+            # National ID
+            elif ('id' in col_str and ('.n' in col_str or 'no' in col_str)) or 'national' in col_str or col_str in ['هوية', 'رقم الهوية', 'الرقم الوطني']:
+                national_id_col = col
+            
+            # Mobile
+            elif col_str in ['mobile', 'mobil', 'phone', 'جوال', 'رقم الجوال', 'هاتف']:
+                mobile_col = col
+            
+            # Job Title
+            elif ('job' in col_str and 'title' in col_str) or col_str in ['title', 'المسمى', 'المسمى الوظيفي', 'الوظيفة']:
+                job_title_col = col
+            
+            # Status
+            elif col_str in ['status', 'الحالة', 'حالة', 'حالة الموظف']:
+                status_col = col
+                
+            # Location
+            elif col_str in ['location', 'موقع', 'الموقع']:
+                location_col = col
+                
+            # Project
+            elif col_str in ['project', 'مشروع', 'المشروع']:
+                project_col = col
         
-        # For each standard column, find if any of its variations exist in the dataframe
-        for standard_col, variations in column_mapping.items():
-            for var in variations:
-                if var in df.columns:
-                    actual_to_standard[var] = standard_col
-                    break
+        # Print detected columns
+        print(f"Detected columns: Name={name_col}, ID={emp_id_col}, NationalID={national_id_col}, Mobile={mobile_col}, Job={job_title_col}, Status={status_col}")
         
-        # If we couldn't find a standard column, check case-insensitive and strip spaces
-        for standard_col, variations in column_mapping.items():
-            if standard_col not in actual_to_standard.values():
-                for col in df.columns:
-                    col_clean = col.lower().strip().replace(' ', '_')
-                    if col_clean in variations or col_clean == standard_col:
-                        actual_to_standard[col] = standard_col
-                        break
-        
-        print(f"Column mapping: {actual_to_standard}")
-        
-        # Apply the mapping to rename columns
-        df_standardized = df.rename(columns=actual_to_standard)
-        
-        # Check required columns
-        required_columns = ['name', 'employee_id', 'national_id', 'mobile', 
-                           'job_title', 'status']
-        
-        for col in required_columns:
-            if col not in df_standardized.columns:
-                raise ValueError(f"Column '{col}' is missing from the Excel file. Available columns: {df.columns.tolist()}")
+        # Force these columns if specific patterns are found 
+        # (This is for the specific file format you're using)
+        if 'Name' in df.columns:
+            name_col = 'Name'
+            
+        if 'Emp .N' in df.columns:
+            emp_id_col = 'Emp .N'
+            
+        if 'ID .N' in df.columns:
+            national_id_col = 'ID .N'
+            
+        if 'Mobil' in df.columns:
+            mobile_col = 'Mobil'
+            
+        if 'Job Title' in df.columns:
+            job_title_col = 'Job Title'
+            
+        if 'Status' in df.columns:
+            status_col = 'Status'
+            
+        if 'Location' in df.columns:
+            location_col = 'Location'
+            
+        if 'Project' in df.columns:
+            project_col = 'Project'
+                
+        # Verify we found all required columns
+        if not all([name_col, emp_id_col, national_id_col, mobile_col, job_title_col, status_col]):
+            missing = []
+            if not name_col: missing.append("Name")
+            if not emp_id_col: missing.append("Employee ID")
+            if not national_id_col: missing.append("National ID")
+            if not mobile_col: missing.append("Mobile")
+            if not job_title_col: missing.append("Job Title")
+            if not status_col: missing.append("Status")
+            
+            missing_str = ", ".join(missing)
+            raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
         
         # Process each row
         employees = []
-        for _, row in df_standardized.iterrows():
-            # Skip rows where required fields are missing
-            if (pd.isna(row['name']) or pd.isna(row['employee_id']) or 
-                pd.isna(row['national_id']) or pd.isna(row['mobile']) or
-                pd.isna(row['job_title']) or pd.isna(row['status'])):
+        for idx, row in df.iterrows():
+            # Skip rows with empty values in important fields
+            if any(pd.isna(row[col]) for col in [name_col, emp_id_col, national_id_col, mobile_col, job_title_col]):
                 continue
-            
-            # Create employee dictionary
+                
+            # Default to 'active' status if it's a datetime object or empty
+            if isinstance(row[status_col], datetime) or pd.isna(row[status_col]):
+                status_value = 'active'
+            else:
+                status_value = str(row[status_col]).lower()
+                
+            # Create employee dictionary with required fields
             employee = {
-                'name': str(row['name']),
-                'employee_id': str(row['employee_id']),
-                'national_id': str(row['national_id']),
-                'mobile': str(row['mobile']),
-                'job_title': str(row['job_title']),
-                'status': 'active' if isinstance(row['status'], datetime) else str(row['status']).lower()
+                'name': str(row[name_col]),
+                'employee_id': str(row[emp_id_col]),
+                'national_id': str(row[national_id_col]),
+                'mobile': str(row[mobile_col]),
+                'job_title': str(row[job_title_col]),
+                'status': status_value
             }
             
             # Add optional fields if present
-            if 'email' in df_standardized.columns and not pd.isna(row['email']):
-                employee['email'] = str(row['email'])
+            if location_col is not None and not pd.isna(row[location_col]):
+                employee['location'] = str(row[location_col])
+                
+            if project_col is not None and not pd.isna(row[project_col]):
+                employee['project'] = str(row[project_col])
             
-            if 'location' in df_standardized.columns and not pd.isna(row['location']):
-                employee['location'] = str(row['location'])
-            
-            if 'project' in df_standardized.columns and not pd.isna(row['project']):
-                employee['project'] = str(row['project'])
-            
-            if 'department_id' in df_standardized.columns and not pd.isna(row['department_id']):
-                employee['department_id'] = int(row['department_id'])
-            
-            if 'join_date' in df_standardized.columns and not pd.isna(row['join_date']):
-                employee['join_date'] = parse_date(str(row['join_date']))
+            # We don't have email in this Excel format, so skip it
             
             employees.append(employee)
+            print(f"Added employee: {employee['name']}")
         
         return employees
     
     except Exception as e:
+        import traceback
+        print(f"Error parsing Excel: {str(e)}")
+        print(traceback.format_exc())
         raise Exception(f"Error parsing Excel file: {str(e)}")
 
 def generate_employee_excel(employees):
