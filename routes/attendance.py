@@ -283,3 +283,32 @@ def stats():
         'end_date': end_date.isoformat(),
         'stats': result
     })
+
+@attendance_bp.route('/api/departments/<int:department_id>/employees')
+def get_department_employees(department_id):
+    """API endpoint to get all employees in a department"""
+    try:
+        # Get the department
+        department = Department.query.get_or_404(department_id)
+        
+        # Get all active employees in the department
+        employees = Employee.query.filter_by(
+            department_id=department_id,
+            status='active'  # Only return active employees
+        ).all()
+        
+        # Format employee data
+        employee_data = []
+        for employee in employees:
+            employee_data.append({
+                'id': employee.id,
+                'name': employee.name,
+                'employee_id': employee.employee_id,
+                'job_title': employee.job_title,
+                'status': employee.status
+            })
+        
+        return jsonify(employee_data)
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

@@ -712,6 +712,47 @@ table {
     100% { background-color: transparent; }
 }
 
+/* Enhanced attendance status visualization */
+.status-present td {
+    background-color: rgba(var(--bs-success-rgb), 0.05);
+    border-left: 3px solid var(--bs-success);
+    transition: all 0.3s ease;
+}
+
+.status-present:hover td {
+    background-color: rgba(var(--bs-success-rgb), 0.1);
+}
+
+.status-absent td {
+    background-color: rgba(var(--bs-danger-rgb), 0.05);
+    border-left: 3px solid var(--bs-danger);
+    transition: all 0.3s ease;
+}
+
+.status-absent:hover td {
+    background-color: rgba(var(--bs-danger-rgb), 0.1);
+}
+
+.status-leave td {
+    background-color: rgba(var(--bs-warning-rgb), 0.05);
+    border-left: 3px solid var(--bs-warning);
+    transition: all 0.3s ease;
+}
+
+.status-leave:hover td {
+    background-color: rgba(var(--bs-warning-rgb), 0.1);
+}
+
+.status-sick td {
+    background-color: rgba(var(--bs-info-rgb), 0.05);
+    border-left: 3px solid var(--bs-info);
+    transition: all 0.3s ease;
+}
+
+.status-sick:hover td {
+    background-color: rgba(var(--bs-info-rgb), 0.1);
+}
+
 /* Pagination styling */
 .pagination {
     margin-top: 1rem;

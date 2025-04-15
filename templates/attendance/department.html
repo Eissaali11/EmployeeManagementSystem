@@ -177,53 +177,34 @@
             });
     }
     
-    // للاختبار: نستخدم محاكاة واجهة برمجة التطبيقات حتى نقوم بتنفيذها
-    // استبدل هذا الكود عندما يتم تنفيذ واجهة برمجة التطبيقات الفعلية
-    // يمكن حذف هذا الجزء بعد تنفيذ واجهة برمجة التطبيقات
-    fetch = function(url) {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                // فحص إذا كان الطلب للحصول على موظفي القسم
-                if (url.includes('/api/departments/') && url.includes('/employees')) {
-                    const departmentId = url.split('/')[3];
-                    const departmentSelect = document.getElementById('department_id');
-                    const departmentOption = Array.from(departmentSelect.options).find(option => option.value === departmentId);
-                    
-                    if (departmentOption) {
-                        // الحصول على اسم القسم وعدد الموظفين من النص المعروض
-                        const departmentText = departmentOption.textContent;
-                        const employeeCountMatch = departmentText.match(/\((\d+) موظف\)/);
-                        const employeeCount = employeeCountMatch ? parseInt(employeeCountMatch[1]) : 0;
-                        
-                        if (employeeCount > 0) {
-                            // إنشاء قائمة بموظفين وهميين للعرض
-                            const employees = [];
-                            for (let i = 1; i <= employeeCount; i++) {
-                                employees.push({
-                                    name: `موظف ${i} - ${departmentOption.textContent.split(' (')[0]}`,
-                                    employee_id: `EMP${departmentId}${i.toString().padStart(3, '0')}`,
-                                    job_title: `مسمى وظيفي ${i}`,
-                                    status: 'active'
-                                });
-                            }
-                            resolve({
-                                ok: true,
-                                json: () => Promise.resolve(employees)
-                            });
-                        } else {
-                            resolve({
-                                ok: true,
-                                json: () => Promise.resolve([])
-                            });
-                        }
-                    } else {
-                        reject(new Error('قسم غير موجود'));
-                    }
-                } else {
-                    reject(new Error('طلب غير معروف'));
-                }
-            }, 500); // محاكاة تأخير الشبكة
+    // إضافة أحداث إضافية عند اختيار حالة الحضور
+    document.querySelectorAll('.attendance-status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const status = this.getAttribute('data-status');
+            // تحديث ظهور الأزرار
+            document.querySelectorAll('.attendance-status-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            // تحديث الحالة في النموذج
+            document.getElementById('status').value = status;
+            
+            // تحديث شكل جدول الموظفين ليعكس الحالة المختارة
+            const employeesList = document.getElementById('department-employees-list');
+            if (employeesList) {
+                const rows = employeesList.querySelectorAll('tr');
+                rows.forEach(row => {
+                    // إزالة كافة فئات الحالة
+                    row.classList.remove('status-present', 'status-absent', 'status-leave', 'status-sick');
+                    // إضافة فئة الحالة الجديدة
+                    row.classList.add('status-' + status);
+                });
+            }
         });
-    };
+    });
+    
+    // تعيين الحالة الافتراضية (حاضر) كنشطة عند تحميل الصفحة
+    document.querySelector('.attendance-status-btn[data-status="present"]').classList.add('active');
 </script>
 {% endblock %}
