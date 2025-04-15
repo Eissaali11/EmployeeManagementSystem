@@ -488,6 +488,64 @@ table {
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     margin-bottom: 1.5rem;
+    position: relative;
+    max-height: 65vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+/* Scroll bar styling */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: rgba(var(--bs-primary-rgb), 0.5);
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--bs-primary-rgb), 0.7);
+}
+
+/* Fixed header for tables with scrolling */
+.table-fixed-header {
+    position: relative;
+    max-height: 65vh;
+    overflow-y: auto;
+}
+
+.table-fixed-header thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Infinite scrolling table container */
+.table-infinite-scroll {
+    position: relative;
+    overflow: auto;
+    max-height: 70vh;
+}
+
+.table-infinite-scroll .loading-indicator {
+    display: none;
+    text-align: center;
+    padding: 1rem;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.table-infinite-scroll.loading .loading-indicator {
+    display: block;
 }
 
 /* Animation Effects */
