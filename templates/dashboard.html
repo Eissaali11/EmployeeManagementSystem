@@ -124,8 +124,8 @@
                         </div>
                         <div class="card-body">
                             <canvas id="departmentChart" 
-                                    data-labels="{{ dept_labels|tojson }}" 
-                                    data-values="{{ dept_data|tojson }}" 
+                                    data-labels='{{ dept_labels|tojson if dept_labels else "[]" }}' 
+                                    data-values='{{ dept_data|tojson if dept_data else "[]" }}' 
                                     height="250"></canvas>
                         </div>
                     </div>
@@ -138,8 +138,8 @@
                         </div>
                         <div class="card-body">
                             <canvas id="salaryChart" 
-                                    data-labels="{{ salary_labels|tojson }}" 
-                                    data-values="{{ salary_data|tojson }}" 
+                                    data-labels='{{ salary_labels|tojson if salary_labels else "[]" }}' 
+                                    data-values='{{ salary_data|tojson if salary_data else "[]" }}' 
                                     height="250"></canvas>
                         </div>
                     </div>

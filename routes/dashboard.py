@@ -46,8 +46,18 @@ def index():
     dept_labels = [dept.name for dept in departments]
     dept_data = [count for _, count in departments]
     
+    # If no departments, add default data to avoid empty chart error
+    if not dept_labels:
+        dept_labels = ["لا يوجد أقسام"]
+        dept_data = [0]
+    
     salary_labels = [f"شهر {month}" for month, _ in monthly_salaries]
     salary_data = [float(total) for _, total in monthly_salaries]
+    
+    # If no salary data, add default data to avoid empty chart error
+    if not salary_labels:
+        salary_labels = ["لا يوجد بيانات"]
+        salary_data = [0]
     
     return render_template('dashboard.html',
                           total_employees=total_employees,
