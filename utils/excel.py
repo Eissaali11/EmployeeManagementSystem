@@ -83,7 +83,7 @@ def parse_employee_excel(file):
                 'national_id': str(row['national_id']),
                 'mobile': str(row['mobile']),
                 'job_title': str(row['job_title']),
-                'status': str(row['status']).lower()
+                'status': 'active' if isinstance(row['status'], datetime) else str(row['status']).lower()
             }
             
             # Add optional fields if present
