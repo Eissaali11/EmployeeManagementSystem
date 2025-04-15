@@ -618,6 +618,100 @@ table {
     margin: 0.25rem;
 }
 
+/* Filter controls */
+.filter-controls {
+    background-color: rgba(var(--bs-primary-rgb), 0.03);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.filter-controls.active {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.filter-controls .form-group {
+    margin-bottom: 1rem;
+}
+
+.filter-controls .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary);
+    font-size: 0.875rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    margin: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.filter-badge:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.15);
+}
+
+.filter-badge .badge-remove {
+    margin-right: 0.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.filter-badge .badge-remove:hover {
+    opacity: 1;
+}
+
+.filter-toggle {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle.active {
+    transform: rotate(180deg);
+}
+
+.filter-summary {
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+}
+
+/* Filter animation */
+.filter-transition {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.filter-transition.collapse:not(.show) {
+    display: block;
+    height: 0;
+    opacity: 0;
+}
+
+.filter-result-count {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    background-color: rgba(var(--bs-success-rgb), 0.1);
+    color: var(--bs-success);
+    margin-right: 0.5rem;
+}
+
+/* Visual feedback for filtering */
+.highlight-new {
+    animation: highlightNew 2s ease;
+}
+
+@keyframes highlightNew {
+    0% { background-color: rgba(var(--bs-primary-rgb), 0.2); }
+    100% { background-color: transparent; }
+}
+
 /* Pagination styling */
 .pagination {
     margin-top: 1rem;

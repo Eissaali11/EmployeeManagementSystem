@@ -10,7 +10,7 @@
     </div>
 
     <div class="row">
-        <div class="col-md-8 mx-auto">
+        <div class="col-lg-8 mx-auto">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">تسجيل حضور لجميع موظفي القسم</h5>
@@ -20,7 +20,7 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="department_id" class="form-label required-field">القسم</label>
-                                <select class="form-select" id="department_id" name="department_id" required>
+                                <select class="form-select" id="department_id" name="department_id" required onchange="loadDepartmentEmployees(this.value)">
                                     <option value="">اختر القسم</option>
                                     {% for department in departments %}
                                     <option value="{{ department.id }}">
@@ -43,22 +43,52 @@
                         
                         <div class="mb-3">
                             <label class="form-label required-field">حالة الحضور للقسم بالكامل</label>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <button type="button" class="btn btn-success btn-lg attendance-status-btn" data-status="present" onclick="setDepartmentAttendance('present')">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <button type="button" class="btn btn-success btn-lg attendance-status-btn m-1 active" data-status="present" onclick="setDepartmentAttendance('present')">
                                     <i class="fas fa-check-circle me-1"></i> حاضر
                                 </button>
-                                <button type="button" class="btn btn-danger btn-lg attendance-status-btn" data-status="absent" onclick="setDepartmentAttendance('absent')">
+                                <button type="button" class="btn btn-danger btn-lg attendance-status-btn m-1" data-status="absent" onclick="setDepartmentAttendance('absent')">
                                     <i class="fas fa-times-circle me-1"></i> غائب
                                 </button>
-                                <button type="button" class="btn btn-warning btn-lg attendance-status-btn" data-status="leave" onclick="setDepartmentAttendance('leave')">
+                                <button type="button" class="btn btn-warning btn-lg attendance-status-btn m-1" data-status="leave" onclick="setDepartmentAttendance('leave')">
                                     <i class="fas fa-calendar-minus me-1"></i> إجازة
                                 </button>
-                                <button type="button" class="btn btn-info btn-lg attendance-status-btn" data-status="sick" onclick="setDepartmentAttendance('sick')">
+                                <button type="button" class="btn btn-info btn-lg attendance-status-btn m-1" data-status="sick" onclick="setDepartmentAttendance('sick')">
                                     <i class="fas fa-procedures me-1"></i> مرضي
                                 </button>
                             </div>
                             <!-- حقل مخفي لتخزين القيمة المختارة -->
                             <input type="hidden" id="status" name="status" value="present">
+                        </div>
+                        
+                        <!-- عرض موظفي القسم المختار -->
+                        <div id="department-employees-container" class="mb-4 mt-4" style="display: none;">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-users me-2"></i>
+                                        قائمة موظفي القسم
+                                        <span id="employee-count" class="filter-result-count"></span>
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive table-fixed-header">
+                                        <table class="table table-hover m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>الاسم</th>
+                                                    <th>الرقم الوظيفي</th>
+                                                    <th>المسمى الوظيفي</th>
+                                                    <th>الحالة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="department-employees-list">
+                                                <!-- سيتم ملؤها بواسطة جافاسكريبت -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="alert alert-info">
@@ -67,7 +97,7 @@
                         </div>
                         
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-save me-1"></i> تسجيل الحضور للقسم
                             </button>
                             <button type="reset" class="btn btn-secondary">
@@ -80,4 +110,120 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // تحميل موظفي القسم عند اختياره
+    function loadDepartmentEmployees(departmentId) {
+        if (!departmentId) {
+            document.getElementById('department-employees-container').style.display = 'none';
+            return;
+        }
+        
+        // الحصول على عنصر الواجهة لعرض القائمة
+        const employeesList = document.getElementById('department-employees-list');
+        const employeeCount = document.getElementById('employee-count');
+        const container = document.getElementById('department-employees-container');
+        
+        // إظهار رسالة تحميل
+        employeesList.innerHTML = '<tr><td colspan="4" class="text-center py-3"><i class="fas fa-spinner fa-spin me-2"></i> جاري تحميل الموظفين...</td></tr>';
+        container.style.display = 'block';
+        
+        // إرسال طلب للحصول على بيانات موظفي القسم
+        fetch(`/api/departments/${departmentId}/employees`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('فشل في الحصول على بيانات الموظفين');
+                }
+                return response.json();
+            })
+            .then(employees => {
+                // عرض عدد الموظفين
+                employeeCount.textContent = employees.length + ' موظف';
+                
+                if (employees.length === 0) {
+                    employeesList.innerHTML = '<tr><td colspan="4" class="text-center py-3">لا يوجد موظفين في هذا القسم</td></tr>';
+                    return;
+                }
+                
+                // إعادة إنشاء جدول الموظفين
+                let html = '';
+                employees.forEach(employee => {
+                    let statusBadge = '';
+                    if (employee.status === 'active') {
+                        statusBadge = '<span class="badge bg-success">نشط</span>';
+                    } else if (employee.status === 'inactive') {
+                        statusBadge = '<span class="badge bg-danger">غير نشط</span>';
+                    } else if (employee.status === 'on_leave') {
+                        statusBadge = '<span class="badge bg-warning">في إجازة</span>';
+                    }
+                    
+                    html += `
+                        <tr class="highlight-new">
+                            <td>${employee.name}</td>
+                            <td>${employee.employee_id}</td>
+                            <td>${employee.job_title}</td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+                
+                employeesList.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                employeesList.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3"><i class="fas fa-exclamation-circle me-2"></i> حدث خطأ: ${error.message}</td></tr>`;
+            });
+    }
+    
+    // للاختبار: نستخدم محاكاة واجهة برمجة التطبيقات حتى نقوم بتنفيذها
+    // استبدل هذا الكود عندما يتم تنفيذ واجهة برمجة التطبيقات الفعلية
+    // يمكن حذف هذا الجزء بعد تنفيذ واجهة برمجة التطبيقات
+    fetch = function(url) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // فحص إذا كان الطلب للحصول على موظفي القسم
+                if (url.includes('/api/departments/') && url.includes('/employees')) {
+                    const departmentId = url.split('/')[3];
+                    const departmentSelect = document.getElementById('department_id');
+                    const departmentOption = Array.from(departmentSelect.options).find(option => option.value === departmentId);
+                    
+                    if (departmentOption) {
+                        // الحصول على اسم القسم وعدد الموظفين من النص المعروض
+                        const departmentText = departmentOption.textContent;
+                        const employeeCountMatch = departmentText.match(/\((\d+) موظف\)/);
+                        const employeeCount = employeeCountMatch ? parseInt(employeeCountMatch[1]) : 0;
+                        
+                        if (employeeCount > 0) {
+                            // إنشاء قائمة بموظفين وهميين للعرض
+                            const employees = [];
+                            for (let i = 1; i <= employeeCount; i++) {
+                                employees.push({
+                                    name: `موظف ${i} - ${departmentOption.textContent.split(' (')[0]}`,
+                                    employee_id: `EMP${departmentId}${i.toString().padStart(3, '0')}`,
+                                    job_title: `مسمى وظيفي ${i}`,
+                                    status: 'active'
+                                });
+                            }
+                            resolve({
+                                ok: true,
+                                json: () => Promise.resolve(employees)
+                            });
+                        } else {
+                            resolve({
+                                ok: true,
+                                json: () => Promise.resolve([])
+                            });
+                        }
+                    } else {
+                        reject(new Error('قسم غير موجود'));
+                    }
+                } else {
+                    reject(new Error('طلب غير معروف'));
+                }
+            }, 500); // محاكاة تأخير الشبكة
+        });
+    };
+</script>
 {% endblock %}
