@@ -16,7 +16,7 @@
                     <h5 class="card-title mb-0">رفع ملف البيانات</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ url_for('employees.import') }}" method="post" enctype="multipart/form-data">
+                    <form action="{{ url_for('employees.import_excel') }}" method="post" enctype="multipart/form-data">
                         <div class="mb-4">
                             <label for="file" class="form-label required-field">ملف Excel</label>
                             <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls" required onchange="validateExcelFile('file')">
