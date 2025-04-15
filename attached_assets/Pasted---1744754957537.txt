@@ -1,0 +1,551 @@
+# خطة مشروع نظام إدارة الموظفين
+
+## نظرة عامة
+تطوير نظام متكامل لإدارة الموظفين باللغة العربية يتضمن وحدات متعددة لإدارة بيانات الموظفين، الحضور، الأقسام، الرواتب، والوثائق مع واجهة مستخدم سهلة الاستخدام وجذابة.
+
+## هيكل المشروع
+
+```
+employee_management_system/
+├── app/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── employee.py
+│   │   ├── department.py
+│   │   ├── attendance.py
+│   │   ├── salary.py
+│   │   └── document.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── employee.py
+│   │   ├── department.py
+│   │   ├── attendance.py
+│   │   ├── salary.py
+│   │   └── document.py
+│   ├── static/
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── images/
+│   ├── templates/
+│   │   ├── base.html
+│   │   ├── auth/
+│   │   ├── employees/
+│   │   ├── departments/
+│   │   ├── attendance/
+│   │   ├── salary/
+│   │   └── documents/
+│   └── utils/
+│       ├── __init__.py
+│       ├── date_converter.py
+│       └── excel_handler.py
+├── migrations/
+├── tests/
+├── .env
+├── config.py
+├── requirements.txt
+└── run.py
+```
+
+## المتطلبات التقنية
+
+### الحزم والمكتبات الأساسية:
+```
+Flask==2.0.1
+Flask-SQLAlchemy==2.5.1
+Flask-Migrate==3.1.0
+Flask-Login==0.5.0
+Flask-WTF==0.15.1
+psycopg2-binary==2.9.1
+pandas==1.3.3
+openpyxl==3.0.9
+hijri-converter==2.2.2
+python-dotenv==0.19.1
+Flask-Babel==2.0.0
+WTForms==2.3.3
+email-validator==1.1.3
+flask-marshmallow==0.14.0
+marshmallow-sqlalchemy==0.26.1
+```
+
+## خطة التنفيذ
+
+### المرحلة 1: إعداد هيكل المشروع وتكوين قاعدة البيانات (2 أسبوع)
+- إعداد بيئة التطوير وتثبيت المكتبات اللازمة
+- تهيئة هيكل المشروع
+- إنشاء قاعدة البيانات وتكوينها
+- إعداد نماذج البيانات (Models)
+- تطوير نظام المصادقة والصلاحيات
+
+### المرحلة 2: تطوير الوحدات الأساسية (3 أسابيع)
+- تطوير وحدة إدارة الموظفين
+- تطوير وحدة إدارة الأقسام
+- تطوير وحدة إدارة الحضور
+- إنشاء نماذج الإدخال والتحقق من البيانات
+- تطوير واجهات المستخدم الأساسية
+
+### المرحلة 3: تطوير وحدات الوثائق والرواتب (2 أسابيع)
+- تطوير وحدة إدارة الرواتب
+- تطوير وحدة إدارة الوثائق
+- تطوير وظائف التنبيهات
+- تطوير وظائف استيراد وتصدير البيانات
+
+### المرحلة 4: تحسين واجهة المستخدم والتقارير (2 أسابيع)
+- تطوير الواجهة الرئيسية ولوحة التحكم
+- إنشاء التقارير المطلوبة
+- دعم التقويم الهجري والميلادي
+- تحسين تجربة المستخدم وتصميم الواجهة
+
+### المرحلة 5: الاختبار والتوثيق (2 أسابيع)
+- اختبار جميع وظائف النظام
+- إصلاح الأخطاء والمشكلات
+- إعداد وثائق المستخدم والمطور
+- التدريب على استخدام النظام
+
+## نماذج البيانات الأساسية
+
+### نموذج الموظف (Employee)
+```python
+from app import db
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+
+class Employee(db.Model, UserMixin):
+    __tablename__ = 'employees'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.String(20), unique=True, nullable=False)
+    national_id = db.Column(db.String(20), unique=True, nullable=False)
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True)
+    mobile = db.Column(db.String(20), nullable=False)
+    position = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(100))
+    project = db.Column(db.String(100))
+    status = db.Column(db.String(20), default='نشط')
+    join_date = db.Column(db.Date, default=datetime.utcnow)
+    password_hash = db.Column(db.String(128))
+    is_admin = db.Column(db.Boolean, default=False)
+    
+    # العلاقات
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    attendances = db.relationship('Attendance', backref='employee', lazy='dynamic')
+    salaries = db.relationship('Salary', backref='employee', lazy='dynamic')
+    documents = db.relationship('Document', backref='employee', lazy='dynamic')
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<موظف: {self.full_name}>'
+```
+
+### نموذج القسم (Department)
+```python
+from app import db
+from datetime import datetime
+
+class Department(db.Model):
+    __tablename__ = 'departments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    manager_id = db.Column(db.Integer, db.ForeignKey('employees.id'))
+    employees = db.relationship('Employee', backref='department', lazy='dynamic', 
+                               foreign_keys='Employee.department_id')
+    manager = db.relationship('Employee', foreign_keys=[manager_id])
+    
+    def __repr__(self):
+        return f'<قسم: {self.name}>'
+```
+
+### نموذج الحضور (Attendance)
+```python
+from app import db
+from datetime import datetime
+
+class Attendance(db.Model):
+    __tablename__ = 'attendances'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
+    check_in = db.Column(db.Time)
+    check_out = db.Column(db.Time)
+    status = db.Column(db.String(20), default='حاضر')  # حاضر، غائب، إجازة
+    notes = db.Column(db.Text)
+    
+    # العلاقات
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    
+    def __repr__(self):
+        return f'<حضور: {self.employee.full_name} - {self.date}>'
+```
+
+### نموذج الراتب (Salary)
+```python
+from app import db
+from datetime import datetime
+
+class Salary(db.Model):
+    __tablename__ = 'salaries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    month = db.Column(db.Integer, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    basic_salary = db.Column(db.Float, nullable=False)
+    allowances = db.Column(db.Float, default=0.0)
+    deductions = db.Column(db.Float, default=0.0)
+    net_salary = db.Column(db.Float, nullable=False)
+    payment_date = db.Column(db.Date)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    
+    def __repr__(self):
+        return f'<راتب: {self.employee.full_name} - {self.month}/{self.year}>'
+```
+
+### نموذج الوثيقة (Document)
+```python
+from app import db
+from datetime import datetime
+
+class Document(db.Model):
+    __tablename__ = 'documents'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    document_type = db.Column(db.String(50), nullable=False)  # هوية، جواز، شهادة صحية
+    document_number = db.Column(db.String(50), nullable=False)
+    issue_date = db.Column(db.Date, nullable=False)
+    expiry_date = db.Column(db.Date, nullable=False)
+    file_path = db.Column(db.String(255))
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    
+    def __repr__(self):
+        return f'<وثيقة: {self.document_type} - {self.employee.full_name}>'
+```
+
+## ملف تكوين التطبيق
+```python
+import os
+from datetime import timedelta
+from dotenv import load_dotenv
+
+# تحميل المتغيرات البيئية من ملف .env
+load_dotenv()
+
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'مفتاح_سري_افتراضي_للتطوير'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://user:password@localhost/employee_management'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'app/static/uploads')
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 ميجابايت كحد أقصى لرفع الملفات
+    
+    # إعدادات البريد الإلكتروني للتنبيهات
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+    
+    # إعدادات babel للغة العربية
+    BABEL_DEFAULT_LOCALE = 'ar'
+    BABEL_DEFAULT_TIMEZONE = 'Asia/Riyadh'
+    
+    # إعدادات جلسة المستخدم
+    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+```
+
+## تطوير واجهة المستخدم
+
+### القالب الأساسي (base.html)
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام إدارة الموظفين{% endblock %}</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- القائمة العلوية -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-users-cog"></i> نظام إدارة الموظفين
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> لوحة التحكم
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('employee.list') }}">
+                            <i class="fas fa-user-tie"></i> الموظفين
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('department.list') }}">
+                            <i class="fas fa-building"></i> الأقسام
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('attendance.list') }}">
+                            <i class="fas fa-clipboard-check"></i> الحضور
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('salary.list') }}">
+                            <i class="fas fa-money-bill-wave"></i> الرواتب
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('document.list') }}">
+                            <i class="fas fa-file-alt"></i> الوثائق
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('report.index') }}">
+                            <i class="fas fa-chart-bar"></i> التقارير
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> {{ current_user.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-id-card"></i> الملف الشخصي
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                                    <i class="fas fa-key"></i> تغيير كلمة المرور
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- محتوى الصفحة -->
+    <div class="container mt-4 mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- الفوتر -->
+    <footer class="footer bg-light py-3 mt-auto">
+        <div class="container text-center">
+            <span class="text-muted">
+                &copy; {{ current_year }} نظام إدارة الموظفين | جميع الحقوق محفوظة
+            </span>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-hijri/2.1.2/moment-hijri.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+```
+
+## ملف تشغيل التطبيق (run.py)
+```python
+from app import create_app
+
+app = create_app()
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+## أدوات مساعدة
+
+### محول التاريخ الهجري (date_converter.py)
+```python
+from hijri_converter import Gregorian, Hijri
+from datetime import date
+
+def gregorian_to_hijri(gregorian_date):
+    """تحويل التاريخ الميلادي إلى هجري"""
+    if not isinstance(gregorian_date, date):
+        return None
+    
+    hijri = Gregorian(gregorian_date.year, gregorian_date.month, gregorian_date.day).to_hijri()
+    return f"{hijri.day}/{hijri.month}/{hijri.year}"
+
+def hijri_to_gregorian(year, month, day):
+    """تحويل التاريخ الهجري إلى ميلادي"""
+    try:
+        gregorian = Hijri(year, month, day).to_gregorian()
+        return date(gregorian.year, gregorian.month, gregorian.day)
+    except ValueError:
+        return None
+```
+
+### معالج ملفات إكسل (excel_handler.py)
+```python
+import pandas as pd
+import os
+from datetime import datetime
+from werkzeug.utils import secure_filename
+from app import db
+from app.models.employee import Employee
+from app.models.salary import Salary
+from app.models.document import Document
+
+def import_employees_from_excel(file):
+    """استيراد بيانات الموظفين من ملف إكسل"""
+    try:
+        df = pd.read_excel(file)
+        required_columns = ['الرقم الوظيفي', 'رقم الهوية', 'الاسم الكامل', 'الجوال', 'المسمى الوظيفي']
+        
+        # التحقق من وجود الأعمدة المطلوبة
+        for col in required_columns:
+            if col not in df.columns:
+                return False, f"العمود '{col}' غير موجود في الملف"
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+        
+        for _, row in df.iterrows():
+            try:
+                # التحقق من وجود الموظف مسبقاً
+                employee = Employee.query.filter_by(employee_id=row['الرقم الوظيفي']).first()
+                
+                if employee:
+                    # تحديث بيانات الموظف الموجود
+                    employee.national_id = row['رقم الهوية']
+                    employee.full_name = row['الاسم الكامل']
+                    employee.mobile = row['الجوال']
+                    employee.position = row['المسمى الوظيفي']
+                    
+                    # تحديث البيانات الاختيارية إذا كانت موجودة
+                    if 'الموقع' in df.columns and not pd.isna(row['الموقع']):
+                        employee.location = row['الموقع']
+                    if 'المشروع' in df.columns and not pd.isna(row['المشروع']):
+                        employee.project = row['المشروع']
+                    if 'الحالة' in df.columns and not pd.isna(row['الحالة']):
+                        employee.status = row['الحالة']
+                    if 'البريد الإلكتروني' in df.columns and not pd.isna(row['البريد الإلكتروني']):
+                        employee.email = row['البريد الإلكتروني']
+                else:
+                    # إنشاء موظف جديد
+                    employee = Employee(
+                        employee_id=row['الرقم الوظيفي'],
+                        national_id=row['رقم الهوية'],
+                        full_name=row['الاسم الكامل'],
+                        mobile=row['الجوال'],
+                        position=row['المسمى الوظيفي']
+                    )
+                    
+                    # إضافة البيانات الاختيارية إذا كانت موجودة
+                    if 'الموقع' in df.columns and not pd.isna(row['الموقع']):
+                        employee.location = row['الموقع']
+                    if 'المشروع' in df.columns and not pd.isna(row['المشروع']):
+                        employee.project = row['المشروع']
+                    if 'الحالة' in df.columns and not pd.isna(row['الحالة']):
+                        employee.status = row['الحالة']
+                    if 'البريد الإلكتروني' in df.columns and not pd.isna(row['البريد الإلكتروني']):
+                        employee.email = row['البريد الإلكتروني']
+                    
+                    # تعيين كلمة مرور افتراضية
+                    employee.set_password(row['رقم الهوية'])
+                    
+                    db.session.add(employee)
+                
+                success_count += 1
+            except Exception as e:
+                error_count += 1
+                errors.append(f"خطأ في السجل {_+1}: {str(e)}")
+        
+        db.session.commit()
+        
+        return True, f"تم استيراد {success_count} سجل بنجاح، {error_count} سجل فشل"
+    
+    except Exception as e:
+        return False, f"حدث خطأ أثناء استيراد البيانات: {str(e)}"
+```
+
+## توصيات للتنفيذ الناجح
+
+1. **التخطيط الجيد**: تأكد من فهم جميع المتطلبات قبل البدء في التنفيذ.
+2. **إنشاء قاعدة بيانات قوية**: صمم قاعدة البيانات بعناية لتجنب المشاكل في المستقبل.
+3. **واجهة مستخدم بسيطة**: ركز على تصميم واجهة مستخدم سهلة الاستخدام ومناسبة للغة العربية.
+4. **اختبار مستمر**: قم باختبار كل وحدة بعد الانتهاء منها للتأكد من عملها بشكل صحيح.
+5. **الأمان**: اهتم بتطبيق معايير الأمان المناسبة لحماية بيانات الموظفين.
+6. **التوثيق**: وثق كل خطوة في التطوير لتسهيل الصيانة المستقبلية.
+7. **التدريب**: قم بإعداد دليل استخدام وتدريب للمستخدمين النهائيين.
+
+## التحديات المتوقعة والحلول
+
+1. **دعم اللغة العربية**: استخدم إعدادات Babel لدعم اللغة العربية بشكل كامل.
+2. **التقويم الهجري**: استخدم مكتبة hijri-converter للتحويل بين التقويمين.
+3. **استيراد البيانات**: تعامل مع الأخطاء المحتملة أثناء استيراد البيانات من ملفات إكسل.
+4. **أداء النظام**: استخدم التخزين المؤقت (caching) لتحسين أداء النظام عند التعامل مع كميات كبيرة من البيانات.
