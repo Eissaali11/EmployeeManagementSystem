@@ -1,0 +1,231 @@
+/* Custom CSS for Arabic Employee Management System */
+
+/* RTL Support */
+body {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Arabic Font Enhancement */
+body, h1, h2, h3, h4, h5, h6, .nav-link, .btn, .form-control, .dropdown-item {
+    font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Fix Bootstrap RTL issues */
+.dropdown-menu {
+    right: 0;
+    left: auto;
+    text-align: right;
+}
+
+.form-check {
+    padding-right: 1.25rem;
+    padding-left: 0;
+}
+
+.form-check-input {
+    margin-right: -1.25rem;
+    margin-left: 0;
+}
+
+/* Custom card styling */
+.dashboard-card {
+    transition: transform 0.3s;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+.dashboard-card .card-icon {
+    font-size: 2.5rem;
+    color: var(--bs-primary);
+}
+
+/* Stats Counter Animation */
+.counter-value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* Table enhancements */
+.table-hover tbody tr:hover {
+    background-color: rgba(var(--bs-info-rgb), 0.1);
+}
+
+/* Status Badge Colors */
+.badge.bg-active {
+    background-color: var(--bs-success);
+}
+
+.badge.bg-inactive {
+    background-color: var(--bs-danger);
+}
+
+.badge.bg-on_leave {
+    background-color: var(--bs-warning);
+}
+
+/* Improve form elements */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.form-control, .form-select {
+    border-radius: 0.5rem;
+}
+
+/* Document status indicators */
+.expiry-warning {
+    color: var(--bs-warning);
+}
+
+.expiry-danger {
+    color: var(--bs-danger);
+}
+
+.expiry-valid {
+    color: var(--bs-success);
+}
+
+/* Custom navbar styling */
+.navbar-custom {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link.active {
+    font-weight: bold;
+    position: relative;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--bs-primary);
+}
+
+/* Custom sidebar styling */
+.sidebar {
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+/* Calendar picker custom styling */
+.calendar-container {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background-color: var(--bs-body-bg);
+}
+
+/* Print styling */
+@media print {
+    .no-print {
+        display: none;
+    }
+    
+    .print-only {
+        display: block;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* Focus indication for accessibility */
+.btn:focus, .form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Custom colors for document types */
+.document-national_id {
+    border-right: 4px solid var(--bs-primary);
+}
+
+.document-passport {
+    border-right: 4px solid var(--bs-success);
+}
+
+.document-health_certificate {
+    border-right: 4px solid var(--bs-info);
+}
+
+.document-work_permit {
+    border-right: 4px solid var(--bs-warning);
+}
+
+.document-education_certificate {
+    border-right: 4px solid var(--bs-danger);
+}
+
+/* Help tooltip */
+.help-tooltip {
+    cursor: help;
+    color: var(--bs-info);
+}
+
+/* Required field indicator */
+.required-field::after {
+    content: '*';
+    color: var(--bs-danger);
+    margin-right: 0.25rem;
+}
+
+/* Department visualization */
+.department-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.department-header {
+    padding: 1rem;
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.department-body {
+    padding: 1rem;
+}
+
+.department-manager {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Attendance Status Colors */
+.status-present {
+    background-color: rgba(var(--bs-success-rgb), 0.1);
+}
+
+.status-absent {
+    background-color: rgba(var(--bs-danger-rgb), 0.1);
+}
+
+.status-leave {
+    background-color: rgba(var(--bs-warning-rgb), 0.1);
+}
+
+.status-sick {
+    background-color: rgba(var(--bs-info-rgb), 0.1);
+}
+
+/* Better responsive tables */
+.table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}

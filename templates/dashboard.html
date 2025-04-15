@@ -1,0 +1,191 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">لوحة التحكم</h1>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">إجمالي الموظفين</h6>
+                                    <h2 class="counter-value" data-target="{{ total_employees }}">0</h2>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <a href="{{ url_for('employees.index') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">الأقسام</h6>
+                                    <h2 class="counter-value" data-target="{{ total_departments }}">0</h2>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-sitemap"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <a href="{{ url_for('departments.index') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">حضور اليوم</h6>
+                                    <h2 class="counter-value" data-target="{{ today_attendance }}">0</h2>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <a href="{{ url_for('attendance.index') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">وثائق قاربت على الانتهاء</h6>
+                                    <h2 class="counter-value" data-target="{{ expiring_documents }}">0</h2>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0">
+                            <a href="{{ url_for('documents.expiring') }}" class="text-white">عرض التفاصيل <i class="fas fa-arrow-left"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">توزيع الموظفين حسب الأقسام</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="departmentChart" 
+                                    data-labels="{{ dept_labels|tojson }}" 
+                                    data-values="{{ dept_data|tojson }}" 
+                                    height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">إجمالي الرواتب الشهرية</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="salaryChart" 
+                                    data-labels="{{ salary_labels|tojson }}" 
+                                    data-values="{{ salary_data|tojson }}" 
+                                    height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Employees Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">موظفين جدد</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>الاسم</th>
+                                            <th>الرقم الوظيفي</th>
+                                            <th>المسمى الوظيفي</th>
+                                            <th>القسم</th>
+                                            <th>تاريخ التعيين</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for employee in recent_employees %}
+                                        <tr>
+                                            <td>{{ employee.name }}</td>
+                                            <td>{{ employee.employee_id }}</td>
+                                            <td>{{ employee.job_title }}</td>
+                                            <td>{{ employee.department.name if employee.department else '-' }}</td>
+                                            <td>
+                                                {% if employee.join_date %}
+                                                <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
+                                                <span class="hijri-date" style="display: none;">
+                                                    <!-- Will be filled by JavaScript -->
+                                                </span>
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center">لا يوجد موظفين حديثين</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('employees.index') }}" class="btn btn-primary">
+                                    <i class="fas fa-users me-1"></i> عرض كافة الموظفين
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts when the DOM is loaded
+        initializeDepartmentCharts();
+    });
+</script>
+{% endblock %}

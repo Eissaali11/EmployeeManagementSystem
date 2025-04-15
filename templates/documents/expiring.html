@@ -1,0 +1,260 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>الوثائق التي ستنتهي قريباً</h1>
+        <a href="{{ url_for('documents.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <!-- فلاتر البحث -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">خيارات البحث</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('documents.expiring') }}" class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="days" class="form-label">الفترة المتبقية</label>
+                    <select class="form-select" id="days" name="days">
+                        <option value="30" {% if days == 30 %}selected{% endif %}>خلال 30 يوم</option>
+                        <option value="60" {% if days == 60 %}selected{% endif %}>خلال 60 يوم</option>
+                        <option value="90" {% if days == 90 %}selected{% endif %}>خلال 90 يوم</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="document_type" class="form-label">نوع الوثيقة</label>
+                    <select class="form-select" id="document_type" name="document_type">
+                        <option value="">جميع الأنواع</option>
+                        {% for doc_type in document_types %}
+                        <option value="{{ doc_type }}" {% if selected_type == doc_type %}selected{% endif %}>
+                            {% if doc_type == 'national_id' %}
+                            الهوية الوطنية
+                            {% elif doc_type == 'passport' %}
+                            جواز السفر
+                            {% elif doc_type == 'health_certificate' %}
+                            الشهادة الصحية
+                            {% elif doc_type == 'work_permit' %}
+                            تصريح العمل
+                            {% elif doc_type == 'education_certificate' %}
+                            الشهادة الدراسية
+                            {% else %}
+                            {{ doc_type }}
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-12 text-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> بحث
+                    </button>
+                    <a href="{{ url_for('documents.expiring') }}" class="btn btn-secondary">
+                        <i class="fas fa-undo me-1"></i> إعادة تعيين
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ملخص الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="card-title mb-0">ملخص الوثائق</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3 mb-3 bg-light rounded-3">
+                                <h6 class="text-muted mb-1">تنتهي خلال 30 يوم</h6>
+                                <h4 class="text-warning" id="expiring30Count">...</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 mb-3 bg-light rounded-3">
+                                <h6 class="text-muted mb-1">تنتهي خلال 60 يوم</h6>
+                                <h4 class="text-info" id="expiring60Count">...</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 mb-3 bg-light rounded-3">
+                                <h6 class="text-muted mb-1">تنتهي خلال 90 يوم</h6>
+                                <h4 class="text-primary" id="expiring90Count">...</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 mb-3 bg-light rounded-3">
+                                <h6 class="text-muted mb-1">منتهية الصلاحية</h6>
+                                <h4 class="text-danger" id="expiredCount">...</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول الوثائق -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                الوثائق التي ستنتهي خلال {{ days }} يوم
+                {% if selected_type %}
+                - نوع: 
+                {% if selected_type == 'national_id' %}
+                الهوية الوطنية
+                {% elif selected_type == 'passport' %}
+                جواز السفر
+                {% elif selected_type == 'health_certificate' %}
+                الشهادة الصحية
+                {% elif selected_type == 'work_permit' %}
+                تصريح العمل
+                {% elif selected_type == 'education_certificate' %}
+                الشهادة الدراسية
+                {% else %}
+                {{ selected_type }}
+                {% endif %}
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if documents %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>الموظف</th>
+                            <th>نوع الوثيقة</th>
+                            <th>رقم الوثيقة</th>
+                            <th>تاريخ الإصدار</th>
+                            <th>تاريخ الانتهاء</th>
+                            <th>المدة المتبقية</th>
+                            <th>ملاحظات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for document in documents %}
+                        {% set days_to_expiry = (document.expiry_date - now.date()).days if now else 0 %}
+                        <tr class="document-{{ document.document_type }} {% if days_to_expiry < 30 %}table-warning{% endif %} {% if days_to_expiry < 0 %}table-danger{% endif %}">
+                            <td>{{ document.employee.name }}</td>
+                            <td>
+                                {% if document.document_type == 'national_id' %}
+                                <span class="badge bg-primary">الهوية الوطنية</span>
+                                {% elif document.document_type == 'passport' %}
+                                <span class="badge bg-success">جواز السفر</span>
+                                {% elif document.document_type == 'health_certificate' %}
+                                <span class="badge bg-info">الشهادة الصحية</span>
+                                {% elif document.document_type == 'work_permit' %}
+                                <span class="badge bg-warning">تصريح العمل</span>
+                                {% elif document.document_type == 'education_certificate' %}
+                                <span class="badge bg-danger">الشهادة الدراسية</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ document.document_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ document.document_number }}</td>
+                            <td>
+                                <span class="gregorian-date">{{ document.issue_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="hijri-date" style="display: none;"></span>
+                            </td>
+                            <td>
+                                <span class="gregorian-date">{{ document.expiry_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="hijri-date" style="display: none;"></span>
+                            </td>
+                            <td>
+                                {% if days_to_expiry < 0 %}
+                                <span class="badge bg-danger">منتهية منذ {{ -days_to_expiry }} يوم</span>
+                                {% else %}
+                                <span class="badge bg-warning">{{ days_to_expiry }} يوم</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ document.notes or '-' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('documents.create') }}" class="btn btn-sm btn-success" title="تجديد">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" title="حذف" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ document.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ document.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">تأكيد الحذف</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                هل أنت متأكد من حذف هذه الوثيقة للموظف <strong>{{ document.employee.name }}</strong>؟
+                                                <p class="text-danger mt-2">هذا الإجراء لا يمكن التراجع عنه.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                <form action="{{ url_for('documents.delete', id=document.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger delete-confirm">تأكيد الحذف</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-check-circle text-success fs-1 mb-3"></i>
+                <p>لا توجد وثائق ستنتهي خلال هذه الفترة</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إعادة تحميل الصفحة عند تغيير أي من حقول البحث
+        const filterFields = ['days', 'document_type'];
+        
+        filterFields.forEach(function(field) {
+            const element = document.getElementById(field);
+            if (element) {
+                element.addEventListener('change', function() {
+                    const form = this.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                });
+            }
+        });
+        
+        // جلب إحصائيات انتهاء الوثائق
+        fetch('{{ url_for("documents.expiry_stats") }}')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('expiring30Count').textContent = data.expiring_30;
+                document.getElementById('expiring60Count').textContent = data.expiring_60;
+                document.getElementById('expiring90Count').textContent = data.expiring_90;
+                document.getElementById('expiredCount').textContent = data.expired;
+            })
+            .catch(error => {
+                console.error('Error fetching document statistics:', error);
+            });
+    });
+</script>
+{% endblock %}

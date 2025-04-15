@@ -1,0 +1,132 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تسجيل حضور لموظف</h1>
+        <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">تسجيل الحضور</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('attendance.record') }}" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="employee_id" class="form-label required-field">الموظف</label>
+                                <select class="form-select" id="employee_id" name="employee_id" required>
+                                    <option value="">اختر الموظف</option>
+                                    {% for employee in employees %}
+                                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>
+                                        {{ employee.name }} ({{ employee.employee_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label required-field">التاريخ</label>
+                                <input type="date" class="form-control date-picker" id="date" name="date" 
+                                       value="{{ request.args.get('date') or today.strftime('%Y-%m-%d') }}" required>
+                                <div class="mt-1">
+                                    <span class="gregorian-date">{{ gregorian_date }}</span>
+                                    <span class="hijri-date" style="display: none;">{{ hijri_date }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label required-field">حالة الحضور</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_present" value="present" checked>
+                                    <label class="form-check-label" for="status_present">
+                                        <span class="badge bg-success">حاضر</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_absent" value="absent">
+                                    <label class="form-check-label" for="status_absent">
+                                        <span class="badge bg-danger">غائب</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_leave" value="leave">
+                                    <label class="form-check-label" for="status_leave">
+                                        <span class="badge bg-warning">إجازة</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_sick" value="sick">
+                                    <label class="form-check-label" for="status_sick">
+                                        <span class="badge bg-info">مرضي</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- وقت الحضور والانصراف (تظهر فقط عند اختيار حاضر) -->
+                        <div id="timeFields" class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="check_in" class="form-label">وقت الحضور</label>
+                                <input type="time" class="form-control" id="check_in" name="check_in">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="check_out" class="form-label">وقت الانصراف</label>
+                                <input type="time" class="form-control" id="check_out" name="check_out">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> تسجيل الحضور
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo me-1"></i> إعادة تعيين
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إظهار/إخفاء حقول الوقت بناءً على الحالة المختارة
+        const statusRadios = document.querySelectorAll('input[name="status"]');
+        const timeFields = document.getElementById('timeFields');
+        
+        function toggleTimeFields() {
+            const selectedStatus = document.querySelector('input[name="status"]:checked').value;
+            if (selectedStatus === 'present') {
+                timeFields.style.display = 'flex';
+            } else {
+                timeFields.style.display = 'none';
+            }
+        }
+        
+        // عند تحميل الصفحة
+        toggleTimeFields();
+        
+        // عند تغيير الحالة
+        statusRadios.forEach(function(radio) {
+            radio.addEventListener('change', toggleTimeFields);
+        });
+    });
+</script>
+{% endblock %}

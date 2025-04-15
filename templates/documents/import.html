@@ -1,0 +1,85 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>استيراد بيانات الوثائق</h1>
+        <a href="{{ url_for('documents.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">رفع ملف الوثائق</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('documents.import') }}" method="post" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="file" class="form-label required-field">ملف Excel</label>
+                            <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls" required onchange="validateExcelFile('file')">
+                            <div class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                يرجى رفع ملف بصيغة Excel (.xlsx, .xls)
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload me-1"></i> رفع الملف واستيراد البيانات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>إرشادات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>هيكل ملف Excel المطلوب:</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <strong>الحقول الإلزامية:</strong> employee_id, document_type, document_number, issue_date, expiry_date
+                        </li>
+                        <li class="list-group-item">
+                            <strong>الحقول الاختيارية:</strong> notes
+                        </li>
+                    </ul>
+
+                    <h6>ملاحظات هامة:</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            حقل 'employee_id' يجب أن يكون معرف الموظف الموجود في النظام
+                        </li>
+                        <li class="list-group-item">
+                            حقل 'document_type' يجب أن يكون أحد الأنواع التالية:
+                            <ul>
+                                <li>national_id - الهوية الوطنية</li>
+                                <li>passport - جواز السفر</li>
+                                <li>health_certificate - الشهادة الصحية</li>
+                                <li>work_permit - تصريح العمل</li>
+                                <li>education_certificate - الشهادة الدراسية</li>
+                                <li>other - أخرى</li>
+                            </ul>
+                        </li>
+                        <li class="list-group-item">
+                            التواريخ يجب أن تكون بالتنسيق YYYY-MM-DD أو DD/MM/YYYY
+                        </li>
+                        <li class="list-group-item">
+                            يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
