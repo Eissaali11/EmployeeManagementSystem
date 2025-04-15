@@ -111,6 +111,54 @@ function animateCounters() {
  * Initialize Charts.js charts for departments visualization
  */
 function initializeDepartmentCharts() {
+    // Check if the department chart element exists
+    const departmentChartEl = document.getElementById('departmentEmployeeChart');
+    if (!departmentChartEl) return;
+    
+    try {
+        // Get departments data from the data attribute
+        const departmentsDataStr = departmentChartEl.getAttribute('data-departments') || '[]';
+        const departmentsData = JSON.parse(departmentsDataStr);
+        
+        // Prepare chart data
+        const labels = departmentsData.map(dept => dept.name);
+        const employeeCounts = departmentsData.map(dept => dept.employee_count);
+        
+        // Create chart
+        new Chart(departmentChartEl, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'عدد الموظفين',
+                    data: employeeCounts,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        precision: 0
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'توزيع الموظفين حسب الأقسام'
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing department chart:', error);
+    }
     // Department distribution chart
     const deptChartElement = document.getElementById('departmentChart');
     if (deptChartElement) {
@@ -163,7 +211,7 @@ function initializeDepartmentCharts() {
             }
         });
     }
-
+    
     // Salary distribution chart
     const salaryChartElement = document.getElementById('salaryChart');
     if (salaryChartElement) {

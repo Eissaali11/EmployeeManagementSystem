@@ -216,6 +216,18 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize charts when the DOM is loaded
         initializeDepartmentCharts();
+        
+        // Display current date
+        displayCurrentDate();
     });
+    
+    function displayCurrentDate() {
+        const currentDateElement = document.getElementById('current-date');
+        if (currentDateElement) {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateElement.textContent = now.toLocaleDateString('ar-SA', options);
+        }
+    }
 </script>
 {% endblock %}
