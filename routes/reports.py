@@ -71,72 +71,28 @@ def employees_pdf():
     
     employees = query.all()
     
-    # إنشاء ملف PDF
-    buffer = BytesIO()
+    # استخدام المكتبة الموحدة لإنشاء PDF
+    from utils.pdf import arabic_text, create_pdf, create_data_table, get_styles
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Spacer, Paragraph
     
-    # تسجيل الخط العربي
-    try:
-        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
-        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
-    except:
-        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
-        pass
-    
-    # تعيين أبعاد الصفحة واتجاهها
-    doc = SimpleDocTemplate(
-        buffer, 
-        pagesize=landscape(A4),
-        rightMargin=2*cm,
-        leftMargin=2*cm,
-        topMargin=2*cm,
-        bottomMargin=2*cm
-    )
-    
-    # إعداد الأنماط
-    styles = getSampleStyleSheet()
-    # إنشاء نمط للنص العربي
-    arabic_style = ParagraphStyle(
-        name='Arabic',
-        parent=styles['Normal'],
-        fontName='Arabic',
-        fontSize=12,
-        alignment=1, # وسط
-        textColor=colors.black
-    )
-    
-    # إنشاء نمط للعناوين
-    title_style = ParagraphStyle(
-        name='Title',
-        parent=styles['Title'],
-        fontName='Arabic',
-        fontSize=16,
-        alignment=1, # وسط
-        textColor=colors.black
-    )
-    
-    # إعداد المحتوى
+    # تجهيز العناصر
     elements = []
     
     # إضافة العنوان
+    styles = get_styles()
     title = f"تقرير الموظفين - {department_name} - {status_name}"
-    # تهيئة النص العربي للعرض في PDF
-    title = get_display(arabic_reshaper.reshape(title))
-    elements.append(Paragraph(title, title_style))
+    elements.append(Paragraph(arabic_text(title), styles['title']))
     elements.append(Spacer(1, 20))
     
     # إضافة تاريخ التقرير
     date_text = f"تاريخ التقرير: {datetime.now().strftime('%Y-%m-%d')}"
-    date_text = get_display(arabic_reshaper.reshape(date_text))
-    elements.append(Paragraph(date_text, arabic_style))
+    elements.append(Paragraph(arabic_text(date_text), styles['arabic']))
     elements.append(Spacer(1, 20))
     
     # إعداد جدول البيانات
     headers = ["الاسم", "الرقم الوظيفي", "الرقم الوطني", "الهاتف", "المسمى الوظيفي", "القسم", "الحالة"]
     data = []
-    
-    # إضافة الرؤوس
-    headers_display = [get_display(arabic_reshaper.reshape(h)) for h in headers]
-    data.append(headers_display)
     
     # إضافة بيانات الموظفين
     for emp in employees:
@@ -151,46 +107,27 @@ def employees_pdf():
         status_text = status_map.get(emp.status, emp.status)
         
         row = [
-            get_display(arabic_reshaper.reshape(emp.name)),
+            arabic_text(emp.name),
             emp.employee_id,
             emp.national_id,
             emp.mobile,
-            get_display(arabic_reshaper.reshape(emp.job_title)),
-            get_display(arabic_reshaper.reshape(department_name)),
-            get_display(arabic_reshaper.reshape(status_text))
+            arabic_text(emp.job_title),
+            arabic_text(department_name),
+            arabic_text(status_text)
         ]
         data.append(row)
     
     # إنشاء الجدول
     if data:
-        table = Table(data)
-        
-        # إعداد أنماط الجدول
-        table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),  # لون خلفية العناوين
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # لون نص العناوين
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # محاذاة النص
-            ('FONTNAME', (0, 0), (-1, 0), 'Arabic'),  # خط العناوين
-            ('FONTSIZE', (0, 0), (-1, 0), 12),  # حجم خط العناوين
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # تباعد أسفل العناوين
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # لون خلفية البيانات
-            ('FONTNAME', (0, 1), (-1, -1), 'Arabic'),  # خط البيانات
-            ('FONTSIZE', (0, 1), (-1, -1), 10),  # حجم خط البيانات
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # حدود الجدول
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة النص عموديا
-        ])
-        
-        table.setStyle(table_style)
+        col_widths = [3*cm, 2*cm, 2*cm, 2*cm, 3*cm, 3*cm, 2*cm]
+        table = create_data_table(headers, data, col_widths)
         elements.append(table)
     else:
-        no_data_text = get_display(arabic_reshaper.reshape("لا توجد بيانات متاحة"))
-        elements.append(Paragraph(no_data_text, arabic_style))
+        no_data_text = "لا توجد بيانات متاحة"
+        elements.append(Paragraph(arabic_text(no_data_text), styles['arabic']))
     
-    # بناء المستند
-    doc.build(elements)
-    
-    # إعادة المؤشر إلى بداية البايت
-    buffer.seek(0)
+    # إنشاء ملف PDF
+    buffer = create_pdf(elements, landscape_mode=True)
     
     # إنشاء استجابة تحميل
     response = make_response(buffer.getvalue())
