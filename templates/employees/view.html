@@ -1,5 +1,109 @@
 {% extends 'layout.html' %}
 
+{% block styles %}
+<style>
+    .attendance-stats-card .card-body {
+        min-height: 300px;
+    }
+    .document-status-card .list-group-item {
+        border-radius: 6px;
+        margin-bottom: 5px;
+    }
+    .dashboard-card {
+        transition: all 0.3s;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    .stat-box {
+        border-radius: 8px;
+        transition: all 0.3s;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    .stat-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    .chart-container {
+        position: relative;
+        height: 200px;
+        width: 100%;
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // بيانات الحضور للرسم البياني
+        {% set present_count = employee.attendances|selectattr('status', 'eq', 'present')|list|length %}
+        {% set absent_count = employee.attendances|selectattr('status', 'eq', 'absent')|list|length %}
+        {% set leave_count = employee.attendances|selectattr('status', 'eq', 'leave')|list|length %}
+        {% set sick_count = employee.attendances|selectattr('status', 'eq', 'sick')|list|length %}
+        
+        // رسم بياني دائري للحضور
+        const attendanceCtx = document.getElementById('attendanceChart');
+        if (attendanceCtx) {
+            const attendanceChart = new Chart(attendanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['حاضر', 'غائب', 'إجازة', 'مرضي'],
+                    datasets: [{
+                        data: [{{ present_count }}, {{ absent_count }}, {{ leave_count }}, {{ sick_count }}],
+                        backgroundColor: [
+                            '#28a745', // أخضر (حاضر)
+                            '#dc3545', // أحمر (غائب)
+                            '#ffc107', // أصفر (إجازة)
+                            '#17a2b8'  // أزرق (مرضي)
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            rtl: true,
+                            labels: {
+                                font: {
+                                    family: 'Cairo, sans-serif'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            bodyFont: {
+                                family: 'Cairo, sans-serif'
+                            },
+                            titleFont: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // تطبيق تأثيرات حركية على بطاقات لوحة المعلومات
+        const dashboardCards = document.querySelectorAll('.dashboard-card');
+        dashboardCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.classList.add('shadow-lg');
+            });
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('shadow-lg');
+            });
+        });
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,9 +112,171 @@
             <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-primary">
                 <i class="fas fa-edit me-1"></i> تعديل البيانات
             </a>
+            <a href="{{ url_for('salaries.create', employee_id=employee.id) }}" class="btn btn-success">
+                <i class="fas fa-money-bill-wave me-1"></i> إضافة راتب
+            </a>
+            <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="btn btn-warning">
+                <i class="fas fa-id-card me-1"></i> إضافة وثيقة
+            </a>
             <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
             </a>
+        </div>
+    </div>
+
+    <!-- لوحة معلومات أداء الموظف (داشبورد) -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-chart-bar me-2"></i>لوحة معلومات الأداء
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- إحصائيات الحضور والغياب -->
+                <div class="col-md-6">
+                    <div class="card border-info mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">إحصائيات الحضور للشهر الحالي</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                {% set present_count = employee.attendances|selectattr('status', 'eq', 'present')|list|length %}
+                                {% set absent_count = employee.attendances|selectattr('status', 'eq', 'absent')|list|length %}
+                                {% set leave_count = employee.attendances|selectattr('status', 'eq', 'leave')|list|length %}
+                                {% set sick_count = employee.attendances|selectattr('status', 'eq', 'sick')|list|length %}
+                                {% set total_count = present_count + absent_count + leave_count + sick_count %}
+                                
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-success text-white rounded">
+                                        <h3>{{ present_count }}</h3>
+                                        <small>أيام الحضور</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-danger text-white rounded">
+                                        <h3>{{ absent_count }}</h3>
+                                        <small>أيام الغياب</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-warning text-white rounded">
+                                        <h3>{{ leave_count }}</h3>
+                                        <small>إجازات</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-info text-white rounded">
+                                        <h3>{{ sick_count }}</h3>
+                                        <small>إجازات مرضية</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- نسبة الحضور -->
+                                <div class="col-12 mt-3">
+                                    {% set attendance_rate = (present_count / total_count * 100)|round|int if total_count > 0 else 0 %}
+                                    <p class="mb-1">نسبة الحضور: {{ attendance_rate }}%</p>
+                                    <div class="progress">
+                                        <div class="progress-bar 
+                                            {% if attendance_rate >= 90 %}bg-success
+                                            {% elif attendance_rate >= 75 %}bg-info
+                                            {% elif attendance_rate >= 50 %}bg-warning
+                                            {% else %}bg-danger{% endif %}" 
+                                            role="progressbar" style="width: {{ attendance_rate }}%" 
+                                            aria-valuenow="{{ attendance_rate }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ attendance_rate }}%
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- متوسط ساعات العمل -->
+                                <div class="col-12 mt-3">
+                                    <p class="mb-1">متوسط ساعات العمل اليومية: <span class="fw-bold">8.5</span> ساعة</p>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 85%" 
+                                            aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
+                                            8.5 ساعة
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- الرسم البياني لحالة الحضور -->
+                                <div class="col-12 mt-4">
+                                    <h6>توزيع حالات الحضور</h6>
+                                    <div class="chart-container">
+                                        <canvas id="attendanceChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- حالة الوثائق والرواتب -->
+                <div class="col-md-6">
+                    <div class="card border-warning mb-3">
+                        <div class="card-header bg-warning text-white">
+                            <h6 class="mb-0">حالة الوثائق والمعلومات المالية</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <!-- حالة الوثائق -->
+                                <div class="col-12 mb-3">
+                                    <h6>حالة الوثائق</h6>
+                                    <ul class="list-group">
+                                        {% set has_national_id = employee.documents|selectattr('document_type', 'eq', 'national_id')|list|length > 0 %}
+                                        {% set has_passport = employee.documents|selectattr('document_type', 'eq', 'passport')|list|length > 0 %}
+                                        {% set has_health_cert = employee.documents|selectattr('document_type', 'eq', 'health_certificate')|list|length > 0 %}
+                                        
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            الهوية الوطنية
+                                            {% if has_national_id %}
+                                            <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                            {% else %}
+                                            <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
+                                            {% endif %}
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            جواز السفر
+                                            {% if has_passport %}
+                                            <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                            {% else %}
+                                            <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
+                                            {% endif %}
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            الشهادة الصحية
+                                            {% if has_health_cert %}
+                                            <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                            {% else %}
+                                            <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
+                                            {% endif %}
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- معلومات مالية -->
+                                <div class="col-12">
+                                    <h6>المعلومات المالية</h6>
+                                    {% if employee.salaries %}
+                                    {% set last_salary = employee.salaries|sort(attribute='id')|last %}
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>آخر راتب:</span>
+                                        <span class="fw-bold">{{ last_salary.net_salary }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>الشهر:</span>
+                                        <span>{{ last_salary.month }}/{{ last_salary.year }}</span>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-center text-muted my-2">لا توجد معلومات مالية مسجلة</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
