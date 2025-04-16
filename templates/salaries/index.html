@@ -110,6 +110,9 @@
                         <a href="{{ url_for('salaries.report_pdf', month=selected_month, year=selected_year) }}" class="btn btn-danger">
                             <i class="fas fa-file-pdf me-1"></i> تصدير PDF
                         </a>
+                        <a href="{{ url_for('salaries.batch_salary_notifications') }}" class="btn btn-success">
+                            <i class="fas fa-envelope me-1"></i> إنشاء إشعارات الرواتب
+                        </a>
                     </div>
                 </div>
             </div>
@@ -150,6 +153,9 @@
                             <td>{{ salary.bonus }}</td>
                             <td class="fw-bold">{{ salary.net_salary }}</td>
                             <td>
+                                <a href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}" class="btn btn-sm btn-success me-1" title="إشعار راتب">
+                                    <i class="fas fa-envelope"></i>
+                                </a>
                                 <button type="button" class="btn btn-sm btn-danger" 
                                         data-bs-toggle="modal" data-bs-target="#deleteModal{{ salary.id }}">
                                     <i class="fas fa-trash"></i>
