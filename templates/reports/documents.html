@@ -104,7 +104,7 @@
                             <tbody>
                                 {% if results %}
                                     {% for document, employee in results %}
-                                    {% set today = now().date() %}
+                                    {% set today = now.date() %}
                                     {% set days_remaining = (document.expiry_date - today).days %}
                                     
                                     <tr class="{% if days_remaining < 0 %}table-danger{% elif days_remaining <= 30 %}table-warning{% endif %}">
@@ -251,7 +251,7 @@
             {% endif %}
             
             // حساب حالة انتهاء الوثائق
-            {% set days_remaining = (document.expiry_date - now().date()).days %}
+            {% set days_remaining = (document.expiry_date - now.date()).days %}
             {% if days_remaining < 0 %}
                 expiryStatus.expired++;
             {% elif days_remaining <= 30 %}

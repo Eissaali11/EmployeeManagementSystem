@@ -4,7 +4,15 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 import io
 import csv
-import pdfkit
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import cm
+import arabic_reshaper
+from bidi.algorithm import get_display
 from app import db
 from models import Document, Employee, SystemAudit
 from utils.excel import parse_document_excel
@@ -299,127 +307,225 @@ def export_employee_documents_pdf(employee_id):
     employee = Employee.query.get_or_404(employee_id)
     documents = Document.query.filter_by(employee_id=employee_id).all()
     
-    # Prepare HTML content
-    html_content = f"""
-    <html dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <title>وثائق الموظف - {employee.name}</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; direction: rtl; padding: 20px; }}
-            h1 {{ color: #2a5885; text-align: center; }}
-            h2 {{ color: #2a5885; }}
-            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
-            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: right; }}
-            th {{ background-color: #2a5885; color: white; }}
-            .header {{ display: flex; justify-content: space-between; margin-bottom: 20px; }}
-            .header-item {{ flex: 1; }}
-            .expired {{ color: red; font-weight: bold; }}
-            .valid {{ color: green; }}
-            .warning {{ color: orange; }}
-        </style>
-    </head>
-    <body>
-        <h1>وثائق الموظف: {employee.name}</h1>
-        
-        <div class="header">
-            <div class="header-item">
-                <h3>بيانات الموظف</h3>
-                <p><strong>الاسم:</strong> {employee.name}</p>
-                <p><strong>الرقم الوظيفي:</strong> {employee.employee_id}</p>
-                <p><strong>رقم الهوية:</strong> {employee.national_id}</p>
-                <p><strong>رقم الجوال:</strong> {employee.mobile}</p>
-            </div>
-            <div class="header-item">
-                <h3>معلومات العمل</h3>
-                <p><strong>المسمى الوظيفي:</strong> {employee.job_title}</p>
-                <p><strong>القسم:</strong> {employee.department.name if employee.department else '-'}</p>
-                <p><strong>الحالة:</strong> {employee.status}</p>
-                <p><strong>الموقع:</strong> {employee.location or '-'}</p>
-            </div>
-        </div>
-        
-        <h2>قائمة الوثائق</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>نوع الوثيقة</th>
-                    <th>رقم الوثيقة</th>
-                    <th>تاريخ الإصدار</th>
-                    <th>تاريخ الانتهاء</th>
-                    <th>الحالة</th>
-                    <th>ملاحظات</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
+    # إنشاء ملف PDF
+    buffer = BytesIO()
     
+    # تسجيل الخط العربي
+    try:
+        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
+        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
+    except:
+        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
+        pass
+    
+    # تعيين أبعاد الصفحة واتجاهها
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    # إعداد الأنماط
+    styles = getSampleStyleSheet()
+    # إنشاء نمط للنص العربي
+    arabic_style = ParagraphStyle(
+        name='Arabic',
+        parent=styles['Normal'],
+        fontName='Arabic',
+        fontSize=10,
+        alignment=2, # يمين (RTL)
+        textColor=colors.black
+    )
+    
+    # إنشاء نمط للعناوين
+    title_style = ParagraphStyle(
+        name='Title',
+        parent=styles['Title'],
+        fontName='Arabic',
+        fontSize=16,
+        alignment=1, # وسط
+        textColor=colors.black
+    )
+    
+    # إنشاء نمط للعناوين الفرعية
+    subtitle_style = ParagraphStyle(
+        name='Subtitle',
+        parent=styles['Heading2'],
+        fontName='Arabic',
+        fontSize=14,
+        alignment=2, # يمين (RTL)
+        textColor=colors.blue
+    )
+    
+    # إعداد المحتوى
+    elements = []
+    
+    # إضافة العنوان
+    title = f"وثائق الموظف: {employee.name}"
+    # تهيئة النص العربي للعرض في PDF
+    title = get_display(arabic_reshaper.reshape(title))
+    elements.append(Paragraph(title, title_style))
+    elements.append(Spacer(1, 20))
+    
+    # إضافة بيانات الموظف في جدول
+    employee_data = [
+        [get_display(arabic_reshaper.reshape("بيانات الموظف")), "", get_display(arabic_reshaper.reshape("معلومات العمل")), ""],
+        [
+            get_display(arabic_reshaper.reshape("الاسم:")), 
+            get_display(arabic_reshaper.reshape(employee.name)), 
+            get_display(arabic_reshaper.reshape("المسمى الوظيفي:")), 
+            get_display(arabic_reshaper.reshape(employee.job_title))
+        ],
+        [
+            get_display(arabic_reshaper.reshape("الرقم الوظيفي:")), 
+            employee.employee_id, 
+            get_display(arabic_reshaper.reshape("القسم:")), 
+            get_display(arabic_reshaper.reshape(employee.department.name if employee.department else '-'))
+        ],
+        [
+            get_display(arabic_reshaper.reshape("رقم الهوية:")), 
+            employee.national_id, 
+            get_display(arabic_reshaper.reshape("الحالة:")), 
+            get_display(arabic_reshaper.reshape(employee.status))
+        ],
+        [
+            get_display(arabic_reshaper.reshape("رقم الجوال:")), 
+            employee.mobile, 
+            get_display(arabic_reshaper.reshape("الموقع:")), 
+            get_display(arabic_reshaper.reshape(employee.location or '-'))
+        ]
+    ]
+    
+    # إنشاء جدول بيانات الموظف
+    employee_table = Table(employee_data, colWidths=[3*cm, 5*cm, 3*cm, 5*cm])
+    employee_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.lightblue),
+        ('BACKGROUND', (2, 0), (3, 0), colors.lightblue),
+        ('TEXTCOLOR', (0, 0), (3, 0), colors.black),
+        ('FONTNAME', (0, 0), (3, 0), 'Arabic'),
+        ('FONTSIZE', (0, 0), (3, 0), 12),
+        ('SPAN', (0, 0), (1, 0)),
+        ('SPAN', (2, 0), (3, 0)),
+        ('ALIGN', (0, 0), (3, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (3, 4), 'MIDDLE'),
+        ('GRID', (0, 0), (3, 4), 0.5, colors.grey),
+        ('BOX', (0, 0), (1, 4), 1, colors.black),
+        ('BOX', (2, 0), (3, 4), 1, colors.black),
+    ]))
+    elements.append(employee_table)
+    elements.append(Spacer(1, 20))
+    
+    # إضافة عنوان قائمة الوثائق
+    subtitle = get_display(arabic_reshaper.reshape("قائمة الوثائق"))
+    elements.append(Paragraph(subtitle, subtitle_style))
+    elements.append(Spacer(1, 10))
+    
+    # إنشاء جدول الوثائق
+    headers = [
+        get_display(arabic_reshaper.reshape("نوع الوثيقة")),
+        get_display(arabic_reshaper.reshape("رقم الوثيقة")),
+        get_display(arabic_reshaper.reshape("تاريخ الإصدار")),
+        get_display(arabic_reshaper.reshape("تاريخ الانتهاء")),
+        get_display(arabic_reshaper.reshape("الحالة")),
+        get_display(arabic_reshaper.reshape("ملاحظات"))
+    ]
+    
+    data = [headers]
+    
+    # إضافة صفوف الوثائق
     today = datetime.now().date()
     
+    # ترجمة أنواع الوثائق
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'health_certificate': 'الشهادة الصحية',
+        'work_permit': 'تصريح العمل',
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية'
+    }
+    
     for doc in documents:
-        # Get document type in Arabic
-        doc_type_ar = ""
-        if doc.document_type == 'national_id':
-            doc_type_ar = "الهوية الوطنية"
-        elif doc.document_type == 'passport':
-            doc_type_ar = "جواز السفر"
-        elif doc.document_type == 'health_certificate':
-            doc_type_ar = "الشهادة الصحية"
-        elif doc.document_type == 'work_permit':
-            doc_type_ar = "تصريح العمل"
-        elif doc.document_type == 'education_certificate':
-            doc_type_ar = "الشهادة الدراسية"
-        elif doc.document_type == 'driving_license':
-            doc_type_ar = "رخصة القيادة"
-        elif doc.document_type == 'annual_leave':
-            doc_type_ar = "الإجازة السنوية"
-        else:
-            doc_type_ar = doc.document_type
+        # الحصول على نوع الوثيقة بالعربية
+        doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
         
-        # Check expiry status
+        # التحقق من حالة انتهاء الصلاحية
         days_to_expiry = (doc.expiry_date - today).days
-        status_class = ""
-        status_text = ""
-        
         if days_to_expiry < 0:
-            status_class = "expired"
             status_text = "منتهية"
         elif days_to_expiry < 30:
-            status_class = "warning"
             status_text = f"تنتهي خلال {days_to_expiry} يوم"
         else:
-            status_class = "valid"
             status_text = "سارية"
         
-        # Add row to table
-        html_content += f"""
-            <tr>
-                <td>{doc_type_ar}</td>
-                <td>{doc.document_number}</td>
-                <td>{doc.issue_date.strftime('%d/%m/%Y')}</td>
-                <td>{doc.expiry_date.strftime('%d/%m/%Y')}</td>
-                <td class="{status_class}">{status_text}</td>
-                <td>{doc.notes or '-'}</td>
-            </tr>
-        """
+        # إضافة صف للجدول
+        row = [
+            get_display(arabic_reshaper.reshape(doc_type_ar)),
+            doc.document_number,
+            format_date_gregorian(doc.issue_date),
+            format_date_gregorian(doc.expiry_date),
+            get_display(arabic_reshaper.reshape(status_text)),
+            get_display(arabic_reshaper.reshape(doc.notes or '-'))
+        ]
+        data.append(row)
     
-    # Close the HTML content
-    html_content += """
-            </tbody>
-        </table>
+    # إنشاء جدول الوثائق إذا كان هناك وثائق
+    if len(data) > 1:
+        # حساب عرض الأعمدة بناءً على عرض الصفحة
+        table_width = A4[0] - 4*cm  # العرض الإجمالي ناقص الهوامش
+        col_widths = [3.5*cm, 3*cm, 2.5*cm, 2.5*cm, 3*cm, 3*cm]
+        documents_table = Table(data, colWidths=col_widths)
         
-        <div style="text-align: center; margin-top: 30px;">
-            <p>تم إنشاء هذا التقرير يوم {}</p>
-        </div>
-    </body>
-    </html>
-    """.format(datetime.now().strftime('%d/%m/%Y'))
+        # تنسيق الجدول
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Arabic'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ])
+        
+        # تطبيق التناوب في ألوان الصفوف
+        for i in range(1, len(data)):
+            if i % 2 == 0:
+                table_style.add('BACKGROUND', (0, i), (-1, i), colors.whitesmoke)
+            
+            # إضافة ألوان حالة انتهاء الصلاحية
+            days_to_expiry = (documents[i-1].expiry_date - today).days
+            if days_to_expiry < 0:
+                table_style.add('TEXTCOLOR', (4, i), (4, i), colors.red)
+                table_style.add('FONTSIZE', (4, i), (4, i), 10)
+            elif days_to_expiry < 30:
+                table_style.add('TEXTCOLOR', (4, i), (4, i), colors.orange)
+        
+        documents_table.setStyle(table_style)
+        elements.append(documents_table)
+    else:
+        # إذا لم تكن هناك وثائق
+        no_data_text = get_display(arabic_reshaper.reshape("لا توجد وثائق مسجلة لهذا الموظف"))
+        elements.append(Paragraph(no_data_text, arabic_style))
     
-    # Create PDF from HTML
-    pdf = pdfkit.from_string(html_content, False)
+    # إضافة معلومات التقرير في أسفل الصفحة
+    elements.append(Spacer(1, 30))
+    footer_text = f"تم إنشاء هذا التقرير بتاريخ: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    footer_text = get_display(arabic_reshaper.reshape(footer_text))
+    elements.append(Paragraph(footer_text, arabic_style))
     
-    # Create response
-    response = make_response(pdf)
+    # بناء المستند
+    doc.build(elements)
+    
+    # إعادة المؤشر إلى بداية البايت
+    buffer.seek(0)
+    
+    # إنشاء استجابة تحميل
+    response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=employee_{employee_id}_documents.pdf'
     
