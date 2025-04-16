@@ -14,13 +14,45 @@ auth_bp = Blueprint('auth', __name__)
 def index():
     return redirect(url_for('dashboard.index'))
 
-@auth_bp.route('/login', methods=['GET'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """صفحة تسجيل الدخول باستخدام Firebase"""
+    """صفحة تسجيل الدخول بالبريد الإلكتروني وكلمة المرور أو Firebase"""
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     
-    # استخدام Firebase فقط للمصادقة
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        remember = True if request.form.get('remember') else False
+        
+        if not email or not password:
+            flash('الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'danger')
+            return redirect(url_for('auth.login'))
+        
+        try:
+            # التحقق من صحة البريد الإلكتروني
+            valid_email = validate_email(email)
+            email = valid_email.email
+        except EmailNotValidError:
+            flash('البريد الإلكتروني غير صالح', 'danger')
+            return redirect(url_for('auth.login'))
+        
+        # البحث عن المستخدم
+        user = User.query.filter_by(email=email).first()
+        
+        # التحقق من وجود المستخدم وصحة كلمة المرور
+        if not user or not user.check_password(password):
+            flash('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'danger')
+            return redirect(url_for('auth.login'))
+        
+        # تسجيل الدخول
+        login_user(user, remember=remember)
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+        
+        flash('تم تسجيل الدخول بنجاح', 'success')
+        return redirect(url_for('dashboard.index'))
+    
     return render_template(
         'auth/login.html',
         firebase_api_key=current_app.config['FIREBASE_API_KEY'],

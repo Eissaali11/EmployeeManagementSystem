@@ -274,34 +274,41 @@
             <div class="tab-content" id="loginTabsContent">
                 <!-- تسجيل الدخول بالبريد الإلكتروني -->
                 <div class="tab-pane fade show active" id="email-login" role="tabpanel" aria-labelledby="email-tab">
-                    <div id="email-password-form">
+                    <form method="POST" action="{{ url_for('auth.login') }}">
+                        {{ form.hidden_tag() if form }}
                         <div class="mb-3">
-                            <label for="emailInput" class="form-label">البريد الإلكتروني</label>
+                            <label for="email" class="form-label">البريد الإلكتروني</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-transparent border-end-0">
                                     <i class="fas fa-envelope text-info"></i>
                                 </span>
-                                <input type="email" class="form-control border-start-0" id="emailInput" placeholder="أدخل بريدك الإلكتروني" required>
+                                <input type="email" class="form-control border-start-0" id="email" name="email" placeholder="أدخل بريدك الإلكتروني" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="passwordInput" class="form-label">كلمة المرور</label>
+                            <label for="password" class="form-label">كلمة المرور</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-transparent border-end-0">
                                     <i class="fas fa-lock text-info"></i>
                                 </span>
-                                <input type="password" class="form-control border-start-0" id="passwordInput" placeholder="أدخل كلمة المرور" required>
+                                <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="أدخل كلمة المرور" required>
                             </div>
                         </div>
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label" for="rememberMe">تذكرني</label>
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">تذكرني</label>
                         </div>
-                        <button id="emailSignIn" class="btn btn-primary login-btn">
+                        <button type="submit" class="btn btn-primary login-btn">
                             <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
                         </button>
-                    </div>
-                    <div id="emailLoginStatus" class="mt-3 text-center"></div>
+                    </form>
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
                 </div>
                 
                 <!-- تسجيل الدخول باستخدام Google -->
