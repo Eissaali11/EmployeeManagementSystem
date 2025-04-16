@@ -2,15 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, make_response, s
 from sqlalchemy import func
 from datetime import datetime, date, timedelta
 from io import BytesIO
-import arabic_reshaper
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.units import cm, inch
-from bidi.algorithm import get_display
+from utils.pdf import create_pdf, arabic_text, create_data_table, get_styles
 from app import db
 from models import Department, Employee, Attendance, Salary, Document, SystemAudit
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
