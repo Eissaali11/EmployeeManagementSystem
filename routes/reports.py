@@ -1074,6 +1074,12 @@ def documents_pdf():
     # الحصول على النتائج النهائية
     results = query.order_by(Document.expiry_date).all()
     
+    # استخدام المكتبة الموحدة لإنشاء PDF
+    from utils.pdf import arabic_text, create_pdf, create_data_table, get_styles
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Spacer, Paragraph
+    from reportlab.lib import colors
+    
     # إعداد المحتوى باستخدام وحدة PDF الجديدة
     elements = []
     

@@ -1,0 +1,217 @@
+{% extends "layout.html" %}
+
+{% block title %}إحصائيات الموظفين{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    .stats-card .card-header {
+        background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-info) 100%);
+        color: white;
+        font-weight: bold;
+        border: none;
+    }
+    .department-table {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .department-table th {
+        background: var(--bs-dark);
+        color: white;
+    }
+    .stats-count {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .status-active {
+        color: var(--bs-success);
+    }
+    .status-inactive {
+        color: var(--bs-danger);
+    }
+    .status-on-leave {
+        color: var(--bs-warning);
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+        margin-bottom: 2rem;
+    }
+    .total-employees {
+        background: linear-gradient(135deg, #2b52ba 0%, #4680ff 100%);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">إحصائيات الموظفين</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">الرئيسية</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">إحصائيات الموظفين</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- ملخص الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card total-employees h-100">
+                <div class="card-body text-center py-4">
+                    <h5 class="card-title">إجمالي الموظفين</h5>
+                    <p class="stats-count mb-0">{{ detailed_stats|sum(attribute='total') }}</p>
+                </div>
+            </div>
+        </div>
+        {% for stat in status_stats %}
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card h-100">
+                <div class="card-header text-center">
+                    <h5 class="card-title mb-0">{{ stat.status }}</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p class="stats-count status-{{ 'active' if stat.status == 'نشط' else ('on-leave' if stat.status == 'في إجازة' else 'inactive') }}">{{ stat.count }}</p>
+                    <p class="text-muted">{{ "%.1f"|format(stat.count / detailed_stats|sum(attribute='total') * 100) }}% من الموظفين</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+        <!-- مخطط الموظفين حسب القسم -->
+        <div class="col-md-5 mb-4">
+            <div class="card stats-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">توزيع الموظفين حسب القسم</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول تفصيلي للموظفين حسب القسم -->
+        <div class="col-md-7 mb-4">
+            <div class="card stats-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">تفاصيل الأقسام</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover department-table">
+                            <thead>
+                                <tr>
+                                    <th>القسم</th>
+                                    <th>نشط</th>
+                                    <th>غير نشط</th>
+                                    <th>في إجازة</th>
+                                    <th>المجموع</th>
+                                    <th>النسبة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in detailed_stats %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('departments.view', id=dept.department_id) }}" class="fw-bold text-decoration-none">
+                                            {{ dept.department_name }}
+                                        </a>
+                                    </td>
+                                    <td class="text-success">{{ dept.active }}</td>
+                                    <td class="text-danger">{{ dept.inactive }}</td>
+                                    <td class="text-warning">{{ dept.on_leave }}</td>
+                                    <td class="fw-bold">{{ dept.total }}</td>
+                                    <td>{{ "%.1f"|format(dept.total / detailed_stats|sum(attribute='total') * 100) }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-dark">
+                                    <th>المجموع</th>
+                                    <th>{{ detailed_stats|sum(attribute='active') }}</th>
+                                    <th>{{ detailed_stats|sum(attribute='inactive') }}</th>
+                                    <th>{{ detailed_stats|sum(attribute='on_leave') }}</th>
+                                    <th>{{ detailed_stats|sum(attribute='total') }}</th>
+                                    <th>100%</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // مخطط الأقسام
+    fetch('{{ url_for("dashboard.department_employee_stats_api") }}')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('departmentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: data.colors.slice(0, data.labels.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    family: 'Tajawal, sans-serif',
+                                    size: 14
+                                },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const value = context.raw;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching department data:', error));
+});
+</script>
+{% endblock %}

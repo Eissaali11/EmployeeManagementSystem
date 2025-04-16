@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template
-from sqlalchemy import func
+from flask import Blueprint, render_template, jsonify
+from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 from models import Employee, Department, Attendance, Document, Salary
 from app import db
@@ -69,3 +69,82 @@ def index():
                           dept_data=dept_data,
                           salary_labels=salary_labels,
                           salary_data=salary_data)
+
+@dashboard_bp.route('/employee-stats')
+def employee_stats():
+    """عرض إحصائيات الموظفين حسب القسم والحالة"""
+    # إحصائيات الموظفين حسب القسم
+    department_stats = db.session.query(
+        Department.id,
+        Department.name,
+        func.count(Employee.id).label('employee_count')
+    ).outerjoin(
+        Employee, Department.id == Employee.department_id
+    ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
+    
+    # إحصائيات الموظفين حسب الحالة
+    status_stats = db.session.query(
+        Employee.status,
+        func.count(Employee.id).label('count')
+    ).group_by(Employee.status).all()
+    
+    # ترجمة حالات الموظفين
+    status_map = {
+        'active': 'نشط',
+        'inactive': 'غير نشط',
+        'on_leave': 'في إجازة'
+    }
+    
+    status_data = [
+        {'status': status_map.get(stat.status, stat.status), 'count': stat.count}
+        for stat in status_stats
+    ]
+    
+    # إحصائيات الموظفين حسب القسم والحالة
+    detailed_stats = []
+    
+    for dept in Department.query.all():
+        dept_stats = {
+            'department_id': dept.id,
+            'department_name': dept.name,
+            'active': Employee.query.filter_by(department_id=dept.id, status='active').count(),
+            'inactive': Employee.query.filter_by(department_id=dept.id, status='inactive').count(),
+            'on_leave': Employee.query.filter_by(department_id=dept.id, status='on_leave').count(),
+            'total': Employee.query.filter_by(department_id=dept.id).count(),
+        }
+        detailed_stats.append(dept_stats)
+    
+    # ترتيب الإحصائيات حسب العدد الإجمالي للموظفين
+    detailed_stats.sort(key=lambda x: x['total'], reverse=True)
+    
+    return render_template('employee_stats.html',
+                           department_stats=department_stats,
+                           status_stats=status_data,
+                           detailed_stats=detailed_stats)
+
+@dashboard_bp.route('/api/department-employee-stats')
+def department_employee_stats_api():
+    """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
+    # إحصائيات الموظفين حسب القسم
+    department_stats = db.session.query(
+        Department.name,
+        func.count(Employee.id).label('employee_count')
+    ).outerjoin(
+        Employee, Department.id == Employee.department_id
+    ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
+    
+    # تنسيق البيانات للرسم البياني
+    dept_data = {
+        'labels': [stat.name for stat in department_stats],
+        'data': [stat.employee_count for stat in department_stats],
+        'colors': [
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+        ]
+    }
+    
+    return jsonify(dept_data)
