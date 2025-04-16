@@ -369,27 +369,24 @@
 
   // عناصر DOM
   const googleSignInBtn = document.getElementById('googleSignIn');
-  const emailSignInBtn = document.getElementById('emailSignIn');
-  const emailInput = document.getElementById('emailInput');
-  const passwordInput = document.getElementById('passwordInput');
-  const rememberMe = document.getElementById('rememberMe');
+  const emailForm = document.querySelector('form[action*="login"]');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const rememberMe = document.getElementById('remember');
   const statusMessage = document.getElementById('statusMessage');
-  const emailLoginStatus = document.getElementById('emailLoginStatus');
+  const emailLoginStatus = document.createElement('div');
+  
+  // إضافة عنصر لعرض حالة تسجيل الدخول بالبريد الإلكتروني
+  if (emailForm) {
+    emailForm.insertAdjacentElement('afterend', emailLoginStatus);
+  }
 
   console.log("تم العثور على عناصر DOM:", {
     googleSignInBtn: !!googleSignInBtn,
-    emailSignInBtn: !!emailSignInBtn,
+    emailForm: !!emailForm,
     emailInput: !!emailInput,
     passwordInput: !!passwordInput
   });
-
-  // تسجيل الدخول باستخدام البريد الإلكتروني وكلمة المرور
-  if (emailSignInBtn) {
-    emailSignInBtn.addEventListener('click', function() {
-      console.log("تم النقر على زر تسجيل الدخول بالبريد الإلكتروني");
-      handleEmailLogin();
-    });
-  }
 
   async function handleEmailLogin() {
     const email = emailInput.value.trim();
@@ -407,7 +404,9 @@
     }
     
     emailLoginStatus.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">جاري تسجيل الدخول...</span></div>';
-    emailSignInBtn.disabled = true;
+    // تعطيل نموذج تسجيل الدخول بالبريد الإلكتروني
+    const submitBtn = emailForm.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
     
     try {
       console.log("محاولة تسجيل الدخول باستخدام Firebase");
@@ -438,11 +437,11 @@
         } catch (createError) {
           console.error("خطأ في إنشاء الحساب:", createError);
           emailLoginStatus.innerHTML = `<div class="alert alert-danger">فشل في إنشاء الحساب: ${createError.message}</div>`;
-          emailSignInBtn.disabled = false;
+          if (submitBtn) submitBtn.disabled = false;
         }
       } else {
         emailLoginStatus.innerHTML = `<div class="alert alert-danger">فشل في تسجيل الدخول: ${error.message}</div>`;
-        emailSignInBtn.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
       }
     }
   }
