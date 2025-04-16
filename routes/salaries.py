@@ -5,9 +5,10 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func
 from datetime import datetime
 from app import db
-from models import Salary, Employee, SystemAudit
+from models import Salary, Employee, Department, SystemAudit
 from utils.excel import parse_salary_excel, generate_salary_excel
 from utils.pdf_generator import generate_salary_report_pdf
+from utils.salary_notification import generate_salary_notification_pdf, generate_batch_salary_notifications
 
 salaries_bp = Blueprint('salaries', __name__)
 
@@ -376,3 +377,107 @@ def report_pdf():
     except Exception as e:
         flash(f'حدث خطأ أثناء إنشاء تقرير PDF: {str(e)}', 'danger')
         return redirect(url_for('salaries.index'))
+
+@salaries_bp.route('/notification/<int:id>/pdf')
+def salary_notification_pdf(id):
+    """إنشاء إشعار راتب لموظف بصيغة PDF"""
+    try:
+        # الحصول على سجل الراتب
+        salary = Salary.query.get_or_404(id)
+        
+        # إنشاء ملف PDF
+        pdf_bytes = generate_salary_notification_pdf(salary)
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='generate_notification',
+            entity_type='salary',
+            entity_id=salary.id,
+            details=f'تم إنشاء إشعار راتب للموظف: {salary.employee.name} لشهر {salary.month}/{salary.year}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        return send_file(
+            BytesIO(pdf_bytes),
+            download_name=f'salary_notification_{salary.employee.employee_id}_{salary.month}_{salary.year}.pdf',
+            as_attachment=True,
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        flash(f'حدث خطأ أثناء إنشاء إشعار الراتب: {str(e)}', 'danger')
+        return redirect(url_for('salaries.index'))
+
+@salaries_bp.route('/notifications/batch', methods=['GET', 'POST'])
+def batch_salary_notifications():
+    """إنشاء إشعارات رواتب مجمعة للموظفين حسب القسم"""
+    # الحصول على الأقسام للاختيار
+    departments = Department.query.all()
+    
+    if request.method == 'POST':
+        try:
+            # الحصول على المعلمات
+            department_id = request.form.get('department_id')
+            month = request.form.get('month')
+            year = request.form.get('year')
+            
+            if not month or not month.isdigit() or not year or not year.isdigit():
+                flash('يرجى اختيار شهر وسنة صالحين', 'danger')
+                return redirect(url_for('salaries.batch_salary_notifications'))
+                
+            month = int(month)
+            year = int(year)
+            
+            # إذا تم تحديد قسم
+            if department_id and department_id != 'all':
+                department_id = int(department_id)
+                department = Department.query.get(department_id)
+                department_name = department.name if department else "غير معروف"
+                # معالجة الإشعارات للقسم المحدد
+                processed_employees = generate_batch_salary_notifications(department_id, month, year)
+                
+                if processed_employees:
+                    # تسجيل العملية
+                    audit = SystemAudit(
+                        action='batch_notifications',
+                        entity_type='salary',
+                        entity_id=0,
+                        details=f'تم إنشاء {len(processed_employees)} إشعار راتب لموظفي قسم {department_name} لشهر {month}/{year}'
+                    )
+                    db.session.add(audit)
+                    db.session.commit()
+                    
+                    flash(f'تم إنشاء {len(processed_employees)} إشعار راتب لموظفي قسم {department_name}', 'success')
+                else:
+                    flash(f'لا توجد رواتب مسجلة لموظفي قسم {department_name} في شهر {month}/{year}', 'warning')
+            else:
+                # معالجة الإشعارات لجميع الموظفين
+                processed_employees = generate_batch_salary_notifications(None, month, year)
+                
+                if processed_employees:
+                    # تسجيل العملية
+                    audit = SystemAudit(
+                        action='batch_notifications',
+                        entity_type='salary',
+                        entity_id=0,
+                        details=f'تم إنشاء {len(processed_employees)} إشعار راتب لجميع الموظفين لشهر {month}/{year}'
+                    )
+                    db.session.add(audit)
+                    db.session.commit()
+                    
+                    flash(f'تم إنشاء {len(processed_employees)} إشعار راتب لجميع الموظفين', 'success')
+                else:
+                    flash(f'لا توجد رواتب مسجلة لشهر {month}/{year}', 'warning')
+                    
+            return redirect(url_for('salaries.index', month=month, year=year))
+                
+        except Exception as e:
+            flash(f'حدث خطأ أثناء إنشاء إشعارات الرواتب: {str(e)}', 'danger')
+    
+    # Default to current month and year
+    now = datetime.now()
+    
+    return render_template('salaries/batch_notifications.html',
+                          departments=departments,
+                          current_month=now.month,
+                          current_year=now.year)
