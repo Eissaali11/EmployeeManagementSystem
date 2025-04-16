@@ -1,11 +1,12 @@
 import os
 import pandas as pd
 from io import BytesIO
+from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from app import db
-from models import Employee, Department, SystemAudit
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary
 from utils.excel import parse_employee_excel, generate_employee_excel
 from utils.date_converter import parse_date
 
@@ -135,7 +136,58 @@ def edit(id):
 def view(id):
     """View detailed employee information"""
     employee = Employee.query.get_or_404(id)
-    return render_template('employees/view.html', employee=employee)
+    
+    # Get employee documents
+    documents = Document.query.filter_by(employee_id=id).all()
+    
+    # Get document types in Arabic
+    document_types_map = {
+        'national_id': 'الهوية الوطنية', 
+        'passport': 'جواز السفر', 
+        'health_certificate': 'الشهادة الصحية', 
+        'work_permit': 'تصريح العمل', 
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية',
+        'other': 'أخرى'
+    }
+    
+    # Get documents by type for easier display
+    documents_by_type = {}
+    for doc_type in document_types_map.keys():
+        documents_by_type[doc_type] = None
+    
+    today = datetime.now().date()
+    
+    for doc in documents:
+        # Add expiry status
+        days_to_expiry = (doc.expiry_date - today).days
+        if days_to_expiry < 0:
+            doc.status_class = "danger"
+            doc.status_text = "منتهية"
+        elif days_to_expiry < 30:
+            doc.status_class = "warning"
+            doc.status_text = f"تنتهي خلال {days_to_expiry} يوم"
+        else:
+            doc.status_class = "success"
+            doc.status_text = "سارية"
+        
+        # Store document by type
+        documents_by_type[doc.document_type] = doc
+    
+    # Get attendance records
+    attendances = Attendance.query.filter_by(employee_id=id).order_by(Attendance.date.desc()).limit(30).all()
+    
+    # Get salary records
+    salaries = Salary.query.filter_by(employee_id=id).order_by(Salary.year.desc(), Salary.month.desc()).all()
+    
+    return render_template('employees/view.html', 
+                          employee=employee, 
+                          documents=documents,
+                          documents_by_type=documents_by_type,
+                          document_types_map=document_types_map,
+                          attendances=attendances,
+                          salaries=salaries)
 
 @employees_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
