@@ -12,20 +12,24 @@
     <div class="row">
         {% for department in departments %}
         <div class="col-md-4 mb-4">
-            <div class="department-card card">
+            <div class="department-card card shadow-sm">
                 <div class="department-header">
-                    <h4>{{ department.name }}</h4>
+                    <h4><i class="fas fa-building me-2"></i>{{ department.name }}</h4>
                 </div>
                 <div class="department-body">
                     {% if department.manager %}
                     <div class="department-manager">
-                        <i class="fas fa-user-tie me-1"></i> المدير: {{ department.manager.name }}
+                        <i class="fas fa-user-tie me-1 text-primary"></i> المدير: <strong>{{ department.manager.name }}</strong>
+                    </div>
+                    {% else %}
+                    <div class="department-manager text-muted">
+                        <i class="fas fa-user-tie me-1"></i> لا يوجد مدير محدد
                     </div>
                     {% endif %}
                     
-                    <div class="my-2">
-                        <i class="fas fa-users me-1"></i> عدد الموظفين: 
-                        <span class="badge bg-primary">{{ department.employees|length }}</span>
+                    <div class="my-3">
+                        <i class="fas fa-users me-1 text-primary"></i> عدد الموظفين: 
+                        <span class="badge bg-primary rounded-pill">{{ department.employees|length }}</span>
                     </div>
                     
                     {% if department.description %}

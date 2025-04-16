@@ -451,18 +451,32 @@ table {
 }
 
 .department-header {
-    padding: 1rem;
+    padding: 1.25rem;
     background-color: var(--bs-primary);
     color: white;
+    text-align: center;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.department-header h4 {
+    color: white;
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .department-body {
-    padding: 1rem;
+    padding: 1.25rem;
+    background-color: rgba(var(--bs-light-rgb), 0.5);
 }
 
 .department-manager {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Attendance Status Colors */
@@ -881,6 +895,41 @@ table {
     background-color: #343a40;
     border-color: rgba(255, 255, 255, 0.1);
     color: #f8f9fa;
+}
+
+/* إصلاح ألوان نص العناوين في الأقسام - تحسينات الوضع المظلم */
+[data-bs-theme=dark] .department-header {
+    background-color: var(--bs-primary);
+    color: white !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme=dark] .department-header h4 {
+    color: white !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme=dark] .department-body {
+    color: #f8f9fa;
+    background-color: #343a40;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme=dark] .department-manager {
+    color: #f8f9fa;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme=dark] .department-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: #2b3035;
+}
+
+[data-bs-theme=dark] .badge.bg-primary {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 [data-bs-theme=dark] .page-link {
