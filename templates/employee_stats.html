@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .stats-card {
-        border-radius: 10px;
+        border-radius: 15px;
         transition: all 0.3s ease;
         overflow: hidden;
         border: none;
@@ -20,6 +20,10 @@
         color: white;
         font-weight: bold;
         border: none;
+        padding: 1rem 1.5rem;
+    }
+    .stats-card .bg-gradient {
+        background: linear-gradient(120deg, #7367f0, #8e85f2);
     }
     .department-table {
         border-radius: 10px;
@@ -45,11 +49,53 @@
     .chart-container {
         position: relative;
         height: 350px;
-        margin-bottom: 2rem;
+    }
+    .chart-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border-radius: 0 0 15px 15px;
+        overflow: hidden;
     }
     .total-employees {
         background: linear-gradient(135deg, #2b52ba 0%, #4680ff 100%);
         color: white;
+    }
+    .department-chart-info {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        background-color: rgba(247, 247, 247, 0.5);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem;
+    }
+    .department-chart-info .total-count,
+    .department-chart-info .departments-count {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .department-chart-info span {
+        display: block;
+    }
+    .department-chart-info #totalEmployees,
+    .department-chart-info #departmentsCount {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #7367f0;
+        margin-bottom: 0.3rem;
+    }
+    .department-chart-info .info-label {
+        font-size: 0.9rem;
+        color: #888;
+    }
+    /* تأثير متحرك للرسم البياني */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .chart-container canvas {
+        animation: fadeIn 0.8s ease-out;
     }
 </style>
 {% endblock %}
@@ -99,12 +145,24 @@
         <!-- مخطط الموظفين حسب القسم -->
         <div class="col-md-5 mb-4">
             <div class="card stats-card">
-                <div class="card-header">
+                <div class="card-header bg-gradient">
                     <h5 class="card-title mb-0">توزيع الموظفين حسب القسم</h5>
                 </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="departmentChart"></canvas>
+                <div class="card-body p-0">
+                    <div class="chart-wrapper">
+                        <div class="chart-container pt-3 px-3">
+                            <canvas id="departmentChart"></canvas>
+                        </div>
+                        <div class="department-chart-info text-center p-3 mt-2" id="chartInfo">
+                            <div class="total-count">
+                                <span id="totalEmployees">0</span>
+                                <span class="info-label">إجمالي الموظفين</span>
+                            </div>
+                            <div class="departments-count">
+                                <span id="departmentsCount">0</span>
+                                <span class="info-label">قسم</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -168,50 +226,117 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // تحديث معلومات الإحصائيات للرسم البياني
+    function updateChartInfo(data) {
+        document.getElementById('totalEmployees').textContent = data.total || 0;
+        document.getElementById('departmentsCount').textContent = data.labels.length || 0;
+    }
+
     // مخطط الأقسام
     fetch('{{ url_for("dashboard.department_employee_stats_api") }}')
         .then(response => response.json())
         .then(data => {
+            // تحديث معلومات الإحصائيات
+            updateChartInfo(data);
+            
             const ctx = document.getElementById('departmentChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
+            
+            // إعداد تكوين الرسم البياني
+            const chart = new Chart(ctx, {
+                type: 'doughnut', // تغيير النوع من pie إلى doughnut للحصول على تأثير أفضل
                 data: {
                     labels: data.labels,
                     datasets: [{
                         data: data.data,
-                        backgroundColor: data.colors.slice(0, data.labels.length),
-                        borderWidth: 2
+                        backgroundColor: data.backgroundColor || ['rgba(75, 192, 192, 0.8)'],
+                        hoverBackgroundColor: data.hoverBackgroundColor || ['rgba(75, 192, 192, 1)'],
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        hoverOffset: 10
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '60%', // حجم الثقب في وسط الرسم البياني
                     plugins: {
                         legend: {
                             position: 'right',
                             labels: {
+                                boxWidth: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                padding: 15,
                                 font: {
                                     family: 'Tajawal, sans-serif',
-                                    size: 14
+                                    size: 13
                                 },
-                                padding: 15
+                                generateLabels: function(chart) {
+                                    const datasets = chart.data.datasets;
+                                    const labels = chart.data.labels;
+                                    const total = datasets[0].data.reduce((a, b) => a + b, 0);
+                                    
+                                    return labels.map(function(label, i) {
+                                        const value = datasets[0].data[i];
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return {
+                                            text: `${label} (${percentage}%)`,
+                                            fillStyle: datasets[0].backgroundColor[i],
+                                            strokeStyle: datasets[0].backgroundColor[i],
+                                            lineWidth: 0,
+                                            fontColor: '#555',
+                                            hidden: !chart.getDataVisibility(i),
+                                            index: i
+                                        };
+                                    });
+                                }
                             }
                         },
                         tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleFont: {
+                                family: 'Tajawal, sans-serif',
+                                size: 15
+                            },
+                            bodyFont: {
+                                family: 'Tajawal, sans-serif',
+                                size: 14
+                            },
+                            padding: 12,
+                            cornerRadius: 8,
                             callbacks: {
                                 label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                     const value = context.raw;
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${context.label}: ${value} (${percentage}%)`;
+                                    const percentage = data.percentages[context.dataIndex];
+                                    return `عدد الموظفين: ${value} (${percentage}%)`;
                                 }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true,
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    onClick: function(e, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const departmentId = data.departmentIds[index];
+                            if (departmentId > 0) {
+                                window.location.href = '/departments/view/' + departmentId;
                             }
                         }
                     }
                 }
             });
         })
-        .catch(error => console.error('Error fetching department data:', error));
+        .catch(error => {
+            console.error('Error fetching department data:', error);
+            // تحديث معلومات الأقسام حتى في حالة الخطأ
+            document.getElementById('totalEmployees').textContent = 0;
+            document.getElementById('departmentsCount').textContent = 0;
+        });
 });
 </script>
 {% endblock %}

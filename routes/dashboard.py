@@ -131,24 +131,70 @@ def department_employee_stats_api():
     """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
     # إحصائيات الموظفين حسب القسم
     department_stats = db.session.query(
+        Department.id,
         Department.name,
         func.count(Employee.id).label('employee_count')
     ).outerjoin(
         Employee, Department.id == Employee.department_id
     ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
     
+    # قائمة بالألوان الجميلة المتناسقة للمخطط
+    gradient_colors = [
+        ['rgba(24, 144, 255, 0.85)', 'rgba(24, 144, 255, 0.4)'],    # أزرق
+        ['rgba(47, 194, 91, 0.85)', 'rgba(47, 194, 91, 0.4)'],      # أخضر
+        ['rgba(250, 173, 20, 0.85)', 'rgba(250, 173, 20, 0.4)'],    # برتقالي
+        ['rgba(245, 34, 45, 0.85)', 'rgba(245, 34, 45, 0.4)'],      # أحمر
+        ['rgba(114, 46, 209, 0.85)', 'rgba(114, 46, 209, 0.4)'],    # بنفسجي
+        ['rgba(19, 194, 194, 0.85)', 'rgba(19, 194, 194, 0.4)'],    # فيروزي
+        ['rgba(82, 196, 26, 0.85)', 'rgba(82, 196, 26, 0.4)'],      # أخضر فاتح
+        ['rgba(144, 19, 254, 0.85)', 'rgba(144, 19, 254, 0.4)'],    # أرجواني
+        ['rgba(240, 72, 68, 0.85)', 'rgba(240, 72, 68, 0.4)'],      # أحمر فاتح
+        ['rgba(250, 140, 22, 0.85)', 'rgba(250, 140, 22, 0.4)'],    # برتقالي داكن
+    ]
+    
+    # تحضير البيانات للرسم البياني مع معلومات إضافية
+    labels = []
+    data = []
+    background_colors = []
+    hover_colors = []
+    department_ids = []
+    
+    # إذا لم تكن هناك أقسام
+    if not department_stats:
+        return jsonify({
+            'labels': ['لا توجد أقسام'],
+            'data': [0],
+            'backgroundColor': ['rgba(200, 200, 200, 0.6)'],
+            'hoverBackgroundColor': ['rgba(200, 200, 200, 0.8)'],
+            'departmentIds': [0],
+            'percentages': [100],
+            'total': 0
+        })
+    
+    total_employees = sum(stat.employee_count for stat in department_stats)
+    percentages = []
+    
+    for idx, stat in enumerate(department_stats):
+        labels.append(stat.name)
+        data.append(stat.employee_count)
+        color_idx = idx % len(gradient_colors)
+        background_colors.append(gradient_colors[color_idx][1])
+        hover_colors.append(gradient_colors[color_idx][0])
+        department_ids.append(stat.id)
+        
+        # حساب النسبة المئوية
+        percentage = round((stat.employee_count / total_employees * 100), 1) if total_employees > 0 else 0
+        percentages.append(percentage)
+    
     # تنسيق البيانات للرسم البياني
     dept_data = {
-        'labels': [stat.name for stat in department_stats],
-        'data': [stat.employee_count for stat in department_stats],
-        'colors': [
-            'rgba(75, 192, 192, 0.8)',
-            'rgba(54, 162, 235, 0.8)',
-            'rgba(153, 102, 255, 0.8)',
-            'rgba(255, 159, 64, 0.8)',
-            'rgba(255, 99, 132, 0.8)',
-            'rgba(255, 206, 86, 0.8)',
-        ]
+        'labels': labels,
+        'data': data,
+        'backgroundColor': background_colors,
+        'hoverBackgroundColor': hover_colors,
+        'departmentIds': department_ids,
+        'percentages': percentages,
+        'total': total_employees
     }
     
     return jsonify(dept_data)
