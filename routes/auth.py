@@ -119,63 +119,10 @@ def profile():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """تسجيل مستخدم جديد"""
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard.index'))
-        
-    if request.method == 'POST':
-        email = request.form.get('email')
-        name = request.form.get('name')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        
-        # التحقق من وجود البيانات المطلوبة
-        if not email or not name or not password or not confirm_password:
-            flash('جميع الحقول مطلوبة', 'danger')
-            return redirect(url_for('auth.register'))
-            
-        # التحقق من تطابق كلمات المرور
-        if password != confirm_password:
-            flash('كلمات المرور غير متطابقة', 'danger')
-            return redirect(url_for('auth.register'))
-            
-        # التحقق من طول كلمة المرور
-        if len(password) < 6:
-            flash('يجب أن تكون كلمة المرور أكثر من 6 أحرف', 'danger')
-            return redirect(url_for('auth.register'))
-        
-        try:
-            # التحقق من صحة البريد الإلكتروني
-            valid_email = validate_email(email)
-            email = valid_email.email
-        except EmailNotValidError:
-            flash('البريد الإلكتروني غير صالح', 'danger')
-            return redirect(url_for('auth.register'))
-            
-        # التحقق من عدم وجود المستخدم بالفعل
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            flash('هذا البريد الإلكتروني مستخدم بالفعل', 'danger')
-            return redirect(url_for('auth.register'))
-            
-        # إنشاء المستخدم الجديد
-        new_user = User(
-            email=email,
-            name=name,
-            auth_type='local',
-            created_at=datetime.utcnow(),
-            last_login=datetime.utcnow()
-        )
-        new_user.set_password(password)
-        
-        # حفظ المستخدم في قاعدة البيانات
-        db.session.add(new_user)
-        db.session.commit()
-        
-        flash('تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول', 'success')
-        return redirect(url_for('auth.login'))
-        
-    return render_template('auth/register.html')
+    """تم إلغاء وظيفة تسجيل مستخدم جديد"""
+    # إعادة توجيه جميع الطلبات إلى صفحة تسجيل الدخول
+    flash('لا يسمح بإنشاء حسابات جديدة في الوقت الحالي', 'info')
+    return redirect(url_for('auth.login'))
 
 @auth_bp.route('/unauthorized')
 def unauthorized():
