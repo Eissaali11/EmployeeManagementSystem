@@ -274,35 +274,34 @@
             <div class="tab-content" id="loginTabsContent">
                 <!-- تسجيل الدخول بالبريد الإلكتروني -->
                 <div class="tab-pane fade show active" id="email-login" role="tabpanel" aria-labelledby="email-tab">
-                    <form method="POST" action="{{ url_for('auth.login') }}">
-                        {{ form.hidden_tag() if form }}
+                    <div id="email-password-form">
                         <div class="mb-3">
-                            <label for="email" class="form-label">البريد الإلكتروني</label>
+                            <label for="emailInput" class="form-label">البريد الإلكتروني</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-transparent border-end-0">
                                     <i class="fas fa-envelope text-info"></i>
                                 </span>
-                                <input type="email" class="form-control border-start-0" id="email" name="email" placeholder="أدخل بريدك الإلكتروني" required>
+                                <input type="email" class="form-control border-start-0" id="emailInput" placeholder="أدخل بريدك الإلكتروني" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">كلمة المرور</label>
+                            <label for="passwordInput" class="form-label">كلمة المرور</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-transparent border-end-0">
                                     <i class="fas fa-lock text-info"></i>
                                 </span>
-                                <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="أدخل كلمة المرور" required>
+                                <input type="password" class="form-control border-start-0" id="passwordInput" placeholder="أدخل كلمة المرور" required>
                             </div>
                         </div>
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                            <label class="form-check-label" for="remember">تذكرني</label>
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">تذكرني</label>
                         </div>
-                        <button type="submit" class="btn btn-primary login-btn">
+                        <button id="emailSignIn" class="btn btn-primary login-btn">
                             <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
                         </button>
-                    </form>
-                    <!-- تم إزالة زر إنشاء حساب جديد -->
+                    </div>
+                    <div id="emailLoginStatus" class="mt-3 text-center"></div>
                 </div>
                 
                 <!-- تسجيل الدخول باستخدام Google -->
@@ -333,6 +332,8 @@
   import { 
     getAuth, 
     signInWithPopup, 
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     GoogleAuthProvider,
     onAuthStateChanged
   } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js';
@@ -353,7 +354,59 @@
 
   // عناصر DOM
   const googleSignInBtn = document.getElementById('googleSignIn');
+  const emailSignInBtn = document.getElementById('emailSignIn');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const rememberMe = document.getElementById('rememberMe');
   const statusMessage = document.getElementById('statusMessage');
+  const emailLoginStatus = document.getElementById('emailLoginStatus');
+
+  // تسجيل الدخول باستخدام البريد الإلكتروني وكلمة المرور
+  emailSignInBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+    
+    // التحقق من صحة البيانات
+    if (!email || !password) {
+      emailLoginStatus.innerHTML = '<div class="alert alert-danger">الرجاء إدخال البريد الإلكتروني وكلمة المرور</div>';
+      return;
+    }
+    
+    emailLoginStatus.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">جاري تسجيل الدخول...</span></div>';
+    emailSignInBtn.disabled = true;
+    
+    try {
+      // محاولة تسجيل الدخول
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // إرسال بيانات المستخدم إلى الخادم
+      await sendUserDataToServer(user);
+    } catch (error) {
+      console.error("خطأ في تسجيل الدخول:", error);
+      
+      if (error.code === 'auth/user-not-found') {
+        // تم عمل هذا بسبب وجود مستخدمين في قاعدة البيانات ولكن غير موجودين في Firebase
+        // قد نحتاج إلى إنشاء حساب جديد في Firebase
+        emailLoginStatus.innerHTML = '<div class="alert alert-warning">جاري محاولة مزامنة الحساب مع Firebase...</div>';
+        
+        try {
+          // محاولة إنشاء المستخدم في Firebase
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          
+          // إرسال بيانات المستخدم إلى الخادم
+          await sendUserDataToServer(user);
+        } catch (createError) {
+          emailLoginStatus.innerHTML = `<div class="alert alert-danger">فشل في تسجيل الدخول: ${createError.message}</div>`;
+          emailSignInBtn.disabled = false;
+        }
+      } else {
+        emailLoginStatus.innerHTML = `<div class="alert alert-danger">فشل في تسجيل الدخول: ${error.message}</div>`;
+        emailSignInBtn.disabled = false;
+      }
+    }
+  });
 
   // تسجيل الدخول باستخدام Google
   googleSignInBtn.addEventListener('click', async () => {
@@ -392,16 +445,24 @@
       const data = await response.json();
       
       if (data.status === 'success') {
-        statusMessage.innerHTML = '<div class="alert alert-success">تم تسجيل الدخول بنجاح! جاري تحويلك...</div>';
+        const successMessage = '<div class="alert alert-success">تم تسجيل الدخول بنجاح! جاري تحويلك...</div>';
+        statusMessage.innerHTML = successMessage;
+        emailLoginStatus.innerHTML = successMessage;
         window.location.href = data.redirect;
       } else {
-        statusMessage.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+        const errorMessage = `<div class="alert alert-danger">${data.message}</div>`;
+        statusMessage.innerHTML = errorMessage;
+        emailLoginStatus.innerHTML = errorMessage;
         googleSignInBtn.disabled = false;
+        emailSignInBtn.disabled = false;
       }
     } catch (error) {
       console.error("خطأ في إرسال البيانات:", error);
-      statusMessage.innerHTML = '<div class="alert alert-danger">حدث خطأ في الاتصال بالخادم</div>';
+      const errorMessage = '<div class="alert alert-danger">حدث خطأ في الاتصال بالخادم</div>';
+      statusMessage.innerHTML = errorMessage;
+      emailLoginStatus.innerHTML = errorMessage;
       googleSignInBtn.disabled = false;
+      emailSignInBtn.disabled = false;
     }
   }
 
@@ -409,6 +470,13 @@
   onAuthStateChanged(auth, (user) => {
     if (user) {
       console.log("المستخدم مسجل الدخول:", user.email);
+    }
+  });
+  
+  // معالجة النموذج عند الضغط على Enter
+  passwordInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') {
+      emailSignInBtn.click();
     }
   });
 </script>

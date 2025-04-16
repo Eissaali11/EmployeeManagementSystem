@@ -14,45 +14,13 @@ auth_bp = Blueprint('auth', __name__)
 def index():
     return redirect(url_for('dashboard.index'))
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@auth_bp.route('/login', methods=['GET'])
 def login():
-    """صفحة تسجيل الدخول بالبريد الإلكتروني وكلمة المرور أو Firebase"""
+    """صفحة تسجيل الدخول باستخدام Firebase"""
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        remember = True if request.form.get('remember') else False
-        
-        if not email or not password:
-            flash('الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'danger')
-            return redirect(url_for('auth.login'))
-        
-        try:
-            # التحقق من صحة البريد الإلكتروني
-            valid_email = validate_email(email)
-            email = valid_email.email
-        except EmailNotValidError:
-            flash('البريد الإلكتروني غير صالح', 'danger')
-            return redirect(url_for('auth.login'))
-        
-        # البحث عن المستخدم
-        user = User.query.filter_by(email=email).first()
-        
-        # التحقق من وجود المستخدم وصحة كلمة المرور
-        if not user or not user.check_password(password):
-            flash('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'danger')
-            return redirect(url_for('auth.login'))
-        
-        # تسجيل الدخول
-        login_user(user, remember=remember)
-        user.last_login = datetime.utcnow()
-        db.session.commit()
-        
-        flash('تم تسجيل الدخول بنجاح', 'success')
-        return redirect(url_for('dashboard.index'))
-    
+    # استخدام Firebase فقط للمصادقة
     return render_template(
         'auth/login.html',
         firebase_api_key=current_app.config['FIREBASE_API_KEY'],
@@ -69,26 +37,44 @@ def process_auth():
         return jsonify({'status': 'error', 'message': 'No data provided'}), 400
     
     # تحقق من وجود البيانات المطلوبة
-    required_fields = ['uid', 'email', 'name', 'picture']
+    required_fields = ['uid', 'email', 'name']
     for field in required_fields:
         if field not in data:
             return jsonify({'status': 'error', 'message': f'Missing field: {field}'}), 400
     
-    # البحث عن المستخدم أو إنشائه
+    # إذا كان الصورة غير موجودة، استخدم قيمة فارغة
+    if 'picture' not in data:
+        data['picture'] = ''
+    
+    # محاولة البحث عن المستخدم حسب معرف Firebase
     user = User.query.filter_by(firebase_uid=data['uid']).first()
     
+    # إذا لم يتم العثور عليه، ابحث حسب البريد الإلكتروني (للمستخدمين الموجودين بالفعل)
     if not user:
-        # إنشاء مستخدم جديد
-        user = User(
-            firebase_uid=data['uid'],
-            email=data['email'],
-            name=data['name'],
-            profile_picture=data['picture'],
-            role='user',  # الدور الافتراضي للمستخدمين الجدد
-            created_at=datetime.utcnow()
-        )
-        db.session.add(user)
-        db.session.commit()
+        user = User.query.filter_by(email=data['email']).first()
+        
+        if user:
+            # تحديث معرف Firebase للمستخدم الموجود
+            user.firebase_uid = data['uid']
+            user.auth_type = 'firebase'
+            if data['picture']:
+                user.profile_picture = data['picture']
+            db.session.commit()
+            current_app.logger.info(f"تم تحديث معرف Firebase للمستخدم: {user.email}")
+        else:
+            # إنشاء مستخدم جديد
+            user = User(
+                firebase_uid=data['uid'],
+                email=data['email'],
+                name=data['name'],
+                profile_picture=data['picture'],
+                role='user',  # الدور الافتراضي للمستخدمين الجدد
+                auth_type='firebase',
+                created_at=datetime.utcnow()
+            )
+            db.session.add(user)
+            db.session.commit()
+            current_app.logger.info(f"تم إنشاء مستخدم جديد: {user.email}")
     
     # تحديث آخر تسجيل دخول
     user.last_login = datetime.utcnow()
