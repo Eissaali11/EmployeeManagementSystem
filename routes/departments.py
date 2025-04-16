@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from sqlalchemy.exc import IntegrityError
 from app import db
 from models import Department, Employee, SystemAudit
+from utils.excel import parse_employee_excel
 
 departments_bp = Blueprint('departments', __name__)
 
@@ -95,6 +96,88 @@ def view(id):
     department = Department.query.get_or_404(id)
     employees = Employee.query.filter_by(department_id=id).all()
     return render_template('departments/view.html', department=department, employees=employees)
+
+@departments_bp.route('/<int:id>/import_employees', methods=['GET', 'POST'])
+def import_employees(id):
+    """Import employees for specific department from Excel file"""
+    department = Department.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('لم يتم اختيار ملف', 'danger')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('لم يتم اختيار ملف', 'danger')
+            return redirect(request.url)
+        
+        if file and file.filename.endswith(('.xlsx', '.xls')):
+            try:
+                # Parse Excel file
+                employees_data = parse_employee_excel(file)
+                
+                success_count = 0
+                error_count = 0
+                error_details = []
+                
+                for index, data in enumerate(employees_data):
+                    try:
+                        # Add department_id to employee data
+                        data['department_id'] = id
+                        
+                        # Check if employee with same employee_id already exists
+                        existing = Employee.query.filter_by(employee_id=data['employee_id']).first()
+                        if existing:
+                            error_count += 1
+                            error_details.append(f"الموظف برقم {data['employee_id']} موجود مسبقا")
+                            continue
+                            
+                        # Check if employee with same national_id already exists
+                        existing = Employee.query.filter_by(national_id=data['national_id']).first()
+                        if existing:
+                            error_count += 1
+                            error_details.append(f"الموظف برقم هوية {data['national_id']} موجود مسبقا")
+                            continue
+                        
+                        employee = Employee(**data)
+                        db.session.add(employee)
+                        db.session.commit()
+                        success_count += 1
+                    except Exception as e:
+                        db.session.rollback()
+                        error_count += 1
+                        error_details.append(f"خطأ في السجل {index+1}: {str(e)}")
+                
+                # Log the import
+                error_detail_str = ", ".join(error_details[:5])
+                if len(error_details) > 5:
+                    error_detail_str += f" وغيرها من الأخطاء..."
+                
+                details = f'تم استيراد {success_count} موظف بنجاح لقسم {department.name} و {error_count} فشل'
+                if error_details:
+                    details += f". أخطاء: {error_detail_str}"
+                    
+                audit = SystemAudit(
+                    action='import',
+                    entity_type='employee',
+                    entity_id=id,
+                    details=details
+                )
+                db.session.add(audit)
+                db.session.commit()
+                
+                if error_count > 0:
+                    flash(f'تم استيراد {success_count} موظف بنجاح و {error_count} فشل. {error_detail_str}', 'warning')
+                else:
+                    flash(f'تم استيراد {success_count} موظف بنجاح', 'success')
+                return redirect(url_for('departments.view', id=id))
+            except Exception as e:
+                flash(f'حدث خطأ أثناء استيراد الملف: {str(e)}', 'danger')
+        else:
+            flash('الملف يجب أن يكون بصيغة Excel (.xlsx, .xls)', 'danger')
+    
+    return render_template('departments/import_employees.html', department=department)
 
 @departments_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
