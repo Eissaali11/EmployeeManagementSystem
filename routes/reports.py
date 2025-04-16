@@ -334,33 +334,144 @@ def attendance_pdf():
     # الحصول على النتائج النهائية
     results = query.order_by(Attendance.date.desc()).all()
     
-    # إعداد قالب HTML للتقرير
-    html_content = render_template('reports/attendance_pdf.html', 
-                                 results=results,
-                                 from_date=format_date_gregorian(from_date),
-                                 to_date=format_date_gregorian(to_date),
-                                 department_name=department_name,
-                                 status_name=status_name,
-                                 report_date=datetime.now().strftime('%Y-%m-%d'),
-                                 format_date_gregorian=format_date_gregorian)
-    
-    # خيارات تحويل HTML إلى PDF
-    options = {
-        'encoding': 'UTF-8',
-        'page-size': 'A4',
-        'margin-top': '1cm',
-        'margin-right': '1cm',
-        'margin-bottom': '1cm',
-        'margin-left': '1cm',
-        'orientation': 'landscape',
-        'enable-local-file-access': True,
-    }
-    
     # إنشاء ملف PDF
-    pdf = pdfkit.from_string(html_content, False, options=options)
+    buffer = BytesIO()
+    
+    # تسجيل الخط العربي
+    try:
+        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
+        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
+    except:
+        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
+        pass
+    
+    # تعيين أبعاد الصفحة واتجاهها
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=landscape(A4),
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    # إعداد الأنماط
+    styles = getSampleStyleSheet()
+    # إنشاء نمط للنص العربي
+    arabic_style = ParagraphStyle(
+        name='Arabic',
+        parent=styles['Normal'],
+        fontName='Arabic',
+        fontSize=12,
+        alignment=1, # وسط
+        textColor=colors.black
+    )
+    
+    # إنشاء نمط للعناوين
+    title_style = ParagraphStyle(
+        name='Title',
+        parent=styles['Title'],
+        fontName='Arabic',
+        fontSize=16,
+        alignment=1, # وسط
+        textColor=colors.black
+    )
+    
+    # إعداد المحتوى
+    elements = []
+    
+    # إضافة العنوان
+    title = f"تقرير الحضور والغياب - {department_name} - {status_name}"
+    # تهيئة النص العربي للعرض في PDF
+    title = get_display(arabic_reshaper.reshape(title))
+    elements.append(Paragraph(title, title_style))
+    elements.append(Spacer(1, 10))
+    
+    # إضافة نطاق التاريخ
+    date_range = f"الفترة من: {format_date_gregorian(from_date)} إلى: {format_date_gregorian(to_date)}"
+    date_range = get_display(arabic_reshaper.reshape(date_range))
+    elements.append(Paragraph(date_range, arabic_style))
+    elements.append(Spacer(1, 20))
+    
+    # إعداد جدول البيانات
+    headers = ["التاريخ", "الاسم", "الرقم الوظيفي", "وقت الحضور", "وقت الانصراف", "الحالة", "القسم"]
+    data = []
+    
+    # إضافة الرؤوس
+    headers_display = [get_display(arabic_reshaper.reshape(h)) for h in headers]
+    data.append(headers_display)
+    
+    # إضافة بيانات الحضور
+    for attendance, employee in results:
+        department_name = employee.department.name if employee.department else "---"
+        
+        # ترجمة حالة الحضور
+        status_map = {
+            'present': 'حاضر',
+            'absent': 'غائب',
+            'leave': 'إجازة',
+            'sick': 'مرضي'
+        }
+        status_text = status_map.get(attendance.status, attendance.status)
+        
+        row = [
+            format_date_gregorian(attendance.date),
+            get_display(arabic_reshaper.reshape(employee.name)),
+            employee.employee_id,
+            str(attendance.check_in) if attendance.check_in else "---",
+            str(attendance.check_out) if attendance.check_out else "---",
+            get_display(arabic_reshaper.reshape(status_text)),
+            get_display(arabic_reshaper.reshape(department_name))
+        ]
+        data.append(row)
+    
+    # إنشاء الجدول
+    if data:
+        # حساب العرض المناسب للجدول بناءً على حجم الصفحة
+        table_width = landscape(A4)[0] - 4*cm  # العرض الإجمالي ناقص الهوامش
+        col_widths = [table_width/len(headers)] * len(headers)  # توزيع متساوي
+        table = Table(data, colWidths=col_widths)
+        
+        # إعداد أنماط الجدول
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),  # لون خلفية العناوين
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # لون نص العناوين
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # محاذاة النص
+            ('FONTNAME', (0, 0), (-1, 0), 'Arabic'),  # خط العناوين
+            ('FONTSIZE', (0, 0), (-1, 0), 12),  # حجم خط العناوين
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # تباعد أسفل العناوين
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # لون خلفية البيانات
+            ('FONTNAME', (0, 1), (-1, -1), 'Arabic'),  # خط البيانات
+            ('FONTSIZE', (0, 1), (-1, -1), 10),  # حجم خط البيانات
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # حدود الجدول
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة النص عموديا
+        ])
+        
+        # تطبيق التناوب في ألوان الصفوف لتحسين القراءة
+        for i in range(1, len(data)):
+            if i % 2 == 0:
+                table_style.add('BACKGROUND', (0, i), (-1, i), colors.whitesmoke)
+        
+        table.setStyle(table_style)
+        elements.append(table)
+    else:
+        no_data_text = get_display(arabic_reshaper.reshape("لا توجد بيانات متاحة"))
+        elements.append(Paragraph(no_data_text, arabic_style))
+    
+    # إضافة معلومات التقرير في أسفل الصفحة
+    elements.append(Spacer(1, 20))
+    footer_text = f"تاريخ إنشاء التقرير: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    footer_text = get_display(arabic_reshaper.reshape(footer_text))
+    elements.append(Paragraph(footer_text, arabic_style))
+    
+    # بناء المستند
+    doc.build(elements)
+    
+    # إعادة المؤشر إلى بداية البايت
+    buffer.seek(0)
     
     # إنشاء استجابة تحميل
-    response = make_response(pdf)
+    response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'inline; filename=attendance_report.pdf'
     
@@ -646,33 +757,134 @@ def salaries_pdf():
         'net': sum(s['net_salary'] for s in salaries if s['has_salary'])
     }
     
-    # إعداد قالب HTML للتقرير
-    html_content = render_template('reports/salaries_pdf.html', 
-                                 salaries=salaries,
-                                 month=month,
-                                 year=year,
-                                 department_name=department_name,
-                                 totals=totals,
-                                 month_name=get_month_name_ar(month),
-                                 report_date=datetime.now().strftime('%Y-%m-%d'))
-    
-    # خيارات تحويل HTML إلى PDF
-    options = {
-        'encoding': 'UTF-8',
-        'page-size': 'A4',
-        'margin-top': '1cm',
-        'margin-right': '1cm',
-        'margin-bottom': '1cm',
-        'margin-left': '1cm',
-        'orientation': 'landscape',
-        'enable-local-file-access': True,
-    }
-    
     # إنشاء ملف PDF
-    pdf = pdfkit.from_string(html_content, False, options=options)
+    buffer = BytesIO()
+    
+    # تسجيل الخط العربي
+    try:
+        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
+        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
+    except:
+        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
+        pass
+    
+    # تعيين أبعاد الصفحة واتجاهها
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=landscape(A4),
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    # إعداد الأنماط
+    styles = getSampleStyleSheet()
+    # إنشاء نمط للنص العربي
+    arabic_style = ParagraphStyle(
+        name='Arabic',
+        parent=styles['Normal'],
+        fontName='Arabic',
+        fontSize=12,
+        alignment=1, # وسط
+        textColor=colors.black
+    )
+    
+    # إنشاء نمط للعناوين
+    title_style = ParagraphStyle(
+        name='Title',
+        parent=styles['Title'],
+        fontName='Arabic',
+        fontSize=16,
+        alignment=1, # وسط
+        textColor=colors.black
+    )
+    
+    # إعداد المحتوى
+    elements = []
+    
+    # إضافة العنوان
+    title = f"كشف رواتب شهر {get_month_name_ar(month)} {year} - {department_name}"
+    # تهيئة النص العربي للعرض في PDF
+    title = get_display(arabic_reshaper.reshape(title))
+    elements.append(Paragraph(title, title_style))
+    elements.append(Spacer(1, 20))
+    
+    # إعداد جدول البيانات
+    headers = ["الاسم", "الرقم الوظيفي", "الراتب الأساسي", "البدلات", "الخصومات", "المكافآت", "صافي الراتب"]
+    data = []
+    
+    # إضافة الرؤوس
+    headers_display = [get_display(arabic_reshaper.reshape(h)) for h in headers]
+    data.append(headers_display)
+    
+    # إضافة بيانات الرواتب
+    for salary_item in salaries:
+        if salary_item['has_salary']:
+            employee = salary_item['employee']
+            row = [
+                get_display(arabic_reshaper.reshape(employee.name)),
+                employee.employee_id,
+                f"{salary_item['basic_salary']:.2f}",
+                f"{salary_item['allowances']:.2f}",
+                f"{salary_item['deductions']:.2f}",
+                f"{salary_item['bonus']:.2f}",
+                f"{salary_item['net_salary']:.2f}"
+            ]
+            data.append(row)
+    
+    # إنشاء الجدول
+    if len(data) > 1:  # لدينا بيانات بخلاف الرؤوس
+        # حساب العرض المناسب للجدول بناءً على حجم الصفحة
+        table_width = landscape(A4)[0] - 4*cm  # العرض الإجمالي ناقص الهوامش
+        col_widths = [table_width/len(headers)] * len(headers)  # توزيع متساوي
+        table = Table(data, colWidths=col_widths)
+        
+        # إعداد أنماط الجدول
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),  # لون خلفية العناوين
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # لون نص العناوين
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # محاذاة النص
+            ('FONTNAME', (0, 0), (-1, 0), 'Arabic'),  # خط العناوين
+            ('FONTSIZE', (0, 0), (-1, 0), 12),  # حجم خط العناوين
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # تباعد أسفل العناوين
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # لون خلفية البيانات
+            ('FONTNAME', (0, 1), (-1, -1), 'Arabic'),  # خط البيانات
+            ('FONTSIZE', (0, 1), (-1, -1), 10),  # حجم خط البيانات
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # حدود الجدول
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة النص عموديا
+        ])
+        
+        # تطبيق التناوب في ألوان الصفوف لتحسين القراءة
+        for i in range(1, len(data)):
+            if i % 2 == 0:
+                table_style.add('BACKGROUND', (0, i), (-1, i), colors.whitesmoke)
+        
+        table.setStyle(table_style)
+        elements.append(table)
+        
+        # إضافة صف الإجماليات
+        elements.append(Spacer(1, 20))
+        totals_text = get_display(arabic_reshaper.reshape(f"الإجماليات: الراتب الأساسي: {totals['basic']:.2f} - البدلات: {totals['allowances']:.2f} - الخصومات: {totals['deductions']:.2f} - المكافآت: {totals['bonus']:.2f} - صافي الرواتب: {totals['net']:.2f}"))
+        elements.append(Paragraph(totals_text, arabic_style))
+    else:
+        no_data_text = get_display(arabic_reshaper.reshape("لا توجد بيانات رواتب لهذه الفترة"))
+        elements.append(Paragraph(no_data_text, arabic_style))
+    
+    # إضافة معلومات التقرير في أسفل الصفحة
+    elements.append(Spacer(1, 20))
+    footer_text = f"تاريخ إنشاء التقرير: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    footer_text = get_display(arabic_reshaper.reshape(footer_text))
+    elements.append(Paragraph(footer_text, arabic_style))
+    
+    # بناء المستند
+    doc.build(elements)
+    
+    # إعادة المؤشر إلى بداية البايت
+    buffer.seek(0)
     
     # إنشاء استجابة تحميل
-    response = make_response(pdf)
+    response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'inline; filename=salaries_report.pdf'
     
@@ -933,32 +1145,153 @@ def documents_pdf():
     # الحصول على النتائج النهائية
     results = query.order_by(Document.expiry_date).all()
     
-    # إعداد قالب HTML للتقرير
-    html_content = render_template('reports/documents_pdf.html', 
-                                 results=results,
-                                 department_name=department_name,
-                                 document_type_name=document_type_name,
-                                 expiry_status=expiry_status,
-                                 report_date=datetime.now().strftime('%Y-%m-%d'),
-                                 format_date_gregorian=format_date_gregorian)
+    # إنشاء ملف PDF
+    buffer = BytesIO()
     
-    # خيارات تحويل HTML إلى PDF
-    options = {
-        'encoding': 'UTF-8',
-        'page-size': 'A4',
-        'margin-top': '1cm',
-        'margin-right': '1cm',
-        'margin-bottom': '1cm',
-        'margin-left': '1cm',
-        'orientation': 'landscape',
-        'enable-local-file-access': True,
+    # تسجيل الخط العربي
+    try:
+        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
+        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
+    except:
+        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
+        pass
+    
+    # تعيين أبعاد الصفحة واتجاهها
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=landscape(A4),
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    # إعداد الأنماط
+    styles = getSampleStyleSheet()
+    # إنشاء نمط للنص العربي
+    arabic_style = ParagraphStyle(
+        name='Arabic',
+        parent=styles['Normal'],
+        fontName='Arabic',
+        fontSize=12,
+        alignment=1, # وسط
+        textColor=colors.black
+    )
+    
+    # إنشاء نمط للعناوين
+    title_style = ParagraphStyle(
+        name='Title',
+        parent=styles['Title'],
+        fontName='Arabic',
+        fontSize=16,
+        alignment=1, # وسط
+        textColor=colors.black
+    )
+    
+    # إعداد المحتوى
+    elements = []
+    
+    # إضافة العنوان
+    title = f"تقرير الوثائق - {document_type_name} - {department_name} - {expiry_status}"
+    # تهيئة النص العربي للعرض في PDF
+    title = get_display(arabic_reshaper.reshape(title))
+    elements.append(Paragraph(title, title_style))
+    elements.append(Spacer(1, 20))
+    
+    # إعداد جدول البيانات
+    headers = ["الموظف", "الرقم الوظيفي", "القسم", "نوع الوثيقة", "رقم الوثيقة", "تاريخ الإصدار", "تاريخ الانتهاء", "الحالة"]
+    data = []
+    
+    # إضافة الرؤوس
+    headers_display = [get_display(arabic_reshaper.reshape(h)) for h in headers]
+    data.append(headers_display)
+    
+    # ترجمة أنواع الوثائق
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'driver_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية',
+        'health_certificate': 'الشهادة الصحية'
     }
     
-    # إنشاء ملف PDF
-    pdf = pdfkit.from_string(html_content, False, options=options)
+    # إضافة بيانات الوثائق
+    today = datetime.now().date()
+    for document, employee in results:
+        department_name = employee.department.name if employee.department else "---"
+        document_type_arabic = document_types_map.get(document.document_type, document.document_type)
+        
+        # تحديد حالة الوثيقة (سارية، قاربت الانتهاء، منتهية)
+        days_to_expiry = (document.expiry_date - today).days
+        if days_to_expiry <= 0:
+            status = "منتهية"
+            status_color = colors.red
+        elif days_to_expiry <= expiry_days:
+            status = f"تنتهي خلال {days_to_expiry} يوم"
+            status_color = colors.orange
+        else:
+            status = "سارية"
+            status_color = colors.green
+        
+        row = [
+            get_display(arabic_reshaper.reshape(employee.name)),
+            employee.employee_id,
+            get_display(arabic_reshaper.reshape(department_name)),
+            get_display(arabic_reshaper.reshape(document_type_arabic)),
+            document.document_number,
+            format_date_gregorian(document.issue_date),
+            format_date_gregorian(document.expiry_date),
+            get_display(arabic_reshaper.reshape(status))
+        ]
+        data.append(row)
+    
+    # إنشاء الجدول
+    if len(data) > 1:  # لدينا بيانات بخلاف الرؤوس
+        # حساب العرض المناسب للجدول بناءً على حجم الصفحة
+        table_width = landscape(A4)[0] - 4*cm  # العرض الإجمالي ناقص الهوامش
+        col_widths = [table_width/len(headers)] * len(headers)  # توزيع متساوي
+        table = Table(data, colWidths=col_widths)
+        
+        # إعداد أنماط الجدول
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),  # لون خلفية العناوين
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # لون نص العناوين
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # محاذاة النص
+            ('FONTNAME', (0, 0), (-1, 0), 'Arabic'),  # خط العناوين
+            ('FONTSIZE', (0, 0), (-1, 0), 12),  # حجم خط العناوين
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # تباعد أسفل العناوين
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # لون خلفية البيانات
+            ('FONTNAME', (0, 1), (-1, -1), 'Arabic'),  # خط البيانات
+            ('FONTSIZE', (0, 1), (-1, -1), 10),  # حجم خط البيانات
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # حدود الجدول
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة النص عموديا
+        ])
+        
+        # تطبيق التناوب في ألوان الصفوف لتحسين القراءة
+        for i in range(1, len(data)):
+            if i % 2 == 0:
+                table_style.add('BACKGROUND', (0, i), (-1, i), colors.whitesmoke)
+        
+        table.setStyle(table_style)
+        elements.append(table)
+    else:
+        no_data_text = get_display(arabic_reshaper.reshape("لا توجد بيانات وثائق متاحة"))
+        elements.append(Paragraph(no_data_text, arabic_style))
+    
+    # إضافة معلومات التقرير في أسفل الصفحة
+    elements.append(Spacer(1, 20))
+    footer_text = f"تاريخ إنشاء التقرير: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    footer_text = get_display(arabic_reshaper.reshape(footer_text))
+    elements.append(Paragraph(footer_text, arabic_style))
+    
+    # بناء المستند
+    doc.build(elements)
+    
+    # إعادة المؤشر إلى بداية البايت
+    buffer.seek(0)
     
     # إنشاء استجابة تحميل
-    response = make_response(pdf)
+    response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = 'inline; filename=documents_report.pdf'
     
