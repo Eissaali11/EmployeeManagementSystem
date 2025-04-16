@@ -126,20 +126,37 @@ def import_employees(id):
                         # Add department_id to employee data
                         data['department_id'] = id
                         
-                        # Check if employee with same employee_id already exists
-                        existing = Employee.query.filter_by(employee_id=data['employee_id']).first()
-                        if existing:
-                            error_count += 1
-                            error_details.append(f"الموظف برقم {data['employee_id']} موجود مسبقا")
-                            continue
-                            
-                        # Check if employee with same national_id already exists
-                        existing = Employee.query.filter_by(national_id=data['national_id']).first()
-                        if existing:
-                            error_count += 1
-                            error_details.append(f"الموظف برقم هوية {data['national_id']} موجود مسبقا")
-                            continue
+                        # Sanitize strings to ensure they're valid UTF-8
+                        for key, value in data.items():
+                            if isinstance(value, str):
+                                # Replace any problematic characters that might cause encoding issues
+                                data[key] = value.encode('utf-8', errors='replace').decode('utf-8')
                         
+                        # Check if employee with same employee_id already exists - safely
+                        try:
+                            employee_id = data.get('employee_id', '')
+                            existing = Employee.query.filter_by(employee_id=employee_id).first()
+                            if existing:
+                                error_count += 1
+                                error_details.append(f"الموظف برقم {employee_id} موجود مسبقا")
+                                continue
+                        except Exception as e:
+                            print(f"Error checking employee_id: {str(e)}")
+                            # Continue processing even if there's an error here
+                            
+                        # Check if employee with same national_id already exists - safely  
+                        try:
+                            national_id = data.get('national_id', '')
+                            existing = Employee.query.filter_by(national_id=national_id).first()
+                            if existing:
+                                error_count += 1
+                                error_details.append(f"الموظف برقم هوية {national_id} موجود مسبقا")
+                                continue
+                        except Exception as e:
+                            print(f"Error checking national_id: {str(e)}")
+                            # Continue processing even if there's an error here
+                        
+                        # Create and save employee
                         employee = Employee(**data)
                         db.session.add(employee)
                         db.session.commit()

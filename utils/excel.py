@@ -133,7 +133,8 @@ def parse_employee_excel(file):
                         elif field == 'employee_id':
                             value = f"EMP{idx+1000}"
                         elif field == 'national_id':
-                            value = f"ID{idx+1000}"
+                            # تنسيق الرقم الوطني بشكل صحيح (10 أرقام)
+                            value = f"1{idx+1000:09d}"
                         elif field == 'mobile':
                             value = f"05xxxxxxxx"
                         elif field == 'job_title':
