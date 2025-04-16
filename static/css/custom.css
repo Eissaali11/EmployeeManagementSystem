@@ -573,10 +573,16 @@ table {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     position: relative;
     background-color: #1e3a5c;
+    cursor: grab; /* مؤشر السحب */
+}
+
+.table-horizontal-scroll:active {
+    cursor: grabbing; /* مؤشر السحب النشط */
 }
 
 .table-horizontal-scroll table {
     min-width: 100%; /* الحد الأدنى لعرض الجدول */
+    table-layout: auto; /* يسمح للجدول بالتمدد حسب المحتوى */
 }
 
 .table-horizontal-scroll:after {
@@ -603,6 +609,74 @@ table {
     pointer-events: none;
     opacity: 0.8;
     z-index: 5;
+}
+
+.table-horizontal-scroll::after {
+    animation: pulseGradient 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGradient {
+    0% { opacity: 0.6; }
+    100% { opacity: 0.9; }
+}
+
+/* ضمان عرض جميع الأعمدة بشكل واضح مع العرض المطلوب */
+.table-horizontal-scroll th,
+.table-horizontal-scroll td {
+    white-space: nowrap; /* منع التفاف النص */
+    min-width: 100px; /* حد أدنى لعرض الخلية */
+    padding: 12px 15px; /* زيادة المساحة الداخلية */
+}
+
+/* تضمين عرض أدنى لبعض الأعمدة المهمة */
+.table-horizontal-scroll th.th-name,
+.table-horizontal-scroll td.td-name {
+    min-width: 180px;
+}
+
+.table-horizontal-scroll th.th-id,
+.table-horizontal-scroll td.td-id {
+    min-width: 120px;
+}
+
+.table-horizontal-scroll th.th-actions,
+.table-horizontal-scroll td.td-actions {
+    min-width: 150px;
+}
+
+/* مؤثر بصري لتوضيح إمكانية التمرير */
+.has-horizontal-scroll {
+    position: relative;
+}
+
+.scroll-indicator {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    animation: fadeInOut 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.8; }
+}
+
+@media (max-width: 992px) {
+    .table-horizontal-scroll table {
+        min-width: 900px; /* عرض أكبر للجداول على الشاشات المتوسطة لضمان التمرير */
+    }
 }
 
 @media (max-width: 768px) {
