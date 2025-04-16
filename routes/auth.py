@@ -3,6 +3,8 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from models import User
+from werkzeug.security import generate_password_hash, check_password_hash
+from email_validator import validate_email, EmailNotValidError
 
 # إنشاء blueprint للمصادقة
 auth_bp = Blueprint('auth', __name__)
@@ -12,10 +14,43 @@ auth_bp = Blueprint('auth', __name__)
 def index():
     return redirect(url_for('dashboard.index'))
 
-@auth_bp.route('/login', methods=['GET'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """صفحة تسجيل الدخول باستخدام Firebase"""
+    """صفحة تسجيل الدخول بالبريد الإلكتروني وكلمة المرور أو Firebase"""
     if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        remember = True if request.form.get('remember') else False
+        
+        if not email or not password:
+            flash('الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'danger')
+            return redirect(url_for('auth.login'))
+        
+        try:
+            # التحقق من صحة البريد الإلكتروني
+            valid_email = validate_email(email)
+            email = valid_email.email
+        except EmailNotValidError:
+            flash('البريد الإلكتروني غير صالح', 'danger')
+            return redirect(url_for('auth.login'))
+        
+        # البحث عن المستخدم
+        user = User.query.filter_by(email=email).first()
+        
+        # التحقق من وجود المستخدم وصحة كلمة المرور
+        if not user or not user.check_password(password):
+            flash('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'danger')
+            return redirect(url_for('auth.login'))
+        
+        # تسجيل الدخول
+        login_user(user, remember=remember)
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+        
+        flash('تم تسجيل الدخول بنجاح', 'success')
         return redirect(url_for('dashboard.index'))
     
     return render_template(
@@ -81,6 +116,66 @@ def logout():
 def profile():
     """عرض ملف المستخدم الشخصي"""
     return render_template('auth/profile.html')
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """تسجيل مستخدم جديد"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # التحقق من وجود البيانات المطلوبة
+        if not email or not name or not password or not confirm_password:
+            flash('جميع الحقول مطلوبة', 'danger')
+            return redirect(url_for('auth.register'))
+            
+        # التحقق من تطابق كلمات المرور
+        if password != confirm_password:
+            flash('كلمات المرور غير متطابقة', 'danger')
+            return redirect(url_for('auth.register'))
+            
+        # التحقق من طول كلمة المرور
+        if len(password) < 6:
+            flash('يجب أن تكون كلمة المرور أكثر من 6 أحرف', 'danger')
+            return redirect(url_for('auth.register'))
+        
+        try:
+            # التحقق من صحة البريد الإلكتروني
+            valid_email = validate_email(email)
+            email = valid_email.email
+        except EmailNotValidError:
+            flash('البريد الإلكتروني غير صالح', 'danger')
+            return redirect(url_for('auth.register'))
+            
+        # التحقق من عدم وجود المستخدم بالفعل
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash('هذا البريد الإلكتروني مستخدم بالفعل', 'danger')
+            return redirect(url_for('auth.register'))
+            
+        # إنشاء المستخدم الجديد
+        new_user = User(
+            email=email,
+            name=name,
+            auth_type='local',
+            created_at=datetime.utcnow(),
+            last_login=datetime.utcnow()
+        )
+        new_user.set_password(password)
+        
+        # حفظ المستخدم في قاعدة البيانات
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash('تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول', 'success')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/register.html')
 
 @auth_bp.route('/unauthorized')
 def unauthorized():

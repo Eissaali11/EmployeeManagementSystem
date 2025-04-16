@@ -106,16 +106,30 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100))
-    firebase_uid = db.Column(db.String(128), unique=True, nullable=False)
+    firebase_uid = db.Column(db.String(128), unique=True, nullable=True)  # جعلها اختيارية للسماح بتسجيل الدخول المحلي
+    password_hash = db.Column(db.String(256), nullable=True)  # حقل لتخزين هاش كلمة المرور
     profile_picture = db.Column(db.String(255))
     role = db.Column(db.String(20), default='user')  # admin, manager, user
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
+    auth_type = db.Column(db.String(20), default='local')  # local أو firebase
     
     # الربط مع الموظف إذا كان المستخدم موظفًا في النظام
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
     employee = db.relationship('Employee', foreign_keys=[employee_id], uselist=False)
+    
+    def set_password(self, password):
+        """تعيين كلمة المرور المشفرة"""
+        from werkzeug.security import generate_password_hash
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """التحقق من كلمة المرور"""
+        from werkzeug.security import check_password_hash
+        if self.password_hash:
+            return check_password_hash(self.password_hash, password)
+        return False
     
     def __repr__(self):
         return f'<User {self.email}>'
