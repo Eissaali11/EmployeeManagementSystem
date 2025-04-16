@@ -327,6 +327,9 @@
 {% block scripts %}
 <!-- إضافة مكتبات Firebase -->
 <script type="module">
+  // للتصحيح فقط
+  console.log("تم تحميل ملف تسجيل الدخول");
+
   // استيراد المكتبات المطلوبة من Firebase
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js';
   import { 
@@ -347,6 +350,11 @@
     appId: "{{ firebase_app_id }}"
   };
 
+  console.log("تكوين Firebase:", {
+    apiKey: "{{ firebase_api_key }}",
+    projectId: "{{ firebase_project_id }}"
+  });
+
   // تهيئة Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -361,10 +369,29 @@
   const statusMessage = document.getElementById('statusMessage');
   const emailLoginStatus = document.getElementById('emailLoginStatus');
 
+  console.log("تم العثور على عناصر DOM:", {
+    googleSignInBtn: !!googleSignInBtn,
+    emailSignInBtn: !!emailSignInBtn,
+    emailInput: !!emailInput,
+    passwordInput: !!passwordInput
+  });
+
   // تسجيل الدخول باستخدام البريد الإلكتروني وكلمة المرور
-  emailSignInBtn.addEventListener('click', async () => {
+  if (emailSignInBtn) {
+    emailSignInBtn.addEventListener('click', function() {
+      console.log("تم النقر على زر تسجيل الدخول بالبريد الإلكتروني");
+      handleEmailLogin();
+    });
+  }
+
+  async function handleEmailLogin() {
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
+    
+    console.log("بيانات تسجيل الدخول:", { 
+      emailProvided: !!email, 
+      passwordProvided: !!password 
+    });
     
     // التحقق من صحة البيانات
     if (!email || !password) {
@@ -372,18 +399,20 @@
       return;
     }
     
-    emailLoginStatus.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">جاري تسجيل الدخول...</span></div>';
+    emailLoginStatus.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">جاري تسجيل الدخول...</span></div>';
     emailSignInBtn.disabled = true;
     
     try {
+      console.log("محاولة تسجيل الدخول باستخدام Firebase");
       // محاولة تسجيل الدخول
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
+      console.log("تم تسجيل الدخول بنجاح:", user.email);
       // إرسال بيانات المستخدم إلى الخادم
       await sendUserDataToServer(user);
     } catch (error) {
-      console.error("خطأ في تسجيل الدخول:", error);
+      console.error("خطأ في تسجيل الدخول:", error.code, error.message);
       
       if (error.code === 'auth/user-not-found') {
         // تم عمل هذا بسبب وجود مستخدمين في قاعدة البيانات ولكن غير موجودين في Firebase
@@ -391,14 +420,17 @@
         emailLoginStatus.innerHTML = '<div class="alert alert-warning">جاري محاولة مزامنة الحساب مع Firebase...</div>';
         
         try {
+          console.log("محاولة إنشاء حساب جديد في Firebase");
           // محاولة إنشاء المستخدم في Firebase
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const user = userCredential.user;
           
+          console.log("تم إنشاء الحساب بنجاح:", user.email);
           // إرسال بيانات المستخدم إلى الخادم
           await sendUserDataToServer(user);
         } catch (createError) {
-          emailLoginStatus.innerHTML = `<div class="alert alert-danger">فشل في تسجيل الدخول: ${createError.message}</div>`;
+          console.error("خطأ في إنشاء الحساب:", createError);
+          emailLoginStatus.innerHTML = `<div class="alert alert-danger">فشل في إنشاء الحساب: ${createError.message}</div>`;
           emailSignInBtn.disabled = false;
         }
       } else {
@@ -406,50 +438,70 @@
         emailSignInBtn.disabled = false;
       }
     }
-  });
+  }
 
   // تسجيل الدخول باستخدام Google
-  googleSignInBtn.addEventListener('click', async () => {
+  if (googleSignInBtn) {
+    googleSignInBtn.addEventListener('click', function() {
+      console.log("تم النقر على زر تسجيل الدخول بـ Google");
+      handleGoogleLogin();
+    });
+  }
+
+  async function handleGoogleLogin() {
     try {
-      statusMessage.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">جاري تسجيل الدخول...</span></div>';
+      statusMessage.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">جاري تسجيل الدخول...</span></div>';
       googleSignInBtn.disabled = true;
       
+      console.log("بدء عملية تسجيل الدخول باستخدام Google");
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
+      console.log("تم تسجيل الدخول باستخدام Google بنجاح:", user.email);
       // إرسال بيانات المستخدم إلى الخادم
       await sendUserDataToServer(user);
     } catch (error) {
-      console.error("خطأ في تسجيل الدخول:", error);
+      console.error("خطأ في تسجيل الدخول باستخدام Google:", error);
       statusMessage.innerHTML = `<div class="alert alert-danger">حدث خطأ: ${error.message}</div>`;
       googleSignInBtn.disabled = false;
     }
-  });
+  }
 
   // إرسال بيانات المستخدم إلى الخادم
   async function sendUserDataToServer(user) {
     try {
+      console.log("إرسال بيانات المستخدم إلى الخادم:", user.email);
+      
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName || user.email.split('@')[0],
+        picture: user.photoURL || ''
+      };
+      
+      console.log("بيانات المستخدم للإرسال:", userData);
+      
       const response = await fetch('/auth/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName || user.email.split('@')[0],
-          picture: user.photoURL || '',
-        }),
+        body: JSON.stringify(userData),
       });
       
+      console.log("تم استلام الرد من الخادم");
       const data = await response.json();
+      console.log("بيانات الرد:", data);
       
       if (data.status === 'success') {
         const successMessage = '<div class="alert alert-success">تم تسجيل الدخول بنجاح! جاري تحويلك...</div>';
         statusMessage.innerHTML = successMessage;
         emailLoginStatus.innerHTML = successMessage;
+        
+        console.log("تم تسجيل الدخول بنجاح، جاري التحويل إلى:", data.redirect);
         window.location.href = data.redirect;
       } else {
+        console.error("خطأ من الخادم:", data.message);
         const errorMessage = `<div class="alert alert-danger">${data.message}</div>`;
         statusMessage.innerHTML = errorMessage;
         emailLoginStatus.innerHTML = errorMessage;
@@ -457,7 +509,7 @@
         emailSignInBtn.disabled = false;
       }
     } catch (error) {
-      console.error("خطأ في إرسال البيانات:", error);
+      console.error("خطأ في إرسال البيانات إلى الخادم:", error);
       const errorMessage = '<div class="alert alert-danger">حدث خطأ في الاتصال بالخادم</div>';
       statusMessage.innerHTML = errorMessage;
       emailLoginStatus.innerHTML = errorMessage;
@@ -469,15 +521,23 @@
   // التحقق من حالة المصادقة الحالية
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      console.log("المستخدم مسجل الدخول:", user.email);
+      console.log("المستخدم مسجل الدخول بالفعل:", user.email);
+    } else {
+      console.log("لا يوجد مستخدم مسجل حاليًا");
     }
   });
   
   // معالجة النموذج عند الضغط على Enter
-  passwordInput.addEventListener('keyup', (event) => {
-    if (event.key === 'Enter') {
-      emailSignInBtn.click();
-    }
-  });
+  if (passwordInput) {
+    passwordInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        console.log("تم الضغط على Enter في حقل كلمة المرور");
+        handleEmailLogin();
+      }
+    });
+  }
+  
+  // للتأكد من تحميل الكود
+  console.log("تم تحميل كود تسجيل الدخول بالكامل");
 </script>
 {% endblock %}
