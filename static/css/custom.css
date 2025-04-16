@@ -557,7 +557,58 @@ table {
     position: relative;
     max-height: 65vh;
     overflow-y: auto;
+    overflow-x: auto; /* تأكيد على التمرير الأفقي */
     scrollbar-width: thin;
+    white-space: nowrap; /* منع التفاف النص في الخلايا */
+}
+
+/* جدول مع تمرير أفقي سلس */
+.table-horizontal-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* تجربة سلسة على الأجهزة اللمسية */
+    overflow-y: hidden;
+    margin-bottom: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    position: relative;
+    background-color: #1e3a5c;
+}
+
+.table-horizontal-scroll table {
+    min-width: 100%; /* الحد الأدنى لعرض الجدول */
+}
+
+.table-horizontal-scroll:after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, rgba(30, 58, 92, 0), #1e3a5c);
+    pointer-events: none;
+    opacity: 0.8;
+    z-index: 5;
+}
+
+.table-horizontal-scroll:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to left, rgba(30, 58, 92, 0), #1e3a5c);
+    pointer-events: none;
+    opacity: 0.8;
+    z-index: 5;
+}
+
+@media (max-width: 768px) {
+    .table-horizontal-scroll table {
+        min-width: 800px; /* عرض أكبر للجداول على الشاشات الصغيرة لضمان التمرير */
+    }
 }
 
 /* Scroll bar styling */
