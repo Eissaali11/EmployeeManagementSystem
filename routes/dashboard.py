@@ -8,6 +8,7 @@ from app import db
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/')
+@login_required
 def index():
     """Main dashboard with overview of system statistics"""
     # Get basic statistics
@@ -72,6 +73,7 @@ def index():
                           salary_data=salary_data)
 
 @dashboard_bp.route('/employee-stats')
+@login_required
 def employee_stats():
     """عرض إحصائيات الموظفين حسب القسم والحالة"""
     # إحصائيات الموظفين حسب القسم
@@ -124,6 +126,7 @@ def employee_stats():
                            detailed_stats=detailed_stats)
 
 @dashboard_bp.route('/api/department-employee-stats')
+@login_required
 def department_employee_stats_api():
     """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
     # إحصائيات الموظفين حسب القسم

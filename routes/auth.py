@@ -7,6 +7,11 @@ from models import User
 # إنشاء blueprint للمصادقة
 auth_bp = Blueprint('auth', __name__)
 
+# مسار افتراضي لإعادة التوجيه للمسجلين
+@auth_bp.route('/index')
+def index():
+    return redirect(url_for('dashboard.index'))
+
 @auth_bp.route('/login', methods=['GET'])
 def login():
     """صفحة تسجيل الدخول باستخدام Firebase"""

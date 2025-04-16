@@ -2,11 +2,11 @@ import os
 import logging
 from datetime import datetime
 
-from flask import Flask, session
+from flask import Flask, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -68,6 +68,14 @@ def inject_now():
         'firebase_app_id': app.config['FIREBASE_APP_ID']
     }
 
+# مسار الجذر الرئيسي للتطبيق
+@app.route('/')
+def root():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    else:
+        return redirect(url_for('auth.login'))
+
 # Register blueprints for different modules
 with app.app_context():
     # Import models before creating tables
@@ -83,13 +91,13 @@ with app.app_context():
     from routes.reports import reports_bp
     from routes.auth import auth_bp
     
-    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(employees_bp, url_prefix='/employees')
     app.register_blueprint(departments_bp, url_prefix='/departments')
     app.register_blueprint(attendance_bp, url_prefix='/attendance')
     app.register_blueprint(salaries_bp, url_prefix='/salaries')
     app.register_blueprint(documents_bp, url_prefix='/documents')
-    app.register_blueprint(reports_bp)
+    app.register_blueprint(reports_bp, url_prefix='/reports')
     app.register_blueprint(auth_bp)
     
     # Create database tables if they don't exist
