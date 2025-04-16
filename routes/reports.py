@@ -1137,65 +1137,24 @@ def documents_pdf():
     # الحصول على النتائج النهائية
     results = query.order_by(Document.expiry_date).all()
     
-    # إنشاء ملف PDF
-    buffer = BytesIO()
-    
-    # تسجيل الخط العربي
-    try:
-        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
-        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
-    except:
-        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
-        pass
-    
-    # تعيين أبعاد الصفحة واتجاهها
-    doc = SimpleDocTemplate(
-        buffer, 
-        pagesize=landscape(A4),
-        rightMargin=2*cm,
-        leftMargin=2*cm,
-        topMargin=2*cm,
-        bottomMargin=2*cm
-    )
-    
-    # إعداد الأنماط
-    styles = getSampleStyleSheet()
-    # إنشاء نمط للنص العربي
-    arabic_style = ParagraphStyle(
-        name='Arabic',
-        parent=styles['Normal'],
-        fontName='Arabic',
-        fontSize=12,
-        alignment=1, # وسط
-        textColor=colors.black
-    )
-    
-    # إنشاء نمط للعناوين
-    title_style = ParagraphStyle(
-        name='Title',
-        parent=styles['Title'],
-        fontName='Arabic',
-        fontSize=16,
-        alignment=1, # وسط
-        textColor=colors.black
-    )
-    
-    # إعداد المحتوى
+    # إعداد المحتوى باستخدام وحدة PDF الجديدة
     elements = []
+    
+    # الحصول على أنماط النصوص المحسنة
+    styles = get_styles()
     
     # إضافة العنوان
     title = f"تقرير الوثائق - {document_type_name} - {department_name} - {expiry_status}"
-    # تهيئة النص العربي للعرض في PDF
-    title = get_display(arabic_reshaper.reshape(title))
-    elements.append(Paragraph(title, title_style))
+    # تهيئة النص العربي للعرض في PDF باستخدام الدالة المحسنة
+    elements.append(Paragraph(arabic_text(title), styles['title']))
     elements.append(Spacer(1, 20))
     
     # إعداد جدول البيانات
     headers = ["الموظف", "الرقم الوظيفي", "القسم", "نوع الوثيقة", "رقم الوثيقة", "تاريخ الإصدار", "تاريخ الانتهاء", "الحالة"]
     data = []
     
-    # إضافة الرؤوس
-    headers_display = [get_display(arabic_reshaper.reshape(h)) for h in headers]
+    # إضافة الرؤوس (مع تطبيق ترميز النص العربي باستخدام الدالة المحسنة)
+    headers_display = [arabic_text(h) for h in headers]
     data.append(headers_display)
     
     # ترجمة أنواع الوثائق
@@ -1226,61 +1185,31 @@ def documents_pdf():
             status_color = colors.green
         
         row = [
-            get_display(arabic_reshaper.reshape(employee.name)),
+            arabic_text(employee.name),
             employee.employee_id,
-            get_display(arabic_reshaper.reshape(department_name)),
-            get_display(arabic_reshaper.reshape(document_type_arabic)),
+            arabic_text(department_name),
+            arabic_text(document_type_arabic),
             document.document_number,
             format_date_gregorian(document.issue_date),
             format_date_gregorian(document.expiry_date),
-            get_display(arabic_reshaper.reshape(status))
+            arabic_text(status)
         ]
         data.append(row)
     
-    # إنشاء الجدول
+    # إنشاء الجدول باستخدام دالة جدول البيانات المحسنة
     if len(data) > 1:  # لدينا بيانات بخلاف الرؤوس
-        # حساب العرض المناسب للجدول بناءً على حجم الصفحة
-        table_width = landscape(A4)[0] - 4*cm  # العرض الإجمالي ناقص الهوامش
-        col_widths = [table_width/len(headers)] * len(headers)  # توزيع متساوي
-        table = Table(data, colWidths=col_widths)
-        
-        # إعداد أنماط الجدول
-        table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),  # لون خلفية العناوين
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # لون نص العناوين
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # محاذاة النص
-            ('FONTNAME', (0, 0), (-1, 0), 'Arabic'),  # خط العناوين
-            ('FONTSIZE', (0, 0), (-1, 0), 12),  # حجم خط العناوين
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # تباعد أسفل العناوين
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # لون خلفية البيانات
-            ('FONTNAME', (0, 1), (-1, -1), 'Arabic'),  # خط البيانات
-            ('FONTSIZE', (0, 1), (-1, -1), 10),  # حجم خط البيانات
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # حدود الجدول
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة النص عموديا
-        ])
-        
-        # تطبيق التناوب في ألوان الصفوف لتحسين القراءة
-        for i in range(1, len(data)):
-            if i % 2 == 0:
-                table_style.add('BACKGROUND', (0, i), (-1, i), colors.whitesmoke)
-        
-        table.setStyle(table_style)
-        elements.append(table)
+        # إنشاء جدول البيانات باستخدام الدالة المحسنة
+        elements.append(create_data_table(headers, data[1:]))
     else:
-        no_data_text = get_display(arabic_reshaper.reshape("لا توجد بيانات وثائق متاحة"))
-        elements.append(Paragraph(no_data_text, arabic_style))
+        elements.append(Paragraph(arabic_text("لا توجد بيانات وثائق متاحة"), styles['normal']))
     
     # إضافة معلومات التقرير في أسفل الصفحة
     elements.append(Spacer(1, 20))
     footer_text = f"تاريخ إنشاء التقرير: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-    footer_text = get_display(arabic_reshaper.reshape(footer_text))
-    elements.append(Paragraph(footer_text, arabic_style))
+    elements.append(Paragraph(arabic_text(footer_text), styles['normal']))
     
-    # بناء المستند
-    doc.build(elements)
-    
-    # إعادة المؤشر إلى بداية البايت
-    buffer.seek(0)
+    # إنشاء ملف PDF واستخدام دالة الإنشاء المحسنة
+    buffer = create_pdf(elements, landscape_mode=True)
     
     # إنشاء استجابة تحميل
     response = make_response(buffer.getvalue())

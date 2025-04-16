@@ -35,7 +35,7 @@ def get_styles():
     arabic_style = ParagraphStyle(
         name='ArabicStyle',
         parent=styles['Normal'],
-        fontName='Helvetica',
+        fontName='Arial',
         fontSize=10,
         alignment=2,  # يمين (RTL)
         textColor=colors.black
@@ -45,7 +45,7 @@ def get_styles():
     title_style = ParagraphStyle(
         name='ArabicTitle',
         parent=styles['Title'],
-        fontName='Helvetica',
+        fontName='Arial',
         fontSize=16,
         alignment=1,  # وسط
         textColor=colors.black
@@ -55,7 +55,7 @@ def get_styles():
     subtitle_style = ParagraphStyle(
         name='ArabicSubtitle',
         parent=styles['Heading2'],
-        fontName='Helvetica',
+        fontName='Arial',
         fontSize=14,
         alignment=2,  # يمين (RTL)
         textColor=colors.blue
