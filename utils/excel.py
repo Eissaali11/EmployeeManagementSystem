@@ -101,20 +101,44 @@ def parse_employee_excel(file):
                 if row.isnull().all():
                     continue
                 
-                # Skip rows with empty values in important fields
-                if any(pd.isna(row[detected_columns[field]]) for field in required_fields):
-                    print(f"Skipping row {idx+1} due to missing required fields")
+                # Handle rows with missing required fields by filling with defaults
+                missing_fields = []
+                for field in required_fields:
+                    if pd.isna(row[detected_columns[field]]):
+                        missing_fields.append(field)
+                
+                # If more than 3 required fields are missing, skip the row
+                if len(missing_fields) > 3:
+                    print(f"Skipping row {idx+1} due to too many missing required fields: {', '.join(missing_fields)}")
                     continue
+                    
+                # If name is missing but there are at least 2 other fields with values, try to process it
+                if 'name' in missing_fields and len(missing_fields) <= 2:
+                    # Generate a temporary name based on available data
+                    temp_name = f"موظف-{idx+1}"
+                    print(f"Row {idx+1}: Missing name, using '{temp_name}' temporarily")
+                    # We'll fill this in the next section
                 
                 # Create employee dictionary with required fields
                 employee = {}
                 
-                # Add required fields
+                # Add required fields with defaults for missing values
                 for field in required_fields:
                     value = row[detected_columns[field]]
                     # Convert to string and handle NaN values
                     if pd.isna(value):
-                        raise ValueError(f"Missing required field '{field}'")
+                        # Generate default values for missing fields
+                        if field == 'name':
+                            value = f"موظف-{idx+1}"
+                        elif field == 'employee_id':
+                            value = f"EMP{idx+1000}"
+                        elif field == 'national_id':
+                            value = f"ID{idx+1000}"
+                        elif field == 'mobile':
+                            value = f"05xxxxxxxx"
+                        elif field == 'job_title':
+                            value = "موظف"
+                        print(f"Row {idx+1}: Auto-filled missing {field} with '{value}'")
                     employee[field] = str(value)
                 
                 # Handle status field specially
