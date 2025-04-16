@@ -512,7 +512,10 @@
         statusMessage.innerHTML = errorMessage;
         emailLoginStatus.innerHTML = errorMessage;
         googleSignInBtn.disabled = false;
-        emailSignInBtn.disabled = false;
+        
+        // إعادة تمكين زر تسجيل الدخول بالبريد الإلكتروني
+        const emailSubmitBtn = emailForm?.querySelector('button[type="submit"]');
+        if (emailSubmitBtn) emailSubmitBtn.disabled = false;
       }
     } catch (error) {
       console.error("خطأ في إرسال البيانات إلى الخادم:", error);
@@ -520,7 +523,10 @@
       statusMessage.innerHTML = errorMessage;
       emailLoginStatus.innerHTML = errorMessage;
       googleSignInBtn.disabled = false;
-      emailSignInBtn.disabled = false;
+      
+      // إعادة تمكين زر تسجيل الدخول بالبريد الإلكتروني
+      const emailSubmitBtn = emailForm?.querySelector('button[type="submit"]');
+      if (emailSubmitBtn) emailSubmitBtn.disabled = false;
     }
   }
 
@@ -532,6 +538,18 @@
       console.log("لا يوجد مستخدم مسجل حاليًا");
     }
   });
+  
+  // مستمع حدث للنموذج الرئيسي للتعامل مع تسجيل الدخول
+  if (emailForm) {
+    emailForm.addEventListener('submit', function(event) {
+      // منع السلوك الافتراضي للنموذج
+      event.preventDefault();
+      console.log("تم تقديم نموذج تسجيل الدخول");
+      
+      // استدعاء معالج تسجيل الدخول بالبريد الإلكتروني
+      handleEmailLogin();
+    });
+  }
   
   // معالجة النموذج عند الضغط على Enter
   if (passwordInput) {

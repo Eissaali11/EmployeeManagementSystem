@@ -16,15 +16,9 @@ from bidi.algorithm import get_display
 # تسجيل الخطوط المستخدمة
 def register_fonts():
     """تسجيل الخطوط المستخدمة في التقارير"""
-    # تسجيل الخط العربي
-    font_path = 'static/fonts/Arial.ttf'
-    try:
-        if not pdfmetrics._fonts.get('Arial'):
-            pdfmetrics.registerFont(TTFont('Arial', font_path))
-    except Exception as e:
-        print(f"خطأ في تسجيل الخط: {e}")
-        # في حالة الخطأ نستخدم الخط الافتراضي
-        pass
+    # نستخدم الخط الافتراضي في ReportLab وهو Helvetica
+    # لا نحتاج لتسجيل خط خاص
+    pass
 
 # إنشاء الأنماط للتقارير
 def get_styles():
@@ -35,7 +29,7 @@ def get_styles():
     arabic_style = ParagraphStyle(
         name='ArabicStyle',
         parent=styles['Normal'],
-        fontName='Arial',
+        fontName='Helvetica',  # استخدام الخط الافتراضي
         fontSize=10,
         alignment=2,  # يمين (RTL)
         textColor=colors.black
@@ -45,7 +39,7 @@ def get_styles():
     title_style = ParagraphStyle(
         name='ArabicTitle',
         parent=styles['Title'],
-        fontName='Arial',
+        fontName='Helvetica-Bold',  # استخدام الخط الافتراضي مع نمط عريض
         fontSize=16,
         alignment=1,  # وسط
         textColor=colors.black
@@ -55,7 +49,7 @@ def get_styles():
     subtitle_style = ParagraphStyle(
         name='ArabicSubtitle',
         parent=styles['Heading2'],
-        fontName='Arial',
+        fontName='Helvetica-Bold',  # استخدام الخط الافتراضي مع نمط عريض
         fontSize=14,
         alignment=2,  # يمين (RTL)
         textColor=colors.blue
