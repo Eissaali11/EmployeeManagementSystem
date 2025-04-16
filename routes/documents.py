@@ -1,7 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
 from datetime import datetime, timedelta
+import io
+import csv
+import pdfkit
 from app import db
 from models import Document, Employee, SystemAudit
 from utils.excel import parse_document_excel
@@ -48,7 +51,8 @@ def index():
     # Get document types for filter dropdown
     document_types = [
         'national_id', 'passport', 'health_certificate', 
-        'work_permit', 'education_certificate', 'other'
+        'work_permit', 'education_certificate', 'driving_license',
+        'annual_leave', 'other'
     ]
     
     return render_template('documents/index.html',
@@ -110,7 +114,8 @@ def create():
     # Get document types for dropdown
     document_types = [
         'national_id', 'passport', 'health_certificate', 
-        'work_permit', 'education_certificate', 'other'
+        'work_permit', 'education_certificate', 'driving_license',
+        'annual_leave', 'other'
     ]
     
     # Default dates
