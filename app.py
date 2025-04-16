@@ -55,6 +55,7 @@ with app.app_context():
     from routes.attendance import attendance_bp
     from routes.salaries import salaries_bp
     from routes.documents import documents_bp
+    from routes.reports import reports_bp
     
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(employees_bp, url_prefix='/employees')
@@ -62,6 +63,7 @@ with app.app_context():
     app.register_blueprint(attendance_bp, url_prefix='/attendance')
     app.register_blueprint(salaries_bp, url_prefix='/salaries')
     app.register_blueprint(documents_bp, url_prefix='/documents')
+    app.register_blueprint(reports_bp)
     
     # Create database tables if they don't exist
     logger.info("Creating database tables...")

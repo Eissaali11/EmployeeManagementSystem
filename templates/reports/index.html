@@ -1,0 +1,153 @@
+{% extends 'layout.html' %}
+
+{% block title %}التقارير - نظام إدارة الموظفين{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        التقارير
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead">مرحبًا بك في نظام التقارير الشامل. يمكنك من هنا الوصول إلى مختلف أنواع التقارير وتصديرها بصيغ متعددة.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        تقارير الموظفين
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">عرض وتصدير بيانات الموظفين حسب القسم والحالة الوظيفية.</p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            قائمة كاملة بجميع الموظفين
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصفية حسب القسم والحالة
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصدير إلى PDF و Excel
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('reports.employees_report') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-file-alt me-1"></i>
+                        عرض تقارير الموظفين
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        تقارير الحضور والغياب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">تقارير شاملة عن حضور وغياب الموظفين خلال فترة زمنية محددة.</p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تحديد فترة زمنية مخصصة
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصفية حسب القسم وحالة الحضور
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصدير إلى PDF و Excel
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('reports.attendance_report') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-file-alt me-1"></i>
+                        عرض تقارير الحضور
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        تقارير الرواتب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">تقارير مفصلة عن رواتب الموظفين خلال شهر وسنة محددة.</p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            عرض حسب الشهر والسنة
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصفية حسب القسم
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصدير إلى PDF و Excel
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('reports.salaries_report') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-file-alt me-1"></i>
+                        عرض تقارير الرواتب
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-id-card me-2"></i>
+                        تقارير الوثائق
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">تقارير مفصلة عن وثائق الموظفين مع تنبيهات الوثائق التي ستنتهي قريبًا.</p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            عرض جميع الوثائق أو المنتهية فقط
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصفية حسب القسم ونوع الوثيقة
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصدير إلى PDF و Excel
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('reports.documents_report') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-file-alt me-1"></i>
+                        عرض تقارير الوثائق
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
