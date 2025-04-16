@@ -501,11 +501,12 @@ function formatEmployeeOption(employee) {
     // Create styled option with employee details
     const $result = $(
         '<div class="select2-employee-option d-flex justify-content-between align-items-center py-1">' +
-            '<div><i class="fas fa-user-circle me-2 text-primary"></i>' + 
-                employee.text.replace(/\([^)]+\)/, '') + 
+            '<div class="d-flex align-items-center">' +
+                '<i class="fas fa-user-circle me-2 text-primary"></i>' + 
+                '<span class="fw-medium">' + employee.text.replace(/\([^)]+\)/, '') + '</span>' +
             '</div>' +
             '<div class="text-muted small badge ' + badgeClass + '">' + 
-                (empId ? empId : '') + 
+                (empId ? '<i class="fas fa-id-card me-1 small"></i>' + empId : '') + 
             '</div>' +
         '</div>'
     );
@@ -520,5 +521,23 @@ function formatEmployeeSelection(employee) {
     if (!employee.id) {
         return employee.text;
     }
-    return $('<span><i class="fas fa-user me-1"></i> ' + employee.text + '</span>');
+    
+    // استخراج رقم الموظف لعرضه
+    let employeeName = employee.text;
+    let employeeId = '';
+    
+    const matches = employee.text.match(/\(([^)]+)\)/);
+    if (matches && matches.length > 1) {
+        employeeId = matches[1];
+        employeeName = employee.text.replace(/\([^)]+\)/, '').trim();
+    }
+    
+    // إنشاء عرض منسق للموظف المحدد
+    return $(
+        '<span class="d-flex align-items-center">' +
+            '<i class="fas fa-user-circle me-2 text-primary"></i>' +
+            '<span class="fw-medium">' + employeeName + '</span>' +
+            (employeeId ? '<span class="ms-2 small text-muted">(' + employeeId + ')</span>' : '') +
+        '</span>'
+    );
 }
