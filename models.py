@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask_login import UserMixin
 from app import db
 
 class Department(db.Model):
@@ -100,6 +101,25 @@ class Document(db.Model):
     def __repr__(self):
         return f'<Document {self.document_type} for {self.employee.name}>'
 
+class User(UserMixin, db.Model):
+    """User model for authentication"""
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100))
+    firebase_uid = db.Column(db.String(128), unique=True, nullable=False)
+    profile_picture = db.Column(db.String(255))
+    role = db.Column(db.String(20), default='user')  # admin, manager, user
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # الربط مع الموظف إذا كان المستخدم موظفًا في النظام
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    employee = db.relationship('Employee', foreign_keys=[employee_id], uselist=False)
+    
+    def __repr__(self):
+        return f'<User {self.email}>'
+
 class SystemAudit(db.Model):
     """Audit trail for significant system actions"""
     id = db.Column(db.Integer, primary_key=True)
@@ -108,6 +128,9 @@ class SystemAudit(db.Model):
     entity_id = db.Column(db.Integer, nullable=False)
     details = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    # إضافة مرجع للمستخدم الذي قام بالإجراء
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    user = db.relationship('User', foreign_keys=[user_id])
     
     def __repr__(self):
         return f'<SystemAudit {self.action} on {self.entity_type} #{self.entity_id}>'
