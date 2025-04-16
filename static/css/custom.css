@@ -526,6 +526,20 @@ table {
     background-color: rgba(var(--bs-info-rgb), 0.1);
 }
 
+/* تنسيق عناوين ملخص الرواتب */
+.salary-heading {
+    color: #2a5885;
+    font-weight: 600;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.salary-heading:hover {
+    color: #3a7fb9;
+    transform: translateY(-2px);
+}
+
 /* Better responsive tables */
 .table-responsive {
     border-radius: 0.75rem;
@@ -948,6 +962,15 @@ table {
 [data-bs-theme=dark] .department-manager {
     color: #f8f9fa;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme=dark] .salary-heading {
+    color: #8fd6ff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme=dark] .salary-heading:hover {
+    color: #b0e0ff;
 }
 
 [data-bs-theme=dark] .department-card {
