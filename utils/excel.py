@@ -64,18 +64,49 @@ def parse_employee_excel(file):
                     break
                     
         # Handle special case for Excel files with columns like 'Name', 'Emp .N', etc. - explicit mappings
-        # This is to handle the specific format mentioned in the original code
+        # هذه المعلومات تستخدم في معالجة النموذج الرسمي المستخدم في النظام
+        # الترتيب هنا مهم جداً كما في نموذج الموظفين
         explicit_mappings = {
-            'Name': 'name',
-            'Emp .N': 'employee_id', 
-            'ID .N': 'national_id',
-            'Mobil': 'mobile',
-            'Job Title': 'job_title',
-            'Status': 'status',
-            'Location': 'location',
-            'Project': 'project',
-            'Email': 'email'
+            'Name': 'name',  # الاسم
+            'Emp .N': 'national_id',  # رقم الهوية (تم التبديل)
+            'ID .N': 'employee_id',  # الرقم الوظيفي (تم التبديل)
+            'Mobil': 'mobile',  # رقم الجوال
+            'Job Title': 'job_title',  # المسمى الوظيفي
+            'Status': 'status',  # الحالة
+            'Location': 'location',  # الموقع
+            'Project': 'project',  # المشروع
+            'Email': 'email'  # البريد الإلكتروني
         }
+        
+        # التأكد من وجود الأعمدة المطلوبة حسب الترتيب الصحيح
+        expected_columns = ['Name', 'Emp .N', 'ID .N', 'Mobil', 'Job Title']
+        missing_columns = [col for col in expected_columns if col not in df.columns]
+        if missing_columns:
+            print(f"تحذير: العمود التالي غير موجود في الملف: {', '.join(missing_columns)}")
+            print(f"الأعمدة الموجودة هي: {df.columns.tolist()}")
+            
+        # فحص ترتيب الأعمدة وإصلاحه إذا كان غير صحيح
+        if len(df.columns) >= 5:
+            # إذا كانت أسماء الأعمدة مختلفة، يمكن أن نفترض أن الترتيب صحيح ونعيد تسمية الأعمدة
+            if 'Name' not in df.columns and 'Emp .N' not in df.columns and 'ID .N' not in df.columns:
+                print("إعادة تسمية الأعمدة بناءً على ترتيبها")
+                new_columns = list(df.columns)
+                for i, col in enumerate(new_columns[:5]):
+                    if i == 0:
+                        detected_columns['name'] = col
+                        print(f"عمود الاسم: {col}")
+                    elif i == 1:
+                        detected_columns['national_id'] = col  # العمود الثاني هو رقم الهوية (تم التبديل)
+                        print(f"عمود رقم الهوية: {col}")
+                    elif i == 2:
+                        detected_columns['employee_id'] = col  # العمود الثالث هو الرقم الوظيفي (تم التبديل)
+                        print(f"عمود الرقم الوظيفي: {col}")
+                    elif i == 3:
+                        detected_columns['mobile'] = col
+                        print(f"عمود رقم الجوال: {col}")
+                    elif i == 4:
+                        detected_columns['job_title'] = col
+                        print(f"عمود المسمى الوظيفي: {col}")
         
         for excel_col, field in explicit_mappings.items():
             if excel_col in df.columns:
@@ -133,8 +164,8 @@ def parse_employee_excel(file):
                         elif field == 'employee_id':
                             value = f"EMP{idx+1000}"
                         elif field == 'national_id':
-                            # تنسيق الرقم الوطني بشكل صحيح (10 أرقام)
-                            value = f"1{idx+1000:09d}"
+                            # تنسيق مختلف للرقم الوطني بحيث لا يكون مشابه للرقم الوظيفي
+                            value = f"N-{idx+5000:07d}"
                         elif field == 'mobile':
                             value = f"05xxxxxxxx"
                         elif field == 'job_title':
@@ -200,22 +231,24 @@ def generate_employee_excel(employees):
         BytesIO object containing the Excel file
     """
     try:
-        # Create data for Excel file
+        # إنشاء بيانات لملف Excel بنفس ترتيب النموذج الأصلي
         data = []
         for employee in employees:
+            # ترتيب البيانات حسب النموذج الأصلي
+            # Name, Emp .N (هوية), ID .N (رقم موظف), Mobil, Job Title, Status, Location, Project, Email
             row = {
-                'معرف الموظف': employee.id,
-                'رقم الموظف': employee.employee_id,
-                'الاسم': employee.name,
-                'رقم الهوية': employee.national_id,
-                'رقم الجوال': employee.mobile,
-                'البريد الإلكتروني': employee.email or '',
-                'المسمى الوظيفي': employee.job_title,
-                'الحالة': employee.status,
-                'الموقع': employee.location or '',
-                'المشروع': employee.project or '',
-                'القسم': employee.department.name if employee.department else '',
-                'تاريخ الانضمام': employee.join_date if employee.join_date else ''
+                'Name': employee.name,  # الاسم
+                'Emp .N': employee.national_id,  # رقم الهوية (تم التبديل)
+                'ID .N': employee.employee_id,  # الرقم الوظيفي (تم التبديل)
+                'Mobil': employee.mobile,  # رقم الجوال
+                'Job Title': employee.job_title,  # المسمى الوظيفي
+                'Status': employee.status,  # الحالة
+                'Location': employee.location or '',  # الموقع
+                'Project': employee.project or '',  # المشروع
+                'Email': employee.email or '',  # البريد الإلكتروني
+                # معلومات إضافية في أعمدة منفصلة
+                'Department': employee.department.name if employee.department else '',  # القسم
+                'Join Date': employee.join_date if employee.join_date else ''  # تاريخ الانضمام
             }
             data.append(row)
         
