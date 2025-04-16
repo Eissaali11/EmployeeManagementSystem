@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, redirect, url_for
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
+from flask_login import login_required, current_user
 from models import Employee, Department, Attendance, Document, Salary
 from app import db
 
