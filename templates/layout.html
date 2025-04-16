@@ -37,37 +37,37 @@
                     <hr>
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li class="nav-item mb-1">
-                            <a href="{{ url_for('dashboard.index') }}" class="nav-link text-white {% if request.path == '/' %}active{% endif %}">
+                            <a href="{{ url_for('dashboard.index') }}" class="nav-link nav-link-custom {% if request.path == '/' %}active{% endif %}">
                                 <i class="fas fa-tachometer-alt me-2"></i>
                                 <span>لوحة التحكم</span>
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a href="{{ url_for('employees.index') }}" class="nav-link text-white {% if '/employees' in request.path %}active{% endif %}">
+                            <a href="{{ url_for('employees.index') }}" class="nav-link nav-link-custom {% if '/employees' in request.path %}active{% endif %}">
                                 <i class="fas fa-users me-2"></i>
                                 <span>الموظفين</span>
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a href="{{ url_for('departments.index') }}" class="nav-link text-white {% if '/departments' in request.path %}active{% endif %}">
+                            <a href="{{ url_for('departments.index') }}" class="nav-link nav-link-custom {% if '/departments' in request.path %}active{% endif %}">
                                 <i class="fas fa-sitemap me-2"></i>
                                 <span>الأقسام</span>
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a href="{{ url_for('attendance.index') }}" class="nav-link text-white {% if '/attendance' in request.path %}active{% endif %}">
+                            <a href="{{ url_for('attendance.index') }}" class="nav-link nav-link-custom {% if '/attendance' in request.path %}active{% endif %}">
                                 <i class="fas fa-calendar-check me-2"></i>
                                 <span>الحضور</span>
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a href="{{ url_for('salaries.index') }}" class="nav-link text-white {% if '/salaries' in request.path %}active{% endif %}">
+                            <a href="{{ url_for('salaries.index') }}" class="nav-link nav-link-custom {% if '/salaries' in request.path %}active{% endif %}">
                                 <i class="fas fa-money-bill-wave me-2"></i>
                                 <span>الرواتب</span>
                             </a>
                         </li>
                         <li class="nav-item mb-1">
-                            <a href="{{ url_for('documents.index') }}" class="nav-link text-white {% if '/documents' in request.path %}active{% endif %}">
+                            <a href="{{ url_for('documents.index') }}" class="nav-link nav-link-custom {% if '/documents' in request.path %}active{% endif %}">
                                 <i class="fas fa-file-alt me-2"></i>
                                 <span>الوثائق</span>
                             </a>
