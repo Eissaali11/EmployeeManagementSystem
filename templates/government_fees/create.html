@@ -494,18 +494,116 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('صفحة احتساب الرسوم الحكومية محملة');
+
     // الدوال المساعدة
     function formatCurrency(amount) {
         return amount.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     
+    // تهيئة العناصر
+    function initializeElements() {
+        console.log('جاري تهيئة العناصر...');
+        
+        // إضافة مستمع لزر الاحتساب
+        const calculateButton = document.getElementById('calculate-button');
+        if (calculateButton) {
+            console.log('تم العثور على زر الاحتساب');
+            // سيتم تعريف معالج الاحتساب لاحقًا
+            // calculateButton.addEventListener('click', handleCalculation);
+        } else {
+            console.error('لم يتم العثور على زر الاحتساب (calculate-button)');
+        }
+        
+        // تهيئة خيار الرسوم الأخرى
+        const includeOtherCheckbox = document.getElementById('include_other');
+        if (includeOtherCheckbox) {
+            includeOtherCheckbox.addEventListener('change', function() {
+                const otherFeeInputs = document.querySelector('.other-fee-inputs');
+                if (otherFeeInputs) {
+                    if (this.checked) {
+                        otherFeeInputs.classList.remove('d-none');
+                    } else {
+                        otherFeeInputs.classList.add('d-none');
+                    }
+                }
+            });
+        }
+        
+        // تهيئة مستمع حالة السداد
+        const paymentStatusSelect = document.getElementById('payment_status');
+        if (paymentStatusSelect) {
+            paymentStatusSelect.addEventListener('change', function() {
+                const paymentDetailsElements = document.querySelectorAll('.payment-details');
+                if (this.value === 'paid') {
+                    paymentDetailsElements.forEach(element => {
+                        element.classList.remove('d-none');
+                    });
+                    
+                    // تعيين تاريخ السداد بتاريخ اليوم
+                    const today = new Date().toISOString().split('T')[0];
+                    const paymentDateField = document.getElementById('payment_date');
+                    if (paymentDateField) {
+                        paymentDateField.value = today;
+                    }
+                } else {
+                    paymentDetailsElements.forEach(element => {
+                        element.classList.add('d-none');
+                    });
+                }
+            });
+        }
+        
+        // تهيئة زر تنزيل إكسل
+        const downloadExcelButton = document.getElementById('download-excel-button');
+        if (downloadExcelButton) {
+            downloadExcelButton.addEventListener('click', function() {
+                if (!window.calculatedFeeData) {
+                    alert('يرجى احتساب الرسوم أولاً قبل تنزيل البيانات');
+                    return;
+                }
+                
+                generateExcelFile(window.calculatedFeeData);
+            });
+        }
+        
+        // تحميل مكتبة SheetJS
+        // نهيئ الدالة الخاصة بتحميل مكتبة الإكسل
+        if (typeof loadXLSXScript !== 'function') {
+            window.loadXLSXScript = function() {
+                console.log('جاري تحميل مكتبة SheetJS...');
+                if (!document.getElementById('sheetjs-script')) {
+                    const script = document.createElement('script');
+                    script.id = 'sheetjs-script';
+                    script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+                    script.onload = function() {
+                        console.log('تم تحميل مكتبة SheetJS بنجاح');
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    console.log('مكتبة SheetJS محملة مسبقًا');
+                }
+            };
+        }
+        loadXLSXScript();
+        
+        console.log('تم تهيئة العناصر بنجاح');
+    }
+    
     // الحصول على قائمة الموظفين
     async function loadEmployees() {
+        console.log('جاري تحميل بيانات الموظفين...');
         try {
             const response = await fetch('/api/employees');
             const data = await response.json();
+            console.log(`تم تحميل ${data.length} موظف`);
             
             const employeeSelect = document.getElementById('employee_id');
+            if (!employeeSelect) {
+                console.error('لم يتم العثور على حقل اختيار الموظف (employee_id)');
+                return;
+            }
+            
             employeeSelect.innerHTML = '<option value="" selected disabled>اختر الموظف</option>';
             
             data.forEach(employee => {
@@ -524,6 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 
                 if (selectedOption.value) {
+                    console.log(`تم اختيار الموظف: ${selectedOption.textContent}`);
                     const employeeInfo = document.getElementById('employee_info');
                     employeeInfo.innerHTML = `
                         <strong>نوع العقد:</strong> ${selectedOption.dataset.contract_type === 'saudi' ? 'سعودي' : 'وافد'}<br>
@@ -533,10 +632,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     
                     // تحديث حالة التوازن الوطني تلقائيًا
-                    if (selectedOption.dataset.national_balance === 'نعم') {
-                        document.getElementById('has_national_balance').checked = true;
-                    } else {
-                        document.getElementById('has_national_balance').checked = false;
+                    const hasNationalBalance = selectedOption.dataset.national_balance === 'نعم';
+                    const balanceCheckbox = document.getElementById('has_national_balance');
+                    if (balanceCheckbox) {
+                        balanceCheckbox.checked = hasNationalBalance;
                     }
                 }
             });
@@ -545,6 +644,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading employees:', error);
             // تهيئة بعض البيانات الافتراضية للعرض
             const employeeSelect = document.getElementById('employee_id');
+            if (!employeeSelect) {
+                console.error('لم يتم العثور على حقل اختيار الموظف (employee_id)');
+                return;
+            }
+            
             employeeSelect.innerHTML = `
                 <option value="" selected disabled>اختر الموظف</option>
                 <option value="1" data-contract_type="foreign" data-nationality="مصري" data-basic_salary="5000" data-national_balance="لا">أحمد محمد (EMP001)</option>
@@ -557,6 +661,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 
                 if (selectedOption.value) {
+                    console.log(`تم اختيار الموظف: ${selectedOption.textContent}`);
                     const employeeInfo = document.getElementById('employee_info');
                     employeeInfo.innerHTML = `
                         <strong>نوع العقد:</strong> ${selectedOption.dataset.contract_type === 'saudi' ? 'سعودي' : 'وافد'}<br>
@@ -566,10 +671,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     
                     // تحديث حالة التوازن الوطني تلقائيًا
-                    if (selectedOption.dataset.national_balance === 'نعم') {
-                        document.getElementById('has_national_balance').checked = true;
-                    } else {
-                        document.getElementById('has_national_balance').checked = false;
+                    const hasNationalBalance = selectedOption.dataset.national_balance === 'نعم';
+                    const balanceCheckbox = document.getElementById('has_national_balance');
+                    if (balanceCheckbox) {
+                        balanceCheckbox.checked = hasNationalBalance;
                     }
                 }
             });
@@ -578,6 +683,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // تحميل الموظفين عند بدء التشغيل
     loadEmployees();
+    
+    // تهيئة العناصر
+    initializeElements();
     
     // معالجة الرسوم الأخرى
     const includeOtherCheckbox = document.getElementById('include_other');
