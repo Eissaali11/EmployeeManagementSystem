@@ -33,6 +33,7 @@
             </div>
 
             <form method="POST" action="{{ url_for('renewal_fees.create') }}" id="feesForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- معلومات الوثيقة والتاريخ -->
                 <div class="card mb-4 border">
                     <div class="card-header bg-light">
