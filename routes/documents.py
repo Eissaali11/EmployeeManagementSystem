@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
 from datetime import datetime, timedelta
 import io
+from io import BytesIO
 import csv
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
@@ -526,11 +527,13 @@ def export_employee_documents_pdf(employee_id):
     buffer.seek(0)
     
     # إنشاء استجابة تحميل
-    response = make_response(buffer.getvalue())
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=employee_{employee_id}_documents.pdf'
-    
-    return response
+    buffer.seek(0)
+    return make_response(send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f'employee_{employee_id}_documents.pdf',
+        mimetype='application/pdf'
+    ))
 
 @documents_bp.route('/employee/<int:employee_id>/export_excel')
 def export_employee_documents_excel(employee_id):
