@@ -79,6 +79,13 @@
                                 <span>الوثائق</span>
                             </a>
                         </li>
+                        
+                        <li class="nav-item mb-1">
+                            <a href="{{ url_for('government_fees.index') }}" class="nav-link nav-link-custom {% if '/government-fees' in request.path %}active{% endif %}">
+                                <i class="fas fa-money-check-alt me-2"></i>
+                                <span>الرسوم الحكومية</span>
+                            </a>
+                        </li>
 
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('vehicles.index') }}" class="nav-link nav-link-custom {% if '/vehicles' in request.path %}active{% endif %}">
@@ -137,7 +144,8 @@
                                 إدارة الرواتب
                             {% elif '/documents' in request.path %}
                                 إدارة الوثائق
-
+                            {% elif '/government-fees' in request.path %}
+                                الرسوم الحكومية
                             {% elif '/vehicles' in request.path %}
                                 نظام إدارة السيارات
                             {% elif '/reports' in request.path %}
