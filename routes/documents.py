@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import io
 from io import BytesIO
 import csv
+from flask_login import current_user
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -102,6 +103,11 @@ def create():
     """Create a new document record"""
     if request.method == 'POST':
         try:
+            # تحقق من وجود CSRF token
+            if 'csrf_token' not in request.form:
+                flash('خطأ في التحقق من الأمان. يرجى المحاولة مرة أخرى.', 'danger')
+                return redirect(url_for('documents.create'))
+                
             employee_id = request.form['employee_id']
             document_type = request.form['document_type']
             document_number = request.form['document_number']
@@ -131,7 +137,7 @@ def create():
                 entity_type='document',
                 entity_id=employee_id,
                 details=f'تم إضافة وثيقة جديدة من نوع {document_type} للموظف: {employee.name}',
-                user_id=None  # تحديد القيمة بشكل واضح كقيمة فارغة
+                user_id=current_user.id if current_user.is_authenticated else None
             )
             db.session.add(audit)
             db.session.commit()
@@ -270,6 +276,11 @@ def update_expiry(id):
 def import_excel():
     """Import document records from Excel file"""
     if request.method == 'POST':
+        # تحقق من وجود CSRF token
+        if 'csrf_token' not in request.form:
+            flash('خطأ في التحقق من الأمان. يرجى المحاولة مرة أخرى.', 'danger')
+            return redirect(request.url)
+            
         if 'file' not in request.files:
             flash('لم يتم اختيار ملف', 'danger')
             return redirect(request.url)
@@ -301,7 +312,8 @@ def import_excel():
                     action='import',
                     entity_type='document',
                     entity_id=0,
-                    details=f'تم استيراد {success_count} وثيقة بنجاح و {error_count} فشل'
+                    details=f'تم استيراد {success_count} وثيقة بنجاح و {error_count} فشل',
+                    user_id=current_user.id if current_user.is_authenticated else None
                 )
                 db.session.add(audit)
                 db.session.commit()

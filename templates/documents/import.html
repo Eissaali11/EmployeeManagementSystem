@@ -17,6 +17,7 @@
                 </div>
                 <div class="card-body">
                     <form action="{{ url_for('documents.import_excel') }}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-4">
                             <label for="file" class="form-label required-field">ملف Excel</label>
                             <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls" required onchange="validateExcelFile('file')">
