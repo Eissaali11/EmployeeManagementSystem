@@ -1090,51 +1090,87 @@
         document.getElementById('resetFormButton').addEventListener('click', function() {
             const confirmReset = confirm('هل أنت متأكد من رغبتك في إعادة ضبط جميع الحقول؟');
             if (confirmReset) {
-                // إعادة تعيين أقسام الرسوم
-                toggles.forEach(toggle => {
-                    const toggleElement = document.getElementById(toggle.id);
-                    toggleElement.checked = false;
+                try {
+                    // إعادة تعيين أقسام الرسوم
+                    toggles.forEach(toggle => {
+                        const toggleElement = document.getElementById(toggle.id);
+                        if (toggleElement) {
+                            toggleElement.checked = false;
+                        }
+                        
+                        const rowElement = document.getElementById(toggle.row);
+                        if (rowElement) {
+                            rowElement.classList.remove('bg-primary', 'bg-opacity-10');
+                        }
+                        
+                        const amountInput = document.getElementById(toggle.amount);
+                        if (amountInput) {
+                            amountInput.value = '';
+                            amountInput.disabled = true;
+                        }
+                        
+                        const notesInput = document.getElementById(toggle.notes);
+                        if (notesInput) {
+                            notesInput.value = '';
+                            notesInput.disabled = true;
+                        }
+                        
+                        if (toggle.transferNumber) {
+                            const transferNumberInput = document.getElementById(toggle.transferNumber);
+                            if (transferNumberInput) {
+                                transferNumberInput.value = '';
+                                transferNumberInput.disabled = true;
+                            }
+                        }
+                        
+                        // تعطيل الحقل المخفي
+                        const typeInput = document.getElementById(toggle.type);
+                        if (typeInput) {
+                            typeInput.disabled = true;
+                        }
+                    });
                     
-                    const rowElement = document.getElementById(toggle.row);
-                    rowElement.classList.remove('bg-primary', 'bg-opacity-10');
-                    
-                    const amountInput = document.getElementById(toggle.amount);
-                    amountInput.value = '';
-                    amountInput.disabled = true;
-                    
-                    const notesInput = document.getElementById(toggle.notes);
-                    if (notesInput) {
-                        notesInput.value = '';
-                        notesInput.disabled = true;
+                    // إعادة تعيين الحقول الأساسية
+                    const documentSelect = document.getElementById('document_id');
+                    if (documentSelect) {
+                        documentSelect.value = '';
+                        $('.select2').trigger('change');
                     }
                     
-                    if (toggle.transferNumber) {
-                        const transferNumberInput = document.getElementById(toggle.transferNumber);
-                        transferNumberInput.value = '';
-                        transferNumberInput.disabled = true;
+                    const feeDateInput = document.getElementById('fee_date');
+                    if (feeDateInput) {
+                        feeDateInput.value = '';
                     }
                     
-                    // تعطيل الحقل المخفي
-                    const typeInput = document.getElementById(toggle.type);
-                    typeInput.disabled = true;
-                });
-                
-                // إعادة تعيين الحقول الأساسية
-                document.getElementById('document_id').value = '';
-                $('.select2').trigger('change');
-                document.getElementById('fee_date').value = '';
-                document.getElementById('payment_status').value = 'pending';
-                document.getElementById('payment_date').value = '';
-                document.getElementById('receipt_number').value = '';
-                
-                // إخفاء تفاصيل الدفع
-                paymentDetailsRow.style.display = 'none';
-                
-                // تحديث الملخص
-                updateSummary();
-                
-                // عرض رسالة نجاح إعادة الضبط
-                showAlert('info', 'تم إعادة ضبط النموذج بنجاح');
+                    const paymentStatusSelect = document.getElementById('payment_status');
+                    if (paymentStatusSelect) {
+                        paymentStatusSelect.value = 'pending';
+                    }
+                    
+                    const paymentDateInput = document.getElementById('payment_date');
+                    if (paymentDateInput) {
+                        paymentDateInput.value = '';
+                    }
+                    
+                    const receiptNumberInput = document.getElementById('receipt_number');
+                    if (receiptNumberInput) {
+                        receiptNumberInput.value = '';
+                    }
+                    
+                    // إخفاء تفاصيل الدفع
+                    if (paymentDetailsRow) {
+                        paymentDetailsRow.style.display = 'none';
+                    }
+                    
+                    // تحديث الملخص
+                    updateSummary();
+                    
+                    // عرض رسالة نجاح إعادة الضبط
+                    showAlert('info', 'تم إعادة ضبط النموذج بنجاح');
+                } catch (error) {
+                    console.error('خطأ في إعادة ضبط النموذج:', error);
+                    showAlert('warning', 'حدث خطأ أثناء إعادة ضبط النموذج');
+                }
             }
         });
         
