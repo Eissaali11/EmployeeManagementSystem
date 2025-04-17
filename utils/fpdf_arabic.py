@@ -171,7 +171,7 @@ def generate_salary_notification_pdf(data):
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
         pdf.set_line_width(0.3)
-        pdf.rect(10, 40, 190, 230)  # إطار خارجي
+        pdf.rect(10.0, 40.0, 190.0, 230.0)  # إطار خارجي
         
         # معلومات الموظف
         pdf.set_font('Tajawal', 'B', 14)
@@ -180,7 +180,7 @@ def generate_salary_notification_pdf(data):
         
         # إضافة خط تحت عنوان بيانات الموظف
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(60, y_pos + 15, 190, y_pos + 15)
+        pdf.line(60.0, float(y_pos) + 15.0, 190.0, float(y_pos) + 15.0)
         
         # بيانات الموظف
         pdf.set_font('Tajawal', '', 12)
@@ -222,7 +222,7 @@ def generate_salary_notification_pdf(data):
         
         # خط تحت عنوان تفاصيل الراتب
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(60, salary_title_y + 10, 140, salary_title_y + 10)
+        pdf.line(60.0, float(salary_title_y) + 10.0, 140.0, float(salary_title_y) + 10.0)
         
         # ========== إعادة تصميم كاملة وصحيحة لقسم ملخص الراتب ==========
         
@@ -238,7 +238,7 @@ def generate_salary_notification_pdf(data):
         
         # خط أفقي تحت العنوان عبر الصفحة
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(70, title_y + 10, 140, title_y + 10)
+        pdf.line(70.0, float(title_y) + 10.0, 140.0, float(title_y) + 10.0)
         
         # نترك مسافة قبل بداية الجدول
         table_y = title_y + 15
