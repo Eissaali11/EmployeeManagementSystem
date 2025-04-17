@@ -518,136 +518,141 @@
                                 <div class="col-4">ملاحظات</div>
                                 <div class="col-1 text-center">تفعيل</div>
                             </div>
-                            
-                            <!-- رسوم مكتب العمل -->
-                            <div id="labor_office_row" class="row mb-3 py-2 align-items-center fee-row rounded">
-                                <div class="col-4 text-end">
-                                    <div class="d-inline-block">
-                                        <i class="fas fa-building me-2"></i>
-                                        <span class="fw-bold">رسوم مكتب العمل</span>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="input-group">
-                                        <input type="number" id="labor_office_amount" class="form-control bg-dark text-white border-secondary text-start fee-amount" 
-                                               min="0" step="0.01" placeholder="0">
-                                        <span class="input-group-text bg-dark text-white border-secondary">ريال</span>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <input type="text" id="labor_office_notes" class="form-control bg-dark text-white border-secondary" placeholder="ملاحظات">
-                                </div>
-                                <div class="col-1 text-center">
-                                    <div class="form-check form-switch d-flex justify-content-center">
-                                        <input class="form-check-input fee-toggle" type="checkbox" id="labor_office_toggle" data-target="labor_office">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- رسوم الجوازات -->
-                            <div id="passport_row" class="row mb-3 py-2 align-items-center fee-row rounded">
-                                <div class="col-4 text-end">
-                                    <div class="d-inline-block">
-                                        <i class="fas fa-passport me-2"></i>
-                                        <span class="fw-bold">رسوم الجوازات</span>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="input-group">
-                                        <input type="number" id="passport_amount" class="form-control bg-dark text-white border-secondary text-start fee-amount" 
-                                               min="0" step="0.01" placeholder="0">
-                                        <span class="input-group-text bg-dark text-white border-secondary">ريال</span>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <input type="text" id="passport_notes" class="form-control bg-dark text-white border-secondary" placeholder="ملاحظات">
-                                </div>
-                                <div class="col-1 text-center">
-                                    <div class="form-check form-switch d-flex justify-content-center">
-                                        <input class="form-check-input fee-toggle" type="checkbox" id="passport_toggle" data-target="passport">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- رسوم التأمينات الاجتماعية -->
-                            <div id="social_insurance_row" class="row mb-3 py-2 align-items-center fee-row rounded">
-                                <div class="col-4 text-end">
-                                    <div class="d-inline-block">
-                                        <i class="fas fa-users me-2"></i>
-                                        <span class="fw-bold">رسوم التأمينات الاجتماعية</span>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="input-group">
-                                        <input type="number" id="social_insurance_amount" class="form-control bg-dark text-white border-secondary text-start fee-amount" 
-                                               min="0" step="0.01" placeholder="0">
-                                        <span class="input-group-text bg-dark text-white border-secondary">ريال</span>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <input type="text" id="social_insurance_notes" class="form-control bg-dark text-white border-secondary" placeholder="ملاحظات">
-                                </div>
-                                <div class="col-1 text-center">
-                                    <div class="form-check form-switch d-flex justify-content-center">
-                                        <input class="form-check-input fee-toggle" type="checkbox" id="social_insurance_toggle" data-target="social_insurance">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- رسوم نقل الكفالة -->
-                            <div id="transfer_sponsorship_row" class="row mb-3 py-2 align-items-center fee-row rounded">
-                                <div class="col-4 text-end">
-                                    <div class="d-inline-block">
-                                        <i class="fas fa-exchange-alt me-2"></i>
-                                        <span class="fw-bold">رسوم نقل الكفالة</span>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="input-group">
-                                        <input type="number" id="transfer_sponsorship_amount" class="form-control bg-dark text-white border-secondary text-start fee-amount" 
-                                               min="0" step="0.01" placeholder="0">
-                                        <span class="input-group-text bg-dark text-white border-secondary">ريال</span>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="d-flex">
-                                        <input type="text" id="transfer_sponsorship_notes" class="form-control bg-dark text-white border-secondary" 
-                                               style="width: 60%;" placeholder="ملاحظات">
-                                        <input type="text" id="transfer_number" class="form-control bg-dark text-white border-secondary ms-2" 
-                                               style="width: 40%;" placeholder="رقم النقل">
-                                    </div>
-                                </div>
-                                <div class="col-1 text-center">
-                                    <div class="form-check form-switch d-flex justify-content-center">
-                                        <input class="form-check-input fee-toggle" type="checkbox" id="transfer_sponsorship_toggle" data-target="transfer_sponsorship">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- رسوم أخرى -->
-                            <div id="other_row" class="row py-2 align-items-center fee-row rounded">
-                                <div class="col-4 text-end">
-                                    <div class="d-inline-block">
-                                        <i class="fas fa-file-invoice-dollar me-2"></i>
-                                        <span class="fw-bold">رسوم أخرى</span>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="input-group">
-                                        <input type="number" id="other_amount" class="form-control bg-dark text-white border-secondary text-start fee-amount" 
-                                               min="0" step="0.01" placeholder="0">
-                                        <span class="input-group-text bg-dark text-white border-secondary">ريال</span>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <input type="text" id="other_description" class="form-control bg-dark text-white border-secondary" placeholder="وصف النوع">
-                                </div>
-                                <div class="col-1 text-center">
-                                    <div class="form-check form-switch d-flex justify-content-center">
-                                        <input class="form-check-input fee-toggle" type="checkbox" id="other_toggle" data-target="other">
-                                    </div>
-                                </div>
-                            </div>
+                                <tbody>
+                                    <!-- رسوم مكتب العمل -->
+                                    <tr id="labor_office_row">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="fee-type-icon labor-office me-2">
+                                                    <i class="fas fa-building"></i>
+                                                </div>
+                                                <span class="fw-bold">رسوم مكتب العمل</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fee-amount-input">
+                                                <input type="number" class="form-control fee-amount" id="labor_office_amount" step="0.01" min="0" placeholder="0.00">
+                                                <span class="fee-currency">ريال</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control" id="labor_office_notes" placeholder="أي ملاحظات إضافية">
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                <input class="form-check-input fee-toggle" type="checkbox" id="labor_office_toggle" data-target="labor_office">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- رسوم الجوازات -->
+                                    <tr id="passport_row">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="fee-type-icon passport me-2">
+                                                    <i class="fas fa-passport"></i>
+                                                </div>
+                                                <span class="fw-bold">رسوم الجوازات</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fee-amount-input">
+                                                <input type="number" class="form-control fee-amount" id="passport_amount" step="0.01" min="0" placeholder="0.00" >
+                                                <span class="fee-currency">ريال</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control" id="passport_notes" placeholder="أي ملاحظات إضافية" >
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                <input class="form-check-input fee-toggle" type="checkbox" id="passport_toggle" data-target="passport">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- رسوم التأمينات الاجتماعية -->
+                                    <tr id="social_insurance_row">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="fee-type-icon social-insurance me-2">
+                                                    <i class="fas fa-users"></i>
+                                                </div>
+                                                <span class="fw-bold">رسوم التأمينات الاجتماعية</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fee-amount-input">
+                                                <input type="number" class="form-control fee-amount" id="social_insurance_amount" step="0.01" min="0" placeholder="0.00" >
+                                                <span class="fee-currency">ريال</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control" id="social_insurance_notes" placeholder="أي ملاحظات إضافية" >
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                <input class="form-check-input fee-toggle" type="checkbox" id="social_insurance_toggle" data-target="social_insurance">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- رسوم نقل الكفالة -->
+                                    <tr id="transfer_sponsorship_row">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="fee-type-icon transfer-sponsorship me-2">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                </div>
+                                                <span class="fw-bold">رسوم نقل الكفالة</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fee-amount-input">
+                                                <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" step="0.01" min="0" placeholder="0.00" >
+                                                <span class="fee-currency">ريال</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex">
+                                                <input type="text" class="form-control me-2" id="transfer_sponsorship_notes" placeholder="أي ملاحظات إضافية" >
+                                                <input type="text" class="form-control" id="transfer_number" placeholder="رقم النقل" style="width: 150px;" >
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                <input class="form-check-input fee-toggle" type="checkbox" id="transfer_sponsorship_toggle" data-target="transfer_sponsorship">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- رسوم أخرى -->
+                                    <tr id="other_row">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="fee-type-icon other me-2">
+                                                    <i class="fas fa-file-invoice-dollar"></i>
+                                                </div>
+                                                <span class="fw-bold">رسوم أخرى</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fee-amount-input">
+                                                <input type="number" class="form-control fee-amount" id="other_amount" step="0.01" min="0" placeholder="0.00" >
+                                                <span class="fee-currency">ريال</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control" id="other_description" placeholder="وصف نوع الرسوم الأخرى" >
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                <input class="form-check-input fee-toggle" type="checkbox" id="other_toggle" data-target="other">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                         
                         <!-- حقول مخفية -->
