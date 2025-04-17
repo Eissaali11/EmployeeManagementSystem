@@ -139,11 +139,12 @@ class RenewalFee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     document_id = db.Column(db.Integer, db.ForeignKey('document.id', ondelete='CASCADE'), nullable=False)
     fee_date = db.Column(db.Date, nullable=False)
-    fee_type = db.Column(db.String(50), nullable=False)  # passport, labor_office, insurance, social_insurance
+    fee_type = db.Column(db.String(50), nullable=False)  # passport, labor_office, insurance, social_insurance, transfer_sponsorship, other
     amount = db.Column(db.Float, nullable=False)
     payment_status = db.Column(db.String(20), default='pending')  # pending, paid, overdue
     payment_date = db.Column(db.Date, nullable=True)
     receipt_number = db.Column(db.String(50), nullable=True)
+    transfer_number = db.Column(db.String(50), nullable=True)  # رقم نقل الكفالة
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
