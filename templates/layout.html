@@ -79,12 +79,7 @@
                                 <span>الوثائق</span>
                             </a>
                         </li>
-                        <li class="nav-item mb-1">
-                            <a href="{{ url_for('renewal_fees.index') }}" class="nav-link nav-link-custom {% if '/renewal-fees' in request.path %}active{% endif %}">
-                                <i class="fas fa-money-bill-wave me-2"></i>
-                                <span>رسوم التجديد</span>
-                            </a>
-                        </li>
+
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('vehicles.index') }}" class="nav-link nav-link-custom {% if '/vehicles' in request.path %}active{% endif %}">
                                 <i class="fas fa-car me-2"></i>
@@ -142,8 +137,7 @@
                                 إدارة الرواتب
                             {% elif '/documents' in request.path %}
                                 إدارة الوثائق
-                            {% elif '/renewal-fees' in request.path %}
-                                رسوم تجديد الأوراق
+
                             {% elif '/vehicles' in request.path %}
                                 نظام إدارة السيارات
                             {% elif '/reports' in request.path %}
