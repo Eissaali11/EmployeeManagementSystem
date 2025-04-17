@@ -51,8 +51,14 @@ class ArabicPDF(FPDF):
         """
         # تشكيل النص العربي للعرض الصحيح - إصلاح مشكلة الأحرف العربية الناقصة
         try:
+            # التأكد من أن كل المكونات من نوع str
+            # يجب تحويل x, y, txt إلى نصوص في حالة كانت أرقام
+            x = float(x) if not isinstance(x, (int, float)) else x
+            y = float(y) if not isinstance(y, (int, float)) else y
+            
             # تحويل النص إلى سلسلة نصية للتأكد من أنه ليس رقم
             txt_str = str(txt)
+            
             # استخدام arabic_reshaper لتحويل النص العربي
             reshaped_text = arabic_reshaper.reshape(txt_str)
             # استخدام get_display لعكس اتجاه النص ليظهر بشكل صحيح
@@ -638,9 +644,13 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         else:
             avg_basic = 0.0
             avg_net = 0.0
+        
+        # تنسيق القيم وتحويلها إلى نصوص    
+        avg_basic_str = f"{avg_basic:.2f}"
+        avg_net_str = f"{avg_net:.2f}"
             
-        pdf.arabic_text(120.0, info_y + 25.0, "متوسط الراتب الأساسي: " + f"{avg_basic:.2f}", 'R')
-        pdf.arabic_text(120.0, info_y + 40.0, "متوسط صافي الراتب: " + f"{avg_net:.2f}", 'R')
+        pdf.arabic_text(120.0, info_y + 25.0, "متوسط الراتب الأساسي: " + avg_basic_str, 'R')
+        pdf.arabic_text(120.0, info_y + 40.0, "متوسط صافي الراتب: " + avg_net_str, 'R')
         
         # التذييل
         pdf.set_xy(10.0, 190.0)
