@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 import io
 from io import BytesIO
 import csv
+import xlsxwriter
 from flask_login import current_user
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
@@ -652,46 +654,375 @@ def export_employee_documents_excel(employee_id):
     employee = Employee.query.get_or_404(employee_id)
     documents = Document.query.filter_by(employee_id=employee_id).all()
     
-    # Create CSV in memory
-    output = io.StringIO()
-    writer = csv.writer(output)
+    # Create Excel in memory
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet("الوثائق")
+    
+    # Add formatting
+    header_format = workbook.add_format({
+        'bold': True,
+        'align': 'center',
+        'valign': 'vcenter',
+        'bg_color': '#D3E0EA',
+        'border': 1,
+        'font_size': 13
+    })
+    
+    # RTL format for workbook
+    worksheet.right_to_left()
+    
+    # Add cell formats
+    cell_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11
+    })
+    
+    date_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11,
+        'num_format': 'dd/mm/yyyy'
+    })
     
     # Write headers
-    writer.writerow(['نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'ملاحظات'])
+    headers = ['نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'ملاحظات']
+    for col_num, data in enumerate(headers):
+        worksheet.write(0, col_num, data, header_format)
+    
+    # Adjust column widths
+    worksheet.set_column(0, 0, 20)  # نوع الوثيقة
+    worksheet.set_column(1, 1, 20)  # رقم الوثيقة
+    worksheet.set_column(2, 2, 15)  # تاريخ الإصدار
+    worksheet.set_column(3, 3, 15)  # تاريخ الانتهاء
+    worksheet.set_column(4, 4, 30)  # ملاحظات
+    
+    # Map for document types
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'health_certificate': 'الشهادة الصحية',
+        'work_permit': 'تصريح العمل',
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية'
+    }
     
     # Write data
-    for doc in documents:
+    for row_num, doc in enumerate(documents, 1):
         # Get document type in Arabic
-        doc_type_ar = ""
-        if doc.document_type == 'national_id':
-            doc_type_ar = "الهوية الوطنية"
-        elif doc.document_type == 'passport':
-            doc_type_ar = "جواز السفر"
-        elif doc.document_type == 'health_certificate':
-            doc_type_ar = "الشهادة الصحية"
-        elif doc.document_type == 'work_permit':
-            doc_type_ar = "تصريح العمل"
-        elif doc.document_type == 'education_certificate':
-            doc_type_ar = "الشهادة الدراسية"
-        elif doc.document_type == 'driving_license':
-            doc_type_ar = "رخصة القيادة"
-        elif doc.document_type == 'annual_leave':
-            doc_type_ar = "الإجازة السنوية"
-        else:
-            doc_type_ar = doc.document_type
+        doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
             
-        writer.writerow([
-            doc_type_ar,
-            doc.document_number,
-            doc.issue_date.strftime('%d/%m/%Y'),
-            doc.expiry_date.strftime('%d/%m/%Y'),
-            doc.notes or ''
-        ])
+        worksheet.write(row_num, 0, doc_type_ar, cell_format)
+        worksheet.write(row_num, 1, doc.document_number, cell_format)
+        worksheet.write_datetime(row_num, 2, doc.issue_date, date_format)
+        worksheet.write_datetime(row_num, 3, doc.expiry_date, date_format)
+        worksheet.write(row_num, 4, doc.notes or '', cell_format)
+    
+    # Add title with employee info
+    info_worksheet = workbook.add_worksheet("معلومات الموظف")
+    info_worksheet.right_to_left()
+    
+    title_format = workbook.add_format({
+        'bold': True,
+        'font_size': 14,
+        'align': 'center',
+        'valign': 'vcenter',
+        'bg_color': '#B8D9EB',
+        'border': 2
+    })
+    
+    info_worksheet.merge_range('A1:B1', f'بيانات الموظف: {employee.name}', title_format)
+    info_worksheet.set_column(0, 0, 20)
+    info_worksheet.set_column(1, 1, 30)
+    
+    field_format = workbook.add_format({
+        'bold': True,
+        'align': 'right',
+        'valign': 'vcenter',
+        'bg_color': '#F0F0F0',
+        'border': 1
+    })
+    
+    info_fields = [
+        ['الاسم', employee.name],
+        ['الرقم الوظيفي', employee.employee_id],
+        ['رقم الهوية', employee.national_id],
+        ['رقم الجوال', employee.mobile],
+        ['القسم', employee.department.name if employee.department else ''],
+        ['المسمى الوظيفي', employee.job_title],
+        ['الحالة', employee.status],
+        ['الموقع', employee.location or '']
+    ]
+    
+    for row_num, (field, value) in enumerate(info_fields):
+        info_worksheet.write(row_num + 1, 0, field, field_format)
+        info_worksheet.write(row_num + 1, 1, value, cell_format)
+    
+    # Close workbook
+    workbook.close()
     
     # Create response
     output.seek(0)
-    response = make_response(output.getvalue())
-    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
-    response.headers['Content-Disposition'] = f'attachment; filename=employee_{employee_id}_documents.csv'
+    return make_response(send_file(
+        output,
+        as_attachment=True,
+        download_name=f'employee_{employee_id}_documents.xlsx',
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ))
+
+@documents_bp.route('/export_excel')
+def export_all_documents_excel():
+    """Export all documents to Excel"""
+    # Get filter parameters
+    document_type = request.args.get('document_type', '')
+    days = int(request.args.get('days', '0'))
+    show_all = request.args.get('show_all', 'false').lower() == 'true'
     
-    return response
+    # Build query
+    query = Document.query
+    
+    # Apply document type filter
+    if document_type:
+        query = query.filter(Document.document_type == document_type)
+    
+    # Apply days filter for expiration
+    if days > 0 and not show_all:
+        today = datetime.now().date()
+        future_date = today + timedelta(days=days)
+        query = query.filter(
+            Document.expiry_date <= future_date,
+            Document.expiry_date >= today
+        )
+    
+    # Get documents with employee information
+    query = query.join(Employee).options(selectinload(Document.employee))
+    documents = query.order_by(Document.expiry_date).all()
+    
+    # Create Excel in memory
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet("الوثائق")
+    
+    # Add formatting
+    header_format = workbook.add_format({
+        'bold': True,
+        'align': 'center',
+        'valign': 'vcenter',
+        'bg_color': '#D3E0EA',
+        'border': 1,
+        'font_size': 13
+    })
+    
+    # RTL format for workbook
+    worksheet.right_to_left()
+    
+    # Add cell formats
+    cell_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11
+    })
+    
+    date_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11,
+        'num_format': 'dd/mm/yyyy'
+    })
+    
+    # Write headers
+    headers = ['اسم الموظف', 'الرقم الوظيفي', 'القسم', 'نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'ملاحظات']
+    for col_num, data in enumerate(headers):
+        worksheet.write(0, col_num, data, header_format)
+    
+    # Adjust column widths
+    worksheet.set_column(0, 0, 25)  # اسم الموظف
+    worksheet.set_column(1, 1, 15)  # الرقم الوظيفي
+    worksheet.set_column(2, 2, 20)  # القسم
+    worksheet.set_column(3, 3, 20)  # نوع الوثيقة
+    worksheet.set_column(4, 4, 20)  # رقم الوثيقة
+    worksheet.set_column(5, 5, 15)  # تاريخ الإصدار
+    worksheet.set_column(6, 6, 15)  # تاريخ الانتهاء
+    worksheet.set_column(7, 7, 15)  # الأيام المتبقية
+    worksheet.set_column(8, 8, 30)  # ملاحظات
+    
+    # Map for document types
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'health_certificate': 'الشهادة الصحية',
+        'work_permit': 'تصريح العمل',
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية'
+    }
+    
+    # Get today's date for remaining days calculation
+    today = datetime.now().date()
+    
+    # Status formats
+    expired_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11,
+        'bg_color': '#FFC7CE',  # Light red
+        'font_color': '#9C0006'  # Dark red
+    })
+    
+    warning_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11,
+        'bg_color': '#FFEB9C',  # Light yellow
+        'font_color': '#9C6500'  # Dark orange
+    })
+    
+    # Write data
+    for row_num, doc in enumerate(documents, 1):
+        # Get employee information
+        employee_name = doc.employee.name if doc.employee else "غير متوفر"
+        employee_id = doc.employee.employee_id if doc.employee else "غير متوفر"
+        department_name = doc.employee.department.name if doc.employee and doc.employee.department else "غير متوفر"
+        
+        # Get document type in Arabic
+        doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
+        
+        # Calculate remaining days
+        days_remaining = (doc.expiry_date - today).days
+        
+        # Determine format for days remaining
+        days_format = cell_format
+        if days_remaining < 0:
+            days_format = expired_format
+        elif days_remaining < 30:
+            days_format = warning_format
+        
+        # Write data
+        worksheet.write(row_num, 0, employee_name, cell_format)
+        worksheet.write(row_num, 1, employee_id, cell_format)
+        worksheet.write(row_num, 2, department_name, cell_format)
+        worksheet.write(row_num, 3, doc_type_ar, cell_format)
+        worksheet.write(row_num, 4, doc.document_number, cell_format)
+        worksheet.write_datetime(row_num, 5, doc.issue_date, date_format)
+        worksheet.write_datetime(row_num, 6, doc.expiry_date, date_format)
+        worksheet.write(row_num, 7, days_remaining, days_format)
+        worksheet.write(row_num, 8, doc.notes or '', cell_format)
+    
+    # Add statistics worksheet
+    stats_worksheet = workbook.add_worksheet("إحصائيات")
+    stats_worksheet.right_to_left()
+    
+    # Set up statistics
+    expired_count = sum(1 for doc in documents if (doc.expiry_date - today).days < 0)
+    expiring_30_count = sum(1 for doc in documents if 0 <= (doc.expiry_date - today).days < 30)
+    expiring_60_count = sum(1 for doc in documents if 30 <= (doc.expiry_date - today).days < 60)
+    expiring_90_count = sum(1 for doc in documents if 60 <= (doc.expiry_date - today).days < 90)
+    valid_count = sum(1 for doc in documents if (doc.expiry_date - today).days >= 90)
+    
+    # Document counts by type
+    doc_type_counts = {}
+    for doc in documents:
+        doc_type = document_types_map.get(doc.document_type, doc.document_type)
+        if doc_type in doc_type_counts:
+            doc_type_counts[doc_type] += 1
+        else:
+            doc_type_counts[doc_type] = 1
+    
+    # Write statistics
+    title_format = workbook.add_format({
+        'bold': True,
+        'font_size': 14,
+        'align': 'center',
+        'valign': 'vcenter',
+        'bg_color': '#B8D9EB',
+        'border': 2
+    })
+    
+    stats_worksheet.merge_range('A1:B1', 'إحصائيات الوثائق', title_format)
+    stats_worksheet.set_column(0, 0, 25)
+    stats_worksheet.set_column(1, 1, 15)
+    
+    stat_header_format = workbook.add_format({
+        'bold': True,
+        'align': 'center',
+        'valign': 'vcenter',
+        'bg_color': '#E6E6E6',
+        'border': 1,
+        'font_size': 12
+    })
+    
+    # تنسيق للحقول
+    field_format = workbook.add_format({
+        'bold': True,
+        'align': 'right',
+        'valign': 'vcenter',
+        'bg_color': '#F0F0F0',
+        'border': 1
+    })
+    
+    # Write expiry statistics
+    stats_worksheet.write(2, 0, 'حالة صلاحية الوثائق', stat_header_format)
+    stats_worksheet.write(2, 1, 'العدد', stat_header_format)
+    
+    row = 3
+    stats_data = [
+        ['وثائق منتهية', expired_count, expired_format],
+        ['تنتهي خلال 30 يوم', expiring_30_count, warning_format],
+        ['تنتهي خلال 60 يوم', expiring_60_count, cell_format],
+        ['تنتهي خلال 90 يوم', expiring_90_count, cell_format],
+        ['صالحة لأكثر من 90 يوم', valid_count, cell_format],
+        ['المجموع', len(documents), stats_worksheet.book.add_format({'bold': True, 'border': 1, 'bg_color': '#D9D9D9'})]
+    ]
+    
+    for label, count, fmt in stats_data:
+        stats_worksheet.write(row, 0, label, field_format)
+        stats_worksheet.write(row, 1, count, fmt)
+        row += 1
+    
+    # Add some space
+    row += 2
+    
+    # Write document type statistics
+    stats_worksheet.write(row, 0, 'أنواع الوثائق', stat_header_format)
+    stats_worksheet.write(row, 1, 'العدد', stat_header_format)
+    row += 1
+    
+    # Sort document types by count (descending)
+    sorted_doc_types = sorted(doc_type_counts.items(), key=lambda x: x[1], reverse=True)
+    
+    for doc_type, count in sorted_doc_types:
+        stats_worksheet.write(row, 0, doc_type, cell_format)
+        stats_worksheet.write(row, 1, count, cell_format)
+        row += 1
+    
+    # Close workbook
+    workbook.close()
+    
+    # Create response
+    output.seek(0)
+    
+    # Generate a descriptive filename
+    filename_parts = []
+    if document_type:
+        filename_parts.append(document_types_map.get(document_type, document_type))
+    if days > 0 and not show_all:
+        filename_parts.append(f"خلال_{days}_يوم")
+    if not filename_parts:
+        filename_parts.append("جميع_الوثائق")
+    
+    filename = "_".join(filename_parts) + ".xlsx"
+    
+    return make_response(send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ))
