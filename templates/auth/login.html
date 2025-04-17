@@ -275,7 +275,7 @@
                 <!-- تسجيل الدخول بالبريد الإلكتروني -->
                 <div class="tab-pane fade show active" id="email-login" role="tabpanel" aria-labelledby="email-tab">
                     <form method="POST" action="{{ url_for('auth.login') }}">
-                        {{ form.hidden_tag() if form }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">البريد الإلكتروني</label>
                             <div class="input-group">
