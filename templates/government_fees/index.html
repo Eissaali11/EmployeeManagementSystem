@@ -1,0 +1,444 @@
+{% extends 'layout.html' %}
+
+{% block title %}الرسوم الحكومية{% endblock %}
+
+{% block styles %}
+<style>
+    .fees-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .fees-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .fee-badge {
+        border-radius: 20px;
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    
+    .fee-status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .fee-status-paid {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .fee-status-overdue {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    
+    .filter-card {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-right: 4px solid #0d6efd;
+    }
+    
+    .stats-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-card.primary {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+    
+    .stats-card.success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .stats-card.warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .stats-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stats-title {
+        font-weight: bold;
+        font-size: 1rem;
+    }
+    
+    .chart-container {
+        height: 300px;
+        margin-bottom: 30px;
+    }
+    
+    .table-container {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .custom-table thead th {
+        font-weight: bold;
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .export-button {
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    
+    .fee-type-icon {
+        font-size: 1.2rem;
+        margin-left: 5px;
+    }
+
+    /* توزيع أنواع الرسوم */
+    .fee-passport { color: #6f42c1; }
+    .fee-labor { color: #fd7e14; }
+    .fee-insurance { color: #20c997; }
+    .fee-social { color: #0dcaf0; }
+    .fee-transfer { color: #dc3545; }
+    .fee-other { color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mb-0">
+                    <i class="fas fa-money-check-alt me-2"></i>
+                    الرسوم الحكومية
+                </h1>
+                <div>
+                    <a href="{{ url_for('government_fees.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> إضافة رسوم
+                    </a>
+                    <a href="#" class="btn btn-success ms-2 export-button">
+                        <i class="fas fa-file-excel"></i> تصدير إلى Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stats-card primary">
+                <div class="stats-title">إجمالي الرسوم</div>
+                <div class="stats-value">{{ "{:,.2f}".format(total_fees) }} ريال</div>
+                <div class="stats-subtitle">الرسوم الكلية المسجلة في النظام</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card success">
+                <div class="stats-title">الرسوم المدفوعة</div>
+                <div class="stats-value">{{ "{:,.2f}".format(paid_fees) }} ريال</div>
+                <div class="stats-subtitle">إجمالي الرسوم التي تم سدادها</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card warning">
+                <div class="stats-title">الرسوم المعلقة</div>
+                <div class="stats-value">{{ "{:,.2f}".format(pending_fees) }} ريال</div>
+                <div class="stats-subtitle">الرسوم التي تنتظر السداد</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم الرسم البياني والفلاتر -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">توزيع الرسوم حسب النوع</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="feeTypeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="filter-card">
+                <h5 class="mb-3">تصفية النتائج</h5>
+                <form method="get" action="{{ url_for('government_fees.index') }}">
+                    <div class="mb-3">
+                        <label for="fee_type" class="form-label">نوع الرسوم</label>
+                        <select class="form-select" id="fee_type" name="fee_type">
+                            <option value="">جميع الأنواع</option>
+                            {% for key, value in fee_types.items() %}
+                            <option value="{{ key }}" {% if fee_type == key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="payment_status" class="form-label">حالة السداد</label>
+                        <select class="form-select" id="payment_status" name="payment_status">
+                            <option value="">جميع الحالات</option>
+                            {% for key, value in payment_statuses.items() %}
+                            <option value="{{ key }}" {% if payment_status == key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="department_id" class="form-label">القسم</label>
+                        <select class="form-select" id="department_id" name="department_id">
+                            <option value="">جميع الأقسام</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if department_id == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="month" class="form-label">الشهر</label>
+                                <select class="form-select" id="month" name="month">
+                                    <option value="">جميع الشهور</option>
+                                    <option value="1" {% if month == "1" %}selected{% endif %}>يناير</option>
+                                    <option value="2" {% if month == "2" %}selected{% endif %}>فبراير</option>
+                                    <option value="3" {% if month == "3" %}selected{% endif %}>مارس</option>
+                                    <option value="4" {% if month == "4" %}selected{% endif %}>أبريل</option>
+                                    <option value="5" {% if month == "5" %}selected{% endif %}>مايو</option>
+                                    <option value="6" {% if month == "6" %}selected{% endif %}>يونيو</option>
+                                    <option value="7" {% if month == "7" %}selected{% endif %}>يوليو</option>
+                                    <option value="8" {% if month == "8" %}selected{% endif %}>أغسطس</option>
+                                    <option value="9" {% if month == "9" %}selected{% endif %}>سبتمبر</option>
+                                    <option value="10" {% if month == "10" %}selected{% endif %}>أكتوبر</option>
+                                    <option value="11" {% if month == "11" %}selected{% endif %}>نوفمبر</option>
+                                    <option value="12" {% if month == "12" %}selected{% endif %}>ديسمبر</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="year" class="form-label">السنة</label>
+                                <select class="form-select" id="year" name="year">
+                                    <option value="">جميع السنوات</option>
+                                    {% for y in range(2023, 2028) %}
+                                    <option value="{{ y }}" {% if year == y|string %}selected{% endif %}>{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">تطبيق الفلتر</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول الرسوم -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">قائمة الرسوم الحكومية</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive table-container">
+                <table class="table table-striped table-hover custom-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الموظف</th>
+                            <th>الرقم الوظيفي</th>
+                            <th>نوع الرسوم</th>
+                            <th>تاريخ الاستحقاق</th>
+                            <th>المبلغ</th>
+                            <th>حالة السداد</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ fee.employee.name }}</td>
+                            <td>{{ fee.employee.employee_id }}</td>
+                            <td>
+                                {% if fee.fee_type == 'passport' %}
+                                <span class="fee-type-icon fee-passport"><i class="fas fa-passport"></i></span> {{ fee_types[fee.fee_type] }}
+                                {% elif fee.fee_type == 'labor_office' %}
+                                <span class="fee-type-icon fee-labor"><i class="fas fa-briefcase"></i></span> {{ fee_types[fee.fee_type] }}
+                                {% elif fee.fee_type == 'insurance' %}
+                                <span class="fee-type-icon fee-insurance"><i class="fas fa-heartbeat"></i></span> {{ fee_types[fee.fee_type] }}
+                                {% elif fee.fee_type == 'social_insurance' %}
+                                <span class="fee-type-icon fee-social"><i class="fas fa-shield-alt"></i></span> {{ fee_types[fee.fee_type] }}
+                                {% elif fee.fee_type == 'transfer_sponsorship' %}
+                                <span class="fee-type-icon fee-transfer"><i class="fas fa-exchange-alt"></i></span> {{ fee_types[fee.fee_type] }}
+                                {% else %}
+                                <span class="fee-type-icon fee-other"><i class="fas fa-file-invoice-dollar"></i></span> {{ fee_types[fee.fee_type] }}
+                                {% endif %}
+                            </td>
+                            <td>{{ fee.fee_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ "{:,.2f}".format(fee.amount) }} ريال</td>
+                            <td>
+                                {% if fee.payment_status == 'pending' %}
+                                <span class="fee-badge fee-status-pending">{{ payment_statuses[fee.payment_status] }}</span>
+                                {% elif fee.payment_status == 'paid' %}
+                                <span class="fee-badge fee-status-paid">{{ payment_statuses[fee.payment_status] }}</span>
+                                {% else %}
+                                <span class="fee-badge fee-status-overdue">{{ payment_statuses[fee.payment_status] }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('government_fees.edit', id=fee.id) }}" class="btn btn-sm btn-warning mb-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger delete-fee mb-1" data-id="{{ fee.id }}" data-bs-toggle="modal" data-bs-target="#deleteFeeModal">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="alert alert-secondary">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    لا توجد رسوم مسجلة حاليًا
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal حذف الرسوم -->
+<div class="modal fade" id="deleteFeeModal" tabindex="-1" aria-labelledby="deleteFeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteFeeModalLabel">تأكيد حذف الرسوم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف هذه الرسوم؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form id="deleteFeeForm" method="post" action="{{ url_for('government_fees.delete', id=0) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تهيئة الرسم البياني لأنواع الرسوم
+    const feeTypeData = {
+        'passport': {{ fee_type_data['passport'] or 0 }},
+        'labor_office': {{ fee_type_data['labor_office'] or 0 }},
+        'insurance': {{ fee_type_data['insurance'] or 0 }},
+        'social_insurance': {{ fee_type_data['social_insurance'] or 0 }},
+        'transfer_sponsorship': {{ fee_type_data['transfer_sponsorship'] or 0 }},
+        'other': {{ fee_type_data['other'] or 0 }}
+    };
+    
+    const ctx = document.getElementById('feeTypeChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                'الجوازات', 
+                'مكتب العمل', 
+                'التأمين الطبي', 
+                'التأمينات الاجتماعية', 
+                'نقل كفالة', 
+                'رسوم أخرى'
+            ],
+            datasets: [{
+                data: [
+                    feeTypeData.passport,
+                    feeTypeData.labor_office,
+                    feeTypeData.insurance,
+                    feeTypeData.social_insurance,
+                    feeTypeData.transfer_sponsorship,
+                    feeTypeData.other
+                ],
+                backgroundColor: [
+                    '#6f42c1', // الجوازات
+                    '#fd7e14', // مكتب العمل
+                    '#20c997', // التأمين الطبي
+                    '#0dcaf0', // التأمينات الاجتماعية
+                    '#dc3545', // نقل كفالة
+                    '#6c757d'  // رسوم أخرى
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed;
+                            return context.label + ': ' + value.toLocaleString('ar-SA', {
+                                style: 'currency',
+                                currency: 'SAR'
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // منطق حذف الرسوم
+    const deleteBtns = document.querySelectorAll('.delete-fee');
+    const deleteFeeForm = document.getElementById('deleteFeeForm');
+    
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const feeId = this.getAttribute('data-id');
+            deleteFeeForm.action = "{{ url_for('government_fees.delete', id=0) }}".replace('0', feeId);
+        });
+    });
+});
+</script>
+{% endblock %}

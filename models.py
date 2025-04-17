@@ -32,6 +32,10 @@ class Employee(db.Model):
     project = db.Column(db.String(100))
     department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='SET NULL'), nullable=True)
     join_date = db.Column(db.Date)
+    nationality = db.Column(db.String(50))  # جنسية الموظف
+    contract_type = db.Column(db.String(20), default='foreign')  # سعودي / وافد - saudi / foreign
+    basic_salary = db.Column(db.Float, default=0.0)  # الراتب الأساسي
+    has_national_balance = db.Column(db.Boolean, default=False)  # هل يتوفر توازن وطني
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -40,6 +44,7 @@ class Employee(db.Model):
     attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
     salaries = db.relationship('Salary', back_populates='employee', cascade='all, delete-orphan')
     documents = db.relationship('Document', back_populates='employee', cascade='all, delete-orphan')
+    government_fees = db.relationship('GovernmentFee', back_populates='employee', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Employee {self.name} ({self.employee_id})>'
@@ -318,3 +323,28 @@ class VehicleHandoverImage(db.Model):
     
     def __repr__(self):
         return f'<VehicleHandoverImage {self.handover_record_id}>'
+
+
+class GovernmentFee(db.Model):
+    """الرسوم الحكومية للموظفين"""
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=False)
+    fee_type = db.Column(db.String(50), nullable=False)  # نوع الرسوم: passport, labor_office, insurance, social_insurance, etc.
+    fee_date = db.Column(db.Date, nullable=False)  # تاريخ استحقاق الرسوم
+    due_date = db.Column(db.Date, nullable=False)  # تاريخ انتهاء المهلة
+    amount = db.Column(db.Float, nullable=False)  # قيمة الرسوم
+    payment_status = db.Column(db.String(20), default='pending')  # حالة السداد: pending, paid, overdue
+    payment_date = db.Column(db.Date, nullable=True)  # تاريخ السداد
+    is_automatic = db.Column(db.Boolean, default=True)  # هل تم احتسابها تلقائيًا أم يدويًا
+    insurance_level = db.Column(db.String(20), nullable=True)  # مستوى التأمين (في حالة التأمين الطبي): basic, medium, high
+    has_national_balance = db.Column(db.Boolean, default=False)  # هل يستفيد من التوازن الوطني (للمقابل المالي)
+    receipt_number = db.Column(db.String(50), nullable=True)  # رقم الإيصال
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    employee = db.relationship('Employee', back_populates='government_fees')
+    
+    def __repr__(self):
+        return f'<GovernmentFee {self.fee_type} for {self.employee.name}, Amount: {self.amount}>'

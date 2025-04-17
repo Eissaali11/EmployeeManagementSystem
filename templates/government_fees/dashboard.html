@@ -1,0 +1,536 @@
+{% extends 'layout.html' %}
+
+{% block title %}لوحة تحكم الرسوم الحكومية{% endblock %}
+
+{% block styles %}
+<style>
+    .stats-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stats-card.primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+    }
+    
+    .stats-card.success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .stats-card.warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+    
+    .stats-card.danger {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+        color: white;
+    }
+    
+    .stats-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+    
+    .stats-title {
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+    
+    .stats-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .stats-footer {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .chart-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .chart-card-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .chart-card-body {
+        padding: 20px;
+    }
+    
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+    
+    .expiry-alert-card {
+        border-right: 4px solid #ef4444;
+        background-color: #fee2e2;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .expiry-alert-card:hover {
+        background-color: #fecaca;
+        transform: translateX(-5px);
+    }
+    
+    .nationality-pill {
+        border-radius: 20px;
+        padding: 5px 15px;
+        margin-left: 5px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .nationality-pill.saudi {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .nationality-pill.foreign {
+        background-color: #cfe2ff;
+        color: #084298;
+    }
+    
+    .fees-summary-table th {
+        font-weight: bold;
+        background-color: #f8f9fa;
+    }
+    
+    .period-selector {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .period-selector .btn-group {
+        margin-right: 10px;
+    }
+    
+    .year-selector {
+        width: 120px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    لوحة تحكم الرسوم الحكومية
+                </h1>
+                <div>
+                    <a href="{{ url_for('government_fees.index') }}" class="btn btn-primary">
+                        <i class="fas fa-list"></i> قائمة الرسوم
+                    </a>
+                    <a href="{{ url_for('government_fees.create') }}" class="btn btn-success ms-2">
+                        <i class="fas fa-plus-circle"></i> إضافة رسوم
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- اختيار الفترة -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="period-selector">
+                        <div class="me-3">
+                            <label class="fw-bold mb-2">عرض إحصائيات:</label>
+                        </div>
+                        <div class="btn-group me-3" role="group" aria-label="عرض الإحصائيات">
+                            <button type="button" class="btn btn-primary active" id="btn-monthly">شهري</button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-yearly">سنوي</button>
+                        </div>
+                        <div class="me-3">
+                            <select class="form-select year-selector" id="year-selector">
+                                <option value="2025" selected>2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
+                        </div>
+                        <div id="month-selector-container">
+                            <select class="form-select" id="month-selector">
+                                <option value="1">يناير</option>
+                                <option value="2">فبراير</option>
+                                <option value="3">مارس</option>
+                                <option value="4" selected>أبريل</option>
+                                <option value="5">مايو</option>
+                                <option value="6">يونيو</option>
+                                <option value="7">يوليو</option>
+                                <option value="8">أغسطس</option>
+                                <option value="9">سبتمبر</option>
+                                <option value="10">أكتوبر</option>
+                                <option value="11">نوفمبر</option>
+                                <option value="12">ديسمبر</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقات الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card primary">
+                <div class="stats-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="stats-title">إجمالي الرسوم</div>
+                <div class="stats-value" id="total-fees">28,750 ريال</div>
+                <div class="stats-footer">في الفترة المحددة</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card success">
+                <div class="stats-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-title">عدد الموظفين</div>
+                <div class="stats-value" id="employee-count">42</div>
+                <div class="stats-footer">
+                    <span id="saudi-count">12</span> سعودي |
+                    <span id="foreign-count">30</span> وافد
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card warning">
+                <div class="stats-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="stats-title">رسوم قيد الانتظار</div>
+                <div class="stats-value" id="pending-fees">14,200 ريال</div>
+                <div class="stats-footer">لم يتم سدادها بعد</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card danger">
+                <div class="stats-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stats-title">تجديدات وشيكة</div>
+                <div class="stats-value" id="due-renewals">7</div>
+                <div class="stats-footer">خلال 30 يومًا</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <i class="fas fa-chart-line me-2"></i>
+                    تطور الرسوم الشهرية (2025)
+                </div>
+                <div class="chart-card-body">
+                    <div class="chart-container">
+                        <canvas id="monthly-fees-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    توزيع الرسوم حسب النوع
+                </div>
+                <div class="chart-card-body">
+                    <div class="chart-container">
+                        <canvas id="fee-type-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم التجديدات والملخص -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        وثائق تستحق التجديد قريبًا
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="expiry-alert-card p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>محمد أحمد علي</strong>
+                                <span class="nationality-pill foreign">وافد</span>
+                                <div class="text-muted small">الإقامة: 5 أيام متبقية</div>
+                            </div>
+                            <div>
+                                <span class="badge bg-danger p-2">عاجل</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expiry-alert-card p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>خالد سعيد الغامدي</strong>
+                                <span class="nationality-pill saudi">سعودي</span>
+                                <div class="text-muted small">الهوية: 15 يوم متبقي</div>
+                            </div>
+                            <div>
+                                <span class="badge bg-warning text-dark p-2">قريب</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expiry-alert-card p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>عبدالله عمر العتيبي</strong>
+                                <span class="nationality-pill foreign">وافد</span>
+                                <div class="text-muted small">التأمين الطبي: 20 يوم متبقي</div>
+                            </div>
+                            <div>
+                                <span class="badge bg-warning text-dark p-2">قريب</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-outline-danger">عرض جميع التجديدات (7)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        ملخص الرسوم السنوية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered fees-summary-table">
+                        <thead>
+                            <tr>
+                                <th>نوع الرسوم</th>
+                                <th>الرسوم الشهرية</th>
+                                <th>الرسوم السنوية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>مكتب العمل</td>
+                                <td>24,000 ريال</td>
+                                <td>288,000 ريال</td>
+                            </tr>
+                            <tr>
+                                <td>الجوازات</td>
+                                <td>1,625 ريال</td>
+                                <td>19,500 ريال</td>
+                            </tr>
+                            <tr>
+                                <td>التأمين الطبي</td>
+                                <td>2,250 ريال</td>
+                                <td>27,000 ريال</td>
+                            </tr>
+                            <tr>
+                                <td>التأمينات الاجتماعية</td>
+                                <td>23,400 ريال</td>
+                                <td>280,800 ريال</td>
+                            </tr>
+                            <tr class="table-active fw-bold">
+                                <td>الإجمالي</td>
+                                <td>51,275 ريال</td>
+                                <td>615,300 ريال</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="d-flex justify-content-end mt-3">
+                        <a href="#" class="btn btn-success">
+                            <i class="fas fa-file-excel me-1"></i>
+                            تصدير التقرير
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // مخطط الرسوم الشهرية
+    const monthlyFeesCtx = document.getElementById('monthly-fees-chart').getContext('2d');
+    const monthlyFeesChart = new Chart(monthlyFeesCtx, {
+        type: 'line',
+        data: {
+            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+            datasets: [
+                {
+                    label: 'إجمالي الرسوم',
+                    data: [45000, 48000, 52000, 51000, 54000, 58000, 57000, 63000, 60000, 62000, 59000, 61000],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.2
+                },
+                {
+                    label: 'الرسوم المدفوعة',
+                    data: [42000, 46000, 49000, 48000, 52000, 54000, 52000, 61000, 56000, 57000, 55000, 58000],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('ar-SA', {
+                                    style: 'currency',
+                                    currency: 'SAR'
+                                }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('ar-SA') + ' ريال';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // مخطط توزيع الرسوم حسب النوع
+    const feeTypeCtx = document.getElementById('fee-type-chart').getContext('2d');
+    const feeTypeChart = new Chart(feeTypeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['مكتب العمل', 'الجوازات', 'التأمين الطبي', 'التأمينات الاجتماعية', 'أخرى'],
+            datasets: [{
+                data: [288000, 19500, 27000, 280800, 9500],
+                backgroundColor: [
+                    '#fd7e14', // مكتب العمل
+                    '#6f42c1', // الجوازات
+                    '#20c997', // التأمين الطبي
+                    '#0dcaf0', // التأمينات الاجتماعية
+                    '#6c757d'  // أخرى
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw;
+                            const percentage = ((value / context.dataset.data.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+                            return `${label}: ${value.toLocaleString('ar-SA')} ريال (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // تبديل عرض الإحصائيات (شهري/سنوي)
+    const btnMonthly = document.getElementById('btn-monthly');
+    const btnYearly = document.getElementById('btn-yearly');
+    const monthSelectorContainer = document.getElementById('month-selector-container');
+
+    btnMonthly.addEventListener('click', function() {
+        btnMonthly.classList.add('active');
+        btnMonthly.classList.remove('btn-outline-primary');
+        btnMonthly.classList.add('btn-primary');
+        
+        btnYearly.classList.remove('active');
+        btnYearly.classList.remove('btn-primary');
+        btnYearly.classList.add('btn-outline-primary');
+        
+        monthSelectorContainer.style.display = 'block';
+        
+        // تحديث البيانات ليتم عرض الإحصائيات الشهرية
+        document.getElementById('total-fees').innerText = '28,750 ريال';
+        document.getElementById('pending-fees').innerText = '14,200 ريال';
+    });
+
+    btnYearly.addEventListener('click', function() {
+        btnYearly.classList.add('active');
+        btnYearly.classList.remove('btn-outline-primary');
+        btnYearly.classList.add('btn-primary');
+        
+        btnMonthly.classList.remove('active');
+        btnMonthly.classList.remove('btn-primary');
+        btnMonthly.classList.add('btn-outline-primary');
+        
+        monthSelectorContainer.style.display = 'none';
+        
+        // تحديث البيانات ليتم عرض الإحصائيات السنوية
+        document.getElementById('total-fees').innerText = '615,300 ريال';
+        document.getElementById('pending-fees').innerText = '132,500 ريال';
+    });
+});
+</script>
+{% endblock %}
