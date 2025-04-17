@@ -5,6 +5,8 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import extract, func, or_
 import os
 import uuid
+import io
+from fpdf import FPDF
 
 from app import db
 from models import Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit
@@ -866,12 +868,13 @@ def handover_pdf(id):
     
     handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
     
-    # إنشاء ملف PDF
-    pdf = ArabicPDF('P', 'mm', 'A4')
-    pdf.add_font('Arial', '', 'arial.ttf', uni=True)
-    pdf.add_font('Arial', 'B', 'arialbd.ttf', uni=True)
+    # إنشاء ملف PDF بسيط
+    pdf = FPDF('P', 'mm', 'A4')
     pdf.set_auto_page_break(True, margin=15)
     pdf.add_page()
+    
+    # استخدام الخط المدمج
+    pdf.set_font('Arial', 'B', 16)
     
     # عنوان المستند
     pdf.set_font('Arial', 'B', 18)
