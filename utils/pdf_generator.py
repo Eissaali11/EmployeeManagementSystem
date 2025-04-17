@@ -39,7 +39,7 @@ def generate_salary_report_pdf(salaries, month, year):
             })
         
         # إنشاء ملف PDF باستخدام FPDF
-        return generate_fpdf_report(salary_data, month_name, year)
+        return generate_fpdf_report(salary_data, month_name, str(year))
     
     except Exception as e:
         print(f"خطأ في إنشاء تقرير PDF: {str(e)}")

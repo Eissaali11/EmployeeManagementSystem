@@ -371,7 +371,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        subtitle = f"تقرير الرواتب - شهر {month_name} {year}"
+        subtitle = f"تقرير الرواتب - شهر {month_name} {str(year)}"
         y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
         
         # إضافة إطار للمستند
