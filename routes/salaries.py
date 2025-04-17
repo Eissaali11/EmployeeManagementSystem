@@ -388,12 +388,13 @@ def salary_notification_pdf(id):
         # إنشاء ملف PDF
         pdf_bytes = generate_salary_notification_pdf(salary)
         
-        # تسجيل العملية
+        # تسجيل العملية - بدون تحديد user_id
         audit = SystemAudit(
             action='generate_notification',
             entity_type='salary',
             entity_id=salary.id,
-            details=f'تم إنشاء إشعار راتب للموظف: {salary.employee.name} لشهر {salary.month}/{salary.year}'
+            details=f'تم إنشاء إشعار راتب للموظف: {salary.employee.name} لشهر {salary.month}/{salary.year}',
+            user_id=None  # تحديد القيمة بشكل واضح كقيمة فارغة
         )
         db.session.add(audit)
         db.session.commit()
@@ -442,7 +443,8 @@ def batch_salary_notifications():
                         action='batch_notifications',
                         entity_type='salary',
                         entity_id=0,
-                        details=f'تم إنشاء {len(processed_employees)} إشعار راتب لموظفي قسم {department_name} لشهر {month}/{year}'
+                        details=f'تم إنشاء {len(processed_employees)} إشعار راتب لموظفي قسم {department_name} لشهر {month}/{year}',
+                        user_id=None  # تحديد القيمة بشكل واضح كقيمة فارغة
                     )
                     db.session.add(audit)
                     db.session.commit()
@@ -460,7 +462,8 @@ def batch_salary_notifications():
                         action='batch_notifications',
                         entity_type='salary',
                         entity_id=0,
-                        details=f'تم إنشاء {len(processed_employees)} إشعار راتب لجميع الموظفين لشهر {month}/{year}'
+                        details=f'تم إنشاء {len(processed_employees)} إشعار راتب لجميع الموظفين لشهر {month}/{year}',
+                        user_id=None  # تحديد القيمة بشكل واضح كقيمة فارغة
                     )
                     db.session.add(audit)
                     db.session.commit()

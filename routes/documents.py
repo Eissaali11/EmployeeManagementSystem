@@ -104,7 +104,8 @@ def create():
                 action='create',
                 entity_type='document',
                 entity_id=employee_id,
-                details=f'تم إضافة وثيقة جديدة من نوع {document_type} للموظف: {employee.name}'
+                details=f'تم إضافة وثيقة جديدة من نوع {document_type} للموظف: {employee.name}',
+                user_id=None  # تحديد القيمة بشكل واضح كقيمة فارغة
             )
             db.session.add(audit)
             db.session.commit()
