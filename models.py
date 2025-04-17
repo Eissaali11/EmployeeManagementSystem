@@ -292,6 +292,7 @@ class VehicleHandover(db.Model):
     has_first_aid_kit = db.Column(db.Boolean, default=True)  # وجود حقيبة إسعافات أولية
     has_warning_triangle = db.Column(db.Boolean, default=True)  # وجود مثلث تحذيري
     has_tools = db.Column(db.Boolean, default=True)  # وجود أدوات
+    form_link = db.Column(db.String(255))  # رابط فورم التسليم/الاستلام
     notes = db.Column(db.Text)  # ملاحظات إضافية
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
