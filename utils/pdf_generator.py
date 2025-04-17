@@ -2,7 +2,7 @@ from io import BytesIO
 import arabic_reshaper
 from bidi.algorithm import get_display
 from datetime import datetime
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
@@ -28,11 +28,14 @@ def generate_salary_report_pdf(salaries, month, year):
             reshaped_text = arabic_reshaper.reshape(str(text))
             return get_display(reshaped_text)
         
-        # Register fonts if not already registered
-        try:
-            pdfmetrics.getFont('Helvetica')
-        except:
-            pdfmetrics.registerFont(TTFont('Helvetica', 'Helvetica'))
+        # Register default font
+        from reportlab.pdfbase.pdfmetrics import registerFontFamily
+        
+        # Use the default Helvetica font which is built into ReportLab
+        arabicFontName = 'Helvetica'
+        
+        # Register font family
+        registerFontFamily(arabicFontName, normal=arabicFontName)
         
         # Get month name in Arabic
         month_names = {
@@ -53,13 +56,14 @@ def generate_salary_report_pdf(salaries, month, year):
         buffer = BytesIO()
         
         # Create PDF document
+        # استخدام وضع أفقي للورقة (Landscape) بدلاً من وضع عمودي
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
-            rightMargin=1*cm,
-            leftMargin=1*cm,
-            topMargin=1*cm,
-            bottomMargin=1*cm
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
         )
         
         # Define styles
