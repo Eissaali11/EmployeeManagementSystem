@@ -6,7 +6,8 @@ from datetime import datetime
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER")
-WHATSAPP_TEMPLATE_SID = "HXb5b62575e6e4ff6129ad7c8efe1f983e"  # معرف قالب الرسالة
+# معرف قالب الرسالة
+WHATSAPP_TEMPLATE_SID = "HXb5b62575e6e4ff6129ad7c8efe1f983e"
 
 def send_salary_notification_whatsapp(employee, salary):
     """
