@@ -495,8 +495,8 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
                 fill = True
                 pdf.set_font('Tajawal', 'B', 10)
             
-            # استخدام نفس موضع X الذي تم تعيينه سابقاً للجدول (summary_x)
-            pdf.set_xy(summary_x, pdf.get_y())
+            # استخدام summary_table_x الذي تم تعريفه للجدول
+            pdf.set_xy(summary_table_x, pdf.get_y())
             pdf.cell(col1_width, 10, item[1], 1, 0, 'C', fill)
             pdf.cell(col2_width, 10, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
         
