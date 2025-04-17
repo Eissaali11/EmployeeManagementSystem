@@ -433,6 +433,11 @@
             <!-- نموذج إدخال البيانات -->
             <form method="POST" action="{{ url_for('renewal_fees.create') }}" id="feesForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- حقول مخفية للبيانات -->
+                <input type="hidden" name="fee_type" id="fee_type" value="">
+                <input type="hidden" name="amount" id="amount" value="">
+                <input type="hidden" name="notes" id="notes" value="">
+                <input type="hidden" name="transfer_number" id="transfer_number_hidden" value="">
                 
                 <!-- معلومات الوثيقة والتاريخ -->
                 <div class="card shadow-sm mb-4">
@@ -1052,52 +1057,99 @@
                 // التحقق من حقول النموذج الأساسية
                 const form = document.getElementById('feesForm');
                 if (!form) {
+                    console.error('خطأ: لم يتم العثور على عنصر النموذج feesForm');
                     showAlert('warning', 'حدث خطأ في النموذج، يرجى تحديث الصفحة');
                     return;
                 }
                 
+                // عرض محتويات النموذج في وحدة التحكم للتشخيص
+                console.log('عناصر النموذج:', form.elements);
+                console.log('عدد عناصر النموذج:', form.elements.length);
+                
+                // التحقق من وجود حقول النموذج المخفية اللازمة
+                const feeTypeField = document.getElementById('fee_type');
+                const amountField = document.getElementById('amount');
+                
+                if (!feeTypeField) {
+                    console.error('خطأ: حقل fee_type المخفي غير موجود');
+                    // إنشاء حقل fee_type إذا لم يكن موجودًا
+                    const hiddenFeeType = document.createElement('input');
+                    hiddenFeeType.type = 'hidden';
+                    hiddenFeeType.id = 'fee_type';
+                    hiddenFeeType.name = 'fee_type';
+                    form.appendChild(hiddenFeeType);
+                    console.log('تم إنشاء حقل fee_type');
+                }
+                
+                if (!amountField) {
+                    console.error('خطأ: حقل amount المخفي غير موجود');
+                    // إنشاء حقل amount إذا لم يكن موجودًا
+                    const hiddenAmount = document.createElement('input');
+                    hiddenAmount.type = 'hidden';
+                    hiddenAmount.id = 'amount';
+                    hiddenAmount.name = 'amount';
+                    form.appendChild(hiddenAmount);
+                    console.log('تم إنشاء حقل amount');
+                }
+                
                 const documentSelect = document.getElementById('document_id');
                 if (!documentSelect || !documentSelect.value) {
+                    console.warn('تحذير: لم يتم اختيار وثيقة');
                     showAlert('warning', 'يرجى اختيار الوثيقة');
                     if (documentSelect) documentSelect.focus();
                     return;
                 }
+                console.log('الوثيقة المختارة:', documentSelect.value);
                 
                 const feeDateInput = document.getElementById('fee_date');
                 if (!feeDateInput || !feeDateInput.value) {
+                    console.warn('تحذير: لم يتم تحديد تاريخ الاستحقاق');
                     showAlert('warning', 'يرجى تحديد تاريخ الاستحقاق');
                     if (feeDateInput) feeDateInput.focus();
                     return;
                 }
+                console.log('تاريخ الاستحقاق:', feeDateInput.value);
                 
                 // التحقق من حقول الدفع إذا كانت الحالة مدفوعة
                 const paymentStatusSelect = document.getElementById('payment_status');
                 if (paymentStatusSelect && paymentStatusSelect.value === 'paid') {
                     const paymentDateInput = document.getElementById('payment_date');
                     if (!paymentDateInput || !paymentDateInput.value) {
+                        console.warn('تحذير: لم يتم تحديد تاريخ الدفع في حالة الدفع "مدفوع"');
                         showAlert('warning', 'يرجى تحديد تاريخ الدفع');
                         if (paymentDateInput) paymentDateInput.focus();
                         return;
                     }
+                    console.log('تاريخ الدفع:', paymentDateInput.value);
                 }
                 
                 // العثور على أول نوع مفعّل
                 let selectedToggle = null;
+                console.log('التحقق من أنواع الرسوم المفعلة:', toggles);
                 for (const toggle of toggles) {
                     const toggleElement = document.getElementById(toggle.id);
                     if (toggleElement && toggleElement.checked) {
+                        console.log('تم العثور على نوع مفعل:', toggle.id);
                         const amountInput = document.getElementById(toggle.amount);
+                        if (!amountInput) {
+                            console.error(`خطأ: حقل المبلغ ${toggle.amount} غير موجود`);
+                            continue;
+                        }
                         const amount = parseFloat(amountInput.value) || 0;
+                        console.log('المبلغ المدخل:', amount);
                         
                         if (amount > 0) {
                             selectedToggle = toggle;
                             break;
+                        } else {
+                            console.warn('تحذير: المبلغ صفر أو غير صالح');
                         }
                     }
                 }
                 
                 // التحقق من وجود رسوم مدخلة
                 if (!selectedToggle) {
+                    console.error('خطأ: لم يتم تفعيل أي نوع رسوم أو إدخال مبلغ صحيح');
                     showAlert('warning', 'يرجى تفعيل وإدخال قيمة لرسم واحد على الأقل');
                     return;
                 }
@@ -1115,21 +1167,53 @@
                 console.log('تعيين المبلغ:', amount);
                 
                 // تعيين الملاحظات
-                const notes = document.getElementById(selectedToggle.notes)?.value || '';
-                document.getElementById('notes').value = notes;
+                const notesField = document.getElementById(selectedToggle.notes);
+                const notes = notesField ? notesField.value || '' : '';
+                
+                // التحقق من وجود حقل الملاحظات المخفي
+                let notesHiddenField = document.getElementById('notes');
+                if (!notesHiddenField) {
+                    notesHiddenField = document.createElement('input');
+                    notesHiddenField.type = 'hidden';
+                    notesHiddenField.id = 'notes';
+                    notesHiddenField.name = 'notes';
+                    form.appendChild(notesHiddenField);
+                    console.log('تم إنشاء حقل notes');
+                }
+                notesHiddenField.value = notes;
                 console.log('تعيين الملاحظات:', notes);
                 
                 // معالجة رقم نقل الكفالة إذا كان مطلوبًا
                 if (feeType === 'transfer_sponsorship') {
-                    const transferValue = document.getElementById('transfer_number')?.value || '';
-                    document.getElementById('transfer_number_hidden').value = transferValue;
+                    const transferInput = document.getElementById('transfer_number');
+                    const transferValue = transferInput ? transferInput.value || '' : '';
+                    
+                    // التحقق من وجود حقل رقم النقل المخفي
+                    let transferHiddenField = document.getElementById('transfer_number_hidden');
+                    if (!transferHiddenField) {
+                        transferHiddenField = document.createElement('input');
+                        transferHiddenField.type = 'hidden';
+                        transferHiddenField.id = 'transfer_number_hidden';
+                        transferHiddenField.name = 'transfer_number';
+                        form.appendChild(transferHiddenField);
+                        console.log('تم إنشاء حقل transfer_number_hidden');
+                    }
+                    transferHiddenField.value = transferValue;
                     console.log('تعيين رقم النقل:', transferValue);
                     
                     if (!transferValue) {
+                        console.warn('تحذير: رقم النقل غير مدخل في حالة نقل الكفالة');
                         showAlert('warning', 'يرجى إدخال رقم النقل لتجديد نقل الكفالة');
-                        document.getElementById('transfer_number').focus();
+                        if (transferInput) transferInput.focus();
                         return;
                     }
+                }
+                
+                // طباعة جميع قيم النموذج للتشخيص
+                const formData = new FormData(form);
+                console.log('بيانات النموذج قبل الإرسال:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
                 }
                 
                 // عرض رسالة قبل الإرسال
@@ -1142,6 +1226,7 @@
                 }, 500);
             } catch (error) {
                 console.error('خطأ في معالجة النموذج:', error);
+                console.error('تفاصيل الخطأ:', error.stack);
                 showAlert('warning', 'حدث خطأ أثناء معالجة النموذج، يرجى تحديث الصفحة');
             }
         });
