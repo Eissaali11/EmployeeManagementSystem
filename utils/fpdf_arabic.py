@@ -14,6 +14,9 @@ class ArabicPDF(FPDF):
     def __init__(self, orientation='P', unit='mm', format='A4'):
         super().__init__(orientation=orientation, unit=unit, format=format)
         # إضافة الخط العربي
+        self.add_font('Tajawal', '', os.path.join('static', 'fonts', 'Tajawal-Regular.ttf'), uni=True)
+        self.add_font('ArefRuqaa', '', os.path.join('static', 'fonts', 'ArefRuqaa-Regular.ttf'), uni=True)
+        # احتياطي
         self.add_font('Arial', '', os.path.join('static', 'fonts', 'arial.ttf'), uni=True)
         self.add_font('Arial', 'B', os.path.join('static', 'fonts', 'arialbd.ttf'), uni=True)
     
@@ -45,17 +48,17 @@ def generate_salary_notification_pdf(data):
         pdf.add_page()
         
         # ضبط الخط
-        pdf.set_font('Arial', '', 14)
+        pdf.set_font('Tajawal', '', 14)
         
         # العنوان
-        pdf.set_font('Arial', 'B', 18)
+        pdf.set_font('Tajawal', '', 18)
         pdf.arabic_text(200, 20, "إشعار راتب", 'C')
         
         # معلومات الموظف
-        pdf.set_font('Arial', 'B', 14)
+        pdf.set_font('Tajawal', '', 14)
         pdf.arabic_text(200, 40, "بيانات الموظف", 'R')
         
-        pdf.set_font('Arial', '', 12)
+        pdf.set_font('Tajawal', '', 12)
         pdf.arabic_text(200, 50, f"الاسم: {data.get('employee_name', '')}", 'R')
         pdf.arabic_text(200, 60, f"الرقم الوظيفي: {data.get('employee_id', '')}", 'R')
         
@@ -69,7 +72,7 @@ def generate_salary_notification_pdf(data):
         
         # تفاصيل الراتب
         y_pos += 20
-        pdf.set_font('Arial', 'B', 14)
+        pdf.set_font('Tajawal', '', 14)
         pdf.arabic_text(200, y_pos, f"تفاصيل راتب شهر: {data.get('month_name', '')} {data.get('year', '')}", 'C')
         
         # جدول الراتب
@@ -84,7 +87,7 @@ def generate_salary_notification_pdf(data):
         
         # رسم الجدول
         y_pos += 15
-        pdf.set_font('Arial', 'B', 12)
+        pdf.set_font('Tajawal', '', 12)
         
         # رأس الجدول
         pdf.set_fill_color(200, 200, 200)  # لون رمادي فاتح
@@ -93,11 +96,11 @@ def generate_salary_notification_pdf(data):
         pdf.cell(60, 10, get_display(arabic_reshaper.reshape(headers[0])), 1, 1, 'C', True)
         
         # بيانات الجدول
-        pdf.set_font('Arial', '', 10)
+        pdf.set_font('Tajawal', '', 10)
         for i, item in enumerate(items):
             fill = False
             if i == len(items) - 1:  # صف المجموع
-                pdf.set_font('Arial', 'B', 10)
+                pdf.set_font('Tajawal', '', 10)
                 fill = True
             
             pdf.set_xy(110, pdf.get_y())
@@ -107,16 +110,16 @@ def generate_salary_notification_pdf(data):
         # إضافة الملاحظات إذا وجدت
         if data.get('notes'):
             pdf.set_xy(40, pdf.get_y() + 10)
-            pdf.set_font('Arial', 'B', 12)
+            pdf.set_font('Tajawal', '', 12)
             pdf.arabic_text(200, pdf.get_y(), "ملاحظات:", 'R')
             
             pdf.set_xy(40, pdf.get_y() + 5)
-            pdf.set_font('Arial', '', 10)
+            pdf.set_font('Tajawal', '', 10)
             pdf.arabic_text(200, pdf.get_y(), data.get('notes', ''), 'R')
         
         # التوقيعات
         pdf.set_xy(40, pdf.get_y() + 30)
-        pdf.set_font('Arial', '', 12)
+        pdf.set_font('Tajawal', '', 12)
         pdf.cell(50, 10, get_display(arabic_reshaper.reshape("توقيع الموظف")), 0, 0, 'C')
         pdf.cell(70, 10, "", 0, 0, 'C')  # فراغ في الوسط
         pdf.cell(50, 10, get_display(arabic_reshaper.reshape("توقيع المدير المالي")), 0, 1, 'C')
@@ -128,13 +131,17 @@ def generate_salary_notification_pdf(data):
         
         # التذييل
         pdf.set_xy(10, 270)
-        pdf.set_font('Arial', '', 8)
+        pdf.set_font('Tajawal', '', 8)
         pdf.set_text_color(150, 150, 150)  # لون رمادي
         pdf.arabic_text(200, pdf.get_y(), f"تم إصدار هذا الإشعار بتاريخ {data.get('current_date', datetime.now().strftime('%Y-%m-%d'))}", 'C')
         pdf.arabic_text(200, pdf.get_y() + 5, "نظام إدارة الموظفين - جميع الحقوق محفوظة", 'C')
         
         # حفظ PDF إلى متغير
-        pdf_bytes = pdf.output('', 'S').encode('latin1')  # FPDF ترجع سلسلة لاتينية
+        pdf_output = pdf.output('', 'S')
+        if isinstance(pdf_output, str):
+            pdf_bytes = pdf_output.encode('latin1')  # FPDF ترجع سلسلة لاتينية في بعض الإصدارات
+        else:
+            pdf_bytes = pdf_output  # في الإصدارات الأحدث قد ترجع بيانات ثنائية مباشرة
         return pdf_bytes
         
     except Exception as e:
@@ -160,13 +167,13 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.add_page()
         
         # ضبط الخط
-        pdf.set_font('Arial', 'B', 18)
+        pdf.set_font('Tajawal', '', 18)
         
         # العنوان
         pdf.arabic_text(280, 20, "تقرير الرواتب", 'C')
         
         # العنوان الفرعي
-        pdf.set_font('Arial', 'B', 14)
+        pdf.set_font('Tajawal', '', 14)
         pdf.arabic_text(280, 30, f"شهر {month_name} {year}", 'C')
         
         # إعداد جدول الرواتب
@@ -180,7 +187,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         total_net = sum(salary.get('net_salary', 0) for salary in salaries_data)
         
         # ضبط موضع الجدول
-        pdf.set_font('Arial', 'B', 10)
+        pdf.set_font('Tajawal', '', 10)
         y_pos = 50
         
         # عرض الأعمدة
@@ -196,7 +203,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             x_pos += col_widths[i]
         
         # بيانات الجدول
-        pdf.set_font('Arial', '', 10)
+        pdf.set_font('Tajawal', '', 10)
         for idx, salary in enumerate(salaries_data):
             y_pos += 10
             fill = idx % 2 == 1  # صفوف بديلة
@@ -244,7 +251,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         ]
         
         x_pos = 30
-        pdf.set_font('Arial', 'B', 10)
+        pdf.set_font('Tajawal', '', 10)
         for i, cell_data in reversed(list(enumerate(summary_data))):
             pdf.set_xy(x_pos, y_pos)
             if i == 1:  # نص "المجموع"
@@ -253,11 +260,11 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             else:
                 text = cell_data
                 align = 'C'
-            pdf.cell(col_widths[i], 10, text, 1, 0, align, 1)
+            pdf.cell(col_widths[i], 10, text, 1, 0, align, True)
             x_pos += col_widths[i]
         
         # ملخص الرواتب
-        pdf.set_font('Arial', 'B', 14)
+        pdf.set_font('Tajawal', '', 14)
         pdf.arabic_text(280, y_pos + 20, "ملخص الرواتب", 'R')
         
         # جدول الملخص
@@ -271,17 +278,17 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         ]
         
         # رسم جدول الملخص
-        pdf.set_font('Arial', 'B', 10)
+        pdf.set_font('Tajawal', '', 10)
         summary_y = y_pos + 30
         
         # رأس جدول الملخص
         pdf.set_fill_color(200, 200, 200)  # لون رمادي فاتح
         pdf.set_xy(210, summary_y)
-        pdf.cell(30, 10, get_display(arabic_reshaper.reshape(summary_headers[1])), 1, 0, 'C', 1)
-        pdf.cell(50, 10, get_display(arabic_reshaper.reshape(summary_headers[0])), 1, 1, 'C', 1)
+        pdf.cell(30, 10, get_display(arabic_reshaper.reshape(summary_headers[1])), 1, 0, 'C', True)
+        pdf.cell(50, 10, get_display(arabic_reshaper.reshape(summary_headers[0])), 1, 1, 'C', True)
         
         # بيانات جدول الملخص
-        pdf.set_font('Arial', '', 10)
+        pdf.set_font('Tajawal', '', 10)
         for i, item in enumerate(summary_items):
             fill = i % 2 == 1  # صفوف بديلة
             if fill:
@@ -290,7 +297,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             if i == len(summary_items) - 1:  # الصف الأخير
                 pdf.set_fill_color(200, 200, 200)  # لون رمادي فاتح
                 fill = True
-                pdf.set_font('Arial', 'B', 10)
+                pdf.set_font('Tajawal', '', 10)
             
             pdf.set_xy(210, pdf.get_y())
             pdf.cell(30, 10, item[1], 1, 0, 'C', fill)
@@ -298,7 +305,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # التذييل
         pdf.set_xy(10, 190)  # تقريباً أسفل الصفحة
-        pdf.set_font('Arial', '', 8)
+        pdf.set_font('Tajawal', '', 8)
         pdf.set_text_color(150, 150, 150)  # لون رمادي
         pdf.arabic_text(280, pdf.get_y(), f"تم إنشاء هذا التقرير في {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", 'C')
         pdf.arabic_text(280, pdf.get_y() + 5, "نظام إدارة الموظفين - جميع الحقوق محفوظة", 'C')
