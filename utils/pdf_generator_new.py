@@ -368,8 +368,8 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
     إنشاء تقرير رواتب كملف PDF باستخدام FPDF
     
     Args:
-        salaries_data: قائمة بقواميس تحتوي على بيانات الرواتب
-        month_name: اسم الشهر
+        salaries_data: قائمة بكائنات Salary
+        month_name: رقم الشهر
         year: السنة
         
     Returns:
@@ -380,12 +380,27 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         month_name = str(month_name)
         year = str(year)
         
+        # تحويل رقم الشهر إلى اسم الشهر
+        month_names = [
+            'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+        ]
+        # التأكد من أن month_name رقم صحيح بين 1 و 12
+        try:
+            month_int = int(month_name)
+            if 1 <= month_int <= 12:
+                month_display = month_names[month_int - 1]
+            else:
+                month_display = month_name
+        except (ValueError, TypeError):
+            month_display = month_name
+        
         # إنشاء PDF جديد في الوضع الأفقي
         pdf = ArabicPDF('L')
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        subtitle = "تقرير الرواتب - شهر " + month_name + " " + year
+        subtitle = "تقرير الرواتب - شهر " + month_display + " " + str(year)
         y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
         
         # إضافة إطار للمستند
@@ -399,15 +414,28 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         # تحويل البيانات إلى نوع مناسب
         clean_salaries_data = []
         for salary in salaries_data:
-            clean_salary = {
-                'employee_name': str(salary.get('employee_name', '')),
-                'employee_id': str(salary.get('employee_id', '')),
-                'basic_salary': float(salary.get('basic_salary', 0)),
-                'allowances': float(salary.get('allowances', 0)),
-                'deductions': float(salary.get('deductions', 0)),
-                'bonus': float(salary.get('bonus', 0)),
-                'net_salary': float(salary.get('net_salary', 0))
-            }
+            # التعامل مع كائنات Salary
+            if hasattr(salary, 'employee'):
+                clean_salary = {
+                    'employee_name': str(salary.employee.name) if salary.employee else '',
+                    'employee_id': str(salary.employee.employee_id) if salary.employee else '',
+                    'basic_salary': float(salary.basic_salary),
+                    'allowances': float(salary.allowances),
+                    'deductions': float(salary.deductions),
+                    'bonus': float(salary.bonus),
+                    'net_salary': float(salary.net_salary)
+                }
+            # التعامل مع القواميس
+            else:
+                clean_salary = {
+                    'employee_name': str(salary.get('employee_name', '')),
+                    'employee_id': str(salary.get('employee_id', '')),
+                    'basic_salary': float(salary.get('basic_salary', 0)),
+                    'allowances': float(salary.get('allowances', 0)),
+                    'deductions': float(salary.get('deductions', 0)),
+                    'bonus': float(salary.get('bonus', 0)),
+                    'net_salary': float(salary.get('net_salary', 0))
+                }
             clean_salaries_data.append(clean_salary)
         
         # حساب المجاميع
