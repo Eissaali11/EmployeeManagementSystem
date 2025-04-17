@@ -75,6 +75,15 @@ def inject_now():
         'firebase_app_id': app.config['FIREBASE_APP_ID']
     }
 
+# تصحيح مشكلة CSRF token في القوالب
+@app.context_processor
+def inject_csrf_token():
+    """إضافة csrf_token إلى جميع القوالب"""
+    def get_csrf_token():
+        return csrf._get_csrf_token()
+    
+    return {'csrf_token': get_csrf_token}
+
 # مسار الجذر الرئيسي للتطبيق
 @app.route('/')
 def root():
