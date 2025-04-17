@@ -27,81 +27,245 @@
                     </div>
                     <div>
                         <h5 class="alert-heading">معلومات مهمة</h5>
-                        <p class="mb-0">جميع الحقول المميزة بعلامة (*) مطلوبة.</p>
+                        <p class="mb-0">قم بإدخال المبالغ لأنواع الرسوم المطلوبة فقط. الحقول الفارغة سيتم تجاهلها.</p>
                     </div>
                 </div>
             </div>
 
-            <form method="POST" action="{{ url_for('renewal_fees.create') }}">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="document_id" class="form-label">الوثيقة *</label>
-                        <select class="form-select select2" id="document_id" name="document_id" required>
-                            <option value="">اختر الوثيقة</option>
-                            {% for document in documents %}
-                            <option value="{{ document.id }}">{{ document.employee.name }} - {{ document.document_type }} ({{ document.document_number }})</option>
-                            {% endfor %}
-                        </select>
+            <form method="POST" action="{{ url_for('renewal_fees.create') }}" id="feesForm">
+                <!-- معلومات الوثيقة والتاريخ -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 fw-bold">معلومات أساسية</h6>
                     </div>
-                    <div class="col-md-6">
-                        <label for="fee_date" class="form-label">تاريخ الاستحقاق *</label>
-                        <input type="date" class="form-control" id="fee_date" name="fee_date" required>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="fee_type" class="form-label">نوع الرسم *</label>
-                        <select class="form-select" id="fee_type" name="fee_type" required>
-                            <option value="">اختر نوع الرسم</option>
-                            {% for type_key, type_name in fee_types.items() %}
-                            <option value="{{ type_key }}">{{ type_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="amount" class="form-label">المبلغ (ريال) *</label>
-                        <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0" required>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="payment_status" class="form-label">حالة الدفع *</label>
-                        <select class="form-select" id="payment_status" name="payment_status" required>
-                            {% for status_key, status_name in payment_statuses.items() %}
-                            <option value="{{ status_key }}" {% if status_key == 'pending' %}selected{% endif %}>{{ status_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row payment-details">
-                    <div class="col-md-6 mb-3">
-                        <label for="payment_date" class="form-label">تاريخ الدفع</label>
-                        <input type="date" class="form-control" id="payment_date" name="payment_date">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="receipt_number" class="form-label">رقم الإيصال</label>
-                        <input type="text" class="form-control" id="receipt_number" name="receipt_number">
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="document_id" class="form-label">الوثيقة *</label>
+                                <select class="form-select select2" id="document_id" name="document_id" required>
+                                    <option value="">اختر الوثيقة</option>
+                                    {% for document in documents %}
+                                    <option value="{{ document.id }}">{{ document.employee.name }} - {{ document.document_type }} ({{ document.document_number }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fee_date" class="form-label">تاريخ الاستحقاق *</label>
+                                <input type="date" class="form-control" id="fee_date" name="fee_date" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="payment_status" class="form-label">حالة الدفع *</label>
+                                <select class="form-select" id="payment_status" name="payment_status" required>
+                                    {% for status_key, status_name in payment_statuses.items() %}
+                                    <option value="{{ status_key }}" {% if status_key == 'pending' %}selected{% endif %}>{{ status_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row payment-details">
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_date" class="form-label">تاريخ الدفع</label>
+                                <input type="date" class="form-control" id="payment_date" name="payment_date">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="receipt_number" class="form-label">رقم الإيصال</label>
+                                <input type="text" class="form-control" id="receipt_number" name="receipt_number">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="notes" class="form-label">ملاحظات</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                <!-- رسوم مكتب العمل -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">رسوم مكتب العمل</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="labor_office_toggle">
+                                <label class="form-check-label" for="labor_office_toggle">تفعيل</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body labor_office_section" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="labor_office_amount" class="form-label">المبلغ (ريال)</label>
+                                <input type="number" class="form-control fee-amount" id="labor_office_amount" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="labor_office_notes" class="form-label">ملاحظات</label>
+                                <input type="text" class="form-control" id="labor_office_notes">
+                            </div>
+                        </div>
+                        <input type="hidden" name="fee_types[]" value="labor_office" disabled>
+                    </div>
                 </div>
 
+                <!-- رسوم الجوازات -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">رسوم الجوازات</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="passport_toggle">
+                                <label class="form-check-label" for="passport_toggle">تفعيل</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body passport_section" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="passport_amount" class="form-label">المبلغ (ريال)</label>
+                                <input type="number" class="form-control fee-amount" id="passport_amount" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="passport_notes" class="form-label">ملاحظات</label>
+                                <input type="text" class="form-control" id="passport_notes">
+                            </div>
+                        </div>
+                        <input type="hidden" name="fee_types[]" value="passport" disabled>
+                    </div>
+                </div>
+
+                <!-- رسوم التأمينات الاجتماعية -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">رسوم التأمينات الاجتماعية</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="social_insurance_toggle">
+                                <label class="form-check-label" for="social_insurance_toggle">تفعيل</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body social_insurance_section" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="social_insurance_amount" class="form-label">المبلغ (ريال)</label>
+                                <input type="number" class="form-control fee-amount" id="social_insurance_amount" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="social_insurance_notes" class="form-label">ملاحظات</label>
+                                <input type="text" class="form-control" id="social_insurance_notes">
+                            </div>
+                        </div>
+                        <input type="hidden" name="fee_types[]" value="social_insurance" disabled>
+                    </div>
+                </div>
+
+                <!-- رسوم نقل الكفالة -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">رسوم نقل الكفالة</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="transfer_sponsorship_toggle">
+                                <label class="form-check-label" for="transfer_sponsorship_toggle">تفعيل</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body transfer_sponsorship_section" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="transfer_sponsorship_amount" class="form-label">المبلغ (ريال)</label>
+                                <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="transfer_number" class="form-label">رقم النقل</label>
+                                <input type="text" class="form-control" id="transfer_number">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="transfer_sponsorship_notes" class="form-label">ملاحظات</label>
+                                <input type="text" class="form-control" id="transfer_sponsorship_notes">
+                            </div>
+                        </div>
+                        <input type="hidden" name="fee_types[]" value="transfer_sponsorship" disabled>
+                    </div>
+                </div>
+
+                <!-- رسوم أخرى -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">رسوم أخرى</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="other_toggle">
+                                <label class="form-check-label" for="other_toggle">تفعيل</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body other_section" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="other_amount" class="form-label">المبلغ (ريال)</label>
+                                <input type="number" class="form-control fee-amount" id="other_amount" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="other_description" class="form-label">وصف الرسوم</label>
+                                <input type="text" class="form-control" id="other_description" placeholder="أدخل وصف الرسوم الأخرى">
+                            </div>
+                        </div>
+                        <input type="hidden" name="fee_types[]" value="other" disabled>
+                    </div>
+                </div>
+
+                <!-- ملخص الرسوم -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0 fw-bold">ملخص الرسوم</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>نوع الرسم</th>
+                                            <th>المبلغ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fees_summary">
+                                        <tr>
+                                            <td colspan="2" class="text-center">لم يتم إضافة أي رسوم بعد</td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-primary">
+                                            <th>المجموع</th>
+                                            <th id="total_fees">0.00 ريال</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">ملاحظات إضافية</label>
+                                    <textarea class="form-control" id="general_notes" name="notes" rows="5"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ والإلغاء -->
                 <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <button type="button" id="submitBtn" class="btn btn-primary btn-lg px-5">
                         <i class="fas fa-save me-1"></i>
-                        حفظ
+                        حفظ جميع الرسوم
                     </button>
                     <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-secondary btn-lg px-5">
                         <i class="fas fa-times me-1"></i>
                         إلغاء
                     </a>
                 </div>
+
+                <!-- حقول مخفية للإرسال -->
+                <input type="hidden" id="actual_fee_type" name="fee_type" value="">
+                <input type="hidden" id="actual_amount" name="amount" value="">
+                <input type="hidden" id="actual_transfer_number" name="transfer_number" value="">
+                <input type="hidden" id="actual_notes" name="notes" value="">
             </form>
         </div>
     </div>
@@ -133,6 +297,224 @@
         // تنفيذ الدالة عند تحميل الصفحة وعند تغيير حالة الدفع
         togglePaymentFields();
         $('#payment_status').change(togglePaymentFields);
+
+        // تبديل عرض/إخفاء أقسام الرسوم
+        $('#labor_office_toggle').change(function() {
+            $('.labor_office_section').toggle(this.checked);
+            $('input[name="fee_types[]"][value="labor_office"]').prop('disabled', !this.checked);
+            updateSummary();
+        });
+        
+        $('#passport_toggle').change(function() {
+            $('.passport_section').toggle(this.checked);
+            $('input[name="fee_types[]"][value="passport"]').prop('disabled', !this.checked);
+            updateSummary();
+        });
+        
+        $('#social_insurance_toggle').change(function() {
+            $('.social_insurance_section').toggle(this.checked);
+            $('input[name="fee_types[]"][value="social_insurance"]').prop('disabled', !this.checked);
+            updateSummary();
+        });
+        
+        $('#transfer_sponsorship_toggle').change(function() {
+            $('.transfer_sponsorship_section').toggle(this.checked);
+            $('input[name="fee_types[]"][value="transfer_sponsorship"]').prop('disabled', !this.checked);
+            updateSummary();
+        });
+        
+        $('#other_toggle').change(function() {
+            $('.other_section').toggle(this.checked);
+            $('input[name="fee_types[]"][value="other"]').prop('disabled', !this.checked);
+            updateSummary();
+        });
+
+        // تحديث ملخص الرسوم عند تغيير أي مبلغ
+        $('.fee-amount').on('input', function() {
+            updateSummary();
+        });
+
+        // تحديث ملخص الرسوم
+        function updateSummary() {
+            var fees = [];
+            var totalFees = 0;
+            
+            // جمع الرسوم المفعلة
+            if ($('#labor_office_toggle').is(':checked') && $('#labor_office_amount').val()) {
+                var amount = parseFloat($('#labor_office_amount').val());
+                fees.push({
+                    type: 'مكتب العمل',
+                    amount: amount
+                });
+                totalFees += amount;
+            }
+            
+            if ($('#passport_toggle').is(':checked') && $('#passport_amount').val()) {
+                var amount = parseFloat($('#passport_amount').val());
+                fees.push({
+                    type: 'الجوازات',
+                    amount: amount
+                });
+                totalFees += amount;
+            }
+            
+            if ($('#social_insurance_toggle').is(':checked') && $('#social_insurance_amount').val()) {
+                var amount = parseFloat($('#social_insurance_amount').val());
+                fees.push({
+                    type: 'التأمينات الاجتماعية',
+                    amount: amount
+                });
+                totalFees += amount;
+            }
+            
+            if ($('#transfer_sponsorship_toggle').is(':checked') && $('#transfer_sponsorship_amount').val()) {
+                var amount = parseFloat($('#transfer_sponsorship_amount').val());
+                fees.push({
+                    type: 'نقل كفالة',
+                    amount: amount
+                });
+                totalFees += amount;
+            }
+            
+            if ($('#other_toggle').is(':checked') && $('#other_amount').val()) {
+                var amount = parseFloat($('#other_amount').val());
+                var desc = $('#other_description').val() || 'رسوم أخرى';
+                fees.push({
+                    type: desc,
+                    amount: amount
+                });
+                totalFees += amount;
+            }
+            
+            // تحديث جدول الملخص
+            var $tbody = $('#fees_summary');
+            $tbody.empty();
+            
+            if (fees.length === 0) {
+                $tbody.append('<tr><td colspan="2" class="text-center">لم يتم إضافة أي رسوم بعد</td></tr>');
+            } else {
+                fees.forEach(function(fee) {
+                    $tbody.append('<tr><td>' + fee.type + '</td><td>' + fee.amount.toFixed(2) + ' ريال</td></tr>');
+                });
+            }
+            
+            // تحديث المجموع
+            $('#total_fees').text(totalFees.toFixed(2) + ' ريال');
+        }
+
+        // معالجة إرسال النموذج لحفظ كل نوع رسم بشكل منفصل
+        $('#submitBtn').click(function() {
+            var document_id = $('#document_id').val();
+            var fee_date = $('#fee_date').val();
+            var payment_status = $('#payment_status').val();
+            var payment_date = $('#payment_date').val();
+            var receipt_number = $('#receipt_number').val();
+            var general_notes = $('#general_notes').val();
+            
+            // التحقق من البيانات الأساسية
+            if (!document_id || !fee_date || !payment_status) {
+                alert('الرجاء ملء جميع الحقول المطلوبة');
+                return;
+            }
+            
+            // التحقق من وجود رسم واحد على الأقل
+            var hasAnyFee = false;
+            if ($('#labor_office_toggle').is(':checked') && $('#labor_office_amount').val()) hasAnyFee = true;
+            if ($('#passport_toggle').is(':checked') && $('#passport_amount').val()) hasAnyFee = true;
+            if ($('#social_insurance_toggle').is(':checked') && $('#social_insurance_amount').val()) hasAnyFee = true;
+            if ($('#transfer_sponsorship_toggle').is(':checked') && $('#transfer_sponsorship_amount').val()) hasAnyFee = true;
+            if ($('#other_toggle').is(':checked') && $('#other_amount').val()) hasAnyFee = true;
+            
+            if (!hasAnyFee) {
+                alert('الرجاء إضافة رسم واحد على الأقل');
+                return;
+            }
+            
+            var allFees = [];
+            
+            // إضافة رسوم مكتب العمل
+            if ($('#labor_office_toggle').is(':checked') && $('#labor_office_amount').val()) {
+                allFees.push({
+                    fee_type: 'labor_office',
+                    amount: $('#labor_office_amount').val(),
+                    notes: $('#labor_office_notes').val() || general_notes
+                });
+            }
+            
+            // إضافة رسوم الجوازات
+            if ($('#passport_toggle').is(':checked') && $('#passport_amount').val()) {
+                allFees.push({
+                    fee_type: 'passport',
+                    amount: $('#passport_amount').val(),
+                    notes: $('#passport_notes').val() || general_notes
+                });
+            }
+            
+            // إضافة رسوم التأمينات الاجتماعية
+            if ($('#social_insurance_toggle').is(':checked') && $('#social_insurance_amount').val()) {
+                allFees.push({
+                    fee_type: 'social_insurance',
+                    amount: $('#social_insurance_amount').val(),
+                    notes: $('#social_insurance_notes').val() || general_notes
+                });
+            }
+            
+            // إضافة رسوم نقل الكفالة
+            if ($('#transfer_sponsorship_toggle').is(':checked') && $('#transfer_sponsorship_amount').val()) {
+                allFees.push({
+                    fee_type: 'transfer_sponsorship',
+                    amount: $('#transfer_sponsorship_amount').val(),
+                    transfer_number: $('#transfer_number').val(),
+                    notes: $('#transfer_sponsorship_notes').val() || general_notes
+                });
+            }
+            
+            // إضافة رسوم أخرى
+            if ($('#other_toggle').is(':checked') && $('#other_amount').val()) {
+                var otherNote = 'نوع الرسم: ' + ($('#other_description').val() || 'رسوم أخرى');
+                if (general_notes) otherNote += ' - ' + general_notes;
+                
+                allFees.push({
+                    fee_type: 'other',
+                    amount: $('#other_amount').val(),
+                    notes: otherNote
+                });
+            }
+            
+            // تقديم نموذج منفصل لكل نوع رسم
+            var submissionCount = allFees.length;
+            var successCount = 0;
+            
+            function submitNextFee(index) {
+                if (index >= allFees.length) {
+                    window.location.href = "{{ url_for('renewal_fees.index') }}";
+                    return;
+                }
+                
+                var fee = allFees[index];
+                
+                $('#actual_fee_type').val(fee.fee_type);
+                $('#actual_amount').val(fee.amount);
+                $('#actual_transfer_number').val(fee.transfer_number || '');
+                $('#actual_notes').val(fee.notes || '');
+                
+                // إرسال النموذج باستخدام AJAX
+                $.ajax({
+                    type: "POST",
+                    url: "{{ url_for('renewal_fees.create') }}",
+                    data: $('#feesForm').serialize(),
+                    success: function() {
+                        successCount++;
+                        submitNextFee(index + 1);
+                    },
+                    error: function() {
+                        alert('حدث خطأ أثناء حفظ الرسوم. الرجاء المحاولة مرة أخرى.');
+                    }
+                });
+            }
+            
+            submitNextFee(0);
+        });
     });
 </script>
 {% endblock %}

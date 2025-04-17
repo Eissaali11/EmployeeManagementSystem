@@ -47,13 +47,12 @@ def index():
     paid_fees = query.filter(RenewalFee.payment_status == 'paid').with_entities(func.sum(RenewalFee.amount)).scalar() or 0
     
     fee_types = {
-        'passport': 'الجوازات',
-        'labor_office': 'مكتب العمل',
-        'insurance': 'التأمين',
-        'social_insurance': 'التأمينات الاجتماعية',
-        'transfer_sponsorship': 'نقل كفالة',
-        'other': 'رسوم أخرى'
-    }
+        "passport": "الجوازات",
+        "labor_office": "مكتب العمل",
+        "insurance": "التأمين",
+        "social_insurance": "التأمينات الاجتماعية",
+        "transfer_sponsorship": "نقل كفالة",
+        "other": "رسوم أخرى" } }
     
     payment_statuses = {
         'pending': 'قيد الانتظار',
@@ -165,12 +164,12 @@ def create():
     documents = Document.query.join(Employee).all()
     
     fee_types = {
-        'passport': 'الجوازات',
-        'labor_office': 'مكتب العمل',
-        'insurance': 'التأمين',
-        'social_insurance': 'التأمينات الاجتماعية',
-        'transfer_sponsorship': 'نقل كفالة',
-        'other': 'رسوم أخرى'
+        "passport": "الجوازات",
+        "labor_office": "مكتب العمل",
+        "insurance": "التأمين",
+        "social_insurance": "التأمينات الاجتماعية",
+        "transfer_sponsorship": "نقل كفالة",
+        "other": "رسوم أخرى" }
     }
     
     payment_statuses = {
@@ -258,13 +257,12 @@ def edit(id):
         payment_date = ''
     
     fee_types = {
-        'passport': 'الجوازات',
-        'labor_office': 'مكتب العمل',
-        'insurance': 'التأمين',
-        'social_insurance': 'التأمينات الاجتماعية',
-        'transfer_sponsorship': 'نقل كفالة',
-        'other': 'رسوم أخرى'
-    }
+        "passport": "الجوازات",
+        "labor_office": "مكتب العمل",
+        "insurance": "التأمين",
+        "social_insurance": "التأمينات الاجتماعية",
+        "transfer_sponsorship": "نقل كفالة",
+        "other": "رسوم أخرى" }
     
     payment_statuses = {
         'pending': 'قيد الانتظار',
@@ -316,13 +314,12 @@ def document_fees(document_id):
     fees = RenewalFee.query.filter_by(document_id=document_id).order_by(RenewalFee.fee_date.desc()).all()
     
     fee_types = {
-        'passport': 'الجوازات',
-        'labor_office': 'مكتب العمل',
-        'insurance': 'التأمين',
-        'social_insurance': 'التأمينات الاجتماعية',
-        'transfer_sponsorship': 'نقل كفالة',
-        'other': 'رسوم أخرى'
-    }
+        "passport": "الجوازات",
+        "labor_office": "مكتب العمل",
+        "insurance": "التأمين",
+        "social_insurance": "التأمينات الاجتماعية",
+        "transfer_sponsorship": "نقل كفالة",
+        "other": "رسوم أخرى" }
     
     payment_statuses = {
         'pending': 'قيد الانتظار',
@@ -378,13 +375,12 @@ def stats():
       .group_by(Department.name).all()
     
     fee_types = {
-        'passport': 'الجوازات',
-        'labor_office': 'مكتب العمل',
-        'insurance': 'التأمين',
-        'social_insurance': 'التأمينات الاجتماعية',
-        'transfer_sponsorship': 'نقل كفالة',
-        'other': 'رسوم أخرى'
-    }
+        "passport": "الجوازات",
+        "labor_office": "مكتب العمل",
+        "insurance": "التأمين",
+        "social_insurance": "التأمينات الاجتماعية",
+        "transfer_sponsorship": "نقل كفالة",
+        "other": "رسوم أخرى" }
     
     payment_statuses = {
         'pending': 'قيد الانتظار',
@@ -399,15 +395,15 @@ def stats():
     }
     
     # تجهيز البيانات للرسوم البيانية
-    fee_type_labels = [fee_types.get(ft[0], ft[0]) for ft in fee_type_stats]
+    fee_type_labels = [fee_types[ft[0]] for ft in fee_type_stats]
     fee_type_counts = [ft[1] for ft in fee_type_stats]
     fee_type_amounts = [ft[2] for ft in fee_type_stats]
     
-    payment_status_labels = [payment_statuses.get(ps[0], ps[0]) for ps in payment_status_stats]
+    payment_status_labels = [payment_statuses[ps[0]] for ps in payment_status_stats]
     payment_status_counts = [ps[1] for ps in payment_status_stats]
     payment_status_amounts = [ps[2] for ps in payment_status_stats]
     
-    month_labels = [f"{month_names.get(int(ms[0]), str(ms[0]))[:3]} {int(ms[1])}" for ms in month_stats]
+    month_labels = [f"{month_names[ms[0]][:3]} {ms[1]}" for ms in month_stats]
     month_counts = [ms[2] for ms in month_stats]
     month_amounts = [ms[3] for ms in month_stats]
     
