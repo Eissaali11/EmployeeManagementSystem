@@ -110,9 +110,14 @@
                         <a href="{{ url_for('salaries.report_pdf', month=selected_month, year=selected_year) }}" class="btn btn-danger">
                             <i class="fas fa-file-pdf me-1"></i> تصدير PDF
                         </a>
-                        <a href="{{ url_for('salaries.batch_salary_notifications') }}" class="btn btn-success">
-                            <i class="fas fa-envelope me-1"></i> إنشاء إشعارات الرواتب
-                        </a>
+                        <div class="btn-group">
+                            <a href="{{ url_for('salaries.batch_salary_notifications') }}" class="btn btn-success">
+                                <i class="fas fa-envelope me-1"></i> إشعارات الرواتب
+                            </a>
+                            <a href="{{ url_for('salaries.batch_deduction_notifications') }}" class="btn btn-danger">
+                                <i class="fab fa-whatsapp me-1"></i> إشعارات الخصومات
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -153,13 +158,36 @@
                             <td>{{ salary.bonus }}</td>
                             <td class="fw-bold">{{ salary.net_salary }}</td>
                             <td>
-                                <a href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}" class="btn btn-sm btn-success me-1" title="إشعار راتب">
-                                    <i class="fas fa-envelope"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-danger" 
-                                        data-bs-toggle="modal" data-bs-target="#deleteModal{{ salary.id }}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="إجراءات">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}">
+                                                <i class="fas fa-file-pdf me-1"></i> إشعار راتب PDF
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('salaries.salary_notification_whatsapp', id=salary.id) }}">
+                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار راتب واتساب
+                                            </a>
+                                        </li>
+                                        {% if salary.deductions > 0 %}
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{{ url_for('salaries.salary_deduction_notification_whatsapp', id=salary.id) }}">
+                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار خصم واتساب
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ salary.id }}">
+                                                <i class="fas fa-trash-alt me-1"></i> حذف
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
                                 
                                 <!-- Delete Modal -->
                                 <div class="modal fade" id="deleteModal{{ salary.id }}" tabindex="-1" aria-hidden="true">
