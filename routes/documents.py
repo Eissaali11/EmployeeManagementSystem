@@ -805,9 +805,37 @@ def export_excel():
     # Create Excel in memory
     output = BytesIO()
     workbook = xlsxwriter.Workbook(output)
-    worksheet = workbook.add_worksheet("الوثائق")
     
-    # Add formatting
+    # Get today's date for remaining days calculation
+    today = datetime.now().date()
+    
+    # Create document status lists
+    expired_docs = []
+    expiring_soon_docs = []
+    valid_docs = []
+    
+    # Categorize documents
+    for doc in documents:
+        days_remaining = (doc.expiry_date - today).days
+        if days_remaining < 0:
+            expired_docs.append(doc)
+        elif days_remaining < 30:
+            expiring_soon_docs.append(doc)
+        else:
+            valid_docs.append(doc)
+    
+    # Map for document types
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'health_certificate': 'الشهادة الصحية',
+        'work_permit': 'تصريح العمل',
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية'
+    }
+    
+    # Format definitions
     header_format = workbook.add_format({
         'bold': True,
         'align': 'center',
@@ -817,10 +845,6 @@ def export_excel():
         'font_size': 13
     })
     
-    # RTL format for workbook
-    worksheet.right_to_left()
-    
-    # Add cell formats
     cell_format = workbook.add_format({
         'align': 'center',
         'valign': 'vcenter',
@@ -836,37 +860,6 @@ def export_excel():
         'num_format': 'dd/mm/yyyy'
     })
     
-    # Write headers
-    headers = ['اسم الموظف', 'الرقم الوظيفي', 'القسم', 'نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'ملاحظات']
-    for col_num, data in enumerate(headers):
-        worksheet.write(0, col_num, data, header_format)
-    
-    # Adjust column widths
-    worksheet.set_column(0, 0, 25)  # اسم الموظف
-    worksheet.set_column(1, 1, 15)  # الرقم الوظيفي
-    worksheet.set_column(2, 2, 20)  # القسم
-    worksheet.set_column(3, 3, 20)  # نوع الوثيقة
-    worksheet.set_column(4, 4, 20)  # رقم الوثيقة
-    worksheet.set_column(5, 5, 15)  # تاريخ الإصدار
-    worksheet.set_column(6, 6, 15)  # تاريخ الانتهاء
-    worksheet.set_column(7, 7, 15)  # الأيام المتبقية
-    worksheet.set_column(8, 8, 30)  # ملاحظات
-    
-    # Map for document types
-    document_types_map = {
-        'national_id': 'الهوية الوطنية',
-        'passport': 'جواز السفر',
-        'health_certificate': 'الشهادة الصحية',
-        'work_permit': 'تصريح العمل',
-        'education_certificate': 'الشهادة الدراسية',
-        'driving_license': 'رخصة القيادة',
-        'annual_leave': 'الإجازة السنوية'
-    }
-    
-    # Get today's date for remaining days calculation
-    today = datetime.now().date()
-    
-    # Status formats
     expired_format = workbook.add_format({
         'align': 'center',
         'valign': 'vcenter',
@@ -885,8 +878,40 @@ def export_excel():
         'font_color': '#9C6500'  # Dark orange
     })
     
-    # Write data
-    for row_num, doc in enumerate(documents, 1):
+    valid_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11,
+        'bg_color': '#C6EFCE',  # Light green
+        'font_color': '#006100'  # Dark green
+    })
+    
+    # Headers definition
+    headers = ['اسم الموظف', 'الرقم الوظيفي', 'القسم', 'نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'ملاحظات']
+    
+    # Add main worksheet with all documents (sorted by expiry date)
+    main_worksheet = workbook.add_worksheet("جميع الوثائق")
+    main_worksheet.right_to_left()
+    
+    # Set column widths for main worksheet
+    main_worksheet.set_column(0, 0, 25)  # اسم الموظف
+    main_worksheet.set_column(1, 1, 15)  # الرقم الوظيفي
+    main_worksheet.set_column(2, 2, 20)  # القسم
+    main_worksheet.set_column(3, 3, 20)  # نوع الوثيقة
+    main_worksheet.set_column(4, 4, 20)  # رقم الوثيقة
+    main_worksheet.set_column(5, 5, 15)  # تاريخ الإصدار
+    main_worksheet.set_column(6, 6, 15)  # تاريخ الانتهاء
+    main_worksheet.set_column(7, 7, 15)  # الأيام المتبقية
+    main_worksheet.set_column(8, 8, 30)  # ملاحظات
+    
+    # Write headers for main worksheet
+    for col_num, data in enumerate(headers):
+        main_worksheet.write(0, col_num, data, header_format)
+    
+    # Write all documents to main worksheet
+    row_num = 1
+    for doc in sorted(documents, key=lambda x: x.expiry_date):
         # Get employee information
         employee_name = doc.employee.name if doc.employee else "غير متوفر"
         employee_id = doc.employee.employee_id if doc.employee else "غير متوفر"
@@ -904,17 +929,81 @@ def export_excel():
             days_format = expired_format
         elif days_remaining < 30:
             days_format = warning_format
+        else:
+            days_format = valid_format
         
         # Write data
-        worksheet.write(row_num, 0, employee_name, cell_format)
-        worksheet.write(row_num, 1, employee_id, cell_format)
-        worksheet.write(row_num, 2, department_name, cell_format)
-        worksheet.write(row_num, 3, doc_type_ar, cell_format)
-        worksheet.write(row_num, 4, doc.document_number, cell_format)
-        worksheet.write_datetime(row_num, 5, doc.issue_date, date_format)
-        worksheet.write_datetime(row_num, 6, doc.expiry_date, date_format)
-        worksheet.write(row_num, 7, days_remaining, days_format)
-        worksheet.write(row_num, 8, doc.notes or '', cell_format)
+        main_worksheet.write(row_num, 0, employee_name, cell_format)
+        main_worksheet.write(row_num, 1, employee_id, cell_format)
+        main_worksheet.write(row_num, 2, department_name, cell_format)
+        main_worksheet.write(row_num, 3, doc_type_ar, cell_format)
+        main_worksheet.write(row_num, 4, doc.document_number, cell_format)
+        main_worksheet.write_datetime(row_num, 5, doc.issue_date, date_format)
+        main_worksheet.write_datetime(row_num, 6, doc.expiry_date, date_format)
+        main_worksheet.write(row_num, 7, days_remaining, days_format)
+        main_worksheet.write(row_num, 8, doc.notes or '', cell_format)
+        row_num += 1
+        
+    # Function to create a worksheet for a category of documents
+    def create_category_worksheet(docs, name, title_bg_color, sheet_icon=''):
+        if not docs:  # Skip if no documents in this category
+            return
+            
+        ws = workbook.add_worksheet(f"{sheet_icon}{name}")
+        ws.right_to_left()
+        
+        # Set column widths
+        for i, width in enumerate([25, 15, 20, 20, 20, 15, 15, 15, 30]):
+            ws.set_column(i, i, width)
+        
+        # Custom title format for this category
+        title_format = workbook.add_format({
+            'bold': True,
+            'font_size': 14,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bg_color': title_bg_color,
+            'border': 2
+        })
+        
+        # Add title
+        ws.merge_range('A1:I1', f"{name} ({len(docs)})", title_format)
+        
+        # Write headers
+        for col_num, data in enumerate(headers):
+            ws.write(1, col_num, data, header_format)
+        
+        # Write data
+        for row_num, doc in enumerate(sorted(docs, key=lambda x: x.expiry_date), 2):
+            # Get employee information
+            employee_name = doc.employee.name if doc.employee else "غير متوفر"
+            employee_id = doc.employee.employee_id if doc.employee else "غير متوفر"
+            department_name = doc.employee.department.name if doc.employee and doc.employee.department else "غير متوفر"
+            
+            # Get document type in Arabic
+            doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
+            
+            # Calculate remaining days
+            days_remaining = (doc.expiry_date - today).days
+            
+            # Write data
+            ws.write(row_num, 0, employee_name, cell_format)
+            ws.write(row_num, 1, employee_id, cell_format)
+            ws.write(row_num, 2, department_name, cell_format)
+            ws.write(row_num, 3, doc_type_ar, cell_format)
+            ws.write(row_num, 4, doc.document_number, cell_format)
+            ws.write_datetime(row_num, 5, doc.issue_date, date_format)
+            ws.write_datetime(row_num, 6, doc.expiry_date, date_format)
+            ws.write(row_num, 7, days_remaining, 
+                    expired_format if days_remaining < 0 else 
+                    warning_format if days_remaining < 30 else 
+                    valid_format)
+            ws.write(row_num, 8, doc.notes or '', cell_format)
+    
+    # Create worksheets for each category
+    create_category_worksheet(expired_docs, "وثائق منتهية", '#FFD9D9', '🔴 ')
+    create_category_worksheet(expiring_soon_docs, "وثائق تنتهي قريباً", '#FFF4D9', '🟠 ')
+    create_category_worksheet(valid_docs, "وثائق سارية", '#E8FFE8', '🟢 ')
     
     # Add statistics worksheet
     stats_worksheet = workbook.add_worksheet("إحصائيات")
