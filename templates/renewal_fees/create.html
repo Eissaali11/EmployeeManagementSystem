@@ -5,141 +5,196 @@
 {% block styles %}
 <style>
     /* تصميم عام */
+    body {
+        background-color: #e9f0f7;
+    }
+    
+    .main-container {
+        background-color: #f5f8fa;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+    
     .card {
-        border-radius: 10px;
-        overflow: hidden;
-        margin-bottom: 20px;
+        border: none;
+        border-radius: 0;
+        background-color: #192f4d;
+        color: white;
+        margin-bottom: 15px;
     }
     
     .card-header {
+        background-color: #192f4d;
         padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .card-body {
-        padding: 20px;
+        padding: 15px;
     }
     
-    /* تصميم صفوف نوع الرسم */
-    .fee-row {
-        transition: all 0.3s ease;
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
-    }
-    
-    .fee-row:hover {
-        background-color: rgba(13, 110, 253, 0.1);
-    }
-    
-    .fee-row.active {
-        background-color: rgba(13, 110, 253, 0.2);
-        box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
+    /* تصميم العناوين */
+    .section-title {
+        color: white;
+        font-size: 1rem;
+        margin: 0;
+        font-weight: 600;
     }
     
     /* تصميم حقول الإدخال */
-    .fee-amount {
-        font-weight: bold;
-        text-align: left;
+    .form-control, .form-select {
+        background-color: #192f4d;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 0;
+        color: white;
+        padding: 10px;
     }
     
-    /* تصميم مفاتيح التبديل */
-    .form-check-input {
-        cursor: pointer;
-        width: 2.5em;
-        height: 1.3em;
+    .form-control:focus, .form-select:focus {
+        background-color: #1b3254;
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: none;
     }
     
-    /* تصميم جدول الملخص */
-    .fee-summary {
-        background-color: #1e2f45;
-        border-radius: 10px;
-        overflow: hidden;
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5);
     }
     
-    /* تصميم الملاحظات */
-    .alert-hint {
-        background-color: rgba(255, 193, 7, 0.2);
-        border-left: 4px solid #ffc107;
+    /* تصميم جدول الرسوم */
+    .fees-table {
+        width: 100%;
+        color: white;
     }
     
-    /* تأثيرات للأزرار */
+    .fees-table th {
+        padding: 10px;
+        font-weight: 600;
+        text-align: right;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .fees-table td {
+        padding: 5px 10px;
+        vertical-align: middle;
+    }
+    
+    .fees-table .form-check {
+        margin: 0;
+    }
+    
+    /* تصميم الأزرار */
     .btn-success {
-        transition: all 0.3s;
+        background-color: #28a745;
+        border: none;
+        color: white;
+        border-radius: 0;
+        padding: 10px 20px;
+        width: 100%;
     }
     
-    .btn-success:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    .btn-outline-secondary {
+        background-color: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 0;
+        padding: 10px 20px;
+        width: 100%;
+    }
+    
+    /* تصميم الخط */
+    .hr-light {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 15px 0;
+    }
+    
+    /* تصميم ملخص الرسوم */
+    .fee-summary {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 0;
+    }
+    
+    /* تصميم رسالة المعلومات */
+    .info-message {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+    
+    /* مربع الاختيار */
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        background-color: #192f4d;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-3 main-container">
     <!-- عنوان الصفحة -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <div class="bg-gradient-primary rounded-circle p-3 me-3 shadow-sm">
-                <i class="fas fa-money-bill-wave fa-2x text-white"></i>
-            </div>
-            <div>
-                <h2 class="mb-0 fw-bold">إضافة رسوم تجديد جديدة</h2>
-                <p class="text-muted mb-0">إدخال رسوم تجديد الأوراق للموظفين</p>
-            </div>
-        </div>
-        <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-right me-1"></i>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">رسوم تجديد الأوراق</h4>
+        <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-sm btn-outline-primary rounded-0">
             العودة للقائمة
         </a>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <!-- نموذج إضافة رسوم التجديد -->
-            <form method="POST" action="{{ url_for('renewal_fees.create') }}" id="feesForm">
-                {{ form.hidden_tag() }}
-                
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-file-alt me-2"></i>
-                            المعلومات الأساسية
-                        </h5>
+    <!-- نموذج إضافة رسوم التجديد -->
+    <form method="POST" action="{{ url_for('renewal_fees.create') }}" id="feesForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="amount" id="amount" value="">
+        <input type="hidden" name="notes" id="notes" value="">
+        
+        <div class="row">
+            <!-- القسم الأيمن (بيانات الوثيقة) -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="section-title">المعلومات الأساسية</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="document_id" class="form-label">الوثيقة <span class="text-danger">*</span></label>
-                                <select name="document_id" id="document_id" class="form-select select2" required>
-                                    <option value="">-- اختر وثيقة --</option>
-                                    {% for document in documents %}
-                                    <option value="{{ document.id }}">{{ document.employee.name }} - {{ document.document_type }} ({{ document.document_number }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="fee_date" class="form-label">تاريخ الاستحقاق <span class="text-danger">*</span></label>
-                                <input type="date" name="fee_date" id="fee_date" class="form-control" required>
-                            </div>
+                        <div class="mb-3">
+                            <label for="document_id" class="form-label">الوثيقة</label>
+                            <select name="document_id" id="document_id" class="form-select select2" required>
+                                <option value="">-- اختر وثيقة --</option>
+                                {% for document in documents %}
+                                <option value="{{ document.id }}">{{ document.employee.name }} - {{ document.document_type }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="payment_status" class="form-label">حالة الدفع <span class="text-danger">*</span></label>
-                                <select name="payment_status" id="payment_status" class="form-select" required>
-                                    {% for status_key, status_name in payment_statuses.items() %}
-                                    <option value="{{ status_key }}" {% if status_key == 'pending' %}selected{% endif %}>{{ status_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                        <div class="mb-3">
+                            <label for="fee_date" class="form-label">تاريخ الاستحقاق</label>
+                            <input type="date" name="fee_date" id="fee_date" class="form-control" required>
                         </div>
                         
-                        <div id="payment_details" class="row mb-3" style="display: none;">
-                            <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="payment_status" class="form-label">حالة الدفع</label>
+                            <select name="payment_status" id="payment_status" class="form-select" required>
+                                {% for status_key, status_name in payment_statuses.items() %}
+                                <option value="{{ status_key }}" {% if status_key == 'pending' %}selected{% endif %}>{{ status_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div id="payment_details" style="display: none;">
+                            <div class="mb-3">
                                 <label for="payment_date" class="form-label">تاريخ الدفع</label>
                                 <input type="date" name="payment_date" id="payment_date" class="form-control">
                             </div>
-                            <div class="col-md-6">
+                            
+                            <div class="mb-3">
                                 <label for="receipt_number" class="form-label">رقم الإيصال</label>
                                 <input type="text" name="receipt_number" id="receipt_number" class="form-control" placeholder="أدخل رقم الإيصال">
                             </div>
@@ -147,215 +202,175 @@
                     </div>
                 </div>
                 
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list-alt me-2"></i>
-                            اختر نوع الرسم والمبلغ
-                        </h5>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="section-title">ملخص الرسوم</h5>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-hint mb-4">
-                            <i class="fas fa-lightbulb me-2"></i>
-                            <span>اختر نوع واحد فقط من الرسوم من القائمة أدناه، وأدخل المبلغ المطلوب.</span>
-                        </div>
-                        
-                        <div class="fee-types">
-                            <!-- رسوم مكتب العمل -->
-                            <div class="form-check mb-3 p-0">
-                                <div class="fee-row d-flex align-items-center p-3" id="labor_office_row">
-                                    <div class="form-check form-switch me-3">
-                                        <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="labor_office" id="labor_office_toggle">
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center w-100">
-                                        <label class="form-check-label fw-bold" for="labor_office_toggle">
-                                            <i class="fas fa-building me-2 text-primary"></i>
-                                            رسوم مكتب العمل
-                                        </label>
-                                        <div class="d-flex align-items-center" style="width: 50%;">
-                                            <div class="input-group" style="width: 60%;">
-                                                <input type="number" class="form-control fee-amount" id="labor_office_amount" min="0" step="0.01" placeholder="المبلغ">
-                                                <span class="input-group-text">ريال</span>
-                                            </div>
-                                            <input type="text" class="form-control ms-2" id="labor_office_notes" placeholder="ملاحظات" style="width: 40%;">
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="fee-summary p-3">
+                            <div class="row mb-2">
+                                <div class="col-6 text-muted">نوع الرسم:</div>
+                                <div class="col-6 text-end fw-bold" id="fee_type_display">-</div>
                             </div>
-                            
-                            <!-- رسوم الجوازات -->
-                            <div class="form-check mb-3 p-0">
-                                <div class="fee-row d-flex align-items-center p-3" id="passport_row">
-                                    <div class="form-check form-switch me-3">
-                                        <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="passport" id="passport_toggle">
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center w-100">
-                                        <label class="form-check-label fw-bold" for="passport_toggle">
-                                            <i class="fas fa-passport me-2 text-info"></i>
-                                            رسوم الجوازات
-                                        </label>
-                                        <div class="d-flex align-items-center" style="width: 50%;">
-                                            <div class="input-group" style="width: 60%;">
-                                                <input type="number" class="form-control fee-amount" id="passport_amount" min="0" step="0.01" placeholder="المبلغ">
-                                                <span class="input-group-text">ريال</span>
-                                            </div>
-                                            <input type="text" class="form-control ms-2" id="passport_notes" placeholder="ملاحظات" style="width: 40%;">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="row mb-2">
+                                <div class="col-6 text-muted">المبلغ:</div>
+                                <div class="col-6 text-end fw-bold" id="fee_amount_display">0.00 ريال</div>
                             </div>
-                            
-                            <!-- رسوم التأمينات الاجتماعية -->
-                            <div class="form-check mb-3 p-0">
-                                <div class="fee-row d-flex align-items-center p-3" id="social_insurance_row">
-                                    <div class="form-check form-switch me-3">
-                                        <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="social_insurance" id="social_insurance_toggle">
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center w-100">
-                                        <label class="form-check-label fw-bold" for="social_insurance_toggle">
-                                            <i class="fas fa-users me-2 text-success"></i>
-                                            رسوم التأمينات الاجتماعية
-                                        </label>
-                                        <div class="d-flex align-items-center" style="width: 50%;">
-                                            <div class="input-group" style="width: 60%;">
-                                                <input type="number" class="form-control fee-amount" id="social_insurance_amount" min="0" step="0.01" placeholder="المبلغ">
-                                                <span class="input-group-text">ريال</span>
-                                            </div>
-                                            <input type="text" class="form-control ms-2" id="social_insurance_notes" placeholder="ملاحظات" style="width: 40%;">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- رسوم نقل الكفالة -->
-                            <div class="form-check mb-3 p-0">
-                                <div class="fee-row d-flex align-items-center p-3" id="transfer_sponsorship_row">
-                                    <div class="form-check form-switch me-3">
-                                        <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="transfer_sponsorship" id="transfer_sponsorship_toggle">
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center w-100">
-                                        <label class="form-check-label fw-bold" for="transfer_sponsorship_toggle">
-                                            <i class="fas fa-exchange-alt me-2 text-danger"></i>
-                                            رسوم نقل الكفالة
-                                        </label>
-                                        <div class="d-flex" style="width: 50%;">
-                                            <div class="input-group" style="width: 40%;">
-                                                <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" min="0" step="0.01" placeholder="المبلغ">
-                                                <span class="input-group-text">ريال</span>
-                                            </div>
-                                            <input type="text" class="form-control mx-2" id="transfer_number" name="transfer_number" placeholder="رقم النقل" style="width: 30%;">
-                                            <input type="text" class="form-control" id="transfer_sponsorship_notes" placeholder="ملاحظات" style="width: 30%;">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- رسوم أخرى -->
-                            <div class="form-check mb-3 p-0">
-                                <div class="fee-row d-flex align-items-center p-3" id="other_row">
-                                    <div class="form-check form-switch me-3">
-                                        <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="other" id="other_toggle">
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center w-100">
-                                        <label class="form-check-label fw-bold" for="other_toggle">
-                                            <i class="fas fa-file-invoice-dollar me-2 text-secondary"></i>
-                                            رسوم أخرى
-                                        </label>
-                                        <div class="d-flex align-items-center" style="width: 50%;">
-                                            <div class="input-group" style="width: 60%;">
-                                                <input type="number" class="form-control fee-amount" id="other_amount" min="0" step="0.01" placeholder="المبلغ">
-                                                <span class="input-group-text">ريال</span>
-                                            </div>
-                                            <input type="text" class="form-control ms-2" id="other_notes" placeholder="تفاصيل" style="width: 40%;">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div id="transfer_row" class="row" style="display: none;">
+                                <div class="col-6 text-muted">رقم النقل:</div>
+                                <div class="col-6 text-end fw-bold" id="transfer_number_display">-</div>
                             </div>
                         </div>
                         
-                        <!-- حقل المبلغ المخفي الذي سيتم إرساله -->
-                        <input type="hidden" name="amount" id="amount">
-                        <input type="hidden" name="notes" id="notes">
+                        <button type="submit" class="btn btn-success mt-3" id="submitButton" disabled>
+                            <i class="fas fa-check-circle me-1"></i>
+                            حفظ الرسوم
+                        </button>
                         
-                        <div class="mt-4 d-flex justify-content-between">
-                            <button type="reset" class="btn btn-outline-secondary">
-                                <i class="fas fa-undo me-1"></i>
-                                إعادة ضبط
-                            </button>
-                            <button type="submit" class="btn btn-success px-4">
-                                <i class="fas fa-check-circle me-1"></i>
-                                حفظ الرسوم
-                            </button>
-                        </div>
+                        <button type="reset" class="btn btn-outline-secondary mt-2" id="resetButton">
+                            <i class="fas fa-undo me-1"></i>
+                            إعادة ضبط
+                        </button>
                     </div>
                 </div>
-            </form>
-        </div>
-        
-        <div class="col-lg-4">
-            <!-- ملخص الرسوم -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-receipt me-2"></i>
-                        ملخص الرسوم
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="fee-summary p-3 mb-3">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-light rounded-circle p-2 me-2">
-                                <i class="fas fa-file-invoice-dollar text-primary"></i>
-                            </div>
-                            <h6 class="mb-0 text-white" id="fee_type_label">نوع الرسم:</h6>
-                            <span class="badge bg-primary ms-2" id="selected_fee_type">لم يتم الاختيار</span>
-                        </div>
-                        
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-light rounded-circle p-2 me-2">
-                                <i class="fas fa-money-bill-wave text-success"></i>
-                            </div>
-                            <h6 class="mb-0 text-white">المبلغ:</h6>
-                            <h5 class="mb-0 ms-auto text-success" id="fee_amount_display">0.00 ريال</h5>
-                        </div>
-                        
-                        <div class="d-flex align-items-center" id="transfer_number_display_container" style="display: none;">
-                            <div class="bg-light rounded-circle p-2 me-2">
-                                <i class="fas fa-exchange-alt text-warning"></i>
-                            </div>
-                            <h6 class="mb-0 text-white">رقم النقل:</h6>
-                            <span class="badge bg-warning ms-2" id="transfer_number_display">-</span>
-                        </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="section-title">تعليمات الاستخدام</h5>
                     </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <span>اختر نوع الرسم وأدخل المبلغ لتسجيل رسوم التجديد</span>
+                    <div class="card-body">
+                        <div class="info-message">
+                            <p class="mb-2"><i class="fas fa-check-circle me-1 text-primary"></i> اختر وثيقة الموظف أولاً</p>
+                            <p class="mb-2"><i class="fas fa-check-circle me-1 text-primary"></i> حدد تاريخ استحقاق الرسوم</p>
+                            <p class="mb-2"><i class="fas fa-check-circle me-1 text-primary"></i> اختر نوع رسوم واحد فقط من الجدول</p>
+                            <p class="mb-2"><i class="fas fa-check-circle me-1 text-primary"></i> أدخل قيمة الرسوم بالريال</p>
+                            <p class="mb-0"><i class="fas fa-check-circle me-1 text-primary"></i> في حالة نقل الكفالة قم بإدخال رقم النقل</p>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- كارت المساعدة -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-question-circle me-2"></i>
-                        تعليمات الاستخدام
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <ul class="ps-3">
-                        <li class="mb-2">اختر الوثيقة المطلوبة من القائمة المنسدلة</li>
-                        <li class="mb-2">حدد تاريخ استحقاق الرسوم</li>
-                        <li class="mb-2">اختر نوع واحد فقط من الرسوم</li>
-                        <li class="mb-2">أدخل المبلغ المستحق بالريال</li>
-                        <li class="mb-2">في حالة رسوم نقل الكفالة، تأكد من إدخال رقم النقل</li>
-                        <li>اضغط على زر "حفظ الرسوم" لإتمام العملية</li>
-                    </ul>
+            <!-- القسم الأيسر (جدول الرسوم) -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="section-title">أنواع الرسوم</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="fees-table">
+                            <thead>
+                                <tr>
+                                    <th width="40%">نوع الرسم</th>
+                                    <th width="25%">المبلغ</th>
+                                    <th width="30%">ملاحظات</th>
+                                    <th width="5%">تفعيل</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- رسوم مكتب العمل -->
+                                <tr>
+                                    <td>رسوم مكتب العمل</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control fee-amount" id="labor_office_amount" min="0" step="0.01" placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" id="labor_office_notes" placeholder="ملاحظات">
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="labor_office" id="labor_office_toggle">
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- رسوم الجوازات -->
+                                <tr>
+                                    <td>رسوم الجوازات</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control fee-amount" id="passport_amount" min="0" step="0.01" placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" id="passport_notes" placeholder="ملاحظات">
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="passport" id="passport_toggle">
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- رسوم التأمينات الاجتماعية -->
+                                <tr>
+                                    <td>رسوم التأمينات الاجتماعية</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control fee-amount" id="social_insurance_amount" min="0" step="0.01" placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" id="social_insurance_notes" placeholder="ملاحظات">
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="social_insurance" id="social_insurance_toggle">
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- رسوم نقل الكفالة -->
+                                <tr>
+                                    <td>رسوم نقل الكفالة</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" min="0" step="0.01" placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <input type="text" class="form-control form-control-sm me-1" id="transfer_sponsorship_notes" placeholder="ملاحظات" style="width: 50%;">
+                                            <input type="text" class="form-control form-control-sm" id="transfer_number" name="transfer_number" placeholder="رقم النقل" style="width: 50%;">
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="transfer_sponsorship" id="transfer_sponsorship_toggle">
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- رسوم أخرى -->
+                                <tr>
+                                    <td>رسوم أخرى</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control fee-amount" id="other_amount" min="0" step="0.01" placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" id="other_notes" placeholder="وصف الرسوم">
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input fee-toggle" type="radio" name="fee_type" value="other" id="other_toggle">
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}
 
@@ -365,7 +380,9 @@
         // تهيئة السيلكت2
         $('.select2').select2({
             dir: 'rtl',
-            width: '100%'
+            width: '100%',
+            dropdownParent: $('#document_id').parent(),
+            theme: "bootstrap-5"
         });
         
         // إظهار/إخفاء تفاصيل الدفع بناءً على حالة الدفع
@@ -374,7 +391,7 @@
         
         paymentStatus.addEventListener('change', function() {
             if (this.value === 'paid') {
-                paymentDetails.style.display = 'flex';
+                paymentDetails.style.display = 'block';
                 document.getElementById('payment_date').setAttribute('required', 'required');
             } else {
                 paymentDetails.style.display = 'none';
@@ -382,63 +399,54 @@
             }
         });
         
-        // تفعيل التالتات الاولية
-        if (paymentStatus.value === 'paid') {
-            paymentDetails.style.display = 'flex';
-            document.getElementById('payment_date').setAttribute('required', 'required');
-        }
-        
         // مقابض للعناصر المختلفة
-        const feeRows = document.querySelectorAll('.fee-row');
         const feeToggles = document.querySelectorAll('.fee-toggle');
-        const transferNumberContainer = document.getElementById('transfer_number_display_container');
+        const feeAmounts = document.querySelectorAll('.fee-amount');
+        const transferNumberField = document.getElementById('transfer_number');
+        const transferRow = document.getElementById('transfer_row');
         const transferNumberDisplay = document.getElementById('transfer_number_display');
-        const selectedFeeTypeDisplay = document.getElementById('selected_fee_type');
+        const feeTypeDisplay = document.getElementById('fee_type_display');
         const feeAmountDisplay = document.getElementById('fee_amount_display');
         const hiddenAmountField = document.getElementById('amount');
         const hiddenNotesField = document.getElementById('notes');
+        const submitButton = document.getElementById('submitButton');
+        
+        // تفعيل الحالة الأولية
+        if (paymentStatus.value === 'paid') {
+            paymentDetails.style.display = 'block';
+            document.getElementById('payment_date').setAttribute('required', 'required');
+        }
         
         // تفعيل صف نوع الرسم عند اختياره
         feeToggles.forEach(toggle => {
             toggle.addEventListener('change', function() {
-                // إلغاء تفعيل جميع الصفوف
-                feeRows.forEach(row => {
-                    row.classList.remove('active');
-                });
+                // تحديث العرض في الملخص
+                const feeType = this.value;
+                feeTypeDisplay.textContent = getFeeTypeName(feeType);
                 
-                // تفعيل الصف المحدد
-                if (this.checked) {
-                    const row = this.closest('.fee-row');
-                    row.classList.add('active');
-                    
-                    // تحديث العرض في الملخص
-                    const feeType = this.value;
-                    selectedFeeTypeDisplay.textContent = getFeeTypeName(feeType);
-                    
-                    // إظهار حقل رقم النقل إذا كان نوع الرسم هو نقل كفالة
-                    if (feeType === 'transfer_sponsorship') {
-                        transferNumberContainer.style.display = 'flex';
-                        updateTransferNumber();
-                    } else {
-                        transferNumberContainer.style.display = 'none';
-                    }
-                    
-                    // تحديث المبلغ في الملخص
-                    updateFeeAmount(feeType);
-                    
-                    // تعيين التركيز على حقل المبلغ
-                    const amountField = row.querySelector('.fee-amount');
-                    if (amountField) {
-                        amountField.focus();
-                    }
+                // إظهار حقل رقم النقل إذا كان نوع الرسم هو نقل كفالة
+                if (feeType === 'transfer_sponsorship') {
+                    transferRow.style.display = 'flex';
+                    updateTransferNumber();
+                } else {
+                    transferRow.style.display = 'none';
+                }
+                
+                // تحديث المبلغ في الملخص
+                updateFeeAmount(feeType);
+                
+                // تعيين التركيز على حقل المبلغ
+                const amountField = document.getElementById(`${feeType}_amount`);
+                if (amountField) {
+                    amountField.focus();
                 }
             });
         });
         
         // تحديث المبلغ عند التغيير
-        document.querySelectorAll('.fee-amount').forEach(input => {
+        feeAmounts.forEach(input => {
             input.addEventListener('input', function() {
-                const row = this.closest('.fee-row');
+                const row = this.closest('tr');
                 const toggle = row.querySelector('.fee-toggle');
                 
                 if (toggle && toggle.checked) {
@@ -448,7 +456,9 @@
         });
         
         // تحديث رقم النقل عند التغيير
-        document.getElementById('transfer_number').addEventListener('input', updateTransferNumber);
+        if (transferNumberField) {
+            transferNumberField.addEventListener('input', updateTransferNumber);
+        }
         
         // تحديث حقول الإدخال المخفية قبل إرسال النموذج
         document.getElementById('feesForm').addEventListener('submit', function(event) {
@@ -495,6 +505,23 @@
             showLoadingMessage();
         });
         
+        // إعادة ضبط النموذج
+        document.getElementById('resetButton').addEventListener('click', function() {
+            // إعادة تعيين عناصر الملخص
+            feeTypeDisplay.textContent = '-';
+            feeAmountDisplay.textContent = '0.00 ريال';
+            transferNumberDisplay.textContent = '-';
+            transferRow.style.display = 'none';
+            
+            // تعطيل زر الحفظ
+            submitButton.disabled = true;
+            
+            // إخفاء تفاصيل الدفع إذا كانت حالة الدفع "قيد الانتظار"
+            if (paymentStatus.value !== 'paid') {
+                paymentDetails.style.display = 'none';
+            }
+        });
+        
         // دالة لتحديث المبلغ في الملخص
         function updateFeeAmount(feeType) {
             const amountField = document.getElementById(`${feeType}_amount`);
@@ -502,13 +529,12 @@
             feeAmountDisplay.textContent = amount.toFixed(2) + ' ريال';
             
             // تعطيل/تمكين زر الحفظ بناءً على وجود مبلغ
-            document.querySelector('button[type="submit"]').disabled = amount <= 0;
+            submitButton.disabled = amount <= 0;
         }
         
         // دالة لتحديث رقم النقل في الملخص
         function updateTransferNumber() {
-            const transferNumber = document.getElementById('transfer_number');
-            transferNumberDisplay.textContent = transferNumber && transferNumber.value ? transferNumber.value : '-';
+            transferNumberDisplay.textContent = transferNumberField && transferNumberField.value ? transferNumberField.value : '-';
         }
         
         // دالة للحصول على اسم نوع الرسم بالعربية
@@ -527,14 +553,14 @@
         // دالة لإظهار رسالة التحميل
         function showLoadingMessage() {
             const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50';
+            loadingDiv.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-75';
             loadingDiv.style.zIndex = '9999';
             
             loadingDiv.innerHTML = `
-                <div class="card p-4 shadow">
+                <div class="card p-3 shadow" style="background-color: #192f4d; border: none; border-radius: 0;">
                     <div class="d-flex align-items-center">
-                        <div class="spinner-border text-primary me-3" role="status"></div>
-                        <h5 class="mb-0">جاري حفظ البيانات...</h5>
+                        <div class="spinner-border text-light me-3" role="status"></div>
+                        <h5 class="mb-0 text-white">جاري حفظ البيانات...</h5>
                     </div>
                 </div>
             `;
