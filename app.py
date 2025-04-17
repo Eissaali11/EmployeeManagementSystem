@@ -91,6 +91,7 @@ with app.app_context():
     from routes.reports import reports_bp
     from routes.auth import auth_bp
     from routes.renewal_fees import renewal_fees_bp
+    from routes.vehicles import vehicles_bp
     
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(employees_bp, url_prefix='/employees')
@@ -99,6 +100,7 @@ with app.app_context():
     app.register_blueprint(salaries_bp, url_prefix='/salaries')
     app.register_blueprint(documents_bp, url_prefix='/documents')
     app.register_blueprint(renewal_fees_bp, url_prefix='/renewal-fees')
+    app.register_blueprint(vehicles_bp, url_prefix='/vehicles')
     app.register_blueprint(reports_bp, url_prefix='/reports')
     app.register_blueprint(auth_bp)
     
