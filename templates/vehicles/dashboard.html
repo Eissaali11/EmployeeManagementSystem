@@ -1,0 +1,344 @@
+{% extends 'layout.html' %}
+
+{% block title %}لوحة معلومات السيارات{% endblock %}
+
+{% block styles %}
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        font-size: 24px;
+        text-align: center;
+        border-radius: 50%;
+    }
+    .alert-card {
+        transition: all 0.3s ease;
+    }
+    .alert-card:hover {
+        transform: translateX(-5px);
+    }
+    .maintenance-chart-container {
+        height: 300px;
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-tachometer-alt ms-2"></i>
+            لوحة معلومات السيارات
+        </h2>
+        <div>
+            <a href="{{ url_for('vehicles.reports') }}" class="btn btn-info">
+                <i class="fas fa-chart-pie ms-1"></i>
+                التقارير والإحصائيات
+            </a>
+            <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-right ms-1"></i>
+                العودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <!-- بطاقات الإحصائيات الرئيسية -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-primary text-white me-3">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">إجمالي السيارات</h6>
+                            <h3 class="mb-0">{{ total_vehicles }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-success text-white me-3">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">إجمالي الإيجارات الشهرية</h6>
+                            <h3 class="mb-0">{{ "{:,.2f}".format(total_monthly_rent) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-warning text-white me-3">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">السيارات في الورشة</h6>
+                            <h3 class="mb-0">{{ vehicles_in_workshop }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card shadow-sm stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-danger text-white me-3">
+                            <i class="fas fa-wrench"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">تكاليف الصيانة السنوية</h6>
+                            <h3 class="mb-0">{{ "{:,.2f}".format(yearly_maintenance_cost) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الصف الثاني: توزيع السيارات والتنبيهات -->
+    <div class="row mb-4">
+        <!-- توزيع السيارات حسب الحالة -->
+        <div class="col-md-7 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie ms-2"></i>
+                        توزيع السيارات حسب الحالة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="position-relative" style="height: 250px;">
+                                <canvas id="vehicleStatusChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="list-group mt-3">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-circle text-success me-2"></i>
+                                        متاحة
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">{{ status_stats.get('available', 0) }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-circle text-primary me-2"></i>
+                                        مؤجرة
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">{{ status_stats.get('rented', 0) }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-circle text-info me-2"></i>
+                                        في المشروع
+                                    </div>
+                                    <span class="badge bg-info rounded-pill">{{ status_stats.get('in_project', 0) }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-circle text-warning me-2"></i>
+                                        في الورشة
+                                    </div>
+                                    <span class="badge bg-warning rounded-pill">{{ status_stats.get('in_workshop', 0) }}</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-circle text-danger me-2"></i>
+                                        حادث
+                                    </div>
+                                    <span class="badge bg-danger rounded-pill">{{ status_stats.get('accident', 0) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- التنبيهات العاجلة -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell ms-2"></i>
+                        التنبيهات العاجلة
+                        <span class="badge bg-danger">{{ alerts|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if alerts %}
+                        <div class="list-group list-group-flush">
+                            {% for alert in alerts %}
+                                <a href="{{ url_for('vehicles.view', id=alert.vehicle_id) }}" class="list-group-item list-group-item-action alert-card p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            {% if alert.type == 'workshop' %}
+                                                <i class="fas fa-tools text-warning me-2"></i>
+                                            {% elif alert.type == 'rental' %}
+                                                <i class="fas fa-calendar-alt text-danger me-2"></i>
+                                            {% else %}
+                                                <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                            {% endif %}
+                                            {{ alert.message }}
+                                        </div>
+                                        <i class="fas fa-chevron-left text-muted"></i>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5>لا توجد تنبيهات عاجلة</h5>
+                            <p class="text-muted">كل شيء يسير بشكل جيد!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تكاليف الصيانة الشهرية -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line ms-2"></i>
+                        تكاليف الصيانة الشهرية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="maintenance-chart-container">
+                        <canvas id="maintenanceCostChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // بيانات توزيع السيارات حسب الحالة
+        const statusData = {
+            labels: [
+                'متاحة', 
+                'مؤجرة', 
+                'في المشروع', 
+                'في الورشة', 
+                'حادث'
+            ],
+            datasets: [{
+                data: [
+                    {{ status_stats.get('available', 0) }},
+                    {{ status_stats.get('rented', 0) }},
+                    {{ status_stats.get('in_project', 0) }},
+                    {{ status_stats.get('in_workshop', 0) }},
+                    {{ status_stats.get('accident', 0) }}
+                ],
+                backgroundColor: [
+                    '#28a745', // متاحة
+                    '#007bff', // مؤجرة
+                    '#17a2b8', // في المشروع
+                    '#ffc107', // في الورشة
+                    '#dc3545'  // حادث
+                ],
+                borderWidth: 0
+            }]
+        };
+
+        const ctxStatus = document.getElementById('vehicleStatusChart').getContext('2d');
+        new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: statusData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+
+        // بيانات تكاليف الصيانة الشهرية
+        const maintenanceData = {
+            labels: [
+                {% for item in monthly_costs %}
+                    '{{ item.month }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'تكاليف الصيانة (ريال)',
+                data: [
+                    {% for item in monthly_costs %}
+                        {{ item.cost }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        };
+
+        const ctxMaintenance = document.getElementById('maintenanceCostChart').getContext('2d');
+        new Chart(ctxMaintenance, {
+            type: 'line',
+            data: maintenanceData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('ar-SA') + ' ريال';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.toLocaleString('ar-SA') + ' ريال';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
