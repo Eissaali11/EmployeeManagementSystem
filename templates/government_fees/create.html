@@ -509,8 +509,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const calculateButton = document.getElementById('calculate-button');
         if (calculateButton) {
             console.log('تم العثور على زر الاحتساب');
-            // سيتم تعريف معالج الاحتساب لاحقًا
-            // calculateButton.addEventListener('click', handleCalculation);
+            calculateButton.addEventListener('click', calculateFees);
         } else {
             console.error('لم يتم العثور على زر الاحتساب (calculate-button)');
         }
@@ -719,14 +718,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // معالجة احتساب الرسوم
-    const calculateButton = document.getElementById('calculate-button');
-    const calculationResult = document.getElementById('calculation-result');
-    const feeDetailsSection = document.getElementById('fee-details-section');
-    
-    calculateButton.addEventListener('click', function() {
+    // تعريف دالة احتساب الرسوم
+    function calculateFees() {
+        console.log('تم استدعاء دالة احتساب الرسوم');
+        
         const employeeSelect = document.getElementById('employee_id');
+        if (!employeeSelect) {
+            console.error('لم يتم العثور على حقل اختيار الموظف');
+            alert('حدث خطأ في تحميل بيانات الموظفين');
+            return;
+        }
+        
         const calculationPeriod = document.getElementById('calculation_period').value;
+        console.log('فترة الاحتساب:', calculationPeriod);
         
         // التحقق من اختيار الموظف
         if (!employeeSelect.value) {
@@ -739,6 +743,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const contractType = selectedOption.dataset.contract_type;
         const basicSalary = parseFloat(selectedOption.dataset.basic_salary) || 0;
         const hasNationalBalance = document.getElementById('has_national_balance').checked;
+        
+        console.log('بيانات الموظف المختار:', {
+            id: employeeSelect.value,
+            name: selectedOption.textContent,
+            contractType: contractType,
+            basicSalary: basicSalary,
+            hasNationalBalance: hasNationalBalance
+        });
         
         // تعريف معاملات التحويل للفترات المختلفة
         const periodMultipliers = {
