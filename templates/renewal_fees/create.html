@@ -533,12 +533,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="labor_office_amount" step="0.01" min="0" placeholder="0.00" disabled="disabled">
+                                                <input type="number" class="form-control fee-amount" id="labor_office_amount" step="0.01" min="0" placeholder="0.00" readonly>
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="labor_office_notes" placeholder="أي ملاحظات إضافية" disabled="disabled">
+                                            <input type="text" class="form-control" id="labor_office_notes" placeholder="أي ملاحظات إضافية" readonly>
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -559,12 +559,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="passport_amount" step="0.01" min="0" placeholder="0.00" disabled="disabled">
+                                                <input type="number" class="form-control fee-amount" id="passport_amount" step="0.01" min="0" placeholder="0.00" readonly>
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="passport_notes" placeholder="أي ملاحظات إضافية" disabled="disabled">
+                                            <input type="text" class="form-control" id="passport_notes" placeholder="أي ملاحظات إضافية" readonly>
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -585,12 +585,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="social_insurance_amount" step="0.01" min="0" placeholder="0.00" disabled="disabled">
+                                                <input type="number" class="form-control fee-amount" id="social_insurance_amount" step="0.01" min="0" placeholder="0.00" readonly>
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="social_insurance_notes" placeholder="أي ملاحظات إضافية" disabled="disabled">
+                                            <input type="text" class="form-control" id="social_insurance_notes" placeholder="أي ملاحظات إضافية" readonly>
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -611,14 +611,14 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" step="0.01" min="0" placeholder="0.00" disabled="disabled">
+                                                <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" step="0.01" min="0" placeholder="0.00" readonly>
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex">
-                                                <input type="text" class="form-control me-2" id="transfer_sponsorship_notes" placeholder="أي ملاحظات إضافية" disabled="disabled">
-                                                <input type="text" class="form-control" id="transfer_number" placeholder="رقم النقل" style="width: 150px;" disabled="disabled">
+                                                <input type="text" class="form-control me-2" id="transfer_sponsorship_notes" placeholder="أي ملاحظات إضافية" readonly>
+                                                <input type="text" class="form-control" id="transfer_number" placeholder="رقم النقل" style="width: 150px;" readonly>
                                             </div>
                                         </td>
                                         <td class="text-center">
@@ -640,12 +640,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="other_amount" step="0.01" min="0" placeholder="0.00" disabled="disabled">
+                                                <input type="number" class="form-control fee-amount" id="other_amount" step="0.01" min="0" placeholder="0.00" readonly>
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="other_description" placeholder="وصف نوع الرسوم الأخرى" disabled="disabled">
+                                            <input type="text" class="form-control" id="other_description" placeholder="وصف نوع الرسوم الأخرى" readonly>
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -658,11 +658,11 @@
                         </div>
                         
                         <!-- حقول مخفية -->
-                        <input type="hidden" name="fee_types[]" id="labor_office_type" value="labor_office" disabled="disabled">
-                        <input type="hidden" name="fee_types[]" id="passport_type" value="passport" disabled="disabled">
-                        <input type="hidden" name="fee_types[]" id="social_insurance_type" value="social_insurance" disabled="disabled">
-                        <input type="hidden" name="fee_types[]" id="transfer_sponsorship_type" value="transfer_sponsorship" disabled="disabled">
-                        <input type="hidden" name="fee_types[]" id="other_type" value="other" disabled="disabled">
+                        <input type="hidden" name="fee_types[]" id="labor_office_type" value="labor_office">
+                        <input type="hidden" name="fee_types[]" id="passport_type" value="passport">
+                        <input type="hidden" name="fee_types[]" id="social_insurance_type" value="social_insurance">
+                        <input type="hidden" name="fee_types[]" id="transfer_sponsorship_type" value="transfer_sponsorship">
+                        <input type="hidden" name="fee_types[]" id="other_type" value="other">
                     </div>
                 </div>
                 
@@ -879,13 +879,17 @@
                     if (this.checked) {
                         rowElement.classList.add('bg-primary', 'bg-opacity-10');
                         
-                        // إزالة خاصية التعطيل من الحقول
-                        amountInput.removeAttribute('disabled');
-                        notesInput.removeAttribute('disabled');
-                        typeInput.removeAttribute('disabled');
+                        // إزالة خاصية القراءة فقط من الحقول
+                        amountInput.removeAttribute('readonly');
+                        notesInput.removeAttribute('readonly');
+                        
+                        // تفعيل الحقول المخفية
+                        if (typeInput) {
+                            typeInput.removeAttribute('readonly');
+                        }
                         
                         if (toggle.transferNumber) {
-                            document.getElementById(toggle.transferNumber).removeAttribute('disabled');
+                            document.getElementById(toggle.transferNumber).removeAttribute('readonly');
                         }
                         
                         // تطبيق تأثير مرئي لتأكيد التفعيل
@@ -899,17 +903,21 @@
                     } else {
                         rowElement.classList.remove('bg-primary', 'bg-opacity-10');
                         
-                        // إضافة خاصية التعطيل للحقول
-                        amountInput.setAttribute('disabled', 'disabled');
-                        notesInput.setAttribute('disabled', 'disabled');
-                        typeInput.setAttribute('disabled', 'disabled');
+                        // إضافة خاصية القراءة فقط للحقول
+                        amountInput.setAttribute('readonly', 'readonly');
+                        notesInput.setAttribute('readonly', 'readonly');
+                        
+                        // تعطيل الحقول المخفية
+                        if (typeInput) {
+                            typeInput.setAttribute('readonly', 'readonly');
+                        }
                         
                         // إزالة التأثير المرئي
                         amountInput.classList.remove('border-primary');
                         notesInput.classList.remove('border-primary');
                         
                         if (toggle.transferNumber) {
-                            document.getElementById(toggle.transferNumber).setAttribute('disabled', 'disabled');
+                            document.getElementById(toggle.transferNumber).setAttribute('readonly', 'readonly');
                         }
                     }
                 } catch (e) {
@@ -1162,14 +1170,14 @@
                         const amountInput = document.getElementById(toggle.amount);
                         if (amountInput) {
                             amountInput.value = '';
-                            amountInput.setAttribute('disabled', 'disabled');
+                            amountInput.setAttribute('readonly', 'readonly');
                             amountInput.classList.remove('border-primary');
                         }
                         
                         const notesInput = document.getElementById(toggle.notes);
                         if (notesInput) {
                             notesInput.value = '';
-                            notesInput.setAttribute('disabled', 'disabled');
+                            notesInput.setAttribute('readonly', 'readonly');
                             notesInput.classList.remove('border-primary');
                         }
                         
@@ -1177,14 +1185,14 @@
                             const transferNumberInput = document.getElementById(toggle.transferNumber);
                             if (transferNumberInput) {
                                 transferNumberInput.value = '';
-                                transferNumberInput.setAttribute('disabled', 'disabled');
+                                transferNumberInput.setAttribute('readonly', 'readonly');
                             }
                         }
                         
                         // تعطيل الحقل المخفي
                         const typeInput = document.getElementById(toggle.type);
                         if (typeInput) {
-                            typeInput.setAttribute('disabled', 'disabled');
+                            typeInput.setAttribute('readonly', 'readonly');
                         }
                     });
                     
