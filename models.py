@@ -204,6 +204,7 @@ class VehicleRental(db.Model):
     lessor_name = db.Column(db.String(100))  # اسم المؤجر أو الشركة المؤجرة
     lessor_contact = db.Column(db.String(100))  # معلومات الاتصال بالمؤجر
     contract_number = db.Column(db.String(50))  # رقم العقد
+    city = db.Column(db.String(100))  # المدينة/المكان الذي توجد فيه السيارة
     notes = db.Column(db.Text)  # ملاحظات
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

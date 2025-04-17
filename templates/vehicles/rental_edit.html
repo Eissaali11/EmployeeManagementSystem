@@ -97,13 +97,17 @@
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="lessor_name" class="form-label">اسم المؤجر / الشركة</label>
                                 <input type="text" class="form-control" id="lessor_name" name="lessor_name" value="{{ rental.lessor_name or '' }}">
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="lessor_contact" class="form-label">معلومات الاتصال بالمؤجر</label>
                                 <input type="text" class="form-control" id="lessor_contact" name="lessor_contact" value="{{ rental.lessor_contact or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="city" class="form-label">المدينة / الموقع</label>
+                                <input type="text" class="form-control" id="city" name="city" value="{{ rental.city or '' }}" placeholder="أدخل المدينة التي توجد فيها السيارة">
                             </div>
                         </div>
                         
