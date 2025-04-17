@@ -267,6 +267,15 @@
                             </div>
                         </div>
                         
+                        <div class="row mb-3 d-none" id="download-excel-row">
+                            <div class="col-md-12">
+                                <button type="button" id="download-excel-button" class="btn btn-success w-100">
+                                    <i class="fas fa-file-excel me-1"></i>
+                                    تحميل البيانات كملف إكسل
+                                </button>
+                            </div>
+                        </div>
+                        
                         <!-- نتيجة الحساب -->
                         <div id="calculation-result" class="calculation-result d-none">
                             <h5 class="text-center mb-2">نتيجة الحساب</h5>
@@ -705,6 +714,9 @@ document.addEventListener('DOMContentLoaded', function() {
         calculationResult.classList.remove('d-none');
         feeDetailsSection.classList.remove('d-none');
         
+        // إظهار زر تنزيل ملف الإكسل
+        document.getElementById('download-excel-row').classList.remove('d-none');
+        
         // تعيين تواريخ افتراضية
         const today = new Date();
         const dueDate = new Date();
@@ -712,6 +724,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.getElementById('fee_date').value = today.toISOString().split('T')[0];
         document.getElementById('due_date').value = dueDate.toISOString().split('T')[0];
+        
+        // حفظ البيانات المحسوبة في المتغيرات العامة لاستخدامها في تصدير ملف الإكسل
+        window.calculatedFeeData = {
+            employeeName: selectedOption.text,
+            employeeId: selectedOption.value,
+            contractType: contractType === 'saudi' ? 'سعودي' : 'وافد',
+            feeType: document.getElementById('fee_type').options[document.getElementById('fee_type').selectedIndex].text,
+            feeTypeValue: feeType,
+            periodName: periodText,
+            periodValue: calculationPeriod,
+            basicSalary: basicSalary,
+            amount: amount,
+            feeDescription: feeDescription,
+            calculationDate: new Date().toISOString().split('T')[0]
+        };
     });
     
     // تعيين سلوك للنموذج
@@ -722,6 +749,77 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('يرجى احتساب الرسوم أولاً قبل الحفظ');
         }
     });
+    
+    // معالجة تنزيل ملف الإكسل
+    const downloadExcelButton = document.getElementById('download-excel-button');
+    downloadExcelButton.addEventListener('click', function() {
+        if (!window.calculatedFeeData) {
+            alert('يرجى احتساب الرسوم أولاً قبل تنزيل البيانات');
+            return;
+        }
+        
+        // إنشاء ملف إكسل باستخدام SheetJS
+        generateExcelFile(window.calculatedFeeData);
+    });
+    
+    // وظيفة إنشاء ملف الإكسل
+    function generateExcelFile(data) {
+        // استخدام مكتبة SheetJS (xlsx) لإنشاء ملف إكسل
+        // نقوم بإنشاء جدول تلقائيًا من البيانات المتوفرة
+        
+        // 1. إنشاء مصفوفة البيانات
+        const rows = [
+            // عنوان الجدول (الصف الأول)
+            ['بيانات احتساب الرسوم الحكومية', '', '', '', ''],
+            ['', '', '', '', ''],
+            // بيانات الموظف
+            ['الموظف:', data.employeeName, '', 'نوع العقد:', data.contractType],
+            ['الراتب الأساسي:', data.basicSalary.toLocaleString('ar-SA') + ' ريال', '', 'تاريخ الاحتساب:', data.calculationDate],
+            ['', '', '', '', ''],
+            // بيانات الرسوم
+            ['نوع الرسوم:', data.feeType, '', 'الفترة:', data.periodName],
+            ['المبلغ المحتسب:', data.amount.toLocaleString('ar-SA') + ' ريال', '', 'وصف الرسوم:', data.feeDescription],
+            ['', '', '', '', ''],
+            // جدول التفاصيل
+            ['ملخص الاحتساب', '', '', '', ''],
+            ['نوع الرسوم', 'الفترة', 'المبلغ', 'التفاصيل', ''],
+            [data.feeType, data.periodName, data.amount.toLocaleString('ar-SA') + ' ريال', data.feeDescription, ''],
+        ];
+        
+        // 2. إنشاء مصنف عمل (Workbook)
+        const worksheet = XLSX.utils.aoa_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        
+        // 3. ضبط عرض الأعمدة
+        const columnWidths = [
+            { wch: 20 }, // عرض العمود الأول
+            { wch: 25 }, // عرض العمود الثاني
+            { wch: 15 }, // عرض العمود الثالث
+            { wch: 20 }, // عرض العمود الرابع
+            { wch: 25 }  // عرض العمود الخامس
+        ];
+        worksheet['!cols'] = columnWidths;
+        
+        // 4. إضافة ورقة العمل إلى المصنف
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'الرسوم الحكومية');
+        
+        // 5. توليد اسم الملف
+        const fileName = `رسوم_${data.feeTypeValue}_${data.employeeName.replace(/\s+/g, '_')}_${data.calculationDate}.xlsx`;
+        
+        // 6. تنزيل الملف
+        XLSX.writeFile(workbook, fileName);
+    }
+    
+    // إضافة مكتبة SheetJS لإنشاء ملفات الإكسل
+    function loadXLSXScript() {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.async = true;
+        document.head.appendChild(script);
+    }
+    
+    // تحميل المكتبة عند تحميل الصفحة
+    loadXLSXScript();
 });
 </script>
 {% endblock %}
