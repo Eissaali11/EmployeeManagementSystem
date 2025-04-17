@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}إضافة رسوم تجديد جديدة{% endblock %}
+{% block title %}إضافة رسوم تجديد{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -20,24 +20,38 @@
             <h6 class="m-0 fw-bold">بيانات رسوم التجديد</h6>
         </div>
         <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-info-circle fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="alert-heading">معلومات مهمة</h5>
+                        <p class="mb-0">جميع الحقول المميزة بعلامة (*) مطلوبة.</p>
+                    </div>
+                </div>
+            </div>
+
             <form method="POST" action="{{ url_for('renewal_fees.create') }}">
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="document_id" class="form-label">الوثيقة <span class="text-danger">*</span></label>
-                        <select class="form-select" id="document_id" name="document_id" required>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="document_id" class="form-label">الوثيقة *</label>
+                        <select class="form-select select2" id="document_id" name="document_id" required>
                             <option value="">اختر الوثيقة</option>
                             {% for document in documents %}
-                            <option value="{{ document.id }}">
-                                {{ document.employee.name }} - {{ document.document_type }} (رقم: {{ document.document_number }})
-                            </option>
+                            <option value="{{ document.id }}">{{ document.employee.name }} - {{ document.document_type }} ({{ document.document_number }})</option>
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="col-md-6">
+                        <label for="fee_date" class="form-label">تاريخ الاستحقاق *</label>
+                        <input type="date" class="form-control" id="fee_date" name="fee_date" required>
+                    </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="fee_type" class="form-label">نوع الرسم <span class="text-danger">*</span></label>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="fee_type" class="form-label">نوع الرسم *</label>
                         <select class="form-select" id="fee_type" name="fee_type" required>
                             <option value="">اختر نوع الرسم</option>
                             {% for type_key, type_name in fee_types.items() %}
@@ -45,19 +59,15 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="amount" class="form-label">المبلغ (ريال) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="amount" name="amount" min="0" step="0.01" required>
+                    <div class="col-md-6">
+                        <label for="amount" class="form-label">المبلغ (ريال) *</label>
+                        <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0" required>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="fee_date" class="form-label">تاريخ الاستحقاق <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="fee_date" name="fee_date" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="payment_status" class="form-label">حالة الدفع <span class="text-danger">*</span></label>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="payment_status" class="form-label">حالة الدفع *</label>
                         <select class="form-select" id="payment_status" name="payment_status" required>
                             {% for status_key, status_name in payment_statuses.items() %}
                             <option value="{{ status_key }}" {% if status_key == 'pending' %}selected{% endif %}>{{ status_name }}</option>
@@ -82,15 +92,15 @@
                     <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                 </div>
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="reset" class="btn btn-secondary me-md-2">
-                        <i class="fas fa-eraser me-1"></i>
-                        مسح
-                    </button>
-                    <button type="submit" class="btn btn-primary">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
                         <i class="fas fa-save me-1"></i>
                         حفظ
                     </button>
+                    <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-secondary btn-lg px-5">
+                        <i class="fas fa-times me-1"></i>
+                        إلغاء
+                    </a>
                 </div>
             </form>
         </div>
@@ -98,33 +108,31 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // إظهار/إخفاء حقول تفاصيل الدفع بناءً على حالة الدفع
-        const paymentStatusSelect = document.getElementById('payment_status');
-        const paymentDetailsDiv = document.querySelector('.payment-details');
+    $(document).ready(function() {
+        // تهيئة Select2 للقوائم
+        $('.select2').select2({
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
         
-        function togglePaymentDetails() {
-            if (paymentStatusSelect.value === 'paid') {
-                paymentDetailsDiv.style.display = 'flex';
-                document.getElementById('payment_date').required = true;
+        // إخفاء/إظهار حقول الدفع بناءً على حالة الدفع
+        function togglePaymentFields() {
+            var status = $('#payment_status').val();
+            if (status === 'paid') {
+                $('.payment-details').show();
+                $('#payment_date').attr('required', true);
             } else {
-                paymentDetailsDiv.style.display = 'none';
-                document.getElementById('payment_date').required = false;
-                document.getElementById('payment_date').value = '';
-                document.getElementById('receipt_number').value = '';
+                $('.payment-details').hide();
+                $('#payment_date').attr('required', false);
             }
         }
         
-        // التحقق الأولي عند تحميل الصفحة
-        togglePaymentDetails();
-        
-        // إضافة مستمع للتغيير
-        paymentStatusSelect.addEventListener('change', togglePaymentDetails);
-        
-        // تعيين تاريخ اليوم كتاريخ افتراضي للاستحقاق
-        document.getElementById('fee_date').valueAsDate = new Date();
+        // تنفيذ الدالة عند تحميل الصفحة وعند تغيير حالة الدفع
+        togglePaymentFields();
+        $('#payment_status').change(togglePaymentFields);
     });
 </script>
 {% endblock %}
