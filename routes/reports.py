@@ -1165,11 +1165,13 @@ def documents_pdf():
     buffer = create_pdf(elements, landscape_mode=True)
     
     # إنشاء استجابة تحميل
-    response = make_response(buffer.getvalue())
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=documents_report.pdf'
-    
-    return response
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="documents_report.pdf",
+        mimetype='application/pdf'
+    )
 
 @reports_bp.route('/documents/excel')
 def documents_excel():
