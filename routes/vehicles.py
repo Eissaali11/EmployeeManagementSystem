@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from sqlalchemy import extract, func, or_
+from sqlalchemy import extract, func
 import os
 import uuid
 
