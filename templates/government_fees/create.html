@@ -328,108 +328,99 @@
                         
                         <div class="row mb-3 d-none" id="download-excel-row">
                             <div class="col-md-12">
-                                <button type="button" id="download-excel-button" class="btn btn-success w-100">
+                                <button type="button" id="download-excel-button" class="btn btn-secondary w-100">
                                     <i class="fas fa-file-excel me-1"></i>
-                                    تحميل البيانات كملف إكسل
+                                    تنزيل البيانات بصيغة إكسل
                                 </button>
                             </div>
                         </div>
                         
-                        <!-- نتيجة الحساب -->
+                        <!-- حقل مخفي لتخزين المبلغ المحسوب -->
+                        <input type="hidden" id="amount" name="amount" value="">
+                        
                         <div id="calculation-result" class="calculation-result d-none">
-                            <h5 class="text-center mb-2">نتيجة الحساب</h5>
+                            <h5 class="text-center mb-3">نتيجة احتساب الرسوم</h5>
                             <div class="result-value" id="result-amount">0.00 ريال</div>
-                            
                             <div class="result-details">
                                 <div class="detail-item">
-                                    <span class="detail-label">نوع الرسوم:</span>
-                                    <span class="detail-value" id="result-fee-type">-</span>
+                                    <div class="detail-label">نوع الرسوم:</div>
+                                    <div class="detail-value" id="result-fee-type">-</div>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">الموظف:</span>
-                                    <span class="detail-value" id="result-employee">-</span>
+                                    <div class="detail-label">الموظف:</div>
+                                    <div class="detail-value" id="result-employee">-</div>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">فترة الحساب:</span>
-                                    <span class="detail-value" id="result-period">-</span>
+                                    <div class="detail-label">الفترة:</div>
+                                    <div class="detail-value" id="result-period">-</div>
                                 </div>
-                                <div class="detail-item" id="detail-national-balance">
-                                    <span class="detail-label">التوازن الوطني:</span>
-                                    <span class="detail-value" id="result-national-balance">-</span>
+                                <div class="detail-item" id="detail-national-balance" style="display: none;">
+                                    <div class="detail-label">التوازن الوطني:</div>
+                                    <div class="detail-value" id="result-national-balance">-</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- بيانات التواريخ والسداد -->
-                        <div class="manual-fee-group d-none" id="fee-details-section">
-                            <h5 class="mb-3">تفاصيل الرسوم</h5>
+                        <!-- قسم الحفظ والمعلومات المالية -->
+                        <div id="fee-details-section" class="d-none">
+                            <h5 class="mb-3 mt-4">معلومات الرسوم والسداد</h5>
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="fee_date" class="form-label">
-                                            <span class="required-asterisk">*</span>
-                                            تاريخ الاستحقاق
-                                        </label>
-                                        <input type="date" class="form-control" id="fee_date" name="fee_date" required>
-                                    </div>
+                                    <label for="fee_date" class="form-label">تاريخ الرسوم</label>
+                                    <input type="date" class="form-control" id="fee_date" name="fee_date" value="{{ today }}">
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="due_date" class="form-label">
-                                            <span class="required-asterisk">*</span>
-                                            تاريخ انتهاء المهلة
-                                        </label>
-                                        <input type="date" class="form-control" id="due_date" name="due_date" required>
-                                    </div>
+                                    <label for="due_date" class="form-label">تاريخ الاستحقاق</label>
+                                    <input type="date" class="form-control" id="due_date" name="due_date" value="{{ due_date }}">
                                 </div>
                             </div>
-                            
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="payment_status" class="form-label">حالة السداد</label>
-                                        <select class="form-select" id="payment_status" name="payment_status">
-                                            <option value="pending" selected>قيد الانتظار</option>
-                                            <option value="paid">مدفوع</option>
-                                            <option value="overdue">متأخر</option>
-                                        </select>
-                                    </div>
+                                    <label for="payment_status" class="form-label">حالة السداد</label>
+                                    <select class="form-select" id="payment_status" name="payment_status">
+                                        <option value="pending" selected>قيد الانتظار</option>
+                                        <option value="paid">تم السداد</option>
+                                        <option value="overdue">متأخر</option>
+                                        <option value="canceled">ملغي</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6 payment-details d-none">
-                                    <div class="mb-3">
-                                        <label for="payment_date" class="form-label">تاريخ السداد</label>
-                                        <input type="date" class="form-control" id="payment_date" name="payment_date">
-                                    </div>
+                                    <label for="payment_date" class="form-label">تاريخ السداد</label>
+                                    <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ today }}">
                                 </div>
                             </div>
-                            
                             <div class="row mb-3 payment-details d-none">
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="receipt_number" class="form-label">رقم الإيصال</label>
-                                        <input type="text" class="form-control" id="receipt_number" name="receipt_number">
-                                    </div>
+                                    <label for="payment_method" class="form-label">طريقة السداد</label>
+                                    <select class="form-select" id="payment_method" name="payment_method">
+                                        <option value="bank_transfer" selected>تحويل بنكي</option>
+                                        <option value="cash">نقدا</option>
+                                        <option value="check">شيك</option>
+                                        <option value="credit_card">بطاقة ائتمان</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="reference_number" class="form-label">رقم المرجع</label>
+                                    <input type="text" class="form-control" id="reference_number" name="reference_number" placeholder="رقم المرجع الخاص بالمعاملة">
                                 </div>
                             </div>
-                            
                             <div class="row mb-3">
                                 <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label for="notes" class="form-label">ملاحظات</label>
-                                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                                    </div>
+                                    <label for="notes" class="form-label">ملاحظات</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="ملاحظات إضافية بخصوص الرسوم"></textarea>
                                 </div>
                             </div>
-                            
-                            <input type="hidden" id="amount" name="amount" value="0">
-                            <input type="hidden" id="is_automatic" name="is_automatic" value="1">
-                            
-                            <div class="action-buttons">
-                                <a href="{{ url_for('government_fees.index') }}" class="btn btn-secondary">إلغاء</a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-1"></i>
-                                    حفظ الرسوم
-                                </button>
+                            <div class="row">
+                                <div class="col-md-12 text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>
+                                        حفظ الرسوم
+                                    </button>
+                                    <a href="{{ url_for('government_fees.index') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>
+                                        إلغاء
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -446,43 +437,20 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-4">
-                        <h6 class="fw-bold">المقابل المالي (مكتب العمل)</h6>
-                        <ul>
-                            <li>800 ريال شهريًا للموظف الوافد</li>
-                            <li>700 ريال شهريًا في حال التوازن الوطني</li>
-                            <li>9,600 ريال سنويًا (الرسوم الكاملة)</li>
-                            <li>8,400 ريال سنويًا (مع التوازن الوطني)</li>
-                        </ul>
+                    <p>يمكنك من خلال هذه الصفحة احتساب مختلف أنواع الرسوم الحكومية المطلوبة للموظفين، مثل:</p>
+                    <ul>
+                        <li>المقابل المالي لمكتب العمل (800 ريال شهريًا للموظف الوافد)</li>
+                        <li>رسوم الإقامة (650 ريال سنويًا للموظف الوافد)</li>
+                        <li>رسوم التأمين الطبي (تختلف حسب مستوى التأمين)</li>
+                        <li>رسوم التأمينات الاجتماعية (22% للسعوديين، 2% للوافدين)</li>
+                    </ul>
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        يمكنك تحديد أكثر من نوع للرسوم واحتسابها معًا.
                     </div>
-                    
-                    <div class="mb-4">
-                        <h6 class="fw-bold">رسوم الإقامة (الجوازات)</h6>
-                        <ul>
-                            <li>650 ريال سنويًا للموظف الوافد</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h6 class="fw-bold">التأمين الطبي</h6>
-                        <ul>
-                            <li>أساسي: 400 ريال سنويًا</li>
-                            <li>متوسط: 900 ريال سنويًا</li>
-                            <li>متميز: 1,500 ريال سنويًا</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <h6 class="fw-bold">التأمينات الاجتماعية</h6>
-                        <ul>
-                            <li>الموظف السعودي: 22% من الراتب الأساسي
-                                <ul>
-                                    <li>12% على صاحب العمل</li>
-                                    <li>10% على الموظف</li>
-                                </ul>
-                            </li>
-                            <li>الموظف الوافد: 2% من الراتب الأساسي (على صاحب العمل)</li>
-                        </ul>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        تأكد من صحة بيانات الموظف قبل احتساب الرسوم.
                     </div>
                 </div>
             </div>
@@ -492,554 +460,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('صفحة احتساب الرسوم الحكومية محملة');
-
-    // الدوال المساعدة
-    function formatCurrency(amount) {
-        return amount.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-    
-    // تهيئة العناصر
-    function initializeElements() {
-        console.log('جاري تهيئة العناصر...');
-        
-        // إضافة مستمع لزر الاحتساب
-        const calculateButton = document.getElementById('calculate-button');
-        if (calculateButton) {
-            console.log('تم العثور على زر الاحتساب');
-            calculateButton.addEventListener('click', calculateFees);
-        } else {
-            console.error('لم يتم العثور على زر الاحتساب (calculate-button)');
-        }
-        
-        // تهيئة خيار الرسوم الأخرى
-        const includeOtherCheckbox = document.getElementById('include_other');
-        if (includeOtherCheckbox) {
-            includeOtherCheckbox.addEventListener('change', function() {
-                const otherFeeInputs = document.querySelector('.other-fee-inputs');
-                if (otherFeeInputs) {
-                    if (this.checked) {
-                        otherFeeInputs.classList.remove('d-none');
-                    } else {
-                        otherFeeInputs.classList.add('d-none');
-                    }
-                }
-            });
-        }
-        
-        // تهيئة مستمع حالة السداد
-        const paymentStatusSelect = document.getElementById('payment_status');
-        if (paymentStatusSelect) {
-            paymentStatusSelect.addEventListener('change', function() {
-                const paymentDetailsElements = document.querySelectorAll('.payment-details');
-                if (this.value === 'paid') {
-                    paymentDetailsElements.forEach(element => {
-                        element.classList.remove('d-none');
-                    });
-                    
-                    // تعيين تاريخ السداد بتاريخ اليوم
-                    const today = new Date().toISOString().split('T')[0];
-                    const paymentDateField = document.getElementById('payment_date');
-                    if (paymentDateField) {
-                        paymentDateField.value = today;
-                    }
-                } else {
-                    paymentDetailsElements.forEach(element => {
-                        element.classList.add('d-none');
-                    });
-                }
-            });
-        }
-        
-        // تهيئة زر تنزيل إكسل
-        const downloadExcelButton = document.getElementById('download-excel-button');
-        if (downloadExcelButton) {
-            downloadExcelButton.addEventListener('click', function() {
-                if (!window.calculatedFeeData) {
-                    alert('يرجى احتساب الرسوم أولاً قبل تنزيل البيانات');
-                    return;
-                }
-                
-                generateExcelFile(window.calculatedFeeData);
-            });
-        }
-        
-        // تحميل مكتبة SheetJS
-        // نهيئ الدالة الخاصة بتحميل مكتبة الإكسل
-        if (typeof loadXLSXScript !== 'function') {
-            window.loadXLSXScript = function() {
-                console.log('جاري تحميل مكتبة SheetJS...');
-                if (!document.getElementById('sheetjs-script')) {
-                    const script = document.createElement('script');
-                    script.id = 'sheetjs-script';
-                    script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-                    script.onload = function() {
-                        console.log('تم تحميل مكتبة SheetJS بنجاح');
-                    };
-                    document.head.appendChild(script);
-                } else {
-                    console.log('مكتبة SheetJS محملة مسبقًا');
-                }
-            };
-        }
-        loadXLSXScript();
-        
-        console.log('تم تهيئة العناصر بنجاح');
-    }
-    
-    // الحصول على قائمة الموظفين
-    async function loadEmployees() {
-        console.log('جاري تحميل بيانات الموظفين...');
-        try {
-            const response = await fetch('/api/employees');
-            const data = await response.json();
-            console.log(`تم تحميل ${data.length} موظف`);
-            
-            const employeeSelect = document.getElementById('employee_id');
-            if (!employeeSelect) {
-                console.error('لم يتم العثور على حقل اختيار الموظف (employee_id)');
-                return;
-            }
-            
-            employeeSelect.innerHTML = '<option value="" selected disabled>اختر الموظف</option>';
-            
-            data.forEach(employee => {
-                const option = document.createElement('option');
-                option.value = employee.id;
-                option.textContent = `${employee.name} (${employee.employee_id})`;
-                option.dataset.contract_type = employee.contract_type || 'foreign';
-                option.dataset.nationality = employee.nationality || 'غير محدد';
-                option.dataset.basic_salary = employee.basic_salary || 0;
-                option.dataset.national_balance = employee.has_national_balance ? 'نعم' : 'لا';
-                employeeSelect.appendChild(option);
-            });
-            
-            // معالجة تغيير الموظف
-            employeeSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                
-                if (selectedOption.value) {
-                    console.log(`تم اختيار الموظف: ${selectedOption.textContent}`);
-                    const employeeInfo = document.getElementById('employee_info');
-                    employeeInfo.innerHTML = `
-                        <strong>نوع العقد:</strong> ${selectedOption.dataset.contract_type === 'saudi' ? 'سعودي' : 'وافد'}<br>
-                        <strong>الجنسية:</strong> ${selectedOption.dataset.nationality}<br>
-                        <strong>الراتب الأساسي:</strong> ${formatCurrency(parseFloat(selectedOption.dataset.basic_salary))} ريال<br>
-                        <strong>التوازن الوطني:</strong> ${selectedOption.dataset.national_balance}
-                    `;
-                    
-                    // تحديث حالة التوازن الوطني تلقائيًا
-                    const hasNationalBalance = selectedOption.dataset.national_balance === 'نعم';
-                    const balanceCheckbox = document.getElementById('has_national_balance');
-                    if (balanceCheckbox) {
-                        balanceCheckbox.checked = hasNationalBalance;
-                    }
-                }
-            });
-            
-        } catch (error) {
-            console.error('Error loading employees:', error);
-            // تهيئة بعض البيانات الافتراضية للعرض
-            const employeeSelect = document.getElementById('employee_id');
-            if (!employeeSelect) {
-                console.error('لم يتم العثور على حقل اختيار الموظف (employee_id)');
-                return;
-            }
-            
-            employeeSelect.innerHTML = `
-                <option value="" selected disabled>اختر الموظف</option>
-                <option value="1" data-contract_type="foreign" data-nationality="مصري" data-basic_salary="5000" data-national_balance="لا">أحمد محمد (EMP001)</option>
-                <option value="2" data-contract_type="saudi" data-nationality="سعودي" data-basic_salary="7500" data-national_balance="نعم">محمد العتيبي (EMP002)</option>
-                <option value="3" data-contract_type="foreign" data-nationality="هندي" data-basic_salary="4500" data-national_balance="لا">راجيش كومار (EMP003)</option>
-            `;
-            
-            // إضافة معالج الحدث
-            employeeSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                
-                if (selectedOption.value) {
-                    console.log(`تم اختيار الموظف: ${selectedOption.textContent}`);
-                    const employeeInfo = document.getElementById('employee_info');
-                    employeeInfo.innerHTML = `
-                        <strong>نوع العقد:</strong> ${selectedOption.dataset.contract_type === 'saudi' ? 'سعودي' : 'وافد'}<br>
-                        <strong>الجنسية:</strong> ${selectedOption.dataset.nationality}<br>
-                        <strong>الراتب الأساسي:</strong> ${formatCurrency(parseFloat(selectedOption.dataset.basic_salary))} ريال<br>
-                        <strong>التوازن الوطني:</strong> ${selectedOption.dataset.national_balance}
-                    `;
-                    
-                    // تحديث حالة التوازن الوطني تلقائيًا
-                    const hasNationalBalance = selectedOption.dataset.national_balance === 'نعم';
-                    const balanceCheckbox = document.getElementById('has_national_balance');
-                    if (balanceCheckbox) {
-                        balanceCheckbox.checked = hasNationalBalance;
-                    }
-                }
-            });
-        }
-    }
-    
-    // تحميل الموظفين عند بدء التشغيل
-    loadEmployees();
-    
-    // تهيئة العناصر
-    initializeElements();
-    
-    // معالجة الرسوم الأخرى
-    const includeOtherCheckbox = document.getElementById('include_other');
-    const otherFeeInputs = document.querySelector('.other-fee-inputs');
-    
-    includeOtherCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            otherFeeInputs.classList.remove('d-none');
-        } else {
-            otherFeeInputs.classList.add('d-none');
-        }
-    });
-    
-    // معالجة تغيير حالة السداد
-    const paymentStatusSelect = document.getElementById('payment_status');
-    const paymentDetailsElements = document.querySelectorAll('.payment-details');
-    
-    paymentStatusSelect.addEventListener('change', function() {
-        if (this.value === 'paid') {
-            paymentDetailsElements.forEach(element => {
-                element.classList.remove('d-none');
-            });
-            
-            // تعيين تاريخ السداد بتاريخ اليوم
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('payment_date').value = today;
-        } else {
-            paymentDetailsElements.forEach(element => {
-                element.classList.add('d-none');
-            });
-        }
-    });
-    
-    // تعريف دالة احتساب الرسوم
-    function calculateFees() {
-        console.log('تم استدعاء دالة احتساب الرسوم');
-        
-        const employeeSelect = document.getElementById('employee_id');
-        if (!employeeSelect) {
-            console.error('لم يتم العثور على حقل اختيار الموظف');
-            alert('حدث خطأ في تحميل بيانات الموظفين');
-            return;
-        }
-        
-        const calculationPeriod = document.getElementById('calculation_period').value;
-        console.log('فترة الاحتساب:', calculationPeriod);
-        
-        // التحقق من اختيار الموظف
-        if (!employeeSelect.value) {
-            alert('يرجى اختيار الموظف أولاً');
-            return;
-        }
-        
-        // الحصول على بيانات الموظف المحددة
-        const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
-        const contractType = selectedOption.dataset.contract_type;
-        const basicSalary = parseFloat(selectedOption.dataset.basic_salary) || 0;
-        const hasNationalBalance = document.getElementById('has_national_balance').checked;
-        
-        console.log('بيانات الموظف المختار:', {
-            id: employeeSelect.value,
-            name: selectedOption.textContent,
-            contractType: contractType,
-            basicSalary: basicSalary,
-            hasNationalBalance: hasNationalBalance
-        });
-        
-        // تعريف معاملات التحويل للفترات المختلفة
-        const periodMultipliers = {
-            'monthly': 1,
-            'quarterly': 3,
-            'semiannual': 6,
-            'annual': 12
-        };
-        
-        // للتأكد من أن المستخدم اختار خدمة واحدة على الأقل
-        const feeCheckboxes = document.querySelectorAll('.fee-option-checkbox:checked');
-        if (feeCheckboxes.length === 0) {
-            alert('يرجى اختيار نوع رسوم واحد على الأقل');
-            return;
-        }
-        
-        // إجمالي المبلغ
-        let totalAmount = 0;
-        let feeTypeDisplay = '';
-        let feeDescriptions = [];
-        
-        // 1. مكتب العمل (المقابل المالي)
-        if (document.getElementById('include_labor_office').checked) {
-            if (contractType === 'saudi') {
-                // لا توجد رسوم مكتب عمل للسعوديين
-                feeDescriptions.push('مكتب العمل: لا ينطبق على الموظفين السعوديين');
-            } else {
-                const monthlyFee = hasNationalBalance ? 700 : 800;
-                const laborFee = monthlyFee * periodMultipliers[calculationPeriod];
-                totalAmount += laborFee;
-                
-                feeDescriptions.push(
-                    `مكتب العمل: ${formatCurrency(laborFee)} ريال (${hasNationalBalance ? 'مع التوازن الوطني' : 'بدون التوازن الوطني'})`
-                );
-            }
-        }
-        
-        // 2. الجوازات (الإقامة)
-        if (document.getElementById('include_passport').checked) {
-            if (contractType === 'saudi') {
-                // لا توجد رسوم جوازات للسعوديين
-                feeDescriptions.push('الجوازات: لا ينطبق على الموظفين السعوديين');
-            } else {
-                // رسوم الإقامة سنوية (650 ريال)
-                const passportFee = (650 / 12) * periodMultipliers[calculationPeriod];
-                totalAmount += passportFee;
-                
-                feeDescriptions.push(`الجوازات (الإقامة): ${formatCurrency(passportFee)} ريال`);
-            }
-        }
-        
-        // 3. التأمين الطبي
-        if (document.getElementById('include_insurance').checked) {
-            if (contractType === 'saudi') {
-                feeDescriptions.push('التأمين الطبي: قد يختلف للموظفين السعوديين');
-            } else {
-                const insuranceLevel = document.querySelector('input[name="insurance_level"]:checked').value;
-                let annualFee = 0;
-                let insuranceType = '';
-                
-                switch (insuranceLevel) {
-                    case 'basic':
-                        annualFee = 400;
-                        insuranceType = 'أساسي';
-                        break;
-                    case 'medium':
-                        annualFee = 900;
-                        insuranceType = 'متوسط';
-                        break;
-                    case 'high':
-                        annualFee = 1500;
-                        insuranceType = 'متميز';
-                        break;
-                }
-                
-                // التأمين سنوي
-                const insuranceFee = (annualFee / 12) * periodMultipliers[calculationPeriod];
-                totalAmount += insuranceFee;
-                
-                feeDescriptions.push(`التأمين الطبي (${insuranceType}): ${formatCurrency(insuranceFee)} ريال`);
-            }
-        }
-        
-        // 4. التأمينات الاجتماعية
-        if (document.getElementById('include_social_insurance').checked) {
-            let socialInsuranceFee = 0;
-            
-            if (contractType === 'saudi') {
-                // 22% من الراتب الأساسي (12% على صاحب العمل و 10% على الموظف)
-                socialInsuranceFee = (0.22 * basicSalary) * periodMultipliers[calculationPeriod];
-                feeDescriptions.push(`التأمينات الاجتماعية: ${formatCurrency(socialInsuranceFee)} ريال (22% من الراتب الأساسي)`);
-            } else {
-                // 2% من الراتب الأساسي للوافدين
-                socialInsuranceFee = (0.02 * basicSalary) * periodMultipliers[calculationPeriod];
-                feeDescriptions.push(`التأمينات الاجتماعية: ${formatCurrency(socialInsuranceFee)} ريال (2% من الراتب الأساسي)`);
-            }
-            
-            totalAmount += socialInsuranceFee;
-        }
-        
-        // 5. رسوم أخرى (إذا تم اختيارها)
-        if (document.getElementById('include_other').checked) {
-            const otherFeeAmount = parseFloat(document.getElementById('other_fee_amount').value) || 0;
-            const otherFeeDesc = document.getElementById('other_fee_description').value || 'رسوم أخرى';
-            
-            if (otherFeeAmount > 0) {
-                totalAmount += otherFeeAmount;
-                feeDescriptions.push(`${otherFeeDesc}: ${formatCurrency(otherFeeAmount)} ريال`);
-            } else {
-                alert('يرجى إدخال مبلغ الرسوم الأخرى');
-                return;
-            }
-        }
-        
-        // تحديد نوع الرسوم المحدد للحقل المخفي
-        let primaryFeeType = '';
-        if (document.getElementById('include_labor_office').checked) {
-            primaryFeeType = 'labor_office';
-            feeTypeDisplay = 'مكتب العمل (المقابل المالي)';
-        } else if (document.getElementById('include_passport').checked) {
-            primaryFeeType = 'passport';
-            feeTypeDisplay = 'الجوازات (الإقامة)';
-        } else if (document.getElementById('include_insurance').checked) {
-            primaryFeeType = 'insurance';
-            feeTypeDisplay = 'التأمين الطبي';
-        } else if (document.getElementById('include_social_insurance').checked) {
-            primaryFeeType = 'social_insurance';
-            feeTypeDisplay = 'التأمينات الاجتماعية';
-        } else if (document.getElementById('include_other').checked) {
-            primaryFeeType = 'other';
-            feeTypeDisplay = 'رسوم أخرى';
-        }
-        
-        // تعيين نوع الرسوم في الحقل المخفي
-        document.getElementById('fee_type').value = primaryFeeType;
-        
-        // تحديث نتيجة الحساب
-        document.getElementById('result-amount').textContent = formatCurrency(totalAmount) + ' ريال';
-        document.getElementById('result-fee-type').textContent = feeDescriptions.length > 1 ? 'رسوم متعددة' : feeTypeDisplay;
-        document.getElementById('result-employee').textContent = selectedOption.text;
-        
-        let periodText = '';
-        switch (calculationPeriod) {
-            case 'monthly': periodText = 'شهري'; break;
-            case 'quarterly': periodText = 'ربع سنوي'; break;
-            case 'semiannual': periodText = 'نصف سنوي'; break;
-            case 'annual': periodText = 'سنوي'; break;
-        }
-        document.getElementById('result-period').textContent = periodText;
-        
-        // عرض/إخفاء حقل التوازن الوطني
-        if (document.getElementById('include_labor_office').checked && contractType !== 'saudi') {
-            document.getElementById('detail-national-balance').style.display = 'flex';
-            document.getElementById('result-national-balance').textContent = hasNationalBalance ? 'نعم' : 'لا';
-        } else {
-            document.getElementById('detail-national-balance').style.display = 'none';
-        }
-        
-        // تحديث حقل المبلغ المخفي
-        document.getElementById('amount').value = totalAmount;
-        
-        // إظهار نتيجة الحساب وقسم تفاصيل الرسوم
-        calculationResult.classList.remove('d-none');
-        feeDetailsSection.classList.remove('d-none');
-        
-        // إظهار زر تنزيل ملف الإكسل
-        document.getElementById('download-excel-row').classList.remove('d-none');
-        
-        // تعيين تواريخ افتراضية
-        const today = new Date();
-        const dueDate = new Date();
-        dueDate.setDate(today.getDate() + 30); // استحقاق بعد 30 يوم
-        
-        document.getElementById('fee_date').value = today.toISOString().split('T')[0];
-        document.getElementById('due_date').value = dueDate.toISOString().split('T')[0];
-        
-        // حفظ البيانات المحسوبة في المتغيرات العامة لاستخدامها في تصدير ملف الإكسل
-        window.calculatedFeeData = {
-            employeeName: selectedOption.text,
-            employeeId: selectedOption.value,
-            contractType: contractType === 'saudi' ? 'سعودي' : 'وافد',
-            feeTypes: feeDescriptions,
-            feeTypeDisplay: feeTypeDisplay,
-            feeTypeValue: primaryFeeType,
-            periodName: periodText,
-            periodValue: calculationPeriod,
-            basicSalary: basicSalary,
-            amount: totalAmount,
-            hasNationalBalance: hasNationalBalance,
-            calculationDate: new Date().toISOString().split('T')[0]
-        };
-    });
-    
-    // تعيين سلوك للنموذج
-    const form = document.getElementById('government-fee-form');
-    form.addEventListener('submit', function(event) {
-        if (!document.getElementById('amount').value || parseFloat(document.getElementById('amount').value) <= 0) {
-            event.preventDefault();
-            alert('يرجى احتساب الرسوم أولاً قبل الحفظ');
-        }
-    });
-    
-    // معالجة تنزيل ملف الإكسل
-    const downloadExcelButton = document.getElementById('download-excel-button');
-    downloadExcelButton.addEventListener('click', function() {
-        if (!window.calculatedFeeData) {
-            alert('يرجى احتساب الرسوم أولاً قبل تنزيل البيانات');
-            return;
-        }
-        
-        // إنشاء ملف إكسل باستخدام SheetJS
-        generateExcelFile(window.calculatedFeeData);
-    });
-    
-    // وظيفة إنشاء ملف الإكسل
-    function generateExcelFile(data) {
-        // استخدام مكتبة SheetJS (xlsx) لإنشاء ملف إكسل
-        // نقوم بإنشاء جدول تلقائيًا من البيانات المتوفرة
-        
-        // 1. إنشاء مصفوفة البيانات - بداية بالمعلومات الأساسية
-        const rows = [
-            // عنوان الجدول (الصف الأول)
-            ['بيانات احتساب الرسوم الحكومية', '', '', '', ''],
-            ['', '', '', '', ''],
-            // بيانات الموظف
-            ['الموظف:', data.employeeName, '', 'نوع العقد:', data.contractType],
-            ['الراتب الأساسي:', data.basicSalary.toLocaleString('ar-SA') + ' ريال', '', 'تاريخ الاحتساب:', data.calculationDate],
-            ['التوازن الوطني:', data.hasNationalBalance ? 'نعم' : 'لا', '', 'الفترة:', data.periodName],
-            ['', '', '', '', ''],
-            // إجمالي المبلغ
-            ['إجمالي المبلغ المحتسب:', data.amount.toLocaleString('ar-SA') + ' ريال', '', '', ''],
-            ['', '', '', '', ''],
-            // عنوان جدول التفاصيل
-            ['تفاصيل الرسوم المحتسبة', '', '', '', ''],
-        ];
-        
-        // إضافة تفاصيل الرسوم
-        if (data.feeTypes && data.feeTypes.length > 0) {
-            // إضافة صف عنوان لجدول التفاصيل
-            rows.push(['نوع الرسوم', 'التفاصيل', '', '', '']);
-            
-            // إضافة صف لكل نوع رسوم
-            data.feeTypes.forEach((feeDesc, index) => {
-                rows.push([`${index + 1}. ${feeDesc}`, '', '', '', '']);
-            });
-        }
-        
-        // إضافة معلومات إضافية
-        rows.push(
-            ['', '', '', '', ''],
-            ['ملاحظات:', '', '', '', ''],
-            ['- تم احتساب الرسوم بناءً على بيانات الموظف والخيارات المحددة.', '', '', '', ''],
-            ['- قد تختلف الرسوم الفعلية عن المحتسبة بناءً على تغيرات أنظمة الرسوم الحكومية.', '', '', '', '']
-        );
-        
-        // 2. إنشاء مصنف عمل (Workbook)
-        const worksheet = XLSX.utils.aoa_to_sheet(rows);
-        const workbook = XLSX.utils.book_new();
-        
-        // 3. ضبط عرض الأعمدة
-        const columnWidths = [
-            { wch: 30 }, // عرض العمود الأول
-            { wch: 40 }, // عرض العمود الثاني
-            { wch: 15 }, // عرض العمود الثالث
-            { wch: 20 }, // عرض العمود الرابع
-            { wch: 25 }  // عرض العمود الخامس
-        ];
-        worksheet['!cols'] = columnWidths;
-        
-        // 4. إضافة ورقة العمل إلى المصنف
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'الرسوم الحكومية');
-        
-        // 5. توليد اسم الملف
-        const fileName = `رسوم_حكومية_${data.employeeName.replace(/\s+/g, '_')}_${data.calculationDate}.xlsx`;
-        
-        // 6. تنزيل الملف
-        XLSX.writeFile(workbook, fileName);
-    }
-    
-    // إضافة مكتبة SheetJS لإنشاء ملفات الإكسل
-    function loadXLSXScript() {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-        script.async = true;
-        document.head.appendChild(script);
-    }
-    
-    // تحميل المكتبة عند تحميل الصفحة
-    loadXLSXScript();
-});
-</script>
+<script src="{{ url_for('static', filename='js/government_fees.js') }}"></script>
 {% endblock %}
