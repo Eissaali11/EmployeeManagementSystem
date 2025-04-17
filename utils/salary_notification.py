@@ -8,6 +8,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import cm
 
 def generate_salary_notification_pdf(salary):
     """
@@ -25,11 +26,20 @@ def generate_salary_notification_pdf(salary):
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        rightMargin=30,
-        leftMargin=30,
-        topMargin=30,
-        bottomMargin=30
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
     )
+    
+    # Register default font
+    from reportlab.pdfbase.pdfmetrics import registerFontFamily
+    
+    # Use the default Helvetica font which is built into ReportLab
+    arabicFontName = 'Helvetica'
+    
+    # Register font family
+    registerFontFamily(arabicFontName, normal=arabicFontName)
     
     # تعريف الأنماط
     styles = getSampleStyleSheet()
@@ -103,19 +113,35 @@ def generate_salary_notification_pdf(salary):
         [arabic_text("صافي الراتب"), f"{salary.net_salary:.2f}"]
     ]
     
-    table = Table(data, colWidths=[300, 150])
-    table.setStyle(TableStyle([
+    # تحديد عرض الأعمدة بوحدات السنتيمتر
+    table = Table(data, colWidths=[10*cm, 4*cm])
+    
+    # تحسين تنسيق الجدول
+    table_style = TableStyle([
         ('BACKGROUND', (0, 0), (1, 0), colors.lightgrey),
         ('TEXTCOLOR', (0, 0), (1, 0), colors.black),
-        ('ALIGN', (0, 0), (1, 0), 'CENTER'),
-        ('ALIGN', (1, 1), (1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),  # محاذاة العمود الأول إلى اليمين
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),  # محاذاة العمود الثاني إلى الوسط
+        ('FONTNAME', (0, 0), (1, 0), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (1, 0), 12),  # حجم خط عناوين الجدول
+        ('FONTSIZE', (0, 1), (1, -1), 10),  # حجم خط بيانات الجدول
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('BACKGROUND', (0, -1), (1, -1), colors.lightgrey),
-    ]))
+        ('BACKGROUND', (0, -1), (1, -1), colors.lightgrey),  # لون خلفية صف المجموع
+        ('FONTNAME', (0, -1), (1, -1), 'Helvetica'),  # خط أكثر سمكاً لصف المجموع
+        ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.black),  # خط أكثر سمكاً تحت العناوين
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة رأسية وسط
+    ])
+    
+    # إضافة ألوان متبادلة للصفوف
+    for i in range(1, len(data)-1):
+        if i % 2 == 0:
+            table_style.add('BACKGROUND', (0, i), (1, i), colors.whitesmoke)
+    
+    table.setStyle(table_style)
     
     elements.append(table)
     elements.append(Spacer(1, 20))
@@ -131,9 +157,26 @@ def generate_salary_notification_pdf(salary):
     elements.append(Spacer(1, 40))
     elements.append(Paragraph(arabic_text("توقيع الموظف باستلام الإشعار"), styles['Arabic']))
     
-    # التذييل
-    elements.append(Spacer(1, 20))
-    elements.append(Paragraph(arabic_text(f"تم إصدار هذا الإشعار في {datetime.now().strftime('%Y-%m-%d')}"), styles['Arabic']))
+    # التذييل في جدول لتحسين مظهره
+    elements.append(Spacer(1, 30))
+    
+    # إنشاء جدول التذييل للحصول على مظهر أفضل
+    footer_data = [
+        [arabic_text(f"تم إصدار هذا الإشعار في {datetime.now().strftime('%Y-%m-%d')}")],
+        [arabic_text("نظام إدارة الموظفين - جميع الحقوق محفوظة")]
+    ]
+    
+    footer_table = Table(footer_data, colWidths=[14*cm])
+    footer_style = TableStyle([
+        ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (0, -1), 8),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.gray),
+        ('BOTTOMPADDING', (0, 0), (0, -1), 5),
+    ])
+    
+    footer_table.setStyle(footer_style)
+    elements.append(footer_table)
     
     # بناء المستند
     doc.build(elements)
