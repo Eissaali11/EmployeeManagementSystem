@@ -964,10 +964,20 @@ def dashboard():
             'vehicle_id': vehicle.id
         })
     
+    # إعداد بيانات حالة السيارات بالتنسيق المطلوب في القالب
+    status_counts = {
+        'available': status_dict.get('available', 0),
+        'rented': status_dict.get('rented', 0),
+        'in_project': status_dict.get('in_project', 0),
+        'in_workshop': status_dict.get('in_workshop', 0),
+        'accident': status_dict.get('accident', 0)
+    }
+    
     # تجميع الإحصائيات في كائن واحد
     stats = {
         'total_vehicles': total_vehicles,
         'status_stats': status_dict,
+        'status_counts': status_counts,  # إضافة حالات السيارات بالتنسيق المناسب للقالب
         'total_monthly_rent': total_monthly_rent,
         'total_rental_cost': total_monthly_rent,  # نفس القيمة تستخدم في القالب باسم مختلف
         'vehicles_in_workshop': vehicles_in_workshop,
@@ -1156,6 +1166,11 @@ def detailed_list():
 @login_required
 def export_vehicles_excel():
     """تصدير بيانات السيارات إلى ملف Excel"""
+    import io
+    import pandas as pd
+    from flask import send_file
+    import datetime
+    
     status_filter = request.args.get('status', '')
     make_filter = request.args.get('make', '')
     
@@ -1173,8 +1188,90 @@ def export_vehicles_excel():
     # الحصول على قائمة السيارات
     vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
     
-    # هنا يتم إنشاء ملف Excel
-    # للتبسيط، سنعود إلى صفحة القائمة مع رسالة
+    # تحويل حالة السيارة إلى نص مقروء بالعربية
+    status_map = {
+        'available': 'متاحة',
+        'rented': 'مؤجرة',
+        'in_project': 'في المشروع',
+        'in_workshop': 'في الورشة',
+        'accident': 'حادث'
+    }
     
-    flash('سيتم تنفيذ وظيفة تصدير Excel قريباً!', 'info')
-    return redirect(url_for('vehicles.index'))
+    # إنشاء قائمة بالبيانات
+    vehicle_data = []
+    for vehicle in vehicles:
+        # حساب تكاليف الصيانة الإجمالية
+        total_maintenance_cost = db.session.query(
+            func.sum(VehicleWorkshop.cost)
+        ).filter(
+            VehicleWorkshop.vehicle_id == vehicle.id
+        ).scalar() or 0
+        
+        # الحصول على معلومات الإيجار النشط
+        active_rental = VehicleRental.query.filter_by(
+            vehicle_id=vehicle.id, is_active=True
+        ).first()
+        
+        # الحصول على معلومات المشروع النشط
+        active_project = VehicleProject.query.filter_by(
+            vehicle_id=vehicle.id, is_active=True
+        ).first()
+        
+        vehicle_data.append({
+            'رقم اللوحة': vehicle.plate_number,
+            'الشركة المصنعة': vehicle.make,
+            'الموديل': vehicle.model,
+            'السنة': vehicle.year,
+            'اللون': vehicle.color,
+            'الحالة': status_map.get(vehicle.status, vehicle.status),
+            'تكاليف الصيانة الإجمالية': total_maintenance_cost,
+            'المؤجر': active_rental.lessor_name if active_rental else '',
+            'تكلفة الإيجار الشهرية': active_rental.monthly_cost if active_rental else 0,
+            'المشروع': active_project.project_name if active_project else '',
+            'الموقع': active_project.location if active_project else '',
+            'ملاحظات': vehicle.notes or ''
+        })
+    
+    # إنشاء DataFrame من البيانات
+    df = pd.DataFrame(vehicle_data)
+    
+    # إنشاء ملف Excel في الذاكرة
+    output = io.BytesIO()
+    
+    # استخدام ExcelWriter مع خيارات لتحسين المظهر
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, sheet_name='بيانات السيارات', index=False)
+        
+        # الحصول على ورقة العمل وworkbook للتنسيق
+        workbook = writer.book
+        worksheet = writer.sheets['بيانات السيارات']
+        
+        # تنسيق الخلايا
+        header_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'top',
+            'fg_color': '#D7E4BC',
+            'border': 1
+        })
+        
+        # تنسيق عناوين الأعمدة
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+            # ضبط عرض العمود
+            worksheet.set_column(col_num, col_num, 15)
+    
+    # التحضير لإرسال الملف
+    output.seek(0)
+    
+    # اسم الملف بالتاريخ الحالي
+    today = datetime.datetime.now().strftime('%Y-%m-%d')
+    filename = f"تقرير_السيارات_{today}.xlsx"
+    
+    # إرسال الملف كمرفق للتنزيل
+    return send_file(
+        output,
+        download_name=filename,
+        as_attachment=True,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
