@@ -55,11 +55,10 @@ def generate_salary_report_pdf(salaries, month, year):
         # Create PDF buffer
         buffer = BytesIO()
         
-        # Create PDF document
-        # استخدام وضع أفقي للورقة (Landscape) بدلاً من وضع عمودي
+        # Create PDF document with landscape orientation
         doc = SimpleDocTemplate(
             buffer,
-            pagesize=A4,
+            pagesize=landscape(A4),  # Use landscape orientation
             rightMargin=2*cm,
             leftMargin=2*cm,
             topMargin=2*cm,
@@ -146,8 +145,9 @@ def generate_salary_report_pdf(salaries, month, year):
             f"{total_net:.2f}"
         ])
         
-        # Create table
-        table = Table(data, repeatRows=1)
+        # Create table with specific column widths
+        col_widths = [1*cm, 4*cm, 2.5*cm, 2*cm, 2*cm, 2*cm, 2*cm, 2*cm]
+        table = Table(data, repeatRows=1, colWidths=col_widths)
         
         # Style the table
         table_style = TableStyle([
@@ -155,12 +155,18 @@ def generate_salary_report_pdf(salaries, month, year):
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
             ('ALIGN', (3, 1), (7, -1), 'CENTER'),  # Numbers are centered
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
             ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('SPAN', (0, -1), (2, -1)),  # Span cells for 'المجموع'
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Vertical alignment
+            ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.black),  # Thicker line below header
         ])
         
         # Add alternating row colors
@@ -171,18 +177,60 @@ def generate_salary_report_pdf(salaries, month, year):
         table.setStyle(table_style)
         elements.append(table)
         
-        # Add summary section
+        # Create summary table
+        summary_data = [
+            [arabic_text("البيان"), arabic_text("المبلغ")],
+            [arabic_text("إجمالي الرواتب الأساسية"), f"{total_basic:.2f}"],
+            [arabic_text("إجمالي البدلات"), f"{total_allowances:.2f}"],
+            [arabic_text("إجمالي الخصومات"), f"{total_deductions:.2f}"],
+            [arabic_text("إجمالي المكافآت"), f"{total_bonus:.2f}"],
+            [arabic_text("إجمالي صافي الرواتب"), f"{total_net:.2f}"],
+        ]
+        
         elements.append(Spacer(1, 20))
-        elements.append(Paragraph(arabic_text(f'إجمالي الرواتب الأساسية: {total_basic:.2f}'), normal_style))
-        elements.append(Paragraph(arabic_text(f'إجمالي البدلات: {total_allowances:.2f}'), normal_style))
-        elements.append(Paragraph(arabic_text(f'إجمالي الخصومات: {total_deductions:.2f}'), normal_style))
-        elements.append(Paragraph(arabic_text(f'إجمالي المكافآت: {total_bonus:.2f}'), normal_style))
-        elements.append(Paragraph(arabic_text(f'إجمالي صافي الرواتب: {total_net:.2f}'), normal_style))
+        
+        # Create summary table
+        summary_table = Table(summary_data, colWidths=[8*cm, 4*cm])
+        summary_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+        ])
+        
+        # Add alternating row colors for summary table
+        for i in range(1, len(summary_data)):
+            if i % 2 == 0:
+                summary_style.add('BACKGROUND', (0, i), (-1, i), colors.lightgrey)
+                
+        summary_table.setStyle(summary_style)
+        elements.append(summary_table)
         
         # Add footer
         elements.append(Spacer(1, 30))
-        elements.append(Paragraph(arabic_text(f'تم إنشاء هذا التقرير في {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'), normal_style))
-        elements.append(Paragraph(arabic_text('نظام إدارة الموظفين - جميع الحقوق محفوظة'), normal_style))
+        
+        # Create footer table for better alignment
+        footer_data = [
+            [arabic_text(f'تم إنشاء هذا التقرير في {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')],
+            [arabic_text('نظام إدارة الموظفين - جميع الحقوق محفوظة')],
+        ]
+        
+        footer_table = Table(footer_data, colWidths=[18*cm])
+        footer_style = TableStyle([
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (0, -1), 8),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.gray),
+        ])
+        
+        footer_table.setStyle(footer_style)
+        elements.append(footer_table)
         
         # Build PDF
         doc.build(elements)
