@@ -908,75 +908,91 @@
         
         // تحديث ملخص الرسوم
         function updateSummary() {
-            const summaryTable = document.getElementById('fees_summary');
-            const feesData = [];
-            let totalFees = 0;
-            
-            toggles.forEach(toggle => {
-                const toggleElement = document.getElementById(toggle.id);
-                const rowElement = document.getElementById(toggle.row);
-                if (toggleElement.checked) {
-                    const amountInput = document.getElementById(toggle.amount);
-                    const amount = parseFloat(amountInput.value) || 0;
+            try {
+                const summaryTable = document.getElementById('fees_summary');
+                if (!summaryTable) return;
+                
+                const feesData = [];
+                let totalFees = 0;
+                
+                toggles.forEach(toggle => {
+                    const toggleElement = document.getElementById(toggle.id);
+                    const rowElement = document.getElementById(toggle.row);
                     
-                    if (amount > 0) {
-                        feesData.push({
-                            type: rowElement.querySelector('.fw-bold').textContent,
-                            amount: amount,
-                            icon: toggle.icon,
-                            colorClass: toggle.colorClass
-                        });
+                    if (toggleElement && toggleElement.checked && rowElement) {
+                        const amountInput = document.getElementById(toggle.amount);
+                        if (!amountInput) return;
                         
-                        totalFees += amount;
+                        const amount = parseFloat(amountInput.value) || 0;
+                        
+                        if (amount > 0) {
+                            const typeName = rowElement.querySelector('.fw-bold');
+                            
+                            feesData.push({
+                                type: typeName ? typeName.textContent : 'نوع الرسم',
+                                amount: amount,
+                                icon: toggle.icon,
+                                colorClass: toggle.colorClass
+                            });
+                            
+                            totalFees += amount;
+                        }
                     }
-                }
-            });
-            
-            // تحديث الجدول
-            if (feesData.length > 0) {
-                let tableHTML = '';
-                feesData.forEach(fee => {
-                    tableHTML += `
+                });
+                
+                // تحديث الجدول
+                if (feesData.length > 0) {
+                    let tableHTML = '';
+                    feesData.forEach(fee => {
+                        tableHTML += `
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge ${fee.colorClass} me-2">${fee.icon}</span>
+                                        ${fee.type}
+                                    </div>
+                                </td>
+                                <td class="text-end fw-bold">${fee.amount.toFixed(2)} ريال</td>
+                            </tr>
+                        `;
+                    });
+                    summaryTable.innerHTML = tableHTML;
+                } else {
+                    summaryTable.innerHTML = `
                         <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <span class="badge ${fee.colorClass} me-2">${fee.icon}</span>
-                                    ${fee.type}
+                            <td colspan="2" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    لم يتم إضافة أي رسوم بعد
                                 </div>
                             </td>
-                            <td class="text-end fw-bold">${fee.amount.toFixed(2)} ريال</td>
                         </tr>
                     `;
-                });
-                summaryTable.innerHTML = tableHTML;
-            } else {
-                summaryTable.innerHTML = `
-                    <tr>
-                        <td colspan="2" class="text-center py-4">
-                            <div class="text-muted">
-                                <i class="fas fa-info-circle me-2"></i>
-                                لم يتم إضافة أي رسوم بعد
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-            
-            // تحديث الإجمالي
-            document.getElementById('total_fees').textContent = totalFees.toFixed(2) + ' ريال';
-            
-            // إظهار أو إخفاء زر الحفظ بناءً على وجود رسوم مدخلة
-            const submitButton = document.getElementById('submitFeeButton');
-            submitButton.disabled = feesData.length === 0;
-            
-            if (feesData.length > 0) {
-                submitButton.classList.remove('btn-secondary');
-                submitButton.classList.add('btn-success');
-                submitButton.innerHTML = '<i class="fas fa-check-circle me-2"></i> حفظ الرسوم';
-            } else {
-                submitButton.classList.remove('btn-success');
-                submitButton.classList.add('btn-secondary');
-                submitButton.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> أدخل البيانات أولاً';
+                }
+                
+                // تحديث الإجمالي
+                const totalFeesElement = document.getElementById('total_fees');
+                if (totalFeesElement) {
+                    totalFeesElement.textContent = totalFees.toFixed(2) + ' ريال';
+                }
+                
+                // إظهار أو إخفاء زر الحفظ بناءً على وجود رسوم مدخلة
+                const submitButton = document.getElementById('submitFeeButton');
+                if (submitButton) {
+                    submitButton.disabled = feesData.length === 0;
+                    
+                    if (feesData.length > 0) {
+                        submitButton.classList.remove('btn-secondary');
+                        submitButton.classList.add('btn-success');
+                        submitButton.innerHTML = '<i class="fas fa-check-circle me-2"></i> حفظ الرسوم';
+                    } else {
+                        submitButton.classList.remove('btn-success');
+                        submitButton.classList.add('btn-secondary');
+                        submitButton.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> أدخل البيانات أولاً';
+                    }
+                }
+            } catch (error) {
+                console.error('خطأ في تحديث الملخص:', error);
             }
         }
         
@@ -985,71 +1001,93 @@
         
         // زر حفظ الرسوم
         document.getElementById('submitFeeButton').addEventListener('click', function() {
-            // العثور على أول نوع مفعّل
-            let selectedToggle = null;
-            
-            for (const toggle of toggles) {
-                const toggleElement = document.getElementById(toggle.id);
-                if (toggleElement.checked) {
-                    const amountInput = document.getElementById(toggle.amount);
-                    const amount = parseFloat(amountInput.value) || 0;
-                    
-                    if (amount > 0) {
-                        selectedToggle = toggle;
-                        break;
+            try {
+                // العثور على أول نوع مفعّل
+                let selectedToggle = null;
+                
+                for (const toggle of toggles) {
+                    const toggleElement = document.getElementById(toggle.id);
+                    if (toggleElement && toggleElement.checked) {
+                        const amountInput = document.getElementById(toggle.amount);
+                        const amount = parseFloat(amountInput.value) || 0;
+                        
+                        if (amount > 0) {
+                            selectedToggle = toggle;
+                            break;
+                        }
                     }
                 }
-            }
-            
-            if (!selectedToggle) {
-                showAlert('warning', 'يرجى تفعيل وإدخال قيمة لرسم واحد على الأقل');
-                return;
-            }
-            
-            // التحقق من باقي حقول النموذج
-            const form = document.getElementById('feesForm');
-            const documentSelect = document.getElementById('document_id');
-            const feeDateInput = document.getElementById('fee_date');
-            
-            if (!documentSelect.value) {
-                showAlert('warning', 'يرجى اختيار الوثيقة');
-                documentSelect.focus();
-                return;
-            }
-            
-            if (!feeDateInput.value) {
-                showAlert('warning', 'يرجى تحديد تاريخ الاستحقاق');
-                feeDateInput.focus();
-                return;
-            }
-            
-            // التحقق من تاريخ الدفع إذا كانت الحالة "مدفوع"
-            if (paymentStatusSelect.value === 'paid' && !document.getElementById('payment_date').value) {
-                showAlert('warning', 'يرجى تحديد تاريخ الدفع');
-                document.getElementById('payment_date').focus();
-                return;
-            }
-            
-            // تعيين قيم الحقول المخفية
-            document.getElementById('fee_type').value = selectedToggle.id.replace('_toggle', '');
-            document.getElementById('amount').value = document.getElementById(selectedToggle.amount).value;
-            
-            // ملاحظات
-            const notesInput = document.getElementById(selectedToggle.notes);
-            document.getElementById('notes').value = notesInput ? notesInput.value : '';
-            
-            // تحديد قيمة رقم النقل إذا كان نوع الرسم هو نقل الكفالة
-            if (selectedToggle.transferNumber && selectedToggle.id === 'transfer_sponsorship_toggle') {
-                const transferNumberInput = document.getElementById(selectedToggle.transferNumber);
-                if (!transferNumberInput.value) {
-                    showAlert('warning', 'يرجى إدخال رقم النقل');
-                    transferNumberInput.focus();
+                
+                if (!selectedToggle) {
+                    showAlert('warning', 'يرجى تفعيل وإدخال قيمة لرسم واحد على الأقل');
                     return;
                 }
+                
+                // التحقق من باقي حقول النموذج
+                const form = document.getElementById('feesForm');
+                if (!form) {
+                    showAlert('warning', 'حدث خطأ في النموذج، يرجى تحديث الصفحة');
+                    return;
+                }
+                
+                const documentSelect = document.getElementById('document_id');
+                if (!documentSelect || !documentSelect.value) {
+                    showAlert('warning', 'يرجى اختيار الوثيقة');
+                    if (documentSelect) documentSelect.focus();
+                    return;
+                }
+                
+                const feeDateInput = document.getElementById('fee_date');
+                if (!feeDateInput || !feeDateInput.value) {
+                    showAlert('warning', 'يرجى تحديد تاريخ الاستحقاق');
+                    if (feeDateInput) feeDateInput.focus();
+                    return;
+                }
+                
+                const paymentStatusSelect = document.getElementById('payment_status');
+                if (paymentStatusSelect && paymentStatusSelect.value === 'paid') {
+                    const paymentDateInput = document.getElementById('payment_date');
+                    if (!paymentDateInput || !paymentDateInput.value) {
+                        showAlert('warning', 'يرجى تحديد تاريخ الدفع');
+                        if (paymentDateInput) paymentDateInput.focus();
+                        return;
+                    }
+                }
+                
+                // تعيين قيم الحقول المخفية
+                const feeTypeInput = document.getElementById('fee_type');
+                if (feeTypeInput) {
+                    feeTypeInput.value = selectedToggle.id.replace('_toggle', '');
+                }
+                
+                const amountInput = document.getElementById('amount');
+                if (amountInput) {
+                    amountInput.value = document.getElementById(selectedToggle.amount).value;
+                }
+                
+                // ملاحظات
+                const notesInput = document.getElementById(selectedToggle.notes);
+                const notesHiddenInput = document.getElementById('notes');
+                if (notesHiddenInput) {
+                    notesHiddenInput.value = notesInput ? notesInput.value : '';
+                }
+                
+                // تحديد قيمة رقم النقل إذا كان نوع الرسم هو نقل الكفالة
+                if (selectedToggle.transferNumber && selectedToggle.id === 'transfer_sponsorship_toggle') {
+                    const transferNumberInput = document.getElementById(selectedToggle.transferNumber);
+                    if (transferNumberInput && !transferNumberInput.value) {
+                        showAlert('warning', 'يرجى إدخال رقم النقل');
+                        transferNumberInput.focus();
+                        return;
+                    }
+                }
+                
+                // إرسال النموذج
+                form.submit();
+            } catch (error) {
+                console.error('خطأ في معالجة النموذج:', error);
+                showAlert('warning', 'حدث خطأ أثناء معالجة النموذج، يرجى تحديث الصفحة');
             }
-            
-            // إرسال النموذج
-            form.submit();
         });
         
         // عرض رسالة تنبيه
