@@ -7,7 +7,7 @@ from datetime import datetime
 from app import db
 from models import Salary, Employee, Department, SystemAudit
 from utils.excel import parse_salary_excel, generate_salary_excel
-from utils.pdf_generator import generate_salary_report_pdf
+from utils.pdf_generator_new import generate_salary_report_pdf
 from utils.salary_notification import generate_salary_notification_pdf, generate_batch_salary_notifications
 from utils.whatsapp_notification import (
     send_salary_notification_whatsapp, 
