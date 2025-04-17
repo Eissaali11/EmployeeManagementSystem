@@ -319,7 +319,7 @@
                         
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <button type="button" id="calculate-button" class="btn btn-calculate w-100">
+                                <button type="button" id="calculate-button" class="btn btn-calculate w-100" onclick="handleCalculateClick()">
                                     <i class="fas fa-calculator me-1"></i>
                                     احتساب الرسوم
                                 </button>
@@ -462,51 +462,64 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/check.js') }}"></script>
 <script>
+// دالة معالجة النقر على زر احتساب الرسوم
+function handleCalculateClick() {
+    console.log('تم استدعاء دالة handleCalculateClick');
+    
+    // اختبار بسيط للتحقق من أن معالج الحدث يعمل
+    const employeeSelect = document.getElementById('employee_id');
+    if (!employeeSelect || !employeeSelect.value) {
+        alert('يرجى اختيار الموظف أولاً');
+        return;
+    }
+    
+    const calculationPeriod = document.getElementById('calculation_period').value;
+    const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+    const hasNationalBalance = document.getElementById('has_national_balance').checked;
+    
+    // إظهار نتيجة بسيطة
+    const resultAmount = document.getElementById('result-amount');
+    const calculationResult = document.getElementById('calculation-result');
+    const feeDetailsSection = document.getElementById('fee-details-section');
+    
+    if (resultAmount) resultAmount.textContent = '1000.00 ريال';
+    if (calculationResult) calculationResult.classList.remove('d-none');
+    if (feeDetailsSection) feeDetailsSection.classList.remove('d-none');
+    
+    // إظهار نتائج أخرى
+    document.getElementById('result-fee-type').textContent = 'رسوم متعددة';
+    document.getElementById('result-employee').textContent = selectedOption.textContent;
+    document.getElementById('result-period').textContent = 'سنوي';
+    
+    // إظهار زر تنزيل ملف الإكسل
+    document.getElementById('download-excel-row').classList.remove('d-none');
+    
+    console.log('تم إظهار النتيجة بنجاح');
+}
+
+// إعداد الصفحة عند التحميل
 document.addEventListener('DOMContentLoaded', function() {
     console.log('تم تحميل الصفحة والبدء بتهيئة المكونات');
     
-    // تحديد زر الحساب
-    const calculateButton = document.getElementById('calculate-button');
-    console.log('زر الحساب:', calculateButton);
+    // إظهار رسالة تأكيد
+    console.log('تم تهيئة صفحة الرسوم الحكومية');
     
-    if (calculateButton) {
-        console.log('تم العثور على زر الحساب - إضافة معالج الحدث');
-        
-        calculateButton.addEventListener('click', function() {
-            console.log('تم النقر على زر الحساب');
-            
-            // اختبار بسيط للتحقق من أن معالج الحدث يعمل
-            const employeeSelect = document.getElementById('employee_id');
-            if (!employeeSelect || !employeeSelect.value) {
+    // إعداد زر تنزيل الإكسل
+    const downloadButton = document.getElementById('download-excel-button');
+    if (downloadButton) {
+        downloadButton.addEventListener('click', function() {
+            const employeeId = document.getElementById('employee_id').value;
+            if (!employeeId) {
                 alert('يرجى اختيار الموظف أولاً');
                 return;
             }
             
-            const calculationPeriod = document.getElementById('calculation_period').value;
-            const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+            const period = document.getElementById('calculation_period').value;
             const hasNationalBalance = document.getElementById('has_national_balance').checked;
             
-            // إظهار نتيجة بسيطة
-            const resultAmount = document.getElementById('result-amount');
-            const calculationResult = document.getElementById('calculation-result');
-            const feeDetailsSection = document.getElementById('fee-details-section');
-            
-            if (resultAmount) resultAmount.textContent = '1000.00 ريال';
-            if (calculationResult) calculationResult.classList.remove('d-none');
-            if (feeDetailsSection) feeDetailsSection.classList.remove('d-none');
-            
-            // إظهار نتائج أخرى
-            document.getElementById('result-fee-type').textContent = 'رسوم متعددة';
-            document.getElementById('result-employee').textContent = selectedOption.textContent;
-            document.getElementById('result-period').textContent = 'سنوي';
-            
-            // إظهار زر تنزيل ملف الإكسل
-            document.getElementById('download-excel-row').classList.remove('d-none');
-            
-            console.log('تم إظهار النتيجة بنجاح');
+            // توجيه المستخدم إلى رابط تنزيل الإكسل
+            window.location.href = `/government-fees/export?employee_id=${employeeId}&period=${period}&has_national_balance=${hasNationalBalance}`;
         });
-    } else {
-        console.error('لم يتم العثور على زر الحساب!');
     }
 });
 </script>
