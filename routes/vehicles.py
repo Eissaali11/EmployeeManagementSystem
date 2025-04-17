@@ -1010,6 +1010,119 @@ def reports():
         top_maintenance_costs=top_maintenance_costs
     )
 
+@vehicles_bp.route('/detailed')
+@login_required
+def detailed_list():
+    """قائمة تفصيلية للسيارات مع معلومات إضافية لكل سيارة على حدة"""
+    # إعداد قيم التصفية
+    status = request.args.get('status')
+    make = request.args.get('make')
+    year = request.args.get('year')
+    project = request.args.get('project')
+    location = request.args.get('location')
+    sort = request.args.get('sort', 'plate_number')
+    search = request.args.get('search', '')
+    
+    # استعلام قاعدة البيانات مع التصفية
+    query = Vehicle.query
+    
+    if status:
+        query = query.filter(Vehicle.status == status)
+    if make:
+        query = query.filter(Vehicle.make == make)
+    if year:
+        query = query.filter(Vehicle.year == int(year))
+    if search:
+        query = query.filter(
+            or_(
+                Vehicle.plate_number.ilike(f'%{search}%'),
+                Vehicle.make.ilike(f'%{search}%'),
+                Vehicle.model.ilike(f'%{search}%'),
+                Vehicle.color.ilike(f'%{search}%')
+            )
+        )
+    
+    # فلترة حسب المشروع
+    if project:
+        vehicle_ids = db.session.query(VehicleProject.vehicle_id).filter_by(
+            project_name=project, is_active=True
+        ).all()
+        vehicle_ids = [v[0] for v in vehicle_ids]
+        query = query.filter(Vehicle.id.in_(vehicle_ids))
+    
+    # فلترة حسب الموقع (المنطقة)
+    if location:
+        vehicle_ids = db.session.query(VehicleProject.vehicle_id).filter_by(
+            location=location, is_active=True
+        ).all()
+        vehicle_ids = [v[0] for v in vehicle_ids]
+        query = query.filter(Vehicle.id.in_(vehicle_ids))
+    
+    # ترتيب النتائج
+    if sort == 'make':
+        query = query.order_by(Vehicle.make, Vehicle.model)
+    elif sort == 'year':
+        query = query.order_by(Vehicle.year.desc())
+    elif sort == 'status':
+        query = query.order_by(Vehicle.status)
+    elif sort == 'created_at':
+        query = query.order_by(Vehicle.created_at.desc())
+    else:
+        query = query.order_by(Vehicle.plate_number)
+    
+    # الترقيم
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+    vehicles = pagination.items
+    
+    # استخراج معلومات إضافية لكل سيارة
+    for vehicle in vehicles:
+        # معلومات الإيجار النشط
+        vehicle.active_rental = VehicleRental.query.filter_by(
+            vehicle_id=vehicle.id, is_active=True
+        ).first()
+        
+        # معلومات آخر دخول للورشة
+        vehicle.latest_workshop = VehicleWorkshop.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehicleWorkshop.entry_date.desc()).first()
+        
+        # معلومات المشروع الحالي
+        vehicle.active_project = VehicleProject.query.filter_by(
+            vehicle_id=vehicle.id, is_active=True
+        ).first()
+    
+    # استخراج قوائم الفلاتر
+    makes = db.session.query(Vehicle.make).distinct().order_by(Vehicle.make).all()
+    makes = [make[0] for make in makes]
+    
+    years = db.session.query(Vehicle.year).distinct().order_by(Vehicle.year.desc()).all()
+    years = [year[0] for year in years]
+    
+    # استخراج قائمة المشاريع النشطة
+    projects = db.session.query(VehicleProject.project_name).filter_by(
+        is_active=True
+    ).distinct().order_by(VehicleProject.project_name).all()
+    projects = [project[0] for project in projects]
+    
+    # استخراج قائمة المواقع (المناطق)
+    locations = db.session.query(VehicleProject.location).distinct().order_by(
+        VehicleProject.location
+    ).all()
+    locations = [location[0] for location in locations]
+    
+    return render_template(
+        'vehicles/detailed_list.html',
+        vehicles=vehicles,
+        pagination=pagination,
+        makes=makes,
+        years=years,
+        projects=projects,
+        locations=locations,
+        total_count=Vehicle.query.count(),
+        request=request
+    )
+
 @vehicles_bp.route('/report/export/excel')
 @login_required
 def export_vehicles_excel():
