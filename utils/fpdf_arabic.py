@@ -37,18 +37,43 @@ class ArabicPDF(FPDF):
         self.secondary_color = (100, 100, 100)  # لون رمادي
         self.table_header_color = (230, 230, 230)  # لون رمادي فاتح لرؤوس الجداول
         self.table_row_alt_color = (245, 245, 245)  # لون رمادي فاتح جداً للصفوف البديلة
+        
+        # تحديد أبعاد الصفحة للمساعدة في تنسيق المحتوى
+        if orientation in ['P', 'p']:
+            self.page_width = 210  # A4 portrait width in mm
+            self.page_height = 297  # A4 portrait height in mm
+        else:
+            self.page_width = 297  # A4 landscape width in mm
+            self.page_height = 210  # A4 landscape height in mm
+            
+        # مساحة العمل المتاحة (مع مراعاة الهوامش)
+        self.content_width = self.page_width - 20  # 10 mm margin on each side
     
-    def arabic_text(self, x, y, txt, align='R'):
-        """طباعة نص عربي"""
+    def arabic_text(self, x, y, txt, align='R', max_width=None):
+        """
+        طباعة نص عربي مع دعم أفضل للمحاذاة وعرض النص
+        
+        Args:
+            x: موضع X للنص
+            y: موضع Y للنص
+            txt: النص العربي المراد طباعته
+            align: المحاذاة ('R', 'L', 'C')
+            max_width: العرض الأقصى للنص (اختياري)
+        """
         # تشكيل النص العربي للعرض الصحيح
         reshaped_text = arabic_reshaper.reshape(txt)
         bidi_text = get_display(reshaped_text)
         
-        # حفظ الموضع الحالي
-        self.set_xy(x, y)
+        # ضبط العرض الأقصى اعتماداً على اتجاه الصفحة إذا لم يتم تحديده
+        if max_width is None:
+            # استخدام العرض الحالي للصفحة مع مراعاة الهوامش
+            max_width = self.content_width
         
-        # ضبط المحاذاة
-        self.cell(0, 10, bidi_text, 0, 1, align)
+        # حفظ الموضع الحالي
+        self.set_xy(x - (max_width if align == 'R' else 0), y)
+        
+        # ضبط المحاذاة وطباعة النص مع تحديد العرض
+        self.cell(max_width, 8, bidi_text, 0, 1, align)
     
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة مع الشعار والعنوان"""
@@ -397,27 +422,34 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             pdf.cell(col_widths[i], 10, text, 1, 0, align, True)
             x_pos += col_widths[i]
         
-        # ملخص الرواتب - مع مراعاة المسافات والتناسق
-        summary_section_y = y_pos + 20
+        # ملخص الرواتب - إصدار محسن بشكل كبير
         
-        # إنشاء عنوان ملخص الرواتب في نفس مكان جدول الملخص لضمان عدم التداخل
-        # احتساب مكان الجدول بما يتناسب مع عدد الموظفين
+        # احتساب مكان الجدول بما يتناسب مع عدد الموظفين وحجم الصفحة
         if len(salaries_data) > 5:
             summary_y = 135  # إذا كان هناك عدد كبير من الموظفين، نضع الجدول في مكان ثابت
         else:
             summary_y = y_pos + 35  # مكان متناسب مع موضع جدول الرواتب
-            
-        # وضع عنوان ملخص الرواتب فوق الجدول مباشرة
+        
+        # تقسيم الصفحة إلى عمودين واضحين
+        # الجانب الأيمن للملخص (ثلثي عرض الصفحة)
+        right_column_width = pdf.content_width * 0.6
+        
+        # الجانب الأيسر للإحصائيات (ثلث عرض الصفحة)
+        left_column_width = pdf.content_width * 0.4
+        
+        # ================ قسم ملخص الرواتب ================
+        # عنوان ملخص الرواتب - مع ضبط موضع أفضل
+        summary_title_x = pdf.page_width - 70
         summary_title_y = summary_y - 15
         
-        # عنوان ملخص الرواتب
         pdf.set_text_color(*pdf.primary_color)
-        pdf.set_font('Tajawal', 'B', 14)
-        pdf.arabic_text(230, summary_title_y, "ملخص الرواتب", 'R')
+        pdf.set_font('Tajawal', 'B', 12)  # تصغير حجم الخط قليلاً
+        # استخدام عرض محدد للنص لضمان عدم التداخل
+        pdf.arabic_text(summary_title_x, summary_title_y, "ملخص الرواتب", 'R', 100)
         
         # إضافة خط تحت عنوان ملخص الرواتب
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(160, summary_title_y + 8, 230, summary_title_y + 8)
+        pdf.line(summary_title_x - 60, summary_title_y + 6, summary_title_x, summary_title_y + 6)
         
         # جدول الملخص
         summary_headers = ["البيان", "المبلغ"]
@@ -432,16 +464,18 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         # رسم جدول الملخص
         pdf.set_font('Tajawal', 'B', 10)
         
-        # رأس جدول الملخص - ضبط عرض وموضع أفضل
-        col1_width = 35  # عمود المبلغ
-        col2_width = 65  # عمود البيان
+        # ضبط أبعاد وموضع جدول الملخص بشكل أفضل
+        col1_width = 40  # عمود المبلغ
+        col2_width = 70  # عمود البيان
+        summary_table_width = col1_width + col2_width
         
         # ضبط موضع X بشكل أفضل لتفادي التداخل مع أي عناصر أخرى
-        summary_x = 165
+        # احتساب موضع الجدول من اليمين للتوافق مع اللغة العربية
+        summary_table_x = pdf.page_width - 80 - summary_table_width
         
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        pdf.set_xy(summary_x, summary_y)
+        pdf.set_xy(summary_table_x, summary_y)
         pdf.cell(col1_width, 10, get_display(arabic_reshaper.reshape(summary_headers[1])), 1, 0, 'C', True)
         pdf.cell(col2_width, 10, get_display(arabic_reshaper.reshape(summary_headers[0])), 1, 1, 'C', True)
         
