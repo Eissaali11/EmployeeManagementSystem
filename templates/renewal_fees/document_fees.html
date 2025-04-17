@@ -1,0 +1,215 @@
+{% extends 'layout.html' %}
+
+{% block title %}رسوم تجديد الوثيقة{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-file-invoice-dollar text-primary me-2"></i>
+            رسوم تجديد الوثيقة
+        </h2>
+        <div>
+            <a href="{{ url_for('documents.index') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-file-alt me-1"></i>
+                عودة للوثائق
+            </a>
+            <a href="{{ url_for('renewal_fees.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>
+                إضافة رسوم جديدة
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-gradient-primary text-white py-3">
+            <h6 class="m-0 fw-bold">معلومات الوثيقة</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">الموظف:</span>
+                            <a href="{{ url_for('employees.view', id=document.employee.id) }}">{{ document.employee.name }}</a>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">الرقم الوظيفي:</span>
+                            <span>{{ document.employee.employee_id }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">القسم:</span>
+                            <span>{{ document.employee.department.name if document.employee.department else '-' }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">نوع الوثيقة:</span>
+                            <span>{{ document.document_type }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">رقم الوثيقة:</span>
+                            <span>{{ document.document_number }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">تاريخ الانتهاء:</span>
+                            <span class="{% if document.expiry_date < now().date() %}text-danger{% endif %}">
+                                {{ document.expiry_date }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-gradient-primary text-white py-3">
+            <h6 class="m-0 fw-bold">قائمة رسوم التجديد</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered" id="feesTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نوع الرسم</th>
+                            <th>المبلغ</th>
+                            <th>تاريخ الاستحقاق</th>
+                            <th>حالة الدفع</th>
+                            <th>تاريخ الدفع</th>
+                            <th>رقم الإيصال</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr class="align-middle">
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <span class="badge rounded-pill 
+                                      {% if fee.fee_type == 'passport' %}bg-primary
+                                      {% elif fee.fee_type == 'labor_office' %}bg-info
+                                      {% elif fee.fee_type == 'insurance' %}bg-warning
+                                      {% elif fee.fee_type == 'social_insurance' %}bg-success
+                                      {% endif %}">
+                                    {{ fee_types[fee.fee_type] }}
+                                </span>
+                            </td>
+                            <td>{{ fee.amount|round(2) }} ريال</td>
+                            <td>{{ fee.fee_date }}</td>
+                            <td>
+                                <span class="badge rounded-pill 
+                                      {% if fee.payment_status == 'pending' %}bg-warning
+                                      {% elif fee.payment_status == 'paid' %}bg-success
+                                      {% elif fee.payment_status == 'overdue' %}bg-danger
+                                      {% endif %}">
+                                    {{ payment_statuses[fee.payment_status] }}
+                                </span>
+                            </td>
+                            <td>{{ fee.payment_date or '-' }}</td>
+                            <td>{{ fee.receipt_number or '-' }}</td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('renewal_fees.edit', id=fee.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ fee.id }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Modal for Delete -->
+                                <div class="modal fade" id="deleteModal{{ fee.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ fee.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ fee.id }}">تأكيد الحذف</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                هل أنت متأكد من حذف رسم التجديد هذا؟
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                <form action="{{ url_for('renewal_fees.delete', id=fee.id) }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger">حذف</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">لا توجد رسوم تجديد مسجلة لهذه الوثيقة</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات بسيطة -->
+    {% if fees|length > 0 %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-gradient-primary text-white py-3">
+            <h6 class="m-0 fw-bold">ملخص الرسوم</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card border-primary h-100">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">إجمالي الرسوم</h5>
+                            <p class="card-text display-6">
+                                {{ fees|map(attribute='amount')|sum|round(2) }} ريال
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card border-warning h-100">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">الرسوم قيد الانتظار</h5>
+                            <p class="card-text display-6">
+                                {{ fees|selectattr('payment_status', 'equalto', 'pending')|map(attribute='amount')|sum|round(2) }} ريال
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card border-success h-100">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">الرسوم المدفوعة</h5>
+                            <p class="card-text display-6">
+                                {{ fees|selectattr('payment_status', 'equalto', 'paid')|map(attribute='amount')|sum|round(2) }} ريال
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تهيئة جدول البيانات
+        $('#feesTable').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/ar.json'
+            },
+            order: [[3, 'desc']], // ترتيب حسب تاريخ الاستحقاق (تنازلي)
+            pageLength: 10
+        });
+    });
+</script>
+{% endblock %}

@@ -134,6 +134,26 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.email}>'
 
+class RenewalFee(db.Model):
+    """تكاليف رسوم تجديد أوراق الموظفين"""
+    id = db.Column(db.Integer, primary_key=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id', ondelete='CASCADE'), nullable=False)
+    fee_date = db.Column(db.Date, nullable=False)
+    fee_type = db.Column(db.String(50), nullable=False)  # passport, labor_office, insurance, social_insurance
+    amount = db.Column(db.Float, nullable=False)
+    payment_status = db.Column(db.String(20), default='pending')  # pending, paid, overdue
+    payment_date = db.Column(db.Date, nullable=True)
+    receipt_number = db.Column(db.String(50), nullable=True)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    document = db.relationship('Document', backref=db.backref('renewal_fees', cascade='all, delete-orphan'))
+    
+    def __repr__(self):
+        return f'<RenewalFee {self.fee_type} for document #{self.document_id}>'
+
 class SystemAudit(db.Model):
     """Audit trail for significant system actions"""
     id = db.Column(db.Integer, primary_key=True)

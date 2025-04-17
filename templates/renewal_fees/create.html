@@ -1,0 +1,130 @@
+{% extends 'layout.html' %}
+
+{% block title %}إضافة رسوم تجديد جديدة{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-plus-circle text-primary me-2"></i>
+            إضافة رسوم تجديد جديدة
+        </h2>
+        <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>
+            العودة للقائمة
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-gradient-primary text-white py-3">
+            <h6 class="m-0 fw-bold">بيانات رسوم التجديد</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('renewal_fees.create') }}">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="document_id" class="form-label">الوثيقة <span class="text-danger">*</span></label>
+                        <select class="form-select" id="document_id" name="document_id" required>
+                            <option value="">اختر الوثيقة</option>
+                            {% for document in documents %}
+                            <option value="{{ document.id }}">
+                                {{ document.employee.name }} - {{ document.document_type }} (رقم: {{ document.document_number }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fee_type" class="form-label">نوع الرسم <span class="text-danger">*</span></label>
+                        <select class="form-select" id="fee_type" name="fee_type" required>
+                            <option value="">اختر نوع الرسم</option>
+                            {% for type_key, type_name in fee_types.items() %}
+                            <option value="{{ type_key }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="amount" class="form-label">المبلغ (ريال) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="amount" name="amount" min="0" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fee_date" class="form-label">تاريخ الاستحقاق <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="fee_date" name="fee_date" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_status" class="form-label">حالة الدفع <span class="text-danger">*</span></label>
+                        <select class="form-select" id="payment_status" name="payment_status" required>
+                            {% for status_key, status_name in payment_statuses.items() %}
+                            <option value="{{ status_key }}" {% if status_key == 'pending' %}selected{% endif %}>{{ status_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row payment-details">
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_date" class="form-label">تاريخ الدفع</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="receipt_number" class="form-label">رقم الإيصال</label>
+                        <input type="text" class="form-control" id="receipt_number" name="receipt_number">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">ملاحظات</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="reset" class="btn btn-secondary me-md-2">
+                        <i class="fas fa-eraser me-1"></i>
+                        مسح
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        حفظ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إظهار/إخفاء حقول تفاصيل الدفع بناءً على حالة الدفع
+        const paymentStatusSelect = document.getElementById('payment_status');
+        const paymentDetailsDiv = document.querySelector('.payment-details');
+        
+        function togglePaymentDetails() {
+            if (paymentStatusSelect.value === 'paid') {
+                paymentDetailsDiv.style.display = 'flex';
+                document.getElementById('payment_date').required = true;
+            } else {
+                paymentDetailsDiv.style.display = 'none';
+                document.getElementById('payment_date').required = false;
+                document.getElementById('payment_date').value = '';
+                document.getElementById('receipt_number').value = '';
+            }
+        }
+        
+        // التحقق الأولي عند تحميل الصفحة
+        togglePaymentDetails();
+        
+        // إضافة مستمع للتغيير
+        paymentStatusSelect.addEventListener('change', togglePaymentDetails);
+        
+        // تعيين تاريخ اليوم كتاريخ افتراضي للاستحقاق
+        document.getElementById('fee_date').valueAsDate = new Date();
+    });
+</script>
+{% endblock %}

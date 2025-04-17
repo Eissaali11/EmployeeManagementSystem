@@ -1,0 +1,128 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل رسوم التجديد{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-edit text-primary me-2"></i>
+            تعديل رسوم التجديد
+        </h2>
+        <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>
+            العودة للقائمة
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-gradient-primary text-white py-3">
+            <h6 class="m-0 fw-bold">بيانات رسوم التجديد</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-info-circle fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="alert-heading">معلومات الوثيقة</h5>
+                        <p class="mb-0">
+                            <strong>الموظف:</strong> {{ renewal_fee.document.employee.name }} |
+                            <strong>نوع الوثيقة:</strong> {{ renewal_fee.document.document_type }} |
+                            <strong>رقم الوثيقة:</strong> {{ renewal_fee.document.document_number }} |
+                            <strong>تاريخ الانتهاء:</strong> {{ renewal_fee.document.expiry_date }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('renewal_fees.edit', id=renewal_fee.id) }}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fee_type" class="form-label">نوع الرسم <span class="text-danger">*</span></label>
+                        <select class="form-select" id="fee_type" name="fee_type" required>
+                            <option value="">اختر نوع الرسم</option>
+                            {% for type_key, type_name in fee_types.items() %}
+                            <option value="{{ type_key }}" {% if renewal_fee.fee_type == type_key %}selected{% endif %}>{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="amount" class="form-label">المبلغ (ريال) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="amount" name="amount" min="0" step="0.01" value="{{ renewal_fee.amount }}" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fee_date" class="form-label">تاريخ الاستحقاق <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="fee_date" name="fee_date" value="{{ fee_date }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_status" class="form-label">حالة الدفع <span class="text-danger">*</span></label>
+                        <select class="form-select" id="payment_status" name="payment_status" required>
+                            {% for status_key, status_name in payment_statuses.items() %}
+                            <option value="{{ status_key }}" {% if renewal_fee.payment_status == status_key %}selected{% endif %}>{{ status_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row payment-details">
+                    <div class="col-md-6 mb-3">
+                        <label for="payment_date" class="form-label">تاريخ الدفع</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ payment_date }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="receipt_number" class="form-label">رقم الإيصال</label>
+                        <input type="text" class="form-control" id="receipt_number" name="receipt_number" value="{{ renewal_fee.receipt_number or '' }}">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">ملاحظات</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ renewal_fee.notes or '' }}</textarea>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-secondary me-md-2">
+                        <i class="fas fa-times me-1"></i>
+                        إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        حفظ التغييرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إظهار/إخفاء حقول تفاصيل الدفع بناءً على حالة الدفع
+        const paymentStatusSelect = document.getElementById('payment_status');
+        const paymentDetailsDiv = document.querySelector('.payment-details');
+        
+        function togglePaymentDetails() {
+            if (paymentStatusSelect.value === 'paid') {
+                paymentDetailsDiv.style.display = 'flex';
+                document.getElementById('payment_date').required = true;
+            } else {
+                paymentDetailsDiv.style.display = 'none';
+                document.getElementById('payment_date').required = false;
+            }
+        }
+        
+        // التحقق الأولي عند تحميل الصفحة
+        togglePaymentDetails();
+        
+        // إضافة مستمع للتغيير
+        paymentStatusSelect.addEventListener('change', togglePaymentDetails);
+    });
+</script>
+{% endblock %}
