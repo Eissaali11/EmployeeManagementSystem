@@ -1,0 +1,306 @@
+{% extends 'layout.html' %}
+
+{% block title %}إحصائيات رسوم التجديد{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-chart-pie text-primary me-2"></i>
+            إحصائيات رسوم التجديد
+        </h2>
+        <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i>
+            العودة للقائمة
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="m-0 fw-bold">توزيع الرسوم حسب النوع</h6>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px">
+                        <canvas id="feeTypeChart"></canvas>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>نوع الرسم</th>
+                                    <th>عدد الرسوم</th>
+                                    <th>إجمالي المبالغ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fee_type, count, amount in fee_type_stats %}
+                                <tr>
+                                    <td>{{ fee_types[fee_type] }}</td>
+                                    <td>{{ count }}</td>
+                                    <td>{{ amount|round(2) }} ريال</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="m-0 fw-bold">توزيع الرسوم حسب حالة الدفع</h6>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px">
+                        <canvas id="paymentStatusChart"></canvas>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>حالة الدفع</th>
+                                    <th>عدد الرسوم</th>
+                                    <th>إجمالي المبالغ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status, count, amount in payment_status_stats %}
+                                <tr>
+                                    <td>{{ payment_statuses[status] }}</td>
+                                    <td>{{ count }}</td>
+                                    <td>{{ amount|round(2) }} ريال</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="m-0 fw-bold">توزيع الرسوم حسب الشهر</h6>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px">
+                        <canvas id="monthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="m-0 fw-bold">توزيع الرسوم حسب القسم</h6>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>القسم</th>
+                                    <th>عدد الرسوم</th>
+                                    <th>إجمالي المبالغ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept_name, count, amount in department_stats %}
+                                <tr>
+                                    <td>{{ dept_name }}</td>
+                                    <td>{{ count }}</td>
+                                    <td>{{ amount|round(2) }} ريال</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إعداد بيانات الرسم البياني حسب نوع الرسم
+        const feeTypeCtx = document.getElementById('feeTypeChart').getContext('2d');
+        const feeTypeChart = new Chart(feeTypeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ fee_type_labels|tojson }},
+                datasets: [{
+                    data: {{ fee_type_amounts|tojson }},
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(46, 204, 113, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(46, 204, 113, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw.toFixed(2) + ' ريال';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // إعداد بيانات الرسم البياني حسب حالة الدفع
+        const paymentStatusCtx = document.getElementById('paymentStatusChart').getContext('2d');
+        const paymentStatusChart = new Chart(paymentStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ payment_status_labels|tojson }},
+                datasets: [{
+                    data: {{ payment_status_amounts|tojson }},
+                    backgroundColor: [
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw.toFixed(2) + ' ريال';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // إعداد بيانات الرسم البياني حسب الشهر
+        const monthCtx = document.getElementById('monthChart').getContext('2d');
+        const monthChart = new Chart(monthCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ month_labels|tojson }},
+                datasets: [{
+                    label: 'إجمالي المبالغ (ريال)',
+                    data: {{ month_amounts|tojson }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toFixed(2) + ' ريال';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(0) + ' ريال';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // إعداد بيانات الرسم البياني حسب القسم
+        const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+        const departmentChart = new Chart(departmentCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ department_labels|tojson }},
+                datasets: [{
+                    label: 'إجمالي المبالغ (ريال)',
+                    data: {{ department_amounts|tojson }},
+                    backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toFixed(2) + ' ريال';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(0) + ' ريال';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
