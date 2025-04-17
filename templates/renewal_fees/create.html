@@ -1066,11 +1066,13 @@
                 const feeTypeInput = document.getElementById('fee_type');
                 if (feeTypeInput) {
                     feeTypeInput.value = selectedToggle.id.replace('_toggle', '');
+                    console.log('تم تعيين نوع الرسم:', feeTypeInput.value);
                 }
                 
                 const amountInput = document.getElementById('amount');
                 if (amountInput) {
                     amountInput.value = document.getElementById(selectedToggle.amount).value;
+                    console.log('تم تعيين المبلغ:', amountInput.value);
                 }
                 
                 // ملاحظات
@@ -1078,6 +1080,37 @@
                 const notesHiddenInput = document.getElementById('notes');
                 if (notesHiddenInput) {
                     notesHiddenInput.value = notesInput ? notesInput.value : '';
+                    console.log('تم تعيين الملاحظات:', notesHiddenInput.value);
+                }
+                
+                // تفعيل حقل نوع الرسم المخفي المقابل
+                const selectedFeeTypeHidden = document.getElementById(selectedToggle.type);
+                if (selectedFeeTypeHidden) {
+                    selectedFeeTypeHidden.disabled = false; // تأكد من أن هذا الحقل مفعل عند الإرسال
+                    console.log('تم تفعيل نوع الرسم المخفي:', selectedFeeTypeHidden.value);
+                }
+                
+                // تأكد من أن حقول الإرسال المخفية مفعلة
+                document.getElementById('fee_type').disabled = false;
+                document.getElementById('amount').disabled = false;
+                document.getElementById('notes').disabled = false;
+                
+                // تأكد من أن قيم التحويل متوفرة إذا كان مطلوبًا
+                if (selectedToggle.id === 'transfer_sponsorship_toggle') {
+                    if (document.getElementById('transfer_number')) {
+                        const transferValue = document.getElementById('transfer_number').value;
+                        // إضافة حقل مخفي جديد لرقم التحويل
+                        let transferNumberHidden = document.getElementById('transfer_number_hidden');
+                        if (!transferNumberHidden) {
+                            transferNumberHidden = document.createElement('input');
+                            transferNumberHidden.type = 'hidden';
+                            transferNumberHidden.id = 'transfer_number_hidden';
+                            transferNumberHidden.name = 'transfer_number';
+                            form.appendChild(transferNumberHidden);
+                        }
+                        transferNumberHidden.value = transferValue;
+                        console.log('تم تعيين رقم التحويل:', transferValue);
+                    }
                 }
                 
                 // تحديد قيمة رقم النقل إذا كان نوع الرسم هو نقل الكفالة
