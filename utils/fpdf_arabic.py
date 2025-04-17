@@ -402,7 +402,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         x_pos = 30.0  # بداية من اليسار (قيمة عائمة)
         
         for i, header in reversed(list(enumerate(headers))):
-            pdf.set_xy(x_pos, y_pos)
+            pdf.set_xy(float(x_pos), float(y_pos))
             pdf.cell(float(col_widths[i]), 10.0, get_display(arabic_reshaper.reshape(header)), 1, 0, 'C', True)
             x_pos += float(col_widths[i])
         
@@ -431,7 +431,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             
             x_pos = 30.0  # تحويل إلى رقم عائم
             for i, cell_data in reversed(list(enumerate(row_data))):
-                pdf.set_xy(x_pos, y_pos)
+                pdf.set_xy(float(x_pos), float(y_pos))
                 if i == 1 or i == 2:  # اسم الموظف والرقم الوظيفي
                     text = get_display(arabic_reshaper.reshape(str(cell_data)))
                     align = 'R'
@@ -556,7 +556,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         # عنوان المعلومات
         info_x = 30.0
         info_y = float(summary_y)
-        pdf.set_xy(info_x, info_y - 15.0)
+        pdf.set_xy(float(info_x), float(info_y) - 15.0)
         pdf.set_text_color(*pdf.primary_color)
         pdf.arabic_text(120.0, float(info_y) - 15.0, "معلومات التقرير", 'R')
         
@@ -585,7 +585,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.arabic_text(120.0, float(info_y) + 40.0, f"متوسط صافي الراتب: {avg_net:.2f}", 'R')
         
         # التذييل
-        pdf.set_xy(10.0, 190.0)  # تقريباً أسفل الصفحة
+        pdf.set_xy(10.0, 190.0)  # تقريباً أسفل الصفحة - هذه القيم بالفعل float
         pdf.set_font('Tajawal', '', 8)
         pdf.set_text_color(*pdf.secondary_color)
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
