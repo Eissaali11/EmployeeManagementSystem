@@ -771,6 +771,7 @@ def create_handover(id):
         has_first_aid_kit = 'has_first_aid_kit' in request.form
         has_warning_triangle = 'has_warning_triangle' in request.form
         has_tools = 'has_tools' in request.form
+        form_link = request.form.get('form_link')
         notes = request.form.get('notes')
         
         # إنشاء سجل تسليم/استلام جديد
@@ -787,6 +788,7 @@ def create_handover(id):
             has_first_aid_kit=has_first_aid_kit,
             has_warning_triangle=has_warning_triangle,
             has_tools=has_tools,
+            form_link=form_link,
             notes=notes
         )
         
@@ -948,6 +950,15 @@ def handover_pdf(id):
     check_mark = '\u2713' if handover.has_tools else '\u2717'
     pdf.cell(100, 8, check_mark, 0, 0, 'R')
     pdf.cell(90, 8, ':أدوات', 0, 1, 'R')
+    
+    # رابط فورم التسليم/الاستلام
+    if handover.form_link:
+        pdf.ln(5)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, "رابط فورم التسليم/الاستلام:", 0, 1, 'R')
+        
+        pdf.set_font('Arial', '', 12)
+        pdf.multi_cell(0, 8, handover.form_link, 0, 'R')
     
     # ملاحظات إضافية
     if handover.notes:
