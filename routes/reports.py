@@ -140,11 +140,13 @@ def employees_pdf():
     buffer = create_pdf(elements, landscape_mode=True)
     
     # إنشاء استجابة تحميل
-    response = make_response(buffer.getvalue())
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=employees_report.pdf'
-    
-    return response
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="employees_report.pdf",
+        mimetype='application/pdf'
+    )
 
 @reports_bp.route('/employees/excel')
 def employees_excel():
@@ -406,15 +408,14 @@ def attendance_pdf():
     # بناء المستند
     doc.build(elements)
     
-    # إعادة المؤشر إلى بداية البايت
+    # إعادة المؤشر إلى بداية البايت والإرجاع كملف
     buffer.seek(0)
-    
-    # إنشاء استجابة تحميل
-    response = make_response(buffer.getvalue())
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=attendance_report.pdf'
-    
-    return response
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="attendance_report.pdf",
+        mimetype='application/pdf'
+    )
 
 @reports_bp.route('/attendance/excel')
 def attendance_excel():
@@ -819,15 +820,14 @@ def salaries_pdf():
     # بناء المستند
     doc.build(elements)
     
-    # إعادة المؤشر إلى بداية البايت
+    # إعادة المؤشر إلى بداية البايت والإرجاع كملف
     buffer.seek(0)
-    
-    # إنشاء استجابة تحميل
-    response = make_response(buffer.getvalue())
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=salaries_report.pdf'
-    
-    return response
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="salaries_report.pdf",
+        mimetype='application/pdf'
+    )
 
 @reports_bp.route('/salaries/excel')
 def salaries_excel():
