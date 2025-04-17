@@ -464,7 +464,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
                 text = get_display(arabic_reshaper.reshape(cell_data))
                 align = 'R'
             else:
-                text = cell_data
+                text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
                 align = 'C'
             pdf.cell(col_widths[i], 10, text, 1, 0, align, True)
             x_pos += col_widths[i]
