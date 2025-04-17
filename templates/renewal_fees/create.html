@@ -129,7 +129,7 @@
     
     <!-- نموذج البيانات -->
     <form id="feeForm" method="POST" action="{{ url_for('renewal_fees.create') }}">
-        {{ form.hidden_tag() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <div class="row">
             <!-- المعلومات الأساسية -->
