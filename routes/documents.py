@@ -775,7 +775,7 @@ def export_employee_documents_excel(employee_id):
     ))
 
 @documents_bp.route('/export_excel')
-def export_all_documents_excel():
+def export_excel():
     """Export all documents to Excel"""
     # Get filter parameters
     document_type = request.args.get('document_type', '')
@@ -973,13 +973,20 @@ def export_all_documents_excel():
     stats_worksheet.write(2, 1, 'العدد', stat_header_format)
     
     row = 3
+    # تنسيق خاص لإجمالي الوثائق
+    total_format = workbook.add_format({
+        'bold': True, 
+        'border': 1, 
+        'bg_color': '#D9D9D9'
+    })
+    
     stats_data = [
         ['وثائق منتهية', expired_count, expired_format],
         ['تنتهي خلال 30 يوم', expiring_30_count, warning_format],
         ['تنتهي خلال 60 يوم', expiring_60_count, cell_format],
         ['تنتهي خلال 90 يوم', expiring_90_count, cell_format],
         ['صالحة لأكثر من 90 يوم', valid_count, cell_format],
-        ['المجموع', len(documents), stats_worksheet.book.add_format({'bold': True, 'border': 1, 'bg_color': '#D9D9D9'})]
+        ['المجموع', len(documents), total_format]
     ]
     
     for label, count, fmt in stats_data:
