@@ -187,38 +187,38 @@ def generate_salary_notification_pdf(data):
         pdf.set_text_color(0, 0, 0)
         
         # إنشاء جدول لبيانات الموظف (أكثر تنظيماً)
-        emp_info_y = y_pos + 20
-        pdf.set_xy(20, emp_info_y)
+        emp_info_y = float(y_pos) + 20.0
+        pdf.set_xy(20.0, float(emp_info_y))
         
         # العمود الأول
         pdf.set_font('Tajawal', 'B', 11)
-        pdf.arabic_text(190, emp_info_y, f"الاسم:", 'R')
+        pdf.arabic_text(190.0, float(emp_info_y), f"الاسم:", 'R')
         pdf.set_font('Tajawal', '', 11)
-        pdf.arabic_text(140, emp_info_y, f"{data.get('employee_name', '')}", 'R')
+        pdf.arabic_text(140.0, float(emp_info_y), f"{data.get('employee_name', '')}", 'R')
         
         pdf.set_font('Tajawal', 'B', 11)
-        pdf.arabic_text(100, emp_info_y, f"الرقم الوظيفي:", 'R')
+        pdf.arabic_text(100.0, float(emp_info_y), f"الرقم الوظيفي:", 'R')
         pdf.set_font('Tajawal', '', 11)
-        pdf.arabic_text(50, emp_info_y, f"{data.get('employee_id', '')}", 'R')
+        pdf.arabic_text(50.0, float(emp_info_y), f"{data.get('employee_id', '')}", 'R')
         
         # العمود الثاني
-        emp_info_y += 12
+        emp_info_y += 12.0
         if data.get('department_name'):
             pdf.set_font('Tajawal', 'B', 11)
-            pdf.arabic_text(190, emp_info_y, f"القسم:", 'R')
+            pdf.arabic_text(190.0, float(emp_info_y), f"القسم:", 'R')
             pdf.set_font('Tajawal', '', 11)
-            pdf.arabic_text(140, emp_info_y, f"{data.get('department_name', '')}", 'R')
+            pdf.arabic_text(140.0, float(emp_info_y), f"{data.get('department_name', '')}", 'R')
         
         pdf.set_font('Tajawal', 'B', 11)
-        pdf.arabic_text(100, emp_info_y, f"المسمى الوظيفي:", 'R')
+        pdf.arabic_text(100.0, float(emp_info_y), f"المسمى الوظيفي:", 'R')
         pdf.set_font('Tajawal', '', 11)
-        pdf.arabic_text(50, emp_info_y, f"{data.get('job_title', '')}", 'R')
+        pdf.arabic_text(50.0, float(emp_info_y), f"{data.get('job_title', '')}", 'R')
         
         # تفاصيل الراتب
-        salary_title_y = emp_info_y + 25
+        salary_title_y = float(emp_info_y) + 25.0
         pdf.set_font('Tajawal', 'B', 14)
         pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190, salary_title_y, "تفاصيل الراتب", 'C')
+        pdf.arabic_text(190.0, float(salary_title_y), "تفاصيل الراتب", 'C')
         
         # خط تحت عنوان تفاصيل الراتب
         pdf.set_draw_color(*pdf.primary_color)
@@ -241,7 +241,7 @@ def generate_salary_notification_pdf(data):
         pdf.line(70.0, float(title_y) + 10.0, 140.0, float(title_y) + 10.0)
         
         # نترك مسافة قبل بداية الجدول
-        table_y = title_y + 15
+        table_y = float(title_y) + 15.0
         
         # تحديد عرض الجدول بشكل يتناسب مع المحتوى
         amount_width = 40.0  # عرض عمود المبلغ
@@ -253,14 +253,14 @@ def generate_salary_notification_pdf(data):
         x_start = float(pdf.page_width - table_width) / 2.0
         
         # إنشاء جدول جديد بتصميم محسن
-        pdf.set_xy(x_start, table_y)
+        pdf.set_xy(float(x_start), float(table_y))
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
         pdf.set_font('Tajawal', 'B', 12)
         
         # رسم رأس الجدول - لكن عكس ترتيب الأعمدة ليتناسب مع اللغة العربية
-        pdf.cell(amount_width, row_height, get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
-        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
+        pdf.cell(float(amount_width), float(row_height), get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
+        pdf.cell(float(item_width), float(row_height), get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
         
         # إعداد مصفوفة بيانات ملخص الراتب
         salary_items = [
@@ -291,7 +291,7 @@ def generate_salary_notification_pdf(data):
                     pdf.set_fill_color(255, 255, 255)
             
             # رسم الصف بشكل صحيح - ضبط كامل للمحاذاة
-            pdf.set_xy(x_start, pdf.get_y())
+            pdf.set_xy(float(x_start), float(pdf.get_y()))
             pdf.cell(float(amount_width), float(row_height), item[1], 1, 0, 'C', fill)
             pdf.cell(float(item_width), float(row_height), get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
         
@@ -300,25 +300,25 @@ def generate_salary_notification_pdf(data):
         
         # إضافة الملاحظات إذا وجدت
         if data.get('notes'):
-            notes_y = pdf.get_y() + 10
+            notes_y = float(pdf.get_y()) + 10.0
             pdf.set_font('Tajawal', 'B', 12)
             pdf.set_text_color(*pdf.primary_color)
-            pdf.arabic_text(190, notes_y, "ملاحظات:", 'R')
+            pdf.arabic_text(190.0, float(notes_y), "ملاحظات:", 'R')
             
-            pdf.set_xy(20, notes_y + 5)
+            pdf.set_xy(20.0, float(notes_y) + 5.0)
             pdf.set_font('Tajawal', '', 10)
             pdf.set_text_color(0, 0, 0)  # لون أسود للنص
             
             # إطار للملاحظات
             notes_text = data.get('notes', '')
-            pdf.rect(20, notes_y + 5, 170, 20)
-            pdf.set_xy(25, notes_y + 10)
-            pdf.multi_cell(160, 5, get_display(arabic_reshaper.reshape(notes_text)), 0, 'R')
+            pdf.rect(20.0, float(notes_y) + 5.0, 170.0, 20.0)
+            pdf.set_xy(25.0, float(notes_y) + 10.0)
+            pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(notes_text)), 0, 'R')
         
         # التوقيعات
-        signature_y = pdf.get_y() + 30
-        if signature_y < 230:  # التأكد من أن التوقيعات ليست قريبة جداً من نهاية الصفحة
-            signature_y = 230
+        signature_y = float(pdf.get_y()) + 30.0
+        if signature_y < 230.0:  # التأكد من أن التوقيعات ليست قريبة جداً من نهاية الصفحة
+            signature_y = 230.0
         
         pdf.set_xy(20.0, float(signature_y))
         pdf.set_font('Tajawal', 'B', 11)
@@ -461,7 +461,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         x_pos = 30.0  # تحويل إلى رقم عائم
         pdf.set_font('Tajawal', 'B', 10)
         for i, cell_data in reversed(list(enumerate(summary_data))):
-            pdf.set_xy(x_pos, y_pos)
+            pdf.set_xy(float(x_pos), float(y_pos))
             if i == 1:  # نص "المجموع"
                 text = get_display(arabic_reshaper.reshape(str(cell_data)))
                 align = 'R'
