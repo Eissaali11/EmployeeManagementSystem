@@ -18,7 +18,7 @@ def index():
     year = request.args.get('year')
     
     # بناء الاستعلام
-    query = GovernmentFee.query.join(Document).join(Employee)
+    query = GovernmentFee.query.join(Employee, GovernmentFee.employee_id == Employee.id)
     
     # تطبيق الفلاتر
     if fee_type:
@@ -93,8 +93,10 @@ def create():
     if request.method == 'POST':
         try:
             # استلام البيانات من النموذج
+            employee_id = request.form.get('employee_id')
             document_id = request.form.get('document_id')
             fee_date = request.form.get('fee_date')
+            due_date = request.form.get('due_date')
             fee_type = request.form.get('fee_type')
             amount = request.form.get('amount')
             payment_status = request.form.get('payment_status', 'pending')
@@ -102,15 +104,19 @@ def create():
             receipt_number = request.form.get('receipt_number')
             transfer_number = request.form.get('transfer_number')
             notes = request.form.get('notes')
+            is_automatic = request.form.get('is_automatic', '1') == '1'
+            insurance_level = request.form.get('insurance_level')
+            has_national_balance = request.form.get('has_national_balance', 'false') == 'true'
             
             # التحقق من البيانات
-            if not all([document_id, fee_date, fee_type, amount]):
+            if not all([employee_id, fee_date, due_date, fee_type, amount]):
                 flash('جميع الحقول المميزة بـ * مطلوبة', 'danger')
                 return redirect(url_for('government_fees.create'))
             
             # تحويل التاريخ
             try:
                 fee_date = datetime.strptime(fee_date, '%Y-%m-%d').date()
+                due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
                 if payment_date:
                     payment_date = datetime.strptime(payment_date, '%Y-%m-%d').date()
                 else:
@@ -119,22 +125,27 @@ def create():
                 flash('تنسيق التاريخ غير صحيح', 'danger')
                 return redirect(url_for('government_fees.create'))
             
-            # التحقق من وجود الوثيقة
-            document = Document.query.get(document_id)
-            if not document:
-                flash('الوثيقة غير موجودة', 'danger')
+            # التحقق من وجود الموظف
+            employee = Employee.query.get(employee_id)
+            if not employee:
+                flash('الموظف غير موجود', 'danger')
                 return redirect(url_for('government_fees.create'))
             
             # إنشاء سجل جديد
             government_fee = GovernmentFee(
+                employee_id=employee_id,
                 document_id=document_id,
                 fee_date=fee_date,
+                due_date=due_date,
                 fee_type=fee_type,
                 amount=float(amount),
                 payment_status=payment_status,
                 payment_date=payment_date,
                 receipt_number=receipt_number,
                 transfer_number=transfer_number if fee_type == 'transfer_sponsorship' else None,
+                is_automatic=is_automatic,
+                insurance_level=insurance_level if fee_type == 'insurance' else None,
+                has_national_balance=has_national_balance,
                 notes=notes
             )
             
@@ -162,13 +173,14 @@ def create():
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
     
-    # الحصول على قائمة الوثائق المتاحة
+    # الحصول على قائمة الموظفين والوثائق المتاحة
+    employees = Employee.query.filter_by(status='active').all()
     documents = Document.query.join(Employee).all()
     
     fee_types = {
         'passport': 'الجوازات',
         'labor_office': 'مكتب العمل',
-        'insurance': 'التأمين',
+        'insurance': 'التأمين الطبي',
         'social_insurance': 'التأمينات الاجتماعية',
         'transfer_sponsorship': 'نقل كفالة',
         'other': 'رسوم أخرى'
@@ -180,10 +192,18 @@ def create():
         'overdue': 'متأخر'
     }
     
+    insurance_levels = {
+        'basic': 'أساسي (400 ريال)',
+        'medium': 'متوسط (900 ريال)',
+        'high': 'متميز (1500 ريال)'
+    }
+    
     return render_template('government_fees/create.html',
+                          employees=employees,
                           documents=documents,
                           fee_types=fee_types,
-                          payment_statuses=payment_statuses)
+                          payment_statuses=payment_statuses,
+                          insurance_levels=insurance_levels)
 
 @government_fees_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit(id):
