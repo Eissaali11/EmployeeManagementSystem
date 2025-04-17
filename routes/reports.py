@@ -8,6 +8,16 @@ from models import Department, Employee, Attendance, Salary, Document, SystemAud
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
 from utils.pdf_generator import generate_salary_report_pdf
+# إضافة الاستيرادات المفقودة
+import arabic_reshaper
+from bidi.algorithm import get_display
+from reportlab.lib import colors
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
