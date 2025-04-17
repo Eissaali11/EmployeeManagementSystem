@@ -533,12 +533,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="labor_office_amount" step="0.01" min="0" placeholder="0.00" readonly>
+                                                <input type="number" class="form-control fee-amount" id="labor_office_amount" step="0.01" min="0" placeholder="0.00">
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="labor_office_notes" placeholder="أي ملاحظات إضافية" readonly>
+                                            <input type="text" class="form-control" id="labor_office_notes" placeholder="أي ملاحظات إضافية">
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -559,12 +559,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="passport_amount" step="0.01" min="0" placeholder="0.00" readonly>
+                                                <input type="number" class="form-control fee-amount" id="passport_amount" step="0.01" min="0" placeholder="0.00" >
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="passport_notes" placeholder="أي ملاحظات إضافية" readonly>
+                                            <input type="text" class="form-control" id="passport_notes" placeholder="أي ملاحظات إضافية" >
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -585,12 +585,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="social_insurance_amount" step="0.01" min="0" placeholder="0.00" readonly>
+                                                <input type="number" class="form-control fee-amount" id="social_insurance_amount" step="0.01" min="0" placeholder="0.00" >
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="social_insurance_notes" placeholder="أي ملاحظات إضافية" readonly>
+                                            <input type="text" class="form-control" id="social_insurance_notes" placeholder="أي ملاحظات إضافية" >
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -611,14 +611,14 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" step="0.01" min="0" placeholder="0.00" readonly>
+                                                <input type="number" class="form-control fee-amount" id="transfer_sponsorship_amount" step="0.01" min="0" placeholder="0.00" >
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex">
-                                                <input type="text" class="form-control me-2" id="transfer_sponsorship_notes" placeholder="أي ملاحظات إضافية" readonly>
-                                                <input type="text" class="form-control" id="transfer_number" placeholder="رقم النقل" style="width: 150px;" readonly>
+                                                <input type="text" class="form-control me-2" id="transfer_sponsorship_notes" placeholder="أي ملاحظات إضافية" >
+                                                <input type="text" class="form-control" id="transfer_number" placeholder="رقم النقل" style="width: 150px;" >
                                             </div>
                                         </td>
                                         <td class="text-center">
@@ -640,12 +640,12 @@
                                         </td>
                                         <td>
                                             <div class="fee-amount-input">
-                                                <input type="number" class="form-control fee-amount" id="other_amount" step="0.01" min="0" placeholder="0.00" readonly>
+                                                <input type="number" class="form-control fee-amount" id="other_amount" step="0.01" min="0" placeholder="0.00" >
                                                 <span class="fee-currency">ريال</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" id="other_description" placeholder="وصف نوع الرسوم الأخرى" readonly>
+                                            <input type="text" class="form-control" id="other_description" placeholder="وصف نوع الرسوم الأخرى" >
                                         </td>
                                         <td class="text-center">
                                             <div class="form-check form-switch d-flex justify-content-center">
@@ -879,19 +879,6 @@
                     if (this.checked) {
                         rowElement.classList.add('bg-primary', 'bg-opacity-10');
                         
-                        // إزالة خاصية القراءة فقط من الحقول
-                        amountInput.removeAttribute('readonly');
-                        notesInput.removeAttribute('readonly');
-                        
-                        // تفعيل الحقول المخفية
-                        if (typeInput) {
-                            typeInput.removeAttribute('readonly');
-                        }
-                        
-                        if (toggle.transferNumber) {
-                            document.getElementById(toggle.transferNumber).removeAttribute('readonly');
-                        }
-                        
                         // تطبيق تأثير مرئي لتأكيد التفعيل
                         amountInput.classList.add('border-primary');
                         notesInput.classList.add('border-primary');
@@ -903,21 +890,16 @@
                     } else {
                         rowElement.classList.remove('bg-primary', 'bg-opacity-10');
                         
-                        // إضافة خاصية القراءة فقط للحقول
-                        amountInput.setAttribute('readonly', 'readonly');
-                        notesInput.setAttribute('readonly', 'readonly');
-                        
-                        // تعطيل الحقول المخفية
-                        if (typeInput) {
-                            typeInput.setAttribute('readonly', 'readonly');
-                        }
+                        // مسح قيم الحقول عند إلغاء التفعيل
+                        amountInput.value = '';
+                        notesInput.value = '';
                         
                         // إزالة التأثير المرئي
                         amountInput.classList.remove('border-primary');
                         notesInput.classList.remove('border-primary');
                         
                         if (toggle.transferNumber) {
-                            document.getElementById(toggle.transferNumber).setAttribute('readonly', 'readonly');
+                            document.getElementById(toggle.transferNumber).value = '';
                         }
                     }
                 } catch (e) {
@@ -1170,14 +1152,12 @@
                         const amountInput = document.getElementById(toggle.amount);
                         if (amountInput) {
                             amountInput.value = '';
-                            amountInput.setAttribute('readonly', 'readonly');
                             amountInput.classList.remove('border-primary');
                         }
                         
                         const notesInput = document.getElementById(toggle.notes);
                         if (notesInput) {
                             notesInput.value = '';
-                            notesInput.setAttribute('readonly', 'readonly');
                             notesInput.classList.remove('border-primary');
                         }
                         
@@ -1185,14 +1165,7 @@
                             const transferNumberInput = document.getElementById(toggle.transferNumber);
                             if (transferNumberInput) {
                                 transferNumberInput.value = '';
-                                transferNumberInput.setAttribute('readonly', 'readonly');
                             }
-                        }
-                        
-                        // تعطيل الحقل المخفي
-                        const typeInput = document.getElementById(toggle.type);
-                        if (typeInput) {
-                            typeInput.setAttribute('readonly', 'readonly');
                         }
                     });
                     
@@ -1243,9 +1216,7 @@
         // تأثيرات عند تركيز الحقول
         document.querySelectorAll('.fee-amount, #document_id, #fee_date, #payment_status, #payment_date, #receipt_number').forEach(input => {
             input.addEventListener('focus', function() {
-                if (!this.disabled) {
-                    this.style.boxShadow = '0 0 0 0.25rem rgba(13, 110, 253, 0.25)';
-                }
+                this.style.boxShadow = '0 0 0 0.25rem rgba(13, 110, 253, 0.25)';
             });
             
             input.addEventListener('blur', function() {
