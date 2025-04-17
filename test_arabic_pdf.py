@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from utils.fpdf_arabic import generate_salary_notification_pdf
+from utils.pdf_generator_new import generate_salary_notification_pdf
 from datetime import datetime
 
 def test_salary_notification():
