@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager, current_user
+from flask_wtf.csrf import CSRFProtect
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -21,6 +22,9 @@ db = SQLAlchemy(model_class=Base)
 
 # Initialize Flask-Login
 login_manager = LoginManager()
+
+# Initialize CSRF Protection
+csrf = CSRFProtect()
 
 # Create the Flask application
 app = Flask(__name__)
@@ -47,6 +51,9 @@ login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'الرجاء تسجيل الدخول للوصول إلى هذه الصفحة'
 login_manager.login_message_category = 'warning'
+
+# Initialize CSRF Protection
+csrf.init_app(app)
 
 # إعداد Firebase
 app.config['FIREBASE_API_KEY'] = os.environ.get('FIREBASE_API_KEY')
