@@ -170,23 +170,6 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="fee_type" class="form-label">
-                                        <span class="required-asterisk">*</span>
-                                        نوع الرسوم
-                                    </label>
-                                    <select class="form-select" id="fee_type" name="fee_type" required>
-                                        <option value="" selected disabled>اختر نوع الرسوم</option>
-                                        <option value="labor_office">مكتب العمل (المقابل المالي)</option>
-                                        <option value="passport">الجوازات (الإقامة)</option>
-                                        <option value="insurance">التأمين الطبي</option>
-                                        <option value="social_insurance">التأمينات الاجتماعية</option>
-                                        <option value="other">رسوم أخرى</option>
-                                    </select>
-                                    <div id="fee_type_info" class="fee-type-info"></div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
                                     <label for="calculation_period" class="form-label">فترة الحساب</label>
                                     <select class="form-select" id="calculation_period" name="calculation_period">
                                         <option value="monthly">شهري</option>
@@ -196,13 +179,9 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- خيارات إضافية لنوع الرسوم -->
-                        <div id="labor_office_options" class="fee-options d-none">
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <div class="form-check">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
                                         <input class="form-check-input" type="checkbox" id="has_national_balance" name="has_national_balance">
                                         <label class="form-check-label" for="has_national_balance">
                                             يستفيد من التوازن الوطني (تخفيض الرسوم إلى 700 ريال)
@@ -212,51 +191,131 @@
                             </div>
                         </div>
                         
-                        <div id="insurance_options" class="fee-options d-none">
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <label class="form-label">مستوى التأمين</label>
+                        <div class="government-fees-sections">
+                            <!-- مكتب العمل (المقابل المالي) -->
+                            <div class="section-card mb-3">
+                                <div class="section-header">
+                                    <h6 class="mb-2">مكتب العمل (المقابل المالي)</h6>
+                                </div>
+                                <div class="section-body">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="insurance_level" id="insurance_basic" value="basic" checked>
-                                        <label class="form-check-label" for="insurance_basic">
-                                            أساسي (400 ريال سنويًا)
+                                        <input class="form-check-input fee-option-checkbox" type="checkbox" id="include_labor_office" name="include_labor_office" data-fee-type="labor_office" checked>
+                                        <label class="form-check-label" for="include_labor_office">
+                                            احتساب رسوم مكتب العمل
                                         </label>
                                     </div>
+                                    <small class="text-muted d-block mt-1">
+                                        800 ريال شهريًا للموظف الوافد أو 700 ريال مع التوازن الوطني
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- الجوازات (الإقامة) -->
+                            <div class="section-card mb-3">
+                                <div class="section-header">
+                                    <h6 class="mb-2">الجوازات (الإقامة)</h6>
+                                </div>
+                                <div class="section-body">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="insurance_level" id="insurance_medium" value="medium">
-                                        <label class="form-check-label" for="insurance_medium">
-                                            متوسط (900 ريال سنويًا)
+                                        <input class="form-check-input fee-option-checkbox" type="checkbox" id="include_passport" name="include_passport" data-fee-type="passport" checked>
+                                        <label class="form-check-label" for="include_passport">
+                                            احتساب رسوم الإقامة
                                         </label>
                                     </div>
+                                    <small class="text-muted d-block mt-1">
+                                        650 ريال سنويًا للموظف الوافد
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- التأمين الطبي -->
+                            <div class="section-card mb-3">
+                                <div class="section-header">
+                                    <h6 class="mb-2">التأمين الطبي</h6>
+                                </div>
+                                <div class="section-body">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="insurance_level" id="insurance_high" value="high">
-                                        <label class="form-check-label" for="insurance_high">
-                                            متميز (1500 ريال سنويًا)
+                                        <input class="form-check-input fee-option-checkbox" type="checkbox" id="include_insurance" name="include_insurance" data-fee-type="insurance" checked>
+                                        <label class="form-check-label" for="include_insurance">
+                                            احتساب رسوم التأمين الطبي
                                         </label>
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="form-label small">مستوى التأمين</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="insurance_level" id="insurance_basic" value="basic" checked>
+                                            <label class="form-check-label" for="insurance_basic">
+                                                أساسي (400 ريال سنويًا)
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="insurance_level" id="insurance_medium" value="medium">
+                                            <label class="form-check-label" for="insurance_medium">
+                                                متوسط (900 ريال سنويًا)
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="insurance_level" id="insurance_high" value="high">
+                                            <label class="form-check-label" for="insurance_high">
+                                                متميز (1500 ريال سنويًا)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- التأمينات الاجتماعية -->
+                            <div class="section-card mb-3">
+                                <div class="section-header">
+                                    <h6 class="mb-2">التأمينات الاجتماعية</h6>
+                                </div>
+                                <div class="section-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input fee-option-checkbox" type="checkbox" id="include_social_insurance" name="include_social_insurance" data-fee-type="social_insurance" checked>
+                                        <label class="form-check-label" for="include_social_insurance">
+                                            احتساب رسوم التأمينات الاجتماعية
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        للموظف السعودي: 22% من الراتب الأساسي (12% على صاحب العمل و 10% على الموظف)<br>
+                                        للموظف الوافد: 2% من الراتب الأساسي (على صاحب العمل)
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- رسوم أخرى -->
+                            <div class="section-card mb-3">
+                                <div class="section-header">
+                                    <h6 class="mb-2">رسوم أخرى</h6>
+                                </div>
+                                <div class="section-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input fee-option-checkbox" type="checkbox" id="include_other" name="include_other" data-fee-type="other">
+                                        <label class="form-check-label" for="include_other">
+                                            إضافة رسوم أخرى
+                                        </label>
+                                    </div>
+                                    <div class="other-fee-inputs mt-2 d-none">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="other_fee_amount" class="form-label small">
+                                                    <span class="required-asterisk">*</span>
+                                                    مبلغ الرسوم
+                                                </label>
+                                                <input type="number" class="form-control" id="other_fee_amount" name="other_fee_amount" min="0" step="0.01">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="other_fee_description" class="form-label small">وصف الرسوم</label>
+                                                <input type="text" class="form-control" id="other_fee_description" name="other_fee_description" placeholder="وصف الرسوم الأخرى">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div id="social_insurance_options" class="fee-options d-none">
-                            <!-- لا توجد خيارات إضافية حاليًا، يتم احتسابها تلقائيًا حسب نوع الموظف -->
-                        </div>
-                        
-                        <div id="other_options" class="fee-options d-none">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="other_fee_amount" class="form-label">
-                                        <span class="required-asterisk">*</span>
-                                        مبلغ الرسوم
-                                    </label>
-                                    <input type="number" class="form-control" id="other_fee_amount" name="other_fee_amount" min="0" step="0.01">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="other_fee_description" class="form-label">وصف الرسوم</label>
-                                    <input type="text" class="form-control" id="other_fee_description" name="other_fee_description" placeholder="وصف الرسوم الأخرى">
-                                </div>
-                            </div>
-                        </div>
+                        <!-- حقل مخفي لتخزين نوع الرسوم المحددة -->
+                        <input type="hidden" id="fee_type" name="fee_type" value="">
                         
                         <div class="row mb-3">
                             <div class="col-md-12">
@@ -520,47 +579,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // تحميل الموظفين عند بدء التشغيل
     loadEmployees();
     
-    // إظهار/إخفاء خيارات نوع الرسوم
-    const feeTypeSelect = document.getElementById('fee_type');
-    const feeTypeInfo = document.getElementById('fee_type_info');
-    const feeOptions = document.querySelectorAll('.fee-options');
+    // معالجة الرسوم الأخرى
+    const includeOtherCheckbox = document.getElementById('include_other');
+    const otherFeeInputs = document.querySelector('.other-fee-inputs');
     
-    feeTypeSelect.addEventListener('change', function() {
-        // إخفاء جميع الخيارات أولاً
-        feeOptions.forEach(option => {
-            option.classList.add('d-none');
-        });
-        
-        // إظهار الخيارات المناسبة حسب نوع الرسوم
-        const selectedValue = this.value;
-        if (selectedValue) {
-            const optionsElement = document.getElementById(`${selectedValue}_options`);
-            if (optionsElement) {
-                optionsElement.classList.remove('d-none');
-            }
-            
-            // تحديث نص المعلومات
-            switch (selectedValue) {
-                case 'labor_office':
-                    feeTypeInfo.textContent = 'رسوم المقابل المالي لمكتب العمل للموظفين الوافدين، 800 ريال شهريًا أو 700 ريال مع التوازن الوطني.';
-                    break;
-                case 'passport':
-                    feeTypeInfo.textContent = 'رسوم تجديد الإقامة السنوية، 650 ريال سنويًا للموظف الوافد.';
-                    break;
-                case 'insurance':
-                    feeTypeInfo.textContent = 'رسوم التأمين الطبي السنوية، تختلف حسب مستوى التغطية.';
-                    break;
-                case 'social_insurance':
-                    feeTypeInfo.textContent = 'رسوم التأمينات الاجتماعية، 22% من الراتب الأساسي للسعوديين، 2% للوافدين.';
-                    break;
-                case 'other':
-                    feeTypeInfo.textContent = 'رسوم أخرى يتم تحديدها يدويًا.';
-                    break;
-                default:
-                    feeTypeInfo.textContent = '';
-            }
+    includeOtherCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            otherFeeInputs.classList.remove('d-none');
         } else {
-            feeTypeInfo.textContent = '';
+            otherFeeInputs.classList.add('d-none');
         }
     });
     
@@ -591,12 +618,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     calculateButton.addEventListener('click', function() {
         const employeeSelect = document.getElementById('employee_id');
-        const feeType = document.getElementById('fee_type').value;
         const calculationPeriod = document.getElementById('calculation_period').value;
         
-        // التحقق من اختيار الموظف ونوع الرسوم
-        if (!employeeSelect.value || !feeType) {
-            alert('يرجى اختيار الموظف ونوع الرسوم أولاً');
+        // التحقق من اختيار الموظف
+        if (!employeeSelect.value) {
+            alert('يرجى اختيار الموظف أولاً');
             return;
         }
         
@@ -604,6 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
         const contractType = selectedOption.dataset.contract_type;
         const basicSalary = parseFloat(selectedOption.dataset.basic_salary) || 0;
+        const hasNationalBalance = document.getElementById('has_national_balance').checked;
         
         // تعريف معاملات التحويل للفترات المختلفة
         const periodMultipliers = {
@@ -613,89 +640,136 @@ document.addEventListener('DOMContentLoaded', function() {
             'annual': 12
         };
         
-        // حساب المبلغ بناءً على نوع الرسوم وفترة الحساب
-        let amount = 0;
-        let feeDescription = '';
-        
-        switch (feeType) {
-            case 'labor_office':
-                if (contractType === 'saudi') {
-                    amount = 0; // لا توجد رسوم مكتب عمل للسعوديين
-                    feeDescription = 'لا ينطبق على الموظفين السعوديين';
-                } else {
-                    const hasNationalBalance = document.getElementById('has_national_balance').checked;
-                    const monthlyFee = hasNationalBalance ? 700 : 800;
-                    amount = monthlyFee * periodMultipliers[calculationPeriod];
-                    feeDescription = hasNationalBalance ? 'مع التوازن الوطني' : 'بدون التوازن الوطني';
-                    document.getElementById('detail-national-balance').style.display = 'flex';
-                    document.getElementById('result-national-balance').textContent = hasNationalBalance ? 'نعم' : 'لا';
-                }
-                break;
-                
-            case 'passport':
-                if (contractType === 'saudi') {
-                    amount = 0; // لا توجد رسوم جوازات للسعوديين
-                    feeDescription = 'لا ينطبق على الموظفين السعوديين';
-                } else {
-                    // رسوم الإقامة سنوية، لذا نقسمها على 12 للحصول على القيمة الشهرية ثم نضربها بمعامل الفترة
-                    amount = (650 / 12) * periodMultipliers[calculationPeriod];
-                    feeDescription = 'رسوم الإقامة';
-                }
-                break;
-                
-            case 'insurance':
-                if (contractType === 'saudi') {
-                    // قد يكون هناك تأمين للسعوديين أيضًا، لكنه اختياري وبمعدلات مختلفة
-                    amount = 0;
-                    feeDescription = 'يرجى تحديد القيمة يدويًا';
-                } else {
-                    const insuranceLevel = document.querySelector('input[name="insurance_level"]:checked').value;
-                    let annualFee = 0;
-                    
-                    switch (insuranceLevel) {
-                        case 'basic':
-                            annualFee = 400;
-                            feeDescription = 'تأمين أساسي';
-                            break;
-                        case 'medium':
-                            annualFee = 900;
-                            feeDescription = 'تأمين متوسط';
-                            break;
-                        case 'high':
-                            annualFee = 1500;
-                            feeDescription = 'تأمين متميز';
-                            break;
-                    }
-                    
-                    // التأمين سنوي، نقسمه على 12 للحصول على القيمة الشهرية ثم نضربه بمعامل الفترة
-                    amount = (annualFee / 12) * periodMultipliers[calculationPeriod];
-                }
-                document.getElementById('detail-national-balance').style.display = 'none';
-                break;
-                
-            case 'social_insurance':
-                if (contractType === 'saudi') {
-                    // 22% من الراتب الأساسي (12% على صاحب العمل و 10% على الموظف)
-                    amount = (0.22 * basicSalary) * periodMultipliers[calculationPeriod];
-                    feeDescription = '22% من الراتب الأساسي';
-                } else {
-                    // 2% من الراتب الأساسي للوافدين (على صاحب العمل)
-                    amount = (0.02 * basicSalary) * periodMultipliers[calculationPeriod];
-                    feeDescription = '2% من الراتب الأساسي';
-                }
-                document.getElementById('detail-national-balance').style.display = 'none';
-                break;
-                
-            case 'other':
-                amount = parseFloat(document.getElementById('other_fee_amount').value) || 0;
-                feeDescription = document.getElementById('other_fee_description').value || 'رسوم أخرى';
-                document.getElementById('detail-national-balance').style.display = 'none';
-                break;
+        // للتأكد من أن المستخدم اختار خدمة واحدة على الأقل
+        const feeCheckboxes = document.querySelectorAll('.fee-option-checkbox:checked');
+        if (feeCheckboxes.length === 0) {
+            alert('يرجى اختيار نوع رسوم واحد على الأقل');
+            return;
         }
         
+        // إجمالي المبلغ
+        let totalAmount = 0;
+        let feeTypeDisplay = '';
+        let feeDescriptions = [];
+        
+        // 1. مكتب العمل (المقابل المالي)
+        if (document.getElementById('include_labor_office').checked) {
+            if (contractType === 'saudi') {
+                // لا توجد رسوم مكتب عمل للسعوديين
+                feeDescriptions.push('مكتب العمل: لا ينطبق على الموظفين السعوديين');
+            } else {
+                const monthlyFee = hasNationalBalance ? 700 : 800;
+                const laborFee = monthlyFee * periodMultipliers[calculationPeriod];
+                totalAmount += laborFee;
+                
+                feeDescriptions.push(
+                    `مكتب العمل: ${formatCurrency(laborFee)} ريال (${hasNationalBalance ? 'مع التوازن الوطني' : 'بدون التوازن الوطني'})`
+                );
+            }
+        }
+        
+        // 2. الجوازات (الإقامة)
+        if (document.getElementById('include_passport').checked) {
+            if (contractType === 'saudi') {
+                // لا توجد رسوم جوازات للسعوديين
+                feeDescriptions.push('الجوازات: لا ينطبق على الموظفين السعوديين');
+            } else {
+                // رسوم الإقامة سنوية (650 ريال)
+                const passportFee = (650 / 12) * periodMultipliers[calculationPeriod];
+                totalAmount += passportFee;
+                
+                feeDescriptions.push(`الجوازات (الإقامة): ${formatCurrency(passportFee)} ريال`);
+            }
+        }
+        
+        // 3. التأمين الطبي
+        if (document.getElementById('include_insurance').checked) {
+            if (contractType === 'saudi') {
+                feeDescriptions.push('التأمين الطبي: قد يختلف للموظفين السعوديين');
+            } else {
+                const insuranceLevel = document.querySelector('input[name="insurance_level"]:checked').value;
+                let annualFee = 0;
+                let insuranceType = '';
+                
+                switch (insuranceLevel) {
+                    case 'basic':
+                        annualFee = 400;
+                        insuranceType = 'أساسي';
+                        break;
+                    case 'medium':
+                        annualFee = 900;
+                        insuranceType = 'متوسط';
+                        break;
+                    case 'high':
+                        annualFee = 1500;
+                        insuranceType = 'متميز';
+                        break;
+                }
+                
+                // التأمين سنوي
+                const insuranceFee = (annualFee / 12) * periodMultipliers[calculationPeriod];
+                totalAmount += insuranceFee;
+                
+                feeDescriptions.push(`التأمين الطبي (${insuranceType}): ${formatCurrency(insuranceFee)} ريال`);
+            }
+        }
+        
+        // 4. التأمينات الاجتماعية
+        if (document.getElementById('include_social_insurance').checked) {
+            let socialInsuranceFee = 0;
+            
+            if (contractType === 'saudi') {
+                // 22% من الراتب الأساسي (12% على صاحب العمل و 10% على الموظف)
+                socialInsuranceFee = (0.22 * basicSalary) * periodMultipliers[calculationPeriod];
+                feeDescriptions.push(`التأمينات الاجتماعية: ${formatCurrency(socialInsuranceFee)} ريال (22% من الراتب الأساسي)`);
+            } else {
+                // 2% من الراتب الأساسي للوافدين
+                socialInsuranceFee = (0.02 * basicSalary) * periodMultipliers[calculationPeriod];
+                feeDescriptions.push(`التأمينات الاجتماعية: ${formatCurrency(socialInsuranceFee)} ريال (2% من الراتب الأساسي)`);
+            }
+            
+            totalAmount += socialInsuranceFee;
+        }
+        
+        // 5. رسوم أخرى (إذا تم اختيارها)
+        if (document.getElementById('include_other').checked) {
+            const otherFeeAmount = parseFloat(document.getElementById('other_fee_amount').value) || 0;
+            const otherFeeDesc = document.getElementById('other_fee_description').value || 'رسوم أخرى';
+            
+            if (otherFeeAmount > 0) {
+                totalAmount += otherFeeAmount;
+                feeDescriptions.push(`${otherFeeDesc}: ${formatCurrency(otherFeeAmount)} ريال`);
+            } else {
+                alert('يرجى إدخال مبلغ الرسوم الأخرى');
+                return;
+            }
+        }
+        
+        // تحديد نوع الرسوم المحدد للحقل المخفي
+        let primaryFeeType = '';
+        if (document.getElementById('include_labor_office').checked) {
+            primaryFeeType = 'labor_office';
+            feeTypeDisplay = 'مكتب العمل (المقابل المالي)';
+        } else if (document.getElementById('include_passport').checked) {
+            primaryFeeType = 'passport';
+            feeTypeDisplay = 'الجوازات (الإقامة)';
+        } else if (document.getElementById('include_insurance').checked) {
+            primaryFeeType = 'insurance';
+            feeTypeDisplay = 'التأمين الطبي';
+        } else if (document.getElementById('include_social_insurance').checked) {
+            primaryFeeType = 'social_insurance';
+            feeTypeDisplay = 'التأمينات الاجتماعية';
+        } else if (document.getElementById('include_other').checked) {
+            primaryFeeType = 'other';
+            feeTypeDisplay = 'رسوم أخرى';
+        }
+        
+        // تعيين نوع الرسوم في الحقل المخفي
+        document.getElementById('fee_type').value = primaryFeeType;
+        
         // تحديث نتيجة الحساب
-        document.getElementById('result-amount').textContent = formatCurrency(amount) + ' ريال';
-        document.getElementById('result-fee-type').textContent = document.getElementById('fee_type').options[document.getElementById('fee_type').selectedIndex].text;
+        document.getElementById('result-amount').textContent = formatCurrency(totalAmount) + ' ريال';
+        document.getElementById('result-fee-type').textContent = feeDescriptions.length > 1 ? 'رسوم متعددة' : feeTypeDisplay;
         document.getElementById('result-employee').textContent = selectedOption.text;
         
         let periodText = '';
@@ -707,8 +781,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.getElementById('result-period').textContent = periodText;
         
+        // عرض/إخفاء حقل التوازن الوطني
+        if (document.getElementById('include_labor_office').checked && contractType !== 'saudi') {
+            document.getElementById('detail-national-balance').style.display = 'flex';
+            document.getElementById('result-national-balance').textContent = hasNationalBalance ? 'نعم' : 'لا';
+        } else {
+            document.getElementById('detail-national-balance').style.display = 'none';
+        }
+        
         // تحديث حقل المبلغ المخفي
-        document.getElementById('amount').value = amount;
+        document.getElementById('amount').value = totalAmount;
         
         // إظهار نتيجة الحساب وقسم تفاصيل الرسوم
         calculationResult.classList.remove('d-none');
@@ -730,13 +812,14 @@ document.addEventListener('DOMContentLoaded', function() {
             employeeName: selectedOption.text,
             employeeId: selectedOption.value,
             contractType: contractType === 'saudi' ? 'سعودي' : 'وافد',
-            feeType: document.getElementById('fee_type').options[document.getElementById('fee_type').selectedIndex].text,
-            feeTypeValue: feeType,
+            feeTypes: feeDescriptions,
+            feeTypeDisplay: feeTypeDisplay,
+            feeTypeValue: primaryFeeType,
             periodName: periodText,
             periodValue: calculationPeriod,
             basicSalary: basicSalary,
-            amount: amount,
-            feeDescription: feeDescription,
+            amount: totalAmount,
+            hasNationalBalance: hasNationalBalance,
             calculationDate: new Date().toISOString().split('T')[0]
         };
     });
@@ -767,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // استخدام مكتبة SheetJS (xlsx) لإنشاء ملف إكسل
         // نقوم بإنشاء جدول تلقائيًا من البيانات المتوفرة
         
-        // 1. إنشاء مصفوفة البيانات
+        // 1. إنشاء مصفوفة البيانات - بداية بالمعلومات الأساسية
         const rows = [
             // عنوان الجدول (الصف الأول)
             ['بيانات احتساب الرسوم الحكومية', '', '', '', ''],
@@ -775,16 +858,33 @@ document.addEventListener('DOMContentLoaded', function() {
             // بيانات الموظف
             ['الموظف:', data.employeeName, '', 'نوع العقد:', data.contractType],
             ['الراتب الأساسي:', data.basicSalary.toLocaleString('ar-SA') + ' ريال', '', 'تاريخ الاحتساب:', data.calculationDate],
+            ['التوازن الوطني:', data.hasNationalBalance ? 'نعم' : 'لا', '', 'الفترة:', data.periodName],
             ['', '', '', '', ''],
-            // بيانات الرسوم
-            ['نوع الرسوم:', data.feeType, '', 'الفترة:', data.periodName],
-            ['المبلغ المحتسب:', data.amount.toLocaleString('ar-SA') + ' ريال', '', 'وصف الرسوم:', data.feeDescription],
+            // إجمالي المبلغ
+            ['إجمالي المبلغ المحتسب:', data.amount.toLocaleString('ar-SA') + ' ريال', '', '', ''],
             ['', '', '', '', ''],
-            // جدول التفاصيل
-            ['ملخص الاحتساب', '', '', '', ''],
-            ['نوع الرسوم', 'الفترة', 'المبلغ', 'التفاصيل', ''],
-            [data.feeType, data.periodName, data.amount.toLocaleString('ar-SA') + ' ريال', data.feeDescription, ''],
+            // عنوان جدول التفاصيل
+            ['تفاصيل الرسوم المحتسبة', '', '', '', ''],
         ];
+        
+        // إضافة تفاصيل الرسوم
+        if (data.feeTypes && data.feeTypes.length > 0) {
+            // إضافة صف عنوان لجدول التفاصيل
+            rows.push(['نوع الرسوم', 'التفاصيل', '', '', '']);
+            
+            // إضافة صف لكل نوع رسوم
+            data.feeTypes.forEach((feeDesc, index) => {
+                rows.push([`${index + 1}. ${feeDesc}`, '', '', '', '']);
+            });
+        }
+        
+        // إضافة معلومات إضافية
+        rows.push(
+            ['', '', '', '', ''],
+            ['ملاحظات:', '', '', '', ''],
+            ['- تم احتساب الرسوم بناءً على بيانات الموظف والخيارات المحددة.', '', '', '', ''],
+            ['- قد تختلف الرسوم الفعلية عن المحتسبة بناءً على تغيرات أنظمة الرسوم الحكومية.', '', '', '', '']
+        );
         
         // 2. إنشاء مصنف عمل (Workbook)
         const worksheet = XLSX.utils.aoa_to_sheet(rows);
@@ -792,8 +892,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 3. ضبط عرض الأعمدة
         const columnWidths = [
-            { wch: 20 }, // عرض العمود الأول
-            { wch: 25 }, // عرض العمود الثاني
+            { wch: 30 }, // عرض العمود الأول
+            { wch: 40 }, // عرض العمود الثاني
             { wch: 15 }, // عرض العمود الثالث
             { wch: 20 }, // عرض العمود الرابع
             { wch: 25 }  // عرض العمود الخامس
@@ -804,7 +904,7 @@ document.addEventListener('DOMContentLoaded', function() {
         XLSX.utils.book_append_sheet(workbook, worksheet, 'الرسوم الحكومية');
         
         // 5. توليد اسم الملف
-        const fileName = `رسوم_${data.feeTypeValue}_${data.employeeName.replace(/\s+/g, '_')}_${data.calculationDate}.xlsx`;
+        const fileName = `رسوم_حكومية_${data.employeeName.replace(/\s+/g, '_')}_${data.calculationDate}.xlsx`;
         
         // 6. تنزيل الملف
         XLSX.writeFile(workbook, fileName);
