@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from sqlalchemy import extract, func
+from sqlalchemy import extract, func, or_
 import os
 import uuid
 
@@ -337,6 +337,7 @@ def create_rental(id):
         lessor_name = request.form.get('lessor_name')
         lessor_contact = request.form.get('lessor_contact')
         contract_number = request.form.get('contract_number')
+        city = request.form.get('city')
         notes = request.form.get('notes')
         
         # إلغاء تنشيط الإيجارات السابقة
@@ -354,6 +355,7 @@ def create_rental(id):
             lessor_name=lessor_name,
             lessor_contact=lessor_contact,
             contract_number=contract_number,
+            city=city,
             notes=notes
         )
         
@@ -390,6 +392,7 @@ def edit_rental(id):
         lessor_name = request.form.get('lessor_name')
         lessor_contact = request.form.get('lessor_contact')
         contract_number = request.form.get('contract_number')
+        city = request.form.get('city')
         notes = request.form.get('notes')
         
         # تحديث معلومات الإيجار
@@ -400,6 +403,7 @@ def edit_rental(id):
         rental.lessor_name = lessor_name
         rental.lessor_contact = lessor_contact
         rental.contract_number = contract_number
+        rental.city = city
         rental.notes = notes
         rental.updated_at = datetime.utcnow()
         
