@@ -165,7 +165,7 @@ def generate_salary_notification_pdf(data):
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        subtitle = f"إشعار راتب - شهر {data.get('month_name', '')} {data.get('year', '')}"
+        subtitle = f"إشعار راتب - شهر {data.get('month_name', '')} {str(data.get('year', ''))}"
         y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
         
         # إضافة إطار للمستند
@@ -244,13 +244,13 @@ def generate_salary_notification_pdf(data):
         table_y = title_y + 15
         
         # تحديد عرض الجدول بشكل يتناسب مع المحتوى
-        amount_width = 40  # عرض عمود المبلغ
-        item_width = 85    # عرض عمود البيان
-        row_height = 10    # ارتفاع الصف
+        amount_width = 40.0  # عرض عمود المبلغ
+        item_width = 85.0    # عرض عمود البيان
+        row_height = 10.0    # ارتفاع الصف
         
         # حساب موقع بداية الجدول في منتصف الصفحة
-        table_width = amount_width + item_width
-        x_start = (pdf.page_width - table_width) / 2
+        table_width = float(amount_width) + float(item_width)
+        x_start = float(pdf.page_width - table_width) / 2.0
         
         # إنشاء جدول جديد بتصميم محسن
         pdf.set_xy(x_start, table_y)
@@ -292,8 +292,8 @@ def generate_salary_notification_pdf(data):
             
             # رسم الصف بشكل صحيح - ضبط كامل للمحاذاة
             pdf.set_xy(x_start, pdf.get_y())
-            pdf.cell(amount_width, row_height, item[1], 1, 0, 'C', fill)
-            pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
+            pdf.cell(float(amount_width), float(row_height), item[1], 1, 0, 'C', fill)
+            pdf.cell(float(item_width), float(row_height), get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
         
         # إعادة ضبط نمط النص
         pdf.set_text_color(0, 0, 0)
@@ -320,12 +320,12 @@ def generate_salary_notification_pdf(data):
         if signature_y < 230:  # التأكد من أن التوقيعات ليست قريبة جداً من نهاية الصفحة
             signature_y = 230
         
-        pdf.set_xy(20, signature_y)
+        pdf.set_xy(20.0, float(signature_y))
         pdf.set_font('Tajawal', 'B', 11)
         pdf.set_text_color(*pdf.secondary_color)
-        pdf.cell(50, 10, get_display(arabic_reshaper.reshape("توقيع الموظف")), 0, 0, 'C')
-        pdf.cell(70, 10, "", 0, 0, 'C')  # فراغ في الوسط
-        pdf.cell(50, 10, get_display(arabic_reshaper.reshape("توقيع المدير المالي")), 0, 1, 'C')
+        pdf.cell(50.0, 10.0, get_display(arabic_reshaper.reshape("توقيع الموظف")), 0, 0, 'C')
+        pdf.cell(70.0, 10.0, "", 0, 0, 'C')  # فراغ في الوسط
+        pdf.cell(50.0, 10.0, get_display(arabic_reshaper.reshape("توقيع المدير المالي")), 0, 1, 'C')
         
         pdf.set_xy(20, pdf.get_y())
         pdf.cell(50, 10, "________________", 0, 0, 'C')
@@ -524,9 +524,9 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        pdf.set_xy(summary_table_x, summary_y)
-        pdf.cell(col1_width, 10, get_display(arabic_reshaper.reshape(summary_headers[1])), 1, 0, 'C', True)
-        pdf.cell(col2_width, 10, get_display(arabic_reshaper.reshape(summary_headers[0])), 1, 1, 'C', True)
+        pdf.set_xy(float(summary_table_x), float(summary_y))
+        pdf.cell(float(col1_width), 10.0, get_display(arabic_reshaper.reshape(summary_headers[1])), 1, 0, 'C', True)
+        pdf.cell(float(col2_width), 10.0, get_display(arabic_reshaper.reshape(summary_headers[0])), 1, 1, 'C', True)
         
         # بيانات جدول الملخص
         pdf.set_text_color(0, 0, 0)  # إعادة النص للون الأسود
@@ -545,9 +545,9 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
                 pdf.set_font('Tajawal', 'B', 10)
             
             # استخدام summary_table_x الذي تم تعريفه للجدول
-            pdf.set_xy(summary_table_x, pdf.get_y())
-            pdf.cell(col1_width, 10, item[1], 1, 0, 'C', fill)
-            pdf.cell(col2_width, 10, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
+            pdf.set_xy(float(summary_table_x), pdf.get_y())
+            pdf.cell(float(col1_width), 10.0, item[1], 1, 0, 'C', fill)
+            pdf.cell(float(col2_width), 10.0, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
         
         # معلومات التقرير - جعلها في عمود منفصل وواضح
         pdf.set_text_color(0, 0, 0)
