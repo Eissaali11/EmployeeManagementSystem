@@ -157,8 +157,16 @@
                             <td>{{ salary.deductions }}</td>
                             <td>{{ salary.bonus }}</td>
                             <td class="fw-bold">{{ salary.net_salary }}</td>
-                            <td>
-                                <div class="dropdown">
+                            <td class="text-center">
+                                <!-- زر الحذف المباشر -->
+                                <form action="{{ url_for('salaries.delete', id=salary.id) }}" method="post" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سجل راتب للموظف {{ salary.employee.name }} لشهر {{ salary.month }}/{{ salary.year }}؟');">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="حذف">
+                                        <i class="fas fa-trash-alt"></i> حذف
+                                    </button>
+                                </form>
+
+                                <!-- زر القائمة المنسدلة -->
+                                <div class="dropdown d-inline">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="إجراءات">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
