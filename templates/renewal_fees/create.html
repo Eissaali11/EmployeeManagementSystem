@@ -4,24 +4,28 @@
 
 {% block styles %}
 <style>
+    body {
+        background-color: #eaeaea;
+    }
+    
     .page-header {
-        background-color: #0c326f;
-        color: white;
+        background-color: transparent;
+        color: #333;
         padding: 20px;
         margin-bottom: 20px;
         border-radius: 0;
     }
     
     .main-section {
-        background-color: white;
+        background-color: transparent;
         border-radius: 0;
         margin-bottom: 20px;
-        border: 1px solid #dee2e6;
+        border: none;
     }
     
     .section-header {
-        background-color: #0c326f;
-        color: white;
+        background-color: transparent;
+        color: #333;
         padding: 12px 15px;
         margin-bottom: 0;
         font-size: 18px;
@@ -53,7 +57,8 @@
     }
     
     .custom-table th {
-        background-color: #f8f9fa;
+        background-color: #1e3a5f;
+        color: white;
         padding: 10px;
         font-weight: 600;
     }
@@ -64,21 +69,34 @@
     }
     
     .fee-row {
-        background-color: #f8f9fa;
+        background-color: #1e3a5f;
         transition: all 0.2s;
+        color: white;
     }
     
     .fee-row:hover {
-        background-color: #e9ecef;
+        background-color: #2a4b72;
     }
     
     .fee-row.active {
-        background-color: #e8f4ff;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        background-color: #2a4b72;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .fee-row .form-control {
+        background-color: #1e3a5f;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    .fee-row .input-group-text {
+        background-color: #1e3a5f;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
     }
     
     .save-btn {
-        background-color: #28a745;
+        background-color: #455a64;
         color: white;
         border: none;
         padding: 12px 24px;
@@ -90,7 +108,7 @@
     }
     
     .save-btn:hover {
-        background-color: #218838;
+        background-color: #37474f;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
@@ -122,7 +140,8 @@
     <!-- عنوان الصفحة -->
     <div class="page-header d-flex justify-content-between align-items-center">
         <h2 class="mb-0">إضافة رسوم تجديد</h2>
-        <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-outline-light">
+        <a href="{{ url_for('renewal_fees.index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-right me-1"></i>
             العودة للقائمة
         </a>
     </div>
@@ -362,30 +381,28 @@
                         ملخص الرسوم المختارة
                     </h3>
                     <div class="section-body">
-                        <div id="fee_summary_empty" class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            لم يتم اختيار أي نوع من الرسوم بعد. يرجى اختيار نوع الرسم وإدخال المبلغ.
+                        <div id="fee_summary_empty" class="alert alert-info bg-light-blue text-center py-3">
+                            <i class="fas fa-info-circle me-2 text-primary fa-2x mb-2"></i>
+                            <p class="mb-0">الرجاء اختيار نوع الرسم وإدخال المبلغ من القائمة</p>
                         </div>
                         
-                        <div id="fee_summary" style="display: none;">
-                            <table class="table table-bordered">
-                                <tr>
-                                    <th width="30%">نوع الرسم:</th>
-                                    <td id="summary_fee_type">-</td>
-                                </tr>
-                                <tr>
-                                    <th>المبلغ:</th>
-                                    <td id="summary_fee_amount" class="text-success fw-bold">0.00 ريال</td>
-                                </tr>
-                                <tr id="summary_transfer_row" style="display: none;">
-                                    <th>رقم النقل:</th>
-                                    <td id="summary_transfer_number">-</td>
-                                </tr>
-                                <tr>
-                                    <th>الملاحظات:</th>
-                                    <td id="summary_notes">-</td>
-                                </tr>
-                            </table>
+                        <div id="fee_summary" style="display: none;" class="p-3 border bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <span class="text-muted">نوع الرسم:</span>
+                                <span id="summary_fee_type" class="fw-bold">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <span class="text-muted">المبلغ:</span>
+                                <span id="summary_fee_amount" class="h5 text-primary mb-0">0.00 ريال</span>
+                            </div>
+                            <div id="summary_transfer_row" style="display: none;" class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <span class="text-muted">رقم النقل:</span>
+                                <span id="summary_transfer_number" class="fw-bold">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">الملاحظات:</span>
+                                <span id="summary_notes" class="text-muted">-</span>
+                            </div>
                         </div>
                     </div>
                 </div>
