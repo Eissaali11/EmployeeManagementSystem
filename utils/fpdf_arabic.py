@@ -399,12 +399,12 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         # رأس الجدول
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        x_pos = 30  # بداية من اليسار
+        x_pos = 30.0  # بداية من اليسار (قيمة عائمة)
         
         for i, header in reversed(list(enumerate(headers))):
             pdf.set_xy(x_pos, y_pos)
-            pdf.cell(col_widths[i], 10, get_display(arabic_reshaper.reshape(header)), 1, 0, 'C', True)
-            x_pos += col_widths[i]
+            pdf.cell(float(col_widths[i]), 10, get_display(arabic_reshaper.reshape(header)), 1, 0, 'C', True)
+            x_pos += float(col_widths[i])
         
         # بيانات الجدول
         pdf.set_text_color(0, 0, 0)  # إعادة النص للون الأسود
@@ -429,7 +429,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
                 f"{salary.get('net_salary', 0):.2f}"
             ]
             
-            x_pos = 30
+            x_pos = 30.0  # تحويل إلى رقم عائم
             for i, cell_data in reversed(list(enumerate(row_data))):
                 pdf.set_xy(x_pos, y_pos)
                 if i == 1 or i == 2:  # اسم الموظف والرقم الوظيفي
@@ -438,8 +438,8 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
                 else:
                     text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
                     align = 'C'
-                pdf.cell(col_widths[i], 10, text, 1, 0, align, fill)
-                x_pos += col_widths[i]
+                pdf.cell(float(col_widths[i]), 10, text, 1, 0, align, fill)
+                x_pos += float(col_widths[i])
         
         # صف المجموع
         y_pos += 10
