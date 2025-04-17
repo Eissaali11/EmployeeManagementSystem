@@ -849,6 +849,12 @@ def view_handover(id):
 @login_required
 def handover_pdf(id):
     """إنشاء نموذج تسليم/استلام كملف PDF"""
+    from utils.fpdf_arabic import ArabicPDF
+    from flask import send_file
+    import io
+    import os
+    from datetime import datetime
+    
     handover = VehicleHandover.query.get_or_404(id)
     vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
     images = VehicleHandoverImage.query.filter_by(handover_record_id=id).all()
@@ -858,12 +864,173 @@ def handover_pdf(id):
     
     handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
     
-    # هنا يتم استدعاء دالة إنشاء ملف PDF للنموذج
-    # يمكن إضافة هذه الدالة في utils/fpdf_arabic.py
-    # من أجل هذا المثال، سنعود إلى صفحة العرض مع رسالة
+    # إنشاء ملف PDF
+    pdf = ArabicPDF('P', 'mm', 'A4')
+    pdf.add_font('Arial', '', 'arial.ttf', uni=True)
+    pdf.add_font('Arial', 'B', 'arialbd.ttf', uni=True)
+    pdf.set_auto_page_break(True, margin=15)
+    pdf.add_page()
     
-    flash('سيتم تنفيذ وظيفة إنشاء PDF قريباً!', 'info')
-    return redirect(url_for('vehicles.view_handover', id=id))
+    # عنوان المستند
+    pdf.set_font('Arial', 'B', 18)
+    title = f"نموذج {handover_type_name} سيارة - {vehicle.plate_number}"
+    pdf.cell(0, 15, title, 0, 1, 'C')
+    
+    # معلومات السيارة
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'معلومات السيارة:', 0, 1, 'R')
+    
+    pdf.set_font('Arial', '', 12)
+    pdf.cell(100, 8, vehicle.plate_number, 0, 0, 'R')
+    pdf.cell(90, 8, ':رقم اللوحة', 0, 1, 'R')
+    
+    pdf.cell(100, 8, f"{vehicle.make} {vehicle.model}", 0, 0, 'R')
+    pdf.cell(90, 8, ':نوع السيارة', 0, 1, 'R')
+    
+    pdf.cell(100, 8, str(vehicle.year), 0, 0, 'R')
+    pdf.cell(90, 8, ':سنة الصنع', 0, 1, 'R')
+    
+    pdf.cell(100, 8, vehicle.color, 0, 0, 'R')
+    pdf.cell(90, 8, ':اللون', 0, 1, 'R')
+    
+    # خط فاصل
+    pdf.ln(5)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(5)
+    
+    # معلومات التسليم/الاستلام
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, f"معلومات {handover_type_name}:", 0, 1, 'R')
+    
+    pdf.set_font('Arial', '', 12)
+    pdf.cell(100, 8, handover.formatted_handover_date, 0, 0, 'R')
+    pdf.cell(90, 8, ':تاريخ ' + handover_type_name, 0, 1, 'R')
+    
+    pdf.cell(100, 8, handover.person_name, 0, 0, 'R')
+    pdf.cell(90, 8, ':اسم المستلم/المسلم', 0, 1, 'R')
+    
+    pdf.cell(100, 8, str(handover.mileage) + " كم", 0, 0, 'R')
+    pdf.cell(90, 8, ':عداد المسافة', 0, 1, 'R')
+    
+    pdf.cell(100, 8, handover.fuel_level, 0, 0, 'R')
+    pdf.cell(90, 8, ':مستوى الوقود', 0, 1, 'R')
+    
+    # حالة السيارة
+    pdf.ln(5)
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, "حالة السيارة:", 0, 1, 'R')
+    
+    pdf.set_font('Arial', '', 12)
+    pdf.multi_cell(0, 8, handover.vehicle_condition, 0, 'R')
+    
+    # التجهيزات
+    pdf.ln(5)
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, "التجهيزات:", 0, 1, 'R')
+    
+    pdf.set_font('Arial', '', 12)
+    check_mark = '\u2713' if handover.has_spare_tire else '\u2717'
+    pdf.cell(100, 8, check_mark, 0, 0, 'R')
+    pdf.cell(90, 8, ':إطار احتياطي', 0, 1, 'R')
+    
+    check_mark = '\u2713' if handover.has_fire_extinguisher else '\u2717'
+    pdf.cell(100, 8, check_mark, 0, 0, 'R')
+    pdf.cell(90, 8, ':طفاية حريق', 0, 1, 'R')
+    
+    check_mark = '\u2713' if handover.has_first_aid_kit else '\u2717'
+    pdf.cell(100, 8, check_mark, 0, 0, 'R')
+    pdf.cell(90, 8, ':حقيبة إسعافات أولية', 0, 1, 'R')
+    
+    check_mark = '\u2713' if handover.has_warning_triangle else '\u2717'
+    pdf.cell(100, 8, check_mark, 0, 0, 'R')
+    pdf.cell(90, 8, ':مثلث تحذيري', 0, 1, 'R')
+    
+    check_mark = '\u2713' if handover.has_tools else '\u2717'
+    pdf.cell(100, 8, check_mark, 0, 0, 'R')
+    pdf.cell(90, 8, ':أدوات', 0, 1, 'R')
+    
+    # ملاحظات إضافية
+    if handover.notes:
+        pdf.ln(5)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, "ملاحظات:", 0, 1, 'R')
+        
+        pdf.set_font('Arial', '', 12)
+        pdf.multi_cell(0, 8, handover.notes, 0, 'R')
+    
+    # إضافة الصور إذا كانت متاحة
+    if images:
+        pdf.add_page()
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, "الصور التوثيقية:", 0, 1, 'R')
+        
+        y_position = pdf.get_y()
+        col_width = 90
+        margin = 10
+        current_col = 0
+        
+        for i, image in enumerate(images):
+            if current_col == 2:
+                current_col = 0
+                y_position += 70
+            
+            x_position = 10 + (current_col * (col_width + margin))
+            
+            try:
+                if os.path.exists(image.image_path):
+                    pdf.image(image.image_path, x_position, y_position, col_width, 60)
+                    
+                    # وصف الصورة
+                    pdf.set_xy(x_position, y_position + 60)
+                    pdf.cell(col_width, 10, image.image_description or f"صورة {i+1}", 0, 1, 'C')
+            except Exception as e:
+                pdf.set_xy(x_position, y_position)
+                pdf.cell(col_width, 20, f"تعذر تحميل الصورة", 1, 1, 'C')
+            
+            current_col += 1
+    
+    # توقيعات
+    pdf.add_page()
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, "الاعتماد والتوقيع:", 0, 1, 'R')
+    
+    pdf.set_font('Arial', '', 12)
+    
+    # جدول التوقيعات
+    col_width = 65
+    pdf.set_xy(10, pdf.get_y() + 10)
+    
+    # عناوين الجدول
+    pdf.cell(col_width, 10, "مستلم السيارة", 1, 0, 'C')
+    pdf.cell(col_width, 10, "المشرف المسؤول", 1, 0, 'C')
+    pdf.cell(col_width, 10, "مسؤول الخدمات", 1, 1, 'C')
+    
+    # مساحة للتوقيع
+    pdf.cell(col_width, 30, "", 1, 0, 'C')
+    pdf.cell(col_width, 30, "", 1, 0, 'C')
+    pdf.cell(col_width, 30, "", 1, 1, 'C')
+    
+    # الأسماء
+    pdf.cell(col_width, 10, "الاسم: _____________", 1, 0, 'C')
+    pdf.cell(col_width, 10, "الاسم: _____________", 1, 0, 'C')
+    pdf.cell(col_width, 10, "الاسم: _____________", 1, 1, 'C')
+    
+    # تاريخ التوقيع
+    pdf.cell(0, 10, f"التاريخ: {format_date_arabic(datetime.now().date())}", 0, 1, 'C')
+    
+    # تصدير الملف
+    pdf_output = io.BytesIO()
+    pdf.output(pdf_output)
+    pdf_output.seek(0)
+    
+    filename = f"نموذج_{handover_type_name}_سيارة_{vehicle.plate_number}.pdf"
+    
+    return send_file(
+        pdf_output,
+        download_name=filename,
+        as_attachment=True,
+        mimetype='application/pdf'
+    )
 
 # مسارات التقارير والإحصائيات
 @vehicles_bp.route('/dashboard')
