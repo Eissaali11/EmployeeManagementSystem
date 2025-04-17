@@ -12,13 +12,24 @@ class ArabicPDF(FPDF):
     """فئة PDF مخصصة لدعم اللغة العربية"""
     
     def __init__(self, orientation='P', unit='mm', format='A4'):
-        super().__init__(orientation=orientation, unit=unit, format=format)
+        # القيم المقبولة للاتجاه هي 'P' (عمودي) أو 'L' (أفقي)
+        o = orientation.upper() if isinstance(orientation, str) else 'P'
+        if o not in ['P', 'L']:
+            o = 'P'
+        
+        # تحويل الوحدة إلى قيمة معترف بها
+        u = unit.lower() if isinstance(unit, str) else 'mm'
+        if u not in ['pt', 'mm', 'cm', 'in']:
+            u = 'mm'
+        
+        # تحويل الصيغة إلى قيمة معترف بها
+        f = format.upper() if isinstance(format, str) else 'A4'
+        
+        # استدعاء المُنشئ الأصلي مع المعاملات الصحيحة
+        super().__init__(orientation=o, unit=u, format=f)
         # إضافة الخط العربي
         self.add_font('Tajawal', '', os.path.join('static', 'fonts', 'Tajawal-Regular.ttf'), uni=True)
-        self.add_font('ArefRuqaa', '', os.path.join('static', 'fonts', 'ArefRuqaa-Regular.ttf'), uni=True)
-        # احتياطي
-        self.add_font('Arial', '', os.path.join('static', 'fonts', 'arial.ttf'), uni=True)
-        self.add_font('Arial', 'B', os.path.join('static', 'fonts', 'arialbd.ttf'), uni=True)
+        self.add_font('Tajawal', 'B', os.path.join('static', 'fonts', 'Tajawal-Bold.ttf'), uni=True)
     
     def arabic_text(self, x, y, txt, align='R'):
         """طباعة نص عربي"""
@@ -311,7 +322,11 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.arabic_text(280, pdf.get_y() + 5, "نظام إدارة الموظفين - جميع الحقوق محفوظة", 'C')
         
         # حفظ PDF إلى متغير
-        pdf_bytes = pdf.output('', 'S').encode('latin1')  # FPDF ترجع سلسلة لاتينية
+        pdf_output = pdf.output('', 'S')
+        if isinstance(pdf_output, str):
+            pdf_bytes = pdf_output.encode('latin1')  # FPDF ترجع سلسلة لاتينية في بعض الإصدارات
+        else:
+            pdf_bytes = pdf_output  # في الإصدارات الأحدث قد ترجع بيانات ثنائية مباشرة
         return pdf_bytes
         
     except Exception as e:
