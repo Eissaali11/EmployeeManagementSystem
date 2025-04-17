@@ -29,8 +29,8 @@ class ArabicPDF(FPDF):
         # استدعاء المُنشئ الأصلي مع المعاملات الصحيحة
         super().__init__(orientation=o, unit=u, format=f)
         # إضافة الخط العربي
-        self.add_font('Tajawal', '', os.path.join('static', 'fonts', 'Tajawal-Regular.ttf'), uni=True)
-        self.add_font('Tajawal', 'B', os.path.join('static', 'fonts', 'Tajawal-Bold.ttf'), uni=True)
+        self.add_font('Tajawal', '', os.path.join('static', 'fonts', 'arial.ttf'), uni=True)
+        self.add_font('Tajawal', 'B', os.path.join('static', 'fonts', 'arialbd.ttf'), uni=True)
         
         # تحديد الألوان الرئيسية في النظام
         self.primary_color = (29, 161, 142)  # اللون الأخضر من شعار RASSCO
@@ -51,7 +51,7 @@ class ArabicPDF(FPDF):
     
     def arabic_text(self, x, y, txt, align='R', max_width=None):
         """
-        طباعة نص عربي مع دعم أفضل للمحاذاة وعرض النص
+        طباعة نص عربي مع دعم أفضل للمحاذاة وعرض النص مع تحسين ظهور الأحرف العربية
         
         Args:
             x: موضع X للنص
@@ -60,9 +60,16 @@ class ArabicPDF(FPDF):
             align: المحاذاة ('R', 'L', 'C')
             max_width: العرض الأقصى للنص (اختياري)
         """
-        # تشكيل النص العربي للعرض الصحيح
-        reshaped_text = arabic_reshaper.reshape(txt)
-        bidi_text = get_display(reshaped_text)
+        # تشكيل النص العربي للعرض الصحيح - إصلاح مشكلة الأحرف العربية الناقصة
+        try:
+            # استخدام arabic_reshaper لتحويل النص العربي
+            reshaped_text = arabic_reshaper.reshape(txt)
+            # استخدام get_display لعكس اتجاه النص ليظهر بشكل صحيح
+            bidi_text = get_display(reshaped_text)
+        except Exception as e:
+            # في حالة حدوث أي خطأ في التحويل، استخدم النص الأصلي
+            print(f"خطأ في تحويل النص العربي: {e}")
+            bidi_text = txt
         
         # ضبط العرض الأقصى اعتماداً على اتجاه الصفحة إذا لم يتم تحديده
         if max_width is None:
@@ -70,10 +77,18 @@ class ArabicPDF(FPDF):
             max_width = self.content_width
         
         # حفظ الموضع الحالي
-        self.set_xy(x - (max_width if align == 'R' else 0), y)
+        if align == 'R':
+            self.set_xy(x - max_width, y)
+        elif align == 'C':
+            self.set_xy(x - (max_width/2), y)
+        else:
+            self.set_xy(x, y)
+        
+        # زيادة ارتفاع الخلية لضمان عدم حدوث تداخل
+        cell_height = 8
         
         # ضبط المحاذاة وطباعة النص مع تحديد العرض
-        self.cell(max_width, 8, bidi_text, 0, 1, align)
+        self.cell(max_width, cell_height, bidi_text, 0, 1, align)
     
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة مع الشعار والعنوان"""
@@ -207,42 +222,41 @@ def generate_salary_notification_pdf(data):
         pdf.set_draw_color(*pdf.primary_color)
         pdf.line(60, salary_title_y + 10, 140, salary_title_y + 10)
         
-        # ========== إعادة تصميم كاملة لقسم ملخص الراتب ==========
-        # نفس نمط جدول الرواتب في تقرير الرواتب ولكن بشكل أفضل
-
+        # ========== إعادة تصميم كاملة وصحيحة لقسم ملخص الراتب ==========
+        
         # نبدأ بعنوان منفصل وواضح تماماً
-        pdf.ln(10)  # مسافة إضافية بعد قسم تفاصيل الراتب
+        pdf.ln(15)  # مسافة إضافية بعد قسم تفاصيل الراتب
         pdf.set_font('Tajawal', 'B', 16)
         pdf.set_text_color(*pdf.primary_color)
 
         # إضافة عنوان محاذى للوسط
-        title_y = pdf.get_y() + 5
-        pdf.set_xy(0, title_y) 
-        pdf.cell(pdf.page_width, 10, get_display(arabic_reshaper.reshape("ملخص الراتب")), 0, 1, 'C')
+        title_y = pdf.get_y()
+        # استخدام get_display لضمان عرض النص العربي بشكل صحيح
+        pdf.cell(0, 10, get_display(arabic_reshaper.reshape("ملخص الراتب")), 0, 1, 'C')
         
-        # خط أفقي تحت العنوان
+        # خط أفقي تحت العنوان عبر الصفحة
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(80, title_y + 10, 130, title_y + 10)
+        pdf.line(70, title_y + 10, 140, title_y + 10)
         
         # نترك مسافة قبل بداية الجدول
         table_y = title_y + 15
         
-        # تحديد عرض الجدول وموضعه
-        table_width = 125  # عرض الجدول الكلي
-        item_width = 85    # عرض عمود البيان
+        # تحديد عرض الجدول بشكل يتناسب مع المحتوى
         amount_width = 40  # عرض عمود المبلغ
+        item_width = 85    # عرض عمود البيان
         row_height = 10    # ارتفاع الصف
         
-        # حساب موقع بداية الجدول في وسط الصفحة
+        # حساب موقع بداية الجدول في منتصف الصفحة
+        table_width = amount_width + item_width
         x_start = (pdf.page_width - table_width) / 2
         
-        # رسم الجدول وعناوين الأعمدة
+        # إنشاء جدول جديد بتصميم محسن
         pdf.set_xy(x_start, table_y)
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
         pdf.set_font('Tajawal', 'B', 12)
         
-        # رسم رأس الجدول
+        # رسم رأس الجدول - لكن عكس ترتيب الأعمدة ليتناسب مع اللغة العربية
         pdf.cell(amount_width, row_height, get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
         pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
         
@@ -256,7 +270,6 @@ def generate_salary_notification_pdf(data):
         ]
         
         # طباعة بيانات الجدول
-        pdf.set_font('Tajawal', '', 11)
         pdf.set_text_color(0, 0, 0)  # لون أسود للنص
         
         for i, item in enumerate(salary_items):
@@ -268,13 +281,14 @@ def generate_salary_notification_pdf(data):
                 fill = True
             else:
                 # تناوب ألوان الصفوف
+                pdf.set_font('Tajawal', '', 11)
                 fill = i % 2 == 1
                 if fill:
                     pdf.set_fill_color(*pdf.table_row_alt_color)
                 else:
                     pdf.set_fill_color(255, 255, 255)
             
-            # رسم الصف الحالي
+            # رسم الصف بشكل صحيح - ضبط كامل للمحاذاة
             pdf.set_xy(x_start, pdf.get_y())
             pdf.cell(amount_width, row_height, item[1], 1, 0, 'C', fill)
             pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
