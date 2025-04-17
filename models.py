@@ -168,3 +168,150 @@ class SystemAudit(db.Model):
     
     def __repr__(self):
         return f'<SystemAudit {self.action} on {self.entity_type} #{self.entity_id}>'
+
+# نماذج إدارة السيارات
+class Vehicle(db.Model):
+    """نموذج السيارة مع المعلومات الأساسية"""
+    id = db.Column(db.Integer, primary_key=True)
+    plate_number = db.Column(db.String(20), nullable=False, unique=True)  # رقم اللوحة
+    make = db.Column(db.String(50), nullable=False)  # الشركة المصنعة (تويوتا، نيسان، إلخ)
+    model = db.Column(db.String(50), nullable=False)  # موديل السيارة
+    year = db.Column(db.Integer, nullable=False)  # سنة الصنع
+    color = db.Column(db.String(30), nullable=False)  # لون السيارة
+    status = db.Column(db.String(30), nullable=False, default='available')  # الحالة: متاحة، مؤجرة، في المشروع، في الورشة، حادث
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    rental_records = db.relationship('VehicleRental', back_populates='vehicle', cascade='all, delete-orphan')
+    workshop_records = db.relationship('VehicleWorkshop', back_populates='vehicle', cascade='all, delete-orphan')
+    project_assignments = db.relationship('VehicleProject', back_populates='vehicle', cascade='all, delete-orphan')
+    handover_records = db.relationship('VehicleHandover', back_populates='vehicle', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Vehicle {self.plate_number} {self.make} {self.model}>'
+
+
+class VehicleRental(db.Model):
+    """معلومات إيجار السيارة"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)  # تاريخ بداية الإيجار
+    end_date = db.Column(db.Date)  # تاريخ نهاية الإيجار (قد يكون فارغا إذا كان الإيجار مستمرا)
+    monthly_cost = db.Column(db.Float, nullable=False)  # قيمة الإيجار الشهري
+    is_active = db.Column(db.Boolean, default=True)  # هل الإيجار نشط حاليا
+    lessor_name = db.Column(db.String(100))  # اسم المؤجر أو الشركة المؤجرة
+    lessor_contact = db.Column(db.String(100))  # معلومات الاتصال بالمؤجر
+    contract_number = db.Column(db.String(50))  # رقم العقد
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', back_populates='rental_records')
+    
+    def __repr__(self):
+        return f'<VehicleRental {self.vehicle_id} {self.start_date} to {self.end_date}>'
+
+
+class VehicleWorkshop(db.Model):
+    """معلومات دخول وخروج السيارة من الورشة"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    entry_date = db.Column(db.Date, nullable=False)  # تاريخ دخول الورشة
+    exit_date = db.Column(db.Date)  # تاريخ الخروج (قد يكون فارغا إذا كانت ما زالت في الورشة)
+    reason = db.Column(db.String(50), nullable=False)  # السبب: عطل، صيانة دورية، حادث
+    description = db.Column(db.Text, nullable=False)  # وصف العطل أو الصيانة
+    repair_status = db.Column(db.String(30), nullable=False, default='in_progress')  # الحالة: قيد التنفيذ، تم الإصلاح، بانتظار الموافقة
+    cost = db.Column(db.Float, default=0.0)  # تكلفة الإصلاح
+    workshop_name = db.Column(db.String(100))  # اسم الورشة
+    technician_name = db.Column(db.String(100))  # اسم الفني المسؤول
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', back_populates='workshop_records')
+    images = db.relationship('VehicleWorkshopImage', back_populates='workshop_record', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<VehicleWorkshop {self.vehicle_id} {self.entry_date} {self.reason}>'
+
+
+class VehicleWorkshopImage(db.Model):
+    """صور توثيقية للسيارة في الورشة"""
+    id = db.Column(db.Integer, primary_key=True)
+    workshop_record_id = db.Column(db.Integer, db.ForeignKey('vehicle_workshop.id', ondelete='CASCADE'), nullable=False)
+    image_type = db.Column(db.String(20), nullable=False)  # النوع: قبل الإصلاح، بعد الإصلاح
+    image_path = db.Column(db.String(255), nullable=False)  # مسار الصورة
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)  # ملاحظات
+    
+    # العلاقات
+    workshop_record = db.relationship('VehicleWorkshop', back_populates='images')
+    
+    def __repr__(self):
+        return f'<VehicleWorkshopImage {self.workshop_record_id} {self.image_type}>'
+
+
+class VehicleProject(db.Model):
+    """معلومات تخصيص السيارة لمشروع معين"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    project_name = db.Column(db.String(100), nullable=False)  # اسم المشروع
+    location = db.Column(db.String(100), nullable=False)  # موقع المشروع (المدينة، المنطقة)
+    manager_name = db.Column(db.String(100), nullable=False)  # اسم مسؤول المشروع
+    start_date = db.Column(db.Date, nullable=False)  # تاريخ بداية تخصيص السيارة للمشروع
+    end_date = db.Column(db.Date)  # تاريخ نهاية التخصيص (قد يكون فارغا إذا كان مستمرا)
+    is_active = db.Column(db.Boolean, default=True)  # هل التخصيص نشط حاليا
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', back_populates='project_assignments')
+    
+    def __repr__(self):
+        return f'<VehicleProject {self.vehicle_id} {self.project_name}>'
+
+
+class VehicleHandover(db.Model):
+    """نموذج تسليم واستلام السيارة"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    handover_type = db.Column(db.String(20), nullable=False)  # النوع: تسليم، استلام
+    handover_date = db.Column(db.Date, nullable=False)  # تاريخ التسليم/الاستلام
+    person_name = db.Column(db.String(100), nullable=False)  # اسم الشخص المستلم/المسلم
+    vehicle_condition = db.Column(db.Text, nullable=False)  # حالة السيارة عند التسليم/الاستلام
+    fuel_level = db.Column(db.String(20), nullable=False)  # مستوى الوقود
+    mileage = db.Column(db.Integer, nullable=False)  # عداد الكيلومترات
+    has_spare_tire = db.Column(db.Boolean, default=True)  # وجود إطار احتياطي
+    has_fire_extinguisher = db.Column(db.Boolean, default=True)  # وجود طفاية حريق
+    has_first_aid_kit = db.Column(db.Boolean, default=True)  # وجود حقيبة إسعافات أولية
+    has_warning_triangle = db.Column(db.Boolean, default=True)  # وجود مثلث تحذيري
+    has_tools = db.Column(db.Boolean, default=True)  # وجود أدوات
+    notes = db.Column(db.Text)  # ملاحظات إضافية
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', back_populates='handover_records')
+    images = db.relationship('VehicleHandoverImage', back_populates='handover_record', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<VehicleHandover {self.vehicle_id} {self.handover_type} {self.handover_date}>'
+
+
+class VehicleHandoverImage(db.Model):
+    """صور توثيقية لحالة السيارة عند التسليم/الاستلام"""
+    id = db.Column(db.Integer, primary_key=True)
+    handover_record_id = db.Column(db.Integer, db.ForeignKey('vehicle_handover.id', ondelete='CASCADE'), nullable=False)
+    image_path = db.Column(db.String(255), nullable=False)  # مسار الصورة
+    image_description = db.Column(db.String(100))  # وصف الصورة
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    handover_record = db.relationship('VehicleHandover', back_populates='images')
+    
+    def __repr__(self):
+        return f'<VehicleHandoverImage {self.handover_record_id}>'

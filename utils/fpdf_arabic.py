@@ -338,7 +338,8 @@ def generate_salary_notification_pdf(data):
         pdf.set_text_color(*pdf.secondary_color)
         current_date = data.get('current_date', datetime.now().strftime('%Y-%m-%d'))
         pdf.arabic_text(200.0, float(pdf.get_y()), f"تم إصدار هذا الإشعار بتاريخ {current_date}", 'C')
-        pdf.arabic_text(200.0, float(pdf.get_y()) + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + str(datetime.now().year), 'C')
+        current_year = datetime.now().year
+        pdf.arabic_text(200.0, float(pdf.get_y()) + 5.0, f"شركة RASSCO - جميع الحقوق محفوظة © {current_year}", 'C')
         
         # حفظ PDF إلى متغير
         pdf_output = pdf.output('', 'S')
@@ -590,7 +591,8 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.set_text_color(*pdf.secondary_color)
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         pdf.arabic_text(280.0, float(pdf.get_y()), f"تم إنشاء هذا التقرير في {current_timestamp}", 'C')
-        pdf.arabic_text(280.0, float(pdf.get_y()) + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + str(datetime.now().year), 'C')
+        current_year = datetime.now().year
+        pdf.arabic_text(280.0, float(pdf.get_y()) + 5.0, f"شركة RASSCO - جميع الحقوق محفوظة © {current_year}", 'C')
         
         # حفظ PDF إلى متغير
         pdf_output = pdf.output('', 'S')
