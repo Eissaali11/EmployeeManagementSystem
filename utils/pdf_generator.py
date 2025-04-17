@@ -17,6 +17,10 @@ def generate_salary_report_pdf(salaries, month, year):
         bytes يحتوي على ملف PDF
     """
     try:
+        # التأكد من تحويل الشهر والسنة إلى قيم عددية
+        month = int(month) if not isinstance(month, int) else month
+        year = int(year) if not isinstance(year, int) else year
+        
         # الحصول على اسم الشهر بالعربية
         month_names = {
             1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
@@ -25,20 +29,20 @@ def generate_salary_report_pdf(salaries, month, year):
         }
         month_name = month_names.get(month, str(month))
         
-        # إعداد بيانات الرواتب للتقرير
+        # إعداد بيانات الرواتب للتقرير مع التأكد من تحويل جميع البيانات إلى نوع مناسب
         salary_data = []
         for salary in salaries:
             salary_data.append({
-                'employee_name': salary.employee.name,
-                'employee_id': salary.employee.employee_id,
-                'basic_salary': salary.basic_salary,
-                'allowances': salary.allowances,
-                'deductions': salary.deductions,
-                'bonus': salary.bonus,
-                'net_salary': salary.net_salary
+                'employee_name': str(salary.employee.name),
+                'employee_id': str(salary.employee.employee_id),
+                'basic_salary': float(salary.basic_salary),
+                'allowances': float(salary.allowances),
+                'deductions': float(salary.deductions),
+                'bonus': float(salary.bonus),
+                'net_salary': float(salary.net_salary)
             })
         
-        # إنشاء ملف PDF باستخدام FPDF
+        # إنشاء ملف PDF باستخدام FPDF مع تحويل جميع المعاملات إلى سلاسل نصية
         return generate_fpdf_report(salary_data, month_name, str(year))
     
     except Exception as e:
