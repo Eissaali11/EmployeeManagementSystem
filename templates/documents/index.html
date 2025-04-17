@@ -16,6 +16,42 @@
             </a>
         </div>
     </div>
+    
+    <!-- إحصائيات الوثائق -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm card bg-primary bg-gradient text-white">
+                <div class="card-body text-center">
+                    <h3 class="counter-value">{{ total_docs }}</h3>
+                    <p class="mb-0">إجمالي الوثائق</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-danger bg-gradient text-white">
+                <div class="card-body text-center">
+                    <h3 class="counter-value">{{ expired_docs }}</h3>
+                    <p class="mb-0">الوثائق المنتهية</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning bg-gradient text-white">
+                <div class="card-body text-center">
+                    <h3 class="counter-value">{{ expiring_soon }}</h3>
+                    <p class="mb-0">تنتهي خلال 10 أيام</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success bg-gradient text-white">
+                <div class="card-body text-center">
+                    <h3 class="counter-value">{{ safe_docs }}</h3>
+                    <p class="mb-0">الوثائق السارية</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- فلاتر البحث -->
     <div class="card mb-4">
@@ -84,8 +120,16 @@
 
     <!-- جدول الوثائق -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">قائمة الوثائق</h5>
+            <div>
+                <a href="{{ url_for('documents.index', show_all='true') }}" class="btn btn-sm btn-outline-primary {% if show_all %}active{% endif %}">
+                    <i class="fas fa-globe me-1"></i> عرض جميع الوثائق
+                </a>
+                <a href="{{ url_for('documents.index') }}" class="btn btn-sm btn-outline-warning {% if not show_all %}active{% endif %}">
+                    <i class="fas fa-filter me-1"></i> عرض الوثائق المنتهية أو التي ستنتهي قريباً
+                </a>
+            </div>
         </div>
         <div class="card-body">
             {% if documents %}
@@ -183,6 +227,7 @@
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                                                 <form action="{{ url_for('documents.delete', id=document.id) }}" method="post">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" class="btn btn-danger delete-confirm">تأكيد الحذف</button>
                                                 </form>
                                             </div>

@@ -28,6 +28,7 @@ def index():
     document_type = request.args.get('document_type', '')
     employee_id = request.args.get('employee_id', '')
     expiring = request.args.get('expiring', '')
+    show_all = request.args.get('show_all', 'false')
     
     # Build query
     query = Document.query
@@ -51,8 +52,27 @@ def index():
         query = query.filter(Document.expiry_date <= future_date, 
                              Document.expiry_date >= datetime.now().date())
     
+    # فلترة الوثائق التي باقي على انتهائها أكثر من 10 أيام
+    today = datetime.now().date()
+    if show_all.lower() != 'true':
+        # عرض الوثائق التي تنتهي في خلال 10 أيام أو أقل أو المنتهية بالفعل
+        future_date_10_days = today + timedelta(days=10)
+        query = query.filter(
+            (Document.expiry_date <= future_date_10_days) | 
+            (Document.expiry_date < today)
+        )
+    
     # Execute query
     documents = query.all()
+    
+    # احسب عدد الوثائق الكلي والمنتهية والقريبة من الانتهاء
+    total_docs = Document.query.count()
+    expired_docs = Document.query.filter(Document.expiry_date < today).count()
+    expiring_soon = Document.query.filter(
+        Document.expiry_date <= today + timedelta(days=10),
+        Document.expiry_date >= today
+    ).count()
+    safe_docs = total_docs - expired_docs - expiring_soon
     
     # Get all employees for filter dropdown
     employees = Employee.query.all()
@@ -70,7 +90,12 @@ def index():
                           document_types=document_types,
                           selected_type=document_type,
                           selected_employee=employee_id,
-                          selected_expiring=expiring)
+                          selected_expiring=expiring,
+                          show_all=show_all.lower() == 'true',
+                          total_docs=total_docs,
+                          expired_docs=expired_docs,
+                          expiring_soon=expiring_soon,
+                          safe_docs=safe_docs)
 
 @documents_bp.route('/create', methods=['GET', 'POST'])
 def create():
@@ -143,6 +168,11 @@ def create():
 @documents_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
     """Delete a document record"""
+    # تحقق من وجود CSRF token
+    if 'csrf_token' not in request.form:
+        flash('خطأ في التحقق من الأمان. يرجى المحاولة مرة أخرى.', 'danger')
+        return redirect(url_for('documents.index'))
+    
     document = Document.query.get_or_404(id)
     employee_name = document.employee.name
     document_type = document.document_type
@@ -155,7 +185,8 @@ def delete(id):
             action='delete',
             entity_type='document',
             entity_id=id,
-            details=f'تم حذف وثيقة من نوع {document_type} للموظف: {employee_name}'
+            details=f'تم حذف وثيقة من نوع {document_type} للموظف: {employee_name}',
+            user_id=current_user.id if current_user.is_authenticated else None
         )
         db.session.add(audit)
         db.session.commit()
@@ -174,6 +205,11 @@ def update_expiry(id):
     
     if request.method == 'POST':
         try:
+            # تحقق من وجود CSRF token
+            if 'csrf_token' not in request.form:
+                flash('خطأ في التحقق من الأمان. يرجى المحاولة مرة أخرى.', 'danger')
+                return redirect(url_for('documents.update_expiry', id=id))
+            
             expiry_date_str = request.form['expiry_date']
             # تحليل التاريخ
             expiry_date = parse_date(expiry_date_str)
@@ -189,7 +225,8 @@ def update_expiry(id):
                 action='update',
                 entity_type='document',
                 entity_id=id,
-                details=f'تم تحديث تاريخ انتهاء وثيقة {document.document_type} للموظف: {document.employee.name} من {old_expiry_date} إلى {expiry_date}'
+                details=f'تم تحديث تاريخ انتهاء وثيقة {document.document_type} للموظف: {document.employee.name} من {old_expiry_date} إلى {expiry_date}',
+                user_id=current_user.id if current_user.is_authenticated else None
             )
             db.session.add(audit)
             db.session.commit()
