@@ -31,6 +31,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "employee_management_secret")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
+# إعفاء بعض المسارات من حماية CSRF
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # تعطيل التحقق التلقائي من CSRF
+
 # Configure database connection using environment variables
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
@@ -108,6 +112,9 @@ with app.app_context():
     from routes.auth import auth_bp
     from routes.renewal_fees import renewal_fees_bp
     from routes.vehicles import vehicles_bp
+    
+    # تعطيل حماية CSRF لطرق معينة
+    csrf.exempt(auth_bp)
     
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(employees_bp, url_prefix='/employees')

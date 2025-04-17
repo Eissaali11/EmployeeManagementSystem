@@ -274,7 +274,7 @@
             <div class="tab-content" id="loginTabsContent">
                 <!-- تسجيل الدخول بالبريد الإلكتروني -->
                 <div class="tab-pane fade show active" id="email-login" role="tabpanel" aria-labelledby="email-tab">
-                    <form method="POST" action="{{ url_for('auth.login') }}">
+                    <form id="login-form" onsubmit="event.preventDefault(); handleEmailLogin()">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">البريد الإلكتروني</label>
@@ -369,7 +369,7 @@
 
   // عناصر DOM
   const googleSignInBtn = document.getElementById('googleSignIn');
-  const emailForm = document.querySelector('form[action*="login"]');
+  const emailForm = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
   const passwordInput = document.getElementById('password');
   const rememberMe = document.getElementById('remember');
