@@ -148,7 +148,11 @@
                                     </label>
                                     <select class="form-select" id="employee_id" name="employee_id" required>
                                         <option value="" selected disabled>اختر الموظف</option>
-                                        <!-- سيتم ملء هذه القائمة ديناميكيًا -->
+                                        {% for employee in employees %}
+                                        <option value="{{ employee.id }}" data-contract="{{ employee.contract_type or 'foreign' }}" data-salary="{{ employee.basic_salary or 0 }}" data-national-balance="{{ employee.has_national_balance or 'false' }}">
+                                            {{ employee.name }} ({{ employee.employee_id }})
+                                        </option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                             </div>
