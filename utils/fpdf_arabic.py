@@ -327,18 +327,18 @@ def generate_salary_notification_pdf(data):
         pdf.cell(70.0, 10.0, "", 0, 0, 'C')  # فراغ في الوسط
         pdf.cell(50.0, 10.0, get_display(arabic_reshaper.reshape("توقيع المدير المالي")), 0, 1, 'C')
         
-        pdf.set_xy(20, pdf.get_y())
-        pdf.cell(50, 10, "________________", 0, 0, 'C')
-        pdf.cell(70, 10, "", 0, 0, 'C')  # فراغ في الوسط
-        pdf.cell(50, 10, "________________", 0, 1, 'C')
+        pdf.set_xy(20.0, float(pdf.get_y()))
+        pdf.cell(50.0, 10.0, "________________", 0, 0, 'C')
+        pdf.cell(70.0, 10.0, "", 0, 0, 'C')  # فراغ في الوسط
+        pdf.cell(50.0, 10.0, "________________", 0, 1, 'C')
         
         # التذييل
-        pdf.set_xy(10, 270)
+        pdf.set_xy(10.0, 270.0)
         pdf.set_font('Tajawal', '', 8)
         pdf.set_text_color(*pdf.secondary_color)
         current_date = data.get('current_date', datetime.now().strftime('%Y-%m-%d'))
-        pdf.arabic_text(200, pdf.get_y(), f"تم إصدار هذا الإشعار بتاريخ {current_date}", 'C')
-        pdf.arabic_text(200, pdf.get_y() + 5, "شركة RASSCO - جميع الحقوق محفوظة © " + str(datetime.now().year), 'C')
+        pdf.arabic_text(200.0, float(pdf.get_y()), f"تم إصدار هذا الإشعار بتاريخ {current_date}", 'C')
+        pdf.arabic_text(200.0, float(pdf.get_y()) + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + str(datetime.now().year), 'C')
         
         # حفظ PDF إلى متغير
         pdf_output = pdf.output('', 'S')
@@ -377,7 +377,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
         pdf.set_line_width(0.3)
-        pdf.rect(10, 40, 277, 150)  # إطار خارجي للتقرير
+        pdf.rect(10.0, 40.0, 277.0, 150.0)  # إطار خارجي للتقرير
         
         # إعداد جدول الرواتب
         headers = ["م", "اسم الموظف", "الرقم الوظيفي", "الراتب الأساسي", "البدلات", "الخصومات", "المكافآت", "صافي الراتب"]
@@ -391,7 +391,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # ضبط موضع الجدول
         pdf.set_font('Tajawal', 'B', 10)
-        y_pos = 50
+        y_pos = 50.0
         
         # عرض الأعمدة
         col_widths = [15.0, 60.0, 25.0, 25.0, 25.0, 25.0, 25.0, 30.0]  # مجموع العرض = 230 (مليمتر تقريباً)
@@ -403,14 +403,14 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         for i, header in reversed(list(enumerate(headers))):
             pdf.set_xy(x_pos, y_pos)
-            pdf.cell(float(col_widths[i]), 10, get_display(arabic_reshaper.reshape(header)), 1, 0, 'C', True)
+            pdf.cell(float(col_widths[i]), 10.0, get_display(arabic_reshaper.reshape(header)), 1, 0, 'C', True)
             x_pos += float(col_widths[i])
         
         # بيانات الجدول
         pdf.set_text_color(0, 0, 0)  # إعادة النص للون الأسود
         pdf.set_font('Tajawal', '', 10)
         for idx, salary in enumerate(salaries_data):
-            y_pos += 10
+            y_pos += 10.0
             fill = idx % 2 == 1  # صفوف بديلة
             if fill:
                 pdf.set_fill_color(*pdf.table_row_alt_color)
@@ -438,11 +438,11 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
                 else:
                     text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
                     align = 'C'
-                pdf.cell(float(col_widths[i]), 10, text, 1, 0, align, fill)
+                pdf.cell(float(col_widths[i]), 10.0, text, 1, 0, align, fill)
                 x_pos += float(col_widths[i])
         
         # صف المجموع
-        y_pos += 10
+        y_pos += 10.0
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
         
@@ -468,16 +468,16 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             else:
                 text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
                 align = 'C'
-            pdf.cell(float(col_widths[i]), 10, text, 1, 0, align, True)
+            pdf.cell(float(col_widths[i]), 10.0, text, 1, 0, align, True)
             x_pos += float(col_widths[i])
         
         # ملخص الرواتب - إصدار محسن بشكل كبير
         
         # احتساب مكان الجدول بما يتناسب مع عدد الموظفين وحجم الصفحة
         if len(salaries_data) > 5:
-            summary_y = 135  # إذا كان هناك عدد كبير من الموظفين، نضع الجدول في مكان ثابت
+            summary_y = 135.0  # إذا كان هناك عدد كبير من الموظفين، نضع الجدول في مكان ثابت
         else:
-            summary_y = y_pos + 35  # مكان متناسب مع موضع جدول الرواتب
+            summary_y = float(y_pos) + 35.0  # مكان متناسب مع موضع جدول الرواتب
         
         # تقسيم الصفحة إلى عمودين واضحين
         # الجانب الأيمن للملخص (ثلثي عرض الصفحة)
