@@ -274,7 +274,7 @@
             <div class="tab-content" id="loginTabsContent">
                 <!-- تسجيل الدخول بالبريد الإلكتروني -->
                 <div class="tab-pane fade show active" id="email-login" role="tabpanel" aria-labelledby="email-tab">
-                    <form id="login-form" onsubmit="event.preventDefault(); handleEmailLogin()">
+                    <form id="login-form" method="POST" action="{{ url_for('auth.login') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">البريد الإلكتروني</label>
@@ -539,27 +539,11 @@
     }
   });
   
-  // مستمع حدث للنموذج الرئيسي للتعامل مع تسجيل الدخول
-  if (emailForm) {
-    emailForm.addEventListener('submit', function(event) {
-      // منع السلوك الافتراضي للنموذج
-      event.preventDefault();
-      console.log("تم تقديم نموذج تسجيل الدخول");
-      
-      // استدعاء معالج تسجيل الدخول بالبريد الإلكتروني
-      handleEmailLogin();
-    });
-  }
+  // تعطيل مستمع الحدث للنموذج الرئيسي ليعمل بشكل طبيعي
+  console.log("تم تعطيل مستمع حدث النموذج للسماح بالسلوك الافتراضي");
   
-  // معالجة النموذج عند الضغط على Enter
-  if (passwordInput) {
-    passwordInput.addEventListener('keyup', (event) => {
-      if (event.key === 'Enter') {
-        console.log("تم الضغط على Enter في حقل كلمة المرور");
-        handleEmailLogin();
-      }
-    });
-  }
+  // تعطيل معالج Enter لكي يعمل النموذج بشكل طبيعي
+  console.log("تم تعطيل معالج الضغط على Enter");
   
   // للتأكد من تحميل الكود
   console.log("تم تحميل كود تسجيل الدخول بالكامل");
