@@ -1,16 +1,62 @@
 """
-وحدة إنشاء ملفات PDF من HTML مع دعم كامل للنصوص العربية
+وحدة إنشاء ملفات PDF من قوالب Jinja مع دعم كامل للنصوص العربية
+تستخدم FPDF بدلاً من weasyprint لتجنب الاعتماد على wkhtmltopdf
 """
 from io import BytesIO
 from datetime import datetime
-from weasyprint import HTML, CSS
 from jinja2 import Template
 import os
 import base64
+import arabic_reshaper
+from bidi.algorithm import get_display
+from fpdf import FPDF
+import re
+
+# استيراد وحدة FPDF المخصصة للعربية
+from utils.fpdf_arabic import ArabicPDF, generate_salary_notification_pdf, generate_salary_report_pdf
+
+def strip_html_tags(text):
+    """
+    إزالة وسوم HTML من النص
+    
+    Args:
+        text: النص المراد معالجته
+        
+    Returns:
+        النص بدون وسوم HTML
+    """
+    return re.sub(r'<.*?>', '', text) if text else ''
+
+def process_html_table_to_data(html_table):
+    """
+    تحويل جدول HTML إلى بيانات مناسبة لـ FPDF
+    
+    Args:
+        html_table: نص HTML يحتوي على جدول
+        
+    Returns:
+        قائمة ببيانات الجدول
+    """
+    # تنفيذ منطق بسيط لاستخراج بيانات الجدول
+    # هذه نسخة مبسطة جداً، يجب تطويرها حسب احتياجات المشروع
+    rows = []
+    # استخراج الصفوف بين <tr> و </tr>
+    tr_pattern = r'<tr.*?>(.*?)</tr>'
+    for tr_match in re.finditer(tr_pattern, html_table, re.DOTALL):
+        row = []
+        # استخراج الخلايا بين <td> و </td> أو <th> و </th>
+        cell_pattern = r'<(?:td|th).*?>(.*?)</(?:td|th)>'
+        for cell_match in re.finditer(cell_pattern, tr_match.group(1), re.DOTALL):
+            cell_content = strip_html_tags(cell_match.group(1).strip())
+            row.append(cell_content)
+        if row:  # تجنب الصفوف الفارغة
+            rows.append(row)
+    return rows
 
 def generate_html_pdf(template_str, data, filename=None, landscape=False):
     """
     إنشاء ملف PDF من قالب HTML مع دعم كامل للعربية
+    باستخدام FPDF بدلاً من weasyprint لتجنب الاعتماد على wkhtmltopdf
     
     Args:
         template_str: قالب HTML كنص
@@ -22,127 +68,64 @@ def generate_html_pdf(template_str, data, filename=None, landscape=False):
         BytesIO أو None
     """
     try:
-        # دمج البيانات مع القالب
-        template = Template(template_str)
-        html_content = template.render(**data)
+        # تحديد نوع البيانات استناداً إلى محتوى data
+        # نقوم بتحليل البيانات لنعرف ما إذا كان إشعار راتب أو تقرير رواتب
+        if 'employee_name' in data and 'basic_salary' in data:
+            # هذا إشعار راتب فردي - استخدام الدالة المخصصة
+            pdf_bytes = generate_salary_notification_pdf(data)
+        elif 'salaries' in data and 'month_name' in data and 'year' in data:
+            # هذا تقرير رواتب - استخدام الدالة المخصصة
+            pdf_bytes = generate_salary_report_pdf(data['salaries'], data['month_name'], data['year'])
+        else:
+            # في حالة أخرى، ننشئ PDF عام
+            # هذا مجرد تنفيذ أساسي، يمكن توسيعه لأنواع أخرى من التقارير
+            pdf = ArabicPDF('L' if landscape else 'P')
+            pdf.add_page()
+            
+            # إضافة ترويسة
+            title = data.get('title', 'تقرير النظام')
+            subtitle = data.get('subtitle', '')
+            pdf.add_company_header(title, subtitle)
+            
+            # إضافة المحتوى بطريقة مبسطة
+            # هذه نسخة أولية، يمكن تحسينها لدعم المزيد من ميزات HTML
+            pdf.set_font('Tajawal', '', 12)
+            pdf.set_text_color(0, 0, 0)
+            
+            # إضافة نص المحتوى الرئيسي
+            content = data.get('content', '')
+            if content:
+                pdf.set_xy(20, 50)
+                pdf.multi_cell(pdf.content_width - 40, 10, get_display(arabic_reshaper.reshape(content)), 0, 'R')
+            
+            # التذييل
+            pdf.set_xy(10, pdf.page_height - 20)
+            pdf.set_font('Tajawal', '', 8)
+            pdf.set_text_color(*pdf.secondary_color)
+            current_date = datetime.now().strftime('%Y-%m-%d')
+            pdf.arabic_text(pdf.page_width / 2, pdf.get_y(), f"تم إنشاء هذا التقرير بتاريخ {current_date}", 'C')
+            pdf.arabic_text(pdf.page_width / 2, pdf.get_y() + 5, "نظام إدارة الموظفين - جميع الحقوق محفوظة", 'C')
+            
+            # إنتاج البيانات الثنائية
+            pdf_output = pdf.output('', 'S')
+            if isinstance(pdf_output, str):
+                pdf_bytes = pdf_output.encode('latin1')
+            else:
+                pdf_bytes = pdf_output
         
-        # إنشاء ملف PDF
-        css_str = """
-            @page {
-                size: """ + ("landscape A4" if landscape else "A4") + """;
-                margin: 2cm;
-                @top-center {
-                    content: "نظام إدارة الموظفين";
-                    font-family: 'Tajawal', sans-serif;
-                    font-size: 10px;
-                    color: #666;
-                }
-                @bottom-center {
-                    content: "الصفحة " counter(page) " من " counter(pages);
-                    font-family: 'Tajawal', sans-serif;
-                    font-size: 10px;
-                    color: #666;
-                }
-            }
-            body {
-                font-family: 'Tajawal', sans-serif;
-                direction: rtl;
-                text-align: right;
-            }
-            h1, h2, h3 {
-                color: #333;
-                text-align: center;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 20px 0;
-            }
-            table, th, td {
-                border: 1px solid #ddd;
-            }
-            th {
-                background-color: #f2f2f2;
-                font-weight: bold;
-                padding: 10px;
-            }
-            td {
-                padding: 8px;
-            }
-            tr:nth-child(even) {
-                background-color: #f9f9f9;
-            }
-            .logo {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-            .footer {
-                margin-top: 30px;
-                text-align: center;
-                font-size: 12px;
-                color: #666;
-            }
-            .signature {
-                margin-top: 50px;
-                display: flex;
-                justify-content: space-between;
-            }
-            .signature div {
-                flex: 1;
-                text-align: center;
-            }
-            .signature .line {
-                width: 80%;
-                margin: 10px auto;
-                border-bottom: 1px solid #000;
-            }
-            .employee-info {
-                margin: 20px 0;
-                padding: 10px;
-                border: 1px solid #ddd;
-                background-color: #f9f9f9;
-            }
-            .employee-info p {
-                margin: 5px 0;
-            }
-            .salary-details {
-                font-weight: bold;
-            }
-            .total-row {
-                font-weight: bold;
-                background-color: #f2f2f2;
-            }
-            @font-face {
-                font-family: 'Tajawal';
-                src: url('static/fonts/Tajawal-Regular.ttf') format('truetype');
-                font-weight: normal;
-                font-style: normal;
-            }
-            @font-face {
-                font-family: 'ArefRuqaa';
-                src: url('static/fonts/ArefRuqaa-Regular.ttf') format('truetype');
-                font-weight: normal;
-                font-style: normal;
-            }
-        """
-        
-        # تحويل HTML إلى PDF
-        buffer = BytesIO()
-        html = HTML(string=html_content)
-        css = CSS(string=css_str)
-        html.write_pdf(buffer, stylesheets=[css])
-        
-        # إذا كان هناك اسم ملف، يتم حفظ البيانات في الملف
+        # معالجة البيانات الناتجة
         if filename:
             with open(filename, 'wb') as f:
-                f.write(buffer.getvalue())
+                f.write(pdf_bytes)
             return None
         
-        # إعادة توجيه المؤشر إلى بداية البيانات
+        # إرجاع البيانات في buffer
+        buffer = BytesIO(pdf_bytes)
         buffer.seek(0)
         return buffer
+    
     except Exception as e:
-        print(f"Error creating PDF: {str(e)}")
+        print(f"Error generating PDF: {str(e)}")
         raise e
 
 def get_salary_notification_template():
