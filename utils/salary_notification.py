@@ -16,28 +16,31 @@ def generate_salary_notification_pdf(salary):
         bytes يحتوي على ملف PDF
     """
     try:
+        # التأكد من تحويل الشهر إلى عدد صحيح
+        month = int(salary.month) if not isinstance(salary.month, int) else salary.month
+        
         # الحصول على اسم الشهر بالعربية
         month_names = {
             1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
             5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
             9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
         }
-        month_name = month_names.get(salary.month, str(salary.month))
+        month_name = month_names.get(month, str(month))
         
-        # تحضير البيانات للقالب
+        # تحضير البيانات للقالب مع التأكد من تحويل جميع البيانات إلى نوع مناسب
         data = {
-            'employee_name': salary.employee.name,
-            'employee_id': salary.employee.employee_id,
-            'job_title': salary.employee.job_title,
-            'department_name': salary.employee.department.name if salary.employee.department else None,
-            'month_name': month_name,
-            'year': salary.year,
-            'basic_salary': salary.basic_salary,
-            'allowances': salary.allowances,
-            'bonus': salary.bonus,
-            'deductions': salary.deductions,
-            'net_salary': salary.net_salary,
-            'notes': salary.notes,
+            'employee_name': str(salary.employee.name),
+            'employee_id': str(salary.employee.employee_id),
+            'job_title': str(salary.employee.job_title),
+            'department_name': str(salary.employee.department.name) if salary.employee.department else None,
+            'month_name': str(month_name),
+            'year': str(salary.year) if isinstance(salary.year, (int, float)) else salary.year,
+            'basic_salary': float(salary.basic_salary),
+            'allowances': float(salary.allowances),
+            'bonus': float(salary.bonus),
+            'deductions': float(salary.deductions),
+            'net_salary': float(salary.net_salary),
+            'notes': str(salary.notes) if salary.notes else None,
             'current_date': datetime.now().strftime('%Y-%m-%d')
         }
         
@@ -62,6 +65,11 @@ def generate_batch_salary_notifications(department_id=None, month=None, year=Non
         قائمة بأسماء الموظفين الذين تم إنشاء إشعارات لهم
     """
     from models import Salary, Employee
+    
+    # التأكد من تحويل البيانات إلى النوع المناسب
+    month = int(month) if month is not None and not isinstance(month, int) else month
+    year = int(year) if year is not None and not isinstance(year, int) else year
+    department_id = int(department_id) if department_id is not None and not isinstance(department_id, int) else department_id
     
     # بناء الاستعلام
     salary_query = Salary.query.filter_by(month=month, year=year)

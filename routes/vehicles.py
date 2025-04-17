@@ -857,159 +857,53 @@ def handover_pdf(id):
     import io
     import os
     from datetime import datetime
+    from utils.pdf_generator_new import generate_vehicle_handover_pdf
     
     try:
+        # التأكد من تحويل المعرف إلى عدد صحيح
+        id = int(id) if not isinstance(id, int) else id
+        
+        # جلب البيانات
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
-        images = VehicleHandoverImage.query.filter_by(handover_record_id=id).all()
         
-        # تنسيق التاريخ
-        handover.formatted_handover_date = format_date_arabic(handover.handover_date)
+        # تجهيز البيانات
+        handover_data = {
+            'vehicle': {
+                'plate_number': str(vehicle.plate_number),
+                'make': str(vehicle.make),
+                'model': str(vehicle.model),
+                'year': int(vehicle.year),
+                'color': str(vehicle.color)
+            },
+            'handover_type': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
+            'handover_date': handover.handover_date.strftime('%Y-%m-%d'),
+            'person_name': str(handover.person_name),
+            'vehicle_condition': str(handover.vehicle_condition),
+            'fuel_level': str(handover.fuel_level),
+            'mileage': int(handover.mileage),
+            'has_spare_tire': bool(handover.has_spare_tire),
+            'has_fire_extinguisher': bool(handover.has_fire_extinguisher),
+            'has_first_aid_kit': bool(handover.has_first_aid_kit),
+            'has_warning_triangle': bool(handover.has_warning_triangle),
+            'has_tools': bool(handover.has_tools),
+            'notes': str(handover.notes) if handover.notes else "",
+            'form_link': str(handover.form_link) if handover.form_link else ""
+        }
         
-        handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
+        # إنشاء ملف PDF باستخدام الوظيفة الجديدة
+        pdf_bytes = generate_vehicle_handover_pdf(handover_data)
         
-        # إنشاء ملف PDF للغة اللاتينية فقط (بدون دعم عربي)
-        # نستخدم هذا الأسلوب كحل مؤقت
-        pdf = FPDF()
-        pdf.add_page()
+        # تحديد اسم الملف
+        filename = f"handover_form_{vehicle.plate_number}.pdf"
         
-        # استخدام خط لاتيني فقط
-        pdf.set_font('Arial', 'B', 16)
-        
-        # عنوان المستند (بالإنجليزية)
-        pdf.cell(0, 15, "Vehicle Handover Form", 0, 1, 'C')
-        
-        # معلومات السيارة
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, "Vehicle Information:", 0, 1, 'L')
-        
-        pdf.set_font('Arial', '', 12)
-        pdf.cell(90, 8, "Plate Number:", 0, 0, 'L')
-        pdf.cell(100, 8, vehicle.plate_number, 0, 1, 'L')
-        
-        pdf.cell(90, 8, "Make & Model:", 0, 0, 'L')
-        pdf.cell(100, 8, vehicle.make + " " + vehicle.model, 0, 1, 'L')
-        
-        pdf.cell(90, 8, "Year:", 0, 0, 'L')
-        pdf.cell(100, 8, str(vehicle.year), 0, 1, 'L')
-        
-        pdf.cell(90, 8, "Color:", 0, 0, 'L')
-        pdf.cell(100, 8, vehicle.color, 0, 1, 'L')
-        
-        # خط فاصل
-        pdf.ln(5)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(5)
-        
-        # معلومات التسليم/الاستلام (بالإنجليزية)
-        handover_type_eng = "Delivery" if handover.handover_type == 'delivery' else "Return"
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, f"{handover_type_eng} Information:", 0, 1, 'L')
-        
-        pdf.set_font('Arial', '', 12)
-        
-        pdf.cell(90, 8, "Date:", 0, 0, 'L')
-        date_str = handover.handover_date.strftime("%d/%m/%Y")
-        pdf.cell(100, 8, date_str, 0, 1, 'L')
-        
-        pdf.cell(90, 8, "Person Name:", 0, 0, 'L')
-        pdf.cell(100, 8, handover.person_name, 0, 1, 'L')
-        
-        pdf.cell(90, 8, "Mileage:", 0, 0, 'L')
-        pdf.cell(100, 8, str(handover.mileage) + " km", 0, 1, 'L')
-        
-        pdf.cell(90, 8, "Fuel Level:", 0, 0, 'L')
-        pdf.cell(100, 8, handover.fuel_level, 0, 1, 'L')
-        
-        # حالة السيارة
-        pdf.ln(5)
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, "Vehicle Condition:", 0, 1, 'L')
-        
-        pdf.set_font('Arial', '', 12)
-        # حالة السيارة قد تكون بالعربية، لذا نستخدم نص افتراضي
-        pdf.multi_cell(0, 8, "See attached condition report", 0, 'L')
-        
-        # التجهيزات (بالإنجليزية)
-        pdf.ln(5)
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, "Equipment:", 0, 1, 'L')
-        
-        pdf.set_font('Arial', '', 12)
-        # استخدم √ و X بدلاً من رموز Unicode
-        check_mark = "Yes" if handover.has_spare_tire else "No"
-        pdf.cell(90, 8, "Spare Tire:", 0, 0, 'L')
-        pdf.cell(100, 8, check_mark, 0, 1, 'L')
-        
-        check_mark = "Yes" if handover.has_fire_extinguisher else "No"
-        pdf.cell(90, 8, "Fire Extinguisher:", 0, 0, 'L')
-        pdf.cell(100, 8, check_mark, 0, 1, 'L')
-        
-        check_mark = "Yes" if handover.has_first_aid_kit else "No"
-        pdf.cell(90, 8, "First Aid Kit:", 0, 0, 'L')
-        pdf.cell(100, 8, check_mark, 0, 1, 'L')
-        
-        check_mark = "Yes" if handover.has_warning_triangle else "No"
-        pdf.cell(90, 8, "Warning Triangle:", 0, 0, 'L')
-        pdf.cell(100, 8, check_mark, 0, 1, 'L')
-        
-        check_mark = "Yes" if handover.has_tools else "No"
-        pdf.cell(90, 8, "Tools:", 0, 0, 'L')
-        pdf.cell(100, 8, check_mark, 0, 1, 'L')
-        
-        # رابط فورم التسليم/الاستلام
-        if handover.form_link:
-            pdf.ln(5)
-            pdf.set_font('Arial', 'B', 14)
-            pdf.cell(0, 10, "Handover Form Link:", 0, 1, 'L')
-            
-            pdf.set_font('Arial', '', 12)
-            pdf.multi_cell(0, 8, handover.form_link, 0, 'L')
-        
-        # ملاحظات إضافية
-        if handover.notes:
-            pdf.ln(5)
-            pdf.set_font('Arial', 'B', 14)
-            pdf.cell(0, 10, "Notes:", 0, 1, 'L')
-            
-            pdf.set_font('Arial', '', 12)
-            # استخدم نص افتراضي لأن الملاحظات قد تكون بالعربية
-            pdf.multi_cell(0, 8, "See attached notes", 0, 'L')
-        
-        # توقيعات
-        pdf.add_page()
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, "Approvals and Signatures:", 0, 1, 'C')
-        
-        pdf.set_font('Arial', '', 12)
-        
-        # جدول التوقيعات
-        col_width = 65
-        pdf.set_xy(10, pdf.get_y() + 10)
-        
-        # عناوين الجدول
-        pdf.cell(col_width, 10, "Vehicle Receiver", 1, 0, 'C')
-        pdf.cell(col_width, 10, "Supervisor", 1, 0, 'C')
-        pdf.cell(col_width, 10, "Services Manager", 1, 1, 'C')
-        
-        # مساحة للتوقيع
-        pdf.cell(col_width, 30, "", 1, 0, 'C')
-        pdf.cell(col_width, 30, "", 1, 0, 'C')
-        pdf.cell(col_width, 30, "", 1, 1, 'C')
-        
-        # الأسماء
-        pdf.cell(col_width, 10, "Name: _____________", 1, 0, 'C')
-        pdf.cell(col_width, 10, "Name: _____________", 1, 0, 'C')
-        pdf.cell(col_width, 10, "Name: _____________", 1, 1, 'C')
-        
-        # تاريخ التوقيع
-        current_date = datetime.now().strftime("%d/%m/%Y")
-        pdf.cell(0, 10, f"Date: {current_date}", 0, 1, 'C')
-        
-        # تصدير الملف
-        pdf_output = io.BytesIO()
-        pdf.output(name=pdf_output)
-        pdf_output.seek(0)
+        # إرسال الملف للمستخدم
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            download_name=filename,
+            as_attachment=True,
+            mimetype='application/pdf'
+        )
         
         filename = f"handover_form_{vehicle.plate_number}.pdf"
         
