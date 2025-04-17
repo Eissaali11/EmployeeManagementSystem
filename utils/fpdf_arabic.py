@@ -394,7 +394,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         y_pos = 50
         
         # عرض الأعمدة
-        col_widths = [15, 60, 25, 25, 25, 25, 25, 30]  # مجموع العرض = 230 (مليمتر تقريباً)
+        col_widths = [15.0, 60.0, 25.0, 25.0, 25.0, 25.0, 25.0, 30.0]  # مجموع العرض = 230 (مليمتر تقريباً)
         
         # رأس الجدول
         pdf.set_fill_color(*pdf.primary_color)
@@ -458,18 +458,18 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             f"{total_net:.2f}"
         ]
         
-        x_pos = 30
+        x_pos = 30.0  # تحويل إلى رقم عائم
         pdf.set_font('Tajawal', 'B', 10)
         for i, cell_data in reversed(list(enumerate(summary_data))):
             pdf.set_xy(x_pos, y_pos)
             if i == 1:  # نص "المجموع"
-                text = get_display(arabic_reshaper.reshape(cell_data))
+                text = get_display(arabic_reshaper.reshape(str(cell_data)))
                 align = 'R'
             else:
                 text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
                 align = 'C'
-            pdf.cell(col_widths[i], 10, text, 1, 0, align, True)
-            x_pos += col_widths[i]
+            pdf.cell(float(col_widths[i]), 10, text, 1, 0, align, True)
+            x_pos += float(col_widths[i])
         
         # ملخص الرواتب - إصدار محسن بشكل كبير
         
@@ -488,8 +488,8 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # ================ قسم ملخص الرواتب ================
         # عنوان ملخص الرواتب - مع ضبط موضع أفضل
-        summary_title_x = pdf.page_width - 70
-        summary_title_y = summary_y - 15
+        summary_title_x = float(pdf.page_width) - 70.0
+        summary_title_y = float(summary_y) - 15.0
         
         pdf.set_text_color(*pdf.primary_color)
         pdf.set_font('Tajawal', 'B', 12)  # تصغير حجم الخط قليلاً
@@ -498,7 +498,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # إضافة خط تحت عنوان ملخص الرواتب
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(summary_title_x - 60, summary_title_y + 6, summary_title_x, summary_title_y + 6)
+        pdf.line(float(summary_title_x) - 60.0, float(summary_title_y) + 6.0, float(summary_title_x), float(summary_title_y) + 6.0)
         
         # جدول الملخص
         summary_headers = ["البيان", "المبلغ"]
@@ -514,13 +514,13 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.set_font('Tajawal', 'B', 10)
         
         # ضبط أبعاد وموضع جدول الملخص بشكل أفضل
-        col1_width = 40  # عمود المبلغ
-        col2_width = 70  # عمود البيان
-        summary_table_width = col1_width + col2_width
+        col1_width = 40.0  # عمود المبلغ
+        col2_width = 70.0  # عمود البيان
+        summary_table_width = float(col1_width) + float(col2_width)
         
         # ضبط موضع X بشكل أفضل لتفادي التداخل مع أي عناصر أخرى
         # احتساب موضع الجدول من اليمين للتوافق مع اللغة العربية
-        summary_table_x = pdf.page_width - 80 - summary_table_width
+        summary_table_x = float(pdf.page_width) - 80.0 - float(summary_table_width)
         
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
@@ -554,43 +554,43 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.set_font('Tajawal', 'B', 10)
         
         # عنوان المعلومات
-        info_x = 30
-        info_y = summary_y
-        pdf.set_xy(info_x, info_y - 15)
+        info_x = 30.0
+        info_y = float(summary_y)
+        pdf.set_xy(info_x, info_y - 15.0)
         pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(120, info_y - 15, "معلومات التقرير", 'R')
+        pdf.arabic_text(120.0, float(info_y) - 15.0, "معلومات التقرير", 'R')
         
         # إضافة خط تحت عنوان معلومات التقرير
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(50, info_y - 7, 120, info_y - 7)
+        pdf.line(50.0, float(info_y) - 7.0, 120.0, float(info_y) - 7.0)
         
         # إطار للمعلومات
         pdf.set_draw_color(*pdf.secondary_color)
-        pdf.rect(info_x, info_y, 110, 45)
+        pdf.rect(float(info_x), float(info_y), 110.0, 45.0)
         
         # معلومات التقرير داخل إطار
         pdf.set_text_color(0, 0, 0)
         pdf.set_font('Tajawal', '', 10)
-        pdf.arabic_text(120, info_y + 10, f"إجمالي عدد الموظفين: {len(salaries_data)}", 'R')
+        pdf.arabic_text(120.0, float(info_y) + 10.0, f"إجمالي عدد الموظفين: {len(salaries_data)}", 'R')
         
         # التأكد من عدم القسمة على صفر
         if len(salaries_data) > 0:
-            avg_basic = total_basic/len(salaries_data)
-            avg_net = total_net/len(salaries_data)
+            avg_basic = float(total_basic)/float(len(salaries_data))
+            avg_net = float(total_net)/float(len(salaries_data))
         else:
-            avg_basic = 0
-            avg_net = 0
+            avg_basic = 0.0
+            avg_net = 0.0
             
-        pdf.arabic_text(120, info_y + 25, f"متوسط الراتب الأساسي: {avg_basic:.2f}", 'R')
-        pdf.arabic_text(120, info_y + 40, f"متوسط صافي الراتب: {avg_net:.2f}", 'R')
+        pdf.arabic_text(120.0, float(info_y) + 25.0, f"متوسط الراتب الأساسي: {avg_basic:.2f}", 'R')
+        pdf.arabic_text(120.0, float(info_y) + 40.0, f"متوسط صافي الراتب: {avg_net:.2f}", 'R')
         
         # التذييل
-        pdf.set_xy(10, 190)  # تقريباً أسفل الصفحة
+        pdf.set_xy(10.0, 190.0)  # تقريباً أسفل الصفحة
         pdf.set_font('Tajawal', '', 8)
         pdf.set_text_color(*pdf.secondary_color)
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        pdf.arabic_text(280, pdf.get_y(), f"تم إنشاء هذا التقرير في {current_timestamp}", 'C')
-        pdf.arabic_text(280, pdf.get_y() + 5, "شركة RASSCO - جميع الحقوق محفوظة © " + str(datetime.now().year), 'C')
+        pdf.arabic_text(280.0, float(pdf.get_y()), f"تم إنشاء هذا التقرير في {current_timestamp}", 'C')
+        pdf.arabic_text(280.0, float(pdf.get_y()) + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + str(datetime.now().year), 'C')
         
         # حفظ PDF إلى متغير
         pdf_output = pdf.output('', 'S')
