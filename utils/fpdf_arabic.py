@@ -62,14 +62,16 @@ class ArabicPDF(FPDF):
         """
         # تشكيل النص العربي للعرض الصحيح - إصلاح مشكلة الأحرف العربية الناقصة
         try:
+            # تحويل النص إلى سلسلة نصية للتأكد من أنه ليس رقم
+            txt_str = str(txt)
             # استخدام arabic_reshaper لتحويل النص العربي
-            reshaped_text = arabic_reshaper.reshape(txt)
+            reshaped_text = arabic_reshaper.reshape(txt_str)
             # استخدام get_display لعكس اتجاه النص ليظهر بشكل صحيح
             bidi_text = get_display(reshaped_text)
         except Exception as e:
             # في حالة حدوث أي خطأ في التحويل، استخدم النص الأصلي
             print(f"خطأ في تحويل النص العربي: {e}")
-            bidi_text = txt
+            bidi_text = str(txt)
         
         # ضبط العرض الأقصى اعتماداً على اتجاه الصفحة إذا لم يتم تحديده
         if max_width is None:
@@ -431,10 +433,10 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
             for i, cell_data in reversed(list(enumerate(row_data))):
                 pdf.set_xy(x_pos, y_pos)
                 if i == 1 or i == 2:  # اسم الموظف والرقم الوظيفي
-                    text = get_display(arabic_reshaper.reshape(cell_data))
+                    text = get_display(arabic_reshaper.reshape(str(cell_data)))
                     align = 'R'
                 else:
-                    text = cell_data
+                    text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
                     align = 'C'
                 pdf.cell(col_widths[i], 10, text, 1, 0, align, fill)
                 x_pos += col_widths[i]
