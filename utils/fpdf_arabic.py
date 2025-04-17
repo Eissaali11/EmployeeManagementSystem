@@ -160,12 +160,27 @@ def generate_salary_notification_pdf(data):
         bytes يحتوي على ملف PDF
     """
     try:
+        # التأكد من أن جميع البيانات من النوع النصي
+        employee_name = str(data.get('employee_name', ''))
+        employee_id = str(data.get('employee_id', ''))
+        job_title = str(data.get('job_title', ''))
+        department_name = str(data.get('department_name', '')) if data.get('department_name') else None
+        month_name = str(data.get('month_name', ''))
+        year = str(data.get('year', ''))
+        basic_salary = float(data.get('basic_salary', 0))
+        allowances = float(data.get('allowances', 0))
+        deductions = float(data.get('deductions', 0))
+        bonus = float(data.get('bonus', 0))
+        net_salary = float(data.get('net_salary', 0))
+        notes = str(data.get('notes', '')) if data.get('notes') else None
+        current_date = str(data.get('current_date', datetime.now().strftime('%Y-%m-%d')))
+        
         # إنشاء PDF جديد
         pdf = ArabicPDF()
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        subtitle = f"إشعار راتب - شهر {data.get('month_name', '')} {str(data.get('year', ''))}"
+        subtitle = "إشعار راتب - شهر " + month_name + " " + year
         y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
         
         # إضافة إطار للمستند
@@ -192,27 +207,27 @@ def generate_salary_notification_pdf(data):
         
         # العمود الأول
         pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(190.0, float(emp_info_y), f"الاسم:", 'R')
+        pdf.arabic_text(190.0, float(emp_info_y), "الاسم:", 'R')
         pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(140.0, float(emp_info_y), f"{data.get('employee_name', '')}", 'R')
+        pdf.arabic_text(140.0, float(emp_info_y), employee_name, 'R')
         
         pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, float(emp_info_y), f"الرقم الوظيفي:", 'R')
+        pdf.arabic_text(100.0, float(emp_info_y), "الرقم الوظيفي:", 'R')
         pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, float(emp_info_y), f"{data.get('employee_id', '')}", 'R')
+        pdf.arabic_text(50.0, float(emp_info_y), employee_id, 'R')
         
         # العمود الثاني
         emp_info_y += 12.0
-        if data.get('department_name'):
+        if department_name:
             pdf.set_font('Arial', 'B', 11)
-            pdf.arabic_text(190.0, float(emp_info_y), f"القسم:", 'R')
+            pdf.arabic_text(190.0, float(emp_info_y), "القسم:", 'R')
             pdf.set_font('Arial', '', 11)
-            pdf.arabic_text(140.0, float(emp_info_y), f"{data.get('department_name', '')}", 'R')
+            pdf.arabic_text(140.0, float(emp_info_y), department_name, 'R')
         
         pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, float(emp_info_y), f"المسمى الوظيفي:", 'R')
+        pdf.arabic_text(100.0, float(emp_info_y), "المسمى الوظيفي:", 'R')
         pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, float(emp_info_y), f"{data.get('job_title', '')}", 'R')
+        pdf.arabic_text(50.0, float(emp_info_y), job_title, 'R')
         
         # تفاصيل الراتب
         salary_title_y = float(emp_info_y) + 25.0
@@ -262,13 +277,20 @@ def generate_salary_notification_pdf(data):
         pdf.cell(float(amount_width), float(row_height), get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
         pdf.cell(float(item_width), float(row_height), get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
         
+        # تنسيق الأرقام
+        basic_salary_str = f"{basic_salary:.2f}"
+        allowances_str = f"{allowances:.2f}"
+        deductions_str = f"{deductions:.2f}"
+        bonus_str = f"{bonus:.2f}"
+        net_salary_str = f"{net_salary:.2f}"
+        
         # إعداد مصفوفة بيانات ملخص الراتب
         salary_items = [
-            ["إجمالي الراتب الأساسي", f"{data.get('basic_salary', 0):.2f}"],
-            ["إجمالي البدلات", f"{data.get('allowances', 0):.2f}"],
-            ["إجمالي الخصومات", f"{data.get('deductions', 0):.2f}"],
-            ["إجمالي المكافآت", f"{data.get('bonus', 0):.2f}"],
-            ["إجمالي صافي الراتب", f"{data.get('net_salary', 0):.2f}"]
+            ["إجمالي الراتب الأساسي", basic_salary_str],
+            ["إجمالي البدلات", allowances_str],
+            ["إجمالي الخصومات", deductions_str],
+            ["إجمالي المكافآت", bonus_str],
+            ["إجمالي صافي الراتب", net_salary_str]
         ]
         
         # طباعة بيانات الجدول
@@ -299,7 +321,7 @@ def generate_salary_notification_pdf(data):
         pdf.set_text_color(0, 0, 0)
         
         # إضافة الملاحظات إذا وجدت
-        if data.get('notes'):
+        if notes:
             notes_y = float(pdf.get_y()) + 10.0
             pdf.set_font('Arial', 'B', 12)
             pdf.set_text_color(*pdf.primary_color)
@@ -310,10 +332,9 @@ def generate_salary_notification_pdf(data):
             pdf.set_text_color(0, 0, 0)  # لون أسود للنص
             
             # إطار للملاحظات
-            notes_text = data.get('notes', '')
             pdf.rect(20.0, float(notes_y) + 5.0, 170.0, 20.0)
             pdf.set_xy(25.0, float(notes_y) + 10.0)
-            pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(notes_text)), 0, 'R')
+            pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(notes)), 0, 'R')
         
         # التوقيعات
         signature_y = float(pdf.get_y()) + 30.0
@@ -336,18 +357,17 @@ def generate_salary_notification_pdf(data):
         pdf.set_xy(10.0, 270.0)
         pdf.set_font('Arial', '', 8)
         pdf.set_text_color(*pdf.secondary_color)
-        current_date = data.get('current_date', datetime.now().strftime('%Y-%m-%d'))
-        pdf.arabic_text(200.0, float(pdf.get_y()), f"تم إصدار هذا الإشعار بتاريخ {current_date}", 'C')
-        current_year = datetime.now().year
-        pdf.arabic_text(200.0, float(pdf.get_y()) + 5.0, f"شركة RASSCO - جميع الحقوق محفوظة © {current_year}", 'C')
         
-        # حفظ PDF إلى متغير
-        pdf_output = pdf.output('', 'S')
-        if isinstance(pdf_output, str):
-            pdf_bytes = pdf_output.encode('latin1')  # FPDF ترجع سلسلة لاتينية في بعض الإصدارات
-        else:
-            pdf_bytes = pdf_output  # في الإصدارات الأحدث قد ترجع بيانات ثنائية مباشرة
-        return pdf_bytes
+        pdf.arabic_text(200.0, float(pdf.get_y()), "تم إصدار هذا الإشعار بتاريخ " + current_date, 'C')
+        current_year_str = str(datetime.now().year)
+        pdf.arabic_text(200.0, float(pdf.get_y()) + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + current_year_str, 'C')
+        
+        # إنشاء الملف كبيانات ثنائية
+        buffer = BytesIO()
+        pdf.output(buffer)
+        buffer.seek(0)
+        
+        return buffer.getvalue()
         
     except Exception as e:
         print(f"خطأ في إنشاء إشعار راتب PDF: {str(e)}")
@@ -367,12 +387,16 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         bytes يحتوي على ملف PDF
     """
     try:
+        # تحويل المدخلات إلى النوع المناسب
+        month_name = str(month_name)
+        year = str(year)
+        
         # إنشاء PDF جديد
         pdf = ArabicPDF('L')  # وضع أفقي
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        subtitle = f"تقرير الرواتب - شهر {month_name} {str(year)}"
+        subtitle = "تقرير الرواتب - شهر " + month_name + " " + year
         y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
         
         # إضافة إطار للمستند
@@ -594,13 +618,12 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         current_year = datetime.now().year
         pdf.arabic_text(280.0, float(pdf.get_y()) + 5.0, f"شركة RASSCO - جميع الحقوق محفوظة © {current_year}", 'C')
         
-        # حفظ PDF إلى متغير
-        pdf_output = pdf.output('', 'S')
-        if isinstance(pdf_output, str):
-            pdf_bytes = pdf_output.encode('latin1')  # FPDF ترجع سلسلة لاتينية في بعض الإصدارات
-        else:
-            pdf_bytes = pdf_output  # في الإصدارات الأحدث قد ترجع بيانات ثنائية مباشرة
-        return pdf_bytes
+        # إنشاء الملف كبيانات ثنائية
+        buffer = BytesIO()
+        pdf.output(buffer)
+        buffer.seek(0)
+        
+        return buffer.getvalue()
         
     except Exception as e:
         print(f"خطأ في إنشاء تقرير الرواتب PDF: {str(e)}")
