@@ -1,0 +1,110 @@
+{% extends 'layout.html' %}
+
+{% block title %}تحديث تاريخ انتهاء الوثيقة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">تحديث تاريخ انتهاء الوثيقة</h5>
+            <a href="{{ url_for('documents.index') }}" class="btn btn-sm btn-light">
+                <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <p class="mb-0">
+                            <strong>الوثيقة:</strong> {{ document_type_ar }} | 
+                            <strong>الموظف:</strong> {{ document.employee.name }} | 
+                            <strong>رقم الوثيقة:</strong> {{ document.document_number }}
+                        </p>
+                        <p class="mb-0 mt-1">
+                            <strong>تاريخ الإصدار:</strong> {{ document.issue_date.strftime('%Y-%m-%d') }} | 
+                            <strong>تاريخ الانتهاء الحالي:</strong> {{ document.expiry_date.strftime('%Y-%m-%d') }}
+                        </p>
+                    </div>
+                    
+                    <form method="post" action="{{ url_for('documents.update_expiry', id=document.id) }}" class="mt-4">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="expiry_date" class="form-label fw-bold">تاريخ الانتهاء الجديد</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                    <input type="text" id="expiry_date" name="expiry_date" class="form-control datepicker" 
+                                            data-gregorian="{{ gregorian_today }}" data-hijri="{{ hijri_today }}"
+                                            placeholder="اختر التاريخ" required>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                                id="calendarTypeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span id="calendarTypeText">ميلادي</span>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="calendarTypeDropdown">
+                                            <li><a class="dropdown-item calendar-type" data-type="gregorian" href="#">ميلادي</a></li>
+                                            <li><a class="dropdown-item calendar-type" data-type="hijri" href="#">هجري</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="form-text text-muted">يمكنك اختيار التاريخ بالتقويم الميلادي أو الهجري</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('documents.index') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> تحديث التاريخ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // حفظ نوع التقويم في متغير
+        let calendarType = 'gregorian';
+        console.log('Calendar type set to Gregorian');
+        
+        // جعل أزرار اختيار نوع التقويم تعمل
+        const calendarTypeItems = document.querySelectorAll('.calendar-type');
+        const calendarTypeText = document.getElementById('calendarTypeText');
+        
+        calendarTypeItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                calendarType = this.getAttribute('data-type');
+                calendarTypeText.textContent = calendarType === 'gregorian' ? 'ميلادي' : 'هجري';
+                console.log('Calendar type set to ' + (calendarType === 'gregorian' ? 'Gregorian' : 'Hijri'));
+            });
+        });
+        
+        // تهيئة التاريخ بحسب التقويم المحدد
+        const datepicker = document.querySelector('.datepicker');
+        if (datepicker) {
+            const defaultDate = new Date(document.getElementById('expiry_date').getAttribute('data-gregorian'));
+            
+            // تهيئة الـ datepicker
+            $(datepicker).datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                rtl: true,
+                language: 'ar',
+                todayHighlight: true,
+                defaultViewDate: defaultDate,
+                orientation: 'bottom'
+            });
+            
+            // ضبط التاريخ الافتراضي
+            $(datepicker).datepicker('setDate', defaultDate);
+        }
+    });
+</script>
+{% endblock %}

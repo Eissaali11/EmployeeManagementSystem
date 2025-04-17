@@ -143,6 +143,12 @@
                             </td>
                             <td>{{ document.notes or '-' }}</td>
                             <td>
+                                <!-- زر تحديث تاريخ انتهاء الوثيقة -->
+                                <a href="{{ url_for('documents.update_expiry', id=document.id) }}" class="btn btn-sm btn-info mb-1" title="تحديث تاريخ الانتهاء">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </a>
+                                
+                                <!-- زر حذف الوثيقة -->
                                 <button type="button" class="btn btn-sm btn-danger" 
                                         data-bs-toggle="modal" data-bs-target="#deleteModal{{ document.id }}">
                                     <i class="fas fa-trash"></i>

@@ -29,14 +29,14 @@
         <div class="row">
             <!-- Sidebar -->
             <div class="col-lg-2 col-md-3 sidebar p-0">
-                <div class="d-flex flex-column flex-shrink-0 p-3">
+                <div class="d-flex flex-column flex-shrink-0 p-3 sidebar-content">
                     <a href="/" class="d-flex align-items-center mb-4 mb-md-0 me-md-auto text-white text-decoration-none">
                         <img src="{{ url_for('static', filename='img/logo.png') }}" alt="شعار النظام" width="40" height="40" class="me-2">
                         <span class="fs-4 fw-bold">نظام الموظفين</span>
                     </a>
                     <hr>
                     {% if current_user.is_authenticated %}
-                    <ul class="nav nav-pills flex-column mb-auto">
+                    <ul class="nav nav-pills flex-column mb-auto sidebar-nav">
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('dashboard.index') }}" class="nav-link nav-link-custom {% if '/dashboard' in request.path %}active{% endif %}">
                                 <i class="fas fa-tachometer-alt me-2"></i>

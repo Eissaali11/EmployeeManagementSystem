@@ -167,6 +167,68 @@ def delete(id):
     
     return redirect(url_for('documents.index'))
 
+@documents_bp.route('/<int:id>/update_expiry', methods=['GET', 'POST'])
+def update_expiry(id):
+    """تحديث تاريخ انتهاء الوثيقة"""
+    document = Document.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            expiry_date_str = request.form['expiry_date']
+            # تحليل التاريخ
+            expiry_date = parse_date(expiry_date_str)
+            
+            # حفظ التاريخ القديم للسجل
+            old_expiry_date = document.expiry_date
+            
+            # تحديث تاريخ الانتهاء
+            document.expiry_date = expiry_date
+            
+            # إضافة سجل للتدقيق
+            audit = SystemAudit(
+                action='update',
+                entity_type='document',
+                entity_id=id,
+                details=f'تم تحديث تاريخ انتهاء وثيقة {document.document_type} للموظف: {document.employee.name} من {old_expiry_date} إلى {expiry_date}'
+            )
+            db.session.add(audit)
+            db.session.commit()
+            
+            flash('تم تحديث تاريخ انتهاء الوثيقة بنجاح', 'success')
+            return redirect(url_for('documents.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تحديث تاريخ انتهاء الوثيقة: {str(e)}', 'danger')
+            return redirect(url_for('documents.update_expiry', id=id))
+    
+    # Get document types for dropdown
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'health_certificate': 'الشهادة الصحية',
+        'work_permit': 'تصريح العمل',
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية',
+        'other': 'أخرى'
+    }
+    
+    # احصل على اسم نوع الوثيقة بالعربية
+    doc_type_ar = document_types_map.get(document.document_type, document.document_type)
+    
+    # Default dates
+    today = datetime.now().date()
+    hijri_today = format_date_hijri(today)
+    gregorian_today = format_date_gregorian(today)
+    
+    return render_template('documents/update_expiry.html',
+                          document=document,
+                          document_type_ar=doc_type_ar,
+                          today=today,
+                          hijri_today=hijri_today,
+                          gregorian_today=gregorian_today)
+
 @documents_bp.route('/import', methods=['GET', 'POST'])
 def import_excel():
     """Import document records from Excel file"""
