@@ -3,7 +3,7 @@
 استخدام FPDF لإنشاء ملفات PDF مع دعم للنصوص العربية
 """
 from datetime import datetime
-from utils.fpdf_arabic import generate_salary_notification_pdf as generate_fpdf_notification
+from utils.pdf_generator_new import generate_salary_notification_pdf as generate_fpdf_notification
 
 def generate_salary_notification_pdf(salary):
     """

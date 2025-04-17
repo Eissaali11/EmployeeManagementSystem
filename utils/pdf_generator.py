@@ -2,7 +2,7 @@
 وحدة إنشاء تقارير PDF باستخدام FPDF
 """
 from datetime import datetime
-from utils.fpdf_arabic import generate_salary_report_pdf as generate_fpdf_report
+from utils.pdf_generator_new import generate_salary_report_pdf as generate_fpdf_report
 
 def generate_salary_report_pdf(salaries, month, year):
     """
