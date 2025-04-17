@@ -207,45 +207,61 @@ def generate_salary_notification_pdf(data):
         pdf.set_draw_color(*pdf.primary_color)
         pdf.line(60, salary_title_y + 10, 140, salary_title_y + 10)
         
-        # جدول الراتب
-        headers = ["البند", "المبلغ"]
-        items = [
-            ["الراتب الأساسي", f"{data.get('basic_salary', 0):.2f}"],
-            ["البدلات", f"{data.get('allowances', 0):.2f}"],
-            ["المكافآت", f"{data.get('bonus', 0):.2f}"],
-            ["الخصومات", f"{data.get('deductions', 0):.2f}"],
-            ["صافي الراتب", f"{data.get('net_salary', 0):.2f}"]
-        ]
+        # إضافة قسم ملخص الراتب
+        pdf.set_font('Tajawal', 'B', 13)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(175, salary_title_y, "ملخص الراتب", 'R')
         
-        # رسم الجدول بتصميم أفضل
+        # خط تحت عنوان ملخص الراتب
+        pdf.set_draw_color(*pdf.primary_color)
+        pdf.line(120, salary_title_y + 8, 175, salary_title_y + 8)
+        
+        # تحضير بيانات الجدول
         table_y = salary_title_y + 20
-        pdf.set_font('Tajawal', 'B', 11)
-        pdf.set_text_color(0, 0, 0)
         
-        # رأس الجدول
+        # إنشاء جدول منظم لملخص الراتب
+        col_width = 60 # عرض العمود
+        col_height = 10 # ارتفاع الصف
+        
+        # رسم الجدول وعناوين الأعمدة (أكثر تنظيماً)
+        pdf.set_font('Tajawal', 'B', 11)
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        pdf.set_xy(50, table_y)
-        pdf.cell(50, 10, get_display(arabic_reshaper.reshape(headers[1])), 1, 0, 'C', True)
-        pdf.cell(70, 10, get_display(arabic_reshaper.reshape(headers[0])), 1, 1, 'C', True)
-        
-        # بيانات الجدول
+        pdf.set_xy(95, table_y)
+        pdf.cell(40, col_height, "المبلغ", 1, 0, 'C', True)
+        pdf.cell(60, col_height, "البيان", 1, 1, 'C', True)
+                
+        # بيانات المحتوى
         pdf.set_text_color(0, 0, 0)  # إعادة لون النص إلى الأسود
         pdf.set_font('Tajawal', '', 11)
-        for i, item in enumerate(items):
-            fill = i % 2 == 1  # صفوف بديلة
-            
-            if i == len(items) - 1:  # صف المجموع
-                pdf.set_font('Tajawal', 'B', 11)
-                pdf.set_fill_color(*pdf.primary_color)
-                pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-                fill = True
-            elif fill:
-                pdf.set_fill_color(*pdf.table_row_alt_color)
-            
-            pdf.set_xy(50, pdf.get_y())
-            pdf.cell(50, 10, item[1], 1, 0, 'C', fill)
-            pdf.cell(70, 10, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
+        
+        # الراتب الأساسي
+        pdf.set_xy(95, pdf.get_y())
+        pdf.cell(40, col_height, f"{data.get('basic_salary', 0):.2f}", 1, 0, 'C')
+        pdf.cell(60, col_height, get_display(arabic_reshaper.reshape("إجمالي الراتب الأساسي")), 1, 1, 'R')
+        
+        # البدلات
+        pdf.set_xy(95, pdf.get_y())
+        pdf.cell(40, col_height, f"{data.get('allowances', 0):.2f}", 1, 0, 'C')
+        pdf.cell(60, col_height, get_display(arabic_reshaper.reshape("إجمالي البدلات")), 1, 1, 'R')
+        
+        # الخصومات
+        pdf.set_xy(95, pdf.get_y())
+        pdf.cell(40, col_height, f"{data.get('deductions', 0):.2f}", 1, 0, 'C')
+        pdf.cell(60, col_height, get_display(arabic_reshaper.reshape("إجمالي الخصومات")), 1, 1, 'R')
+        
+        # المكافآت
+        pdf.set_xy(95, pdf.get_y())
+        pdf.cell(40, col_height, f"{data.get('bonus', 0):.2f}", 1, 0, 'C')
+        pdf.cell(60, col_height, get_display(arabic_reshaper.reshape("إجمالي المكافآت")), 1, 1, 'R')
+        
+        # صافي الراتب
+        pdf.set_font('Tajawal', 'B', 11)
+        pdf.set_fill_color(*pdf.primary_color)
+        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+        pdf.set_xy(95, pdf.get_y())
+        pdf.cell(40, col_height, f"{data.get('net_salary', 0):.2f}", 1, 0, 'C', True)
+        pdf.cell(60, col_height, get_display(arabic_reshaper.reshape("إجمالي صافي الراتب")), 1, 1, 'R', True)
         
         pdf.set_text_color(0, 0, 0)  # إعادة لون النص إلى الأسود
         
