@@ -4,6 +4,15 @@
 
 {% block styles %}
 <style>
+    /* تنسيق صفوف الرسوم */
+    .fee-row {
+        position: relative;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 8px;
+        padding: 10px 0;
+    }
     /* تحسينات عامة لعناصر النموذج */
     .form-control, .form-select {
         background-color: #1a1a1a !important;
@@ -858,39 +867,47 @@
             // إضافة تأثير عند تمرير الماوس على الصف
             rowElement.addEventListener('mouseover', function() {
                 if (!toggleElement.checked) {
-                    this.classList.add('bg-dark', 'bg-opacity-10');
+                    this.classList.add('bg-dark', 'bg-opacity-25');
                 }
             });
             
             rowElement.addEventListener('mouseout', function() {
                 if (!toggleElement.checked) {
-                    this.classList.remove('bg-dark', 'bg-opacity-10');
+                    this.classList.remove('bg-dark', 'bg-opacity-25');
                 }
             });
             
             toggleElement.addEventListener('change', function() {
                 try {
                     if (this.checked) {
+                        // تغيير خلفية الصف المفعل
                         rowElement.classList.add('bg-primary', 'bg-opacity-10');
+                        rowElement.style.boxShadow = '0 0 5px rgba(13, 110, 253, 0.5)';
                         
-                        // تطبيق تأثير مرئي لتأكيد التفعيل
-                        amountInput.classList.add('border-primary');
-                        notesInput.classList.add('border-primary');
+                        // تغيير نمط الحدود لجميع الحقول في الصف
+                        const inputFields = rowElement.querySelectorAll('input:not(.fee-toggle)');
+                        inputFields.forEach(input => {
+                            input.classList.add('border-primary');
+                        });
                         
                         // التركيز على حقل المبلغ
                         setTimeout(() => {
                             amountInput.focus();
                         }, 100);
                     } else {
+                        // إزالة الخلفية والتأثيرات البصرية
                         rowElement.classList.remove('bg-primary', 'bg-opacity-10');
+                        rowElement.style.boxShadow = '';
                         
                         // مسح قيم الحقول عند إلغاء التفعيل
                         amountInput.value = '';
                         notesInput.value = '';
                         
-                        // إزالة التأثير المرئي
-                        amountInput.classList.remove('border-primary');
-                        notesInput.classList.remove('border-primary');
+                        // إزالة التأثير المرئي من الحقول
+                        const inputFields = rowElement.querySelectorAll('input:not(.fee-toggle)');
+                        inputFields.forEach(input => {
+                            input.classList.remove('border-primary');
+                        });
                         
                         if (toggle.transferNumber) {
                             document.getElementById(toggle.transferNumber).value = '';
@@ -951,10 +968,12 @@
                         console.log('المبلغ:', amount);
                         
                         if (amount > 0) {
-                            const typeName = rowElement.querySelector('.fw-bold');
+                            // نستخرج اسم نوع الرسم من العنصر
+                            const typeElement = rowElement.querySelector('.fw-bold');
+                            const typeName = typeElement ? typeElement.textContent.trim() : 'نوع الرسم';
                             
                             feesData.push({
-                                type: typeName ? typeName.textContent : 'نوع الرسم',
+                                type: typeName,
                                 amount: amount,
                                 icon: toggle.icon,
                                 colorClass: toggle.colorClass
@@ -1176,6 +1195,7 @@
                         const rowElement = document.getElementById(toggle.row);
                         if (rowElement) {
                             rowElement.classList.remove('bg-primary', 'bg-opacity-10');
+                            rowElement.style.boxShadow = '';
                         }
                         
                         const amountInput = document.getElementById(toggle.amount);
@@ -1196,6 +1216,12 @@
                                 transferNumberInput.value = '';
                             }
                         }
+                        
+                        // إزالة التأثيرات المرئية من جميع الحقول في الصف
+                        const inputFields = rowElement.querySelectorAll('input:not(.fee-toggle)');
+                        inputFields.forEach(input => {
+                            input.classList.remove('border-primary');
+                        });
                     });
                     
                     // إعادة تعيين الحقول الأساسية
