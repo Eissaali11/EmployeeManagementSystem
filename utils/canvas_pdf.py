@@ -227,7 +227,7 @@ def generate_salary_notification_pdf(data):
         
         # إعادة توجيه المؤشر إلى بداية البيانات
         buffer.seek(0)
-        return buffer
+        return buffer.getvalue()
         
     except Exception as e:
         print(f"Error creating salary notification PDF: {str(e)}")
@@ -485,7 +485,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # إعادة توجيه المؤشر إلى بداية البيانات
         buffer.seek(0)
-        return buffer
+        return buffer.getvalue()
         
     except Exception as e:
         print(f"Error creating salary report PDF: {str(e)}")
