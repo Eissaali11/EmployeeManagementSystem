@@ -904,15 +904,6 @@ def handover_pdf(id):
             as_attachment=True,
             mimetype='application/pdf'
         )
-        
-        filename = f"handover_form_{vehicle.plate_number}.pdf"
-        
-        return send_file(
-            pdf_output,
-            download_name=filename,
-            as_attachment=True,
-            mimetype='application/pdf'
-        )
     except Exception as e:
         # في حالة حدوث خطأ، عرض رسالة الخطأ والعودة إلى صفحة عرض السيارة
         flash(f'خطأ في إنشاء ملف PDF: {str(e)}', 'danger')
