@@ -964,13 +964,38 @@ def dashboard():
             'vehicle_id': vehicle.id
         })
     
+    # تجميع الإحصائيات في كائن واحد
+    stats = {
+        'total_vehicles': total_vehicles,
+        'status_stats': status_dict,
+        'total_monthly_rent': total_monthly_rent,
+        'total_rental_cost': total_monthly_rent,  # نفس القيمة تستخدم في القالب باسم مختلف
+        'vehicles_in_workshop': vehicles_in_workshop,
+        'yearly_maintenance_cost': yearly_maintenance_cost,
+        'new_vehicles_last_month': Vehicle.query.filter(
+            Vehicle.created_at >= (datetime.now() - timedelta(days=30))
+        ).count(),  # عدد السيارات المضافة في الشهر الماضي
+        
+        # تكاليف الورشة للشهر الحالي
+        'workshop_cost_current_month': db.session.query(
+            func.sum(VehicleWorkshop.cost)
+        ).filter(
+            extract('year', VehicleWorkshop.entry_date) == current_year,
+            extract('month', VehicleWorkshop.entry_date) == current_month
+        ).scalar() or 0,
+        
+        # عدد السيارات في المشاريع
+        'vehicles_in_projects': Vehicle.query.filter_by(status='in_project').count(),
+        
+        # عدد المشاريع النشطة
+        'project_assignments_count': db.session.query(
+            func.count(func.distinct(VehicleProject.project_name))
+        ).filter_by(is_active=True).scalar() or 0
+    }
+    
     return render_template(
         'vehicles/dashboard.html',
-        total_vehicles=total_vehicles,
-        status_stats=status_dict,
-        total_monthly_rent=total_monthly_rent,
-        vehicles_in_workshop=vehicles_in_workshop,
-        yearly_maintenance_cost=yearly_maintenance_cost,
+        stats=stats,
         monthly_costs=monthly_costs,
         alerts=alerts
     )
