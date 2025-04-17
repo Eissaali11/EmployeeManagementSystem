@@ -1,12 +1,12 @@
 """
-وحدة إنشاء تقارير PDF باستخدام ReportLab Canvas
+وحدة إنشاء تقارير PDF باستخدام FPDF
 """
 from datetime import datetime
-from utils.canvas_pdf import generate_salary_report_pdf as generate_canvas_report_pdf
+from utils.fpdf_arabic import generate_salary_report_pdf as generate_fpdf_report
 
 def generate_salary_report_pdf(salaries, month, year):
     """
-    إنشاء تقرير PDF للرواتب باستخدام ReportLab Canvas مع دعم للغة العربية
+    إنشاء تقرير PDF للرواتب باستخدام FPDF مع دعم للغة العربية
     
     Args:
         salaries: قائمة بكائنات الرواتب
@@ -14,7 +14,7 @@ def generate_salary_report_pdf(salaries, month, year):
         year: السنة
         
     Returns:
-        BytesIO يحتوي على ملف PDF
+        bytes يحتوي على ملف PDF
     """
     try:
         # الحصول على اسم الشهر بالعربية
@@ -38,8 +38,8 @@ def generate_salary_report_pdf(salaries, month, year):
                 'net_salary': salary.net_salary
             })
         
-        # إنشاء ملف PDF باستخدام Canvas
-        return generate_canvas_report_pdf(salary_data, month_name, year)
+        # إنشاء ملف PDF باستخدام FPDF
+        return generate_fpdf_report(salary_data, month_name, year)
     
     except Exception as e:
         print(f"خطأ في إنشاء تقرير PDF: {str(e)}")

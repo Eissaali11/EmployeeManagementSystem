@@ -1,9 +1,9 @@
 """
 وحدة إنشاء إشعار راتب كملف PDF
-استخدام Canvas من ReportLab لإنشاء ملفات PDF مع دعم للنصوص العربية
+استخدام FPDF لإنشاء ملفات PDF مع دعم للنصوص العربية
 """
 from datetime import datetime
-from utils.canvas_pdf import generate_salary_notification_pdf as generate_canvas_pdf
+from utils.fpdf_arabic import generate_salary_notification_pdf as generate_fpdf_notification
 
 def generate_salary_notification_pdf(salary):
     """
@@ -13,7 +13,7 @@ def generate_salary_notification_pdf(salary):
         salary: كائن Salary يحتوي على بيانات الراتب
         
     Returns:
-        BytesIO يحتوي على ملف PDF
+        bytes يحتوي على ملف PDF
     """
     try:
         # الحصول على اسم الشهر بالعربية
@@ -41,8 +41,8 @@ def generate_salary_notification_pdf(salary):
             'current_date': datetime.now().strftime('%Y-%m-%d')
         }
         
-        # إنشاء ملف PDF باستخدام Canvas
-        return generate_canvas_pdf(data)
+        # إنشاء ملف PDF باستخدام FPDF
+        return generate_fpdf_notification(data)
         
     except Exception as e:
         print(f"خطأ في إنشاء إشعار الراتب: {str(e)}")
