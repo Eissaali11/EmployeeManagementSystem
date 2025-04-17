@@ -729,7 +729,7 @@
                     </div>
                     
                     <div class="d-grid gap-3">
-                        <button type="button" id="submitFeeButton" class="btn btn-success btn-lg fw-bold">
+                        <button type="submit" id="submitFeeButton" class="btn btn-success btn-lg fw-bold">
                             <i class="fas fa-check-circle me-2"></i>
                             حفظ الرسوم
                         </button>
@@ -1049,8 +1049,10 @@
         // تنفيذ تحديث الملخص عند تحميل الصفحة
         updateSummary();
         
-        // زر حفظ الرسوم
-        document.getElementById('submitFeeButton').addEventListener('click', function() {
+        // التحقق قبل إرسال النموذج
+        document.getElementById('feesForm').addEventListener('submit', function(event) {
+            // منع الإرسال التلقائي للنموذج
+            event.preventDefault();
             try {
                 console.log('زر الحفظ: بدء عملية الحفظ');
                 
