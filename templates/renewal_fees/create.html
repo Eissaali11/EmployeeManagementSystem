@@ -666,10 +666,11 @@
                     </div>
                 </div>
                 
-                <!-- حقول رسوم التجديد المخفية للإرسال -->
+                <!-- حقول رسوم التجديد للإرسال -->
                 <input type="hidden" id="fee_type" name="fee_type">
                 <input type="hidden" id="amount" name="amount">
                 <input type="hidden" id="notes" name="notes">
+                <input type="hidden" id="transfer_number_hidden" name="transfer_number">
             </form>
         </div>
         
@@ -911,27 +912,50 @@
         
         // تحديث الملخص عند تغيير قيمة أي رسم
         document.querySelectorAll('.fee-amount').forEach(input => {
-            input.addEventListener('input', updateSummary);
+            input.addEventListener('input', function() {
+                console.log('تغيير قيمة المبلغ:', this.value);
+                updateSummary();
+            });
+        });
+        
+        // تحديث عند تغيير حالة التفعيل
+        document.querySelectorAll('.fee-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                console.log('تغيير حالة التفعيل:', this.checked);
+                updateSummary();
+            });
         });
         
         // تحديث ملخص الرسوم
         function updateSummary() {
             try {
+                console.log('بدء تحديث الملخص');
                 const summaryTable = document.getElementById('fees_summary');
-                if (!summaryTable) return;
+                if (!summaryTable) {
+                    console.error('لم يتم العثور على جدول الملخص');
+                    return;
+                }
                 
                 const feesData = [];
                 let totalFees = 0;
                 
-                toggles.forEach(toggle => {
+                // فحص كل نوع رسوم
+                for (const toggle of toggles) {
                     const toggleElement = document.getElementById(toggle.id);
-                    const rowElement = document.getElementById(toggle.row);
+                    if (!toggleElement) continue;
                     
-                    if (toggleElement && toggleElement.checked && rowElement) {
+                    const rowElement = document.getElementById(toggle.row);
+                    if (!rowElement) continue;
+                    
+                    console.log('فحص:', toggle.id, 'مفعل:', toggleElement.checked);
+                    
+                    // إذا كان النوع مفعلاً
+                    if (toggleElement.checked) {
                         const amountInput = document.getElementById(toggle.amount);
-                        if (!amountInput) return;
+                        if (!amountInput) continue;
                         
                         const amount = parseFloat(amountInput.value) || 0;
+                        console.log('المبلغ:', amount);
                         
                         if (amount > 0) {
                             const typeName = rowElement.querySelector('.fw-bold');
@@ -944,9 +968,10 @@
                             });
                             
                             totalFees += amount;
+                            console.log('إضافة للإجمالي. الإجمالي الحالي:', totalFees);
                         }
                     }
-                });
+                }
                 
                 // تحديث الجدول
                 if (feesData.length > 0) {
@@ -1010,28 +1035,9 @@
         // زر حفظ الرسوم
         document.getElementById('submitFeeButton').addEventListener('click', function() {
             try {
-                // العثور على أول نوع مفعّل
-                let selectedToggle = null;
+                console.log('زر الحفظ: بدء عملية الحفظ');
                 
-                for (const toggle of toggles) {
-                    const toggleElement = document.getElementById(toggle.id);
-                    if (toggleElement && toggleElement.checked) {
-                        const amountInput = document.getElementById(toggle.amount);
-                        const amount = parseFloat(amountInput.value) || 0;
-                        
-                        if (amount > 0) {
-                            selectedToggle = toggle;
-                            break;
-                        }
-                    }
-                }
-                
-                if (!selectedToggle) {
-                    showAlert('warning', 'يرجى تفعيل وإدخال قيمة لرسم واحد على الأقل');
-                    return;
-                }
-                
-                // التحقق من باقي حقول النموذج
+                // التحقق من حقول النموذج الأساسية
                 const form = document.getElementById('feesForm');
                 if (!form) {
                     showAlert('warning', 'حدث خطأ في النموذج، يرجى تحديث الصفحة');
@@ -1052,6 +1058,7 @@
                     return;
                 }
                 
+                // التحقق من حقول الدفع إذا كانت الحالة مدفوعة
                 const paymentStatusSelect = document.getElementById('payment_status');
                 if (paymentStatusSelect && paymentStatusSelect.value === 'paid') {
                     const paymentDateInput = document.getElementById('payment_date');
@@ -1062,69 +1069,65 @@
                     }
                 }
                 
-                // تعيين قيم الحقول المخفية
-                const feeTypeInput = document.getElementById('fee_type');
-                if (feeTypeInput) {
-                    feeTypeInput.value = selectedToggle.id.replace('_toggle', '');
-                    console.log('تم تعيين نوع الرسم:', feeTypeInput.value);
-                }
-                
-                const amountInput = document.getElementById('amount');
-                if (amountInput) {
-                    amountInput.value = document.getElementById(selectedToggle.amount).value;
-                    console.log('تم تعيين المبلغ:', amountInput.value);
-                }
-                
-                // ملاحظات
-                const notesInput = document.getElementById(selectedToggle.notes);
-                const notesHiddenInput = document.getElementById('notes');
-                if (notesHiddenInput) {
-                    notesHiddenInput.value = notesInput ? notesInput.value : '';
-                    console.log('تم تعيين الملاحظات:', notesHiddenInput.value);
-                }
-                
-                // تفعيل حقل نوع الرسم المخفي المقابل
-                const selectedFeeTypeHidden = document.getElementById(selectedToggle.type);
-                if (selectedFeeTypeHidden) {
-                    selectedFeeTypeHidden.disabled = false; // تأكد من أن هذا الحقل مفعل عند الإرسال
-                    console.log('تم تفعيل نوع الرسم المخفي:', selectedFeeTypeHidden.value);
-                }
-                
-                // تأكد من أن حقول الإرسال المخفية مفعلة
-                document.getElementById('fee_type').disabled = false;
-                document.getElementById('amount').disabled = false;
-                document.getElementById('notes').disabled = false;
-                
-                // تأكد من أن قيم التحويل متوفرة إذا كان مطلوبًا
-                if (selectedToggle.id === 'transfer_sponsorship_toggle') {
-                    if (document.getElementById('transfer_number')) {
-                        const transferValue = document.getElementById('transfer_number').value;
-                        // إضافة حقل مخفي جديد لرقم التحويل
-                        let transferNumberHidden = document.getElementById('transfer_number_hidden');
-                        if (!transferNumberHidden) {
-                            transferNumberHidden = document.createElement('input');
-                            transferNumberHidden.type = 'hidden';
-                            transferNumberHidden.id = 'transfer_number_hidden';
-                            transferNumberHidden.name = 'transfer_number';
-                            form.appendChild(transferNumberHidden);
+                // العثور على أول نوع مفعّل
+                let selectedToggle = null;
+                for (const toggle of toggles) {
+                    const toggleElement = document.getElementById(toggle.id);
+                    if (toggleElement && toggleElement.checked) {
+                        const amountInput = document.getElementById(toggle.amount);
+                        const amount = parseFloat(amountInput.value) || 0;
+                        
+                        if (amount > 0) {
+                            selectedToggle = toggle;
+                            break;
                         }
-                        transferNumberHidden.value = transferValue;
-                        console.log('تم تعيين رقم التحويل:', transferValue);
                     }
                 }
                 
-                // تحديد قيمة رقم النقل إذا كان نوع الرسم هو نقل الكفالة
-                if (selectedToggle.transferNumber && selectedToggle.id === 'transfer_sponsorship_toggle') {
-                    const transferNumberInput = document.getElementById(selectedToggle.transferNumber);
-                    if (transferNumberInput && !transferNumberInput.value) {
-                        showAlert('warning', 'يرجى إدخال رقم النقل');
-                        transferNumberInput.focus();
+                // التحقق من وجود رسوم مدخلة
+                if (!selectedToggle) {
+                    showAlert('warning', 'يرجى تفعيل وإدخال قيمة لرسم واحد على الأقل');
+                    return;
+                }
+                
+                console.log('تم تحديد الرسم:', selectedToggle.id);
+                
+                // تعيين نوع الرسم
+                const feeType = selectedToggle.id.replace('_toggle', '');
+                document.getElementById('fee_type').value = feeType;
+                console.log('تعيين نوع الرسم:', feeType);
+                
+                // تعيين المبلغ
+                const amount = document.getElementById(selectedToggle.amount).value;
+                document.getElementById('amount').value = amount;
+                console.log('تعيين المبلغ:', amount);
+                
+                // تعيين الملاحظات
+                const notes = document.getElementById(selectedToggle.notes)?.value || '';
+                document.getElementById('notes').value = notes;
+                console.log('تعيين الملاحظات:', notes);
+                
+                // معالجة رقم نقل الكفالة إذا كان مطلوبًا
+                if (feeType === 'transfer_sponsorship') {
+                    const transferValue = document.getElementById('transfer_number')?.value || '';
+                    document.getElementById('transfer_number_hidden').value = transferValue;
+                    console.log('تعيين رقم النقل:', transferValue);
+                    
+                    if (!transferValue) {
+                        showAlert('warning', 'يرجى إدخال رقم النقل لتجديد نقل الكفالة');
+                        document.getElementById('transfer_number').focus();
                         return;
                     }
                 }
                 
-                // إرسال النموذج
-                form.submit();
+                // عرض رسالة قبل الإرسال
+                showAlert('info', 'جاري حفظ الرسوم...');
+                
+                // تأخير قصير ثم إرسال النموذج
+                setTimeout(() => {
+                    console.log('إرسال النموذج');
+                    form.submit();
+                }, 500);
             } catch (error) {
                 console.error('خطأ في معالجة النموذج:', error);
                 showAlert('warning', 'حدث خطأ أثناء معالجة النموذج، يرجى تحديث الصفحة');
