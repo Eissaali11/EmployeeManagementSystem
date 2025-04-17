@@ -207,67 +207,80 @@ def generate_salary_notification_pdf(data):
         pdf.set_draw_color(*pdf.primary_color)
         pdf.line(60, salary_title_y + 10, 140, salary_title_y + 10)
         
-        # إضافة قسم ملخص الراتب - محاذاة أفضل وتنسيق محسن
-        pdf.set_font('Tajawal', 'B', 14)
+        # ========== إعادة تصميم كاملة لقسم ملخص الراتب ==========
+        # نفس نمط جدول الرواتب في تقرير الرواتب ولكن بشكل أفضل
+
+        # نبدأ بعنوان منفصل وواضح تماماً
+        pdf.ln(10)  # مسافة إضافية بعد قسم تفاصيل الراتب
+        pdf.set_font('Tajawal', 'B', 16)
         pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190, salary_title_y, "ملخص الراتب", 'R')
+
+        # إضافة عنوان محاذى للوسط
+        title_y = pdf.get_y() + 5
+        pdf.set_xy(0, title_y) 
+        pdf.cell(pdf.page_width, 10, get_display(arabic_reshaper.reshape("ملخص الراتب")), 0, 1, 'C')
         
-        # خط تحت عنوان ملخص الراتب (جعله أطول وأوضح)
+        # خط أفقي تحت العنوان
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(130, salary_title_y + 8, 190, salary_title_y + 8)
+        pdf.line(80, title_y + 10, 130, title_y + 10)
         
-        # تحضير بيانات الجدول - تقريب لتجنب الخروج عن حدود الصفحة
-        table_y = salary_title_y + 20
+        # نترك مسافة قبل بداية الجدول
+        table_y = title_y + 15
         
-        # تعريف أبعاد الجدول لجعله أكثر تنظيمًا
-        amount_width = 45  # عرض عمود المبلغ
-        item_width = 80    # عرض عمود البيان
+        # تحديد عرض الجدول وموضعه
+        table_width = 125  # عرض الجدول الكلي
+        item_width = 85    # عرض عمود البيان
+        amount_width = 40  # عرض عمود المبلغ
         row_height = 10    # ارتفاع الصف
         
-        # حساب بداية الجدول من اليمين بشكل مناسب للورقة
-        x_start = pdf.page_width - 30 - amount_width - item_width
+        # حساب موقع بداية الجدول في وسط الصفحة
+        x_start = (pdf.page_width - table_width) / 2
         
-        # رسم الجدول وعناوين الأعمدة (أكثر تنظيماً)
-        pdf.set_font('Tajawal', 'B', 11)
-        pdf.set_fill_color(*pdf.primary_color)
-        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+        # رسم الجدول وعناوين الأعمدة
         pdf.set_xy(x_start, table_y)
-        pdf.cell(amount_width, row_height, "المبلغ", 1, 0, 'C', True)
-        pdf.cell(item_width, row_height, "البيان", 1, 1, 'C', True)
-                
-        # بيانات المحتوى
-        pdf.set_text_color(0, 0, 0)  # إعادة لون النص إلى الأسود
-        pdf.set_font('Tajawal', '', 11)
-        
-        # الراتب الأساسي
-        pdf.set_xy(x_start, pdf.get_y())
-        pdf.cell(amount_width, row_height, f"{data.get('basic_salary', 0):.2f}", 1, 0, 'C')
-        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("إجمالي الراتب الأساسي")), 1, 1, 'R')
-        
-        # البدلات
-        pdf.set_xy(x_start, pdf.get_y())
-        pdf.cell(amount_width, row_height, f"{data.get('allowances', 0):.2f}", 1, 0, 'C')
-        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("إجمالي البدلات")), 1, 1, 'R')
-        
-        # الخصومات
-        pdf.set_xy(x_start, pdf.get_y())
-        pdf.cell(amount_width, row_height, f"{data.get('deductions', 0):.2f}", 1, 0, 'C')
-        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("إجمالي الخصومات")), 1, 1, 'R')
-        
-        # المكافآت
-        pdf.set_xy(x_start, pdf.get_y())
-        pdf.cell(amount_width, row_height, f"{data.get('bonus', 0):.2f}", 1, 0, 'C')
-        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("إجمالي المكافآت")), 1, 1, 'R')
-        
-        # صافي الراتب - بلون مختلف وخط سميك
-        pdf.set_font('Tajawal', 'B', 12)
         pdf.set_fill_color(*pdf.primary_color)
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        pdf.set_xy(x_start, pdf.get_y())
-        pdf.cell(amount_width, row_height, f"{data.get('net_salary', 0):.2f}", 1, 0, 'C', True)
-        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("إجمالي صافي الراتب")), 1, 1, 'R', True)
+        pdf.set_font('Tajawal', 'B', 12)
         
-        pdf.set_text_color(0, 0, 0)  # إعادة لون النص إلى الأسود
+        # رسم رأس الجدول
+        pdf.cell(amount_width, row_height, get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
+        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
+        
+        # إعداد مصفوفة بيانات ملخص الراتب
+        salary_items = [
+            ["إجمالي الراتب الأساسي", f"{data.get('basic_salary', 0):.2f}"],
+            ["إجمالي البدلات", f"{data.get('allowances', 0):.2f}"],
+            ["إجمالي الخصومات", f"{data.get('deductions', 0):.2f}"],
+            ["إجمالي المكافآت", f"{data.get('bonus', 0):.2f}"],
+            ["إجمالي صافي الراتب", f"{data.get('net_salary', 0):.2f}"]
+        ]
+        
+        # طباعة بيانات الجدول
+        pdf.set_font('Tajawal', '', 11)
+        pdf.set_text_color(0, 0, 0)  # لون أسود للنص
+        
+        for i, item in enumerate(salary_items):
+            # تطبيق تنسيق خاص للصف الأخير (إجمالي صافي الراتب)
+            if i == len(salary_items) - 1:
+                pdf.set_font('Tajawal', 'B', 12)
+                pdf.set_fill_color(*pdf.primary_color)
+                pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+                fill = True
+            else:
+                # تناوب ألوان الصفوف
+                fill = i % 2 == 1
+                if fill:
+                    pdf.set_fill_color(*pdf.table_row_alt_color)
+                else:
+                    pdf.set_fill_color(255, 255, 255)
+            
+            # رسم الصف الحالي
+            pdf.set_xy(x_start, pdf.get_y())
+            pdf.cell(amount_width, row_height, item[1], 1, 0, 'C', fill)
+            pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
+        
+        # إعادة ضبط نمط النص
+        pdf.set_text_color(0, 0, 0)
         
         # إضافة الملاحظات إذا وجدت
         if data.get('notes'):
