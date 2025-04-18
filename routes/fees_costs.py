@@ -199,7 +199,9 @@ def document_details(document_id):
     
     return render_template('fees_costs/document_details.html',
                           document=document,
-                          fees_costs=fees_costs)
+                          fees_costs=fees_costs,
+                          now=datetime.now(),
+                          timedelta=timedelta)
 
 @fees_costs_bp.route('/expiring-documents')
 @login_required
