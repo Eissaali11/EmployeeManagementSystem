@@ -1,0 +1,483 @@
+/* 
+   نمط CSS خاص بالواجهة المحمولة
+   نظام إدارة الموظفين - النسخة المحمولة
+*/
+
+:root {
+    --primary-color: #1E88E5;
+    --primary-dark: #1565C0;
+    --primary-light: #90CAF9;
+    --accent-color: #FF9800;
+    --text-color: #212121;
+    --text-secondary: #757575;
+    --background-light: #FFFFFF;
+    --background-grey: #F5F5F5;
+    --divider-color: #BDBDBD;
+    --success-color: #4CAF50;
+    --warning-color: #FFC107;
+    --danger-color: #F44336;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    direction: rtl;
+}
+
+body {
+    font-family: 'Tajawal', Arial, sans-serif;
+    color: var(--text-color);
+    background-color: var(--background-grey);
+    line-height: 1.6;
+    padding-bottom: 60px; /* مساحة للقائمة السفلية */
+}
+
+/* تنسيقات القائمة العلوية */
+.mobile-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mobile-header h1 {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.mobile-menu-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* تنسيقات القائمة الجانبية */
+.mobile-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 80%;
+    height: 100%;
+    background-color: var(--background-light);
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    z-index: 2000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
+    direction: rtl;
+}
+
+.mobile-sidebar.active {
+    transform: translateX(0);
+}
+
+.sidebar-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-sidebar {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.sidebar-user {
+    padding: 1rem;
+    border-bottom: 1px solid var(--divider-color);
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-user img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: 1rem;
+}
+
+.sidebar-menu ul {
+    list-style: none;
+}
+
+.sidebar-menu li {
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.sidebar-menu a:hover {
+    background-color: var(--background-grey);
+}
+
+.sidebar-menu i {
+    margin-left: 0.5rem;
+    color: var(--primary-color);
+}
+
+/* تنسيقات القائمة السفلية */
+.mobile-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--background-light);
+    display: flex;
+    justify-content: space-around;
+    padding: 0.5rem;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    z-index: 900;
+}
+
+.footer-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    padding: 0.25rem;
+}
+
+.footer-item.active {
+    color: var(--primary-color);
+}
+
+.footer-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+/* تنسيقات البطاقات */
+.mobile-card {
+    background-color: var(--background-light);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 1rem;
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.mobile-card-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.mobile-card-content {
+    margin-bottom: 0.5rem;
+}
+
+/* تنسيقات النماذج */
+.mobile-form-group {
+    margin-bottom: 1rem;
+}
+
+.mobile-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.mobile-form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    font-family: 'Tajawal', Arial, sans-serif;
+    font-size: 1rem;
+}
+
+.mobile-form-control:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.mobile-form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    font-family: 'Tajawal', Arial, sans-serif;
+    font-size: 1rem;
+    background-color: white;
+}
+
+/* تنسيقات الأزرار */
+.mobile-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Tajawal', Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.mobile-btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.mobile-btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.mobile-btn-secondary {
+    background-color: var(--background-grey);
+    color: var(--text-color);
+    border: 1px solid var(--divider-color);
+}
+
+.mobile-btn-secondary:hover {
+    background-color: var(--divider-color);
+}
+
+.mobile-btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.mobile-btn-warning {
+    background-color: var(--warning-color);
+    color: var(--text-color);
+}
+
+.mobile-btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.mobile-btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* تنسيقات الجدول المحمول */
+.mobile-table {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.mobile-table-row {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--divider-color);
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mobile-table-header {
+    background-color: var(--primary-light);
+    font-weight: bold;
+}
+
+.mobile-table-cell {
+    flex: 1;
+    padding: 0.25rem;
+}
+
+/* تنسيقات الإشعارات */
+.mobile-notification {
+    padding: 1rem;
+    margin: 1rem;
+    border-radius: 4px;
+    border-right: 4px solid var(--primary-color);
+    background-color: var(--background-light);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mobile-notification-success {
+    border-right-color: var(--success-color);
+}
+
+.mobile-notification-warning {
+    border-right-color: var(--warning-color);
+}
+
+.mobile-notification-danger {
+    border-right-color: var(--danger-color);
+}
+
+/* تنسيقات شاشة التحميل */
+.mobile-loader {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+}
+
+.mobile-loader.active {
+    display: flex;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--primary-light);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* تنسيقات للإحصائيات */
+.mobile-stat-card {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.mobile-stat-card.primary {
+    background-color: var(--primary-color);
+}
+
+.mobile-stat-card.success {
+    background-color: var(--success-color);
+}
+
+.mobile-stat-card.warning {
+    background-color: var(--warning-color);
+}
+
+.mobile-stat-card.danger {
+    background-color: var(--danger-color);
+}
+
+.mobile-stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.mobile-stat-title {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* تنسيقات لعرض عناصر الربط السريع في الصفحة الرئيسية */
+.mobile-quick-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.mobile-quick-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background-light);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mobile-quick-link:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.mobile-quick-link i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.mobile-quick-link span {
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* تنسيقات لعرض التقارير */
+.mobile-report-filters {
+    background-color: var(--background-light);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mobile-report-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    gap: 0.5rem;
+}
+
+.mobile-report-actions button {
+    flex: 1;
+}
+
+.mobile-report-table {
+    overflow-x: auto;
+    margin: 0 1rem;
+}
+
+/* تصميم للهواتف الأصغر حجماً */
+@media (max-width: 320px) {
+    html {
+        font-size: 14px;
+    }
+    
+    .mobile-quick-links {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* تصميم للأجهزة الأكبر (الأجهزة اللوحية) */
+@media (min-width: 768px) {
+    .mobile-card {
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .mobile-sidebar {
+        width: 350px;
+    }
+}
