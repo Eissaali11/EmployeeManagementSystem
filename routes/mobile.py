@@ -444,20 +444,64 @@ def salary_details(salary_id):
 @login_required
 def documents():
     """صفحة الوثائق للنسخة المحمولة"""
+    # فلترة الوثائق بناءً على البارامترات
+    employee_id = request.args.get('employee_id', type=int)
+    document_type = request.args.get('document_type')
+    status = request.args.get('status')  # valid, expiring, expired
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
     
-    # بيانات مؤقتة - يمكن استبدالها بالبيانات الفعلية من قاعدة البيانات
+    # قم باستعلام قاعدة البيانات للحصول على قائمة الموظفين
     employees = Employee.query.order_by(Employee.name).all()
-    documents = []
     
-    # إحصائيات الوثائق
+    # إنشاء استعلام أساسي للوثائق
+    query = Document.query
+    
+    # إضافة فلاتر إلى الاستعلام إذا تم توفيرها
+    if employee_id:
+        query = query.filter(Document.employee_id == employee_id)
+    
+    if document_type:
+        query = query.filter(Document.document_type == document_type)
+    
+    # الحصول على التاريخ الحالي
     current_date = datetime.now().date()
+    
+    # إضافة فلتر حالة الوثيقة
+    if status:
+        if status == 'valid':
+            # وثائق سارية المفعول (تاريخ انتهاء الصلاحية بعد 60 يوم على الأقل من اليوم)
+            valid_date = current_date + timedelta(days=60)
+            query = query.filter(Document.expiry_date >= valid_date)
+        elif status == 'expiring':
+            # وثائق على وشك الانتهاء (تاريخ انتهاء الصلاحية خلال 60 يوم من اليوم)
+            expiring_min_date = current_date
+            expiring_max_date = current_date + timedelta(days=60)
+            query = query.filter(Document.expiry_date >= expiring_min_date, 
+                                Document.expiry_date <= expiring_max_date)
+        elif status == 'expired':
+            # وثائق منتهية الصلاحية (تاريخ انتهاء الصلاحية قبل اليوم)
+            query = query.filter(Document.expiry_date < current_date)
+    
+    # تنفيذ الاستعلام مع ترتيب النتائج حسب تاريخ انتهاء الصلاحية
+    query = query.order_by(Document.expiry_date)
+    
+    # تقسيم النتائج إلى صفحات
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    documents = pagination.items
+    
+    # حساب إحصائيات الوثائق
+    valid_count = Document.query.filter(Document.expiry_date >= current_date + timedelta(days=60)).count()
+    expiring_count = Document.query.filter(Document.expiry_date >= current_date, 
+                                          Document.expiry_date <= current_date + timedelta(days=60)).count()
+    expired_count = Document.query.filter(Document.expiry_date < current_date).count()
+    total_count = Document.query.count()
+    
     document_stats = {
-        'valid': 0,
-        'expiring': 0,
-        'expired': 0,
-        'total': 0
+        'valid': valid_count,
+        'expiring': expiring_count,
+        'expired': expired_count,
+        'total': total_count
     }
     
     return render_template('mobile/documents.html',
@@ -465,7 +509,7 @@ def documents():
                           documents=documents,
                           current_date=current_date,
                           document_stats=document_stats,
-                          pagination=None)
+                          pagination=pagination)
 
 # إضافة وثيقة جديدة - النسخة المحمولة
 @mobile_bp.route('/documents/add', methods=['GET', 'POST'])
