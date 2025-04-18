@@ -65,27 +65,27 @@
                 <div class="fee-costs-section">
                     <div class="fee-data-item costs">
                         <div class="fee-data-label">رسوم الجوازات</div>
-                        <div class="fee-data-value amount">{{ '{:,.2f}'.format(fee.passport_fee|default(0)) }}</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.passport_fee|default(0)) }}</div>
                     </div>
 
                     <div class="fee-data-item costs">
                         <div class="fee-data-label">رسوم مكتب العمل</div>
-                        <div class="fee-data-value amount">{{ '{:,.2f}'.format(fee.labor_office_fee|default(0)) }}</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.labor_office_fee|default(0)) }}</div>
                     </div>
 
                     <div class="fee-data-item costs">
                         <div class="fee-data-label">رسوم التأمين</div>
-                        <div class="fee-data-value amount">{{ '{:,.2f}'.format(fee.insurance_fee|default(0)) }}</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.insurance_fee|default(0)) }}</div>
                     </div>
 
                     <div class="fee-data-item costs">
                         <div class="fee-data-label">رسوم التأمينات الاجتماعية</div>
-                        <div class="fee-data-value amount">{{ '{:,.2f}'.format(fee.social_insurance_fee|default(0)) }}</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.social_insurance_fee|default(0)) }}</div>
                     </div>
 
                     <div class="fee-data-item total">
                         <div class="fee-data-label">إجمالي الرسوم</div>
-                        <div class="fee-data-value amount">{{ '{:,.2f}'.format(fee.total_fees|default(0)) }}</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block; font-size: 1.3rem;">{{ '{:,.2f}'.format(fee.total_fees|default(0)) }}</div>
                     </div>
                 </div>
 
@@ -195,7 +195,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="mobile-btn mobile-btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="mobile-btn mobile-btn-primary" id="submitEditForm">حفظ التغييرات</button>
+                <button type="button" class="mobile-btn mobile-btn-primary" id="submitEditForm" onclick="document.getElementById('editFeeForm').submit();">حفظ التغييرات</button>
             </div>
         </div>
     </div>
@@ -236,7 +236,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="mobile-btn mobile-btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="mobile-btn mobile-btn-primary" id="submitPaidForm">تأكيد السداد</button>
+                <button type="button" class="mobile-btn mobile-btn-primary" id="submitPaidForm" onclick="document.getElementById('markAsPaidForm').submit();">تأكيد السداد</button>
             </div>
         </div>
     </div>
