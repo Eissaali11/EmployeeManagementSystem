@@ -1,0 +1,401 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}السيارات - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}السيارات{% endblock %}
+
+{% block content %}
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.vehicles') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <input type="text" name="search" class="mobile-form-control" placeholder="البحث عن سيارة..." value="{{ request.args.get('search', '') }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <select name="status" class="mobile-form-select">
+                    <option value="">جميع الحالات</option>
+                    <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>نشطة</option>
+                    <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>غير نشطة</option>
+                    <option value="maintenance" {% if request.args.get('status') == 'maintenance' %}selected{% endif %}>قيد الصيانة</option>
+                </select>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- قائمة السيارات -->
+{% if vehicles %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-car"></i> قائمة السيارات
+        <div class="mobile-card-subtitle">{{ vehicles|length }} سيارة</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for vehicle in vehicles %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
+                <div class="mobile-list-item-icon">
+                    {% if vehicle.type == 'car' %}
+                    <i class="fas fa-car"></i>
+                    {% elif vehicle.type == 'truck' %}
+                    <i class="fas fa-truck"></i>
+                    {% elif vehicle.type == 'bus' %}
+                    <i class="fas fa-bus"></i>
+                    {% elif vehicle.type == 'van' %}
+                    <i class="fas fa-shuttle-van"></i>
+                    {% else %}
+                    <i class="fas fa-car-side"></i>
+                    {% endif %}
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ vehicle.name }} - {{ vehicle.plate_number }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        {{ vehicle.model }} {{ vehicle.year }}
+                    </div>
+                    <div class="mobile-list-item-info">
+                        <span class="badge 
+                              {% if vehicle.status == 'active' %}bg-success
+                              {% elif vehicle.status == 'maintenance' %}bg-warning
+                              {% else %}bg-secondary{% endif %}">
+                            {{ vehicle.status_display }}
+                        </span>
+                        {% if vehicle.driver %}
+                        <span class="ms-2"><i class="fas fa-user"></i> {{ vehicle.driver }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mobile-list-item-action">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- ترقيم الصفحات -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mobile-pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('mobile.vehicles', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+            
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                    <a href="{{ url_for('mobile.vehicles', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                    {% else %}
+                    <span class="mobile-pagination-item active">{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="mobile-pagination-item">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('mobile.vehicles', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-car fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد سيارات</h5>
+        <p class="text-secondary">لم يتم العثور على أي سيارات في النظام</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- الإحصائيات -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> إحصائيات السيارات
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="vehicles-stats">
+            <div class="vehicle-stat active">
+                <div class="stat-value">{{ stats.active or 0 }}</div>
+                <div class="stat-label">نشطة</div>
+            </div>
+            <div class="vehicle-stat maintenance">
+                <div class="stat-value">{{ stats.maintenance or 0 }}</div>
+                <div class="stat-label">قيد الصيانة</div>
+            </div>
+            <div class="vehicle-stat inactive">
+                <div class="stat-value">{{ stats.inactive or 0 }}</div>
+                <div class="stat-label">غير نشطة</div>
+            </div>
+            <div class="vehicle-stat total">
+                <div class="stat-value">{{ stats.total or 0 }}</div>
+                <div class="stat-label">الإجمالي</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="vehiclesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- روابط إضافية -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-link"></i> روابط سريعة
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="quick-links">
+            <a href="{{ url_for('mobile.add_vehicle') }}" class="quick-link">
+                <i class="fas fa-plus-circle"></i>
+                <span>إضافة سيارة</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="quick-link">
+                <i class="fas fa-tools"></i>
+                <span>سجل الصيانة</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicle_documents') }}" class="quick-link">
+                <i class="fas fa-file-alt"></i>
+                <span>وثائق السيارات</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicle_expenses') }}" class="quick-link">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>المصروفات</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+    color: #666;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #757575;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-action {
+    color: #ccc;
+}
+
+.mobile-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+
+.mobile-pagination-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35px;
+    height: 35px;
+    margin: 0 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #757575;
+}
+
+.mobile-pagination-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.vehicles-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.vehicle-stat {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.vehicle-stat.active {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.vehicle-stat.maintenance {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.vehicle-stat.inactive {
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.vehicle-stat.total {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #757575;
+}
+
+.chart-container {
+    height: 200px;
+    margin: 10px 0;
+}
+
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.quick-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s;
+}
+
+.quick-link:hover {
+    transform: translateY(-3px);
+}
+
+.quick-link i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+.quick-link span {
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إنشاء بيانات الرسم البياني للسيارات
+    const vehiclesData = {
+        labels: ['نشطة', 'قيد الصيانة', 'غير نشطة'],
+        datasets: [{
+            data: [
+                {{ stats.active or 0 }},
+                {{ stats.maintenance or 0 }},
+                {{ stats.inactive or 0 }}
+            ],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.7)',   // نشطة
+                'rgba(255, 193, 7, 0.7)',   // قيد الصيانة
+                'rgba(108, 117, 125, 0.7)'  // غير نشطة
+            ],
+            borderWidth: 0
+        }]
+    };
+
+    // إنشاء الرسم البياني للسيارات
+    const ctx = document.getElementById('vehiclesChart').getContext('2d');
+    const vehiclesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: vehiclesData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

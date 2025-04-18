@@ -216,8 +216,29 @@ def edit_attendance(record_id):
 @login_required
 def departments():
     """صفحة الأقسام للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/departments.html')
+    # الحصول على قائمة الأقسام
+    departments = Department.query.all()
+    employees_count = Employee.query.count()
+    
+    return render_template('mobile/departments.html',
+                          departments=departments,
+                          employees_count=employees_count)
+
+# صفحة إضافة قسم جديد - النسخة المحمولة
+@mobile_bp.route('/departments/add', methods=['GET', 'POST'])
+@login_required
+def add_department():
+    """صفحة إضافة قسم جديد للنسخة المحمولة"""
+    # ستتم إضافة وظيفة إضافة قسم جديد لاحقاً
+    return render_template('mobile/add_department.html')
+
+# صفحة تفاصيل القسم - النسخة المحمولة
+@mobile_bp.route('/departments/<int:department_id>')
+@login_required
+def department_details(department_id):
+    """صفحة تفاصيل القسم للنسخة المحمولة"""
+    department = Department.query.get_or_404(department_id)
+    return render_template('mobile/department_details.html', department=department)
 
 # صفحة الرواتب - النسخة المحمولة
 @mobile_bp.route('/salaries')
@@ -334,16 +355,85 @@ def reports():
 @login_required
 def vehicles():
     """صفحة السيارات للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/vehicles.html')
+    # بيانات مؤقتة
+    vehicles = []
+    stats = {
+        'active': 0,
+        'maintenance': 0,
+        'inactive': 0,
+        'total': 0
+    }
+    return render_template('mobile/vehicles.html', vehicles=vehicles, stats=stats)
+    
+# تفاصيل السيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/<int:vehicle_id>')
+@login_required
+def vehicle_details(vehicle_id):
+    """تفاصيل السيارة للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/vehicle_details.html')
+
+# إضافة سيارة جديدة - النسخة المحمولة
+@mobile_bp.route('/vehicles/add', methods=['GET', 'POST'])
+@login_required
+def add_vehicle():
+    """إضافة سيارة جديدة للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/add_vehicle.html')
+
+# سجل صيانة السيارات - النسخة المحمولة
+@mobile_bp.route('/vehicles/maintenance')
+@login_required
+def vehicle_maintenance():
+    """سجل صيانة السيارات للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/vehicle_maintenance.html')
+
+# وثائق السيارات - النسخة المحمولة
+@mobile_bp.route('/vehicles/documents')
+@login_required
+def vehicle_documents():
+    """وثائق السيارات للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/vehicle_documents.html')
+
+# مصروفات السيارات - النسخة المحمولة
+@mobile_bp.route('/vehicles/expenses')
+@login_required
+def vehicle_expenses():
+    """مصروفات السيارات للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/vehicle_expenses.html')
 
 # صفحة الرسوم والتكاليف - النسخة المحمولة
 @mobile_bp.route('/fees')
 @login_required
 def fees():
     """صفحة الرسوم والتكاليف للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/fees.html')
+    # بيانات مؤقتة
+    fees = []
+    fees_summary = {
+        'pending_fees': 0,
+        'paid_fees': 0,
+        'total_fees': 0
+    }
+    return render_template('mobile/fees.html', fees=fees, fees_summary=fees_summary)
+
+# إضافة رسم جديد - النسخة المحمولة
+@mobile_bp.route('/fees/add', methods=['GET', 'POST'])
+@login_required
+def add_fee():
+    """إضافة رسم جديد للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/add_fee.html')
+
+# تفاصيل الرسم - النسخة المحمولة 
+@mobile_bp.route('/fees/<int:fee_id>')
+@login_required
+def fee_details(fee_id):
+    """تفاصيل الرسم للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/fee_details.html')
 
 # صفحة الإشعارات - النسخة المحمولة
 @mobile_bp.route('/notifications')

@@ -1,0 +1,464 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}التقارير - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}التقارير{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-file-alt"></i> التقارير المتاحة
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="report-list">
+            <!-- تقرير الموظفين -->
+            <div class="report-item" onclick="toggleReportOptions('employees')">
+                <div class="report-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="report-info">
+                    <div class="report-title">تقرير الموظفين</div>
+                    <div class="report-description">قائمة بجميع الموظفين مصنفة حسب القسم مع بياناتهم الأساسية</div>
+                </div>
+                <div class="report-toggle">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="report-options" id="employees-options">
+                <a href="{{ url_for('mobile.employees_report') }}" class="report-option-btn">
+                    <i class="fas fa-eye"></i> عرض
+                </a>
+                <a href="{{ url_for('mobile.employees_pdf') }}" class="report-option-btn">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{{ url_for('mobile.employees_excel') }}" class="report-option-btn">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+            
+            <!-- تقرير الحضور -->
+            <div class="report-item" onclick="toggleReportOptions('attendance')">
+                <div class="report-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="report-info">
+                    <div class="report-title">تقرير الحضور والغياب</div>
+                    <div class="report-description">سجلات الحضور والغياب للموظفين خلال فترة محددة</div>
+                </div>
+                <div class="report-toggle">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="report-options" id="attendance-options">
+                <a href="{{ url_for('mobile.attendance_report') }}" class="report-option-btn">
+                    <i class="fas fa-eye"></i> عرض
+                </a>
+                <a href="{{ url_for('mobile.attendance_pdf') }}" class="report-option-btn">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{{ url_for('mobile.attendance_excel') }}" class="report-option-btn">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+            
+            <!-- تقرير الرواتب -->
+            <div class="report-item" onclick="toggleReportOptions('salaries')">
+                <div class="report-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="report-info">
+                    <div class="report-title">تقرير الرواتب</div>
+                    <div class="report-description">تفاصيل الرواتب والمدفوعات والخصومات للموظفين</div>
+                </div>
+                <div class="report-toggle">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="report-options" id="salaries-options">
+                <a href="{{ url_for('mobile.salaries_report') }}" class="report-option-btn">
+                    <i class="fas fa-eye"></i> عرض
+                </a>
+                <a href="{{ url_for('mobile.salaries_pdf') }}" class="report-option-btn">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{{ url_for('mobile.salaries_excel') }}" class="report-option-btn">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+            
+            <!-- تقرير الوثائق -->
+            <div class="report-item" onclick="toggleReportOptions('documents')">
+                <div class="report-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="report-info">
+                    <div class="report-title">تقرير الوثائق</div>
+                    <div class="report-description">حالة الوثائق ومواعيد انتهائها وتكاليف التجديد</div>
+                </div>
+                <div class="report-toggle">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="report-options" id="documents-options">
+                <a href="{{ url_for('mobile.documents_report') }}" class="report-option-btn">
+                    <i class="fas fa-eye"></i> عرض
+                </a>
+                <a href="{{ url_for('mobile.documents_pdf') }}" class="report-option-btn">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{{ url_for('mobile.documents_excel') }}" class="report-option-btn">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+            
+            <!-- تقرير السيارات -->
+            <div class="report-item" onclick="toggleReportOptions('vehicles')">
+                <div class="report-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="report-info">
+                    <div class="report-title">تقرير السيارات</div>
+                    <div class="report-description">معلومات السيارات وحالتها ومواعيد الصيانة</div>
+                </div>
+                <div class="report-toggle">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="report-options" id="vehicles-options">
+                <a href="{{ url_for('mobile.vehicles_report') }}" class="report-option-btn">
+                    <i class="fas fa-eye"></i> عرض
+                </a>
+                <a href="{{ url_for('mobile.vehicles_pdf') }}" class="report-option-btn">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{{ url_for('mobile.vehicles_excel') }}" class="report-option-btn">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+            
+            <!-- تقرير الرسوم -->
+            <div class="report-item" onclick="toggleReportOptions('fees')">
+                <div class="report-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="report-info">
+                    <div class="report-title">تقرير الرسوم والتكاليف</div>
+                    <div class="report-description">ملخص الرسوم والتكاليف المتوقعة للوثائق والتجديدات</div>
+                </div>
+                <div class="report-toggle">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+            <div class="report-options" id="fees-options">
+                <a href="{{ url_for('mobile.fees_report') }}" class="report-option-btn">
+                    <i class="fas fa-eye"></i> عرض
+                </a>
+                <a href="{{ url_for('mobile.fees_pdf') }}" class="report-option-btn">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a href="{{ url_for('mobile.fees_excel') }}" class="report-option-btn">
+                    <i class="fas fa-file-excel"></i> Excel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-bar"></i> التقارير الإحصائية
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="stats-reports">
+            <a href="{{ url_for('mobile.employee_stats') }}" class="stats-report-item">
+                <div class="stats-report-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-report-title">إحصائيات الموظفين</div>
+            </a>
+            
+            <a href="{{ url_for('mobile.attendance_stats') }}" class="stats-report-item">
+                <div class="stats-report-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stats-report-title">إحصائيات الحضور</div>
+            </a>
+            
+            <a href="{{ url_for('mobile.salary_stats') }}" class="stats-report-item">
+                <div class="stats-report-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="stats-report-title">إحصائيات الرواتب</div>
+            </a>
+            
+            <a href="{{ url_for('mobile.document_stats') }}" class="stats-report-item">
+                <div class="stats-report-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stats-report-title">إحصائيات الوثائق</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-cog"></i> إعدادات التقارير
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.report_settings') }}" method="POST" class="mobile-form">
+            {{ form.hidden_tag() if form }}
+            
+            <div class="mobile-form-group">
+                <label>الشعار</label>
+                <div class="form-check">
+                    <input type="checkbox" id="show_logo" name="show_logo" class="form-check-input" checked>
+                    <label class="form-check-label" for="show_logo">إظهار شعار الشركة في التقارير</label>
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>نوع التقويم</label>
+                <div class="form-check">
+                    <input type="radio" id="calendar_gregorian" name="calendar_type" value="gregorian" class="form-check-input" checked>
+                    <label class="form-check-label" for="calendar_gregorian">ميلادي</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" id="calendar_hijri" name="calendar_type" value="hijri" class="form-check-input">
+                    <label class="form-check-label" for="calendar_hijri">هجري</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" id="calendar_both" name="calendar_type" value="both" class="form-check-input">
+                    <label class="form-check-label" for="calendar_both">كلاهما</label>
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>تنسيق التاريخ</label>
+                <select name="date_format" class="mobile-form-select">
+                    <option value="Y-m-d">YYYY-MM-DD (2025-04-18)</option>
+                    <option value="d/m/Y">DD/MM/YYYY (18/04/2025)</option>
+                    <option value="m/d/Y">MM/DD/YYYY (04/18/2025)</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>حجم الصفحة</label>
+                <select name="page_size" class="mobile-form-select">
+                    <option value="A4">A4</option>
+                    <option value="Letter">Letter</option>
+                    <option value="Legal">Legal</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>اتجاه الصفحة</label>
+                <div class="form-check">
+                    <input type="radio" id="orientation_portrait" name="orientation" value="portrait" class="form-check-input" checked>
+                    <label class="form-check-label" for="orientation_portrait">عمودي</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" id="orientation_landscape" name="orientation" value="landscape" class="form-check-input">
+                    <label class="form-check-label" for="orientation_landscape">أفقي</label>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="mobile-btn mobile-btn-primary w-100">
+                    <i class="fas fa-save"></i> حفظ الإعدادات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.report-list {
+    border-top: 1px solid #eee;
+}
+
+.report-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.report-icon {
+    background-color: #f5f5f5;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+    color: var(--primary-color);
+}
+
+.report-info {
+    flex: 1;
+}
+
+.report-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.report-description {
+    font-size: 0.85rem;
+    color: #777;
+}
+
+.report-toggle {
+    margin-right: 10px;
+    color: #aaa;
+    transition: transform 0.3s;
+}
+
+.report-toggle.active {
+    transform: rotate(180deg);
+}
+
+.report-options {
+    display: none;
+    padding: 0 15px 15px;
+    border-bottom: 1px solid #eee;
+    background-color: #f9f9f9;
+}
+
+.report-options.active {
+    display: flex;
+}
+
+.report-option-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border-radius: 5px;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.report-option-btn:hover {
+    background-color: #eee;
+}
+
+.report-option-btn i {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.stats-reports {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.stats-report-item {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s;
+}
+
+.stats-report-item:hover {
+    transform: translateY(-3px);
+}
+
+.stats-report-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.stats-report-title {
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.mobile-form-group {
+    margin-bottom: 15px;
+}
+
+.mobile-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.mobile-form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.form-check {
+    padding-right: 1.5rem;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.form-check:last-child {
+    margin-bottom: 0;
+}
+
+.form-check-input {
+    position: absolute;
+    right: 0;
+    margin-top: 0.3rem;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleReportOptions(reportId) {
+    const optionsElement = document.getElementById(`${reportId}-options`);
+    const toggleIcon = document.querySelector(`[onclick="toggleReportOptions('${reportId}')"] .report-toggle`);
+    
+    // Close all other options
+    document.querySelectorAll('.report-options').forEach(el => {
+        if (el.id !== `${reportId}-options`) {
+            el.classList.remove('active');
+        }
+    });
+    
+    document.querySelectorAll('.report-toggle').forEach(el => {
+        if (!el.closest(`[onclick="toggleReportOptions('${reportId}')"]`)) {
+            el.classList.remove('active');
+        }
+    });
+    
+    // Toggle the clicked options
+    optionsElement.classList.toggle('active');
+    toggleIcon.classList.toggle('active');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة التقارير');
+});
+</script>
+{% endblock %}

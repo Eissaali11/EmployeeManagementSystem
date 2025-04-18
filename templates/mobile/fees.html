@@ -1,0 +1,382 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الرسوم والتكاليف - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الرسوم والتكاليف{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="إضافة" onclick="location.href='{{ url_for('mobile.add_fee') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.fees') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>نوع الوثيقة</label>
+                <select name="document_type" class="mobile-form-select">
+                    <option value="">جميع الأنواع</option>
+                    <option value="هوية" {% if request.args.get('document_type') == 'هوية' %}selected{% endif %}>هوية</option>
+                    <option value="جواز سفر" {% if request.args.get('document_type') == 'جواز سفر' %}selected{% endif %}>جواز سفر</option>
+                    <option value="رخصة قيادة" {% if request.args.get('document_type') == 'رخصة قيادة' %}selected{% endif %}>رخصة قيادة</option>
+                    <option value="إقامة" {% if request.args.get('document_type') == 'إقامة' %}selected{% endif %}>إقامة</option>
+                    <option value="تأمين صحي" {% if request.args.get('document_type') == 'تأمين صحي' %}selected{% endif %}>تأمين صحي</option>
+                    <option value="تأمين سيارة" {% if request.args.get('document_type') == 'تأمين سيارة' %}selected{% endif %}>تأمين سيارة</option>
+                    <option value="فحص دوري" {% if request.args.get('document_type') == 'فحص دوري' %}selected{% endif %}>فحص دوري</option>
+                    <option value="ترخيص سيارة" {% if request.args.get('document_type') == 'ترخيص سيارة' %}selected{% endif %}>ترخيص سيارة</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>حالة الرسوم</label>
+                <select name="status" class="mobile-form-select">
+                    <option value="">جميع الحالات</option>
+                    <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>قيد الانتظار</option>
+                    <option value="paid" {% if request.args.get('status') == 'paid' %}selected{% endif %}>مدفوع</option>
+                    <option value="expired" {% if request.args.get('status') == 'expired' %}selected{% endif %}>متأخر</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>من تاريخ</label>
+                    <input type="date" name="date_from" class="mobile-form-control" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>إلى تاريخ</label>
+                    <input type="date" name="date_to" class="mobile-form-control" value="{{ request.args.get('date_to', '') }}">
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.fees') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ملخص الرسوم -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> ملخص الرسوم والتكاليف
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="fees-summary">
+            <div class="fee-stat pending">
+                <div class="fee-amount">{{ '{:,.2f}'.format(fees_summary.pending_fees or 0) }}</div>
+                <div class="fee-label">رسوم مستحقة</div>
+            </div>
+            <div class="fee-stat paid">
+                <div class="fee-amount">{{ '{:,.2f}'.format(fees_summary.paid_fees or 0) }}</div>
+                <div class="fee-label">رسوم مدفوعة</div>
+            </div>
+            <div class="fee-stat total">
+                <div class="fee-amount">{{ '{:,.2f}'.format(fees_summary.total_fees or 0) }}</div>
+                <div class="fee-label">إجمالي الرسوم</div>
+            </div>
+        </div>
+        
+        <div class="fees-chart-container">
+            <canvas id="feesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- قائمة الرسوم -->
+{% if fees %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list-alt"></i> قائمة الرسوم والتكاليف
+        <div class="mobile-card-subtitle">{{ fees|length }} رسم</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for fee in fees %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.fee_details', fee_id=fee.id) }}'">
+                <div class="mobile-list-item-badge 
+                       {% if fee.status == 'paid' %}paid
+                       {% elif fee.status == 'pending' %}pending
+                       {% else %}expired{% endif %}">
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ fee.document_type }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        {% if fee.document %}
+                        {{ fee.document.name }} - {{ fee.document.employee.name if fee.document.employee else 'غير محدد' }}
+                        {% elif fee.vehicle %}
+                        {{ fee.vehicle.name }} - {{ fee.vehicle.plate_number }}
+                        {% else %}
+                        {{ fee.description or 'بدون وصف' }}
+                        {% endif %}
+                    </div>
+                    <div class="mobile-list-item-info">
+                        <span>تاريخ الاستحقاق: {{ fee.due_date.strftime('%Y-%m-%d') if fee.due_date else 'غير محدد' }}</span>
+                    </div>
+                </div>
+                <div class="mobile-list-item-amount">
+                    {{ '{:,.2f}'.format(fee.amount) }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- ترقيم الصفحات -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mobile-pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('mobile.fees', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+            
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                    <a href="{{ url_for('mobile.fees', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                    {% else %}
+                    <span class="mobile-pagination-item active">{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="mobile-pagination-item">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('mobile.fees', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-dollar-sign fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد رسوم</h5>
+        <p class="text-secondary">لا توجد بيانات رسوم متطابقة مع معايير البحث</p>
+        <a href="{{ url_for('mobile.add_fee') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-plus"></i> إضافة رسم جديد
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.mobile-form-row .mobile-form-group {
+    flex: 1;
+}
+
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-badge {
+    width: 10px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 2px 0 0 2px;
+}
+
+.mobile-list-item-badge.paid {
+    background-color: #28a745;
+}
+
+.mobile-list-item-badge.pending {
+    background-color: #ffc107;
+}
+
+.mobile-list-item-badge.expired {
+    background-color: #dc3545;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+    padding-right: 15px;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-amount {
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.fees-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.fee-stat {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.fee-stat.pending {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.fee-stat.paid {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.fee-stat.total {
+    grid-column: span 2;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.fee-amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.fee-label {
+    font-size: 0.85rem;
+}
+
+.fees-chart-container {
+    height: 200px;
+    margin: 10px 0;
+}
+
+.mobile-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+
+.mobile-pagination-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35px;
+    height: 35px;
+    margin: 0 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #757575;
+}
+
+.mobile-pagination-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // بيانات الرسوم
+    const feesData = {
+        labels: ['رسوم مدفوعة', 'رسوم مستحقة'],
+        datasets: [{
+            data: [
+                {{ fees_summary.paid_fees or 0 }},
+                {{ fees_summary.pending_fees or 0 }}
+            ],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.7)',  // رسوم مدفوعة
+                'rgba(255, 193, 7, 0.7)'   // رسوم مستحقة
+            ],
+            borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(255, 193, 7, 1)'
+            ],
+            borderWidth: 1
+        }]
+    };
+
+    // إنشاء رسم بياني للرسوم
+    const ctx = document.getElementById('feesChart').getContext('2d');
+    const feesChart = new Chart(ctx, {
+        type: 'pie',
+        data: feesData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
