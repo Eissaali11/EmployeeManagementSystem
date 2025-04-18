@@ -1,0 +1,126 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}شروط الاستخدام - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}شروط الاستخدام{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title text-center">
+        <i class="fas fa-file-contract"></i> شروط وأحكام الاستخدام
+    </div>
+    
+    <div class="mobile-card-content terms-content">
+        <div class="terms-section">
+            <h3>1. مقدمة</h3>
+            <p>أهلاً بك في نظام إدارة الموظفين ("التطبيق") الذي توفره شركة التقنية المتطورة ("الشركة"). باستخدامك لهذا التطبيق، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا كنت لا توافق على أي من هذه الشروط، يرجى عدم استخدام التطبيق.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>2. حساب المستخدم</h3>
+            <p>للوصول إلى معظم ميزات التطبيق، ستحتاج إلى إنشاء حساب مستخدم. عند إنشاء حساب، يجب عليك تقديم معلومات دقيقة وكاملة وحديثة. أنت مسؤول عن الحفاظ على سرية كلمة المرور الخاصة بك وعن جميع الأنشطة التي تحدث ضمن حسابك.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>3. استخدام التطبيق</h3>
+            <p>تمنحك الشركة ترخيصًا محدودًا، غير حصري وغير قابل للتحويل للوصول إلى واستخدام التطبيق لأغراض إدارة الموظفين وفقًا للشروط المنصوص عليها. يجب عليك الالتزام بجميع القوانين المعمول بها وسياسات الشركة عند استخدام التطبيق.</p>
+            <p>يحظر عليك:</p>
+            <ul>
+                <li>استخدام التطبيق لأي غرض غير قانوني أو غير مصرح به</li>
+                <li>نقل أي فيروسات أو أكواد ضارة</li>
+                <li>محاولة الوصول غير المصرح به إلى النظام</li>
+                <li>تأجير أو ترخيص أو بيع أو توزيع التطبيق</li>
+                <li>نسخ أو تعديل محتوى التطبيق</li>
+            </ul>
+        </div>
+        
+        <div class="terms-section">
+            <h3>4. الخصوصية</h3>
+            <p>تخضع المعلومات التي تقدمها من خلال التطبيق لسياسة الخصوصية الخاصة بنا. باستخدامك للتطبيق، فإنك توافق على جمع واستخدام معلوماتك وفقًا لسياسة الخصوصية.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>5. حقوق الملكية الفكرية</h3>
+            <p>يحتفظ التطبيق وجميع محتوياته، بما في ذلك النصوص والرسومات والشعارات والأيقونات والصور والصوت والبرامج، بملكية الشركة أو المرخصين لها، وهي محمية بموجب قوانين حقوق النشر والعلامات التجارية وغيرها من قوانين الملكية الفكرية.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>6. تحديثات وتغييرات</h3>
+            <p>قد تقوم الشركة بتحديث أو تغيير هذه الشروط من وقت لآخر. سيتم إشعارك بأي تغييرات جوهرية من خلال التطبيق. استمرارك في استخدام التطبيق بعد هذه التغييرات يعني موافقتك على الشروط المعدلة.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>7. إنهاء الخدمة</h3>
+            <p>تحتفظ الشركة بالحق في تعليق أو إنهاء حسابك في أي وقت في حالة انتهاكك لهذه الشروط، أو لأي سبب آخر حسب تقدير الشركة المطلق.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>8. حدود المسؤولية</h3>
+            <p>لن تكون الشركة مسؤولة عن أي أضرار مباشرة أو غير مباشرة أو عرضية أو خاصة أو تبعية أو عقابية ناتجة عن استخدامك للتطبيق.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>9. القانون الواجب التطبيق</h3>
+            <p>تخضع هذه الشروط لقوانين المملكة العربية السعودية.</p>
+        </div>
+        
+        <div class="terms-section">
+            <h3>10. اتصل بنا</h3>
+            <p>إذا كانت لديك أي أسئلة حول هذه الشروط، يرجى الاتصال بنا على: <a href="mailto:info@advancedtech.com">info@advancedtech.com</a></p>
+        </div>
+        
+        <div class="terms-footer">
+            <p>آخر تحديث: 18 أبريل 2025</p>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    <a href="{{ url_for('mobile.settings') }}" class="mobile-btn mobile-btn-secondary">
+        <i class="fas fa-arrow-right"></i> العودة للإعدادات
+    </a>
+</div>
+
+<style>
+.terms-content {
+    padding: 15px;
+}
+
+.terms-section {
+    margin-bottom: 20px;
+}
+
+.terms-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.terms-section p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.terms-section ul {
+    padding-right: 20px;
+    margin-bottom: 10px;
+}
+
+.terms-section ul li {
+    margin-bottom: 5px;
+}
+
+.terms-footer {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-size: 0.85rem;
+    color: #757575;
+    text-align: center;
+}
+
+.action-buttons {
+    margin: 20px 15px;
+}
+</style>
+{% endblock %}

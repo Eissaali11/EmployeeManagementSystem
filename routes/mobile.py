@@ -358,8 +358,45 @@ def notifications():
 @login_required
 def settings():
     """صفحة الإعدادات للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/settings.html')
+    current_year = datetime.now().year
+    return render_template('mobile/settings.html', current_year=current_year)
+
+# صفحة الملف الشخصي - النسخة المحمولة
+@mobile_bp.route('/profile')
+@login_required
+def profile():
+    """صفحة الملف الشخصي للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/profile.html')
+
+# صفحة تغيير كلمة المرور - النسخة المحمولة
+@mobile_bp.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """صفحة تغيير كلمة المرور للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/change_password.html')
+
+# صفحة شروط الاستخدام - النسخة المحمولة
+@mobile_bp.route('/terms')
+def terms():
+    """صفحة شروط الاستخدام للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/terms.html')
+
+# صفحة سياسة الخصوصية - النسخة المحمولة
+@mobile_bp.route('/privacy')
+def privacy():
+    """صفحة سياسة الخصوصية للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/privacy.html')
+
+# صفحة تواصل معنا - النسخة المحمولة
+@mobile_bp.route('/contact')
+def contact():
+    """صفحة تواصل معنا للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/contact.html')
 
 # صفحة التطبيق غير متصل بالإنترنت - النسخة المحمولة
 @mobile_bp.route('/offline')
