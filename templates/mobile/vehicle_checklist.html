@@ -1134,15 +1134,89 @@ document.addEventListener('DOMContentLoaded', function() {
     // زر حفظ تشيك لست الفحص
     document.getElementById('save-checklist').addEventListener('click', function() {
         const vehicleSelect = document.getElementById('vehicle-select');
+        const inspectionDate = document.getElementById('inspection-date');
+        const inspectorName = document.getElementById('inspector-name');
+        const inspectionType = document.getElementById('inspection-type');
         
+        // التحقق من إدخال البيانات الأساسية
         if (!vehicleSelect.value) {
             showNotification('الرجاء اختيار السيارة أولاً', 'error');
             vehicleSelect.focus();
             return;
         }
         
-        // هنا يمكن إضافة المزيد من التحقق من الإدخال وإرسال البيانات للخادم
-        showNotification('تم حفظ تشيك لست الفحص بنجاح!', 'success');
+        if (!inspectionDate.value) {
+            showNotification('الرجاء إدخال تاريخ الفحص', 'error');
+            inspectionDate.focus();
+            return;
+        }
+        
+        if (!inspectorName.value) {
+            showNotification('الرجاء إدخال اسم الفاحص', 'error');
+            inspectorName.focus();
+            return;
+        }
+        
+        // جمع البيانات من النموذج
+        const checklistData = {
+            vehicle_id: vehicleSelect.value,
+            inspection_date: inspectionDate.value,
+            inspector_name: inspectorName.value,
+            inspection_type: inspectionType.value,
+            general_notes: '',
+            items: []
+        };
+        
+        // جمع بيانات العناصر
+        const sections = document.querySelectorAll('.checklist-section');
+        sections.forEach(section => {
+            const sectionName = section.querySelector('.section-title').textContent.trim();
+            const items = section.querySelectorAll('.checklist-item');
+            
+            items.forEach(item => {
+                const itemLabel = item.querySelector('.form-check-label').textContent.trim();
+                const checkedRadio = item.querySelector('input[type="radio"]:checked');
+                const notesInput = item.querySelector('input[type="text"]');
+                
+                if (checkedRadio) {
+                    checklistData.items.push({
+                        category: sectionName,
+                        item_name: itemLabel,
+                        status: checkedRadio.value,
+                        notes: notesInput ? notesInput.value : ''
+                    });
+                }
+            });
+        });
+        
+        // عرض رسالة تحميل
+        showNotification('جاري حفظ البيانات...', 'info');
+        
+        // إرسال البيانات للخادم
+        fetch('{{ url_for("mobile.add_vehicle_checklist") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(checklistData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+                // التوجيه إلى صفحة تفاصيل الفحص
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("mobile.vehicle_checklist_list") }}';
+                }, 1500);
+            } else {
+                showNotification(data.message || 'حدث خطأ أثناء الحفظ', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('حدث خطأ أثناء الاتصال بالخادم', 'error');
+        });
     });
     
     // زر طباعة التقرير
