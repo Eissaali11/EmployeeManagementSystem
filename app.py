@@ -113,6 +113,7 @@ with app.app_context():
     from routes.vehicles import vehicles_bp
     from routes.fees_costs import fees_costs_bp
     from routes.api import api_bp
+    from routes.enhanced_reports import enhanced_reports_bp
     
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
@@ -126,6 +127,7 @@ with app.app_context():
     app.register_blueprint(vehicles_bp, url_prefix='/vehicles')
     app.register_blueprint(fees_costs_bp, url_prefix='/fees-costs')
     app.register_blueprint(reports_bp, url_prefix='/reports')
+    app.register_blueprint(enhanced_reports_bp, url_prefix='/enhanced-reports')
     app.register_blueprint(api_bp)
     app.register_blueprint(auth_bp)
     
