@@ -187,6 +187,34 @@
     </div>
 </div>
 
+<!-- خيارات الإضافة السريعة -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-plus"></i> إضافة جديد
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="quick-links">
+            <a href="{{ url_for('mobile.add_vehicle') }}" class="quick-link">
+                <i class="fas fa-car"></i>
+                <span>إضافة سيارة</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicles') }}" class="quick-link" onclick="window.location.href='{{ url_for('mobile.vehicles') }}'; return false;">
+                <i class="fas fa-tools"></i>
+                <span>إضافة صيانة</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicles') }}" class="quick-link" onclick="window.location.href='{{ url_for('mobile.vehicles') }}'; return false;">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>إضافة مصروف</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicles') }}" class="quick-link" onclick="window.location.href='{{ url_for('mobile.vehicles') }}'; return false;">
+                <i class="fas fa-file-alt"></i>
+                <span>إضافة وثيقة</span>
+            </a>
+        </div>
+    </div>
+</div>
+
 <style>
 .mobile-list {
     border-top: 1px solid #eee;

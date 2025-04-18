@@ -1,0 +1,298 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إضافة مصروف جديد{% endblock %}
+{% block header_title %}إضافة مصروف جديد{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-money-bill-wave"></i>
+      إضافة مصروف جديد
+    </h2>
+    <a href="{{ url_for('mobile.vehicle_expenses') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+
+  <!-- نموذج إضافة مصروف -->
+  <div class="mobile-card">
+    <div class="mobile-card-body">
+      <form method="post" action="{{ url_for('mobile.vehicles') }}" enctype="multipart/form-data" id="expenseForm">
+        {{ form.csrf_token if form and form.csrf_token }}
+        
+        <!-- بيانات المصروف الأساسية -->
+        <div class="mobile-form-section">
+          <h3 class="mobile-form-section-title">بيانات المصروف الأساسية</h3>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">السيارة</label>
+            <select class="mobile-form-select" name="vehicle_id" required>
+              <option value="" selected disabled>اختر السيارة</option>
+              <option value="1">تويوتا كامري - أ ب ج ١٢٣٤</option>
+              <option value="2">هونداي سوناتا - س ع د ٥٦٧٨</option>
+              <option value="3">نيسان باترول - ك و ي ٩٨٧٦</option>
+            </select>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">نوع المصروف</label>
+            <select class="mobile-form-select" name="expense_type" required>
+              <option value="" selected disabled>اختر نوع المصروف</option>
+              <option value="fuel">وقود</option>
+              <option value="maintenance">صيانة</option>
+              <option value="license">ترخيص</option>
+              <option value="insurance">تأمين</option>
+              <option value="repair">إصلاح</option>
+              <option value="parts">قطع غيار</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">الوصف</label>
+            <input type="text" class="mobile-form-input" name="description" required placeholder="مثال: تعبئة وقود">
+          </div>
+          
+          <div class="mobile-form-row">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">المبلغ (ر.س)</label>
+              <input type="number" step="0.01" class="mobile-form-input" name="amount" required placeholder="مثال: 250.50">
+            </div>
+            
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">تاريخ المصروف</label>
+              <input type="date" class="mobile-form-input" name="date" required>
+            </div>
+          </div>
+        </div>
+        
+        <!-- بيانات إضافية -->
+        <div class="mobile-form-section">
+          <h3 class="mobile-form-section-title">بيانات إضافية</h3>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">الموقع / المورد</label>
+            <input type="text" class="mobile-form-input" name="supplier" placeholder="مثال: محطة وقود الخزامى">
+          </div>
+          
+          <div class="mobile-form-row">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">رقم الفاتورة</label>
+              <input type="text" class="mobile-form-input" name="invoice_number" placeholder="مثال: INV-12345">
+            </div>
+            
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">قراءة العداد (كم)</label>
+              <input type="number" class="mobile-form-input" name="odometer" placeholder="مثال: 12500">
+            </div>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">ملاحظات</label>
+            <textarea class="mobile-form-textarea" name="notes" rows="3" placeholder="أي ملاحظات إضافية"></textarea>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">صورة الفاتورة</label>
+            <div class="mobile-form-file">
+              <input type="file" id="invoiceImage" name="invoice_image" accept="image/*" class="mobile-form-file-input">
+              <label for="invoiceImage" class="mobile-form-file-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>اختر صورة الفاتورة</span>
+              </label>
+              <div class="mobile-form-file-preview" id="imagePreview"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- بيانات الوقود (تظهر فقط عند اختيار نوع مصروف وقود) -->
+        <div class="mobile-form-section" id="fuelExpenseSection" style="display: none;">
+          <h3 class="mobile-form-section-title">بيانات الوقود</h3>
+          
+          <div class="mobile-form-row">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">كمية الوقود (لتر)</label>
+              <input type="number" step="0.01" class="mobile-form-input" name="fuel_quantity" placeholder="مثال: 40.5">
+            </div>
+            
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">سعر اللتر (ر.س)</label>
+              <input type="number" step="0.01" class="mobile-form-input" name="fuel_price_per_liter" placeholder="مثال: 2.18">
+            </div>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">نوع الوقود</label>
+            <select class="mobile-form-select" name="fuel_type">
+              <option value="">اختر نوع الوقود</option>
+              <option value="91">بنزين 91</option>
+              <option value="95">بنزين 95</option>
+              <option value="diesel">ديزل</option>
+              <option value="electric">شحن كهربائي</option>
+            </select>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">قراءة العداد السابقة (كم)</label>
+            <input type="number" class="mobile-form-input" name="previous_odometer" placeholder="مثال: 12100">
+          </div>
+          
+          <div class="mobile-form-group">
+            <div class="mobile-form-checkbox">
+              <input type="checkbox" id="full_tank" name="full_tank" class="mobile-form-checkbox-input">
+              <label for="full_tank" class="mobile-form-checkbox-label">تعبئة خزان كامل</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mobile-form-actions">
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-save"></i>
+            حفظ المصروف
+          </button>
+          <button type="reset" class="mobile-btn mobile-btn-secondary">
+            <i class="fas fa-undo"></i>
+            إعادة تعيين
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mobile-form-file {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  
+  .mobile-form-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  
+  .mobile-form-file-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: var(--card-bg);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+  
+  .mobile-form-file-label:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  .mobile-form-file-preview {
+    margin-top: 8px;
+    width: 100%;
+    height: 150px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+  }
+  
+  .mobile-form-file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .mobile-form-section {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .mobile-form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  
+  .mobile-form-section-title {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+  
+  .mobile-form-row {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .mobile-form-row .mobile-form-group {
+    flex: 1;
+  }
+  
+  .mobile-form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  
+  .mobile-form-checkbox-input {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .mobile-form-checkbox-label {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // معاينة الصورة قبل الرفع
+  document.getElementById('invoiceImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    
+    if (file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="معاينة الصورة">`;
+      };
+      
+      reader.readAsDataURL(file);
+    } else {
+      preview.innerHTML = '';
+    }
+  });
+  
+  // إظهار أو إخفاء قسم بيانات الوقود حسب نوع المصروف
+  document.querySelector('select[name="expense_type"]').addEventListener('change', function() {
+    const fuelExpenseSection = document.getElementById('fuelExpenseSection');
+    
+    if (this.value === 'fuel') {
+      fuelExpenseSection.style.display = 'block';
+    } else {
+      fuelExpenseSection.style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}
