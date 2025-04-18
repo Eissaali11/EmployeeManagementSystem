@@ -1,0 +1,476 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}{{ vehicle.name }} - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تفاصيل السيارة{% endblock %}
+
+{% block content %}
+<!-- بطاقة معلومات السيارة -->
+<div class="mobile-card">
+    <div class="vehicle-header" style="background-color: {{ vehicle.color | lower if vehicle.color else '#f8f9fa' }}">
+        <div class="vehicle-name">{{ vehicle.name }}</div>
+        <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
+        <div class="vehicle-status 
+                    {% if vehicle.status == 'active' %}badge bg-success
+                    {% elif vehicle.status == 'maintenance' %}badge bg-warning
+                    {% else %}badge bg-secondary{% endif %}">
+            {{ vehicle.status_display }}
+        </div>
+    </div>
+    
+    <div class="mobile-card-content px-0">
+        <div class="vehicle-details">
+            <div class="detail-section">
+                <h4 class="detail-title">
+                    <i class="fas fa-info-circle"></i> معلومات أساسية
+                </h4>
+                <div class="detail-content">
+                    <div class="detail-item">
+                        <div class="detail-label">الطراز</div>
+                        <div class="detail-value">{{ vehicle.model }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">سنة الصنع</div>
+                        <div class="detail-value">{{ vehicle.year }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">اللون</div>
+                        <div class="detail-value">{{ vehicle.color }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">تاريخ الشراء</div>
+                        <div class="detail-value">{{ vehicle.purchase_date.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">سعر الشراء</div>
+                        <div class="detail-value">{{ '{:,.2f}'.format(vehicle.purchase_price) }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4 class="detail-title">
+                    <i class="fas fa-clipboard-check"></i> معلومات التشغيل
+                </h4>
+                <div class="detail-content">
+                    <div class="detail-item">
+                        <div class="detail-label">عداد الكيلومترات</div>
+                        <div class="detail-value">{{ '{:,}'.format(vehicle.odometer) }} كم</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">نوع الوقود</div>
+                        <div class="detail-value">{{ vehicle.fuel_type }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">السائق</div>
+                        <div class="detail-value">{{ vehicle.driver }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">القسم</div>
+                        <div class="detail-value">{{ vehicle.department }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if vehicle.notes %}
+            <div class="detail-section">
+                <h4 class="detail-title">
+                    <i class="fas fa-clipboard"></i> ملاحظات
+                </h4>
+                <div class="detail-content">
+                    <div class="vehicle-notes">{{ vehicle.notes }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- وثائق السيارة -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-file-alt"></i> الوثائق
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="document-stats">
+            <div class="doc-stat">
+                <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'valid')|list|length }}</div>
+                <div class="stat-label">سارية</div>
+            </div>
+            <div class="doc-stat warning">
+                <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'expiring')|list|length }}</div>
+                <div class="stat-label">قرب الانتهاء</div>
+            </div>
+            <div class="doc-stat danger">
+                <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'expired')|list|length }}</div>
+                <div class="stat-label">منتهية</div>
+            </div>
+            <div class="doc-stat info">
+                <div class="stat-value">{{ documents|length }}</div>
+                <div class="stat-label">الإجمالي</div>
+            </div>
+        </div>
+        
+        {% if documents %}
+        <div class="document-list">
+            {% for doc in documents %}
+            <div class="document-item">
+                <div class="document-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="document-content">
+                    <div class="document-name">{{ doc.name }}</div>
+                    <div class="document-expiry">
+                        <span class="{% if doc.status == 'expired' %}text-danger
+                                     {% elif doc.status == 'expiring' %}text-warning
+                                     {% else %}text-success{% endif %}">
+                            {{ doc.expiry_date.strftime('%Y-%m-%d') }}
+                        </span>
+                    </div>
+                </div>
+                <div class="document-status">
+                    <span class="badge 
+                               {% if doc.status == 'expired' %}bg-danger
+                               {% elif doc.status == 'expiring' %}bg-warning
+                               {% else %}bg-success{% endif %}">
+                        {% if doc.status == 'expired' %}منتهية
+                        {% elif doc.status == 'expiring' %}توشك على الانتهاء
+                        {% else %}سارية{% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-list">
+            <div class="text-center py-4">
+                <i class="fas fa-file fa-3x text-secondary mb-3"></i>
+                <p>لا توجد وثائق مسجلة لهذه السيارة</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- سجل الصيانة -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-tools"></i> سجل الصيانة
+        <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="title-link">عرض الكل</a>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if maintenance_records %}
+        <div class="maintenance-list">
+            {% for record in maintenance_records %}
+            <a href="{{ url_for('mobile.maintenance_details', maintenance_id=record.id) }}" class="maintenance-item">
+                <div class="maintenance-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
+                <div class="maintenance-content">
+                    <div class="maintenance-type 
+                             {% if record.maintenance_type == 'دورية' %}badge bg-info
+                             {% elif record.maintenance_type == 'طارئة' %}badge bg-warning
+                             {% elif record.maintenance_type == 'إصلاح' %}badge bg-danger
+                             {% else %}badge bg-secondary{% endif %}">
+                        {{ record.maintenance_type }}
+                    </div>
+                    <div class="maintenance-description">{{ record.description }}</div>
+                </div>
+                <div class="maintenance-cost">{{ '{:,.2f}'.format(record.cost) }}</div>
+            </a>
+            {% endfor %}
+            
+            <div class="text-center py-3">
+                <a href="{{ url_for('mobile.add_maintenance') }}?vehicle_id={{ vehicle.id }}" class="mobile-btn mobile-btn-primary">
+                    <i class="fas fa-plus"></i> إضافة صيانة جديدة
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-list">
+            <div class="text-center py-4">
+                <i class="fas fa-tools fa-3x text-secondary mb-3"></i>
+                <p>لا توجد سجلات صيانة لهذه السيارة</p>
+                <a href="{{ url_for('mobile.add_maintenance') }}?vehicle_id={{ vehicle.id }}" class="mobile-btn mobile-btn-primary mt-2">
+                    <i class="fas fa-plus"></i> إضافة صيانة جديدة
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- الرسوم المستحقة -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-money-bill-wave"></i> الرسوم المستحقة
+        <a href="{{ url_for('mobile.fees') }}?vehicle_id={{ vehicle.id }}" class="title-link">عرض الكل</a>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if fees %}
+        <div class="fees-list">
+            {% for fee in fees %}
+            <a href="{{ url_for('mobile.fee_details', fee_id=fee.id) }}" class="fee-item">
+                <div class="fee-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="fee-content">
+                    <div class="fee-name">{{ fee.name }}</div>
+                    <div class="fee-date">تاريخ الاستحقاق: {{ fee.due_date.strftime('%Y-%m-%d') }}</div>
+                </div>
+                <div class="fee-amount">{{ '{:,.2f}'.format(fee.amount) }}</div>
+                <div class="fee-status 
+                          {% if fee.status == 'pending' %}badge bg-warning
+                          {% elif fee.status == 'paid' %}badge bg-success
+                          {% else %}badge bg-danger{% endif %}">
+                    {% if fee.status == 'pending' %}مستحق{% elif fee.status == 'paid' %}مدفوع{% else %}متأخر{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-list">
+            <div class="text-center py-4">
+                <i class="fas fa-money-bill-wave fa-3x text-secondary mb-3"></i>
+                <p>لا توجد رسوم مستحقة لهذه السيارة</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- أزرار الإجراءات -->
+<div class="action-buttons">
+    <a href="{{ url_for('mobile.edit_vehicle', vehicle_id=vehicle.id) }}" class="mobile-btn mobile-btn-primary">
+        <i class="fas fa-edit"></i> تعديل
+    </a>
+    <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-info">
+        <i class="fas fa-tools"></i> سجل الصيانة
+    </a>
+    <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
+        <i class="fas fa-arrow-right"></i> العودة للسيارات
+    </a>
+</div>
+
+<style>
+.vehicle-header {
+    padding: 20px;
+    color: #212121;
+    background-color: #f8f9fa;
+    text-align: center;
+    border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+}
+
+.vehicle-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.vehicle-plate {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    direction: ltr;
+    text-align: center;
+}
+
+.vehicle-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+}
+
+.vehicle-details {
+    padding: 0;
+}
+
+.detail-section {
+    border-bottom: 1px solid var(--border-color);
+    padding: 0;
+}
+
+.detail-section:last-child {
+    border-bottom: none;
+}
+
+.detail-title {
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 15px;
+    margin: 0;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+}
+
+.detail-title i {
+    margin-left: 8px;
+    color: var(--primary-color);
+}
+
+.detail-content {
+    padding: 15px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    font-weight: 500;
+}
+
+.vehicle-notes {
+    line-height: 1.6;
+}
+
+.document-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.doc-stat {
+    text-align: center;
+    padding: 10px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.doc-stat.warning {
+    color: #ffc107;
+}
+
+.doc-stat.danger {
+    color: #dc3545;
+}
+
+.doc-stat.info {
+    color: #0dcaf0;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.document-list, .maintenance-list, .fees-list {
+    padding: 0;
+}
+
+.document-item, .maintenance-item, .fee-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    text-decoration: none;
+    color: inherit;
+}
+
+.document-item:last-child, .maintenance-item:last-child, .fee-item:last-child {
+    border-bottom: none;
+}
+
+.document-icon, .fee-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    background-color: #f8f9fa;
+    border-radius: 50%;
+    margin-left: 15px;
+    color: var(--text-secondary);
+}
+
+.document-content, .fee-content {
+    flex: 1;
+}
+
+.document-name, .fee-name {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.document-expiry, .fee-date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.document-status, .fee-status {
+    margin-right: 10px;
+}
+
+.maintenance-date {
+    min-width: 80px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.maintenance-content {
+    flex: 1;
+}
+
+.maintenance-type {
+    display: inline-block;
+    margin-bottom: 5px;
+    font-size: 0.75rem;
+}
+
+.maintenance-description {
+    font-size: 0.9rem;
+}
+
+.maintenance-cost {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.empty-list {
+    padding: 20px;
+    color: var(--text-secondary);
+}
+
+.title-link {
+    font-size: 0.8rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    margin-right: auto;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 20px;
+}
+
+.action-buttons a:first-child {
+    grid-column: span 2;
+}
+</style>
+{% endblock %}
