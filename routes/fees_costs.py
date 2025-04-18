@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+import os
+import xlsxwriter
+from io import BytesIO
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_login import login_required, current_user
 from sqlalchemy import func, extract
 from app import db
@@ -233,3 +236,166 @@ def expired_documents():
     return render_template('fees_costs/expired_documents.html',
                           documents=documents,
                           today=today)
+
+@fees_costs_bp.route('/export-to-excel')
+@login_required
+def export_to_excel():
+    """تصدير بيانات تكاليف الرسوم وبيانات الموظفين كملف إكسل"""
+    try:
+        # إنشاء بايت ستريم لتخزين ملف الإكسل
+        output = BytesIO()
+        
+        # إنشاء مصنف إكسل جديد
+        workbook = xlsxwriter.Workbook(output)
+        
+        # إضافة ورقة عمل
+        worksheet = workbook.add_worksheet('تكاليف الرسوم')
+        
+        # تنسيق العناوين
+        header_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'valign': 'vcenter',
+            'font_color': 'white',
+            'bg_color': '#1e3a8a',
+            'border': 1
+        })
+        
+        # تنسيق الخلايا العادية
+        cell_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1
+        })
+        
+        # تنسيق الأرقام
+        number_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'num_format': '#,##0.00'
+        })
+        
+        # تنسيق التواريخ
+        date_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'num_format': 'yyyy-mm-dd'
+        })
+        
+        # تنسيق العناوين
+        worksheet.right_to_left()  # تمكين الكتابة من اليمين إلى اليسار للغة العربية
+        
+        # العناوين
+        headers = [
+            'الرقم', 'اسم الموظف', 'الرقم الوظيفي', 'الجنسية', 'القسم',
+            'نوع المستند', 'رقم المستند', 'تاريخ الإصدار', 'تاريخ الانتهاء',
+            'رسوم الجوازات', 'رسوم مكتب العمل', 'رسوم التأمين', 'رسوم التأمينات',
+            'نقل كفالة', 'إجمالي الرسوم', 'حالة السداد', 'تاريخ الاستحقاق', 'تاريخ السداد',
+            'ملاحظات'
+        ]
+        
+        # كتابة الترويسة
+        for col_num, header in enumerate(headers):
+            worksheet.write(0, col_num, header, header_format)
+            worksheet.set_column(col_num, col_num, 18)  # تعيين عرض العمود
+        
+        # الحصول على البيانات
+        fees_costs = FeesCost.query.join(Document).join(Employee).order_by(FeesCost.id).all()
+        
+        # كتابة البيانات
+        for row_num, fee in enumerate(fees_costs, 1):
+            worksheet.write(row_num, 0, row_num, cell_format)
+            worksheet.write(row_num, 1, fee.document.employee.name, cell_format)
+            worksheet.write(row_num, 2, fee.document.employee.employee_id, cell_format)
+            worksheet.write(row_num, 3, fee.document.employee.nationality, cell_format)
+            if fee.document.employee.department:
+                worksheet.write(row_num, 4, fee.document.employee.department.name, cell_format)
+            else:
+                worksheet.write(row_num, 4, "-", cell_format)
+            worksheet.write(row_num, 5, fee.document_type, cell_format)
+            worksheet.write(row_num, 6, fee.document.document_number, cell_format)
+            worksheet.write(row_num, 7, fee.document.issue_date, date_format)
+            worksheet.write(row_num, 8, fee.document.expiry_date, date_format)
+            worksheet.write(row_num, 9, fee.passport_fee, number_format)
+            worksheet.write(row_num, 10, fee.labor_office_fee, number_format)
+            worksheet.write(row_num, 11, fee.insurance_fee, number_format)
+            worksheet.write(row_num, 12, fee.social_insurance_fee, number_format)
+            worksheet.write(row_num, 13, "نعم" if fee.transfer_sponsorship else "لا", cell_format)
+            worksheet.write(row_num, 14, fee.total_fees(), number_format)
+            
+            # ترجمة حالة السداد
+            payment_status_text = {
+                'pending': 'قيد الانتظار',
+                'paid': 'تم السداد',
+                'overdue': 'متأخر'
+            }.get(fee.payment_status, fee.payment_status)
+            
+            worksheet.write(row_num, 15, payment_status_text, cell_format)
+            worksheet.write(row_num, 16, fee.due_date, date_format)
+            if fee.payment_date:
+                worksheet.write(row_num, 17, fee.payment_date, date_format)
+            else:
+                worksheet.write(row_num, 17, "-", cell_format)
+            worksheet.write(row_num, 18, fee.notes or "", cell_format)
+        
+        # إضافة صفحة للإحصائيات
+        stats_sheet = workbook.add_worksheet('الإحصائيات')
+        stats_sheet.right_to_left()
+        
+        # عناوين الإحصائيات
+        stats_headers = ['البند', 'القيمة (ر.س)']
+        for col_num, header in enumerate(stats_headers):
+            stats_sheet.write(0, col_num, header, header_format)
+            stats_sheet.set_column(col_num, col_num, 25)
+        
+        # حساب الإحصائيات
+        total_passport_fees = db.session.query(func.sum(FeesCost.passport_fee)).scalar() or 0
+        total_labor_fees = db.session.query(func.sum(FeesCost.labor_office_fee)).scalar() or 0
+        total_insurance_fees = db.session.query(func.sum(FeesCost.insurance_fee)).scalar() or 0
+        total_social_insurance_fees = db.session.query(func.sum(FeesCost.social_insurance_fee)).scalar() or 0
+        total_fees = total_passport_fees + total_labor_fees + total_insurance_fees + total_social_insurance_fees
+        
+        # كتابة الإحصائيات
+        stats_data = [
+            ['إجمالي رسوم الجوازات', total_passport_fees],
+            ['إجمالي رسوم مكتب العمل', total_labor_fees],
+            ['إجمالي رسوم التأمين', total_insurance_fees],
+            ['إجمالي رسوم التأمينات الاجتماعية', total_social_insurance_fees],
+            ['إجمالي جميع الرسوم', total_fees]
+        ]
+        
+        for row_num, (label, value) in enumerate(stats_data, 1):
+            stats_sheet.write(row_num, 0, label, cell_format)
+            stats_sheet.write(row_num, 1, value, number_format)
+        
+        # إغلاق المصنف
+        workbook.close()
+        
+        # إعادة المؤشر إلى بداية الملف للقراءة
+        output.seek(0)
+        
+        # تسجيل التدقيق
+        audit = SystemAudit(
+            action='export',
+            entity_type='fees_costs',
+            entity_id=0,
+            details='تم تصدير بيانات تكاليف الرسوم وبيانات الموظفين كملف إكسل',
+            user_id=current_user.id
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إرسال الملف
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=f'تكاليف_الرسوم_{timestamp}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
+        return redirect(url_for('fees_costs.index'))
