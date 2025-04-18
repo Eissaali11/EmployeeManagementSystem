@@ -527,18 +527,9 @@ def attendance_excel():
                 bottom=Side(style='thin')
             )
     
-    # ضبط عرض الأعمدة
-    for col in sheet.columns:
-        max_length = 0
-        column = col[0].column_letter  # الحصول على حرف العمود
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2) * 1.2
-        sheet.column_dimensions[column].width = adjusted_width
+    # ضبط عرض الأعمدة باستخدام الدالة المساعدة
+    from utils.excel_utils import adjust_column_width
+    adjust_column_width(sheet)
     
     # ضبط اتجاه الورقة للعربية (من اليمين لليسار)
     sheet.sheet_view.rightToLeft = True
@@ -1196,18 +1187,9 @@ def documents_excel():
                 bottom=Side(style='thin')
             )
     
-    # ضبط عرض الأعمدة
-    for col in sheet.columns:
-        max_length = 0
-        column = col[0].column_letter  # الحصول على حرف العمود
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2) * 1.2
-        sheet.column_dimensions[column].width = adjusted_width
+    # ضبط عرض الأعمدة باستخدام الدالة المساعدة
+    from utils.excel_utils import adjust_column_width
+    adjust_column_width(sheet)
     
     # ضبط اتجاه الورقة للعربية (من اليمين لليسار)
     sheet.sheet_view.rightToLeft = True
