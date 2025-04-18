@@ -832,6 +832,7 @@ def salaries_pdf():
 @reports_bp.route('/salaries/excel')
 def salaries_excel():
     """تصدير تقرير الرواتب إلى Excel"""
+    from openpyxl.utils import get_column_letter
     # الحصول على معلمات الفلتر
     current_year = datetime.now().year
     current_month = datetime.now().month
