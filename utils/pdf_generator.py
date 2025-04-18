@@ -37,12 +37,17 @@ def generate_salary_report_pdf(salaries, month, year, department_name, totals):
         # إنشاء ملف PDF
         buffer = BytesIO()
         
-        # تسجيل الخط العربي إذا كان متاحًا، وإلا استخدام الخط الافتراضي
+        # تسجيل الخط العربي (Tajawal)
         try:
-            pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
-            arabic_font = 'Arabic'
-        except:
+            # تسجيل خط تاجول الذي يدعم اللغة العربية
+            pdfmetrics.registerFont(TTFont('Tajawal', 'static/fonts/Tajawal-Regular.ttf'))
+            pdfmetrics.registerFont(TTFont('TajawalBold', 'static/fonts/Tajawal-Bold.ttf'))
+            arabic_font = 'Tajawal'
+            arabic_font_bold = 'TajawalBold'
+        except Exception as e:
+            print(f"خطأ في تسجيل الخط العربي: {str(e)}")
             arabic_font = 'Helvetica'
+            arabic_font_bold = 'Helvetica-Bold'
             
         # تعيين أبعاد الصفحة واتجاهها
         doc = SimpleDocTemplate(
@@ -78,6 +83,20 @@ def generate_salary_report_pdf(salaries, month, year, department_name, totals):
         
         # إعداد المحتوى
         elements = []
+        
+        # إضافة اسم الشركة
+        company_name = "نظام إدارة الموظفين - شركة التقنية المتطورة"
+        company_name = get_display(arabic_reshaper.reshape(company_name))
+        company_style = ParagraphStyle(
+            name='CompanyTitle',
+            parent=styles['Title'],
+            fontName=arabic_font_bold,
+            fontSize=18,
+            alignment=1, # وسط
+            textColor=colors.black
+        )
+        elements.append(Paragraph(company_name, company_style))
+        elements.append(Spacer(1, 10))
         
         # إضافة العنوان
         title = f"كشف رواتب شهر {get_month_name_ar(month)} {year} - {department_name}"

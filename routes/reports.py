@@ -750,19 +750,26 @@ def salaries_excel():
     sheet = workbook.active
     sheet.title = "تقرير الرواتب"
     
-    # تنسيق العنوان
+    # تنسيق اسم المشروع
     sheet.merge_cells('A1:G1')
-    title_cell = sheet['A1']
+    company_cell = sheet['A1']
+    company_cell.value = "نظام إدارة الموظفين - شركة التقنية المتطورة"
+    company_cell.font = Font(size=18, bold=True, name='Tajawal')
+    company_cell.alignment = Alignment(horizontal='center')
+    
+    # تنسيق العنوان
+    sheet.merge_cells('A2:G2')
+    title_cell = sheet['A2']
     title_cell.value = f"تقرير الرواتب لشهر {get_month_name_ar(month)} {year}"
-    title_cell.font = Font(size=16, bold=True, name='Calibri')
+    title_cell.font = Font(size=16, bold=True, name='Tajawal')
     title_cell.alignment = Alignment(horizontal='center')
     
     # إضافة عناوين الأعمدة
     headers = ["اسم الموظف", "الرقم الوظيفي", "القسم", "الراتب الأساسي", "البدلات", "الاستقطاعات", "المكافآت", "صافي الراتب"]
     for col, header in enumerate(headers, start=1):
-        cell = sheet.cell(row=2, column=col)
+        cell = sheet.cell(row=3, column=col)
         cell.value = header
-        cell.font = Font(bold=True, name='Calibri')
+        cell.font = Font(bold=True, name='Tajawal')
         cell.alignment = Alignment(horizontal='center')
         cell.fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
         
@@ -806,10 +813,10 @@ def salaries_excel():
             )
     
     # إضافة صف الإجماليات
-    total_row = len(salaries) + 3
+    total_row = len(salaries) + 4
     
     sheet.cell(row=total_row, column=1).value = "الإجمالي"
-    sheet.cell(row=total_row, column=1).font = Font(bold=True, name='Calibri')
+    sheet.cell(row=total_row, column=1).font = Font(bold=True, name='Tajawal')
     sheet.merge_cells(f'A{total_row}:C{total_row}')
     
     # حساب الإجماليات
@@ -828,7 +835,7 @@ def salaries_excel():
     # تنسيق صف الإجماليات
     for col in range(1, 9):
         cell = sheet.cell(row=total_row, column=col)
-        cell.font = Font(bold=True, name='Calibri')
+        cell.font = Font(bold=True, name='Tajawal')
         cell.alignment = Alignment(horizontal='center')
         cell.fill = PatternFill(start_color="EEEEEE", end_color="EEEEEE", fill_type="solid")
         
@@ -1100,11 +1107,18 @@ def documents_excel():
     if expiring_only:
         title += f" - الوثائق التي ستنتهي خلال {expiry_days} يوم"
     
-    # تنسيق العنوان
+    # تنسيق اسم المشروع
     sheet.merge_cells('A1:H1')
-    title_cell = sheet['A1']
+    company_cell = sheet['A1']
+    company_cell.value = "نظام إدارة الموظفين - شركة التقنية المتطورة"
+    company_cell.font = Font(size=18, bold=True, name='Tajawal')
+    company_cell.alignment = Alignment(horizontal='center')
+    
+    # تنسيق العنوان
+    sheet.merge_cells('A2:H2')
+    title_cell = sheet['A2']
     title_cell.value = title
-    title_cell.font = Font(size=16, bold=True, name='Calibri')
+    title_cell.font = Font(size=16, bold=True, name='Tajawal')
     title_cell.alignment = Alignment(horizontal='center')
     
     # إضافة عناوين الأعمدة
