@@ -17,24 +17,55 @@ class ArabicPDF(FPDF):
         # استدعاء المُنشئ الأصلي
         super().__init__(orientation=orientation, unit=unit, format=format)
         
-        # إضافة الخط العربي (Tajawal)
-        tajawal_regular = os.path.join('static', 'fonts', 'Tajawal-Regular.ttf')
-        tajawal_bold = os.path.join('static', 'fonts', 'Tajawal-Bold.ttf')
-        
-        # التأكد من وجود ملفات الخط
-        if os.path.exists(tajawal_regular) and os.path.exists(tajawal_bold):
-            # تسجيل الخط باسمه الأصلي
-            self.add_font('Tajawal', '', tajawal_regular, uni=True)
-            self.add_font('Tajawal', 'B', tajawal_bold, uni=True)
-            # تسجيل نفس الخط باسم Arial للحفاظ على توافق الكود الحالي
-            self.add_font('Arial', '', tajawal_regular, uni=True)
-            self.add_font('Arial', 'B', tajawal_bold, uni=True)
-            print("تم تسجيل خط Tajawal للنصوص العربية بنجاح")
-        else:
-            # استخدام خط Arial كبديل
-            self.add_font('Arial', '', os.path.join('static', 'fonts', 'arial.ttf'), uni=True)
-            self.add_font('Arial', 'B', os.path.join('static', 'fonts', 'arialbd.ttf'), uni=True)
-            print("تعذر العثور على خط Tajawal، تم استخدام Arial بدلاً منه")
+        # إضافة الخط العربي (تأكد من استخدام خط يدعم اللغة العربية بشكل كامل)
+        try:
+            # محاولة استخدام خط Amiri (مشهور بدعم اللغة العربية بشكل ممتاز)
+            amiri_regular = os.path.join('static', 'fonts', 'Amiri-Regular.ttf')
+            amiri_bold = os.path.join('static', 'fonts', 'Amiri-Bold.ttf')
+            
+            if os.path.exists(amiri_regular) and os.path.exists(amiri_bold):
+                # تسجيل خط Amiri للاستخدام
+                self.add_font('Arabic', '', amiri_regular, uni=True)
+                self.add_font('Arabic', 'B', amiri_bold, uni=True)
+                # تسجيل نفسه كـ Arial للتوافق
+                self.add_font('Arial', '', amiri_regular, uni=True)
+                self.add_font('Arial', 'B', amiri_bold, uni=True)
+                print("تم تسجيل خط Amiri للنصوص العربية بنجاح")
+            else:
+                # الخيار البديل: استخدام خط Tajawal
+                tajawal_regular = os.path.join('static', 'fonts', 'Tajawal-Regular.ttf')
+                tajawal_bold = os.path.join('static', 'fonts', 'Tajawal-Bold.ttf')
+                
+                if os.path.exists(tajawal_regular) and os.path.exists(tajawal_bold):
+                    # تسجيل خط Tajawal للاستخدام
+                    self.add_font('Arabic', '', tajawal_regular, uni=True)
+                    self.add_font('Arabic', 'B', tajawal_bold, uni=True)
+                    self.add_font('Arial', '', tajawal_regular, uni=True)
+                    self.add_font('Arial', 'B', tajawal_bold, uni=True)
+                    print("تم تسجيل خط Tajawal للنصوص العربية بنجاح")
+                else:
+                    # الخطة C: محاولة استخدام الخط المضمن في النظام
+                    font_dir = os.path.join('static', 'fonts')
+                    for font_file in os.listdir(font_dir):
+                        if font_file.endswith('.ttf') and ('arabic' in font_file.lower() or 'utf' in font_file.lower()):
+                            # وجدنا خطًا مناسبًا
+                            font_path = os.path.join(font_dir, font_file)
+                            self.add_font('Arabic', '', font_path, uni=True)
+                            self.add_font('Arial', '', font_path, uni=True)
+                            print(f"تم تسجيل الخط {font_file} للنصوص العربية")
+                            break
+                    else:
+                        # لم نجد خطًا مناسبًا
+                        print("تعذر العثور على خط يدعم اللغة العربية")
+        except Exception as e:
+            print(f"خطأ في تسجيل الخط: {str(e)}")
+            # استخدام خط Arial كملاذ أخير
+            try:
+                self.add_font('Arial', '', os.path.join('static', 'fonts', 'arial.ttf'), uni=True)
+                self.add_font('Arial', 'B', os.path.join('static', 'fonts', 'arialbd.ttf'), uni=True)
+                print("تم استخدام Arial كخط بديل")
+            except:
+                print("فشل تسجيل أي خط")
         
         # تحديد الألوان الرئيسية في النظام
         self.primary_color = (29, 161, 142)  # اللون الأخضر من شعار
@@ -74,10 +105,25 @@ class ArabicPDF(FPDF):
             # تحويل النص إلى سلسلة نصية للتأكد من أنه ليس رقم
             txt_str = str(txt)
             
-            # استخدام arabic_reshaper لتحويل النص العربي
-            reshaped_text = arabic_reshaper.reshape(txt_str)
+            # استخدام معالجة متقدمة للنص العربي
+            # نستخدم تهيئة خاصة لـ arabic_reshaper لتحسين دعم جميع الحروف العربية
+            configuration = {
+                'delete_harakat': False,
+                'support_ligatures': True,
+                'language': 'Arabic',
+                'shift_harakat_position': False,
+                'use_unshaped_instead_of_isolated': False
+            }
+            
+            # استخدام arabic_reshaper مع التكوين المحسّن
+            reshaped_text = arabic_reshaper.reshape(txt_str, configuration=configuration)
+            
             # استخدام get_display لعكس اتجاه النص ليظهر بشكل صحيح
             bidi_text = get_display(reshaped_text)
+            
+            # تنقية النص وإزالة أي أحرف غير مدعومة
+            bidi_text = ''.join(c for c in bidi_text if ord(c) < 65536)
+            
         except Exception as e:
             # في حالة حدوث أي خطأ في التحويل، استخدم النص الأصلي
             print(f"خطأ في تحويل النص العربي: {e}")
@@ -133,7 +179,7 @@ class ArabicPDF(FPDF):
             self.line(10, 30, line_end, 30)
         
         # إضافة العنوان الرئيسي - ضبط أفضل للموضع والحجم
-        self.set_font('Arial', 'B', 14)
+        self.set_font('Arabic', 'B', 14)
         self.set_text_color(*self.primary_color)
         
         # تحسين موضع العنوان بحيث لا يتداخل مع اللوجو أو حافة الصفحة
@@ -144,7 +190,7 @@ class ArabicPDF(FPDF):
         
         # إضافة العنوان الفرعي إذا كان موجوداً
         if subtitle:
-            self.set_font('Arial', '', 11)
+            self.set_font('Arabic', '', 11)
             self.set_text_color(*self.secondary_color)
             
             # تحسين موضع العنوان الفرعي لمنع التداخل
