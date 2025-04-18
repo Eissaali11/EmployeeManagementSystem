@@ -17,9 +17,24 @@ class ArabicPDF(FPDF):
         # استدعاء المُنشئ الأصلي
         super().__init__(orientation=orientation, unit=unit, format=format)
         
-        # إضافة الخط العربي
-        self.add_font('Arial', '', os.path.join('static', 'fonts', 'arial.ttf'), uni=True)
-        self.add_font('Arial', 'B', os.path.join('static', 'fonts', 'arialbd.ttf'), uni=True)
+        # إضافة الخط العربي (Tajawal)
+        tajawal_regular = os.path.join('static', 'fonts', 'Tajawal-Regular.ttf')
+        tajawal_bold = os.path.join('static', 'fonts', 'Tajawal-Bold.ttf')
+        
+        # التأكد من وجود ملفات الخط
+        if os.path.exists(tajawal_regular) and os.path.exists(tajawal_bold):
+            # تسجيل الخط باسمه الأصلي
+            self.add_font('Tajawal', '', tajawal_regular, uni=True)
+            self.add_font('Tajawal', 'B', tajawal_bold, uni=True)
+            # تسجيل نفس الخط باسم Arial للحفاظ على توافق الكود الحالي
+            self.add_font('Arial', '', tajawal_regular, uni=True)
+            self.add_font('Arial', 'B', tajawal_bold, uni=True)
+            print("تم تسجيل خط Tajawal للنصوص العربية بنجاح")
+        else:
+            # استخدام خط Arial كبديل
+            self.add_font('Arial', '', os.path.join('static', 'fonts', 'arial.ttf'), uni=True)
+            self.add_font('Arial', 'B', os.path.join('static', 'fonts', 'arialbd.ttf'), uni=True)
+            print("تعذر العثور على خط Tajawal، تم استخدام Arial بدلاً منه")
         
         # تحديد الألوان الرئيسية في النظام
         self.primary_color = (29, 161, 142)  # اللون الأخضر من شعار RASSCO
@@ -176,7 +191,7 @@ def generate_salary_notification_pdf(data):
         
         # إضافة ترويسة الشركة
         subtitle = "إشعار راتب - شهر " + str(month_name) + " " + str(year)
-        y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
+        y_pos = pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
@@ -355,7 +370,7 @@ def generate_salary_notification_pdf(data):
         
         pdf.arabic_text(200.0, pdf.get_y(), "تم إصدار هذا الإشعار بتاريخ " + current_date, 'C')
         current_year_str = str(datetime.now().year)
-        pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + current_year_str, 'C')
+        pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year_str, 'C')
         
         # إنشاء الملف كبيانات ثنائية
         buffer = BytesIO()
@@ -407,7 +422,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # إضافة ترويسة الشركة
         subtitle = "تقرير الرواتب - شهر " + str(month_display) + " " + str(year)
-        y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
+        y_pos = pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
@@ -659,7 +674,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         pdf.arabic_text(280.0, pdf.get_y(), "تم إنشاء هذا التقرير في " + current_timestamp, 'C')
         current_year = str(datetime.now().year)
-        pdf.arabic_text(280.0, pdf.get_y() + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + current_year, 'C')
+        pdf.arabic_text(280.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year, 'C')
         
         # إنشاء الملف كبيانات ثنائية
         buffer = BytesIO()
@@ -721,7 +736,7 @@ def generate_vehicle_handover_pdf(handover_data):
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        y_pos = pdf.add_company_header("نظام إدارة المركبات RASSCO", doc_title)
+        y_pos = pdf.add_company_header("نظام إدارة المركبات - شركة التقنية المتطورة", doc_title)
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
@@ -943,7 +958,7 @@ def generate_vehicle_handover_pdf(handover_data):
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         pdf.arabic_text(200.0, pdf.get_y(), "تم إنشاء هذا المستند في " + current_timestamp, 'C')
         current_year = str(datetime.now().year)
-        pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة RASSCO - جميع الحقوق محفوظة © " + current_year, 'C')
+        pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year, 'C')
         
         # إنشاء الملف كبيانات ثنائية
         buffer = BytesIO()
