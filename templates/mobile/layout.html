@@ -7,6 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
+  <!-- أيقونة التطبيق -->
+  <link rel="icon" href="{{ url_for('static', filename='mobile/img/logo.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='mobile/img/logo.png') }}">
+  
   <title>{% block title %}نظام إدارة الموظفين{% endblock %}</title>
   
   <!-- خطوط Tajawal و Font Awesome -->
@@ -18,6 +22,7 @@
   <!-- ملفات الأنماط الأساسية -->
   <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='mobile/css/mobile-theme.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='mobile/manifest.json') }}"">
   
   {% block styles %}{% endblock %}
   
@@ -90,7 +95,10 @@
     <!-- القائمة الجانبية -->
     <div class="mobile-sidebar" id="sidebar">
       <div class="sidebar-header">
-        <h2 class="sidebar-title">نظام إدارة الموظفين</h2>
+        <div class="sidebar-logo">
+          <img src="{{ url_for('static', filename='mobile/img/logo.png') }}" alt="شعار التطبيق" class="logo-img">
+          <h2 class="sidebar-title">نظام إدارة الموظفين</h2>
+        </div>
         <button class="sidebar-close" id="sidebar-close">
           <i class="fas fa-times"></i>
         </button>
