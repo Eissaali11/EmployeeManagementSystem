@@ -101,7 +101,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         # بداية صفوف البيانات
         y_pos = y_start + 10
         pdf.set_text_color(0, 0, 0)  # لون النص أسود
-        pdf.set_font('Amiri', '', 10)
+        pdf.set_font('Arial', '', 10)
         
         # حساب المجاميع
         total_basic = 0
@@ -167,7 +167,7 @@ def create_salary_report_pdf(salaries_data, month, year):
                 # إعادة تعيين نمط النص
                 y_pos += 10
                 pdf.set_text_color(0, 0, 0)
-                pdf.set_font('Amiri', '', 10)
+                pdf.set_font('Arial', '', 10)
         
         # رسم صف المجموع
         pdf.set_fill_color(*pdf.primary_color_light)
