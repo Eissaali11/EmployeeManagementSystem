@@ -1,0 +1,268 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}مصروفات السيارات{% endblock %}
+{% block header_title %}مصروفات السيارات{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-money-bill-wave"></i>
+      مصروفات السيارات
+    </h2>
+    <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+
+  <!-- إحصائيات سريعة -->
+  <div class="mobile-summary-cards">
+    <div class="mobile-summary-card primary">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-gas-pump"></i>
+      </div>
+      <div class="mobile-summary-value">4,500 ر.س</div>
+      <div class="mobile-summary-label">وقود</div>
+    </div>
+    
+    <div class="mobile-summary-card success">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <div class="mobile-summary-value">11,200 ر.س</div>
+      <div class="mobile-summary-label">صيانة</div>
+    </div>
+    
+    <div class="mobile-summary-card warning">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-id-card"></i>
+      </div>
+      <div class="mobile-summary-value">3,500 ر.س</div>
+      <div class="mobile-summary-label">تراخيص</div>
+    </div>
+    
+    <div class="mobile-summary-card danger">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div class="mobile-summary-value">19,200 ر.س</div>
+      <div class="mobile-summary-label">إجمالي المصروفات</div>
+    </div>
+  </div>
+
+  <!-- قائمة المصروفات -->
+  <div class="mobile-card">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-list"></i>
+        سجل المصروفات
+      </div>
+      <div class="mobile-card-actions">
+        <button class="mobile-btn-icon" onclick="toggleFilters()">
+          <i class="fas fa-filter"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- فلاتر البحث (مخفية افتراضياً) -->
+    <div class="mobile-card-body" id="filtersSection" style="display: none;">
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">السيارة</label>
+        <select class="mobile-form-select">
+          <option value="">جميع السيارات</option>
+          <option value="1">تويوتا كامري</option>
+          <option value="2">هونداي سوناتا</option>
+          <option value="3">نيسان باترول</option>
+        </select>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">نوع المصروف</label>
+        <select class="mobile-form-select">
+          <option value="">جميع الأنواع</option>
+          <option value="fuel">وقود</option>
+          <option value="maintenance">صيانة</option>
+          <option value="license">تراخيص</option>
+          <option value="insurance">تأمين</option>
+          <option value="other">أخرى</option>
+        </select>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">الفترة الزمنية</label>
+        <select class="mobile-form-select">
+          <option value="week">آخر أسبوع</option>
+          <option value="month" selected>آخر شهر</option>
+          <option value="quarter">آخر ثلاثة أشهر</option>
+          <option value="year">العام الحالي</option>
+        </select>
+      </div>
+      
+      <div class="mobile-form-actions">
+        <button class="mobile-btn mobile-btn-primary" onclick="applyFilters()">
+          <i class="fas fa-search"></i>
+          تطبيق الفلتر
+        </button>
+      </div>
+    </div>
+    
+    <div class="mobile-expenses-list">
+      <!-- مصروف -->
+      <div class="mobile-expense-item">
+        <div class="mobile-expense-icon">
+          <i class="fas fa-gas-pump"></i>
+        </div>
+        <div class="mobile-expense-details">
+          <div class="mobile-expense-title">تعبئة وقود</div>
+          <div class="mobile-expense-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
+          <div class="mobile-expense-date">قبل ٥ أيام</div>
+        </div>
+        <div class="mobile-expense-amount">260 ر.س</div>
+      </div>
+      
+      <!-- مصروف -->
+      <div class="mobile-expense-item">
+        <div class="mobile-expense-icon">
+          <i class="fas fa-tools"></i>
+        </div>
+        <div class="mobile-expense-details">
+          <div class="mobile-expense-title">صيانة دورية</div>
+          <div class="mobile-expense-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
+          <div class="mobile-expense-date">قبل ١٢ يوم</div>
+        </div>
+        <div class="mobile-expense-amount">750 ر.س</div>
+      </div>
+      
+      <!-- مصروف -->
+      <div class="mobile-expense-item">
+        <div class="mobile-expense-icon">
+          <i class="fas fa-id-card"></i>
+        </div>
+        <div class="mobile-expense-details">
+          <div class="mobile-expense-title">تجديد رخصة سير</div>
+          <div class="mobile-expense-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
+          <div class="mobile-expense-date">قبل ١٥ يوم</div>
+        </div>
+        <div class="mobile-expense-amount">1,200 ر.س</div>
+      </div>
+      
+      <!-- مصروف -->
+      <div class="mobile-expense-item">
+        <div class="mobile-expense-icon">
+          <i class="fas fa-car-crash"></i>
+        </div>
+        <div class="mobile-expense-details">
+          <div class="mobile-expense-title">إصلاح أضرار</div>
+          <div class="mobile-expense-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
+          <div class="mobile-expense-date">قبل ١٨ يوم</div>
+        </div>
+        <div class="mobile-expense-amount">2,800 ر.س</div>
+      </div>
+      
+      <!-- مصروف -->
+      <div class="mobile-expense-item">
+        <div class="mobile-expense-icon">
+          <i class="fas fa-gas-pump"></i>
+        </div>
+        <div class="mobile-expense-details">
+          <div class="mobile-expense-title">تعبئة وقود</div>
+          <div class="mobile-expense-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
+          <div class="mobile-expense-date">قبل ٢٤ يوم</div>
+        </div>
+        <div class="mobile-expense-amount">280 ر.س</div>
+      </div>
+      
+      <!-- مصروف -->
+      <div class="mobile-expense-item">
+        <div class="mobile-expense-icon">
+          <i class="fas fa-clipboard-check"></i>
+        </div>
+        <div class="mobile-expense-details">
+          <div class="mobile-expense-title">فحص فني</div>
+          <div class="mobile-expense-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
+          <div class="mobile-expense-date">قبل ٢٨ يوم</div>
+        </div>
+        <div class="mobile-expense-amount">400 ر.س</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- زر إضافة مصروف جديد -->
+  <button class="mobile-fab" onclick="location.href='#'">
+    <i class="fas fa-plus"></i>
+  </button>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mobile-expenses-list {
+    padding: 0;
+  }
+  
+  .mobile-expense-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .mobile-expense-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+  }
+  
+  .mobile-expense-details {
+    flex: 1;
+  }
+  
+  .mobile-expense-title {
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 4px;
+  }
+  
+  .mobile-expense-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+  
+  .mobile-expense-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+  }
+  
+  .mobile-expense-amount {
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-color);
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    if (filtersSection.style.display === 'none') {
+      filtersSection.style.display = 'block';
+    } else {
+      filtersSection.style.display = 'none';
+    }
+  }
+  
+  function applyFilters() {
+    // تنفيذ عملية الفلترة
+    alert('تم تطبيق الفلتر');
+    toggleFilters();
+  }
+</script>
+{% endblock %}
