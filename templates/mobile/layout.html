@@ -1,138 +1,372 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="description" content="نظام إدارة الموظفين - نسخة الجوال">
-    <meta name="theme-color" content="#1E88E5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2962ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <title>{% block title %}نظام إدارة الموظفين{% endblock %}</title>
+  
+  <!-- خطوط Tajawal و Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- ملفات الأنماط الأساسية -->
+  <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='mobile/css/mobile-theme.css') }}">
+  
+  {% block styles %}{% endblock %}
+  
+  <style>
+    body {
+      font-family: 'Tajawal', Arial, sans-serif;
+    }
     
-    <title>{% block title %}نظام إدارة الموظفين{% endblock %}</title>
+    .notification-badge {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background-color: var(--danger-color);
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
     
-    <!-- روابط PWA -->
-    <link rel="manifest" href="{{ url_for('static', filename='mobile/manifest.json') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='mobile/images/icon-192.png') }}">
-    
-    <!-- أيقونات الموقع -->
-    <link rel="icon" href="{{ url_for('static', filename='mobile/images/favicon.ico') }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='mobile/images/favicon.ico') }}" type="image/x-icon">
-    
-    <!-- الخطوط وملفات CSS -->
-    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='mobile/css/mobile-style.css') }}">
-    
-    <!-- CSS إضافي خاص بالصفحة -->
-    {% block styles %}{% endblock %}
+    /* تحسينات لوضع الشاشة المتجاوبة */
+    @media (min-width: 992px) {
+      .mobile-container {
+        max-width: 450px;
+        margin: 0 auto;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+        height: 85vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border-radius: 20px;
+        position: relative;
+      }
+      
+      .mobile-content-wrapper {
+        flex: 1;
+        overflow-y: auto;
+        position: relative;
+        padding-bottom: var(--footer-height);
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- القائمة العلوية -->
+  <div class="mobile-container">
+    <!-- رأس التطبيق -->
     <header class="mobile-header">
-        <button class="mobile-menu-button" aria-label="القائمة">
-            <i class="fas fa-bars"></i>
+      <div class="mobile-header-left">
+        <button class="mobile-header-button" id="sidebar-toggle">
+          <i class="fas fa-bars"></i>
         </button>
-        <h1>{% block header_title %}نظام إدارة الموظفين{% endblock %}</h1>
-        {% block header_actions %}
-        <button class="mobile-menu-button" aria-label="إشعارات" onclick="location.href='{{ url_for('mobile.notifications') }}'">
-            <i class="fas fa-bell"></i>
+      </div>
+      
+      <h1 class="mobile-header-title">{% block header_title %}نظام إدارة الموظفين{% endblock %}</h1>
+      
+      <div class="mobile-header-right">
+        <button class="mobile-header-button" onclick="location.href='{{ url_for('mobile.notifications') }}'">
+          <i class="fas fa-bell"></i>
+          {% if notifications_count and notifications_count > 0 %}
+          <span class="notification-badge">{{ notifications_count if notifications_count < 10 else '9+' }}</span>
+          {% endif %}
         </button>
-        {% endblock %}
+      </div>
     </header>
     
     <!-- القائمة الجانبية -->
-    <div class="mobile-sidebar" id="mobile-sidebar">
-        <div class="sidebar-header">
-            <h2>القائمة الرئيسية</h2>
-            <button class="close-sidebar" aria-label="إغلاق">
-                <i class="fas fa-times"></i>
-            </button>
+    <div class="mobile-sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">نظام إدارة الموظفين</h2>
+        <button class="sidebar-close" id="sidebar-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      {% if current_user.is_authenticated %}
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar">
+          <img src="{{ current_user.profile_image | default('https://ui-avatars.com/api/?name=' + current_user.username + '&background=2962ff&color=fff', true) }}" alt="{{ current_user.username }}">
         </div>
-        
-        <div class="sidebar-user">
-            {% if current_user.is_authenticated %}
-            <img src="{{ url_for('static', filename='mobile/images/user.png') }}" alt="صورة المستخدم">
-            <div>
-                <div class="user-name">{{ current_user.username }}</div>
-                <div class="user-role">{{ current_user.role }}</div>
-            </div>
-            {% else %}
-            <img src="{{ url_for('static', filename='mobile/images/guest.png') }}" alt="صورة المستخدم">
-            <div>
-                <div class="user-name">زائر</div>
-                <div class="user-role">غير مسجل الدخول</div>
-            </div>
-            {% endif %}
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">{{ current_user.first_name if current_user.first_name else current_user.username }}</div>
+          <div class="sidebar-user-role">{{ current_user.role | default('مستخدم', true) }}</div>
         </div>
-        
-        <nav class="sidebar-menu">
-            <ul>
-                <li><a href="{{ url_for('mobile.index') }}"><i class="fas fa-home"></i> الرئيسية</a></li>
-                <li><a href="{{ url_for('mobile.employees') }}"><i class="fas fa-users"></i> الموظفون</a></li>
-                <li><a href="{{ url_for('mobile.attendance') }}"><i class="fas fa-calendar-check"></i> الحضور والغياب</a></li>
-                <li><a href="{{ url_for('mobile.departments') }}"><i class="fas fa-building"></i> الأقسام</a></li>
-                <li><a href="{{ url_for('mobile.salaries') }}"><i class="fas fa-money-bill-wave"></i> الرواتب</a></li>
-                <li><a href="{{ url_for('mobile.documents') }}"><i class="fas fa-file-alt"></i> الوثائق</a></li>
-                <li><a href="{{ url_for('mobile.reports') }}"><i class="fas fa-chart-bar"></i> التقارير</a></li>
-                <li><a href="{{ url_for('mobile.vehicles') }}"><i class="fas fa-car"></i> السيارات</a></li>
-                <li><a href="{{ url_for('mobile.fees') }}"><i class="fas fa-dollar-sign"></i> التكاليف والرسوم</a></li>
-                {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('mobile.settings') }}"><i class="fas fa-cog"></i> الإعدادات</a></li>
-                <li><a href="{{ url_for('mobile.logout') }}"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
-                {% else %}
-                <li><a href="{{ url_for('mobile.login') }}"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</a></li>
-                {% endif %}
-            </ul>
-        </nav>
+      </div>
+      {% endif %}
+      
+      <div class="sidebar-menu">
+        <div class="sidebar-menu-title">القائمة الرئيسية</div>
+        <ul class="sidebar-menu-items">
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.index') }}" class="sidebar-menu-link {{ 'active' if request.endpoint == 'mobile.index' }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-home"></i></span>
+              <span class="sidebar-menu-text">الرئيسية</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.employees') }}" class="sidebar-menu-link {{ 'active' if 'employees' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-users"></i></span>
+              <span class="sidebar-menu-text">الموظفين</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.attendance') }}" class="sidebar-menu-link {{ 'active' if 'attendance' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-calendar-check"></i></span>
+              <span class="sidebar-menu-text">الحضور والغياب</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.departments') }}" class="sidebar-menu-link {{ 'active' if 'departments' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-building"></i></span>
+              <span class="sidebar-menu-text">الأقسام</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.salaries') }}" class="sidebar-menu-link {{ 'active' if 'salaries' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-money-bill-wave"></i></span>
+              <span class="sidebar-menu-text">الرواتب</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.documents') }}" class="sidebar-menu-link {{ 'active' if 'documents' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-file-alt"></i></span>
+              <span class="sidebar-menu-text">الوثائق</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.vehicles') }}" class="sidebar-menu-link {{ 'active' if 'vehicles' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-car"></i></span>
+              <span class="sidebar-menu-text">السيارات</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.fees') }}" class="sidebar-menu-link {{ 'active' if 'fees' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-dollar-sign"></i></span>
+              <span class="sidebar-menu-text">الرسوم والتكاليف</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="sidebar-menu">
+        <div class="sidebar-menu-title">إضافي</div>
+        <ul class="sidebar-menu-items">
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.reports') }}" class="sidebar-menu-link {{ 'active' if 'reports' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-chart-bar"></i></span>
+              <span class="sidebar-menu-text">التقارير</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.notifications') }}" class="sidebar-menu-link {{ 'active' if request.endpoint == 'mobile.notifications' }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-bell"></i></span>
+              <span class="sidebar-menu-text">الإشعارات</span>
+              {% if notifications_count and notifications_count > 0 %}
+              <span class="badge bg-danger rounded-pill">{{ notifications_count }}</span>
+              {% endif %}
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.settings') }}" class="sidebar-menu-link {{ 'active' if request.endpoint == 'mobile.settings' }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-cog"></i></span>
+              <span class="sidebar-menu-text">الإعدادات</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.profile') }}" class="sidebar-menu-link {{ 'active' if request.endpoint == 'mobile.profile' }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-user"></i></span>
+              <span class="sidebar-menu-text">الملف الشخصي</span>
+            </a>
+          </li>
+          {% if current_user.is_authenticated %}
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.logout') }}" class="sidebar-menu-link">
+              <span class="sidebar-menu-icon"><i class="fas fa-sign-out-alt"></i></span>
+              <span class="sidebar-menu-text">تسجيل الخروج</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.login') }}" class="sidebar-menu-link">
+              <span class="sidebar-menu-icon"><i class="fas fa-sign-in-alt"></i></span>
+              <span class="sidebar-menu-text">تسجيل الدخول</span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
     
-    <!-- خلفية قاتمة للقائمة الجانبية -->
-    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <!-- خلفية القائمة الجانبية -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
     
     <!-- المحتوى الرئيسي -->
-    <main class="mobile-content">
+    <div class="mobile-content-wrapper">
+      <main class="mobile-content">
+        <!-- تنبيهات الفلاش -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="mobile-toast-container">
+              {% for category, message in messages %}
+                <div class="mobile-toast mobile-toast-{{ category }} show">
+                  <div class="mobile-toast-icon">
+                    <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'warning' %}exclamation-triangle{% elif category == 'danger' %}times-circle{% else %}info-circle{% endif %}"></i>
+                  </div>
+                  <div class="mobile-toast-content">
+                    <div class="mobile-toast-message">{{ message }}</div>
+                  </div>
+                  <button class="mobile-toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
         {% block content %}{% endblock %}
-    </main>
-    
-    <!-- القائمة السفلية -->
-    <nav class="mobile-footer">
-        <a href="{{ url_for('mobile.index') }}" class="footer-item {% if request.path == url_for('mobile.index') %}active{% endif %}">
-            <i class="fas fa-home"></i>
-            <span>الرئيسية</span>
-        </a>
-        <a href="{{ url_for('mobile.employees') }}" class="footer-item {% if request.path == url_for('mobile.employees') %}active{% endif %}">
-            <i class="fas fa-users"></i>
-            <span>الموظفون</span>
-        </a>
-        <a href="{{ url_for('mobile.attendance') }}" class="footer-item {% if request.path == url_for('mobile.attendance') %}active{% endif %}">
-            <i class="fas fa-calendar-check"></i>
-            <span>الحضور</span>
-        </a>
-        <a href="{{ url_for('mobile.documents') }}" class="footer-item {% if request.path == url_for('mobile.documents') %}active{% endif %}">
-            <i class="fas fa-file-alt"></i>
-            <span>الوثائق</span>
-        </a>
-        <a href="{{ url_for('mobile.salaries') }}" class="footer-item {% if request.path == url_for('mobile.salaries') %}active{% endif %}">
-            <i class="fas fa-money-bill-wave"></i>
-            <span>الرواتب</span>
-        </a>
-    </nav>
-    
-    <!-- شاشة التحميل -->
-    <div class="mobile-loader">
-        <div class="spinner"></div>
+      </main>
     </div>
     
-    <!-- زر العودة للأعلى -->
-    <button class="mobile-scroll-top" aria-label="العودة للأعلى">
-        <i class="fas fa-arrow-up"></i>
-    </button>
+    <!-- القائمة السفلية -->
+    <footer class="mobile-footer">
+      <a href="{{ url_for('mobile.index') }}" class="mobile-footer-item {{ 'active' if request.endpoint == 'mobile.index' }}">
+        <div class="mobile-footer-icon">
+          <i class="fas fa-home"></i>
+        </div>
+        <div class="mobile-footer-text">الرئيسية</div>
+      </a>
+      <a href="{{ url_for('mobile.employees') }}" class="mobile-footer-item {{ 'active' if 'employees' in request.endpoint }}">
+        <div class="mobile-footer-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="mobile-footer-text">الموظفين</div>
+      </a>
+      <a href="{{ url_for('mobile.attendance') }}" class="mobile-footer-item {{ 'active' if 'attendance' in request.endpoint }}">
+        <div class="mobile-footer-icon">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="mobile-footer-text">الحضور</div>
+      </a>
+      <a href="{{ url_for('mobile.reports') }}" class="mobile-footer-item {{ 'active' if 'reports' in request.endpoint }}">
+        <div class="mobile-footer-icon">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="mobile-footer-text">التقارير</div>
+      </a>
+      <a href="{{ url_for('mobile.settings') }}" class="mobile-footer-item {{ 'active' if request.endpoint == 'mobile.settings' }}">
+        <div class="mobile-footer-icon">
+          <i class="fas fa-cog"></i>
+        </div>
+        <div class="mobile-footer-text">الإعدادات</div>
+      </a>
+    </footer>
+  </div>
+  
+  <!-- مؤشر التحميل -->
+  <div class="mobile-loader" id="loader">
+    <div class="mobile-spinner"></div>
+  </div>
+  
+  <!-- البرامج النصية الأساسية -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    // التعامل مع القائمة الجانبية
+    document.addEventListener('DOMContentLoaded', function() {
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      const sidebarClose = document.getElementById('sidebar-close');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+          sidebar.classList.add('active');
+          sidebarOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+      }
+      
+      if (sidebarClose) {
+        sidebarClose.addEventListener('click', function() {
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        });
+      }
+      
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        });
+      }
+      
+      // إخفاء رسائل الفلاش تلقائياً
+      setTimeout(function() {
+        const toasts = document.querySelectorAll('.mobile-toast');
+        toasts.forEach(toast => {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        });
+      }, 5000);
+      
+      // تغيير حجم الرأس عند التمرير
+      const header = document.querySelector('.mobile-header');
+      const content = document.querySelector('.mobile-content');
+      
+      if (content) {
+        content.addEventListener('scroll', function() {
+          if (content.scrollTop > 10) {
+            header.classList.add('collapsed');
+          } else {
+            header.classList.remove('collapsed');
+          }
+        });
+      }
+    });
     
-    <!-- سكريبت جافاسكربت -->
-    <script src="{{ url_for('static', filename='mobile/js/mobile-script.js') }}"></script>
+    // وظائف عامة للتطبيق
+    function showLoader() {
+      document.getElementById('loader').classList.add('active');
+    }
     
-    <!-- سكريبت خاص بالصفحة -->
-    {% block scripts %}{% endblock %}
+    function hideLoader() {
+      document.getElementById('loader').classList.remove('active');
+    }
+    
+    // معالجة الروابط وإظهار مؤشر التحميل
+    document.addEventListener('click', function(e) {
+      const target = e.target.closest('a:not([target="_blank"])');
+      if (target && target.href && !target.href.includes('#') && !target.dataset.noloader) {
+        showLoader();
+      }
+    });
+    
+    // معالجة النماذج وإظهار مؤشر التحميل
+    document.addEventListener('submit', function(e) {
+      if (!e.target.dataset.noloader) {
+        showLoader();
+      }
+    });
+  </script>
+  
+  {% block scripts %}{% endblock %}
 </body>
 </html>

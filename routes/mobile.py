@@ -51,7 +51,8 @@ def index():
     return render_template('mobile/index.html', 
                             stats=stats,
                             expiring_documents=expiring_documents,
-                            absences=absences)
+                            absences=absences,
+                            now=datetime.now())
 
 # صفحة تسجيل الدخول - النسخة المحمولة
 @mobile_bp.route('/login', methods=['GET', 'POST'])
