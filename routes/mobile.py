@@ -12,7 +12,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 
 # إنشاء مخطط المسارات
