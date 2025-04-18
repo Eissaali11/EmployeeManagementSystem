@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import login_required
+from flask_login import login_required, current_user
 from sqlalchemy import func, extract
 from app import db
 from models import FeesCost, Document, Employee, Department, SystemAudit
@@ -15,11 +15,11 @@ def index():
     today = datetime.now().date()
     expiry_date_limit = today + timedelta(days=90)  # 90 يومًا من الآن
     
-    expired_docs = Document.query.filter(Document.expiry_date < today).join(Employee).all()
+    expired_docs = Document.query.filter(Document.expiry_date < today).join(Employee).order_by(Document.expiry_date.desc()).limit(10).all()
     expiring_docs = Document.query.filter(
         Document.expiry_date >= today,
         Document.expiry_date <= expiry_date_limit
-    ).join(Employee).all()
+    ).join(Employee).order_by(Document.expiry_date).limit(10).all()
     
     # استخراج تكاليف الرسوم المسجلة
     fees_costs = FeesCost.query.join(Document).join(Employee).all()
@@ -88,7 +88,8 @@ def create():
                 action='create',
                 entity_type='fees_cost',
                 entity_id=fees_cost.id,
-                details=f'تم إضافة تكاليف رسوم جديدة للوثيقة رقم {document_id}'
+                details=f'تم إضافة تكاليف رسوم جديدة للوثيقة رقم {document_id}',
+                user_id=current_user.id
             )
             db.session.add(audit)
             db.session.commit()
@@ -141,7 +142,8 @@ def edit(id):
                 action='update',
                 entity_type='fees_cost',
                 entity_id=fees_cost.id,
-                details=f'تم تحديث تكاليف الرسوم للوثيقة رقم {fees_cost.document_id}'
+                details=f'تم تحديث تكاليف الرسوم للوثيقة رقم {fees_cost.document_id}',
+                user_id=current_user.id
             )
             db.session.add(audit)
             
@@ -172,7 +174,8 @@ def delete(id):
             action='delete',
             entity_type='fees_cost',
             entity_id=id,
-            details=f'تم حذف تكاليف الرسوم للوثيقة رقم {document_id}'
+            details=f'تم حذف تكاليف الرسوم للوثيقة رقم {document_id}',
+            user_id=current_user.id
         )
         db.session.add(audit)
         
