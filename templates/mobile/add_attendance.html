@@ -81,8 +81,9 @@
         <div class="quick-attendance-form">
             <p class="text-center mb-3">يمكنك تسجيل حضور أو انصراف سريع للموظف المختار</p>
             
-            <form action="{{ url_for('mobile.quick_attendance') }}" method="POST" class="mobile-form">
+            <form action="{{ url_for('mobile.add_attendance') }}" method="POST" class="mobile-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="quick" value="true">
                 
                 <div class="mobile-form-group">
                     <select name="employee_id" class="mobile-form-select" required>

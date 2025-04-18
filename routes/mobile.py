@@ -205,9 +205,65 @@ def attendance():
 @login_required
 def add_attendance():
     """إضافة سجل حضور جديد للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    # الحصول على قائمة الموظفين
     employees = Employee.query.order_by(Employee.name).all()
     current_date = datetime.now().date()
+    
+    if request.method == 'POST':
+        # معالجة النموذج المرسل
+        employee_id = request.form.get('employee_id')
+        date_str = request.form.get('date')
+        status = request.form.get('status')
+        check_in = request.form.get('check_in')
+        check_out = request.form.get('check_out')
+        notes = request.form.get('notes')
+        quick = request.form.get('quick') == 'true'
+        action = request.form.get('action')
+        
+        # التحقق من أن الموظف موجود
+        employee = Employee.query.get(employee_id) if employee_id else None
+        
+        if employee:
+            if quick and action:
+                # معالجة التسجيل السريع
+                attendance_date = datetime.now().date()
+                now_time = datetime.now().time()
+                
+                if action == 'check_in':
+                    status = 'حاضر'
+                    check_in = now_time.strftime('%H:%M')
+                    check_out = None
+                    notes = "تم تسجيل الحضور عبر النظام المحمول."
+                elif action == 'check_out':
+                    status = 'حاضر'
+                    check_in = None
+                    check_out = now_time.strftime('%H:%M')
+                    notes = "تم تسجيل الانصراف عبر النظام المحمول."
+            else:
+                # معالجة التسجيل العادي
+                attendance_date = datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else current_date
+            
+            # إنشاء سجل الحضور الجديد
+            new_attendance = Attendance(
+                employee_id=employee.id,
+                date=attendance_date,
+                status=status,
+                check_in=check_in,
+                check_out=check_out,
+                notes=notes
+            )
+            
+            try:
+                db.session.add(new_attendance)
+                db.session.commit()
+                flash('تم تسجيل الحضور بنجاح', 'success')
+                return redirect(url_for('mobile.attendance'))
+            except Exception as e:
+                db.session.rollback()
+                flash('حدث خطأ أثناء تسجيل الحضور. يرجى المحاولة مرة أخرى.', 'danger')
+                print(f"خطأ في إضافة سجل الحضور: {str(e)}")
+        else:
+            flash('يرجى اختيار موظف صالح', 'warning')
     
     # المتغيرات المطلوبة لعرض الصفحة
     return render_template('mobile/add_attendance.html',
