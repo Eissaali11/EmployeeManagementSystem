@@ -1,0 +1,318 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الرواتب - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الرواتب{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="إضافة" onclick="location.href='{{ url_for('mobile.add_salary') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.salaries') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>الشهر</label>
+                    <select name="month" class="mobile-form-select">
+                        <option value="">اختر الشهر</option>
+                        <option value="1" {% if request.args.get('month') == '1' %}selected{% endif %}>يناير</option>
+                        <option value="2" {% if request.args.get('month') == '2' %}selected{% endif %}>فبراير</option>
+                        <option value="3" {% if request.args.get('month') == '3' %}selected{% endif %}>مارس</option>
+                        <option value="4" {% if request.args.get('month') == '4' %}selected{% endif %}>أبريل</option>
+                        <option value="5" {% if request.args.get('month') == '5' %}selected{% endif %}>مايو</option>
+                        <option value="6" {% if request.args.get('month') == '6' %}selected{% endif %}>يونيو</option>
+                        <option value="7" {% if request.args.get('month') == '7' %}selected{% endif %}>يوليو</option>
+                        <option value="8" {% if request.args.get('month') == '8' %}selected{% endif %}>أغسطس</option>
+                        <option value="9" {% if request.args.get('month') == '9' %}selected{% endif %}>سبتمبر</option>
+                        <option value="10" {% if request.args.get('month') == '10' %}selected{% endif %}>أكتوبر</option>
+                        <option value="11" {% if request.args.get('month') == '11' %}selected{% endif %}>نوفمبر</option>
+                        <option value="12" {% if request.args.get('month') == '12' %}selected{% endif %}>ديسمبر</option>
+                    </select>
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>السنة</label>
+                    <select name="year" class="mobile-form-select">
+                        <option value="">اختر السنة</option>
+                        {% for year in range(current_year-5, current_year+1) %}
+                        <option value="{{ year }}" {% if request.args.get('year')|int == year or (not request.args.get('year') and year == current_year) %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الموظف</label>
+                <select name="employee_id" class="mobile-form-select">
+                    <option value="">جميع الموظفين</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>{{ employee.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.salaries') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ملخص الرواتب -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-money-bill-wave"></i> ملخص الرواتب
+        <div class="mobile-card-subtitle">{{ selected_month }} {{ selected_year }}</div>
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="salary-summary">
+            <div class="salary-stat">
+                <div class="salary-amount">{{ '{:,.0f}'.format(salary_stats.total_basic or 0) }}</div>
+                <div class="salary-label">الرواتب الأساسية</div>
+            </div>
+            <div class="salary-stat">
+                <div class="salary-amount">{{ '{:,.0f}'.format(salary_stats.total_allowances or 0) }}</div>
+                <div class="salary-label">البدلات</div>
+            </div>
+            <div class="salary-stat">
+                <div class="salary-amount">{{ '{:,.0f}'.format(salary_stats.total_deductions or 0) }}</div>
+                <div class="salary-label">الخصومات</div>
+            </div>
+            <div class="salary-stat total">
+                <div class="salary-amount">{{ '{:,.0f}'.format(salary_stats.total_net or 0) }}</div>
+                <div class="salary-label">صافي الرواتب</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قائمة الرواتب -->
+{% if salaries %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list-alt"></i> قائمة الرواتب
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for salary in salaries %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.salary_details', salary_id=salary.id) }}'">
+                <div class="mobile-list-item-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ salary.employee.name }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        {{ salary.month }}/{{ salary.year }}
+                        {% if salary.is_paid %}
+                        <span class="status-badge paid">تم الدفع</span>
+                        {% else %}
+                        <span class="status-badge unpaid">لم يتم الدفع</span>
+                        {% endif %}
+                    </div>
+                    <div class="mobile-list-item-info">
+                        <div class="salary-details">
+                            <span>أساسي: {{ '{:,.0f}'.format(salary.basic_salary) }}</span>
+                            <span>بدلات: {{ '{:,.0f}'.format(salary.allowances) }}</span>
+                            <span>خصومات: {{ '{:,.0f}'.format(salary.deductions) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-list-item-value">
+                    {{ '{:,.0f}'.format(salary.net_salary) }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- ترقيم الصفحات -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mobile-pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('mobile.salaries', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+            
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                    <a href="{{ url_for('mobile.salaries', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                    {% else %}
+                    <span class="mobile-pagination-item active">{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="mobile-pagination-item">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('mobile.salaries', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-money-bill-wave fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد رواتب</h5>
+        <p class="text-secondary">لا توجد بيانات رواتب متطابقة مع معايير البحث</p>
+        <a href="{{ url_for('mobile.add_salary') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-plus"></i> إضافة راتب جديد
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.mobile-form-row .mobile-form-group {
+    flex: 1;
+}
+
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-icon {
+    margin-left: 15px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #757575;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-value {
+    font-weight: bold;
+    color: #28a745;
+    display: flex;
+    align-items: center;
+    min-width: 80px;
+    justify-content: flex-end;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-right: 5px;
+}
+
+.status-badge.paid {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.unpaid {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.salary-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.salary-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.salary-stat {
+    text-align: center;
+    padding: 15px 10px;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.salary-stat.total {
+    grid-column: span 2;
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.salary-amount {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.salary-label {
+    font-size: 0.85rem;
+    color: #757575;
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #757575;
+    font-weight: normal;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة الرواتب');
+});
+</script>
+{% endblock %}

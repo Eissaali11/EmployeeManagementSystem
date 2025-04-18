@@ -1,0 +1,243 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إضافة موظف - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}إضافة موظف جديد{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-user-plus"></i> بيانات الموظف الجديد
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.add_employee') }}" method="POST" class="mobile-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="mobile-form-group">
+                <label>الاسم الكامل*</label>
+                <input type="text" name="name" class="mobile-form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                       required placeholder="اكتب الاسم الكامل للموظف" value="{{ form.name.data or '' }}">
+                {% if form.name.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.name.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الرقم الوظيفي*</label>
+                <input type="text" name="employee_id" class="mobile-form-control {% if form.employee_id.errors %}is-invalid{% endif %}" 
+                       required placeholder="أدخل الرقم الوظيفي" value="{{ form.employee_id.data or '' }}">
+                {% if form.employee_id.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.employee_id.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>المسمى الوظيفي*</label>
+                <input type="text" name="job_title" class="mobile-form-control {% if form.job_title.errors %}is-invalid{% endif %}" 
+                       required placeholder="أدخل المسمى الوظيفي" value="{{ form.job_title.data or '' }}">
+                {% if form.job_title.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.job_title.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>القسم*</label>
+                <select name="department_id" class="mobile-form-select {% if form.department_id.errors %}is-invalid{% endif %}" required>
+                    <option value="">اختر القسم</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if form.department_id.data|int == department.id %}selected{% endif %}>
+                        {{ department.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if form.department_id.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.department_id.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>رقم الهاتف</label>
+                    <input type="tel" name="phone" class="mobile-form-control {% if form.phone.errors %}is-invalid{% endif %}" 
+                           placeholder="05xxxxxxxx" value="{{ form.phone.data or '' }}">
+                    {% if form.phone.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.phone.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" name="email" class="mobile-form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                           placeholder="email@example.com" value="{{ form.email.data or '' }}">
+                    {% if form.email.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>تاريخ التعيين*</label>
+                <input type="date" name="hire_date" class="mobile-form-control {% if form.hire_date.errors %}is-invalid{% endif %}" 
+                       required value="{{ form.hire_date.data.strftime('%Y-%m-%d') if form.hire_date.data else '' }}">
+                {% if form.hire_date.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.hire_date.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>الجنسية</label>
+                    <input type="text" name="nationality" class="mobile-form-control {% if form.nationality.errors %}is-invalid{% endif %}" 
+                           placeholder="الجنسية" value="{{ form.nationality.data or '' }}">
+                    {% if form.nationality.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.nationality.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>رقم الهوية</label>
+                    <input type="text" name="id_number" class="mobile-form-control {% if form.id_number.errors %}is-invalid{% endif %}" 
+                           placeholder="رقم الهوية" value="{{ form.id_number.data or '' }}">
+                    {% if form.id_number.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.id_number.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mobile-form-group mb-4">
+                <div class="form-check">
+                    <input type="checkbox" name="active" id="active" class="form-check-input" 
+                           {% if form.active.data or form.active.data == None %}checked{% endif %}>
+                    <label class="form-check-label" for="active">الموظف نشط</label>
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>ملاحظات</label>
+                <textarea name="notes" class="mobile-form-control" rows="3" 
+                          placeholder="ملاحظات إضافية">{{ form.notes.data or '' }}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="mobile-btn mobile-btn-primary w-100">
+                    <i class="fas fa-save"></i> حفظ البيانات
+                </button>
+                <a href="{{ url_for('mobile.employees') }}" class="mobile-btn mobile-btn-secondary w-100 mt-2">
+                    <i class="fas fa-times"></i> إلغاء
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.mobile-form-row .mobile-form-group {
+    flex: 1;
+}
+
+.mobile-form-group {
+    margin-bottom: 15px;
+}
+
+.mobile-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.mobile-form-control, .mobile-form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.mobile-form-control:focus, .mobile-form-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.form-check {
+    padding-right: 1.5rem;
+    position: relative;
+}
+
+.form-check-input {
+    position: absolute;
+    right: 0;
+    margin-top: 0.3rem;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة إضافة موظف');
+});
+</script>
+{% endblock %}

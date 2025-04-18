@@ -149,15 +149,67 @@ def add_employee():
 def employee_details(employee_id):
     """صفحة تفاصيل الموظف للنسخة المحمولة"""
     employee = Employee.query.get_or_404(employee_id)
-    return render_template('mobile/employee_details.html', employee=employee)
+    
+    # الحصول على بيانات إضافية للموظف (يمكن استكمالها لاحقًا)
+    attendance_records = []  # سجلات الحضور
+    salary = None  # معلومات الراتب
+    documents = []  # الوثائق
+    current_date = datetime.now().date()
+    
+    return render_template('mobile/employee_details.html', 
+                          employee=employee,
+                          attendance_records=attendance_records,
+                          salary=salary,
+                          documents=documents,
+                          current_date=current_date)
+
+# صفحة تعديل موظف - النسخة المحمولة
+@mobile_bp.route('/employees/<int:employee_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_employee(employee_id):
+    """صفحة تعديل موظف للنسخة المحمولة"""
+    employee = Employee.query.get_or_404(employee_id)
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/edit_employee.html', employee=employee)
 
 # صفحة الحضور والغياب - النسخة المحمولة
 @mobile_bp.route('/attendance')
 @login_required
 def attendance():
     """صفحة الحضور والغياب للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/attendance.html')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # بيانات مؤقتة - يمكن استبدالها بالبيانات الفعلية من قاعدة البيانات
+    employees = Employee.query.order_by(Employee.name).all()
+    attendance_records = []
+    
+    # إحصائيات اليوم
+    current_date = datetime.now().date()
+    today_stats = {'present': 0, 'absent': 0, 'leave': 0, 'total': len(employees)}
+    
+    return render_template('mobile/attendance.html',
+                          employees=employees,
+                          attendance_records=attendance_records,
+                          current_date=current_date,
+                          today_stats=today_stats,
+                          pagination=None)
+
+# إضافة سجل حضور جديد - النسخة المحمولة
+@mobile_bp.route('/attendance/add', methods=['GET', 'POST'])
+@login_required
+def add_attendance():
+    """إضافة سجل حضور جديد للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/add_attendance.html')
+
+# تعديل سجل حضور - النسخة المحمولة
+@mobile_bp.route('/attendance/<int:record_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_attendance(record_id):
+    """تعديل سجل حضور للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/edit_attendance.html')
 
 # صفحة الأقسام - النسخة المحمولة
 @mobile_bp.route('/departments')
@@ -172,16 +224,102 @@ def departments():
 @login_required
 def salaries():
     """صفحة الرواتب للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/salaries.html')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # بيانات مؤقتة - يمكن استبدالها بالبيانات الفعلية من قاعدة البيانات
+    employees = Employee.query.order_by(Employee.name).all()
+    salaries = []
+    
+    # إحصائيات الرواتب
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    selected_year = request.args.get('year', current_year, type=int)
+    selected_month = request.args.get('month', current_month, type=int)
+    
+    # تحويل الشهر إلى اسمه بالعربية
+    month_names = {
+        1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
+        5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+        9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+    }
+    selected_month_name = month_names.get(selected_month, '')
+    
+    salary_stats = {
+        'total_basic': 0,
+        'total_allowances': 0,
+        'total_deductions': 0,
+        'total_net': 0
+    }
+    
+    return render_template('mobile/salaries.html',
+                          employees=employees,
+                          salaries=salaries,
+                          current_year=current_year,
+                          selected_year=selected_year,
+                          selected_month=selected_month_name,
+                          salary_stats=salary_stats,
+                          pagination=None)
+
+# إضافة راتب جديد - النسخة المحمولة
+@mobile_bp.route('/salaries/add', methods=['GET', 'POST'])
+@login_required
+def add_salary():
+    """إضافة راتب جديد للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/add_salary.html')
+
+# تفاصيل الراتب - النسخة المحمولة
+@mobile_bp.route('/salaries/<int:salary_id>')
+@login_required
+def salary_details(salary_id):
+    """تفاصيل الراتب للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/salary_details.html')
 
 # صفحة الوثائق - النسخة المحمولة
 @mobile_bp.route('/documents')
 @login_required
 def documents():
     """صفحة الوثائق للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/documents.html')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # بيانات مؤقتة - يمكن استبدالها بالبيانات الفعلية من قاعدة البيانات
+    employees = Employee.query.order_by(Employee.name).all()
+    documents = []
+    
+    # إحصائيات الوثائق
+    current_date = datetime.now().date()
+    document_stats = {
+        'valid': 0,
+        'expiring': 0,
+        'expired': 0,
+        'total': 0
+    }
+    
+    return render_template('mobile/documents.html',
+                          employees=employees,
+                          documents=documents,
+                          current_date=current_date,
+                          document_stats=document_stats,
+                          pagination=None)
+
+# إضافة وثيقة جديدة - النسخة المحمولة
+@mobile_bp.route('/documents/add', methods=['GET', 'POST'])
+@login_required
+def add_document():
+    """إضافة وثيقة جديدة للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/add_document.html')
+
+# تفاصيل وثيقة - النسخة المحمولة
+@mobile_bp.route('/documents/<int:document_id>')
+@login_required
+def document_details(document_id):
+    """تفاصيل وثيقة للنسخة المحمولة"""
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/document_details.html')
 
 # صفحة التقارير - النسخة المحمولة
 @mobile_bp.route('/reports')
