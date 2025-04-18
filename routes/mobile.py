@@ -206,7 +206,13 @@ def attendance():
 def add_attendance():
     """إضافة سجل حضور جديد للنسخة المحمولة"""
     # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/add_attendance.html')
+    employees = Employee.query.order_by(Employee.name).all()
+    current_date = datetime.now().date()
+    
+    # المتغيرات المطلوبة لعرض الصفحة
+    return render_template('mobile/add_attendance.html',
+                          employees=employees,
+                          current_date=current_date)
 
 # تعديل سجل حضور - النسخة المحمولة
 @mobile_bp.route('/attendance/<int:record_id>/edit', methods=['GET', 'POST'])
@@ -214,7 +220,14 @@ def add_attendance():
 def edit_attendance(record_id):
     """تعديل سجل حضور للنسخة المحمولة"""
     # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/edit_attendance.html')
+    attendance = Attendance.query.get_or_404(record_id)
+    employees = Employee.query.order_by(Employee.name).all()
+    current_date = datetime.now().date()
+    
+    return render_template('mobile/edit_attendance.html',
+                          attendance=attendance,
+                          employees=employees,
+                          current_date=current_date)
 
 # صفحة الأقسام - النسخة المحمولة
 @mobile_bp.route('/departments')
@@ -234,8 +247,12 @@ def departments():
 @login_required
 def add_department():
     """صفحة إضافة قسم جديد للنسخة المحمولة"""
+    # الموظفين كمديرين محتملين للقسم
+    employees = Employee.query.order_by(Employee.name).all()
+    
     # ستتم إضافة وظيفة إضافة قسم جديد لاحقاً
-    return render_template('mobile/add_department.html')
+    return render_template('mobile/add_department.html', 
+                          employees=employees)
 
 # صفحة تفاصيل القسم - النسخة المحمولة
 @mobile_bp.route('/departments/<int:department_id>')
@@ -336,8 +353,26 @@ def documents():
 @login_required
 def add_document():
     """إضافة وثيقة جديدة للنسخة المحمولة"""
+    # قائمة الموظفين للاختيار
+    employees = Employee.query.order_by(Employee.name).all()
+    current_date = datetime.now().date()
+    
+    # أنواع الوثائق المتاحة
+    document_types = [
+        'هوية وطنية',
+        'إقامة',
+        'جواز سفر',
+        'رخصة قيادة',
+        'شهادة صحية',
+        'شهادة تأمين',
+        'أخرى'
+    ]
+    
     # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/add_document.html')
+    return render_template('mobile/add_document.html',
+                          employees=employees,
+                          document_types=document_types,
+                          current_date=current_date)
 
 # تفاصيل وثيقة - النسخة المحمولة
 @mobile_bp.route('/documents/<int:document_id>')
