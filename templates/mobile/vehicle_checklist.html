@@ -1,0 +1,816 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تشيك لست السيارة - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تشيك لست السيارة{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="العودة" onclick="location.href='{{ url_for('mobile.vehicles') }}'">
+    <i class="fas fa-arrow-right"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- نموذج اختيار السيارة والتاريخ -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-car"></i> اختيار السيارة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form id="vehicle-select-form" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>السيارة</label>
+                <select id="vehicle-select" class="mobile-form-select" required>
+                    <option value="">اختر السيارة</option>
+                    {% for vehicle in vehicles %}
+                    <option value="{{ vehicle.id }}">{{ vehicle.name }} - {{ vehicle.plate_number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>تاريخ الفحص</label>
+                <input type="date" id="inspection-date" class="mobile-form-control" value="{{ now.strftime('%Y-%m-%d') if now else '' }}" required>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>القائم بالفحص</label>
+                <input type="text" id="inspector-name" class="mobile-form-control" placeholder="اسم الفاحص" required>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>نوع الفحص</label>
+                <select id="inspection-type" class="mobile-form-select" required>
+                    <option value="daily">فحص يومي</option>
+                    <option value="weekly">فحص أسبوعي</option>
+                    <option value="monthly">فحص شهري</option>
+                    <option value="quarterly">فحص ربع سنوي</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- قائمة الفحص -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-clipboard-check"></i> قائمة الفحص
+    </div>
+    
+    <div class="mobile-card-content">
+        <form id="checklist-form" class="mobile-form">
+            <!-- المحرك والسوائل -->
+            <div class="checklist-section">
+                <h4 class="section-title">
+                    <i class="fas fa-oil-can"></i> المحرك والسوائل
+                </h4>
+                
+                <div class="checklist-items">
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="engine-oil">زيت المحرك</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="engine-oil" id="engine-oil-good" value="good">
+                                <label class="form-check-label" for="engine-oil-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="engine-oil" id="engine-oil-fair" value="fair">
+                                <label class="form-check-label" for="engine-oil-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="engine-oil" id="engine-oil-poor" value="poor">
+                                <label class="form-check-label" for="engine-oil-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="engine-oil-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="brake-fluid">سائل الفرامل</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="brake-fluid" id="brake-fluid-good" value="good">
+                                <label class="form-check-label" for="brake-fluid-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="brake-fluid" id="brake-fluid-fair" value="fair">
+                                <label class="form-check-label" for="brake-fluid-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="brake-fluid" id="brake-fluid-poor" value="poor">
+                                <label class="form-check-label" for="brake-fluid-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="brake-fluid-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="coolant">سائل التبريد</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="coolant" id="coolant-good" value="good">
+                                <label class="form-check-label" for="coolant-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="coolant" id="coolant-fair" value="fair">
+                                <label class="form-check-label" for="coolant-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="coolant" id="coolant-poor" value="poor">
+                                <label class="form-check-label" for="coolant-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="coolant-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="power-steering">سائل باور الدركسون</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="power-steering" id="power-steering-good" value="good">
+                                <label class="form-check-label" for="power-steering-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="power-steering" id="power-steering-fair" value="fair">
+                                <label class="form-check-label" for="power-steering-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="power-steering" id="power-steering-poor" value="poor">
+                                <label class="form-check-label" for="power-steering-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="power-steering-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="transmission-fluid">زيت ناقل الحركة</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transmission-fluid" id="transmission-fluid-good" value="good">
+                                <label class="form-check-label" for="transmission-fluid-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transmission-fluid" id="transmission-fluid-fair" value="fair">
+                                <label class="form-check-label" for="transmission-fluid-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="transmission-fluid" id="transmission-fluid-poor" value="poor">
+                                <label class="form-check-label" for="transmission-fluid-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="transmission-fluid-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="washer-fluid">سائل مساحات الزجاج</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="washer-fluid" id="washer-fluid-good" value="good">
+                                <label class="form-check-label" for="washer-fluid-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="washer-fluid" id="washer-fluid-fair" value="fair">
+                                <label class="form-check-label" for="washer-fluid-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="washer-fluid" id="washer-fluid-poor" value="poor">
+                                <label class="form-check-label" for="washer-fluid-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="washer-fluid-notes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- الإطارات والفرامل -->
+            <div class="checklist-section">
+                <h4 class="section-title">
+                    <i class="fas fa-tire"></i> الإطارات والفرامل
+                </h4>
+                
+                <div class="checklist-items">
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="tire-pressure">ضغط الإطارات</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tire-pressure" id="tire-pressure-good" value="good">
+                                <label class="form-check-label" for="tire-pressure-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tire-pressure" id="tire-pressure-fair" value="fair">
+                                <label class="form-check-label" for="tire-pressure-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tire-pressure" id="tire-pressure-poor" value="poor">
+                                <label class="form-check-label" for="tire-pressure-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="tire-pressure-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="tire-wear">تآكل الإطارات</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tire-wear" id="tire-wear-good" value="good">
+                                <label class="form-check-label" for="tire-wear-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tire-wear" id="tire-wear-fair" value="fair">
+                                <label class="form-check-label" for="tire-wear-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tire-wear" id="tire-wear-poor" value="poor">
+                                <label class="form-check-label" for="tire-wear-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="tire-wear-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="spare-tire">الإطار الاحتياطي</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="spare-tire" id="spare-tire-good" value="good">
+                                <label class="form-check-label" for="spare-tire-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="spare-tire" id="spare-tire-fair" value="fair">
+                                <label class="form-check-label" for="spare-tire-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="spare-tire" id="spare-tire-poor" value="poor">
+                                <label class="form-check-label" for="spare-tire-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="spare-tire-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="brake-pads">لبادات الفرامل</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="brake-pads" id="brake-pads-good" value="good">
+                                <label class="form-check-label" for="brake-pads-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="brake-pads" id="brake-pads-fair" value="fair">
+                                <label class="form-check-label" for="brake-pads-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="brake-pads" id="brake-pads-poor" value="poor">
+                                <label class="form-check-label" for="brake-pads-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="brake-pads-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="parking-brake">فرامل اليد</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="parking-brake" id="parking-brake-good" value="good">
+                                <label class="form-check-label" for="parking-brake-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="parking-brake" id="parking-brake-fair" value="fair">
+                                <label class="form-check-label" for="parking-brake-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="parking-brake" id="parking-brake-poor" value="poor">
+                                <label class="form-check-label" for="parking-brake-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="parking-brake-notes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- الإضاءة والكهرباء -->
+            <div class="checklist-section">
+                <h4 class="section-title">
+                    <i class="fas fa-lightbulb"></i> الإضاءة والكهرباء
+                </h4>
+                
+                <div class="checklist-items">
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="headlights">المصابيح الأمامية</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="headlights" id="headlights-good" value="good">
+                                <label class="form-check-label" for="headlights-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="headlights" id="headlights-fair" value="fair">
+                                <label class="form-check-label" for="headlights-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="headlights" id="headlights-poor" value="poor">
+                                <label class="form-check-label" for="headlights-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="headlights-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="taillights">المصابيح الخلفية</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="taillights" id="taillights-good" value="good">
+                                <label class="form-check-label" for="taillights-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="taillights" id="taillights-fair" value="fair">
+                                <label class="form-check-label" for="taillights-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="taillights" id="taillights-poor" value="poor">
+                                <label class="form-check-label" for="taillights-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="taillights-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="turn-signals">إشارات الانعطاف</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="turn-signals" id="turn-signals-good" value="good">
+                                <label class="form-check-label" for="turn-signals-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="turn-signals" id="turn-signals-fair" value="fair">
+                                <label class="form-check-label" for="turn-signals-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="turn-signals" id="turn-signals-poor" value="poor">
+                                <label class="form-check-label" for="turn-signals-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="turn-signals-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="hazard-lights">أضواء الطوارئ</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="hazard-lights" id="hazard-lights-good" value="good">
+                                <label class="form-check-label" for="hazard-lights-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="hazard-lights" id="hazard-lights-fair" value="fair">
+                                <label class="form-check-label" for="hazard-lights-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="hazard-lights" id="hazard-lights-poor" value="poor">
+                                <label class="form-check-label" for="hazard-lights-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="hazard-lights-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="battery">البطارية</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="battery" id="battery-good" value="good">
+                                <label class="form-check-label" for="battery-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="battery" id="battery-fair" value="fair">
+                                <label class="form-check-label" for="battery-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="battery" id="battery-poor" value="poor">
+                                <label class="form-check-label" for="battery-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="battery-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="horn">المنبه (الهورن)</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="horn" id="horn-good" value="good">
+                                <label class="form-check-label" for="horn-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="horn" id="horn-fair" value="fair">
+                                <label class="form-check-label" for="horn-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="horn" id="horn-poor" value="poor">
+                                <label class="form-check-label" for="horn-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="horn-notes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- مكونات داخلية وخارجية -->
+            <div class="checklist-section">
+                <h4 class="section-title">
+                    <i class="fas fa-car-side"></i> مكونات داخلية وخارجية
+                </h4>
+                
+                <div class="checklist-items">
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="wipers">مساحات الزجاج</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="wipers" id="wipers-good" value="good">
+                                <label class="form-check-label" for="wipers-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="wipers" id="wipers-fair" value="fair">
+                                <label class="form-check-label" for="wipers-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="wipers" id="wipers-poor" value="poor">
+                                <label class="form-check-label" for="wipers-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="wipers-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="mirrors">المرايا</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="mirrors" id="mirrors-good" value="good">
+                                <label class="form-check-label" for="mirrors-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="mirrors" id="mirrors-fair" value="fair">
+                                <label class="form-check-label" for="mirrors-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="mirrors" id="mirrors-poor" value="poor">
+                                <label class="form-check-label" for="mirrors-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="mirrors-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="windows">النوافذ والزجاج</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="windows" id="windows-good" value="good">
+                                <label class="form-check-label" for="windows-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="windows" id="windows-fair" value="fair">
+                                <label class="form-check-label" for="windows-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="windows" id="windows-poor" value="poor">
+                                <label class="form-check-label" for="windows-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="windows-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="seat-belts">أحزمة الأمان</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="seat-belts" id="seat-belts-good" value="good">
+                                <label class="form-check-label" for="seat-belts-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="seat-belts" id="seat-belts-fair" value="fair">
+                                <label class="form-check-label" for="seat-belts-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="seat-belts" id="seat-belts-poor" value="poor">
+                                <label class="form-check-label" for="seat-belts-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="seat-belts-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="steering">نظام التوجيه (الدركسون)</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="steering" id="steering-good" value="good">
+                                <label class="form-check-label" for="steering-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="steering" id="steering-fair" value="fair">
+                                <label class="form-check-label" for="steering-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="steering" id="steering-poor" value="poor">
+                                <label class="form-check-label" for="steering-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="steering-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="body-damage">حالة جسم السيارة</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="body-damage" id="body-damage-good" value="good">
+                                <label class="form-check-label" for="body-damage-good">جيد</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="body-damage" id="body-damage-fair" value="fair">
+                                <label class="form-check-label" for="body-damage-fair">متوسط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="body-damage" id="body-damage-poor" value="poor">
+                                <label class="form-check-label" for="body-damage-poor">سيء</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="body-damage-notes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- أنظمة السلامة والطوارئ -->
+            <div class="checklist-section">
+                <h4 class="section-title">
+                    <i class="fas fa-shield-alt"></i> أنظمة السلامة والطوارئ
+                </h4>
+                
+                <div class="checklist-items">
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="fire-extinguisher">طفاية الحريق</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="fire-extinguisher" id="fire-extinguisher-good" value="good">
+                                <label class="form-check-label" for="fire-extinguisher-good">موجودة</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="fire-extinguisher" id="fire-extinguisher-poor" value="poor">
+                                <label class="form-check-label" for="fire-extinguisher-poor">غير موجودة</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="fire-extinguisher-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="first-aid">حقيبة الإسعافات الأولية</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="first-aid" id="first-aid-good" value="good">
+                                <label class="form-check-label" for="first-aid-good">موجودة</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="first-aid" id="first-aid-poor" value="poor">
+                                <label class="form-check-label" for="first-aid-poor">غير موجودة</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="first-aid-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="warning-triangle">مثلث التحذير</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="warning-triangle" id="warning-triangle-good" value="good">
+                                <label class="form-check-label" for="warning-triangle-good">موجود</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="warning-triangle" id="warning-triangle-poor" value="poor">
+                                <label class="form-check-label" for="warning-triangle-poor">غير موجود</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="warning-triangle-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <label class="form-check-label" for="jack-tools">رافعة وعدة الإطارات</label>
+                        <div class="form-checks">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="jack-tools" id="jack-tools-good" value="good">
+                                <label class="form-check-label" for="jack-tools-good">موجودة</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="jack-tools" id="jack-tools-poor" value="poor">
+                                <label class="form-check-label" for="jack-tools-poor">غير موجودة</label>
+                            </div>
+                        </div>
+                        <div class="checklist-notes">
+                            <input type="text" class="mobile-form-control" placeholder="ملاحظات" name="jack-tools-notes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ملاحظات وتوصيات عامة -->
+            <div class="checklist-section">
+                <h4 class="section-title">
+                    <i class="fas fa-clipboard"></i> ملاحظات وتوصيات عامة
+                </h4>
+                
+                <div class="checklist-items">
+                    <div class="checklist-item full-width">
+                        <label class="form-check-label">ملاحظات عامة</label>
+                        <div class="checklist-notes">
+                            <textarea class="mobile-form-control" name="general-notes" rows="4" placeholder="أدخل أي ملاحظات أو توصيات إضافية هنا..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="checklist-item full-width">
+                        <label class="form-check-label">توصيات الصيانة</label>
+                        <div class="checklist-notes">
+                            <textarea class="mobile-form-control" name="maintenance-recommendations" rows="4" placeholder="أدخل توصيات الصيانة هنا..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-section">
+                <button type="button" id="save-checklist" class="mobile-btn mobile-btn-primary btn-block">
+                    <i class="fas fa-save"></i> حفظ تشيك لست الفحص
+                </button>
+                <button type="button" id="print-checklist" class="mobile-btn mobile-btn-secondary btn-block mt-3">
+                    <i class="fas fa-print"></i> طباعة التقرير
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.checklist-section {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.checklist-section:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-left: 10px;
+}
+
+.checklist-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.checklist-item {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.checklist-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-check-label {
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.form-checks {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+}
+
+.form-check-input {
+    margin-left: 5px;
+}
+
+.checklist-notes {
+    margin-top: 8px;
+}
+
+.checklist-notes input, 
+.checklist-notes textarea {
+    width: 100%;
+}
+
+.submit-section {
+    margin-top: 25px;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .checklist-items {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة تشيك لست السيارة');
+    
+    // زر حفظ تشيك لست الفحص
+    document.getElementById('save-checklist').addEventListener('click', function() {
+        const vehicleSelect = document.getElementById('vehicle-select');
+        
+        if (!vehicleSelect.value) {
+            alert('الرجاء اختيار السيارة أولاً');
+            vehicleSelect.focus();
+            return;
+        }
+        
+        // هنا يمكن إضافة المزيد من التحقق من الإدخال وإرسال البيانات للخادم
+        alert('تم حفظ تشيك لست الفحص بنجاح!');
+    });
+    
+    // زر طباعة التقرير
+    document.getElementById('print-checklist').addEventListener('click', function() {
+        const vehicleSelect = document.getElementById('vehicle-select');
+        
+        if (!vehicleSelect.value) {
+            alert('الرجاء اختيار السيارة وإكمال الفحص أولاً');
+            vehicleSelect.focus();
+            return;
+        }
+        
+        // هنا يمكن إضافة منطق لتجهيز وطباعة التقرير
+        window.print();
+    });
+});
+</script>
+{% endblock %}

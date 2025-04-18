@@ -761,6 +761,23 @@ def vehicle_expenses():
     # يمكن تنفيذ هذه الوظيفة لاحقًا
     return render_template('mobile/vehicle_expenses.html')
 
+# تشيك لست السيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/checklist')
+@login_required
+def vehicle_checklist():
+    """تشيك لست فحص أجزاء السيارة للنسخة المحمولة"""
+    # قائمة السيارات للاختيار
+    vehicles_data = Vehicle.query.all()
+    vehicles = [
+        {
+            'id': vehicle.id,
+            'name': f"{vehicle.make} {vehicle.model}",
+            'plate_number': vehicle.plate_number,
+        } for vehicle in vehicles_data
+    ]
+    
+    return render_template('mobile/vehicle_checklist.html', vehicles=vehicles)
+
 # صفحة الرسوم والتكاليف - النسخة المحمولة
 @mobile_bp.route('/fees')
 @login_required
