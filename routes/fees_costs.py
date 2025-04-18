@@ -323,7 +323,7 @@ def export_to_excel():
             worksheet.write(row_num, 11, fee.insurance_fee, number_format)
             worksheet.write(row_num, 12, fee.social_insurance_fee, number_format)
             worksheet.write(row_num, 13, "نعم" if fee.transfer_sponsorship else "لا", cell_format)
-            worksheet.write(row_num, 14, fee.total_fees(), number_format)
+            worksheet.write(row_num, 14, fee.total_fees, number_format)
             
             # ترجمة حالة السداد
             payment_status_text = {
