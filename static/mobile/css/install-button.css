@@ -1,0 +1,42 @@
+/* أنماط زر تثبيت التطبيق */
+.mobile-install-button {
+  position: fixed;
+  bottom: calc(var(--footer-height) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 50px;
+  background: linear-gradient(45deg, #2962ff, #3687ff);
+  color: white;
+  font-weight: 500;
+  font-size: 1rem;
+  border: none;
+  box-shadow: 0 4px 10px rgba(41, 98, 255, 0.3);
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s;
+  animation: pulse 2s infinite;
+}
+
+.mobile-install-button i {
+  font-size: 1.25rem;
+}
+
+.mobile-install-button:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(41, 98, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(41, 98, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(41, 98, 255, 0);
+  }
+}
