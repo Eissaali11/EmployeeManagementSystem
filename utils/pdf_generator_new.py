@@ -38,6 +38,7 @@ class ArabicPDF(FPDF):
         
         # تحديد الألوان الرئيسية في النظام
         self.primary_color = (29, 161, 142)  # اللون الأخضر من شعار RASSCO
+        self.primary_color_light = (164, 225, 217)  # نسخة فاتحة من اللون الأخضر
         self.secondary_color = (100, 100, 100)  # لون رمادي
         self.table_header_color = (230, 230, 230)  # لون رمادي فاتح لرؤوس الجداول
         self.table_row_alt_color = (245, 245, 245)  # لون رمادي فاتح جداً للصفوف البديلة

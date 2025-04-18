@@ -89,7 +89,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         pdf.rect(10, y_start, 277, 10, style='F')
         
         # كتابة عناوين الأعمدة
-        pdf.set_font('Amiri', 'B', 10)
+        pdf.set_font('Arial', 'B', 10)  # استخدام خط Arial بدلاً من Amiri
         pdf.set_text_color(255, 255, 255)  # لون النص أبيض
         
         # كتابة رأس الجدول
@@ -156,7 +156,7 @@ def create_salary_report_pdf(salaries_data, month, year):
                 pdf.rect(10, y_pos, 277, 10, style='F')
                 
                 # كتابة عناوين الأعمدة
-                pdf.set_font('Amiri', 'B', 10)
+                pdf.set_font('Arial', 'B', 10)
                 pdf.set_text_color(255, 255, 255)
                 
                 x_pos = 10
@@ -174,7 +174,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         pdf.rect(10, y_pos, 277, 10, style='F')
         
         # كتابة بيانات المجموع
-        pdf.set_font('Amiri', 'B', 10)
+        pdf.set_font('Arial', 'B', 10)
         pdf.arabic_text(10 + col_widths[0]/2, y_pos + 5, "", 'C')
         pdf.arabic_text(10 + col_widths[0] + col_widths[1]/2, y_pos + 5, "المجموع", 'C')
         pdf.arabic_text(10 + col_widths[0] + col_widths[1] + col_widths[2]/2, y_pos + 5, "", 'C')
@@ -195,7 +195,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         
         # إضافة معلومات إحصائية
         y_pos += 15
-        pdf.set_font('Amiri', 'B', 10)
+        pdf.set_font('Arial', 'B', 10)
         pdf.set_text_color(*pdf.secondary_color)
         pdf.arabic_text(20, y_pos, f"إجمالي عدد الموظفين: {len(salaries_data)}", 'R')
         pdf.arabic_text(100, y_pos, f"إجمالي الرواتب: {total_net:,.2f}", 'R')
