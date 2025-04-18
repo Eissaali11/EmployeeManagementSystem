@@ -123,11 +123,11 @@ with app.app_context():
     app.register_blueprint(departments_bp, url_prefix='/departments')
     app.register_blueprint(attendance_bp, url_prefix='/attendance')
     app.register_blueprint(salaries_bp, url_prefix='/salaries')
+    app.register_blueprint(enhanced_reports_bp, url_prefix='/enhanced_reports')
     app.register_blueprint(documents_bp, url_prefix='/documents')
     app.register_blueprint(vehicles_bp, url_prefix='/vehicles')
     app.register_blueprint(fees_costs_bp, url_prefix='/fees-costs')
     app.register_blueprint(reports_bp, url_prefix='/reports')
-    app.register_blueprint(enhanced_reports_bp, url_prefix='/enhanced-reports')
     app.register_blueprint(api_bp)
     app.register_blueprint(auth_bp)
     

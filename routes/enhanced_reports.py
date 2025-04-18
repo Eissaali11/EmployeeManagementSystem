@@ -15,7 +15,7 @@ from utils.pdf_generator_fixed import generate_salary_report_pdf
 from utils.pdf_generator_new import generate_salary_notification_pdf, generate_vehicle_handover_pdf
 
 # إنشاء موجه المسارات
-enhanced_reports_bp = Blueprint('enhanced_reports', __name__, url_prefix='/enhanced_reports')
+enhanced_reports_bp = Blueprint('enhanced_reports', __name__)
 
 @enhanced_reports_bp.route('/')
 def index():
