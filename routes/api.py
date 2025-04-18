@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from models import Employee, Department, Document, GovernmentFee
+from models import Employee, Department, Document
 from app import db
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -77,74 +77,9 @@ def get_expiring_documents(days):
     
     return jsonify(documents_list)
 
-@api_bp.route('/fees/monthly/<int:year>')
-def get_monthly_fees(year):
-    """الحصول على إجمالي الرسوم الشهرية لسنة معينة"""
-    from sqlalchemy import func, extract
-    
-    monthly_data = db.session.query(
-        extract('month', GovernmentFee.fee_date).label('month'),
-        func.sum(GovernmentFee.amount).label('total_amount')
-    ).filter(extract('year', GovernmentFee.fee_date) == year)\
-     .group_by('month')\
-     .order_by('month')\
-     .all()
-    
-    # تهيئة مصفوفة لجميع الشهور
-    months_data = [0] * 12
-    
-    # ملء البيانات المتوفرة
-    for month, amount in monthly_data:
-        months_data[int(month)-1] = float(amount)
-    
-    return jsonify({
-        'year': year,
-        'months': ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],
-        'data': months_data
-    })
 
-@api_bp.route('/fees/summary/<int:year>')
-def get_fees_summary(year):
-    """الحصول على ملخص الرسوم السنوية حسب النوع"""
-    from sqlalchemy import func, extract
-    
-    # استخراج مجموع الرسوم حسب النوع لسنة معينة
-    fee_types_data = db.session.query(
-        GovernmentFee.fee_type,
-        func.sum(GovernmentFee.amount).label('total_amount')
-    ).filter(extract('year', GovernmentFee.fee_date) == year)\
-     .group_by(GovernmentFee.fee_type)\
-     .all()
-    
-    # تنظيم البيانات في قاموس
-    fee_summary = {
-        'labor_office': 0,
-        'passport': 0,
-        'insurance': 0,
-        'social_insurance': 0,
-        'other': 0
-    }
-    
-    for fee_type, amount in fee_types_data:
-        if fee_type in fee_summary:
-            fee_summary[fee_type] = float(amount)
-        else:
-            fee_summary['other'] += float(amount)
-    
-    # حساب الإجمالي
-    total_fees = sum(fee_summary.values())
-    
-    # حساب المتوسط الشهري
-    monthly_average = {key: value / 12 for key, value in fee_summary.items()}
-    monthly_total = total_fees / 12
-    
-    return jsonify({
-        'year': year,
-        'annual': fee_summary,
-        'annual_total': total_fees,
-        'monthly': monthly_average,
-        'monthly_total': monthly_total
-    })
+
+
 
 @api_bp.route('/employees/nationality/stats')
 def get_nationality_stats():
