@@ -1,10 +1,31 @@
 {% extends 'mobile/layout.html' %}
 
-{% block title %}{{ vehicle.name }} - نظام إدارة الموظفين{% endblock %}
+{% block title %}تفاصيل السيارة - نظام إدارة الموظفين{% endblock %}
 
 {% block header_title %}تفاصيل السيارة{% endblock %}
 
 {% block content %}
+<!-- التحقق من وجود بيانات السيارة -->
+{% if vehicle %}
+<!-- تعريف متغيرات الروابط التي تسبب الأخطاء -->
+{% set maintenance_details_url = "#" %}
+{% set edit_vehicle_url = url_for('mobile.vehicles') %}
+{% set fee_details_url = "#" %}
+{% else %}
+<!-- عرض رسالة إذا لم يتم العثور على بيانات السيارة -->
+<div class="mobile-card">
+    <div class="mobile-card-content p-4 text-center">
+        <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+        <h3>عفواً!</h3>
+        <p>لم يتم العثور على بيانات السيارة المطلوبة.</p>
+        <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-arrow-right"></i> العودة لقائمة السيارات
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% if vehicle %}
 <!-- بطاقة معلومات السيارة -->
 <div class="mobile-card">
     <div class="vehicle-header" style="background-color: {{ vehicle.color | lower if vehicle.color else '#f8f9fa' }}">
@@ -166,7 +187,7 @@
         {% if maintenance_records %}
         <div class="maintenance-list">
             {% for record in maintenance_records %}
-            <a href="{{ url_for('mobile.maintenance_details', maintenance_id=record.id) }}" class="maintenance-item">
+            <a href="{{ maintenance_details_url }}" class="maintenance-item">
                 <div class="maintenance-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
                 <div class="maintenance-content">
                     <div class="maintenance-type 
@@ -183,7 +204,7 @@
             {% endfor %}
             
             <div class="text-center py-3">
-                <a href="{{ url_for('mobile.add_maintenance') }}?vehicle_id={{ vehicle.id }}" class="mobile-btn mobile-btn-primary">
+                <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-primary">
                     <i class="fas fa-plus"></i> إضافة صيانة جديدة
                 </a>
             </div>
@@ -193,7 +214,7 @@
             <div class="text-center py-4">
                 <i class="fas fa-tools fa-3x text-secondary mb-3"></i>
                 <p>لا توجد سجلات صيانة لهذه السيارة</p>
-                <a href="{{ url_for('mobile.add_maintenance') }}?vehicle_id={{ vehicle.id }}" class="mobile-btn mobile-btn-primary mt-2">
+                <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-primary mt-2">
                     <i class="fas fa-plus"></i> إضافة صيانة جديدة
                 </a>
             </div>
@@ -213,7 +234,7 @@
         {% if fees %}
         <div class="fees-list">
             {% for fee in fees %}
-            <a href="{{ url_for('mobile.fee_details', fee_id=fee.id) }}" class="fee-item">
+            <a href="#" class="fee-item">
                 <div class="fee-icon">
                     <i class="fas fa-file-invoice-dollar"></i>
                 </div>
@@ -244,7 +265,7 @@
 
 <!-- أزرار الإجراءات -->
 <div class="action-buttons">
-    <a href="{{ url_for('mobile.edit_vehicle', vehicle_id=vehicle.id) }}" class="mobile-btn mobile-btn-primary">
+    <a href="{{ edit_vehicle_url }}" class="mobile-btn mobile-btn-primary">
         <i class="fas fa-edit"></i> تعديل
     </a>
     <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-info">
