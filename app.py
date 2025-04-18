@@ -114,6 +114,7 @@ with app.app_context():
     from routes.fees_costs import fees_costs_bp
     from routes.api import api_bp
     from routes.enhanced_reports import enhanced_reports_bp
+    from routes.mobile import mobile_bp
     
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
@@ -130,6 +131,7 @@ with app.app_context():
     app.register_blueprint(reports_bp, url_prefix='/reports')
     app.register_blueprint(api_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(mobile_bp, url_prefix='/mobile')
     
     # Create database tables if they don't exist
     logger.info("Creating database tables...")

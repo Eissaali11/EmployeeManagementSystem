@@ -1,0 +1,216 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الموظفون - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الموظفون{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="إضافة" onclick="location.href='{{ url_for('mobile.add_employee') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.employees') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <input type="text" name="search" class="mobile-form-control" placeholder="البحث عن اسم، رقم موظف..." value="{{ request.args.get('search', '') }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <select name="department_id" class="mobile-form-select">
+                    <option value="">جميع الأقسام</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if request.args.get('department_id')|int == department.id %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.employees') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- قائمة الموظفين -->
+{% if employees %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-users"></i> قائمة الموظفين ({{ employees|length }})
+    </div>
+    
+    <div class="mobile-card-content">
+        {% for employee in employees %}
+        <div class="mobile-employee-card" onclick="location.href='{{ url_for('mobile.employee_details', employee_id=employee.id) }}'">
+            <div class="mobile-employee-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="mobile-employee-info">
+                <div class="mobile-employee-name">{{ employee.name }}</div>
+                <div class="mobile-employee-position">{{ employee.job_title }}</div>
+                <div class="mobile-employee-details">
+                    <span><i class="fas fa-id-card"></i> {{ employee.employee_id }}</span>
+                    <span><i class="fas fa-building"></i> {{ employee.department.name if employee.department else 'غير محدد' }}</span>
+                </div>
+            </div>
+            <div class="mobile-employee-action">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- ترقيم الصفحات -->
+    {% if pagination and pagination.pages > 1 %}
+    <div class="mobile-pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('mobile.employees', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+        
+        {% for page in pagination.iter_pages() %}
+            {% if page %}
+                {% if page != pagination.page %}
+                <a href="{{ url_for('mobile.employees', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                {% else %}
+                <span class="mobile-pagination-item active">{{ page }}</span>
+                {% endif %}
+            {% else %}
+                <span class="mobile-pagination-item">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+        <a href="{{ url_for('mobile.employees', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-users fa-3x text-secondary mb-3"></i>
+        <h5>لا يوجد موظفين</h5>
+        <p class="text-secondary">لا توجد بيانات موظفين متطابقة مع معايير البحث</p>
+        <a href="{{ url_for('mobile.add_employee') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-plus"></i> إضافة موظف جديد
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-employee-card {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.mobile-employee-card:last-child {
+    border-bottom: none;
+}
+
+.mobile-employee-card:hover {
+    background-color: #f5f5f5;
+}
+
+.mobile-employee-avatar {
+    width: 50px;
+    height: 50px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+}
+
+.mobile-employee-avatar i {
+    font-size: 1.5rem;
+    color: #757575;
+}
+
+.mobile-employee-info {
+    flex: 1;
+}
+
+.mobile-employee-name {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.mobile-employee-position {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-employee-details {
+    display: flex;
+    gap: 15px;
+    font-size: 0.8rem;
+    color: #757575;
+}
+
+.mobile-employee-details i {
+    margin-left: 5px;
+}
+
+.mobile-employee-action {
+    color: #bbb;
+}
+
+.mobile-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.mobile-pagination-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35px;
+    height: 35px;
+    margin: 0 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #757575;
+}
+
+.mobile-pagination-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة الموظفين');
+});
+</script>
+{% endblock %}

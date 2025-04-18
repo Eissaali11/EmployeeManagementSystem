@@ -1,0 +1,152 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الرئيسية - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الرئيسية{% endblock %}
+
+{% block content %}
+<!-- إحصائيات سريعة -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-line"></i> لوحة الإحصائيات
+    </div>
+    
+    <div class="row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+        <div class="mobile-stat-card primary" style="flex: 1">
+            <div class="mobile-stat-number">{{ stats.employees_count }}</div>
+            <div class="mobile-stat-title">الموظفون</div>
+        </div>
+        
+        <div class="mobile-stat-card success" style="flex: 1">
+            <div class="mobile-stat-number">{{ stats.departments_count }}</div>
+            <div class="mobile-stat-title">الأقسام</div>
+        </div>
+        
+        <div class="mobile-stat-card warning" style="flex: 1">
+            <div class="mobile-stat-number">{{ stats.documents_count }}</div>
+            <div class="mobile-stat-title">الوثائق</div>
+        </div>
+        
+        <div class="mobile-stat-card danger" style="flex: 1">
+            <div class="mobile-stat-number">{{ stats.vehicles_count }}</div>
+            <div class="mobile-stat-title">المركبات</div>
+        </div>
+    </div>
+</div>
+
+<!-- روابط سريعة -->
+<div class="mobile-quick-links">
+    <a href="{{ url_for('mobile.employees') }}" class="mobile-quick-link">
+        <i class="fas fa-users"></i>
+        <span>الموظفون</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.attendance') }}" class="mobile-quick-link">
+        <i class="fas fa-calendar-check"></i>
+        <span>الحضور والغياب</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.departments') }}" class="mobile-quick-link">
+        <i class="fas fa-building"></i>
+        <span>الأقسام</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.salaries') }}" class="mobile-quick-link">
+        <i class="fas fa-money-bill-wave"></i>
+        <span>الرواتب</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.documents') }}" class="mobile-quick-link">
+        <i class="fas fa-file-alt"></i>
+        <span>الوثائق</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.reports') }}" class="mobile-quick-link">
+        <i class="fas fa-chart-bar"></i>
+        <span>التقارير</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.vehicles') }}" class="mobile-quick-link">
+        <i class="fas fa-car"></i>
+        <span>المركبات</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.fees') }}" class="mobile-quick-link">
+        <i class="fas fa-dollar-sign"></i>
+        <span>الرسوم</span>
+    </a>
+    
+    <a href="{{ url_for('mobile.settings') }}" class="mobile-quick-link">
+        <i class="fas fa-cog"></i>
+        <span>الإعدادات</span>
+    </a>
+</div>
+
+<!-- الوثائق المنتهية قريباً -->
+{% if expiring_documents %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-exclamation-triangle"></i> وثائق منتهية قريباً
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="mobile-table">
+            {% for doc in expiring_documents %}
+            <div class="mobile-table-row">
+                <div class="mobile-table-cell">{{ doc.name }}</div>
+                <div class="mobile-table-cell">{{ doc.employee.name }}</div>
+                <div class="mobile-table-cell">{{ doc.expiry_date.strftime('%Y-%m-%d') }}</div>
+                <div class="mobile-table-cell">
+                    {% if doc.days_remaining == 0 %}
+                    <span class="badge bg-danger">منتهية اليوم</span>
+                    {% elif doc.days_remaining < 0 %}
+                    <span class="badge bg-danger">منتهية منذ {{ -doc.days_remaining }} يوم</span>
+                    {% else %}
+                    <span class="badge bg-warning">{{ doc.days_remaining }} يوم</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- الغياب اليوم -->
+{% if absences %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-user-times"></i> الغياب اليوم
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="mobile-table">
+            {% for absence in absences %}
+            <div class="mobile-table-row">
+                <div class="mobile-table-cell">{{ absence.employee.name }}</div>
+                <div class="mobile-table-cell">{{ absence.employee.department.name }}</div>
+                <div class="mobile-table-cell">
+                    {% if absence.reason %}
+                    {{ absence.reason }}
+                    {% else %}
+                    <span class="text-secondary">غير محدد</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- تذكير: نهاية المحتوى -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // أي سكريبت خاص بصفحة الرئيسية
+    console.log('تم تحميل صفحة الرئيسية المحمولة');
+});
+</script>
+{% endblock %}
