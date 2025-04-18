@@ -347,8 +347,55 @@ def document_details(document_id):
 @login_required
 def reports():
     """صفحة التقارير للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/reports.html')
+    # قائمة التقارير الأخيرة (يمكن جلبها من قاعدة البيانات لاحقًا)
+    recent_reports = []
+    return render_template('mobile/reports.html', recent_reports=recent_reports)
+
+# تقرير الموظفين - النسخة المحمولة
+@mobile_bp.route('/reports/employees')
+@login_required
+def report_employees():
+    """تقرير الموظفين للنسخة المحمولة"""
+    departments = Department.query.all()
+    employees = Employee.query.all()
+    return render_template('mobile/report_employees.html', 
+                         departments=departments,
+                         employees=employees)
+
+# تقرير الحضور - النسخة المحمولة
+@mobile_bp.route('/reports/attendance')
+@login_required
+def report_attendance():
+    """تقرير الحضور للنسخة المحمولة"""
+    return render_template('mobile/report_attendance.html')
+
+# تقرير الرواتب - النسخة المحمولة
+@mobile_bp.route('/reports/salaries')
+@login_required
+def report_salaries():
+    """تقرير الرواتب للنسخة المحمولة"""
+    return render_template('mobile/report_salaries.html')
+
+# تقرير الوثائق - النسخة المحمولة
+@mobile_bp.route('/reports/documents')
+@login_required
+def report_documents():
+    """تقرير الوثائق للنسخة المحمولة"""
+    return render_template('mobile/report_documents.html')
+
+# تقرير السيارات - النسخة المحمولة 
+@mobile_bp.route('/reports/vehicles')
+@login_required
+def report_vehicles():
+    """تقرير السيارات للنسخة المحمولة"""
+    return render_template('mobile/report_vehicles.html')
+
+# تقرير الرسوم - النسخة المحمولة
+@mobile_bp.route('/reports/fees')
+@login_required
+def report_fees():
+    """تقرير الرسوم للنسخة المحمولة"""
+    return render_template('mobile/report_fees.html')
 
 # صفحة السيارات - النسخة المحمولة
 @mobile_bp.route('/vehicles')

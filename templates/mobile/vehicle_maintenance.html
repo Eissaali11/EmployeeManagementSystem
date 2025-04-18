@@ -1,0 +1,409 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}سجل الصيانة - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}سجل صيانة السيارات{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="إضافة" onclick="location.href='{{ url_for('mobile.add_maintenance') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.vehicle_maintenance') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>السيارة</label>
+                <select name="vehicle_id" class="mobile-form-select">
+                    <option value="">جميع السيارات</option>
+                    {% for vehicle in vehicles %}
+                    <option value="{{ vehicle.id }}" {% if request.args.get('vehicle_id') == vehicle.id|string %}selected{% endif %}>
+                        {{ vehicle.name }} - {{ vehicle.plate_number }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>نوع الصيانة</label>
+                <select name="maintenance_type" class="mobile-form-select">
+                    <option value="">جميع الأنواع</option>
+                    <option value="دورية" {% if request.args.get('maintenance_type') == 'دورية' %}selected{% endif %}>دورية</option>
+                    <option value="طارئة" {% if request.args.get('maintenance_type') == 'طارئة' %}selected{% endif %}>طارئة</option>
+                    <option value="إصلاح" {% if request.args.get('maintenance_type') == 'إصلاح' %}selected{% endif %}>إصلاح</option>
+                    <option value="فحص" {% if request.args.get('maintenance_type') == 'فحص' %}selected{% endif %}>فحص</option>
+                    <option value="أخرى" {% if request.args.get('maintenance_type') == 'أخرى' %}selected{% endif %}>أخرى</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>من تاريخ</label>
+                    <input type="date" name="date_from" class="mobile-form-control" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>إلى تاريخ</label>
+                    <input type="date" name="date_to" class="mobile-form-control" value="{{ request.args.get('date_to', '') }}">
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- سجل الصيانة -->
+{% if maintenance_records %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-tools"></i> سجل الصيانة
+        <div class="mobile-card-subtitle">{{ maintenance_records|length }} عملية صيانة</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for record in maintenance_records %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.maintenance_details', maintenance_id=record.id) }}'">
+                <div class="mobile-list-item-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ record.vehicle.name }} - {{ record.vehicle.plate_number }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        <span class="badge {% if record.maintenance_type == 'دورية' %}bg-info
+                                         {% elif record.maintenance_type == 'طارئة' %}bg-warning
+                                         {% elif record.maintenance_type == 'إصلاح' %}bg-danger
+                                         {% else %}bg-secondary{% endif %}">
+                            {{ record.maintenance_type }}
+                        </span>
+                        {{ record.description }}
+                    </div>
+                    <div class="mobile-list-item-info">
+                        <span><i class="far fa-calendar-alt"></i> {{ record.date.strftime('%Y-%m-%d') }}</span>
+                        <span class="ms-3"><i class="far fa-money-bill-alt"></i> {{ '{:,.2f}'.format(record.cost) }}</span>
+                    </div>
+                </div>
+                <div class="mobile-list-item-action">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- ترقيم الصفحات -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mobile-pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('mobile.vehicle_maintenance', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+            
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                    <a href="{{ url_for('mobile.vehicle_maintenance', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                    {% else %}
+                    <span class="mobile-pagination-item active">{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="mobile-pagination-item">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('mobile.vehicle_maintenance', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-tools fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد سجلات صيانة</h5>
+        <p class="text-secondary">لم يتم العثور على سجلات صيانة متطابقة مع معايير البحث</p>
+        <a href="{{ url_for('mobile.add_maintenance') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-plus"></i> إضافة سجل صيانة جديد
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- ملخص التكاليف -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-bar"></i> ملخص تكاليف الصيانة
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="maintenance-summary">
+            <div class="summary-item total">
+                <div class="summary-value">{{ '{:,.2f}'.format(cost_summary.total) }}</div>
+                <div class="summary-label">التكلفة الإجمالية</div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-value">{{ '{:,.2f}'.format(cost_summary.periodic) }}</div>
+                <div class="summary-label">صيانة دورية</div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-value">{{ '{:,.2f}'.format(cost_summary.emergency) }}</div>
+                <div class="summary-label">صيانة طارئة</div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-value">{{ '{:,.2f}'.format(cost_summary.repair) }}</div>
+                <div class="summary-label">إصلاحات</div>
+            </div>
+            
+            <div class="summary-item">
+                <div class="summary-value">{{ '{:,.2f}'.format(cost_summary.other) }}</div>
+                <div class="summary-label">أخرى</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="maintenanceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.mobile-form-row .mobile-form-group {
+    flex: 1;
+}
+
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+    color: #666;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #757575;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-action {
+    color: #ccc;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+}
+
+.bg-info {
+    background-color: #0dcaf0;
+    color: #fff;
+}
+
+.bg-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.bg-danger {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.bg-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.mobile-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+
+.mobile-pagination-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35px;
+    height: 35px;
+    margin: 0 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #757575;
+}
+
+.mobile-pagination-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.maintenance-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.summary-item.total {
+    grid-column: span 2;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.summary-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+    color: #757575;
+}
+
+.chart-container {
+    height: 200px;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // رسم بياني لتكاليف الصيانة
+    const ctx = document.getElementById('maintenanceChart').getContext('2d');
+    
+    const maintenanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['صيانة دورية', 'صيانة طارئة', 'إصلاحات', 'أخرى'],
+            datasets: [{
+                label: 'تكلفة الصيانة',
+                data: [
+                    {{ cost_summary.periodic }},
+                    {{ cost_summary.emergency }},
+                    {{ cost_summary.repair }},
+                    {{ cost_summary.other }}
+                ],
+                backgroundColor: [
+                    'rgba(13, 202, 240, 0.7)',    // صيانة دورية
+                    'rgba(255, 193, 7, 0.7)',     // صيانة طارئة
+                    'rgba(220, 53, 69, 0.7)',     // إصلاحات
+                    'rgba(108, 117, 125, 0.7)'    // أخرى
+                ],
+                borderColor: [
+                    'rgba(13, 202, 240, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)',
+                    'rgba(108, 117, 125, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
