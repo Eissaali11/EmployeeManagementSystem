@@ -110,6 +110,57 @@
     </div>
 </div>
 
+<!-- تسجيل حضور الجميع -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-users"></i> تسجيل حضور الجميع
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.add_attendance') }}" method="POST" class="mobile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="all_employees" value="true">
+            
+            <div class="mobile-form-group">
+                <label>التاريخ*</label>
+                <input type="date" name="date" class="mobile-form-control" required 
+                       value="{{ current_date.strftime('%Y-%m-%d') }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الحالة*</label>
+                <select name="status" class="mobile-form-select" required>
+                    <option value="">اختر الحالة</option>
+                    <option value="حاضر">حاضر</option>
+                    <option value="غائب">غائب</option>
+                    <option value="إجازة">إجازة</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>وقت الحضور</label>
+                    <input type="time" name="check_in" class="mobile-form-control">
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>وقت الإنصراف</label>
+                    <input type="time" name="check_out" class="mobile-form-control">
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>ملاحظات</label>
+                <textarea name="notes" class="mobile-form-control" rows="2" placeholder="ملاحظات تنطبق على الجميع"></textarea>
+            </div>
+            
+            <button type="submit" class="mobile-btn mobile-btn-primary w-100">
+                <i class="fas fa-users-check"></i> تسجيل حضور الجميع
+            </button>
+        </form>
+    </div>
+</div>
+
 <style>
 .mobile-form-row {
     display: flex;
