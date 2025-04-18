@@ -265,8 +265,8 @@ def add_attendance():
         else:
             flash('يرجى اختيار موظف صالح', 'warning')
     
-    # المتغيرات المطلوبة لعرض الصفحة
-    return render_template('mobile/add_attendance.html',
+    # المتغيرات المطلوبة لعرض الصفحة - استخدام الصفحة الجديدة لتجنب الخطأ
+    return render_template('mobile/add_attendance_new.html',
                           employees=employees,
                           current_date=current_date)
 
