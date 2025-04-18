@@ -77,15 +77,15 @@
     <div class="mobile-card-content">
         <div class="fees-summary">
             <div class="fee-stat pending">
-                <div class="fee-amount">{{ '{:,.2f}'.format(fees_summary.pending_fees or 0) }}</div>
+                <div class="fee-amount" style="direction: ltr; text-align: center; font-family: 'Roboto', 'Tajawal', sans-serif;">{{ '{:,.2f}'.format(fees_summary.pending_fees or 0) }}</div>
                 <div class="fee-label">رسوم مستحقة</div>
             </div>
             <div class="fee-stat paid">
-                <div class="fee-amount">{{ '{:,.2f}'.format(fees_summary.paid_fees or 0) }}</div>
+                <div class="fee-amount" style="direction: ltr; text-align: center; font-family: 'Roboto', 'Tajawal', sans-serif;">{{ '{:,.2f}'.format(fees_summary.paid_fees or 0) }}</div>
                 <div class="fee-label">رسوم مدفوعة</div>
             </div>
             <div class="fee-stat total">
-                <div class="fee-amount">{{ '{:,.2f}'.format(fees_summary.total_fees or 0) }}</div>
+                <div class="fee-amount" style="direction: ltr; text-align: center; font-family: 'Roboto', 'Tajawal', sans-serif;">{{ '{:,.2f}'.format(fees_summary.total_fees or 0) }}</div>
                 <div class="fee-label">إجمالي الرسوم</div>
             </div>
         </div>
@@ -126,8 +126,8 @@
                         <span>تاريخ الاستحقاق: {{ fee.due_date.strftime('%Y-%m-%d') if fee.due_date else 'غير محدد' }}</span>
                     </div>
                 </div>
-                <div class="mobile-list-item-amount">
-                    {{ '{:,.2f}'.format(fee.total_fees) }}
+                <div class="mobile-list-item-amount" style="direction: ltr; text-align: left;">
+                    {{ '{:,.2f}'.format(fee.total_fees|default(0)) }}
                 </div>
             </div>
             {% endfor %}

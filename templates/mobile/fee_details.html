@@ -107,16 +107,16 @@
     <!-- أزرار الإجراءات -->
     <div class="mobile-action-buttons">
         <a href="{{ url_for('mobile.fees') }}" class="mobile-btn mobile-btn-outline-secondary">
-            <i class="fas fa-arrow-right ml-1"></i> العودة للقائمة
+            <i class="fas fa-arrow-right me-2"></i> العودة للقائمة
         </a>
         
         <a href="#" class="mobile-btn mobile-btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editFeeModal">
-            <i class="fas fa-edit ml-1"></i> تعديل
+            <i class="fas fa-edit me-2"></i> تعديل
         </a>
         
         {% if fee.payment_status != 'paid' %}
         <a href="#" class="mobile-btn mobile-btn-primary" data-bs-toggle="modal" data-bs-target="#markAsPaidModal">
-            <i class="fas fa-check-circle ml-1"></i> تسجيل كمدفوع
+            <i class="fas fa-check-circle me-2"></i> تسجيل كمدفوع
         </a>
         {% endif %}
     </div>
@@ -423,7 +423,7 @@
 }
 
 .mobile-btn i {
-    margin-left: 8px;
+    margin-right: 8px;
 }
 
 .mobile-btn-primary {
