@@ -158,6 +158,40 @@ class RenewalFee(db.Model):
     
     def __repr__(self):
         return f'<RenewalFee {self.fee_type} for document #{self.document_id}>'
+        
+class FeesCost(db.Model):
+    """تكاليف الرسوم للوثائق والمستندات"""
+    id = db.Column(db.Integer, primary_key=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id', ondelete='CASCADE'), nullable=False)
+    document_type = db.Column(db.String(50), nullable=False)  # نوع الوثيقة: national_id, residence, passport, etc.
+    
+    # تكاليف مختلف الرسوم
+    passport_fee = db.Column(db.Float, default=0.0)  # رسوم الجوازات
+    labor_office_fee = db.Column(db.Float, default=0.0)  # رسوم مكتب العمل
+    insurance_fee = db.Column(db.Float, default=0.0)  # رسوم التأمين
+    social_insurance_fee = db.Column(db.Float, default=0.0)  # رسوم التأمينات الاجتماعية
+    transfer_sponsorship = db.Column(db.Boolean, default=False)  # هل يتطلب نقل كفالة
+    
+    # معلومات التواريخ والدفع
+    due_date = db.Column(db.Date, nullable=False)  # تاريخ استحقاق الرسوم
+    payment_status = db.Column(db.String(20), default='pending')  # حالة السداد: pending, paid, overdue
+    payment_date = db.Column(db.Date, nullable=True)  # تاريخ السداد
+    
+    # معلومات إضافية
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    document = db.relationship('Document', backref=db.backref('fees_costs', cascade='all, delete-orphan'))
+    
+    def __repr__(self):
+        return f'<FeesCost for document #{self.document_id}, type: {self.document_type}>'
+    
+    @property
+    def total_fees(self):
+        """إجمالي تكاليف جميع الرسوم"""
+        return self.passport_fee + self.labor_office_fee + self.insurance_fee + self.social_insurance_fee
 
 class SystemAudit(db.Model):
     """Audit trail for significant system actions"""

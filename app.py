@@ -111,6 +111,7 @@ with app.app_context():
     from routes.reports import reports_bp
     from routes.auth import auth_bp
     from routes.vehicles import vehicles_bp
+    from routes.fees_costs import fees_costs_bp
     from routes.api import api_bp
     
     # تعطيل حماية CSRF لطرق معينة
@@ -123,6 +124,7 @@ with app.app_context():
     app.register_blueprint(salaries_bp, url_prefix='/salaries')
     app.register_blueprint(documents_bp, url_prefix='/documents')
     app.register_blueprint(vehicles_bp, url_prefix='/vehicles')
+    app.register_blueprint(fees_costs_bp, url_prefix='/fees-costs')
     app.register_blueprint(reports_bp, url_prefix='/reports')
     app.register_blueprint(api_bp)
     app.register_blueprint(auth_bp)

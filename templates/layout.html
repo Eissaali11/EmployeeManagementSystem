@@ -80,7 +80,12 @@
                             </a>
                         </li>
                         
-
+                        <li class="nav-item mb-1">
+                            <a href="{{ url_for('fees_costs.index') }}" class="nav-link nav-link-custom {% if '/fees-costs' in request.path %}active{% endif %}">
+                                <i class="fas fa-money-check-alt me-2"></i>
+                                <span>تكاليف الرسوم</span>
+                            </a>
+                        </li>
 
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('vehicles.index') }}" class="nav-link nav-link-custom {% if '/vehicles' in request.path %}active{% endif %}">
@@ -139,7 +144,8 @@
                                 إدارة الرواتب
                             {% elif '/documents' in request.path %}
                                 إدارة الوثائق
-
+                            {% elif '/fees-costs' in request.path %}
+                                تكاليف الرسوم
                             {% elif '/vehicles' in request.path %}
                                 نظام إدارة السيارات
                             {% elif '/reports' in request.path %}
