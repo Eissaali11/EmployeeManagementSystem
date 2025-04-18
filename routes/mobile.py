@@ -674,14 +674,8 @@ def vehicle_details(vehicle_id):
         'color': vehicle.color,
         'status': vehicle.status,
         'status_display': vehicle.status,  # يمكن إضافة معالجة للترجمة
-        'purchase_date': vehicle.purchase_date,
-        'purchase_price': vehicle.purchase_price,
-        'insurance_expiry': vehicle.insurance_expiry_date if hasattr(vehicle, 'insurance_expiry_date') else None,
-        'license_expiry': vehicle.license_expiry_date if hasattr(vehicle, 'license_expiry_date') else None,
-        'odometer': vehicle.odometer,
-        'fuel_type': vehicle.fuel_type if hasattr(vehicle, 'fuel_type') else '',
-        'driver': vehicle.driver if hasattr(vehicle, 'driver') else '',
-        'notes': vehicle.notes
+        # التحقق من وجود الحقول قبل إضافتها لتفادي أخطاء AttributeError
+        'notes': vehicle.notes if hasattr(vehicle, 'notes') else ''
     }
     
     return render_template('mobile/vehicle_details.html',
