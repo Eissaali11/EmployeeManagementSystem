@@ -118,7 +118,7 @@
                 <div class="mobile-list-item-content">
                     <div class="mobile-list-item-title">{{ salary.employee.name }}</div>
                     <div class="mobile-list-item-subtitle">
-                        {{ salary.month }}/{{ salary.year }}
+                        {{ salary.date.strftime('%Y/%m/%d') }}
                         {% if salary.is_paid %}
                         <span class="status-badge paid">تم الدفع</span>
                         {% else %}

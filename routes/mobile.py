@@ -4,6 +4,7 @@
 """
 
 from datetime import datetime, timedelta
+from sqlalchemy import extract
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
@@ -367,15 +368,17 @@ def salaries():
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
     
-    # بيانات مؤقتة - يمكن استبدالها بالبيانات الفعلية من قاعدة البيانات
+    # جلب بيانات الموظفين
     employees = Employee.query.order_by(Employee.name).all()
-    salaries = []
     
     # إحصائيات الرواتب
     current_year = datetime.now().year
     current_month = datetime.now().month
     selected_year = request.args.get('year', current_year, type=int)
     selected_month = request.args.get('month', current_month, type=int)
+    
+    # فلترة الموظف
+    employee_id = request.args.get('employee_id', None, type=int)
     
     # تحويل الشهر إلى اسمه بالعربية
     month_names = {
@@ -385,21 +388,40 @@ def salaries():
     }
     selected_month_name = month_names.get(selected_month, '')
     
+    # قاعدة الاستعلام الأساسية للرواتب
+    query = Salary.query.filter(
+        extract('year', Salary.date) == selected_year,
+        extract('month', Salary.date) == selected_month
+    )
+    
+    # تطبيق فلتر الموظف إذا تم تحديده
+    if employee_id:
+        query = query.filter(Salary.employee_id == employee_id)
+    
+    # تنفيذ الاستعلام والحصول على نتائج مع التصفح
+    paginator = query.order_by(Salary.date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    salaries = paginator.items
+    
+    # حساب إجماليات الرواتب
+    total_salaries = query.all()
     salary_stats = {
-        'total_basic': 0,
-        'total_allowances': 0,
-        'total_deductions': 0,
-        'total_net': 0
+        'total_basic': sum(salary.basic_salary for salary in total_salaries),
+        'total_allowances': sum(salary.allowances for salary in total_salaries),
+        'total_deductions': sum(salary.deductions for salary in total_salaries),
+        'total_net': sum(salary.net_salary for salary in total_salaries)
     }
     
     return render_template('mobile/salaries.html',
                           employees=employees,
                           salaries=salaries,
                           current_year=current_year,
+                          current_month=current_month,
                           selected_year=selected_year,
-                          selected_month=selected_month_name,
+                          selected_month=selected_month,
+                          selected_month_name=selected_month_name,
+                          employee_id=employee_id,
                           salary_stats=salary_stats,
-                          pagination=None)
+                          pagination=paginator)
 
 # إضافة راتب جديد - النسخة المحمولة
 @mobile_bp.route('/salaries/add', methods=['GET', 'POST'])
@@ -687,14 +709,66 @@ def vehicle_expenses():
 @login_required
 def fees():
     """صفحة الرسوم والتكاليف للنسخة المحمولة"""
-    # بيانات مؤقتة
-    fees = []
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # فلترة حسب نوع الوثيقة
+    document_type = request.args.get('document_type', '')
+    # فلترة حسب حالة الرسوم
+    status = request.args.get('status', '')
+    # فلترة حسب التاريخ
+    from_date = request.args.get('from_date', '')
+    to_date = request.args.get('to_date', '')
+    
+    # بناء استعلام قاعدة البيانات
+    query = Fee.query
+    
+    # تطبيق الفلاتر إذا تم تحديدها
+    if document_type:
+        query = query.filter(Fee.document_type == document_type)
+    
+    if status:
+        query = query.filter(Fee.status == status)
+    
+    if from_date:
+        try:
+            from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
+            query = query.filter(Fee.due_date >= from_date_obj)
+        except ValueError:
+            pass
+    
+    if to_date:
+        try:
+            to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
+            query = query.filter(Fee.due_date <= to_date_obj)
+        except ValueError:
+            pass
+    
+    # تنفيذ الاستعلام مع الترتيب والتصفح
+    paginator = query.order_by(Fee.due_date.asc()).paginate(page=page, per_page=per_page, error_out=False)
+    fees = paginator.items
+    
+    # الحصول على أنواع الوثائق المتاحة
+    document_types = db.session.query(Fee.document_type).distinct().all()
+    document_types = [d[0] for d in document_types if d[0]]
+    
+    # حساب إجماليات الرسوم
+    all_fees = query.all()
     fees_summary = {
-        'pending_fees': 0,
-        'paid_fees': 0,
-        'total_fees': 0
+        'pending_fees': sum(fee.amount for fee in all_fees if fee.status == 'pending'),
+        'paid_fees': sum(fee.amount for fee in all_fees if fee.status == 'paid'),
+        'total_fees': sum(fee.amount for fee in all_fees)
     }
-    return render_template('mobile/fees.html', fees=fees, fees_summary=fees_summary)
+    
+    return render_template('mobile/fees.html', 
+                          fees=fees, 
+                          fees_summary=fees_summary,
+                          pagination=paginator,
+                          document_types=document_types,
+                          selected_type=document_type,
+                          selected_status=status,
+                          from_date=from_date,
+                          to_date=to_date)
 
 # إضافة رسم جديد - النسخة المحمولة
 @mobile_bp.route('/fees/add', methods=['GET', 'POST'])
