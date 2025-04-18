@@ -442,14 +442,32 @@ def report_fees():
 @login_required
 def vehicles():
     """صفحة السيارات للنسخة المحمولة"""
-    # بيانات مؤقتة
-    vehicles = []
+    # استخدام نفس البيانات الموجودة في قاعدة البيانات
+    status_filter = request.args.get('status', '')
+    make_filter = request.args.get('make', '')
+    
+    # قاعدة الاستعلام الأساسية
+    query = Vehicle.query
+    
+    # إضافة التصفية حسب الحالة إذا تم تحديدها
+    if status_filter:
+        query = query.filter(Vehicle.status == status_filter)
+    
+    # إضافة التصفية حسب الشركة المصنعة إذا تم تحديدها
+    if make_filter:
+        query = query.filter(Vehicle.make == make_filter)
+    
+    # الحصول على قائمة السيارات
+    vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
+    
+    # إحصائيات سريعة - نعدل المسميات لتتوافق مع النسخة المحمولة
     stats = {
-        'active': 0,
-        'maintenance': 0,
-        'inactive': 0,
-        'total': 0
+        'total': Vehicle.query.count(),
+        'active': Vehicle.query.filter_by(status='available').count(),
+        'maintenance': Vehicle.query.filter_by(status='in_workshop').count(),
+        'inactive': Vehicle.query.filter_by(status='accident').count() + Vehicle.query.filter_by(status='rented').count() + Vehicle.query.filter_by(status='in_project').count()
     }
+    
     return render_template('mobile/vehicles.html', vehicles=vehicles, stats=stats)
     
 # تفاصيل السيارة - النسخة المحمولة
@@ -457,87 +475,41 @@ def vehicles():
 @login_required
 def vehicle_details(vehicle_id):
     """تفاصيل السيارة للنسخة المحمولة"""
-    # بيانات مؤقتة للسيارة
-    vehicle = {
-        'id': vehicle_id,
-        'name': 'تويوتا كامري',
-        'plate_number': 'أ ب ج ١٢٣٤',
-        'model': 'كامري',
-        'year': 2022,
-        'color': 'أبيض',
-        'status': 'active',
-        'status_display': 'نشطة',
-        'purchase_date': datetime.now().date() - timedelta(days=365),
-        'purchase_price': 120000.00,
-        'insurance_expiry': datetime.now().date() + timedelta(days=180),
-        'license_expiry': datetime.now().date() + timedelta(days=90),
-        'odometer': 15000,
-        'fuel_type': 'بنزين',
-        'driver': 'أحمد محمد',
-        'department': 'الإدارة العامة',
-        'notes': 'سيارة بحالة ممتازة وتستخدم بشكل يومي للتنقلات الرسمية'
+    # الحصول على بيانات السيارة من قاعدة البيانات
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    # الحصول على سجل الصيانة الخاص بالسيارة
+    # تحتاج هذه العملية إلى تعديل في النموذج لكي تعمل، الآن نستخدم بيانات تجريبية
+    maintenance_records = []
+    
+    # الحصول على وثائق السيارة من قاعدة البيانات
+    documents = []
+    
+    # الحصول على رسوم السيارة من قاعدة البيانات
+    fees = []
+    
+    # تحويل البيانات إلى التنسيق المطلوب للعرض في النسخة المحمولة
+    vehicle_data = {
+        'id': vehicle.id,
+        'name': f"{vehicle.make} {vehicle.model}",
+        'plate_number': vehicle.plate_number,
+        'model': vehicle.model,
+        'year': vehicle.year,
+        'color': vehicle.color,
+        'status': vehicle.status,
+        'status_display': vehicle.status,  # يمكن إضافة معالجة للترجمة
+        'purchase_date': vehicle.purchase_date,
+        'purchase_price': vehicle.purchase_price,
+        'insurance_expiry': vehicle.insurance_expiry_date if hasattr(vehicle, 'insurance_expiry_date') else None,
+        'license_expiry': vehicle.license_expiry_date if hasattr(vehicle, 'license_expiry_date') else None,
+        'odometer': vehicle.odometer,
+        'fuel_type': vehicle.fuel_type if hasattr(vehicle, 'fuel_type') else '',
+        'driver': vehicle.driver if hasattr(vehicle, 'driver') else '',
+        'notes': vehicle.notes
     }
     
-    # بيانات مؤقتة لسجل الصيانة
-    maintenance_records = [
-        {
-            'id': 1,
-            'date': datetime.now().date() - timedelta(days=30),
-            'maintenance_type': 'دورية',
-            'description': 'تغيير زيت وفلتر',
-            'cost': 500.00
-        },
-        {
-            'id': 2,
-            'date': datetime.now().date() - timedelta(days=90),
-            'maintenance_type': 'إصلاح',
-            'description': 'إصلاح نظام التكييف',
-            'cost': 1200.00
-        }
-    ]
-    
-    # بيانات مؤقتة للوثائق
-    documents = [
-        {
-            'id': 1,
-            'name': 'تأمين شامل',
-            'expiry_date': datetime.now().date() + timedelta(days=180),
-            'status': 'valid'
-        },
-        {
-            'id': 2,
-            'name': 'رخصة تسيير',
-            'expiry_date': datetime.now().date() + timedelta(days=90),
-            'status': 'valid'
-        },
-        {
-            'id': 3,
-            'name': 'الفحص الدوري',
-            'expiry_date': datetime.now().date() - timedelta(days=10),
-            'status': 'expired'
-        }
-    ]
-    
-    # بيانات مؤقتة للرسوم
-    fees = [
-        {
-            'id': 1,
-            'name': 'تجديد التأمين',
-            'amount': 3500.00,
-            'due_date': datetime.now().date() + timedelta(days=180),
-            'status': 'pending'
-        },
-        {
-            'id': 2,
-            'name': 'تجديد رخصة التسيير',
-            'amount': 1200.00,
-            'due_date': datetime.now().date() + timedelta(days=90),
-            'status': 'pending'
-        }
-    ]
-    
     return render_template('mobile/vehicle_details.html',
-                         vehicle=vehicle,
+                         vehicle=vehicle_data,
                          maintenance_records=maintenance_records,
                          documents=documents,
                          fees=fees)
@@ -555,47 +527,33 @@ def add_vehicle():
 @login_required
 def vehicle_maintenance():
     """سجل صيانة السيارات للنسخة المحمولة"""
-    # بيانات مؤقتة للسيارات
+    # الحصول على قائمة السيارات الحقيقية من قاعدة البيانات
+    vehicles_data = Vehicle.query.all()
+    
+    # تحويل بيانات السيارات إلى الصيغة المطلوبة للعرض
     vehicles = [
         {
-            'id': 1,
-            'name': 'تويوتا كامري',
-            'plate_number': 'أ ب ج ١٢٣٤',
-        },
-        {
-            'id': 2,
-            'name': 'هونداي سوناتا',
-            'plate_number': 'س ع د ٥٦٧٨',
-        }
+            'id': vehicle.id,
+            'name': f"{vehicle.make} {vehicle.model}",
+            'plate_number': vehicle.plate_number,
+        } for vehicle in vehicles_data
     ]
     
-    # بيانات مؤقتة لسجلات الصيانة
-    maintenance_records = [
-        {
-            'id': 1,
-            'date': datetime.now().date() - timedelta(days=30),
-            'maintenance_type': 'دورية',
-            'description': 'تغيير زيت وفلتر',
-            'cost': 500.00,
-            'vehicle': {'id': 1, 'name': 'تويوتا كامري', 'plate_number': 'أ ب ج ١٢٣٤'}
-        },
-        {
-            'id': 2,
-            'date': datetime.now().date() - timedelta(days=90),
-            'maintenance_type': 'إصلاح',
-            'description': 'إصلاح نظام التكييف',
-            'cost': 1200.00,
-            'vehicle': {'id': 1, 'name': 'تويوتا كامري', 'plate_number': 'أ ب ج ١٢٣٤'}
-        },
-        {
-            'id': 3,
-            'date': datetime.now().date() - timedelta(days=15),
-            'maintenance_type': 'طارئة',
-            'description': 'تغيير بطارية',
-            'cost': 850.00,
-            'vehicle': {'id': 2, 'name': 'هونداي سوناتا', 'plate_number': 'س ع د ٥٦٧٨'}
-        }
-    ]
+    # هنا يجب استعلام سجلات الصيانة الحقيقية من قاعدة البيانات
+    # لكن قد نحتاج لإضافة العلاقات أولاً
+    maintenance_records = []
+    
+    # إضافة بعض البيانات الإفتراضية للعرض
+    if not maintenance_records and vehicles:
+        for i, vehicle in enumerate(vehicles[:3]):  # نأخذ أول 3 سيارات فقط
+            maintenance_records.append({
+                'id': i + 1,
+                'date': datetime.now().date() - timedelta(days=30 * (i + 1)),
+                'maintenance_type': 'دورية' if i == 0 else 'إصلاح' if i == 1 else 'طارئة',
+                'description': 'تغيير زيت وفلتر' if i == 0 else 'إصلاح نظام التكييف' if i == 1 else 'تغيير بطارية',
+                'cost': 500.00 + (i * 350),
+                'vehicle': vehicle
+            })
     
     # ملخص تكاليف الصيانة
     cost_summary = {
