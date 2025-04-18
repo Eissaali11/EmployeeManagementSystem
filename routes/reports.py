@@ -639,7 +639,10 @@ def salaries_report():
 @reports_bp.route('/salaries/pdf')
 def salaries_pdf():
     """تصدير تقرير الرواتب إلى PDF"""
+    # استخدام توليد التقارير عبر وحدة utils.pdf_generator
+    from utils.pdf_generator import generate_salary_report_pdf
     from reportlab.lib.units import cm
+    
     # الحصول على معلمات الفلتر
     current_year = datetime.now().year
     current_month = datetime.now().month
@@ -648,18 +651,10 @@ def salaries_pdf():
     year = int(request.args.get('year', current_year))
     department_id = request.args.get('department_id', '')
     
-    # استعلام الرواتب
-    salaries_query = Salary.query.filter_by(
-        month=month,
-        year=year
-    )
-    
-    # الحصول على قائمة الموظفين الذين لديهم رواتب (لعرضها في التقرير)
-    employee_ids_with_salary = [s.employee_id for s in salaries_query.all()]
-    
-    # استعلام لجميع الموظفين (لإظهار الموظفين الذين ليس لديهم رواتب مسجلة)
+    # استعلام الموظفين النشطين
     employees_query = Employee.query.filter(Employee.status == 'active')
     
+    # تطبيق فلتر القسم إذا كان محددًا
     if department_id:
         employees_query = employees_query.filter_by(department_id=department_id)
         department = Department.query.get(department_id)
@@ -699,135 +694,14 @@ def salaries_pdf():
         'net': sum(s['net_salary'] for s in salaries if s['has_salary'])
     }
     
-    # إنشاء ملف PDF
-    buffer = BytesIO()
+    # توليد PDF باستخدام وحدة PDF المخصصة
+    pdf_file = generate_salary_report_pdf(salaries, month, year, department_name, totals)
     
-    # تسجيل الخط العربي
-    try:
-        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
-        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
-    except:
-        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
-        pass
-    
-    # تعيين أبعاد الصفحة واتجاهها
-    doc = SimpleDocTemplate(
-        buffer, 
-        pagesize=landscape(A4),
-        rightMargin=2*cm,
-        leftMargin=2*cm,
-        topMargin=2*cm,
-        bottomMargin=2*cm
-    )
-    
-    # إعداد الأنماط
-    styles = getSampleStyleSheet()
-    # إنشاء نمط للنص العربي
-    arabic_style = ParagraphStyle(
-        name='Arabic',
-        parent=styles['Normal'],
-        fontName='Arabic',
-        fontSize=12,
-        alignment=1, # وسط
-        textColor=colors.black
-    )
-    
-    # إنشاء نمط للعناوين
-    title_style = ParagraphStyle(
-        name='Title',
-        parent=styles['Title'],
-        fontName='Arabic',
-        fontSize=16,
-        alignment=1, # وسط
-        textColor=colors.black
-    )
-    
-    # إعداد المحتوى
-    elements = []
-    
-    # إضافة العنوان
-    title = f"كشف رواتب شهر {get_month_name_ar(month)} {year} - {department_name}"
-    # تهيئة النص العربي للعرض في PDF
-    title = get_display(arabic_reshaper.reshape(title))
-    elements.append(Paragraph(title, title_style))
-    elements.append(Spacer(1, 20))
-    
-    # إعداد جدول البيانات
-    headers = ["الاسم", "الرقم الوظيفي", "الراتب الأساسي", "البدلات", "الخصومات", "المكافآت", "صافي الراتب"]
-    data = []
-    
-    # إضافة الرؤوس
-    headers_display = [get_display(arabic_reshaper.reshape(h)) for h in headers]
-    data.append(headers_display)
-    
-    # إضافة بيانات الرواتب
-    for salary_item in salaries:
-        if salary_item['has_salary']:
-            employee = salary_item['employee']
-            row = [
-                get_display(arabic_reshaper.reshape(employee.name)),
-                employee.employee_id,
-                f"{salary_item['basic_salary']:.2f}",
-                f"{salary_item['allowances']:.2f}",
-                f"{salary_item['deductions']:.2f}",
-                f"{salary_item['bonus']:.2f}",
-                f"{salary_item['net_salary']:.2f}"
-            ]
-            data.append(row)
-    
-    # إنشاء الجدول
-    if len(data) > 1:  # لدينا بيانات بخلاف الرؤوس
-        # حساب العرض المناسب للجدول بناءً على حجم الصفحة
-        table_width = landscape(A4)[0] - 4*cm  # العرض الإجمالي ناقص الهوامش
-        col_widths = [table_width/len(headers)] * len(headers)  # توزيع متساوي
-        table = Table(data, colWidths=col_widths)
-        
-        # إعداد أنماط الجدول
-        table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),  # لون خلفية العناوين
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # لون نص العناوين
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # محاذاة النص
-            ('FONTNAME', (0, 0), (-1, 0), 'Arabic'),  # خط العناوين
-            ('FONTSIZE', (0, 0), (-1, 0), 12),  # حجم خط العناوين
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # تباعد أسفل العناوين
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # لون خلفية البيانات
-            ('FONTNAME', (0, 1), (-1, -1), 'Arabic'),  # خط البيانات
-            ('FONTSIZE', (0, 1), (-1, -1), 10),  # حجم خط البيانات
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),  # حدود الجدول
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة النص عموديا
-        ])
-        
-        # تطبيق التناوب في ألوان الصفوف لتحسين القراءة
-        for i in range(1, len(data)):
-            if i % 2 == 0:
-                table_style.add('BACKGROUND', (0, i), (-1, i), colors.whitesmoke)
-        
-        table.setStyle(table_style)
-        elements.append(table)
-        
-        # إضافة صف الإجماليات
-        elements.append(Spacer(1, 20))
-        totals_text = get_display(arabic_reshaper.reshape(f"الإجماليات: الراتب الأساسي: {totals['basic']:.2f} - البدلات: {totals['allowances']:.2f} - الخصومات: {totals['deductions']:.2f} - المكافآت: {totals['bonus']:.2f} - صافي الرواتب: {totals['net']:.2f}"))
-        elements.append(Paragraph(totals_text, arabic_style))
-    else:
-        no_data_text = get_display(arabic_reshaper.reshape("لا توجد بيانات رواتب لهذه الفترة"))
-        elements.append(Paragraph(no_data_text, arabic_style))
-    
-    # إضافة معلومات التقرير في أسفل الصفحة
-    elements.append(Spacer(1, 20))
-    footer_text = f"تاريخ إنشاء التقرير: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-    footer_text = get_display(arabic_reshaper.reshape(footer_text))
-    elements.append(Paragraph(footer_text, arabic_style))
-    
-    # بناء المستند
-    doc.build(elements)
-    
-    # إعادة المؤشر إلى بداية البايت والإرجاع كملف
-    buffer.seek(0)
+    # إرسال الملف للمستخدم
     return send_file(
-        buffer,
+        pdf_file,
         as_attachment=True,
-        download_name="salaries_report.pdf",
+        download_name=f"salaries_report_{month}_{year}.pdf",
         mimetype='application/pdf'
     )
 
@@ -843,19 +717,26 @@ def salaries_excel():
     year = int(request.args.get('year', current_year))
     department_id = request.args.get('department_id', '')
     
-    # استعلام الرواتب
-    salaries_query = Salary.query.filter_by(
-        month=month,
-        year=year
-    )
+    # استعلام الموظفين النشطين
+    employees_query = Employee.query.filter(Employee.status == 'active')
     
-    # تطبيق الفلاتر
+    # تطبيق فلتر القسم إذا كان محددًا
     if department_id:
-        # نحتاج أولاً إلى الحصول على معرفات الموظفين في القسم المحدد
-        dept_employee_ids = [e.id for e in Employee.query.filter_by(department_id=department_id).all()]
-        salaries_query = salaries_query.filter(Salary.employee_id.in_(dept_employee_ids))
+        employees_query = employees_query.filter_by(department_id=department_id)
     
-    salaries = salaries_query.all()
+    employees = employees_query.all()
+    
+    # الحصول على الرواتب النهائية مع التفاصيل
+    salaries = []
+    for employee in employees:
+        salary = Salary.query.filter_by(
+            employee_id=employee.id,
+            month=month,
+            year=year
+        ).first()
+        
+        if salary:
+            salaries.append(salary)
     
     # إنشاء ملف Excel
     import pandas as pd
