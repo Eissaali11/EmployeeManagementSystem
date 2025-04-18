@@ -542,8 +542,21 @@ def add_document():
 @login_required
 def document_details(document_id):
     """تفاصيل وثيقة للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/document_details.html')
+    # الحصول على بيانات الوثيقة من قاعدة البيانات
+    document = Document.query.get_or_404(document_id)
+    
+    # الحصول على التاريخ الحالي للمقارنة مع تاريخ انتهاء الصلاحية
+    current_date = datetime.now().date()
+    
+    # حساب المدة المتبقية (أو المنقضية) لصلاحية الوثيقة
+    days_remaining = None
+    if document.expiry_date:
+        days_remaining = (document.expiry_date - current_date).days
+        
+    return render_template('mobile/document_details.html',
+                          document=document,
+                          current_date=current_date,
+                          days_remaining=days_remaining)
 
 # صفحة التقارير - النسخة المحمولة
 @mobile_bp.route('/reports')

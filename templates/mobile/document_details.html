@@ -5,8 +5,8 @@
 {% block header_title %}تفاصيل الوثيقة{% endblock %}
 
 {% block header_actions %}
-<button class="mobile-menu-button" aria-label="تعديل" onclick="location.href='{{ url_for('mobile.edit_document', document_id=document.id) }}'">
-    <i class="fas fa-edit"></i>
+<button class="mobile-menu-button" aria-label="رجوع" onclick="location.href='{{ url_for('mobile.documents') }}'">
+    <i class="fas fa-arrow-right"></i>
 </button>
 {% endblock %}
 
@@ -31,7 +31,7 @@
             <i class="fas fa-file-alt"></i>
             {% endif %}
         </div>
-        <h2 class="document-name">{{ document.name }}</h2>
+        <h2 class="document-name">{{ document.document_type }} - {{ document.document_number }}</h2>
         <p class="document-type">{{ document.document_type }}</p>
         
         <div class="document-status">
@@ -92,11 +92,7 @@
         <div class="info-group">
             <div class="info-label">رسوم التجديد</div>
             <div class="info-value">
-                {% if document.renewal_fee %}
-                {{ '{:,.2f}'.format(document.renewal_fee) }}
-                {% else %}
                 <span class="text-muted">غير متوفر</span>
-                {% endif %}
             </div>
         </div>
         
@@ -110,33 +106,21 @@
 </div>
 
 <!-- معاينة الوثيقة -->
-{% if document.file_path %}
+<!-- تم تعطيل عرض الملفات المرفقة مؤقتًا حتى يتم إضافة الحقل للنموذج -->
+<!--
 <div class="mobile-card">
     <div class="mobile-card-title">
         <i class="fas fa-file"></i> معاينة الوثيقة
     </div>
     
     <div class="mobile-card-content text-center">
-        {% if document.file_path.endswith('.pdf') %}
-        <div class="document-preview">
-            <i class="fas fa-file-pdf document-preview-icon"></i>
-            <p>ملف PDF</p>
-        </div>
-        {% elif document.file_path.endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
-        <img src="{{ url_for('static', filename='uploads/' + document.file_path) }}" alt="{{ document.name }}" class="document-image">
-        {% else %}
         <div class="document-preview">
             <i class="fas fa-file document-preview-icon"></i>
             <p>معاينة غير متوفرة</p>
         </div>
-        {% endif %}
-        
-        <a href="{{ url_for('mobile.download_document', document_id=document.id) }}" class="mobile-btn mobile-btn-primary mt-3">
-            <i class="fas fa-download"></i> تحميل الوثيقة
-        </a>
     </div>
 </div>
-{% endif %}
+-->
 
 <div class="action-buttons">
     <a href="{{ url_for('mobile.documents') }}" class="mobile-btn mobile-btn-secondary">
