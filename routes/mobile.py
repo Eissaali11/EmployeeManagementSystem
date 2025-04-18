@@ -777,6 +777,95 @@ def add_fee():
     """إضافة رسم جديد للنسخة المحمولة"""
     # يمكن تنفيذ هذه الوظيفة لاحقًا
     return render_template('mobile/add_fee.html')
+    
+# تعديل رسم - النسخة المحمولة
+@mobile_bp.route('/fees/<int:fee_id>/edit', methods=['POST'])
+@login_required
+def edit_fee(fee_id):
+    """تعديل رسم قائم للنسخة المحمولة"""
+    # الحصول على بيانات الرسم من قاعدة البيانات
+    fee = Fee.query.get_or_404(fee_id)
+    
+    if request.method == 'POST':
+        # تحديث بيانات الرسم من النموذج
+        fee.document_type = request.form.get('document_type')
+        
+        # تحديث تاريخ الاستحقاق
+        due_date_str = request.form.get('due_date')
+        if due_date_str:
+            fee.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        
+        # تحديث حالة الدفع
+        fee.payment_status = request.form.get('payment_status')
+        
+        # تحديث تاريخ السداد إذا كانت الحالة "مدفوع"
+        if fee.payment_status == 'paid':
+            payment_date_str = request.form.get('payment_date')
+            if payment_date_str:
+                fee.payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
+        else:
+            fee.payment_date = None
+        
+        # تحديث قيم الرسوم
+        fee.passport_fee = float(request.form.get('passport_fee', 0))
+        fee.labor_office_fee = float(request.form.get('labor_office_fee', 0))
+        fee.insurance_fee = float(request.form.get('insurance_fee', 0))
+        fee.social_insurance_fee = float(request.form.get('social_insurance_fee', 0))
+        
+        # تحديث حالة نقل الكفالة
+        fee.transfer_sponsorship = 'transfer_sponsorship' in request.form
+        
+        # تحديث الملاحظات
+        fee.notes = request.form.get('notes', '')
+        
+        # حفظ التغييرات في قاعدة البيانات
+        try:
+            db.session.commit()
+            flash('تم تحديث الرسم بنجاح', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تحديث الرسم: {str(e)}', 'danger')
+        
+    # العودة إلى صفحة تفاصيل الرسم
+    return redirect(url_for('mobile.fee_details', fee_id=fee_id))
+
+# تسجيل رسم كمدفوع - النسخة المحمولة
+@mobile_bp.route('/fees/<int:fee_id>/mark-as-paid', methods=['POST'])
+@login_required
+def mark_fee_as_paid(fee_id):
+    """تسجيل رسم كمدفوع للنسخة المحمولة"""
+    # الحصول على بيانات الرسم من قاعدة البيانات
+    fee = Fee.query.get_or_404(fee_id)
+    
+    if request.method == 'POST':
+        # تحديث حالة الدفع
+        fee.payment_status = 'paid'
+        
+        # تحديث تاريخ السداد
+        payment_date_str = request.form.get('payment_date')
+        if payment_date_str:
+            fee.payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
+        else:
+            fee.payment_date = datetime.now().date()
+        
+        # إضافة ملاحظات السداد إلى ملاحظات الرسم
+        payment_notes = request.form.get('payment_notes')
+        if payment_notes:
+            if fee.notes:
+                fee.notes = f"{fee.notes}\n\nملاحظات السداد ({fee.payment_date}):\n{payment_notes}"
+            else:
+                fee.notes = f"ملاحظات السداد ({fee.payment_date}):\n{payment_notes}"
+        
+        # حفظ التغييرات في قاعدة البيانات
+        try:
+            db.session.commit()
+            flash('تم تسجيل الرسم كمدفوع بنجاح', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تسجيل الرسم كمدفوع: {str(e)}', 'danger')
+    
+    # العودة إلى صفحة تفاصيل الرسم
+    return redirect(url_for('mobile.fee_details', fee_id=fee_id))
 
 # تفاصيل الرسم - النسخة المحمولة 
 @mobile_bp.route('/fees/<int:fee_id>')
@@ -786,7 +875,10 @@ def fee_details(fee_id):
     # الحصول على بيانات الرسم من قاعدة البيانات
     fee = Fee.query.get_or_404(fee_id)
     
-    return render_template('mobile/fee_details.html', fee=fee)
+    # إرسال التاريخ الحالي لاستخدامه في النموذج
+    now = datetime.now()
+    
+    return render_template('mobile/fee_details.html', fee=fee, now=now)
 
 # صفحة الإشعارات - النسخة المحمولة
 @mobile_bp.route('/notifications')
