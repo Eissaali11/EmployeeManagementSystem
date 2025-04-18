@@ -366,10 +366,8 @@ class VehicleChecklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
     inspection_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
-    inspection_time = db.Column(db.Time, nullable=True)  # وقت الفحص
     inspector_name = db.Column(db.String(100), nullable=False)  # اسم الفاحص
     inspection_type = db.Column(db.String(20), nullable=False)  # نوع الفحص: يومي، أسبوعي، شهري، ربع سنوي
-    odometer_reading = db.Column(db.Integer, nullable=True)  # قراءة العداد
     status = db.Column(db.String(20), default='completed')  # حالة الفحص: مكتمل، قيد التنفيذ، ملغي
     notes = db.Column(db.Text)  # ملاحظات عامة
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
