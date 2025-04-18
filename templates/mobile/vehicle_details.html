@@ -37,14 +37,15 @@
                         <div class="detail-label">اللون</div>
                         <div class="detail-value">{{ vehicle.color }}</div>
                     </div>
-                    <div class="detail-item">
+                    <!-- حذف حقول غير موجودة للتجنب الأخطاء -->
+                    <!-- <div class="detail-item">
                         <div class="detail-label">تاريخ الشراء</div>
-                        <div class="detail-value">{{ vehicle.purchase_date.strftime('%Y-%m-%d') }}</div>
+                        <div class="detail-value">{{ vehicle.purchase_date.strftime('%Y-%m-%d') if vehicle.purchase_date else 'غير متوفر' }}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">سعر الشراء</div>
-                        <div class="detail-value">{{ '{:,.2f}'.format(vehicle.purchase_price) }}</div>
-                    </div>
+                        <div class="detail-value">{{ '{:,.2f}'.format(vehicle.purchase_price) if vehicle.purchase_price else 'غير متوفر' }}</div>
+                    </div> -->
                 </div>
             </div>
             
@@ -53,22 +54,23 @@
                     <i class="fas fa-clipboard-check"></i> معلومات التشغيل
                 </h4>
                 <div class="detail-content">
-                    <div class="detail-item">
+                    <!-- تم تعليق الحقول غير الموجودة في النموذج -->
+                    <!-- <div class="detail-item">
                         <div class="detail-label">عداد الكيلومترات</div>
-                        <div class="detail-value">{{ '{:,}'.format(vehicle.odometer) }} كم</div>
-                    </div>
-                    <div class="detail-item">
+                        <div class="detail-value">{{ '{:,}'.format(vehicle.odometer) if vehicle.odometer else 0 }} كم</div>
+                    </div> -->
+                    <!-- <div class="detail-item">
                         <div class="detail-label">نوع الوقود</div>
                         <div class="detail-value">{{ vehicle.fuel_type }}</div>
-                    </div>
-                    <div class="detail-item">
+                    </div> -->
+                    <!-- <div class="detail-item">
                         <div class="detail-label">السائق</div>
                         <div class="detail-value">{{ vehicle.driver }}</div>
-                    </div>
-                    <div class="detail-item">
+                    </div> -->
+                    <!-- <div class="detail-item">
                         <div class="detail-label">القسم</div>
                         <div class="detail-value">{{ vehicle.department }}</div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             
