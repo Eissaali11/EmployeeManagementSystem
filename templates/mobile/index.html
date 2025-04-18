@@ -327,7 +327,7 @@
 {% block content %}
 <!-- بطاقة الترحيب -->
 <div class="welcome-card slide-up">
-  <h1 class="welcome-title">مرحباً {{ current_user.first_name if current_user.first_name else current_user.username }}</h1>
+  <h1 class="welcome-title">مرحباً {{ current_user.name if current_user.is_authenticated else 'زائر' }}</h1>
   <p class="welcome-subtitle">مرحباً بك في نظام إدارة الموظفين</p>
   <div class="welcome-date">
     <i class="far fa-calendar-alt"></i>

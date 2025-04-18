@@ -36,6 +36,9 @@ def index():
         'vehicles_count': Vehicle.query.count(),
     }
     
+    # التحقق من وجود إشعارات غير مقروءة (يمكن استبداله بالتنفيذ الفعلي)
+    notifications_count = 3  # مثال: 3 إشعارات غير مقروءة
+    
     # الوثائق التي ستنتهي قريباً
     today = datetime.now().date()
     expiring_documents = Document.query.filter(Document.expiry_date >= today).order_by(Document.expiry_date).limit(5).all()
@@ -52,6 +55,7 @@ def index():
                             stats=stats,
                             expiring_documents=expiring_documents,
                             absences=absences,
+                            notifications_count=notifications_count,
                             now=datetime.now())
 
 # صفحة تسجيل الدخول - النسخة المحمولة
@@ -64,7 +68,7 @@ def login():
     form = LoginForm()
     
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(email=form.username.data).first()
         
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=form.remember.data)
