@@ -13,6 +13,9 @@
                         <a href="{{ url_for('fees_costs.index') }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
                         </a>
+                        <a href="{{ url_for('fees_costs.export_to_excel') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-file-excel me-1"></i> تصدير إلى إكسل
+                        </a>
                         <a href="{{ url_for('fees_costs.create') }}?document_id={{ document.id }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus-circle me-1"></i> إضافة تكاليف جديدة
                         </a>
