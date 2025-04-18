@@ -9,7 +9,10 @@ from app import db
 from models import Department, Employee, Attendance, Salary, Document, SystemAudit
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
-from utils.pdf_generator_fixed import generate_salary_report_pdf, generate_salary_notification_pdf, generate_vehicle_handover_pdf
+# استخدام دالة تقرير الرواتب المحسنة من الملف الجديد
+from utils.pdf_generator_fixed import generate_salary_report_pdf
+# استيراد الدوال المتبقية من الملف الأصلي
+from utils.pdf_generator_new import generate_salary_notification_pdf, generate_vehicle_handover_pdf
 
 # إنشاء موجه المسارات
 enhanced_reports_bp = Blueprint('enhanced_reports', __name__, url_prefix='/enhanced_reports')
