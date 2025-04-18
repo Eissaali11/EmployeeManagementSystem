@@ -37,13 +37,14 @@ def generate_salary_report_pdf(salaries, month, year, department_name, totals):
         # إنشاء ملف PDF
         buffer = BytesIO()
         
-        # تسجيل الخط العربي (Tajawal)
+        # تسجيل الخط العربي (Tajawal بدلاً من Cairo لأن Cairo غير متوفر)
         try:
-            # تسجيل خط تاجول الذي يدعم اللغة العربية
-            pdfmetrics.registerFont(TTFont('Tajawal', 'static/fonts/Tajawal-Regular.ttf'))
-            pdfmetrics.registerFont(TTFont('TajawalBold', 'static/fonts/Tajawal-Bold.ttf'))
-            arabic_font = 'Tajawal'
-            arabic_font_bold = 'TajawalBold'
+            # محاولة تسجيل خط Tajawal الذي يدعم اللغة العربية
+            pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Tajawal-Regular.ttf'))
+            pdfmetrics.registerFont(TTFont('ArabicBold', 'static/fonts/Tajawal-Bold.ttf'))
+            arabic_font = 'Arabic'
+            arabic_font_bold = 'ArabicBold'
+            print("تم تسجيل خط Tajawal بنجاح")
         except Exception as e:
             print(f"خطأ في تسجيل الخط العربي: {str(e)}")
             arabic_font = 'Helvetica'

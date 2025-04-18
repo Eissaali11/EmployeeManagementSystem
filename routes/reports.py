@@ -1124,9 +1124,9 @@ def documents_excel():
     # إضافة عناوين الأعمدة
     headers = ["اسم الموظف", "الرقم الوظيفي", "القسم", "نوع الوثيقة", "رقم الوثيقة", "تاريخ الإصدار", "تاريخ الانتهاء", "الحالة", "ملاحظات"]
     for col, header in enumerate(headers, start=1):
-        cell = sheet.cell(row=2, column=col)
+        cell = sheet.cell(row=3, column=col)
         cell.value = header
-        cell.font = Font(bold=True, name='Calibri')
+        cell.font = Font(bold=True, name='Tajawal')
         cell.alignment = Alignment(horizontal='center')
         cell.fill = PatternFill(start_color="DDDDDD", end_color="DDDDDD", fill_type="solid")
         
@@ -1186,6 +1186,7 @@ def documents_excel():
         for col in range(1, 10):
             cell = sheet.cell(row=idx, column=col)
             cell.alignment = Alignment(horizontal='center')
+            cell.font = Font(name='Tajawal')
             
             # تنسيق الحدود
             cell.border = Border(
