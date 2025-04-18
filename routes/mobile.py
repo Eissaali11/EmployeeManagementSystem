@@ -417,8 +417,90 @@ def vehicles():
 @login_required
 def vehicle_details(vehicle_id):
     """تفاصيل السيارة للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/vehicle_details.html')
+    # بيانات مؤقتة للسيارة
+    vehicle = {
+        'id': vehicle_id,
+        'name': 'تويوتا كامري',
+        'plate_number': 'أ ب ج ١٢٣٤',
+        'model': 'كامري',
+        'year': 2022,
+        'color': 'أبيض',
+        'status': 'active',
+        'status_display': 'نشطة',
+        'purchase_date': datetime.now().date() - timedelta(days=365),
+        'purchase_price': 120000.00,
+        'insurance_expiry': datetime.now().date() + timedelta(days=180),
+        'license_expiry': datetime.now().date() + timedelta(days=90),
+        'odometer': 15000,
+        'fuel_type': 'بنزين',
+        'driver': 'أحمد محمد',
+        'department': 'الإدارة العامة',
+        'notes': 'سيارة بحالة ممتازة وتستخدم بشكل يومي للتنقلات الرسمية'
+    }
+    
+    # بيانات مؤقتة لسجل الصيانة
+    maintenance_records = [
+        {
+            'id': 1,
+            'date': datetime.now().date() - timedelta(days=30),
+            'maintenance_type': 'دورية',
+            'description': 'تغيير زيت وفلتر',
+            'cost': 500.00
+        },
+        {
+            'id': 2,
+            'date': datetime.now().date() - timedelta(days=90),
+            'maintenance_type': 'إصلاح',
+            'description': 'إصلاح نظام التكييف',
+            'cost': 1200.00
+        }
+    ]
+    
+    # بيانات مؤقتة للوثائق
+    documents = [
+        {
+            'id': 1,
+            'name': 'تأمين شامل',
+            'expiry_date': datetime.now().date() + timedelta(days=180),
+            'status': 'valid'
+        },
+        {
+            'id': 2,
+            'name': 'رخصة تسيير',
+            'expiry_date': datetime.now().date() + timedelta(days=90),
+            'status': 'valid'
+        },
+        {
+            'id': 3,
+            'name': 'الفحص الدوري',
+            'expiry_date': datetime.now().date() - timedelta(days=10),
+            'status': 'expired'
+        }
+    ]
+    
+    # بيانات مؤقتة للرسوم
+    fees = [
+        {
+            'id': 1,
+            'name': 'تجديد التأمين',
+            'amount': 3500.00,
+            'due_date': datetime.now().date() + timedelta(days=180),
+            'status': 'pending'
+        },
+        {
+            'id': 2,
+            'name': 'تجديد رخصة التسيير',
+            'amount': 1200.00,
+            'due_date': datetime.now().date() + timedelta(days=90),
+            'status': 'pending'
+        }
+    ]
+    
+    return render_template('mobile/vehicle_details.html',
+                         vehicle=vehicle,
+                         maintenance_records=maintenance_records,
+                         documents=documents,
+                         fees=fees)
 
 # إضافة سيارة جديدة - النسخة المحمولة
 @mobile_bp.route('/vehicles/add', methods=['GET', 'POST'])
@@ -433,8 +515,61 @@ def add_vehicle():
 @login_required
 def vehicle_maintenance():
     """سجل صيانة السيارات للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/vehicle_maintenance.html')
+    # بيانات مؤقتة للسيارات
+    vehicles = [
+        {
+            'id': 1,
+            'name': 'تويوتا كامري',
+            'plate_number': 'أ ب ج ١٢٣٤',
+        },
+        {
+            'id': 2,
+            'name': 'هونداي سوناتا',
+            'plate_number': 'س ع د ٥٦٧٨',
+        }
+    ]
+    
+    # بيانات مؤقتة لسجلات الصيانة
+    maintenance_records = [
+        {
+            'id': 1,
+            'date': datetime.now().date() - timedelta(days=30),
+            'maintenance_type': 'دورية',
+            'description': 'تغيير زيت وفلتر',
+            'cost': 500.00,
+            'vehicle': {'id': 1, 'name': 'تويوتا كامري', 'plate_number': 'أ ب ج ١٢٣٤'}
+        },
+        {
+            'id': 2,
+            'date': datetime.now().date() - timedelta(days=90),
+            'maintenance_type': 'إصلاح',
+            'description': 'إصلاح نظام التكييف',
+            'cost': 1200.00,
+            'vehicle': {'id': 1, 'name': 'تويوتا كامري', 'plate_number': 'أ ب ج ١٢٣٤'}
+        },
+        {
+            'id': 3,
+            'date': datetime.now().date() - timedelta(days=15),
+            'maintenance_type': 'طارئة',
+            'description': 'تغيير بطارية',
+            'cost': 850.00,
+            'vehicle': {'id': 2, 'name': 'هونداي سوناتا', 'plate_number': 'س ع د ٥٦٧٨'}
+        }
+    ]
+    
+    # ملخص تكاليف الصيانة
+    cost_summary = {
+        'total': sum(record['cost'] for record in maintenance_records),
+        'periodic': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] == 'دورية'),
+        'emergency': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] == 'طارئة'),
+        'repair': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] == 'إصلاح'),
+        'other': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] not in ['دورية', 'طارئة', 'إصلاح'])
+    }
+    
+    return render_template('mobile/vehicle_maintenance.html',
+                         vehicles=vehicles,
+                         maintenance_records=maintenance_records,
+                         cost_summary=cost_summary)
 
 # وثائق السيارات - النسخة المحمولة
 @mobile_bp.route('/vehicles/documents')

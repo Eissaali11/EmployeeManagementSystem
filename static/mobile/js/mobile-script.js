@@ -1,328 +1,369 @@
 /**
- * سكربت جافاسكربت خاص بالواجهة المحمولة
- * نظام إدارة الموظفين - النسخة المحمولة
+ * الملف الرئيسي للجافاسكربت للنسخة المحمولة
+ * يحتوي على كافة الوظائف والتفاعلات للتطبيق
  */
 
-// تهيئة التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
-    initMobileApp();
-});
-
-/**
- * تهيئة التطبيق المحمول
- */
-function initMobileApp() {
+    // ===============================
+    // تهيئة العناصر المتغيرة
+    // ===============================
+    const sidebar = document.getElementById('mobile-sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const menuBtn = document.querySelector('.mobile-header .fa-bars').parentElement;
+    const closeBtn = document.querySelector('.close-sidebar');
+    const scrollTopBtn = document.querySelector('.mobile-scroll-top');
+    const loader = document.querySelector('.mobile-loader');
+    
+    // ===============================
     // تهيئة القائمة الجانبية
-    initSidebar();
-    
-    // تهيئة الأحداث والتفاعلات
-    setupEventListeners();
-    
-    // تسجيل Service Worker للـ PWA
-    registerServiceWorker();
-}
-
-/**
- * تهيئة القائمة الجانبية
- */
-function initSidebar() {
-    // زر فتح القائمة الجانبية
-    const menuButton = document.querySelector('.mobile-menu-button');
-    // زر إغلاق القائمة الجانبية
-    const closeButton = document.querySelector('.close-sidebar');
-    // العنصر الرئيسي للقائمة الجانبية
-    const sidebar = document.querySelector('.mobile-sidebar');
-    // خلفية قاتمة للإغلاق
-    const overlay = document.getElementById('sidebar-overlay');
-    
-    if (menuButton) {
-        menuButton.addEventListener('click', function() {
+    // ===============================
+    if (menuBtn && sidebar && sidebarOverlay) {
+        // فتح القائمة الجانبية
+        menuBtn.addEventListener('click', function() {
             sidebar.classList.add('active');
-            if (overlay) overlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // منع التمرير في الخلفية
-        });
-    }
-    
-    if (closeButton) {
-        closeButton.addEventListener('click', closeSidebar);
-    }
-    
-    if (overlay) {
-        overlay.addEventListener('click', closeSidebar);
-    }
-    
-    // إغلاق القائمة الجانبية عند النقر على أي رابط فيها
-    const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', closeSidebar);
-    });
-    
-    /**
-     * إغلاق القائمة الجانبية
-     */
-    function closeSidebar() {
-        sidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = ''; // إعادة تمكين التمرير
-    }
-}
-
-/**
- * تهيئة مستمعي الأحداث
- */
-function setupEventListeners() {
-    // مستمعي أحداث النماذج
-    setupFormValidation();
-    
-    // مستمعي أحداث للتبديل بين علامات التبويب (إذا وجدت)
-    setupTabSwitching();
-    
-    // إعداد زر العودة للأعلى (إذا وجد)
-    setupScrollToTop();
-}
-
-/**
- * التحقق من صحة النماذج
- */
-function setupFormValidation() {
-    const forms = document.querySelectorAll('.mobile-form');
-    
-    forms.forEach(form => {
-        form.addEventListener('submit', function(event) {
-            if (!validateForm(form)) {
-                event.preventDefault();
-            }
-        });
-    });
-    
-    /**
-     * التحقق من صحة النموذج
-     * @param {HTMLFormElement} form النموذج المراد التحقق منه
-     * @returns {boolean} نتيجة التحقق
-     */
-    function validateForm(form) {
-        let isValid = true;
-        const requiredFields = form.querySelectorAll('[required]');
-        
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                isValid = false;
-                field.classList.add('is-invalid');
-                
-                // إنشاء رسالة خطأ إذا لم تكن موجودة
-                let errorMsg = field.nextElementSibling;
-                if (!errorMsg || !errorMsg.classList.contains('error-message')) {
-                    errorMsg = document.createElement('div');
-                    errorMsg.className = 'error-message';
-                    errorMsg.textContent = 'هذا الحقل مطلوب';
-                    field.parentNode.insertBefore(errorMsg, field.nextSibling);
-                }
-            } else {
-                field.classList.remove('is-invalid');
-                
-                // إزالة رسالة الخطأ إذا وجدت
-                const errorMsg = field.nextElementSibling;
-                if (errorMsg && errorMsg.classList.contains('error-message')) {
-                    errorMsg.remove();
-                }
-            }
+            sidebarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // منع التمرير
         });
         
-        return isValid;
-    }
-}
-
-/**
- * إعداد التبديل بين علامات التبويب
- */
-function setupTabSwitching() {
-    const tabButtons = document.querySelectorAll('.mobile-tab-button');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            
-            // إزالة الفئة النشطة من جميع الأزرار
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // إضافة الفئة النشطة للزر الحالي
-            this.classList.add('active');
-            
-            // إخفاء جميع محتويات التبويب
-            const tabContents = document.querySelectorAll('.mobile-tab-content');
-            tabContents.forEach(content => content.style.display = 'none');
-            
-            // إظهار المحتوى المستهدف
-            const targetContent = document.getElementById(targetId);
-            if (targetContent) {
-                targetContent.style.display = 'block';
-            }
+        // إغلاق القائمة الجانبية
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = ''; // السماح بالتمرير مرة أخرى
+        }
+        
+        // إغلاق عند النقر على زر الإغلاق
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeSidebar);
+        }
+        
+        // إغلاق عند النقر على الخلفية الضبابية
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        
+        // إغلاق عند النقر على أي رابط في القائمة
+        const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                showLoader(); // إظهار التحميل
+                closeSidebar();
+            });
         });
-    });
-    
-    // تفعيل علامة التبويب الأولى افتراضياً
-    const firstTab = document.querySelector('.mobile-tab-button');
-    if (firstTab) {
-        firstTab.click();
     }
-}
-
-/**
- * إعداد زر العودة للأعلى
- */
-function setupScrollToTop() {
-    const scrollButton = document.querySelector('.mobile-scroll-top');
     
-    if (scrollButton) {
-        // إظهار أو إخفاء الزر بناءً على موضع التمرير
+    // ===============================
+    // تهيئة زر العودة للأعلى
+    // ===============================
+    if (scrollTopBtn) {
+        // إظهار/إخفاء زر العودة للأعلى
         window.addEventListener('scroll', function() {
             if (window.scrollY > 300) {
-                scrollButton.classList.add('visible');
+                scrollTopBtn.classList.add('visible');
             } else {
-                scrollButton.classList.remove('visible');
+                scrollTopBtn.classList.remove('visible');
             }
         });
         
-        // التمرير للأعلى عند النقر على الزر
-        scrollButton.addEventListener('click', function() {
+        // التمرير للأعلى عند النقر
+        scrollTopBtn.addEventListener('click', function() {
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
             });
         });
     }
-}
-
-/**
- * تسجيل Service Worker للـ PWA
- */
-function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/static/mobile/js/service-worker.js').then(function(registration) {
-                console.log('ServiceWorker تم التسجيل بنجاح مع النطاق: ', registration.scope);
-            }, function(err) {
-                console.log('ServiceWorker فشل التسجيل: ', err);
+    
+    // ===============================
+    // تهيئة حقول التاريخ والوقت
+    // ===============================
+    // تحويل الحقول ذات الخاصية data-hijri إلى حقول تاريخ هجري
+    const hijriDateInputs = document.querySelectorAll('[data-hijri]');
+    if (hijriDateInputs.length > 0) {
+        initializeHijriDatePicker();
+    }
+    
+    // ===============================
+    // تأثيرات الأزرار والروابط
+    // ===============================
+    // إضافة تأثير الضغط على الأزرار
+    const buttons = document.querySelectorAll('.mobile-btn, .footer-item, .mobile-menu-button');
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', function() {
+            this.classList.add('pressed');
+        });
+        
+        button.addEventListener('touchend', function() {
+            this.classList.remove('pressed');
+        });
+    });
+    
+    // تتبع الضغط على روابط القائمة السفلية لتحميل الصفحات
+    const footerLinks = document.querySelectorAll('.mobile-footer a');
+    footerLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // عدم تنفيذ إذا كان الرابط نشطًا بالفعل
+            if (this.classList.contains('active')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // إظهار شاشة التحميل
+            showLoader();
+        });
+    });
+    
+    // ===============================
+    // دعم PWA
+    // ===============================
+    // تثبيت التطبيق
+    let deferredPrompt;
+    const installButton = document.getElementById('install-app');
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // منع ظهور رسالة التثبيت التلقائية للمتصفح
+        e.preventDefault();
+        // تخزين الحدث للاستخدام لاحقًا
+        deferredPrompt = e;
+        // إظهار زر التثبيت إذا كان موجودًا
+        if (installButton) {
+            installButton.style.display = 'block';
+            
+            installButton.addEventListener('click', async () => {
+                // إخفاء زر التثبيت
+                installButton.style.display = 'none';
+                // إظهار واجهة التثبيت
+                deferredPrompt.prompt();
+                // انتظار خيار المستخدم
+                const { outcome } = await deferredPrompt.userChoice;
+                // تفريغ المتغير
+                deferredPrompt = null;
             });
+        }
+    });
+    
+    // ===============================
+    // التحقق من الاتصال بالإنترنت
+    // ===============================
+    function updateOnlineStatus() {
+        const statusElement = document.getElementById('connection-status');
+        if (statusElement) {
+            if (navigator.onLine) {
+                statusElement.textContent = 'متصل';
+                statusElement.classList.remove('offline');
+                statusElement.classList.add('online');
+            } else {
+                statusElement.textContent = 'غير متصل';
+                statusElement.classList.remove('online');
+                statusElement.classList.add('offline');
+                
+                // إظهار إشعار
+                showToast('أنت غير متصل بالإنترنت', 'warning');
+            }
+        }
+    }
+    
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+    
+    // ===============================
+    // التأكد من حالة الاتصال بالخادم
+    // ===============================
+    function checkServerConnection() {
+        fetch('/mobile/api/check-connection')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('فشل الاتصال بالخادم');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('متصل بالخادم:', data);
+            })
+            .catch(error => {
+                console.error('خطأ في الاتصال بالخادم:', error);
+                showToast('لا يمكن الاتصال بالخادم', 'error');
+            });
+    }
+    
+    // التحقق من الاتصال بالخادم كل دقيقة
+    setInterval(checkServerConnection, 60000);
+    
+    // ===============================
+    // وظائف مساعدة
+    // ===============================
+    // إظهار شاشة التحميل
+    function showLoader() {
+        if (loader) {
+            loader.classList.add('active');
+            setTimeout(() => {
+                loader.classList.remove('active');
+            }, 800); // إخفاء بعد 800 مللي ثانية
+        }
+    }
+    
+    // إظهار رسالة toast
+    function showToast(message, type = 'info') {
+        // التحقق من وجود حاوية التوست
+        let toastContainer = document.querySelector('.toast-container');
+        
+        // إنشاء حاوية إذا لم تكن موجودة
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // إنشاء عنصر التوست
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        
+        // إضافة زر إغلاق
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'toast-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = function() {
+            toast.remove();
+        };
+        
+        toast.appendChild(closeBtn);
+        toastContainer.appendChild(toast);
+        
+        // إظهار التوست
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        // إخفاء التوست تلقائيًا بعد 5 ثواني
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 5000);
+    }
+    
+    // تهيئة منتقي التاريخ الهجري
+    function initializeHijriDatePicker() {
+        // يتم تنفيذ هذه الوظيفة فقط إذا كانت مكتبة التقويم الهجري متاحة
+        if (typeof HijriDatePicker === 'undefined') {
+            console.warn('مكتبة التقويم الهجري غير متاحة');
+            return;
+        }
+        
+        const hijriDateInputs = document.querySelectorAll('[data-hijri]');
+        hijriDateInputs.forEach(input => {
+            const options = {
+                inputSelector: input,
+                showHijriDate: true,
+                showGregDate: true,
+                selectedDate: input.value || new Date().toISOString().split('T')[0],
+                hijriFormat: 'iYYYY/iMM/iDD',
+                gregorianFormat: 'YYYY-MM-DD'
+            };
+            
+            new HijriDatePicker(options);
         });
     }
-}
-
-/**
- * عرض شاشة التحميل
- */
-function showLoader() {
-    const loader = document.querySelector('.mobile-loader');
-    if (loader) {
-        loader.classList.add('active');
-    }
-}
-
-/**
- * إخفاء شاشة التحميل
- */
-function hideLoader() {
-    const loader = document.querySelector('.mobile-loader');
-    if (loader) {
-        loader.classList.remove('active');
-    }
-}
-
-/**
- * عرض إشعار
- * @param {string} message نص الإشعار
- * @param {string} type نوع الإشعار (success, warning, danger)
- * @param {number} duration مدة ظهور الإشعار بالمللي ثانية
- */
-function showNotification(message, type = 'success', duration = 3000) {
-    // إزالة الإشعارات السابقة
-    const existingNotifications = document.querySelectorAll('.mobile-notification');
-    existingNotifications.forEach(notification => {
-        notification.remove();
+    
+    // إخفاء شاشة التحميل الأولية
+    hideInitialLoader();
+    
+    // ===============================
+    // إضافة تفاعلات للمكونات المخصصة
+    // ===============================
+    // مخططات الإحصائيات
+    initCharts();
+    
+    // تفعيل لوحات التبديل (tabs)
+    const tabButtons = document.querySelectorAll('.mobile-tabs-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            
+            // إزالة التفعيل من جميع الأزرار وإخفاء جميع المحتويات
+            document.querySelectorAll('.mobile-tabs-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mobile-tab-content').forEach(c => c.classList.remove('active'));
+            
+            // تفعيل الزر والمحتوى المختار
+            this.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        });
     });
     
-    // إنشاء عنصر الإشعار
-    const notification = document.createElement('div');
-    notification.className = `mobile-notification mobile-notification-${type}`;
-    notification.textContent = message;
+    // تفعيل القوائم المنسدلة
+    const dropdownToggles = document.querySelectorAll('.mobile-dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.nextElementSibling;
+            
+            // إغلاق جميع القوائم المنسدلة المفتوحة الأخرى
+            document.querySelectorAll('.mobile-dropdown-menu.show').forEach(menu => {
+                if (menu !== dropdown) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // تبديل حالة القائمة المنسدلة الحالية
+            dropdown.classList.toggle('show');
+        });
+    });
     
-    // إضافة الإشعار للصفحة
-    document.body.appendChild(notification);
-    
-    // إزالة الإشعار بعد المدة المحددة
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, duration);
+    // إغلاق القوائم المنسدلة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!e.target.matches('.mobile-dropdown-toggle') && !e.target.closest('.mobile-dropdown-menu')) {
+            document.querySelectorAll('.mobile-dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+});
+
+// إخفاء شاشة التحميل الأولية
+function hideInitialLoader() {
+    const initialLoader = document.querySelector('.mobile-loader');
+    if (initialLoader) {
+        initialLoader.classList.remove('active');
+    }
 }
 
-/**
- * إرسال طلب AJAX
- * @param {string} url عنوان URL للطلب
- * @param {string} method طريقة الطلب (GET, POST)
- * @param {Object} data البيانات المرسلة مع الطلب
- * @param {Function} successCallback دالة تنفذ عند نجاح الطلب
- * @param {Function} errorCallback دالة تنفذ عند فشل الطلب
- */
-function sendAjaxRequest(url, method, data, successCallback, errorCallback) {
-    // عرض شاشة التحميل
-    showLoader();
+// تهيئة المخططات
+function initCharts() {
+    // تنفذ هذه الوظيفة فقط إذا كانت مكتبة Chart.js متاحة وكانت هناك مخططات للتهيئة
+    if (typeof Chart === 'undefined' || !document.querySelector('[data-chart]')) {
+        return;
+    }
     
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': getCsrfToken()
-        },
-        body: method !== 'GET' ? JSON.stringify(data) : null
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('حدث خطأ في الاستجابة');
-        }
-        return response.json();
-    })
-    .then(data => {
-        hideLoader();
-        if (successCallback) {
-            successCallback(data);
-        }
-    })
-    .catch(error => {
-        hideLoader();
-        if (errorCallback) {
-            errorCallback(error);
-        } else {
-            showNotification('حدث خطأ أثناء تنفيذ الطلب', 'danger');
-            console.error(error);
-        }
+    // تهيئة المخططات
+    const chartElements = document.querySelectorAll('[data-chart]');
+    chartElements.forEach(element => {
+        const chartType = element.getAttribute('data-chart');
+        const chartData = JSON.parse(element.getAttribute('data-chart-data') || '{}');
+        const chartOptions = JSON.parse(element.getAttribute('data-chart-options') || '{}');
+        
+        new Chart(element, {
+            type: chartType,
+            data: chartData,
+            options: chartOptions
+        });
     });
 }
 
-/**
- * الحصول على رمز CSRF من الكوكيز
- * @returns {string} رمز CSRF
- */
-function getCsrfToken() {
-    const name = 'csrf_token=';
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const cookieArray = decodedCookie.split(';');
-    
-    for (let i = 0; i < cookieArray.length; i++) {
-        let cookie = cookieArray[i].trim();
-        if (cookie.indexOf(name) === 0) {
-            return cookie.substring(name.length, cookie.length);
-        }
+// وظيفة لتسجيل Service Worker
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/mobile/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
     }
-    
-    // البحث عن الرمز في عنصر الإدخال المخفي
-    const csrfInput = document.querySelector('input[name="csrf_token"]');
-    if (csrfInput) {
-        return csrfInput.value;
-    }
-    
-    return '';
 }
+
+// تسجيل Service Worker عند تحميل الصفحة
+window.addEventListener('load', () => {
+    registerServiceWorker();
+});

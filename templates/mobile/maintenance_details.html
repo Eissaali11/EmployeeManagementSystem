@@ -1,0 +1,342 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تفاصيل الصيانة - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تفاصيل سجل الصيانة{% endblock %}
+
+{% block content %}
+<!-- بطاقة معلومات الصيانة -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-tools"></i> معلومات الصيانة
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="info-section">
+            <div class="info-header">
+                <div class="maintenance-type 
+                    {% if maintenance.maintenance_type == 'دورية' %} type-periodic
+                    {% elif maintenance.maintenance_type == 'طارئة' %} type-emergency
+                    {% elif maintenance.maintenance_type == 'إصلاح' %} type-repair
+                    {% else %} type-other
+                    {% endif %}">
+                    {{ maintenance.maintenance_type }}
+                </div>
+                <div class="maintenance-date">
+                    <i class="far fa-calendar-alt"></i> {{ maintenance.date.strftime('%Y-%m-%d') }}
+                </div>
+            </div>
+            
+            <div class="maintenance-vehicle">
+                <div class="vehicle-name">{{ maintenance.vehicle.name }}</div>
+                <div class="vehicle-plate">{{ maintenance.vehicle.plate_number }}</div>
+            </div>
+            
+            <div class="maintenance-description">
+                {{ maintenance.description }}
+            </div>
+            
+            <div class="maintenance-details">
+                <div class="detail-item">
+                    <div class="detail-label">رقم الفاتورة</div>
+                    <div class="detail-value">{{ maintenance.invoice_number or 'غير محدد' }}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">مزود الخدمة</div>
+                    <div class="detail-value">{{ maintenance.service_provider or 'غير محدد' }}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">القراءة الحالية للعداد</div>
+                    <div class="detail-value">{{ '{:,}'.format(maintenance.odometer) if maintenance.odometer else 'غير محدد' }} كم</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">التكلفة</div>
+                    <div class="detail-value cost">{{ '{:,.2f}'.format(maintenance.cost) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قطع الغيار -->
+{% if maintenance.parts_replaced %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-cogs"></i> قطع الغيار المستبدلة
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="parts-list">
+            {{ maintenance.parts_replaced|nl2br }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ملاحظات -->
+{% if maintenance.notes %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-clipboard"></i> ملاحظات
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="maintenance-notes">
+            {{ maintenance.notes|nl2br }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- تاريخ الصيانة للسيارة -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-history"></i> سجل صيانة السيارة
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if vehicle_maintenance_history %}
+        <div class="timeline">
+            {% for record in vehicle_maintenance_history %}
+            <div class="timeline-item {% if record.id == maintenance.id %}active{% endif %}">
+                <div class="timeline-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
+                <div class="timeline-content">
+                    <div class="timeline-type 
+                        {% if record.maintenance_type == 'دورية' %} type-periodic
+                        {% elif record.maintenance_type == 'طارئة' %} type-emergency
+                        {% elif record.maintenance_type == 'إصلاح' %} type-repair
+                        {% else %} type-other
+                        {% endif %}">
+                        {{ record.maintenance_type }}
+                    </div>
+                    <div class="timeline-description">{{ record.description }}</div>
+                    <div class="timeline-cost">{{ '{:,.2f}'.format(record.cost) }}</div>
+                    {% if record.id != maintenance.id %}
+                    <a href="{{ url_for('mobile.maintenance_details', maintenance_id=record.id) }}" class="timeline-link">
+                        عرض التفاصيل
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-secondary">لا توجد سجلات صيانة أخرى لهذه السيارة</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- أزرار الإجراءات -->
+<div class="action-buttons">
+    <a href="{{ url_for('mobile.edit_maintenance', maintenance_id=maintenance.id) }}" class="mobile-btn mobile-btn-primary">
+        <i class="fas fa-edit"></i> تعديل
+    </a>
+    <a href="{{ url_for('mobile.vehicle_details', vehicle_id=maintenance.vehicle.id) }}" class="mobile-btn mobile-btn-secondary">
+        <i class="fas fa-car"></i> تفاصيل السيارة
+    </a>
+    <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-info">
+        <i class="fas fa-arrow-right"></i> عودة للسجل
+    </a>
+</div>
+
+<style>
+.info-section {
+    padding: 0;
+}
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.maintenance-type {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.type-periodic {
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0;
+}
+
+.type-emergency {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.type-repair {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.type-other {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+}
+
+.maintenance-date {
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.maintenance-vehicle {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.vehicle-name {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.vehicle-plate {
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.maintenance-description {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.maintenance-details {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    font-weight: 500;
+}
+
+.detail-value.cost {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.parts-list, .maintenance-notes {
+    line-height: 1.6;
+}
+
+.timeline {
+    position: relative;
+    padding: 15px;
+}
+
+.timeline:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 30px;
+    width: 2px;
+    background-color: #eee;
+}
+
+.timeline-item {
+    position: relative;
+    padding-right: 45px;
+    margin-bottom: 20px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    right: 23px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    border: 2px solid #fff;
+    z-index: 1;
+}
+
+.timeline-item.active:before {
+    background-color: var(--primary-color);
+}
+
+.timeline-date {
+    color: #757575;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.timeline-content {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.timeline-type {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.timeline-description {
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.timeline-cost {
+    color: #dc3545;
+    font-weight: 500;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.timeline-link {
+    display: inline-block;
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    text-decoration: none;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 20px;
+}
+
+.action-buttons .mobile-btn:first-child {
+    grid-column: span 2;
+}
+</style>
+{% endblock %}
