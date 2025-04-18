@@ -22,7 +22,13 @@
   <!-- ملفات الأنماط الأساسية -->
   <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='mobile/css/mobile-theme.css') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='mobile/manifest.json') }}"">
+  <link rel="manifest" href="{{ url_for('static', filename='mobile/manifest.json') }}">
+  
+  <!-- إعدادات PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="نظام إدارة الموظفين">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='mobile/img/logo.png') }}">
   
   {% block styles %}{% endblock %}
   
@@ -293,6 +299,17 @@
   <!-- البرامج النصية الأساسية -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
+    // تسجيل خادم الويب للتطبيق
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('{{ url_for('static', filename='mobile/serviceworker.js') }}')
+        .then(function(registration) {
+          console.log('تم تسجيل خادم الويب بنجاح:', registration.scope);
+        })
+        .catch(function(error) {
+          console.log('فشل تسجيل خادم الويب:', error);
+        });
+    }
+    
     // التعامل مع القائمة الجانبية
     document.addEventListener('DOMContentLoaded', function() {
       const sidebarToggle = document.getElementById('sidebar-toggle');
