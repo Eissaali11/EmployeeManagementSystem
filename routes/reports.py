@@ -14,6 +14,7 @@ from bidi.algorithm import get_display
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
@@ -638,6 +639,7 @@ def salaries_report():
 @reports_bp.route('/salaries/pdf')
 def salaries_pdf():
     """تصدير تقرير الرواتب إلى PDF"""
+    from reportlab.lib.units import cm
     # الحصول على معلمات الفلتر
     current_year = datetime.now().year
     current_month = datetime.now().month
