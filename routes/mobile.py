@@ -761,7 +761,7 @@ def vehicle_expenses():
     # يمكن تنفيذ هذه الوظيفة لاحقًا
     return render_template('mobile/vehicle_expenses.html')
 
-# تشيك لست السيارة - النسخة المحمولة
+# تشيك لست السيارة (إضافة فحص جديد) - النسخة المحمولة
 @mobile_bp.route('/vehicles/checklist')
 @login_required
 def vehicle_checklist():
@@ -776,7 +776,187 @@ def vehicle_checklist():
         } for vehicle in vehicles_data
     ]
     
-    return render_template('mobile/vehicle_checklist.html', vehicles=vehicles)
+    # تاريخ اليوم
+    now = datetime.now()
+    
+    return render_template('mobile/vehicle_checklist.html', vehicles=vehicles, now=now)
+
+
+# قائمة فحوصات السيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/checklist/list')
+@login_required
+def vehicle_checklist_list():
+    """قائمة فحوصات السيارة للنسخة المحمولة"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # فلترة حسب السيارة
+    vehicle_id = request.args.get('vehicle_id', '')
+    # فلترة حسب نوع الفحص
+    inspection_type = request.args.get('inspection_type', '')
+    # فلترة حسب التاريخ
+    from_date = request.args.get('from_date', '')
+    to_date = request.args.get('to_date', '')
+    
+    # بناء استعلام قاعدة البيانات
+    query = VehicleChecklist.query
+    
+    # تطبيق الفلاتر إذا تم تحديدها
+    if vehicle_id:
+        query = query.filter(VehicleChecklist.vehicle_id == vehicle_id)
+    
+    if inspection_type:
+        query = query.filter(VehicleChecklist.inspection_type == inspection_type)
+    
+    if from_date:
+        try:
+            from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
+            query = query.filter(VehicleChecklist.inspection_date >= from_date_obj)
+        except ValueError:
+            pass
+    
+    if to_date:
+        try:
+            to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
+            query = query.filter(VehicleChecklist.inspection_date <= to_date_obj)
+        except ValueError:
+            pass
+    
+    # تنفيذ الاستعلام مع الترتيب والتصفح
+    paginator = query.order_by(VehicleChecklist.inspection_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    checklists = paginator.items
+    
+    # الحصول على بيانات السيارات لعرضها في القائمة
+    vehicles = Vehicle.query.all()
+    
+    # تحويل بيانات الفحوصات إلى تنسيق مناسب للعرض
+    checklists_data = []
+    for checklist in checklists:
+        vehicle = Vehicle.query.get(checklist.vehicle_id)
+        if vehicle:
+            checklist_data = {
+                'id': checklist.id,
+                'vehicle_name': f"{vehicle.make} {vehicle.model}",
+                'vehicle_plate': vehicle.plate_number,
+                'inspection_date': checklist.inspection_date,
+                'inspection_type': checklist.inspection_type,
+                'inspector_name': checklist.inspector_name,
+                'status': checklist.status,
+                'completion_percentage': checklist.completion_percentage,
+                'summary': checklist.summary
+            }
+            checklists_data.append(checklist_data)
+    
+    return render_template('mobile/vehicle_checklist_list.html',
+                          checklists=checklists_data,
+                          pagination=paginator,
+                          vehicles=vehicles,
+                          selected_vehicle=vehicle_id,
+                          selected_type=inspection_type,
+                          from_date=from_date,
+                          to_date=to_date)
+
+
+# تفاصيل فحص السيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/checklist/<int:checklist_id>')
+@login_required
+def vehicle_checklist_details(checklist_id):
+    """تفاصيل فحص السيارة للنسخة المحمولة"""
+    # الحصول على بيانات الفحص من قاعدة البيانات
+    checklist = VehicleChecklist.query.get_or_404(checklist_id)
+    
+    # الحصول على بيانات السيارة
+    vehicle = Vehicle.query.get(checklist.vehicle_id)
+    
+    # جمع بيانات عناصر الفحص مرتبة حسب الفئة
+    checklist_items = {}
+    for item in checklist.checklist_items:
+        if item.category not in checklist_items:
+            checklist_items[item.category] = []
+        
+        checklist_items[item.category].append(item)
+    
+    return render_template('mobile/vehicle_checklist_details.html',
+                          checklist=checklist,
+                          vehicle=vehicle,
+                          checklist_items=checklist_items)
+
+
+# إضافة فحص جديد للسيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/checklist/add', methods=['POST'])
+@login_required
+def add_vehicle_checklist():
+    """إضافة فحص جديد للسيارة للنسخة المحمولة"""
+    if request.method == 'POST':
+        # استلام بيانات الفحص من النموذج
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'status': 'error', 'message': 'لم يتم استلام بيانات'})
+        
+        vehicle_id = data.get('vehicle_id')
+        inspection_date = data.get('inspection_date')
+        inspector_name = data.get('inspector_name')
+        inspection_type = data.get('inspection_type')
+        general_notes = data.get('general_notes', '')
+        items_data = data.get('items', [])
+        
+        # التحقق من وجود البيانات المطلوبة
+        if not all([vehicle_id, inspection_date, inspector_name, inspection_type]):
+            return jsonify({'status': 'error', 'message': 'بيانات غير مكتملة، يرجى ملء جميع الحقول المطلوبة'})
+        
+        try:
+            # تحويل التاريخ إلى كائن Date
+            inspection_date = datetime.strptime(inspection_date, '%Y-%m-%d').date()
+            
+            # إنشاء فحص جديد
+            new_checklist = VehicleChecklist(
+                vehicle_id=vehicle_id,
+                inspection_date=inspection_date,
+                inspector_name=inspector_name,
+                inspection_type=inspection_type,
+                notes=general_notes
+            )
+            
+            db.session.add(new_checklist)
+            db.session.flush()  # للحصول على معرّف الفحص الجديد
+            
+            # إضافة عناصر الفحص
+            for item_data in items_data:
+                category = item_data.get('category')
+                item_name = item_data.get('item_name')
+                status = item_data.get('status')
+                notes = item_data.get('notes', '')
+                
+                # التحقق من وجود البيانات المطلوبة
+                if not all([category, item_name, status]):
+                    continue
+                
+                # إنشاء عنصر فحص جديد
+                new_item = VehicleChecklistItem(
+                    checklist_id=new_checklist.id,
+                    category=category,
+                    item_name=item_name,
+                    status=status,
+                    notes=notes
+                )
+                
+                db.session.add(new_item)
+            
+            # حفظ التغييرات في قاعدة البيانات
+            db.session.commit()
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'تم إضافة الفحص بنجاح',
+                'checklist_id': new_checklist.id
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'status': 'error', 'message': f'حدث خطأ أثناء إضافة الفحص: {str(e)}'})
+    
+    return jsonify({'status': 'error', 'message': 'طريقة غير مسموح بها'})
 
 # صفحة الرسوم والتكاليف - النسخة المحمولة
 @mobile_bp.route('/fees')

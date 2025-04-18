@@ -721,6 +721,9 @@
                 <button type="button" id="print-checklist" class="mobile-btn mobile-btn-secondary btn-block mt-3">
                     <i class="fas fa-print"></i> طباعة التقرير
                 </button>
+                <a href="{{ url_for('mobile.vehicle_checklist_list') }}" class="mobile-btn mobile-btn-info btn-block mt-3">
+                    <i class="fas fa-clipboard-list"></i> عرض جميع فحوصات السيارات
+                </a>
             </div>
         </form>
     </div>
@@ -890,6 +893,11 @@
 
 .mobile-btn-secondary {
     background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+.mobile-btn-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
 }
 
 @media (min-width: 768px) {

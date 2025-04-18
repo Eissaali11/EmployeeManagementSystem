@@ -358,4 +358,65 @@ class VehicleHandoverImage(db.Model):
         return f'<VehicleHandoverImage {self.handover_record_id}>'
 
 
+class VehicleChecklist(db.Model):
+    """تشيك لست فحص السيارة"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    inspection_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
+    inspector_name = db.Column(db.String(100), nullable=False)  # اسم الفاحص
+    inspection_type = db.Column(db.String(20), nullable=False)  # نوع الفحص: يومي، أسبوعي، شهري، ربع سنوي
+    status = db.Column(db.String(20), default='completed')  # حالة الفحص: مكتمل، قيد التنفيذ، ملغي
+    notes = db.Column(db.Text)  # ملاحظات عامة
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', backref=db.backref('checklists', cascade='all, delete-orphan'))
+    checklist_items = db.relationship('VehicleChecklistItem', back_populates='checklist', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<VehicleChecklist {self.id} for vehicle {self.vehicle_id} on {self.inspection_date}>'
+    
+    @property
+    def completion_percentage(self):
+        """حساب نسبة اكتمال الفحص"""
+        if not self.checklist_items:
+            return 0
+        
+        total_items = len(self.checklist_items)
+        completed_items = sum(1 for item in self.checklist_items if item.status != 'not_checked')
+        
+        return int((completed_items / total_items) * 100)
+    
+    @property
+    def summary(self):
+        """ملخص حالة الفحص"""
+        if not self.checklist_items:
+            return {'good': 0, 'fair': 0, 'poor': 0, 'not_checked': 0}
+        
+        summary = {'good': 0, 'fair': 0, 'poor': 0, 'not_checked': 0}
+        for item in self.checklist_items:
+            summary[item.status] += 1
+        
+        return summary
+
+
+class VehicleChecklistItem(db.Model):
+    """عناصر تشيك لست فحص السيارة"""
+    id = db.Column(db.Integer, primary_key=True)
+    checklist_id = db.Column(db.Integer, db.ForeignKey('vehicle_checklist.id', ondelete='CASCADE'), nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # فئة العنصر: محرك، إطارات، إضاءة، مكونات داخلية، إلخ
+    item_name = db.Column(db.String(100), nullable=False)  # اسم العنصر: زيت المحرك، ضغط الإطارات، إلخ
+    status = db.Column(db.String(20), nullable=False, default='not_checked')  # الحالة: جيد، متوسط، سيء، لم يتم الفحص
+    notes = db.Column(db.Text)  # ملاحظات خاصة بالعنصر
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    checklist = db.relationship('VehicleChecklist', back_populates='checklist_items')
+    
+    def __repr__(self):
+        return f'<VehicleChecklistItem {self.id} {self.item_name} status: {self.status}>'
+
+
 
