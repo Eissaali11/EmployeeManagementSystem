@@ -88,9 +88,25 @@ def inject_csrf_token():
     
     return {'csrf_token': get_csrf_token}
 
-# مسار الجذر الرئيسي للتطبيق
+# مسار الجذر الرئيسي للتطبيق مع توجيه تلقائي حسب نوع الجهاز
 @app.route('/')
 def root():
+    from flask import request
+    
+    user_agent = request.headers.get('User-Agent', '').lower()
+    mobile_devices = ['android', 'iphone', 'ipad', 'mobile']
+    
+    # التحقق مما إذا كان الطلب يتضمن معلمة m=1 للوصول المباشر إلى نسخة الجوال
+    mobile_param = request.args.get('m', '0')
+    
+    # إذا كان المستخدم يستخدم جهازاً محمولاً أو طلب نسخة الجوال صراحةً
+    if any(device in user_agent for device in mobile_devices) or mobile_param == '1':
+        if current_user.is_authenticated:
+            return redirect(url_for('mobile.index'))
+        else:
+            return redirect(url_for('mobile.login'))
+    
+    # إذا كان المستخدم يستخدم جهاز كمبيوتر
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     else:
