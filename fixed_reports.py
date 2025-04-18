@@ -7,7 +7,8 @@ from app import db
 from models import Department, Employee, Attendance, Salary, Document, SystemAudit
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
-from utils.pdf_generator import generate_salary_report_pdf
+# استخدام النسخة المحسنة التي تدعم اللغة العربية بشكل كامل
+from utils.pdf_generator_fixed import generate_salary_report_pdf
 # إضافة الاستيرادات المفقودة
 import arabic_reshaper
 from bidi.algorithm import get_display
