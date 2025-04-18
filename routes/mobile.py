@@ -390,8 +390,8 @@ def salaries():
     
     # قاعدة الاستعلام الأساسية للرواتب
     query = Salary.query.filter(
-        extract('year', Salary.date) == selected_year,
-        extract('month', Salary.date) == selected_month
+        Salary.year == selected_year,
+        Salary.month == selected_month
     )
     
     # تطبيق فلتر الموظف إذا تم تحديده
@@ -399,7 +399,7 @@ def salaries():
         query = query.filter(Salary.employee_id == employee_id)
     
     # تنفيذ الاستعلام والحصول على نتائج مع التصفح
-    paginator = query.order_by(Salary.date.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    paginator = query.order_by(Salary.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
     salaries = paginator.items
     
     # حساب إجماليات الرواتب
@@ -783,8 +783,10 @@ def add_fee():
 @login_required
 def fee_details(fee_id):
     """تفاصيل الرسم للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/fee_details.html')
+    # الحصول على بيانات الرسم من قاعدة البيانات
+    fee = Fee.query.get_or_404(fee_id)
+    
+    return render_template('mobile/fee_details.html', fee=fee)
 
 # صفحة الإشعارات - النسخة المحمولة
 @mobile_bp.route('/notifications')

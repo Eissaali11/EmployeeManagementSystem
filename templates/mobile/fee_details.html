@@ -1,0 +1,254 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تفاصيل الرسوم{% endblock %}
+
+{% block content %}
+<div class="mobile-header">
+    <div class="mobile-header-left">
+        <a href="{{ url_for('mobile.fees') }}" class="mobile-back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="mobile-header-title">تفاصيل الرسم</div>
+    <div class="mobile-header-right">
+        <a href="#" class="mobile-action-btn" id="printBtn">
+            <i class="fas fa-print"></i>
+        </a>
+    </div>
+</div>
+
+<div class="mobile-container">
+    <!-- معلومات الرسم الأساسية -->
+    <div class="mobile-card mb-3">
+        <div class="mobile-card-header">
+            <h5 class="mobile-card-title">
+                معلومات الرسم
+                <span class="mobile-badge {% if fee.payment_status == 'paid' %}success{% elif fee.payment_status == 'pending' %}warning{% else %}danger{% endif %}">
+                    {{ fee.payment_status|default('قيد الانتظار') }}
+                </span>
+            </h5>
+        </div>
+        <div class="mobile-card-content">
+            <div class="fee-data-row">
+                <div class="fee-data-label">نوع الوثيقة</div>
+                <div class="fee-data-value">{{ fee.document_type|default('لم يتم تحديد النوع') }}</div>
+            </div>
+
+            <div class="fee-data-row">
+                <div class="fee-data-label">المستند المرتبط</div>
+                <div class="fee-data-value">
+                    {% if fee.document %}
+                    <a href="{{ url_for('mobile.document_details', document_id=fee.document.id) }}">
+                        {{ fee.document.document_number or 'وثيقة رقم ' + fee.document.id|string }}
+                    </a>
+                    {% else %}
+                    غير مرتبط بمستند
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="fee-data-row">
+                <div class="fee-data-label">تاريخ الاستحقاق</div>
+                <div class="fee-data-value">{{ fee.due_date.strftime('%Y-%m-%d')|default('غير محدد') }}</div>
+            </div>
+
+            {% if fee.payment_date %}
+            <div class="fee-data-row">
+                <div class="fee-data-label">تاريخ السداد</div>
+                <div class="fee-data-value">{{ fee.payment_date.strftime('%Y-%m-%d') }}</div>
+            </div>
+            {% endif %}
+
+            <div class="fee-data-divider"></div>
+
+            <div class="fee-data-row">
+                <div class="fee-data-label">رسوم الجوازات</div>
+                <div class="fee-data-value">{{ '{:,.2f}'.format(fee.passport_fee|default(0)) }}</div>
+            </div>
+
+            <div class="fee-data-row">
+                <div class="fee-data-label">رسوم مكتب العمل</div>
+                <div class="fee-data-value">{{ '{:,.2f}'.format(fee.labor_office_fee|default(0)) }}</div>
+            </div>
+
+            <div class="fee-data-row">
+                <div class="fee-data-label">رسوم التأمين</div>
+                <div class="fee-data-value">{{ '{:,.2f}'.format(fee.insurance_fee|default(0)) }}</div>
+            </div>
+
+            <div class="fee-data-row">
+                <div class="fee-data-label">رسوم التأمينات الاجتماعية</div>
+                <div class="fee-data-value">{{ '{:,.2f}'.format(fee.social_insurance_fee|default(0)) }}</div>
+            </div>
+
+            <div class="fee-data-row total">
+                <div class="fee-data-label">إجمالي الرسوم</div>
+                <div class="fee-data-value">{{ '{:,.2f}'.format(fee.total_fees|default(0)) }}</div>
+            </div>
+
+            <div class="fee-data-row">
+                <div class="fee-data-label">نقل كفالة</div>
+                <div class="fee-data-value">{{ 'نعم' if fee.transfer_sponsorship else 'لا' }}</div>
+            </div>
+
+            {% if fee.notes %}
+            <div class="fee-data-divider"></div>
+            <div class="fee-data-row notes">
+                <div class="fee-data-label">ملاحظات</div>
+                <div class="fee-data-value">{{ fee.notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="mobile-action-buttons">
+        <a href="{{ url_for('mobile.fees') }}" class="mobile-btn mobile-btn-secondary">
+            <i class="fas fa-arrow-right ml-1"></i> العودة للقائمة
+        </a>
+        
+        <a href="#" class="mobile-btn mobile-btn-warning mx-2" data-bs-toggle="modal" data-bs-target="#editFeeModal">
+            <i class="fas fa-edit ml-1"></i> تعديل
+        </a>
+        
+        {% if fee.payment_status != 'paid' %}
+        <a href="#" class="mobile-btn mobile-btn-primary" data-bs-toggle="modal" data-bs-target="#markAsPaidModal">
+            <i class="fas fa-check-circle ml-1"></i> تسجيل كمدفوع
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- نموذج تعديل الرسم -->
+<div class="modal fade" id="editFeeModal" tabindex="-1" aria-labelledby="editFeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editFeeModalLabel">تعديل الرسم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center text-muted">الميزة غير متاحة حالياً</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="mobile-btn mobile-btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج تسجيل كمدفوع -->
+<div class="modal fade" id="markAsPaidModal" tabindex="-1" aria-labelledby="markAsPaidModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markAsPaidModalLabel">تسجيل الرسم كمدفوع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center text-muted">الميزة غير متاحة حالياً</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="mobile-btn mobile-btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.fee-data-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.fee-data-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.fee-data-value {
+    font-weight: 600;
+    text-align: left;
+}
+
+.fee-data-row.total {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #eee;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.fee-data-row.total .fee-data-label,
+.fee-data-row.total .fee-data-value {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.fee-data-divider {
+    border-top: 1px solid #eee;
+    margin: 15px 0;
+}
+
+.fee-data-row.notes {
+    flex-direction: column;
+}
+
+.fee-data-row.notes .fee-data-label {
+    margin-bottom: 8px;
+}
+
+.fee-data-row.notes .fee-data-value {
+    text-align: right;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    color: #555;
+}
+
+.mobile-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-right: 5px;
+    background-color: #eee;
+    color: #666;
+    white-space: nowrap;
+}
+
+.mobile-badge.success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.mobile-badge.warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.mobile-badge.danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.mobile-action-buttons {
+    display: flex;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // زر الطباعة
+    document.getElementById('printBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.print();
+    });
+});
+</script>
+{% endblock %}
