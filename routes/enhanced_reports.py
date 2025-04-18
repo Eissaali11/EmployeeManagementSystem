@@ -14,6 +14,25 @@ from utils.pdf_generator_fixed import generate_salary_report_pdf, generate_salar
 # إنشاء موجه المسارات
 enhanced_reports_bp = Blueprint('enhanced_reports', __name__, url_prefix='/enhanced_reports')
 
+@enhanced_reports_bp.route('/')
+def index():
+    """
+    الصفحة الرئيسية للتقارير المحسنة
+    """
+    from datetime import datetime
+    # الحصول على الشهر والسنة الحالية
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    
+    # الحصول على قائمة الأقسام
+    departments = Department.query.all()
+    
+    return render_template('reports/enhanced.html', 
+                         departments=departments,
+                         current_year=current_year,
+                         current_month=current_month,
+                         get_month_name_ar=get_month_name_ar)
+
 @enhanced_reports_bp.route('/salaries/pdf')
 def salaries_pdf():
     """
