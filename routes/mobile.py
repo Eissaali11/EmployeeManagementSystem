@@ -12,7 +12,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 
 # إنشاء مخطط المسارات
@@ -728,7 +728,7 @@ def fees():
         query = query.filter(Fee.document_type == document_type)
     
     if status:
-        query = query.filter(Fee.status == status)
+        query = query.filter(Fee.payment_status == status)
     
     if from_date:
         try:
@@ -755,9 +755,9 @@ def fees():
     # حساب إجماليات الرسوم
     all_fees = query.all()
     fees_summary = {
-        'pending_fees': sum(fee.amount for fee in all_fees if fee.status == 'pending'),
-        'paid_fees': sum(fee.amount for fee in all_fees if fee.status == 'paid'),
-        'total_fees': sum(fee.amount for fee in all_fees)
+        'pending_fees': sum(fee.total_fees for fee in all_fees if fee.payment_status == 'pending'),
+        'paid_fees': sum(fee.total_fees for fee in all_fees if fee.payment_status == 'paid'),
+        'total_fees': sum(fee.total_fees for fee in all_fees)
     }
     
     return render_template('mobile/fees.html', 

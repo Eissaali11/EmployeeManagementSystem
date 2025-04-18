@@ -109,19 +109,17 @@
             {% for fee in fees %}
             <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.fee_details', fee_id=fee.id) }}'">
                 <div class="mobile-list-item-badge 
-                       {% if fee.status == 'paid' %}paid
-                       {% elif fee.status == 'pending' %}pending
+                       {% if fee.payment_status == 'paid' %}paid
+                       {% elif fee.payment_status == 'pending' %}pending
                        {% else %}expired{% endif %}">
                 </div>
                 <div class="mobile-list-item-content">
                     <div class="mobile-list-item-title">{{ fee.document_type }}</div>
                     <div class="mobile-list-item-subtitle">
-                        {% if fee.document %}
-                        {{ fee.document.name }} - {{ fee.document.employee.name if fee.document.employee else 'غير محدد' }}
-                        {% elif fee.vehicle %}
-                        {{ fee.vehicle.name }} - {{ fee.vehicle.plate_number }}
+                        {% if fee.document and fee.document.employee %}
+                        {{ fee.document_type }} - {{ fee.document.employee.name }}
                         {% else %}
-                        {{ fee.description or 'بدون وصف' }}
+                        {{ fee.document_type }}
                         {% endif %}
                     </div>
                     <div class="mobile-list-item-info">
@@ -129,7 +127,7 @@
                     </div>
                 </div>
                 <div class="mobile-list-item-amount">
-                    {{ '{:,.2f}'.format(fee.amount) }}
+                    {{ '{:,.2f}'.format(fee.total_fees) }}
                 </div>
             </div>
             {% endfor %}
