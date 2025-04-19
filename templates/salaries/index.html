@@ -163,6 +163,18 @@
                                     <i class="fas fa-print me-1"></i> طباعة الراتب
                                 </a>
                                 
+                                <!-- زر مشاركة عبر الواتساب -->
+                                <a href="{{ url_for('salaries.share_salary_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-success mb-1" title="مشاركة عبر الواتساب">
+                                    <i class="fab fa-whatsapp me-1"></i> واتساب
+                                </a>
+                                
+                                {% if salary.deductions > 0 %}
+                                <!-- زر مشاركة إشعار الخصم عبر الواتساب -->
+                                <a href="{{ url_for('salaries.share_deduction_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-danger mb-1" title="مشاركة إشعار الخصم عبر الواتساب">
+                                    <i class="fab fa-whatsapp me-1"></i> إشعار الخصم
+                                </a>
+                                {% endif %}
+                                
                                 <!-- زر الحذف المباشر -->
                                 <form action="{{ url_for('salaries.delete', id=salary.id) }}" method="post" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سجل راتب للموظف {{ salary.employee.name }} لشهر {{ salary.month }}/{{ salary.year }}؟');">
                                     <button type="submit" class="btn btn-sm btn-danger" title="حذف">
@@ -183,13 +195,23 @@
                                         </li>
                                         <li>
                                             <a class="dropdown-item" href="{{ url_for('salaries.salary_notification_whatsapp', id=salary.id) }}">
-                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار راتب واتساب
+                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار راتب واتساب (API)
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('salaries.share_salary_via_whatsapp', id=salary.id) }}">
+                                                <i class="fab fa-whatsapp me-1"></i> مشاركة الراتب عبر واتساب
                                             </a>
                                         </li>
                                         {% if salary.deductions > 0 %}
                                         <li>
                                             <a class="dropdown-item text-danger" href="{{ url_for('salaries.salary_deduction_notification_whatsapp', id=salary.id) }}">
-                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار خصم واتساب
+                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار خصم واتساب (API)
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{{ url_for('salaries.share_deduction_via_whatsapp', id=salary.id) }}">
+                                                <i class="fab fa-whatsapp me-1"></i> مشاركة إشعار الخصم عبر واتساب
                                             </a>
                                         </li>
                                         {% endif %}

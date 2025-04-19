@@ -415,6 +415,119 @@ def salary_notification_pdf(id):
         flash(f'حدث خطأ أثناء إنشاء إشعار الراتب: {str(e)}', 'danger')
         return redirect(url_for('salaries.index'))
 
+@salaries_bp.route('/notification/<int:id>/share_whatsapp')
+def share_salary_via_whatsapp(id):
+    """مشاركة إشعار راتب عبر الواتس اب باستخدام رابط المشاركة المباشر"""
+    try:
+        # الحصول على سجل الراتب
+        salary = Salary.query.get_or_404(id)
+        employee = salary.employee
+        
+        # الحصول على اسم الشهر بالعربية
+        month_names = {
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
+            5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+            9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+        }
+        month_name = month_names.get(salary.month, str(salary.month))
+        
+        # إعداد نص الرسالة
+        message_text = f"""
+*إشعار راتب - شركة التقنية المتطورة*
+
+الموظف: {employee.name}
+الشهر: {month_name} {salary.year}
+
+الراتب الأساسي: {salary.basic_salary:.2f}
+البدلات: {salary.allowances:.2f}
+الخصومات: {salary.deductions:.2f}
+المكافآت: {salary.bonus:.2f}
+
+صافي الراتب: *{salary.net_salary:.2f}*
+
+تم إنشاء هذا الإشعار تلقائياً من نظام إدارة الموظفين.
+"""
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='share_whatsapp_link',
+            entity_type='salary',
+            entity_id=salary.id,
+            details=f'تم مشاركة إشعار راتب عبر رابط واتس اب للموظف: {employee.name} لشهر {salary.month}/{salary.year}',
+            user_id=None
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إنشاء رابط الواتس اب مع نص الرسالة
+        from urllib.parse import quote
+        whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
+        
+        # إعادة توجيه المستخدم إلى رابط الواتس اب
+        return redirect(whatsapp_url)
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء مشاركة إشعار الراتب عبر الواتس اب: {str(e)}', 'danger')
+        return redirect(url_for('salaries.index'))
+
+
+@salaries_bp.route('/notification/<int:id>/share_deduction_whatsapp')
+def share_deduction_via_whatsapp(id):
+    """مشاركة إشعار خصم راتب عبر الواتس اب باستخدام رابط المشاركة المباشر"""
+    try:
+        # الحصول على سجل الراتب
+        salary = Salary.query.get_or_404(id)
+        employee = salary.employee
+        
+        # التحقق من وجود خصم على الراتب
+        if salary.deductions <= 0:
+            flash('لا يوجد خصم على هذا الراتب', 'warning')
+            return redirect(url_for('salaries.index'))
+        
+        # الحصول على اسم الشهر بالعربية
+        month_names = {
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
+            5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+            9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+        }
+        month_name = month_names.get(salary.month, str(salary.month))
+        
+        # إعداد نص الرسالة
+        message_text = f"""
+*إشعار خصم على الراتب - شركة التقنية المتطورة*
+
+الموظف: {employee.name}
+الشهر: {month_name} {salary.year}
+
+مبلغ الخصم: *{salary.deductions:.2f}*
+
+الراتب بعد الخصم: {salary.net_salary:.2f}
+
+تم إنشاء هذا الإشعار تلقائياً من نظام إدارة الموظفين.
+"""
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='share_deduction_whatsapp_link',
+            entity_type='salary',
+            entity_id=salary.id,
+            details=f'تم مشاركة إشعار خصم عبر رابط واتس اب للموظف: {employee.name} لشهر {salary.month}/{salary.year}',
+            user_id=None
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إنشاء رابط الواتس اب مع نص الرسالة
+        from urllib.parse import quote
+        whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
+        
+        # إعادة توجيه المستخدم إلى رابط الواتس اب
+        return redirect(whatsapp_url)
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء مشاركة إشعار الخصم عبر الواتس اب: {str(e)}', 'danger')
+        return redirect(url_for('salaries.index'))
+
 
 @salaries_bp.route('/notification/<int:id>/whatsapp', methods=['GET'])
 def salary_notification_whatsapp(id):
