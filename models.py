@@ -464,4 +464,31 @@ class VehicleMaintenanceImage(db.Model):
         return f'<VehicleMaintenanceImage {self.id} for maintenance {self.maintenance_id}>'
 
 
+class VehicleFuelConsumption(db.Model):
+    """تسجيل استهلاك الوقود اليومي للسيارات"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    date = db.Column(db.Date, nullable=False)  # تاريخ تعبئة الوقود
+    liters = db.Column(db.Float, nullable=False)  # كمية اللترات
+    cost = db.Column(db.Float, nullable=False)  # التكلفة الإجمالية
+    kilometer_reading = db.Column(db.Integer)  # قراءة عداد المسافة
+    driver_name = db.Column(db.String(100))  # اسم السائق
+    fuel_type = db.Column(db.String(20), default='بنزين')  # نوع الوقود (بنزين، ديزل، إلخ)
+    filling_station = db.Column(db.String(100))  # محطة الوقود
+    notes = db.Column(db.Text)  # ملاحظات إضافية
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', backref=db.backref('fuel_records', cascade='all, delete-orphan'))
+    
+    def __repr__(self):
+        return f'<VehicleFuelConsumption {self.id} {self.liters} liters for vehicle {self.vehicle_id}>'
+    
+    @property
+    def cost_per_liter(self):
+        """حساب تكلفة اللتر الواحد"""
+        if self.liters and self.liters > 0:
+            return self.cost / self.liters
+        return 0
+
 

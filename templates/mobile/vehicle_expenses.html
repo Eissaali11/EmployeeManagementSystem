@@ -1,14 +1,14 @@
 {% extends 'mobile/layout.html' %}
 
-{% block title %}مصروفات السيارات{% endblock %}
-{% block header_title %}مصروفات السيارات{% endblock %}
+{% block title %}مصروفات الوقود{% endblock %}
+{% block header_title %}مصروفات الوقود{% endblock %}
 
 {% block content %}
 <div class="mobile-section">
   <div class="mobile-section-header">
     <h2 class="mobile-section-title">
-      <i class="fas fa-money-bill-wave"></i>
-      مصروفات السيارات
+      <i class="fas fa-gas-pump"></i>
+      مصروفات الوقود
     </h2>
     <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
       <i class="fas fa-arrow-right"></i>
@@ -22,41 +22,58 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-gas-pump"></i>
       </div>
-      <div class="mobile-summary-value">4,500 ر.س</div>
-      <div class="mobile-summary-label">وقود</div>
+      <div class="mobile-summary-value">{{ "{:,.0f}".format(weekly_cost) }}</div>
+      <div class="mobile-summary-label">وقود (أسبوعي)</div>
     </div>
     
     <div class="mobile-summary-card success">
       <div class="mobile-summary-icon">
-        <i class="fas fa-tools"></i>
+        <i class="fas fa-calendar-week"></i>
       </div>
-      <div class="mobile-summary-value">11,200 ر.س</div>
-      <div class="mobile-summary-label">صيانة</div>
+      <div class="mobile-summary-value">{{ "{:,.0f}".format(monthly_cost) }}</div>
+      <div class="mobile-summary-label">وقود (شهري)</div>
     </div>
     
     <div class="mobile-summary-card warning">
       <div class="mobile-summary-icon">
-        <i class="fas fa-id-card"></i>
+        <i class="fas fa-tachometer-alt"></i>
       </div>
-      <div class="mobile-summary-value">3,500 ر.س</div>
-      <div class="mobile-summary-label">تراخيص</div>
+      <div class="mobile-summary-value">{{ "{:,.1f}".format(weekly_liters) }}</div>
+      <div class="mobile-summary-label">لتر (أسبوعي)</div>
     </div>
     
     <div class="mobile-summary-card danger">
       <div class="mobile-summary-icon">
-        <i class="fas fa-file-invoice"></i>
+        <i class="fas fa-chart-line"></i>
       </div>
-      <div class="mobile-summary-value">19,200 ر.س</div>
-      <div class="mobile-summary-label">إجمالي المصروفات</div>
+      <div class="mobile-summary-value">{{ "{:,.1f}".format(monthly_liters) }}</div>
+      <div class="mobile-summary-label">لتر (شهري)</div>
     </div>
   </div>
 
-  <!-- قائمة المصروفات -->
+  <!-- الأزرار الرئيسية -->
+  <div class="mobile-action-buttons mb-3">
+    <a href="{{ url_for('mobile.add_fuel_consumption') }}" class="mobile-action-button">
+      <div class="mobile-action-icon">
+        <i class="fas fa-plus-circle"></i>
+      </div>
+      <div class="mobile-action-label">إضافة تعبئة وقود</div>
+    </a>
+    
+    <a href="{{ url_for('mobile.fuel_consumption_stats') }}" class="mobile-action-button">
+      <div class="mobile-action-icon">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <div class="mobile-action-label">إحصائيات الاستهلاك</div>
+    </a>
+  </div>
+
+  <!-- قائمة سجلات تعبئة الوقود -->
   <div class="mobile-card">
     <div class="mobile-card-header">
       <div class="mobile-card-title">
         <i class="fas fa-list"></i>
-        سجل المصروفات
+        آخر عمليات تعبئة الوقود
       </div>
       <div class="mobile-card-actions">
         <button class="mobile-btn-icon" onclick="toggleFilters()">
@@ -67,129 +84,66 @@
     
     <!-- فلاتر البحث (مخفية افتراضياً) -->
     <div class="mobile-card-body" id="filtersSection" style="display: none;">
-      <div class="mobile-form-group">
-        <label class="mobile-form-label">السيارة</label>
-        <select class="mobile-form-select">
-          <option value="">جميع السيارات</option>
-          <option value="1">تويوتا كامري</option>
-          <option value="2">هونداي سوناتا</option>
-          <option value="3">نيسان باترول</option>
-        </select>
-      </div>
-      
-      <div class="mobile-form-group">
-        <label class="mobile-form-label">نوع المصروف</label>
-        <select class="mobile-form-select">
-          <option value="">جميع الأنواع</option>
-          <option value="fuel">وقود</option>
-          <option value="maintenance">صيانة</option>
-          <option value="license">تراخيص</option>
-          <option value="insurance">تأمين</option>
-          <option value="other">أخرى</option>
-        </select>
-      </div>
-      
-      <div class="mobile-form-group">
-        <label class="mobile-form-label">الفترة الزمنية</label>
-        <select class="mobile-form-select">
-          <option value="week">آخر أسبوع</option>
-          <option value="month" selected>آخر شهر</option>
-          <option value="quarter">آخر ثلاثة أشهر</option>
-          <option value="year">العام الحالي</option>
-        </select>
-      </div>
-      
-      <div class="mobile-form-actions">
-        <button class="mobile-btn mobile-btn-primary" onclick="applyFilters()">
-          <i class="fas fa-search"></i>
-          تطبيق الفلتر
-        </button>
-      </div>
+      <form id="filterForm" method="GET" action="{{ url_for('mobile.vehicle_expenses') }}">
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">السيارة</label>
+          <select name="vehicle_id" class="mobile-form-select">
+            <option value="">جميع السيارات</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}" {% if selected_vehicle == vehicle.id %}selected{% endif %}>
+              {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">الفترة الزمنية</label>
+          <select name="period" class="mobile-form-select">
+            <option value="week" {% if period == 'week' %}selected{% endif %}>آخر أسبوع</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>آخر شهر</option>
+            <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>آخر ثلاثة أشهر</option>
+            <option value="year" {% if period == 'year' %}selected{% endif %}>السنة الحالية</option>
+          </select>
+        </div>
+        
+        <div class="mobile-form-actions">
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-search"></i>
+            تطبيق الفلتر
+          </button>
+        </div>
+      </form>
     </div>
     
     <div class="mobile-expenses-list">
-      <!-- مصروف -->
-      <div class="mobile-expense-item">
-        <div class="mobile-expense-icon">
-          <i class="fas fa-gas-pump"></i>
+      {% if fuel_records %}
+        {% for record in fuel_records %}
+        <div class="mobile-expense-item">
+          <div class="mobile-expense-icon">
+            <i class="fas fa-gas-pump"></i>
+          </div>
+          <div class="mobile-expense-details">
+            <div class="mobile-expense-title">تعبئة {{ record.fuel_type }} ({{ "{:,.1f}".format(record.liters) }} لتر)</div>
+            <div class="mobile-expense-subtitle">{{ record.vehicle.make }} {{ record.vehicle.model }} - {{ record.vehicle.plate_number }}</div>
+            <div class="mobile-expense-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
+          </div>
+          <div class="mobile-expense-amount">{{ "{:,.2f}".format(record.cost) }} ر.س</div>
         </div>
-        <div class="mobile-expense-details">
-          <div class="mobile-expense-title">تعبئة وقود</div>
-          <div class="mobile-expense-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
-          <div class="mobile-expense-date">قبل ٥ أيام</div>
+        {% endfor %}
+      {% else %}
+        <div class="mobile-empty-state">
+          <div class="mobile-empty-icon">
+            <i class="fas fa-gas-pump"></i>
+          </div>
+          <p>لا توجد سجلات تعبئة وقود حاليا</p>
         </div>
-        <div class="mobile-expense-amount">260 ر.س</div>
-      </div>
-      
-      <!-- مصروف -->
-      <div class="mobile-expense-item">
-        <div class="mobile-expense-icon">
-          <i class="fas fa-tools"></i>
-        </div>
-        <div class="mobile-expense-details">
-          <div class="mobile-expense-title">صيانة دورية</div>
-          <div class="mobile-expense-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
-          <div class="mobile-expense-date">قبل ١٢ يوم</div>
-        </div>
-        <div class="mobile-expense-amount">750 ر.س</div>
-      </div>
-      
-      <!-- مصروف -->
-      <div class="mobile-expense-item">
-        <div class="mobile-expense-icon">
-          <i class="fas fa-id-card"></i>
-        </div>
-        <div class="mobile-expense-details">
-          <div class="mobile-expense-title">تجديد رخصة سير</div>
-          <div class="mobile-expense-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
-          <div class="mobile-expense-date">قبل ١٥ يوم</div>
-        </div>
-        <div class="mobile-expense-amount">1,200 ر.س</div>
-      </div>
-      
-      <!-- مصروف -->
-      <div class="mobile-expense-item">
-        <div class="mobile-expense-icon">
-          <i class="fas fa-car-crash"></i>
-        </div>
-        <div class="mobile-expense-details">
-          <div class="mobile-expense-title">إصلاح أضرار</div>
-          <div class="mobile-expense-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
-          <div class="mobile-expense-date">قبل ١٨ يوم</div>
-        </div>
-        <div class="mobile-expense-amount">2,800 ر.س</div>
-      </div>
-      
-      <!-- مصروف -->
-      <div class="mobile-expense-item">
-        <div class="mobile-expense-icon">
-          <i class="fas fa-gas-pump"></i>
-        </div>
-        <div class="mobile-expense-details">
-          <div class="mobile-expense-title">تعبئة وقود</div>
-          <div class="mobile-expense-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
-          <div class="mobile-expense-date">قبل ٢٤ يوم</div>
-        </div>
-        <div class="mobile-expense-amount">280 ر.س</div>
-      </div>
-      
-      <!-- مصروف -->
-      <div class="mobile-expense-item">
-        <div class="mobile-expense-icon">
-          <i class="fas fa-clipboard-check"></i>
-        </div>
-        <div class="mobile-expense-details">
-          <div class="mobile-expense-title">فحص فني</div>
-          <div class="mobile-expense-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
-          <div class="mobile-expense-date">قبل ٢٨ يوم</div>
-        </div>
-        <div class="mobile-expense-amount">400 ر.س</div>
-      </div>
+      {% endif %}
     </div>
   </div>
   
-  <!-- زر إضافة مصروف جديد -->
-  <button class="mobile-fab" onclick="location.href='{{ url_for('mobile.vehicles') }}'">
+  <!-- زر إضافة تعبئة وقود جديدة -->
+  <button class="mobile-fab" onclick="location.href='{{ url_for('mobile.add_fuel_consumption') }}'">
     <i class="fas fa-plus"></i>
   </button>
 </div>
@@ -197,6 +151,48 @@
 
 {% block styles %}
 <style>
+  .mb-3 {
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .mobile-action-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    padding: 1.25rem 1rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .mobile-action-button:hover, 
+  .mobile-action-button:active {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobile-action-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+  }
+  
+  .mobile-action-label {
+    font-weight: 500;
+    text-align: center;
+  }
+  
   .mobile-expenses-list {
     padding: 0;
   }
@@ -244,6 +240,22 @@
   .mobile-expense-amount {
     font-weight: var(--font-weight-bold);
     color: var(--primary-color);
+  }
+  
+  .mobile-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  
+  .mobile-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    opacity: 0.2;
+  }
+  
+  .mobile-empty-state p {
+    color: var(--text-secondary);
   }
 </style>
 {% endblock %}

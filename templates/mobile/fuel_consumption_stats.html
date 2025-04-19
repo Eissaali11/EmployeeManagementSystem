@@ -1,0 +1,388 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إحصائيات استهلاك الوقود{% endblock %}
+{% block header_title %}إحصائيات استهلاك الوقود{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-chart-bar"></i>
+      إحصائيات استهلاك الوقود
+    </h2>
+    <a href="{{ url_for('mobile.vehicle_expenses') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+  
+  <!-- فلاتر التقرير -->
+  <div class="mobile-card mb-4">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-filter"></i>
+        فلترة التقرير
+      </div>
+    </div>
+    <div class="mobile-card-body">
+      <form id="statsFilterForm" method="GET" action="{{ url_for('mobile.fuel_consumption_stats') }}">
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">السيارة</label>
+          <select name="vehicle_id" class="mobile-form-select">
+            <option value="">جميع السيارات</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}" {% if selected_vehicle == vehicle.id %}selected{% endif %}>
+              {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">الفترة الزمنية</label>
+          <select name="period" class="mobile-form-select">
+            <option value="week" {% if period == 'week' %}selected{% endif %}>آخر أسبوع</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>آخر شهر</option>
+            <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>آخر ثلاثة أشهر</option>
+            <option value="year" {% if period == 'year' %}selected{% endif %}>السنة الحالية</option>
+          </select>
+        </div>
+        
+        <div class="mobile-form-actions">
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-search"></i>
+            تطبيق الفلتر
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- ملخص الإحصائيات -->
+  <div class="mobile-card mb-4">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-tachometer-alt"></i>
+        ملخص الاستهلاك - {{ period_text }}
+      </div>
+    </div>
+    <div class="mobile-card-body">
+      <div class="mobile-stats-grid">
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">إجمالي اللترات</div>
+          <div class="mobile-stat-value highlight">{{ "{:,.1f}".format(total_liters) }}</div>
+          <div class="mobile-stat-unit">لتر</div>
+        </div>
+        
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">إجمالي التكلفة</div>
+          <div class="mobile-stat-value danger">{{ "{:,.2f}".format(total_cost) }}</div>
+          <div class="mobile-stat-unit">ر.س</div>
+        </div>
+        
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">متوسط التكلفة اليومي</div>
+          <div class="mobile-stat-value warning">{{ "{:,.2f}".format(daily_avg_cost) }}</div>
+          <div class="mobile-stat-unit">ر.س</div>
+        </div>
+        
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">متوسط تكلفة اللتر</div>
+          <div class="mobile-stat-value success">{{ "{:,.2f}".format(avg_cost_per_liter) }}</div>
+          <div class="mobile-stat-unit">ر.س</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- الرسم البياني -->
+  <div class="mobile-card mb-4">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-chart-line"></i>
+        تطور الاستهلاك
+      </div>
+    </div>
+    <div class="mobile-card-body">
+      <canvas id="consumptionChart" height="200"></canvas>
+    </div>
+  </div>
+  
+  <!-- قائمة عمليات التعبئة -->
+  <div class="mobile-card">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-gas-pump"></i>
+        سجل تعبئة الوقود
+      </div>
+    </div>
+    <div class="mobile-card-body p-0">
+      {% if fuel_records %}
+      <div class="mobile-fuel-records-list">
+        {% for record in fuel_records %}
+        <div class="mobile-fuel-record-item">
+          <div class="mobile-fuel-record-date">
+            <div class="mobile-fuel-record-day">{{ record.date.strftime('%d') }}</div>
+            <div class="mobile-fuel-record-month">{{ record.date.strftime('%b') }}</div>
+          </div>
+          <div class="mobile-fuel-record-details">
+            <div class="mobile-fuel-record-title">{{ record.vehicle.make }} {{ record.vehicle.model }}</div>
+            <div class="mobile-fuel-record-subtitle">{{ record.vehicle.plate_number }}</div>
+            <div class="mobile-fuel-record-info">
+              {{ "{:,.1f}".format(record.liters) }} لتر ({{ record.fuel_type }})
+              {% if record.kilometer_reading %}
+              - {{ "{:,}".format(record.kilometer_reading) }} كم
+              {% endif %}
+            </div>
+          </div>
+          <div class="mobile-fuel-record-cost">
+            <div class="mobile-fuel-record-amount">{{ "{:,.2f}".format(record.cost) }}</div>
+            <div class="mobile-fuel-record-currency">ر.س</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="mobile-empty-state">
+        <div class="mobile-empty-icon">
+          <i class="fas fa-gas-pump"></i>
+        </div>
+        <p>لا توجد سجلات تعبئة وقود خلال هذه الفترة</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mb-4 {
+    margin-bottom: 1.5rem;
+  }
+
+  .p-0 {
+    padding: 0 !important;
+  }
+  
+  .mobile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .mobile-stat-item {
+    padding: 1rem;
+    background-color: rgba(var(--card-bg-rgb), 0.7);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-light);
+    text-align: center;
+  }
+  
+  .mobile-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  
+  .mobile-stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .mobile-stat-unit {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
+  .highlight {
+    color: var(--primary-color);
+  }
+  
+  .success {
+    color: var(--success-color);
+  }
+  
+  .warning {
+    color: var(--warning-color);
+  }
+  
+  .danger {
+    color: var(--danger-color);
+  }
+  
+  .mobile-fuel-records-list {
+    padding: 0;
+  }
+  
+  .mobile-fuel-record-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .mobile-fuel-record-item:last-child {
+    border-bottom: none;
+  }
+  
+  .mobile-fuel-record-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    border-radius: 8px;
+    margin-left: 1rem;
+  }
+  
+  .mobile-fuel-record-day {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  .mobile-fuel-record-month {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobile-fuel-record-details {
+    flex: 1;
+  }
+  
+  .mobile-fuel-record-title {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+  
+  .mobile-fuel-record-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
+  
+  .mobile-fuel-record-info {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  
+  .mobile-fuel-record-cost {
+    text-align: left;
+  }
+  
+  .mobile-fuel-record-amount {
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  .mobile-fuel-record-currency {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobile-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  
+  .mobile-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    opacity: 0.2;
+  }
+  
+  .mobile-empty-state p {
+    color: var(--text-secondary);
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // إعداد الرسم البياني
+    const ctx = document.getElementById('consumptionChart').getContext('2d');
+    
+    const chartData = {
+      labels: {{ chart_labels|tojson }},
+      datasets: [
+        {
+          label: 'كمية الوقود (لتر)',
+          data: {{ chart_liters|tojson }},
+          borderColor: '#4f91f4',
+          backgroundColor: 'rgba(79, 145, 244, 0.1)',
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'التكلفة (ر.س)',
+          data: {{ chart_costs|tojson }},
+          borderColor: '#f67280',
+          backgroundColor: 'rgba(246, 114, 128, 0.1)',
+          tension: 0.3,
+          fill: true,
+          yAxisID: 'y1'
+        }
+      ]
+    };
+    
+    const chartConfig = {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15
+            }
+          },
+          tooltip: {
+            rtl: true
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'كمية الوقود (لتر)'
+            }
+          },
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'التكلفة (ر.س)'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          },
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          }
+        }
+      },
+    };
+    
+    new Chart(ctx, chartConfig);
+  });
+</script>
+{% endblock %}
