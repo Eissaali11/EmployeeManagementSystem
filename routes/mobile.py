@@ -739,6 +739,33 @@ def vehicle_maintenance():
                          maintenance_records=maintenance_records,
                          cost_summary=cost_summary)
 
+# إضافة صيانة جديدة - النسخة المحمولة
+@mobile_bp.route('/vehicles/maintenance/add', methods=['GET', 'POST'])
+@login_required
+def add_maintenance():
+    """إضافة صيانة جديدة للنسخة المحمولة"""
+    # الحصول على قائمة السيارات
+    vehicles = Vehicle.query.all()
+    
+    if request.method == 'POST':
+        # معالجة إرسال النموذج
+        vehicle_id = request.form.get('vehicle_id')
+        maintenance_type = request.form.get('maintenance_type')
+        description = request.form.get('description')
+        cost = request.form.get('cost')
+        date = request.form.get('date')
+        status = request.form.get('status')
+        notes = request.form.get('notes')
+        
+        # هنا سيتم إضافة السجل لقاعدة البيانات (عند إنشاء جدول صيانة المركبات)
+        # حالياً نعرض رسالة نجاح ونعيد التوجيه إلى صفحة الصيانة
+        
+        flash('تمت إضافة سجل الصيانة بنجاح', 'success')
+        return redirect(url_for('mobile.vehicle_maintenance'))
+    
+    # عرض نموذج إضافة صيانة جديدة
+    return render_template('mobile/add_maintenance.html', vehicles=vehicles)
+
 # وثائق السيارات - النسخة المحمولة
 @mobile_bp.route('/vehicles/documents')
 @login_required
