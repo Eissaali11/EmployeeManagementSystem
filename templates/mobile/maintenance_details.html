@@ -73,6 +73,30 @@
         </div>
       </div>
       {% endif %}
+      
+      {% if maintenance.delivery_receipt_url %}
+      <div class="maintenance-receipt">
+        <div class="receipt-title">
+          <i class="fas fa-file-export"></i>
+          إيصال تسليم السيارة للورشة
+        </div>
+        <div class="receipt-image-container">
+          <img src="{{ maintenance.delivery_receipt_url }}" alt="إيصال تسليم السيارة للورشة" class="receipt-image" onclick="openImageViewer('{{ maintenance.delivery_receipt_url }}')">
+        </div>
+      </div>
+      {% endif %}
+      
+      {% if maintenance.pickup_receipt_url %}
+      <div class="maintenance-receipt">
+        <div class="receipt-title">
+          <i class="fas fa-file-import"></i>
+          إيصال استلام السيارة من الورشة
+        </div>
+        <div class="receipt-image-container">
+          <img src="{{ maintenance.pickup_receipt_url }}" alt="إيصال استلام السيارة من الورشة" class="receipt-image" onclick="openImageViewer('{{ maintenance.pickup_receipt_url }}')">
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
   

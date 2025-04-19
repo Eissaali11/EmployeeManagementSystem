@@ -101,6 +101,24 @@
       <div class="mobile-form-hint">أدخل رابط لصورة الإيصال أو فاتورة الصيانة</div>
     </div>
     
+    <div class="mobile-form-group">
+      <label for="delivery_receipt_url">
+        <i class="fas fa-file-export"></i>
+        رابط إيصال تسليم السيارة للورشة
+      </label>
+      <input type="url" name="delivery_receipt_url" id="delivery_receipt_url" class="mobile-form-control" value="{{ maintenance.delivery_receipt_url or '' }}" placeholder="https://example.com/delivery.jpg">
+      <div class="mobile-form-hint">أدخل رابط لإيصال تسليم السيارة للورشة</div>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="pickup_receipt_url">
+        <i class="fas fa-file-import"></i>
+        رابط إيصال استلام السيارة من الورشة
+      </label>
+      <input type="url" name="pickup_receipt_url" id="pickup_receipt_url" class="mobile-form-control" value="{{ maintenance.pickup_receipt_url or '' }}" placeholder="https://example.com/pickup.jpg">
+      <div class="mobile-form-hint">أدخل رابط لإيصال استلام السيارة من الورشة</div>
+    </div>
+    
     <!-- تفاصيل إضافية -->
     <div class="mobile-form-section-title">
       <i class="fas fa-clipboard-list"></i>

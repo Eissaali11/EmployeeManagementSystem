@@ -433,6 +433,8 @@ class VehicleMaintenance(db.Model):
     cost = db.Column(db.Float, default=0.0)  # تكلفة الصيانة
     technician = db.Column(db.String(100), nullable=False)  # الفني المسؤول
     receipt_image_url = db.Column(db.String(255))  # رابط صورة الإيصال
+    delivery_receipt_url = db.Column(db.String(255))  # رابط إيصال تسليم السيارة للورشة
+    pickup_receipt_url = db.Column(db.String(255))  # رابط إيصال استلام السيارة من الورشة
     parts_replaced = db.Column(db.Text)  # قطع الغيار المستبدلة
     actions_taken = db.Column(db.Text)  # الإجراءات المتخذة
     notes = db.Column(db.Text)  # ملاحظات إضافية
