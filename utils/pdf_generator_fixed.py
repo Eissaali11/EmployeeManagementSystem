@@ -119,23 +119,33 @@ def create_salary_report_pdf(salaries_data, month, year):
             
             # كتابة بيانات الصف
             x_pos = 10
+            
+            # التعامل مع كائن Salary بطريقة صحيحة (الوصول المباشر للخصائص)
+            employee_name = salary.employee.name if hasattr(salary, 'employee') else ''
+            employee_id = salary.employee.employee_id if hasattr(salary, 'employee') else ''
+            basic_salary = salary.basic_salary if hasattr(salary, 'basic_salary') else 0
+            allowances = salary.allowances if hasattr(salary, 'allowances') else 0
+            bonus = salary.bonus if hasattr(salary, 'bonus') else 0
+            deductions = salary.deductions if hasattr(salary, 'deductions') else 0
+            net_salary = salary.net_salary if hasattr(salary, 'net_salary') else 0
+            
             row_data = [
                 str(idx + 1),
-                salary.get('employee_name', ''),
-                salary.get('employee_id', ''),
-                "{:,.2f}".format(float(salary.get('basic_salary', 0))),
-                "{:,.2f}".format(float(salary.get('allowances', 0))),
-                "{:,.2f}".format(float(salary.get('bonus', 0))),
-                "{:,.2f}".format(float(salary.get('deductions', 0))),
-                "{:,.2f}".format(float(salary.get('net_salary', 0)))
+                employee_name,
+                employee_id,
+                "{:,.2f}".format(float(basic_salary)),
+                "{:,.2f}".format(float(allowances)),
+                "{:,.2f}".format(float(bonus)),
+                "{:,.2f}".format(float(deductions)),
+                "{:,.2f}".format(float(net_salary))
             ]
             
             # تجميع المبالغ
-            total_basic += float(salary.get('basic_salary', 0))
-            total_allowances += float(salary.get('allowances', 0))
-            total_bonus += float(salary.get('bonus', 0))
-            total_deductions += float(salary.get('deductions', 0))
-            total_net += float(salary.get('net_salary', 0))
+            total_basic += float(basic_salary)
+            total_allowances += float(allowances)
+            total_bonus += float(bonus)
+            total_deductions += float(deductions)
+            total_net += float(net_salary)
             
             # كتابة كل خلية
             for i, cell_data in enumerate(row_data):
