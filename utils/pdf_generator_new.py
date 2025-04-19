@@ -162,7 +162,7 @@ class ArabicPDF(FPDF):
 
 def generate_salary_notification_pdf(data):
     """
-    إنشاء إشعار راتب كملف PDF باستخدام FPDF
+    إنشاء إشعار راتب كملف PDF باستخدام FPDF - تصميم جديد مشابه للنموذج المرسل
     
     Args:
         data: قاموس يحتوي على بيانات الراتب
@@ -171,7 +171,7 @@ def generate_salary_notification_pdf(data):
         bytes يحتوي على ملف PDF
     """
     try:
-        # التأكد من أن جميع البيانات من النوع النصي
+        # التأكد من أن جميع البيانات من النوع الصحيح
         employee_name = str(data.get('employee_name', ''))
         employee_id = str(data.get('employee_id', ''))
         job_title = str(data.get('job_title', ''))
@@ -190,103 +190,104 @@ def generate_salary_notification_pdf(data):
         pdf = ArabicPDF()
         pdf.add_page()
         
-        # إضافة ترويسة الشركة
-        subtitle = "إشعار راتب - شهر " + str(month_name) + " " + str(year)
-        y_pos = pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
+        # ---- 1. العنوان والشعار ----
+        # إضافة الشعار
+        logo_path = os.path.join('static', 'images', 'logo.png')
+        if os.path.exists(logo_path):
+            pdf.image(logo_path, 10, 8, 35)
         
-        # إضافة إطار للمستند
-        pdf.set_draw_color(*pdf.primary_color)
-        pdf.set_line_width(0.3)
-        pdf.rect(10.0, 40.0, 190.0, 230.0)  # إطار خارجي
-        
-        # معلومات الموظف
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190, y_pos + 5, "بيانات الموظف", 'R')
-        
-        # إضافة خط تحت عنوان بيانات الموظف
-        pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(60.0, y_pos + 15.0, 190.0, y_pos + 15.0)
-        
-        # بيانات الموظف
-        pdf.set_font('Arial', '', 12)
-        pdf.set_text_color(0, 0, 0)
-        
-        # إنشاء جدول لبيانات الموظف (أكثر تنظيماً)
-        emp_info_y = y_pos + 20.0
-        pdf.set_xy(20.0, emp_info_y)
-        
-        # العمود الأول
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(190.0, emp_info_y, "الاسم:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(140.0, emp_info_y, employee_name, 'R')
-        
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, emp_info_y, "الرقم الوظيفي:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, emp_info_y, employee_id, 'R')
-        
-        # العمود الثاني
-        emp_info_y += 12.0
-        if department_name:
-            pdf.set_font('Arial', 'B', 11)
-            pdf.arabic_text(190.0, emp_info_y, "القسم:", 'R')
-            pdf.set_font('Arial', '', 11)
-            pdf.arabic_text(140.0, emp_info_y, department_name, 'R')
-        
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, emp_info_y, "المسمى الوظيفي:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, emp_info_y, job_title, 'R')
-        
-        # تفاصيل الراتب
-        salary_title_y = emp_info_y + 25.0
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190.0, salary_title_y, "تفاصيل الراتب", 'C')
-        
-        # خط تحت عنوان تفاصيل الراتب
-        pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(60.0, salary_title_y + 10.0, 140.0, salary_title_y + 10.0)
-        
-        # ========== إعادة تصميم كاملة وصحيحة لقسم ملخص الراتب ==========
-        
-        # نبدأ بعنوان منفصل وواضح تماماً
-        pdf.ln(15)  # مسافة إضافية بعد قسم تفاصيل الراتب
+        # عنوان المستند (اسم الشركة)
         pdf.set_font('Arial', 'B', 16)
         pdf.set_text_color(*pdf.primary_color)
-
-        # إضافة عنوان محاذى للوسط
-        title_y = pdf.get_y()
-        # استخدام get_display لضمان عرض النص العربي بشكل صحيح
-        pdf.cell(0, 10, get_display(arabic_reshaper.reshape("ملخص الراتب")), 0, 1, 'C')
+        pdf.arabic_text(105, 15, "نظام إدارة الموظفين - شركة التقنية المتطورة", 'C')
         
-        # خط أفقي تحت العنوان عبر الصفحة
+        # تاريخ الإشعار والشهر
+        pdf.set_font('Arial', '', 13)
+        subtitle = f"إشعار راتب - شهر {month_name} {year}"
+        pdf.arabic_text(105, 25, subtitle, 'C')
+        
+        # خط أفقي تحت العنوان
+        pdf.set_draw_color(1, 150, 150)  # لون تركواز فاتح
+        pdf.set_line_width(0.5)
+        pdf.line(10, 32, 200, 32)
+        
+        # ---- 2. إطار كامل للمستند ----
+        pdf.set_draw_color(20, 150, 120)  # لون تركواز مائل للأخضر
+        pdf.set_line_width(0.3)
+        pdf.rect(10, 40, 190, 235)  # إطار كامل للمستند
+        
+        # ---- 3. قسم بيانات الموظف ----
+        # عنوان القسم
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(170, 50, "بيانات الموظف", 'C')
+        
+        # خط تحت العنوان
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(70.0, title_y + 10.0, 140.0, title_y + 10.0)
+        pdf.line(140, 55, 195, 55)
         
-        # نترك مسافة قبل بداية الجدول
-        table_y = title_y + 15.0
-        
-        # تحديد عرض الجدول بشكل يتناسب مع المحتوى
-        amount_width = 40.0  # عرض عمود المبلغ
-        item_width = 85.0    # عرض عمود البيان
-        row_height = 10.0    # ارتفاع الصف
-        
-        # حساب موقع بداية الجدول في منتصف الصفحة
-        table_width = amount_width + item_width
-        x_start = (pdf.page_width - table_width) / 2.0
-        
-        # إنشاء جدول جديد بتصميم محسن
-        pdf.set_xy(x_start, table_y)
-        pdf.set_fill_color(*pdf.primary_color)
-        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+        # اسم الموظف - مع نص "الاسم:" محاذى للجهة اليمنى
         pdf.set_font('Arial', 'B', 12)
+        pdf.set_text_color(0, 0, 0)
+        pdf.arabic_text(180, 70, "الاسم:", 'R')
         
-        # رسم رأس الجدول - لكن عكس ترتيب الأعمدة ليتناسب مع اللغة العربية
-        pdf.cell(amount_width, row_height, get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
-        pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
+        # القيمة محاذاة للجهة اليسرى
+        pdf.set_font('Arial', '', 12)
+        pdf.arabic_text(120, 70, employee_name, 'R')
+        
+        # إضافة معلومات الموظف الأخرى إذا كانت متوفرة
+        if job_title:
+            pdf.set_font('Arial', 'B', 12)
+            pdf.arabic_text(80, 70, "المسمى الوظيفي:", 'R')
+            pdf.set_font('Arial', '', 12)
+            pdf.arabic_text(20, 70, job_title, 'R')
+            
+        if department_name:
+            pdf.set_font('Arial', 'B', 12)
+            pdf.arabic_text(180, 85, "القسم:", 'R')
+            pdf.set_font('Arial', '', 12)
+            pdf.arabic_text(140, 85, department_name, 'R')
+            
+        if employee_id:
+            pdf.set_font('Arial', 'B', 12)
+            pdf.arabic_text(80, 85, "الرقم الوظيفي:", 'R')
+            pdf.set_font('Arial', '', 12)
+            pdf.arabic_text(30, 85, employee_id, 'R')
+        
+        # ---- 4. قسم تفاصيل الراتب ----
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(170, 110, "تفاصيل الراتب", 'C')
+        
+        # خط تحت العنوان
+        pdf.set_draw_color(*pdf.primary_color)
+        pdf.line(140, 115, 195, 115)
+        
+        # ---- 5. ملخص الراتب ----
+        # عنوان قسم ملخص الراتب
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(105, 140, "ملخص الراتب", 'C')
+        
+        # خط تحت العنوان
+        pdf.line(75, 145, 135, 145)
+        
+        # جدول تفاصيل الراتب
+        # تحديد الأبعاد
+        table_width = 130
+        col1_width = 40  # عرض عمود المبلغ
+        col2_width = 90  # عرض عمود البيان
+        table_x = (210 - table_width) / 2  # محاذاة في الوسط
+        table_y = 150
+        row_height = 10
+        
+        # رسم رأس الجدول
+        pdf.set_fill_color(29, 161, 142)  # لون أخضر متوسط للعنوان
+        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+        pdf.set_xy(table_x, table_y)
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(col1_width, row_height, get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
+        pdf.cell(col2_width, row_height, get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
         
         # تنسيق الأرقام
         basic_salary_str = f"{basic_salary:.2f}"
@@ -295,7 +296,7 @@ def generate_salary_notification_pdf(data):
         bonus_str = f"{bonus:.2f}"
         net_salary_str = f"{net_salary:.2f}"
         
-        # إعداد مصفوفة بيانات ملخص الراتب
+        # إعداد بيانات الجدول
         salary_items = [
             ["إجمالي الراتب الأساسي", basic_salary_str],
             ["إجمالي البدلات", allowances_str],
@@ -304,77 +305,82 @@ def generate_salary_notification_pdf(data):
             ["إجمالي صافي الراتب", net_salary_str]
         ]
         
-        # طباعة بيانات الجدول
-        pdf.set_text_color(0, 0, 0)  # لون أسود للنص
-        
-        for i, item in enumerate(salary_items):
-            # تطبيق تنسيق خاص للصف الأخير (إجمالي صافي الراتب)
-            if i == len(salary_items) - 1:
-                pdf.set_font('Arial', 'B', 12)
-                pdf.set_fill_color(*pdf.primary_color)
-                pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-                fill = True
-            else:
-                # تناوب ألوان الصفوف
-                pdf.set_font('Arial', '', 11)
-                fill = i % 2 == 1
-                if fill:
-                    pdf.set_fill_color(*pdf.table_row_alt_color)
-                else:
-                    pdf.set_fill_color(255, 255, 255)
-            
-            # رسم الصف بشكل صحيح - ضبط كامل للمحاذاة
-            pdf.set_xy(x_start, pdf.get_y())
-            pdf.cell(amount_width, row_height, item[1], 1, 0, 'C', fill)
-            pdf.cell(item_width, row_height, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
-        
-        # إعادة ضبط نمط النص
+        # رسم صفوف الجدول
+        pdf.set_font('Arial', '', 12)
         pdf.set_text_color(0, 0, 0)
         
-        # إضافة الملاحظات إذا وجدت
+        for i, item in enumerate(salary_items):
+            # تنسيق خاص للصف الأخير (إجمالي صافي الراتب)
+            if i == len(salary_items) - 1:
+                # الصف الأخير بلون مميز
+                pdf.set_fill_color(29, 161, 142)
+                pdf.set_text_color(255, 255, 255)
+                pdf.set_font('Arial', 'B', 12)
+            else:
+                # الصفوف العادية بلون فاتح متناوب
+                pdf.set_font('Arial', '', 12)
+                pdf.set_text_color(0, 0, 0)
+                if i % 2 == 0:
+                    pdf.set_fill_color(255, 255, 255)  # خلفية بيضاء
+                else:
+                    pdf.set_fill_color(240, 240, 240)  # خلفية رمادية فاتحة
+            
+            # رسم الخلايا
+            pdf.set_xy(table_x, pdf.get_y())
+            pdf.cell(col1_width, row_height, item[1], 1, 0, 'C', True)
+            pdf.cell(col2_width, row_height, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', True)
+        
+        # ---- 6. إضافة ملاحظات إذا وجدت ----
         if notes:
-            notes_y = pdf.get_y() + 10.0
+            pdf.ln(10)
             pdf.set_font('Arial', 'B', 12)
             pdf.set_text_color(*pdf.primary_color)
-            pdf.arabic_text(190.0, notes_y, "ملاحظات:", 'R')
+            pdf.set_x(20)
+            pdf.arabic_text(180, pdf.get_y(), "ملاحظات:", 'R')
             
-            pdf.set_xy(20.0, notes_y + 5.0)
-            pdf.set_font('Arial', '', 10)
-            pdf.set_text_color(0, 0, 0)  # لون أسود للنص
-            
-            # إطار للملاحظات
-            pdf.rect(20.0, notes_y + 5.0, 170.0, 20.0)
-            pdf.set_xy(25.0, notes_y + 10.0)
-            pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(notes)), 0, 'R')
+            pdf.set_font('Arial', '', 11)
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_xy(20, pdf.get_y() + 5)
+            pdf.set_draw_color(200, 200, 200)
+            pdf.rect(20, pdf.get_y(), 170, 20)
+            pdf.set_xy(25, pdf.get_y() + 5)
+            pdf.multi_cell(160, 5, get_display(arabic_reshaper.reshape(notes)), 0, 'R')
         
-        # التوقيعات
-        signature_y = pdf.get_y() + 30.0
-        if signature_y < 230.0:  # التأكد من أن التوقيعات ليست قريبة جداً من نهاية الصفحة
-            signature_y = 230.0
+        # ---- 7. التوقيعات ----
+        # تحديد موضع التوقيعات ليكون في الأسفل بمسافة مناسبة
+        signature_y = 240
         
-        pdf.set_xy(20.0, signature_y)
+        # عنوان التوقيعات
+        pdf.set_xy(20, signature_y)
         pdf.set_font('Arial', 'B', 11)
-        pdf.set_text_color(*pdf.secondary_color)
-        pdf.cell(50.0, 10.0, get_display(arabic_reshaper.reshape("توقيع الموظف")), 0, 0, 'C')
-        pdf.cell(70.0, 10.0, "", 0, 0, 'C')  # فراغ في الوسط
-        pdf.cell(50.0, 10.0, get_display(arabic_reshaper.reshape("توقيع المدير المالي")), 0, 1, 'C')
+        pdf.set_text_color(80, 80, 80)
         
-        pdf.set_xy(20.0, pdf.get_y())
-        pdf.cell(50.0, 10.0, "________________", 0, 0, 'C')
-        pdf.cell(70.0, 10.0, "", 0, 0, 'C')  # فراغ في الوسط
-        pdf.cell(50.0, 10.0, "________________", 0, 1, 'C')
+        # توقيع الموظف (في اليسار)
+        pdf.arabic_text(50, signature_y, "توقيع الموظف", 'C')
         
-        # التذييل
-        pdf.set_xy(10.0, 270.0)
+        # توقيع المدير المالي (في اليمين)
+        pdf.arabic_text(150, signature_y, "توقيع المدير المالي", 'C')
+        
+        # خطوط التوقيع
+        pdf.set_draw_color(150, 150, 150)
+        
+        # خط توقيع الموظف
+        pdf.line(20, signature_y + 15, 80, signature_y + 15)
+        
+        # خط توقيع المدير المالي
+        pdf.line(120, signature_y + 15, 180, signature_y + 15)
+        
+        # ---- 8. التذييل ----
+        pdf.set_xy(10, 275)
         pdf.set_font('Arial', '', 8)
-        pdf.set_text_color(*pdf.secondary_color)
+        pdf.set_text_color(100, 100, 100)
         
-        pdf.arabic_text(200.0, pdf.get_y(), "تم إصدار هذا الإشعار بتاريخ " + current_date, 'C')
+        # تاريخ الإصدار والحقوق
+        pdf.arabic_text(105, pdf.get_y(), f"تم إصدار هذا الإشعار بتاريخ {current_date}", 'C')
         current_year_str = str(datetime.now().year)
-        pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year_str, 'C')
+        pdf.arabic_text(105, pdf.get_y() + 5, f"شركة التقنية المتطورة - جميع الحقوق محفوظة © {current_year_str}", 'C')
         
-        # إنشاء الملف كبيانات ثنائية - تحديث للإصدار الجديد من FPDF
-        # استخدام dest='S' لإرجاع المحتوى كسلسلة نصية ثم تحويله إلى بايت
+        # ---- 9. إرجاع ملف PDF كبيانات ثنائية ----
         pdf_content = pdf.output(dest='S').encode('latin1')
         return pdf_content
         
