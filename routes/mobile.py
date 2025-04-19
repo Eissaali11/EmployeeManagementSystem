@@ -1000,13 +1000,8 @@ def vehicle_documents():
     # يمكن تنفيذ هذه الوظيفة لاحقًا
     return render_template('mobile/vehicle_documents.html')
 
-# مصروفات السيارات - النسخة المحمولة
-@mobile_bp.route('/vehicles/expenses')
-@login_required
-def vehicle_expenses():
-    """مصروفات السيارات للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/vehicle_expenses.html')
+# مصروفات السيارات - النسخة المحمولة - تم تحديثها
+# انظر إلى التنفيذ الجديد في نهاية الملف
 
 # تشيك لست السيارة (إضافة فحص جديد) - النسخة المحمولة
 @mobile_bp.route('/vehicles/checklist')
@@ -1445,3 +1440,232 @@ def offline():
 def check_connection():
     """نقطة نهاية للتحقق من حالة الاتصال للنسخة المحمولة"""
     return jsonify({'status': 'online', 'timestamp': datetime.now().isoformat()})
+
+
+# صفحة مصروفات السيارات (الوقود) - النسخة المحمولة
+@mobile_bp.route('/vehicles/expenses')
+@login_required
+def vehicle_expenses():
+    """صفحة مصروفات الوقود للسيارات - النسخة المحمولة"""
+    # الحصول على معلمات الفلاتر
+    vehicle_id = request.args.get('vehicle_id', type=int)
+    period = request.args.get('period', 'month')  # الفترة الزمنية: week, month, quarter, year
+    
+    # تحديد تاريخ البداية حسب الفترة
+    today = date.today()
+    if period == 'week':
+        start_date = today - timedelta(days=7)
+        period_text = 'الأسبوع الماضي'
+    elif period == 'month':
+        start_date = today.replace(day=1)
+        period_text = 'الشهر الحالي'
+    elif period == 'quarter':
+        month = today.month - (today.month - 1) % 3
+        start_date = today.replace(month=month, day=1)
+        period_text = 'الربع الحالي'
+    elif period == 'year':
+        start_date = today.replace(month=1, day=1)
+        period_text = 'السنة الحالية'
+    else:
+        start_date = today - timedelta(days=30)
+        period_text = 'آخر 30 يوم'
+    
+    # استعلام سجلات الوقود
+    query = VehicleFuelConsumption.query.filter(VehicleFuelConsumption.date >= start_date)
+    
+    # تطبيق فلتر السيارة إذا تم تحديده
+    if vehicle_id:
+        query = query.filter_by(vehicle_id=vehicle_id)
+    
+    # ترتيب السجلات حسب التاريخ (الأحدث أولاً)
+    query = query.order_by(VehicleFuelConsumption.date.desc())
+    
+    # الحصول على سجلات تعبئة الوقود
+    fuel_records = query.limit(20).all()
+    
+    # حساب الإحصائيات
+    # إجمالي التكلفة والكمية للأسبوع الحالي
+    week_start = today - timedelta(days=today.weekday())
+    weekly_stats = db.session.query(
+        func.sum(VehicleFuelConsumption.cost).label('total_cost'),
+        func.sum(VehicleFuelConsumption.liters).label('total_liters')
+    ).filter(VehicleFuelConsumption.date >= week_start)
+    
+    if vehicle_id:
+        weekly_stats = weekly_stats.filter(VehicleFuelConsumption.vehicle_id == vehicle_id)
+    
+    weekly_stats = weekly_stats.first()
+    weekly_cost = weekly_stats.total_cost if weekly_stats and weekly_stats.total_cost else 0
+    weekly_liters = weekly_stats.total_liters if weekly_stats and weekly_stats.total_liters else 0
+    
+    # إجمالي التكلفة والكمية للشهر الحالي
+    month_start = today.replace(day=1)
+    monthly_stats = db.session.query(
+        func.sum(VehicleFuelConsumption.cost).label('total_cost'),
+        func.sum(VehicleFuelConsumption.liters).label('total_liters')
+    ).filter(VehicleFuelConsumption.date >= month_start)
+    
+    if vehicle_id:
+        monthly_stats = monthly_stats.filter(VehicleFuelConsumption.vehicle_id == vehicle_id)
+    
+    monthly_stats = monthly_stats.first()
+    monthly_cost = monthly_stats.total_cost if monthly_stats and monthly_stats.total_cost else 0
+    monthly_liters = monthly_stats.total_liters if monthly_stats and monthly_stats.total_liters else 0
+    
+    # الحصول على جميع السيارات للفلاتر
+    vehicles = Vehicle.query.order_by(Vehicle.make, Vehicle.model).all()
+    
+    return render_template('mobile/vehicle_expenses.html',
+                          fuel_records=fuel_records,
+                          vehicles=vehicles,
+                          selected_vehicle=vehicle_id,
+                          period=period,
+                          period_text=period_text,
+                          weekly_cost=weekly_cost,
+                          weekly_liters=weekly_liters,
+                          monthly_cost=monthly_cost,
+                          monthly_liters=monthly_liters)
+
+
+# صفحة إضافة تعبئة وقود - النسخة المحمولة
+@mobile_bp.route('/vehicles/expenses/add-fuel', methods=['GET', 'POST'])
+@login_required
+def add_fuel_consumption():
+    """صفحة إضافة تعبئة وقود جديدة - النسخة المحمولة"""
+    # الحصول على قائمة السيارات
+    vehicles = Vehicle.query.order_by(Vehicle.make, Vehicle.model).all()
+    
+    if request.method == 'POST':
+        try:
+            # معالجة النموذج المرسل
+            vehicle_id = request.form.get('vehicle_id', type=int)
+            date_str = request.form.get('date')
+            liters = request.form.get('liters', type=float)
+            cost = request.form.get('cost', type=float)
+            kilometer_reading = request.form.get('kilometer_reading', type=int)
+            driver_name = request.form.get('driver_name')
+            fuel_type = request.form.get('fuel_type')
+            filling_station = request.form.get('filling_station')
+            notes = request.form.get('notes')
+            
+            # التحقق من البيانات المطلوبة
+            if not (vehicle_id and date_str and liters and cost):
+                flash('جميع الحقول المطلوبة يجب ملؤها', 'danger')
+                return render_template('mobile/add_fuel_consumption.html', 
+                                    vehicles=vehicles,
+                                    now=datetime.now())
+            
+            # تحويل التاريخ
+            consumption_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            
+            # إنشاء سجل جديد لتعبئة الوقود
+            new_fuel_record = VehicleFuelConsumption(
+                vehicle_id=vehicle_id,
+                date=consumption_date,
+                liters=liters,
+                cost=cost,
+                kilometer_reading=kilometer_reading,
+                driver_name=driver_name,
+                fuel_type=fuel_type,
+                filling_station=filling_station,
+                notes=notes
+            )
+            
+            # حفظ السجل في قاعدة البيانات
+            db.session.add(new_fuel_record)
+            db.session.commit()
+            
+            flash('تم إضافة تعبئة الوقود بنجاح', 'success')
+            return redirect(url_for('mobile.vehicle_expenses'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء حفظ البيانات: {str(e)}', 'danger')
+            print(f"خطأ في إضافة تعبئة الوقود: {str(e)}")
+    
+    # عرض النموذج
+    return render_template('mobile/add_fuel_consumption.html', 
+                          vehicles=vehicles,
+                          now=datetime.now())
+
+
+# صفحة إحصائيات استهلاك الوقود - النسخة المحمولة
+@mobile_bp.route('/vehicles/expenses/stats')
+@login_required
+def fuel_consumption_stats():
+    """صفحة إحصائيات استهلاك الوقود - النسخة المحمولة"""
+    # الحصول على معلمات الفلاتر
+    vehicle_id = request.args.get('vehicle_id', type=int)
+    period = request.args.get('period', 'month')  # الفترة الزمنية: week, month, quarter, year
+    
+    # تحديد تاريخ البداية حسب الفترة
+    today = date.today()
+    if period == 'week':
+        start_date = today - timedelta(days=7)
+        period_text = 'آخر أسبوع'
+    elif period == 'month':
+        start_date = today - timedelta(days=30)
+        period_text = 'آخر شهر'
+    elif period == 'quarter':
+        start_date = today - timedelta(days=90)
+        period_text = 'آخر ثلاثة أشهر'
+    elif period == 'year':
+        start_date = today - timedelta(days=365)
+        period_text = 'آخر سنة'
+    else:
+        start_date = today - timedelta(days=30)
+        period_text = 'آخر 30 يوم'
+    
+    # استعلام سجلات الوقود
+    query = VehicleFuelConsumption.query.filter(VehicleFuelConsumption.date >= start_date)
+    
+    # تطبيق فلتر السيارة إذا تم تحديده
+    if vehicle_id:
+        query = query.filter_by(vehicle_id=vehicle_id)
+    
+    # ترتيب السجلات حسب التاريخ (الأحدث أولاً)
+    fuel_records = query.order_by(VehicleFuelConsumption.date.desc()).all()
+    
+    # حساب الإحصائيات العامة
+    total_liters = sum(record.liters for record in fuel_records) if fuel_records else 0
+    total_cost = sum(record.cost for record in fuel_records) if fuel_records else 0
+    
+    # حساب متوسط التكلفة اليومي
+    days_in_period = (today - start_date).days or 1  # تجنب القسمة على صفر
+    daily_avg_cost = total_cost / days_in_period
+    
+    # حساب متوسط تكلفة اللتر
+    avg_cost_per_liter = total_cost / total_liters if total_liters > 0 else 0
+    
+    # إعداد بيانات الرسم البياني
+    # تجميع البيانات حسب التاريخ
+    chart_data = {}
+    for record in fuel_records:
+        date_str = record.date.strftime('%Y-%m-%d')
+        if date_str not in chart_data:
+            chart_data[date_str] = {'liters': 0, 'cost': 0}
+        chart_data[date_str]['liters'] += record.liters
+        chart_data[date_str]['cost'] += record.cost
+    
+    # ترتيب البيانات حسب التاريخ
+    sorted_dates = sorted(chart_data.keys())
+    chart_labels = sorted_dates
+    chart_liters = [chart_data[date]['liters'] for date in sorted_dates]
+    chart_costs = [chart_data[date]['cost'] for date in sorted_dates]
+    
+    # الحصول على جميع السيارات للفلاتر
+    vehicles = Vehicle.query.order_by(Vehicle.make, Vehicle.model).all()
+    
+    return render_template('mobile/fuel_consumption_stats.html',
+                          fuel_records=fuel_records,
+                          vehicles=vehicles,
+                          selected_vehicle=vehicle_id,
+                          period=period,
+                          period_text=period_text,
+                          total_liters=total_liters,
+                          total_cost=total_cost,
+                          daily_avg_cost=daily_avg_cost,
+                          avg_cost_per_liter=avg_cost_per_liter,
+                          chart_labels=chart_labels,
+                          chart_liters=chart_liters,
+                          chart_costs=chart_costs)
