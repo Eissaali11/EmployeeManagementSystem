@@ -77,6 +77,15 @@ def load_user(user_id):
     from models import User
     return User.query.get(int(user_id))
 
+# إضافة فلتر nl2br لتحويل السطور الجديدة إلى وسوم HTML <br>
+from markupsafe import Markup
+
+@app.template_filter('nl2br')
+def nl2br_filter(s):
+    if s:
+        return Markup(s.replace('\n', '<br>'))
+    return s
+
 # Context processor to add variables to all templates
 @app.context_processor
 def inject_now():
