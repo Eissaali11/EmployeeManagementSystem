@@ -1,0 +1,27 @@
+# تمكين محرك إعادة الكتابة
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ wsgi.py/$1 [QSA,L]
+</IfModule>
+
+# التعامل مع ملفات Python كنصوص برمجية
+<IfModule mod_fcgid.c>
+    AddHandler fcgid-script .py
+    FcgidWrapper /usr/bin/python3 .py
+</IfModule>
+
+# إعداد صفحات الخطأ المخصصة
+ErrorDocument 404 /static/error/404.html
+ErrorDocument 500 /static/error/500.html
+
+# ضغط الملفات لتسريع التحميل
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json
+</IfModule>
+
+# تعيين التوقيت المحلي للمنطقة العربية
+SetEnv TZ Asia/Riyadh
+
+# تمكين التعامل مع UTF-8 للدعم العربي
+AddDefaultCharset UTF-8
