@@ -158,13 +158,20 @@
   <div class="mobile-actions-bar">
     <a href="{{ url_for('mobile.edit_maintenance', maintenance_id=maintenance.id) }}" class="mobile-btn mobile-btn-primary">
       <i class="fas fa-edit"></i>
-      تعديل الصيانة
+      تعديل الصيانة ({{ maintenance.id }})
     </a>
     
     <button class="mobile-btn mobile-btn-danger" onclick="confirmDelete()">
       <i class="fas fa-trash-alt"></i>
       حذف
     </button>
+  </div>
+  
+  <!-- معلومات تصحيح -->
+  <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-top: 10px; border-radius: 5px;">
+    <p><strong>معلومات تصحيح:</strong></p>
+    <p>معرف الصيانة: {{ maintenance.id }}</p>
+    <p>نوع الكائن: {{ maintenance.__class__.__name__ }}</p>
   </div>
   
 </div>

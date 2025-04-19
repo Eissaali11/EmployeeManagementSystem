@@ -852,6 +852,8 @@ def maintenance_details(maintenance_id):
     # جلب سجل الصيانة من قاعدة البيانات
     maintenance = VehicleMaintenance.query.get_or_404(maintenance_id)
     
+    print(f"DEBUG: Maintenance ID: {maintenance.id}, Type: {type(maintenance)}")
+    
     # جلب بيانات السيارة
     vehicle = Vehicle.query.get(maintenance.vehicle_id)
     
