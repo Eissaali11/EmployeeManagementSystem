@@ -1,66 +1,19 @@
-# ملف .htaccess أساسي للعمل على استضافة Hostinger
-# يحدد صفحة الخطأ 404 وبعض إعدادات أمان أساسية
+# ملف .htaccess مبسط للغاية لاستضافة Hostinger
 
-# تمكين محرك إعادة الكتابة
-RewriteEngine On
+# تعيين الصفحات الافتراضية
+DirectoryIndex home.html index.html index.php welcome.php
 
-# تعيين المجلد الأساسي للتطبيق (قد تحتاج لتغييره إذا كان التطبيق في مجلد فرعي)
-RewriteBase /
+# منع استعراض محتويات المجلدات
+Options -Indexes
 
-# إعادة توجيه جميع طلبات المجلد الجذر إلى index.html أو welcome.php إذا كان index.html غير موجود
-DirectoryIndex index.html index.php welcome.php
-
-# إعدادات PHP (قد تحتاج للتعليق عليها إذا لم تكن لديك صلاحيات لتغيير إعدادات PHP)
-<IfModule mod_php.c>
-    php_flag display_errors On
-    php_value max_execution_time 300
-    php_value max_input_time 300
-    php_value memory_limit 256M
-    php_value post_max_size 64M
-    php_value upload_max_filesize 64M
-    php_value max_file_uploads 50
-</IfModule>
+# تحديد ترميز الصفحات
+AddDefaultCharset UTF-8
 
 # حماية الملفات الحساسة
-<Files ~ "^\.(htaccess|htpasswd|env|git|gitignore)">
+<Files ~ "^\.(htaccess|env|git)">
     Order deny,allow
     Deny from all
 </Files>
 
-# منع استعراض المجلدات
-Options -Indexes
-
-# تعيين ترميز افتراضي UTF-8
-AddDefaultCharset UTF-8
-AddCharset UTF-8 .html .css .js .php
-
-# تمكين CORS للسماح بطلبات من نفس المجال
-<IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
-</IfModule>
-
 # صفحة الخطأ 404 المخصصة
-ErrorDocument 404 /welcome.php
-
-# تحسين الأداء
-<IfModule mod_expires.c>
-    ExpiresActive on
-    ExpiresDefault "access plus 1 month"
-    ExpiresByType text/css "access plus 1 year"
-    ExpiresByType application/javascript "access plus 1 year"
-    ExpiresByType image/jpeg "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType image/gif "access plus 1 year"
-    ExpiresByType image/svg+xml "access plus 1 year"
-</IfModule>
-
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json
-</IfModule>
-
-# تعيين محتوى افتراضي إذا كان محتوى آخر غير متوفر
-<IfModule mod_rewrite.c>
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ welcome.php [L]
-</IfModule>
+ErrorDocument 404 /home.html
