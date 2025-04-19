@@ -17,16 +17,29 @@
     FcgidWrapper /usr/bin/php-cgi .php
 </IfModule>
 
-# التعامل مع Python
+# التعامل مع Python - السماح بتنفيذ ملفات Python
 <FilesMatch "\.py$">
     Options +ExecCGI
     SetHandler cgi-script
 </FilesMatch>
 
+# تعيين wsgi.py كملف قابل للتنفيذ
+<Files "wsgi.py">
+    Options +ExecCGI
+    SetHandler cgi-script
+    Require all granted
+</Files>
+
 # تكوين البايثون
 <IfModule mod_cgi.c>
     AddHandler cgi-script .py
 </IfModule>
+
+# حماية الملفات الحساسة
+<FilesMatch "\.(env|git|htaccess|log|sh|inc|bak|example)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
 
 # إعداد صفحات الخطأ المخصصة
 ErrorDocument 403 /static/error/403.html
@@ -44,7 +57,7 @@ SetEnv TZ Asia/Riyadh
 # تمكين التعامل مع UTF-8 للدعم العربي
 AddDefaultCharset UTF-8
 
-# تحديد أذونات الوصول
+# تحديد أذونات الوصول - مهم جدًا لتجنب خطأ 403
 <Directory />
     Options FollowSymLinks
     AllowOverride All
@@ -52,8 +65,33 @@ AddDefaultCharset UTF-8
 </Directory>
 
 # السماح بالوصول إلى المجلد الرئيسي
-<Directory "/home/user/public_html">
+# قم بتعديل المسار ليتوافق مع مسار موقعك على خادم Hostinger
+<Directory "/home/u123456789/domains/yourdomain.com/public_html">
     Options Indexes FollowSymLinks
     AllowOverride All
     Require all granted
 </Directory>
+
+# تعيين ملف الفهرسة الافتراضي
+DirectoryIndex index.php index.html index.htm
+
+# تكوين الكاش للملفات الثابتة
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/x-javascript "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresDefault "access plus 2 days"
+</IfModule>
+
+# تعيين متغيرات بيئية إضافية
+SetEnv FLASK_APP main.py
+SetEnv FLASK_ENV production
