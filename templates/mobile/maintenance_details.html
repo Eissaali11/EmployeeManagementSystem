@@ -156,12 +156,12 @@
   
   <!-- أزرار الإجراءات -->
   <div class="mobile-actions-bar">
-    <a href="{{ url_for('mobile.vehicle_maintenance') }}/edit/{{ maintenance.id }}" class="mobile-btn mobile-btn-primary">
+    <a href="{{ url_for('mobile.edit_maintenance', maintenance_id=maintenance.id) }}" class="mobile-btn mobile-btn-primary">
       <i class="fas fa-edit"></i>
       تعديل الصيانة
     </a>
     
-    <button class="mobile-btn mobile-btn-danger" onclick="confirmDelete({{ maintenance.id }})">
+    <button class="mobile-btn mobile-btn-danger" onclick="confirmDelete()">
       <i class="fas fa-trash-alt"></i>
       حذف
     </button>
@@ -443,9 +443,9 @@
   }
   
   // تأكيد الحذف
-  function confirmDelete(id) {
+  function confirmDelete() {
     if (confirm('هل أنت متأكد من حذف سجل الصيانة هذا؟ لا يمكن التراجع عن هذا الإجراء.')) {
-      window.location.href = '{{ url_for("mobile.vehicle_maintenance") }}/delete/' + id;
+      window.location.href = '{{ url_for("mobile.delete_maintenance", maintenance_id=maintenance.id) }}';
     }
   }
 </script>
