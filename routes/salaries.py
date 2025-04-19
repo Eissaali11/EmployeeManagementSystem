@@ -431,21 +431,29 @@ def share_salary_via_whatsapp(id):
         }
         month_name = month_names.get(salary.month, str(salary.month))
         
-        # إعداد نص الرسالة
+        # إنشاء رابط لتحميل ملف PDF
+        pdf_url = url_for('salaries.salary_notification_pdf', id=salary.id, _external=True)
+        
+        # إعداد نص الرسالة مع رابط التحميل
         message_text = f"""
 *إشعار راتب - شركة التقنية المتطورة*
+
+السلام عليكم ورحمة الله وبركاته،
+
+تحية طيبة،
+
+نود إشعاركم بإيداع راتب شهر {month_name} {salary.year}.
 
 الموظف: {employee.name}
 الشهر: {month_name} {salary.year}
 
-الراتب الأساسي: {salary.basic_salary:.2f}
-البدلات: {salary.allowances:.2f}
-الخصومات: {salary.deductions:.2f}
-المكافآت: {salary.bonus:.2f}
-
 صافي الراتب: *{salary.net_salary:.2f}*
 
-تم إنشاء هذا الإشعار تلقائياً من نظام إدارة الموظفين.
+للاطلاع على تفاصيل الراتب، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
+{pdf_url}
+
+مع تحيات إدارة الموارد البشرية
+شركة التقنية المتطورة
 """
         
         # تسجيل العملية
@@ -461,7 +469,23 @@ def share_salary_via_whatsapp(id):
         
         # إنشاء رابط الواتس اب مع نص الرسالة
         from urllib.parse import quote
-        whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
+        
+        # التحقق مما إذا كان رقم الهاتف متوفر للموظف
+        if employee.mobile:
+            # تنسيق رقم الهاتف (إضافة رمز الدولة +966 إذا لم يكن موجودًا)
+            to_phone = employee.mobile
+            if not to_phone.startswith('+'):
+                # إذا كان الرقم يبدأ بـ 0، نحذفه ونضيف رمز الدولة
+                if to_phone.startswith('0'):
+                    to_phone = "+966" + to_phone[1:]
+                else:
+                    to_phone = "+966" + to_phone
+            
+            # إنشاء رابط مباشر للموظف
+            whatsapp_url = f"https://wa.me/{to_phone}?text={quote(message_text)}"
+        else:
+            # إذا لم يكن هناك رقم هاتف، استخدم الطريقة العادية
+            whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
         
         # إعادة توجيه المستخدم إلى رابط الواتس اب
         return redirect(whatsapp_url)
@@ -492,9 +516,18 @@ def share_deduction_via_whatsapp(id):
         }
         month_name = month_names.get(salary.month, str(salary.month))
         
-        # إعداد نص الرسالة
+        # إنشاء رابط لتحميل ملف PDF
+        pdf_url = url_for('salaries.salary_notification_pdf', id=salary.id, _external=True)
+        
+        # إعداد نص الرسالة مع رابط التحميل
         message_text = f"""
 *إشعار خصم على الراتب - شركة التقنية المتطورة*
+
+السلام عليكم ورحمة الله وبركاته،
+
+تحية طيبة،
+
+نود إبلاغكم عن وجود خصم على راتب شهر {month_name} {salary.year}.
 
 الموظف: {employee.name}
 الشهر: {month_name} {salary.year}
@@ -503,7 +536,11 @@ def share_deduction_via_whatsapp(id):
 
 الراتب بعد الخصم: {salary.net_salary:.2f}
 
-تم إنشاء هذا الإشعار تلقائياً من نظام إدارة الموظفين.
+للاطلاع على تفاصيل الراتب والخصم، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
+{pdf_url}
+
+مع تحيات إدارة الموارد البشرية
+شركة التقنية المتطورة
 """
         
         # تسجيل العملية
@@ -519,7 +556,23 @@ def share_deduction_via_whatsapp(id):
         
         # إنشاء رابط الواتس اب مع نص الرسالة
         from urllib.parse import quote
-        whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
+        
+        # التحقق مما إذا كان رقم الهاتف متوفر للموظف
+        if employee.mobile:
+            # تنسيق رقم الهاتف (إضافة رمز الدولة +966 إذا لم يكن موجودًا)
+            to_phone = employee.mobile
+            if not to_phone.startswith('+'):
+                # إذا كان الرقم يبدأ بـ 0، نحذفه ونضيف رمز الدولة
+                if to_phone.startswith('0'):
+                    to_phone = "+966" + to_phone[1:]
+                else:
+                    to_phone = "+966" + to_phone
+            
+            # إنشاء رابط مباشر للموظف
+            whatsapp_url = f"https://wa.me/{to_phone}?text={quote(message_text)}"
+        else:
+            # إذا لم يكن هناك رقم هاتف، استخدم الطريقة العادية
+            whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
         
         # إعادة توجيه المستخدم إلى رابط الواتس اب
         return redirect(whatsapp_url)
