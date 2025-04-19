@@ -1,45 +1,36 @@
+# تكوين بسيط لـ htaccess لحل مشكلة 404
+Options +ExecCGI +FollowSymLinks
+DirectoryIndex index.php index.html
+
 # تمكين محرك إعادة الكتابة
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
     
-    # السماح بالوصول إلى المجلدات والملفات الموجودة
+    # معالجة الطلبات للملفات والمجلدات الموجودة بالفعل
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     
-    # توجيه كل الطلبات إلى ملف الفهرسة
+    # توجيه كل الطلبات إلى index.php
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
 
-# تكوين معالج PHP - CGI
-<IfModule mod_fcgid.c>
-    AddHandler fcgid-script .php
-    FcgidWrapper /usr/bin/php-cgi .php
-</IfModule>
-
-# التعامل مع Python - السماح بتنفيذ ملفات Python
+# التعامل مع ملفات Python
+AddHandler cgi-script .py
 <FilesMatch "\.py$">
     Options +ExecCGI
     SetHandler cgi-script
 </FilesMatch>
 
-# تعيين wsgi.py كملف قابل للتنفيذ
-<Files "wsgi.py">
-    Options +ExecCGI
-    SetHandler cgi-script
-    Require all granted
-</Files>
+# تعيين الملفات الافتراضية
+DirectoryIndex index.php index.html
 
-# تكوين البايثون
-<IfModule mod_cgi.c>
-    AddHandler cgi-script .py
+# تكوين PHP
+<IfModule mod_php.c>
+    php_flag display_errors On
+    php_flag log_errors On
+    php_value error_log /home/u800258840/domains/eissa.site/public_html/php_errors.log
 </IfModule>
-
-# حماية الملفات الحساسة
-<FilesMatch "\.(env|git|htaccess|log|sh|inc|bak|example)$">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
 
 # إعداد صفحات الخطأ المخصصة
 ErrorDocument 403 /static/error/403.html
@@ -65,9 +56,9 @@ AddDefaultCharset UTF-8
 </Directory>
 
 # السماح بالوصول إلى المجلد الرئيسي
-# قم بتعديل المسار ليتوافق مع مسار موقعك على خادم Hostinger
-<Directory "/home/u123456789/domains/yourdomain.com/public_html">
-    Options Indexes FollowSymLinks
+# المسار المحدث لموقعك على Hostinger
+<Directory "/home/u800258840/domains/eissa.site/public_html">
+    Options Indexes FollowSymLinks ExecCGI
     AllowOverride All
     Require all granted
 </Directory>
