@@ -1,0 +1,98 @@
+# إعداد البيئة لعمل تطبيق Flask مع قاعدة بيانات PostgreSQL ودعم HTML، CSS، JavaScript
+
+# 1. إنشاء بيئة افتراضية لتثبيت الحزم اللازمة
+python3 -m venv venv
+source venv/bin/activate  # تفعيل البيئة الافتراضية على أنظمة Linux/Mac
+# أو على Windows:
+# venv\Scripts\activate
+
+# 2. تثبيت Flask و PostgreSQL و الحزم الأخرى اللازمة
+pip install Flask psycopg2 flask_sqlalchemy flask-babel
+
+# 3. إنشاء ملف `requirements.txt` لتثبيت الحزم
+pip freeze > requirements.txt
+
+# 4. إعداد تطبيق Flask في ملف `app.py` (نموذج أولي)
+touch app.py
+
+# في ملف `app.py`:
+"""
+from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+from flask_babel import Babel
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@hostname:port/dbname'
+app.config['SECRET_KEY'] = 'your_secret_key'
+
+db = SQLAlchemy(app)
+babel = Babel(app)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+if __name__ == "__main__":
+    app.run(debug=True)
+"""
+
+# 5. إعداد HTML في ملف `templates/index.html`
+touch templates/index.html
+
+# في ملف `index.html`:
+"""
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الموظفين</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>مرحبًا بك في نظام إدارة الموظفين</h1>
+</body>
+</html>
+"""
+
+# 6. إعداد ملفات CSS في مجلد `static`
+mkdir static
+touch static/styles.css
+
+# في ملف `styles.css`:
+"""
+body {
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    text-align: right;
+}
+
+h1 {
+    color: #4CAF50;
+}
+"""
+
+# 7. إعداد قاعدة بيانات PostgreSQL على Hostinger:
+# - قم بإنشاء قاعدة بيانات PostgreSQL عبر لوحة تحكم Hostinger.
+# - احصل على تفاصيل الاتصال (اسم القاعدة، اسم المستخدم، كلمة المرور، العنوان).
+# - استبدل في ملف `app.py` رابط الاتصال بـ PostgreSQL مثل التالي:
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://username:password@hostname:port/dbname'
+
+# 8. رفع الملفات إلى Hostinger باستخدام FTP أو cPanel
+# قم برفع الملفات `app.py` و `requirements.txt` و `templates` و `static` إلى حسابك على Hostinger.
+
+# 9. إعداد Gunicorn لتشغيل التطبيق عبر WSGI:
+pip install gunicorn
+
+# 10. إعداد ملف `wsgi.py` لتشغيل التطبيق:
+touch wsgi.py
+
+# في ملف `wsgi.py`:
+"""
+from app import app
+
+if __name__ == "__main__":
+    app.run()
+"""
+
+# 11. التحقق من أن كل شيء يعمل بشكل صحيح عبر URL الخاص بك على Hostinger.
