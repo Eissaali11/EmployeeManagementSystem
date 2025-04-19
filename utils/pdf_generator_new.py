@@ -249,26 +249,60 @@ def generate_salary_notification_pdf(data):
         pdf.set_font('Amiri', 'B', 12)
         pdf.set_text_color(0, 0, 0)
         pdf.set_xy(160, 65)
-        pdf.arabic_text(170, 65, "الاسم:", 'R')
         
+        # استخدام cell بدلاً من arabic_text لعرض "الاسم:" واسم الموظف
+        label_text = get_display(arabic_reshaper.reshape("الاسم:"))
+        pdf.cell(30, 8, label_text, 0, 0, 'R')
+        
+        # وضع اسم الموظف بالمحاذاة المناسبة
         pdf.set_font('Amiri', '', 12)
-        pdf.arabic_text(120, 65, employee_name, 'R')
+        pdf.set_xy(20, 65)
+        employee_name_text = get_display(arabic_reshaper.reshape(employee_name))
+        pdf.cell(140, 8, employee_name_text, 0, 1, 'R')
+        
+        # إضافة المزيد من بيانات الموظف (الرقم الوظيفي، المسمى الوظيفي، القسم)
+        if employee_id:
+            pdf.set_font('Amiri', 'B', 12)
+            pdf.set_xy(160, 75)
+            id_label = get_display(arabic_reshaper.reshape("الرقم الوظيفي:"))
+            pdf.cell(30, 8, id_label, 0, 0, 'R')
+            
+            pdf.set_font('Amiri', '', 12)
+            pdf.set_xy(20, 75)
+            pdf.cell(140, 8, employee_id, 0, 1, 'R')
+        
+        # المسمى الوظيفي
+        if job_title:
+            pdf.set_font('Amiri', 'B', 12)
+            pdf.set_xy(160, 85)
+            title_label = get_display(arabic_reshaper.reshape("المسمى الوظيفي:"))
+            pdf.cell(30, 8, title_label, 0, 0, 'R')
+            
+            pdf.set_font('Amiri', '', 12)
+            pdf.set_xy(20, 85)
+            job_title_text = get_display(arabic_reshaper.reshape(job_title))
+            pdf.cell(140, 8, job_title_text, 0, 1, 'R')
         
         # ------ قسم تفاصيل الراتب ------
+        # نضبط موضع "تفاصيل الراتب" ليكون بعد بيانات الموظف
+        details_y = 100 # ضبط الموضع الرأسي بناءً على وجود بيانات الموظف
+        
         pdf.set_font('Amiri', 'B', 14)
         pdf.set_text_color(29, 161, 142)
-        pdf.arabic_text(105, 85, "تفاصيل الراتب", 'C')
+        pdf.arabic_text(105, details_y, "تفاصيل الراتب", 'C')
         
         # خط تحت عنوان تفاصيل الراتب
-        pdf.line(130, 95, 80, 95)
+        pdf.line(130, details_y + 10, 80, details_y + 10)
         
         # ------ قسم ملخص الراتب ------
+        summary_y = details_y + 20 # نبدأ "ملخص الراتب" بعد 20 مم من "تفاصيل الراتب"
+        
         pdf.set_font('Amiri', 'B', 14)
         pdf.set_text_color(29, 161, 142)
-        pdf.arabic_text(105, 115, "ملخص الراتب", 'C')
+        pdf.arabic_text(105, summary_y, "ملخص الراتب", 'C')
         
         # خط تحت عنوان ملخص الراتب
-        pdf.line(145, 125, 65, 125)
+        pdf.line(145, summary_y + 10, 65, summary_y + 10)
         
         # ------ جدول ملخص الراتب - تصميم مطابق للصورة المرسلة ------
         # يحتاج إلى تمركز في الصفحة مع عرض 140 وحدة
@@ -276,7 +310,7 @@ def generate_salary_notification_pdf(data):
         col1_width = 50   # عرض عمود المبلغ
         col2_width = 90   # عرض عمود البيان
         table_x = (210 - table_width) / 2  # النقطة X في وسط الصفحة
-        table_y = 135
+        table_y = summary_y + 15  # الموضع Y بناءً على موضع العنوان "ملخص الراتب"
         row_height = 10
         
         # رأس الجدول - لون أخضر وخط أبيض
@@ -384,15 +418,21 @@ def generate_salary_notification_pdf(data):
             current_y += row_height
         
         # ------ قسم التوقيعات ------
-        signature_y = 200
+        # حساب الموضع بناءً على آخر صف في الجدول (بعده ب 20 مم)
+        signature_y = current_y + 20
         
         # توقيع الموظف (يسار)
         pdf.set_text_color(0, 0, 0)
         pdf.set_font('Amiri', 'B', 11)
-        pdf.arabic_text(50, signature_y, "توقيع الموظف", 'C')
+        # استخدام set_xy و cell بدلاً من arabic_text
+        pdf.set_xy(30, signature_y)
+        employee_sign = get_display(arabic_reshaper.reshape("توقيع الموظف"))
+        pdf.cell(40, 8, employee_sign, 0, 0, 'C')
         
         # توقيع المدير المالي (يمين)
-        pdf.arabic_text(160, signature_y, "توقيع المدير المالي", 'C')
+        pdf.set_xy(140, signature_y)
+        manager_sign = get_display(arabic_reshaper.reshape("توقيع المدير المالي"))
+        pdf.cell(40, 8, manager_sign, 0, 0, 'C')
         
         # خطوط التوقيع
         pdf.set_xy(30, signature_y + 10)
@@ -407,12 +447,15 @@ def generate_salary_notification_pdf(data):
         pdf.set_text_color(100, 100, 100)
         
         # تاريخ الإصدار
-        footer_text = f"تم إصدار هذا الإشعار بتاريخ {current_date}"
-        pdf.arabic_text(105, footer_y, footer_text, 'C')
+        pdf.set_xy(105 - 40, footer_y)
+        footer_text = get_display(arabic_reshaper.reshape(f"تم إصدار هذا الإشعار بتاريخ {current_date}"))
+        pdf.cell(80, 8, footer_text, 0, 0, 'C')
         
         # حقوق النشر
-        copyright_text = f"شركة التقنية المتطورة - جميع الحقوق محفوظة © {datetime.now().year}"
-        pdf.arabic_text(105, footer_y + 5, copyright_text, 'C')
+        pdf.set_xy(105 - 40, footer_y + 8)
+        current_year = str(datetime.now().year)
+        copyright_text = get_display(arabic_reshaper.reshape(f"شركة التقنية المتطورة - جميع الحقوق محفوظة © {current_year}"))
+        pdf.cell(80, 8, copyright_text, 0, 0, 'C')
         
         # إرجاع المستند كبيانات ثنائية
         pdf_content = pdf.output(dest='S').encode('latin1')
