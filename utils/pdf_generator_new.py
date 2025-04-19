@@ -162,7 +162,7 @@ class ArabicPDF(FPDF):
 
 def generate_salary_notification_pdf(data):
     """
-    إنشاء إشعار راتب كملف PDF باستخدام FPDF - تصميم منظم بالكامل للنموذج
+    إنشاء إشعار راتب كملف PDF باستخدام FPDF - تصميم مطابق تماماً للنموذج المرسل
     
     Args:
         data: قاموس يحتوي على بيانات الراتب
@@ -186,154 +186,100 @@ def generate_salary_notification_pdf(data):
         notes = str(data.get('notes', '')) if data.get('notes') else ''
         current_date = str(data.get('current_date', datetime.now().strftime('%Y-%m-%d')))
         
-        # ---- إنشاء مستند PDF بتصميم بسيط جداً ومتطابق مع النموذج المرسل ----
+        # ---- إنشاء مستند PDF جديد ----
         pdf = ArabicPDF()
         pdf.add_page()
         
-        # ---- 1. الشعار والعنوان ----
-        # إضافة الشعار في أعلى اليسار
+        # ---- 1. إضافة الشعار إذا وجد ----
         logo_path = os.path.join('static', 'images', 'logo.png')
         if os.path.exists(logo_path):
-            pdf.image(logo_path, 10, 8, 30)  # حجم أصغر للشعار
+            pdf.image(logo_path, 10, 8, 35)
         
-        # العنوان الرئيسي (اسم الشركة والنظام)
-        pdf.set_font('Arial', 'B', 18)
-        pdf.set_text_color(29, 161, 142)  # اللون الأخضر التركوازي
+        # ---- 2. عنوان النظام والشركة ----
+        pdf.set_font('Arial', 'B', 16)
+        pdf.set_text_color(29, 161, 142)  # لون أخضر تركوازي
         company_name = "نظام إدارة الموظفين - شركة التقنية المتطورة"
-        # طباعة العنوان مع محاذاة وسطية
-        y_title = 15
-        pdf.set_xy(40, y_title)
+        pdf.set_xy(40, 15)
         pdf.cell(130, 10, get_display(arabic_reshaper.reshape(company_name)), 0, 1, 'C')
         
-        # العنوان الفرعي (إشعار الراتب والشهر)
-        y_subtitle = 28
-        pdf.set_font('Arial', '', 14)
-        pdf.set_text_color(100, 100, 100)  # لون رمادي للعنوان الفرعي
+        # ---- 3. عنوان إشعار الراتب ----
+        pdf.set_font('Arial', '', 13)
+        pdf.set_text_color(100, 100, 100)
         subtitle = f"إشعار راتب - شهر {month_name} {year}"
-        pdf.set_xy(40, y_subtitle)
+        pdf.set_xy(40, 25)
         pdf.cell(130, 10, get_display(arabic_reshaper.reshape(subtitle)), 0, 1, 'C')
         
-        # خط أفقي أخضر تحت العنوان
+        # ---- 4. خط فاصل أخضر ----
         pdf.set_draw_color(29, 161, 142)
-        pdf.set_line_width(0.5)
-        pdf.line(10, 38, 200, 38)
+        pdf.set_line_width(0.7)
+        pdf.line(10, 35, 200, 35)
         
-        # ---- 2. إطار كامل للمستند ----
-        pdf.set_draw_color(29, 161, 142)  # اللون الأخضر نفسه للإطار
-        pdf.set_line_width(0.7)  # خط أكثر سماكة للإطار الخارجي
-        pdf.rect(10, 45, 190, 220)  # إطار واضح حول كامل المستند
+        # ---- 5. بيانات الموظف ----
+        # عنوان بيانات الموظف
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(29, 161, 142)
+        pdf.set_xy(0, 45)
+        pdf.cell(210, 10, get_display(arabic_reshaper.reshape("بيانات الموظف")), 0, 1, 'C')
         
-        # ---- 3. قسم بيانات الموظف بتصميم مستطيل ----
-        # عنوان قسم بيانات الموظف
-        employee_title_y = 52
+        # خط تحت العنوان
+        pdf.set_draw_color(29, 161, 142)
+        pdf.line(120, 55, 90, 55)
         
-        # خلفية لمستطيل بيانات الموظف
-        pdf.set_fill_color(245, 245, 245)  # لون رمادي فاتح جداً
-        pdf.rect(20, employee_title_y, 170, 40, 'F')  # مستطيل كبير للمعلومات
-        
-        # عنوان القسم داخل شريط أخضر
-        pdf.set_fill_color(29, 161, 142)
-        pdf.rect(20, employee_title_y, 170, 10, 'F')  # شريط أخضر للعنوان
-        
-        # عنوان "بيانات الموظف" باللون الأبيض
+        # معلومات الموظف
         pdf.set_font('Arial', 'B', 12)
-        pdf.set_text_color(255, 255, 255)  # نص أبيض
-        pdf.set_xy(20, employee_title_y + 2)
-        pdf.cell(170, 6, get_display(arabic_reshaper.reshape("بيانات الموظف")), 0, 1, 'C')
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_xy(150, 60)
+        pdf.cell(40, 10, get_display(arabic_reshaper.reshape("الاسم:")), 0, 0, 'R')
         
-        # بيانات الموظف داخل المستطيل
-        pdf.set_text_color(0, 0, 0)  # نص أسود
+        pdf.set_font('Arial', '', 12)
+        pdf.set_xy(50, 60)
+        pdf.cell(100, 10, get_display(arabic_reshaper.reshape(employee_name)), 0, 1, 'R')
         
-        # الصف الأول - الاسم
-        info_y = employee_title_y + 15
+        # ---- 6. تفاصيل الراتب ----
+        # عنوان تفاصيل الراتب
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(29, 161, 142)
+        pdf.set_xy(0, 80)
+        pdf.cell(210, 10, get_display(arabic_reshaper.reshape("تفاصيل الراتب")), 0, 1, 'C')
         
-        # اسم الموظف
-        pdf.set_font('Arial', 'B', 11)
-        pdf.set_xy(140, info_y)
-        pdf.cell(40, 6, get_display(arabic_reshaper.reshape("الاسم:")), 0, 0, 'R')
+        # خط تحت العنوان
+        pdf.set_draw_color(29, 161, 142)
+        pdf.line(130, 90, 80, 90)
         
-        pdf.set_font('Arial', '', 11)
-        pdf.set_xy(40, info_y)
-        pdf.cell(100, 6, get_display(arabic_reshaper.reshape(employee_name)), 0, 0, 'R')
-        
-        # الصف الثاني - القسم والرقم الوظيفي
-        info_y = employee_title_y + 25
-        
-        # القسم
-        pdf.set_font('Arial', 'B', 11)
-        pdf.set_xy(140, info_y)
-        pdf.cell(40, 6, get_display(arabic_reshaper.reshape("القسم:")), 0, 0, 'R')
-        
-        # الرقم الوظيفي
-        pdf.set_font('Arial', '', 11)
-        pdf.set_xy(40, info_y)
-        pdf.cell(100, 6, get_display(arabic_reshaper.reshape(department_name if department_name else "-")), 0, 0, 'R')
-        
-        # الصف الثالث
-        info_y = employee_title_y + 35
-        
-        # المسمى الوظيفي
-        pdf.set_font('Arial', 'B', 11)
-        pdf.set_xy(140, info_y)
-        pdf.cell(40, 6, get_display(arabic_reshaper.reshape("المسمى الوظيفي:")), 0, 0, 'R')
-        
-        pdf.set_font('Arial', '', 11)
-        pdf.set_xy(40, info_y)
-        pdf.cell(100, 6, get_display(arabic_reshaper.reshape(job_title)), 0, 0, 'R')
-        
-        # ---- 4. قسم تفاصيل الراتب بتصميم مستطيل ----
-        # عنوان قسم تفاصيل الراتب
-        salary_title_y = 100
-        
-        # خلفية لمستطيل تفاصيل الراتب
-        pdf.set_fill_color(245, 245, 245)  # لون رمادي فاتح جداً
-        pdf.rect(20, salary_title_y, 170, 105, 'F')  # مستطيل كبير للمعلومات
-        
-        # عنوان القسم داخل شريط أخضر
-        pdf.set_fill_color(29, 161, 142)
-        pdf.rect(20, salary_title_y, 170, 10, 'F')  # شريط أخضر للعنوان
-        
-        # عنوان "تفاصيل الراتب" باللون الأبيض
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_text_color(255, 255, 255)  # نص أبيض
-        pdf.set_xy(20, salary_title_y + 2)
-        pdf.cell(170, 6, get_display(arabic_reshaper.reshape("تفاصيل الراتب")), 0, 1, 'C')
-        
-        # ---- 5. ملخص الراتب داخل تفاصيل الراتب ----
+        # ---- 7. ملخص الراتب مع جدول بتصميم شبيه للنموذج المرسل ----
         # عنوان ملخص الراتب
-        pdf.set_text_color(29, 161, 142)  # لون أخضر للنص
-        pdf.set_font('Arial', 'B', 12)
-        summary_title_y = salary_title_y + 20
-        pdf.set_xy(20, summary_title_y)
-        pdf.cell(170, 6, get_display(arabic_reshaper.reshape("ملخص الراتب")), 0, 1, 'C')
+        pdf.set_font('Arial', 'B', 14)
+        pdf.set_text_color(29, 161, 142)
+        pdf.set_xy(0, 100)
+        pdf.cell(210, 10, get_display(arabic_reshaper.reshape("ملخص الراتب")), 0, 1, 'C')
         
         # خط تحت عنوان ملخص الراتب
         pdf.set_draw_color(29, 161, 142)
-        pdf.line(65, summary_title_y + 8, 145, summary_title_y + 8)
+        pdf.line(145, 110, 65, 110)
         
-        # جدول ملخص الراتب
-        table_y = summary_title_y + 15
-        table_width = 130  # عرض الجدول
-        col1_width = 40   # عرض عمود المبلغ
-        col2_width = 90   # عرض عمود البيان
+        # ---- 8. جدول ملخص الراتب بنفس التصميم بالضبط كما في الصورة ----
+        table_y = 120
+        table_width = 140
+        col1_width = 50  # عرض عمود المبلغ
+        col2_width = 90  # عرض عمود البيان
         table_x = (210 - table_width) / 2  # محاذاة في الوسط
         
-        # رسم رأس الجدول - بإطار وخلفية خضراء
-        pdf.set_fill_color(29, 161, 142)  # لون أخضر للخلفية
+        # رأس الجدول بلون أخضر
+        pdf.set_fill_color(29, 161, 142)  # نفس اللون الأخضر الموجود في الصورة
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
         pdf.set_xy(table_x, table_y)
-        pdf.set_font('Arial', 'B', 12)
+        pdf.set_font('Arial', 'B', 14)
         pdf.cell(col1_width, 10, get_display(arabic_reshaper.reshape("المبلغ")), 1, 0, 'C', True)
         pdf.cell(col2_width, 10, get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
         
-        # تنسيق الأرقام مع فواصل الآلاف
+        # تنسيق الأرقام المالية
         basic_salary_str = f"{basic_salary:.2f}"
         allowances_str = f"{allowances:.2f}"
         deductions_str = f"{deductions:.2f}"
         bonus_str = f"{bonus:.2f}"
         net_salary_str = f"{net_salary:.2f}"
         
-        # إعداد بيانات الجدول
+        # بيانات الجدول
         salary_items = [
             ["إجمالي الراتب الأساسي", basic_salary_str],
             ["إجمالي البدلات", allowances_str],
@@ -343,61 +289,43 @@ def generate_salary_notification_pdf(data):
         ]
         
         # رسم صفوف الجدول
-        pdf.set_font('Arial', '', 12)
         pdf.set_text_color(0, 0, 0)
+        pdf.set_font('Arial', '', 12)
+        pdf.set_fill_color(255, 255, 255)  # خلفية بيضاء للصفوف العادية
         
         for i, item in enumerate(salary_items):
             # تنسيق خاص للصف الأخير (إجمالي صافي الراتب)
             if i == len(salary_items) - 1:
-                # الصف الأخير بلون مميز
-                pdf.set_fill_color(29, 161, 142)
-                pdf.set_text_color(255, 255, 255)
+                pdf.set_fill_color(29, 161, 142)  # خلفية خضراء للصف الأخير
+                pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
                 pdf.set_font('Arial', 'B', 12)
-            else:
-                # الصفوف العادية بلون فاتح متناوب
-                pdf.set_font('Arial', '', 12)
-                pdf.set_text_color(0, 0, 0)
-                if i % 2 == 0:
-                    pdf.set_fill_color(255, 255, 255)  # خلفية بيضاء
-                else:
-                    pdf.set_fill_color(240, 240, 240)  # خلفية رمادية فاتحة
             
             # رسم الخلايا
             pdf.set_xy(table_x, pdf.get_y())
-            pdf.cell(col1_width, 10, item[1], 1, 0, 'C', True)
-            pdf.cell(col2_width, 10, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', True)
+            pdf.cell(col1_width, 10, item[1], 1, 0, 'C', i == len(salary_items) - 1)
+            pdf.cell(col2_width, 10, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', i == len(salary_items) - 1)
         
-        # ---- 6. قسم التوقيعات ----
-        # مستطيل كبير للتوقيعات
-        signature_y = 215
-        pdf.set_fill_color(245, 245, 245)  # لون رمادي فاتح جداً
-        pdf.rect(20, signature_y, 170, 40, 'F')
+        # ---- 9. قسم التوقيعات ----
+        signature_y = 200
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font('Arial', 'B', 11)
         
-        # قسم التوقيعات
-        pdf.set_text_color(80, 80, 80)
-        pdf.set_font('Arial', 'B', 12)
+        # توقيع الموظف (يسار)
+        pdf.set_xy(30, signature_y)
+        pdf.cell(40, 10, get_display(arabic_reshaper.reshape("توقيع الموظف")), 0, 0, 'C')
         
-        # توقيع الموظف (على اليسار)
-        pdf.set_xy(20, signature_y + 10)
-        pdf.cell(50, 10, get_display(arabic_reshaper.reshape("توقيع الموظف")), 0, 0, 'C')
-        
-        # توقيع المدير المالي (على اليمين)
-        pdf.set_xy(120, signature_y + 10)
-        pdf.cell(50, 10, get_display(arabic_reshaper.reshape("توقيع المدير المالي")), 0, 0, 'C')
+        # توقيع المدير المالي (يمين)
+        pdf.set_xy(140, signature_y)
+        pdf.cell(40, 10, get_display(arabic_reshaper.reshape("توقيع المدير المالي")), 0, 1, 'C')
         
         # خطوط التوقيع
-        pdf.set_draw_color(100, 100, 100)
-        pdf.set_line_width(0.3)
+        pdf.set_xy(30, signature_y + 10)
+        pdf.cell(40, 10, "______________", 0, 0, 'C')
         
-        # خط توقيع الموظف
-        pdf.line(30, signature_y + 25, 60, signature_y + 25)
+        pdf.set_xy(140, signature_y + 10)
+        pdf.cell(40, 10, "______________", 0, 1, 'C')
         
-        # خط توقيع المدير
-        pdf.line(140, signature_y + 25, 170, signature_y + 25)
-        
-        # ---- 7. التذييل ----
-        # تاريخ الإصدار والحقوق
-        pdf.set_xy(10, 270)
+        # ---- 10. التذييل ----
         pdf.set_font('Arial', '', 8)
         pdf.set_text_color(100, 100, 100)
         
@@ -409,12 +337,12 @@ def generate_salary_notification_pdf(data):
         pdf.set_xy(0, 275)
         pdf.cell(210, 6, get_display(arabic_reshaper.reshape(copyright_text)), 0, 1, 'C')
         
-        # ---- 8. إرجاع ملف PDF كبيانات ثنائية ----
+        # ---- 11. إرجاع ملف PDF كبيانات ثنائية ----
         pdf_content = pdf.output(dest='S').encode('latin1')
         return pdf_content
         
     except Exception as e:
-        print(f"خطأ في إنشاء إشعار راتب PDF الجديد: {str(e)}")
+        print(f"خطأ في إنشاء إشعار راتب PDF: {str(e)}")
         raise e
 
 
