@@ -769,6 +769,9 @@ def vehicle_maintenance():
         'today': today_count
     }
     
+    # تمرير التاريخ الحالي لاستخدامه في القالب
+    current_date = datetime.now().date()
+    
     return render_template('mobile/vehicle_maintenance.html',
                          vehicles=vehicles,
                          maintenance_records=maintenance_records,
@@ -778,7 +781,8 @@ def vehicle_maintenance():
                          selected_vehicle=vehicle_id,
                          selected_type=maintenance_type,
                          date_from=date_from,
-                         date_to=date_to)
+                         date_to=date_to,
+                         current_date=current_date)
 
 # إضافة صيانة جديدة - النسخة المحمولة
 @mobile_bp.route('/vehicles/maintenance/add', methods=['GET', 'POST'])

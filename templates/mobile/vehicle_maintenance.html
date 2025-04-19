@@ -146,7 +146,7 @@
           {% elif record.status == "منجزة" %}
             {% set status_class = "completed" %}
           {% elif record.status == "قيد الانتظار" %}
-            {% set is_late = record.date < now().date() %}
+            {% set is_late = record.date < current_date %}
             {% if is_late %}
               {% set status_class = "late" %}
               {% set status_text = "متأخرة" %}
