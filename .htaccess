@@ -1,17 +1,35 @@
 # تمكين محرك إعادة الكتابة
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
+    
+    # السماح بالوصول إلى المجلدات والملفات الموجودة
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.*)$ wsgi.py/$1 [QSA,L]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # توجيه كل الطلبات إلى ملف الفهرسة
+    RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
 
-# التعامل مع ملفات Python كنصوص برمجية
+# تكوين معالج PHP - CGI
 <IfModule mod_fcgid.c>
-    AddHandler fcgid-script .py
-    FcgidWrapper /usr/bin/python3 .py
+    AddHandler fcgid-script .php
+    FcgidWrapper /usr/bin/php-cgi .php
+</IfModule>
+
+# التعامل مع Python
+<FilesMatch "\.py$">
+    Options +ExecCGI
+    SetHandler cgi-script
+</FilesMatch>
+
+# تكوين البايثون
+<IfModule mod_cgi.c>
+    AddHandler cgi-script .py
 </IfModule>
 
 # إعداد صفحات الخطأ المخصصة
+ErrorDocument 403 /static/error/403.html
 ErrorDocument 404 /static/error/404.html
 ErrorDocument 500 /static/error/500.html
 
@@ -25,3 +43,17 @@ SetEnv TZ Asia/Riyadh
 
 # تمكين التعامل مع UTF-8 للدعم العربي
 AddDefaultCharset UTF-8
+
+# تحديد أذونات الوصول
+<Directory />
+    Options FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+
+# السماح بالوصول إلى المجلد الرئيسي
+<Directory "/home/user/public_html">
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
