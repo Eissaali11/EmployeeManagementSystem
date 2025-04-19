@@ -805,6 +805,7 @@ def add_maintenance():
             notes = request.form.get('notes', '')
             parts_replaced = request.form.get('parts_replaced', '')
             actions_taken = request.form.get('actions_taken', '')
+            receipt_image_url = request.form.get('receipt_image_url', '')
             
             # التحقق من تعبئة الحقول المطلوبة
             if not vehicle_id or not maintenance_type or not description or not date_str or not status or not technician:
@@ -823,6 +824,7 @@ def add_maintenance():
                 status=status,
                 cost=cost,
                 technician=technician,
+                receipt_image_url=receipt_image_url,
                 parts_replaced=parts_replaced,
                 actions_taken=actions_taken,
                 notes=notes
@@ -880,6 +882,7 @@ def maintenance_details(maintenance_id):
         'status_class': status_class,
         'cost': maintenance.cost,
         'technician': maintenance.technician,
+        'receipt_image_url': maintenance.receipt_image_url,
         'parts_replaced': maintenance.parts_replaced,
         'actions_taken': maintenance.actions_taken,
         'notes': maintenance.notes,
@@ -929,6 +932,9 @@ def edit_maintenance(maintenance_id):
             # تحويل التاريخ إلى كائن Date
             maintenance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             
+            # استخراج رابط صورة الإيصال
+            receipt_image_url = request.form.get('receipt_image_url', '')
+            
             # تحديث سجل الصيانة
             maintenance.vehicle_id = vehicle_id
             maintenance.date = maintenance_date
@@ -937,6 +943,7 @@ def edit_maintenance(maintenance_id):
             maintenance.status = status
             maintenance.cost = cost
             maintenance.technician = technician
+            maintenance.receipt_image_url = receipt_image_url
             maintenance.parts_replaced = parts_replaced
             maintenance.actions_taken = actions_taken
             maintenance.notes = notes

@@ -96,6 +96,13 @@
           <input type="text" name="technician" class="mobile-form-input" placeholder="اسم الفني المسؤول" required>
         </div>
         
+        <!-- رابط صورة الإيصال -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">رابط صورة الإيصال</label>
+          <input type="url" name="receipt_image_url" class="mobile-form-input" placeholder="https://example.com/receipt.jpg">
+          <small class="mobile-form-hint">أدخل رابط لصورة الإيصال أو فاتورة الصيانة</small>
+        </div>
+        
         <!-- أزرار التحكم -->
         <div class="mobile-form-actions">
           <button type="reset" class="mobile-btn mobile-btn-secondary">
@@ -150,6 +157,13 @@
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 2rem;
+  }
+  
+  .mobile-form-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    display: block;
   }
 </style>
 {% endblock %}

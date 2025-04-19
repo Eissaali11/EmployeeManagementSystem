@@ -61,6 +61,18 @@
           <div class="info-value">{{ maintenance.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
         </div>
       </div>
+      
+      {% if maintenance.receipt_image_url %}
+      <div class="maintenance-receipt">
+        <div class="receipt-title">
+          <i class="fas fa-receipt"></i>
+          صورة الإيصال
+        </div>
+        <div class="receipt-image-container">
+          <img src="{{ maintenance.receipt_image_url }}" alt="صورة إيصال الصيانة" class="receipt-image" onclick="openImageViewer('{{ maintenance.receipt_image_url }}')">
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
   
@@ -378,6 +390,40 @@
     font-size: 2rem;
     color: white;
     cursor: pointer;
+  }
+  
+  /* صورة الإيصال */
+  .maintenance-receipt {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-light);
+  }
+  
+  .receipt-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+  }
+  
+  .receipt-image-container {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .receipt-image {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .receipt-image:hover {
+    transform: scale(1.05);
   }
 </style>
 {% endblock %}
