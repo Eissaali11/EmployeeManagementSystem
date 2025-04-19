@@ -154,24 +154,34 @@
   </div>
   {% endif %}
   
-  <!-- أزرار الإجراءات -->
-  <div class="mobile-actions-bar">
-    <a href="{{ url_for('mobile.edit_maintenance', maintenance_id=maintenance.id) }}" class="mobile-btn mobile-btn-primary">
-      <i class="fas fa-edit"></i>
-      تعديل الصيانة ({{ maintenance.id }})
-    </a>
-    
-    <button class="mobile-btn mobile-btn-danger" onclick="confirmDelete()">
-      <i class="fas fa-trash-alt"></i>
-      حذف
-    </button>
-  </div>
-  
-  <!-- معلومات تصحيح -->
+<!-- معلومات تصحيح -->
   <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-top: 10px; border-radius: 5px;">
     <p><strong>معلومات تصحيح:</strong></p>
     <p>معرف الصيانة: {{ maintenance.id }}</p>
     <p>نوع الكائن: {{ maintenance.__class__.__name__ }}</p>
+  </div>
+  
+  <!-- أزرار الإجراءات -->
+  <div class="mobile-card mb-4">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-cog"></i>
+        الإجراءات
+      </div>
+    </div>
+    <div class="mobile-card-body">
+      <div class="mobile-actions-bar">
+        <a href="{{ url_for('mobile.edit_maintenance', maintenance_id=maintenance.id) }}" class="mobile-btn mobile-btn-primary">
+          <i class="fas fa-edit"></i>
+          تعديل الصيانة ({{ maintenance.id }})
+        </a>
+        
+        <button class="mobile-btn mobile-btn-danger" onclick="confirmDelete()">
+          <i class="fas fa-trash-alt"></i>
+          حذف
+        </button>
+      </div>
+    </div>
   </div>
   
 </div>
@@ -346,16 +356,15 @@
   }
   
   .mobile-actions-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: static;
     display: flex;
     justify-content: space-between;
     padding: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
     background-color: var(--card-bg);
-    border-top: 1px solid var(--border-light);
-    z-index: 100;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
   }
   
   .mobile-empty-state {
