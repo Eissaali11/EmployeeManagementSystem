@@ -12,7 +12,7 @@ from utils.excel import generate_employee_excel, generate_salary_excel
 # استخدام دالة تقرير الرواتب المحسنة من الملف الجديد
 from utils.pdf_generator_fixed import generate_salary_report_pdf
 # استيراد الدوال المتبقية من الملف الأصلي
-from utils.pdf_generator_new import generate_salary_notification_pdf, generate_vehicle_handover_pdf
+from utils.pdf_generator_new import generate_salary_notification_pdf, generate_workshop_receipts_pdf as generate_vehicle_handover_pdf
 
 # إنشاء موجه المسارات
 enhanced_reports_bp = Blueprint('enhanced_reports', __name__)

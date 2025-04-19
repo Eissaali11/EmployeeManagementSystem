@@ -373,12 +373,10 @@ def generate_salary_notification_pdf(data):
         current_year_str = str(datetime.now().year)
         pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year_str, 'C')
         
-        # إنشاء الملف كبيانات ثنائية
-        buffer = BytesIO()
-        pdf.output(buffer)
-        buffer.seek(0)
-        
-        return buffer.getvalue()
+        # إنشاء الملف كبيانات ثنائية - تحديث للإصدار الجديد من FPDF
+        # استخدام dest='S' لإرجاع المحتوى كسلسلة نصية ثم تحويله إلى بايت
+        pdf_content = pdf.output(dest='S').encode('latin1')
+        return pdf_content
         
     except Exception as e:
         print(f"خطأ في إنشاء إشعار راتب PDF الجديد: {str(e)}")
@@ -391,7 +389,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
     
     Args:
         salaries_data: قائمة بكائنات Salary
-        month_name: رقم الشهر
+        month_name: رقم الشهر أو اسم الشهر
         year: السنة
         
     Returns:
@@ -404,269 +402,177 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # تحويل رقم الشهر إلى اسم الشهر
         month_names = [
-            'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+            'يناير', 'فبراير', 'مارس', 'أبريل',
+            'مايو', 'يونيو', 'يوليو', 'أغسطس',
+            'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
         ]
-        # التأكد من أن month_name رقم صحيح بين 1 و 12
-        try:
-            month_int = int(month_name)
-            if 1 <= month_int <= 12:
-                month_display = month_names[month_int - 1]
-            else:
-                month_display = month_name
-        except (ValueError, TypeError):
-            month_display = month_name
+        
+        # إذا كان month_name عددًا، فسيتم استخدامه كفهرس في القائمة
+        if month_name.isdigit() and 1 <= int(month_name) <= 12:
+            month_name = month_names[int(month_name) - 1]
         
         # إنشاء PDF جديد في الوضع الأفقي
         pdf = ArabicPDF('L')
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        subtitle = "تقرير الرواتب - شهر " + str(month_display) + " " + str(year)
+        subtitle = "تقرير الرواتب - شهر " + month_name + " " + year
         y_pos = pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
         
-        # إضافة إطار للمستند
-        pdf.set_draw_color(*pdf.primary_color)
-        pdf.set_line_width(0.3)
-        pdf.rect(10.0, 40.0, 277.0, 150.0)  # إطار خارجي للتقرير
+        # إنشاء جدول الرواتب
+        headers = ["م", "اسم الموظف", "الرقم الوظيفي", "القسم", "الراتب الأساسي", "البدلات", "المكافآت", "الخصومات", "صافي الراتب"]
         
-        # إعداد جدول الرواتب
-        headers = ["م", "اسم الموظف", "الرقم الوظيفي", "الراتب الأساسي", "البدلات", "الخصومات", "المكافآت", "صافي الراتب"]
+        # تعيين عرض كل عمود (مجموع العروض = 270)
+        col_widths = [10, 50, 25, 35, 30, 30, 30, 30, 30]
         
-        # تحويل البيانات إلى نوع مناسب
-        clean_salaries_data = []
-        for salary in salaries_data:
-            # التعامل مع كائنات Salary
-            if hasattr(salary, 'employee'):
-                clean_salary = {
-                    'employee_name': str(salary.employee.name) if salary.employee else '',
-                    'employee_id': str(salary.employee.employee_id) if salary.employee else '',
-                    'basic_salary': float(salary.basic_salary),
-                    'allowances': float(salary.allowances),
-                    'deductions': float(salary.deductions),
-                    'bonus': float(salary.bonus),
-                    'net_salary': float(salary.net_salary)
-                }
-            # التعامل مع القواميس
-            else:
-                clean_salary = {
-                    'employee_name': str(salary.get('employee_name', '')),
-                    'employee_id': str(salary.get('employee_id', '')),
-                    'basic_salary': float(salary.get('basic_salary', 0)),
-                    'allowances': float(salary.get('allowances', 0)),
-                    'deductions': float(salary.get('deductions', 0)),
-                    'bonus': float(salary.get('bonus', 0)),
-                    'net_salary': float(salary.get('net_salary', 0))
-                }
-            clean_salaries_data.append(clean_salary)
+        # بداية جدول الرواتب
+        y_start = y_pos + 10
+        pdf.set_y(y_start)
+        
+        # رسم خلفية رأس الجدول
+        pdf.set_fill_color(*pdf.primary_color)
+        pdf.rect(10, y_start, 277, 10, style='F')
+        
+        # كتابة عناوين الأعمدة
+        pdf.set_font('Arial', 'B', 10)
+        pdf.set_text_color(255, 255, 255)  # لون النص أبيض
+        
+        # كتابة رأس الجدول
+        x_pos = 10
+        for i, header in enumerate(headers):
+            pdf.arabic_text(x_pos + col_widths[i]/2, y_start + 5, header, 'C')
+            x_pos += col_widths[i]
+        
+        # بداية صفوف البيانات
+        y_pos = y_start + 10
+        pdf.set_text_color(0, 0, 0)  # لون النص أسود
+        pdf.set_font('Arial', '', 9)
         
         # حساب المجاميع
-        total_basic = sum(salary['basic_salary'] for salary in clean_salaries_data)
-        total_allowances = sum(salary['allowances'] for salary in clean_salaries_data)
-        total_deductions = sum(salary['deductions'] for salary in clean_salaries_data)
-        total_bonus = sum(salary['bonus'] for salary in clean_salaries_data)
-        total_net = sum(salary['net_salary'] for salary in clean_salaries_data)
+        total_basic = 0
+        total_allowances = 0
+        total_bonus = 0
+        total_deductions = 0
+        total_net = 0
         
-        # ضبط موضع الجدول
-        pdf.set_font('Arial', 'B', 10)
-        y_pos = 50.0
-        
-        # عرض الأعمدة
-        col_widths = [15.0, 60.0, 25.0, 25.0, 25.0, 25.0, 25.0, 30.0]  # مجموع العرض = 230 (مليمتر تقريباً)
-        
-        # رأس الجدول
-        pdf.set_fill_color(*pdf.primary_color)
-        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        x_pos = 30.0  # بداية من اليسار
-        
-        for i, header in reversed(list(enumerate(headers))):
-            pdf.set_xy(x_pos, y_pos)
-            pdf.cell(col_widths[i], 10.0, get_display(arabic_reshaper.reshape(header)), 1, 0, 'C', True)
-            x_pos += col_widths[i]
-        
-        # بيانات الجدول
-        pdf.set_text_color(0, 0, 0)  # إعادة النص للون الأسود
-        pdf.set_font('Arial', '', 10)
-        for idx, salary in enumerate(clean_salaries_data):
-            y_pos += 10.0
-            fill = idx % 2 == 1  # صفوف بديلة
-            if fill:
-                pdf.set_fill_color(*pdf.table_row_alt_color)
-            else:
-                pdf.set_fill_color(255, 255, 255)  # خلفية بيضاء للصفوف غير المظللة
+        # إضافة صفوف البيانات
+        for idx, salary in enumerate(salaries_data):
+            # تناوب لون الخلفية
+            if idx % 2 == 0:
+                pdf.set_fill_color(240, 240, 240)
+                pdf.rect(10, y_pos, 277, 8, style='F')
             
-            # تنسيق القيم المالية
-            basic_salary_str = f"{salary['basic_salary']:.2f}"
-            allowances_str = f"{salary['allowances']:.2f}"
-            deductions_str = f"{salary['deductions']:.2f}"
-            bonus_str = f"{salary['bonus']:.2f}"
-            net_salary_str = f"{salary['net_salary']:.2f}"
+            # كتابة بيانات الصف
+            x_pos = 10
             
-            # بيانات الصف
-            row_data = [
-                str(idx + 1),
-                salary['employee_name'],
-                salary['employee_id'],
-                basic_salary_str,
-                allowances_str,
-                deductions_str,
-                bonus_str,
-                net_salary_str
-            ]
+            # الحصول على بيانات الموظف والراتب بشكل آمن
+            try:
+                # التعامل مع كائن Salary
+                employee_name = salary.employee.name if hasattr(salary, 'employee') else ''
+                employee_id = salary.employee.employee_id if hasattr(salary, 'employee') else ''
+                department_name = salary.employee.department.name if hasattr(salary, 'employee') and hasattr(salary.employee, 'department') and salary.employee.department else ''
+                basic_salary = salary.basic_salary if hasattr(salary, 'basic_salary') else 0
+                allowances = salary.allowances if hasattr(salary, 'allowances') else 0
+                bonus = salary.bonus if hasattr(salary, 'bonus') else 0
+                deductions = salary.deductions if hasattr(salary, 'deductions') else 0
+                net_salary = salary.net_salary if hasattr(salary, 'net_salary') else 0
+                
+                row_data = [
+                    str(idx + 1),
+                    employee_name,
+                    employee_id,
+                    department_name,
+                    "{:,.2f}".format(float(basic_salary)),
+                    "{:,.2f}".format(float(allowances)),
+                    "{:,.2f}".format(float(bonus)),
+                    "{:,.2f}".format(float(deductions)),
+                    "{:,.2f}".format(float(net_salary))
+                ]
+                
+                # تجميع المبالغ
+                total_basic += float(basic_salary)
+                total_allowances += float(allowances)
+                total_bonus += float(bonus)
+                total_deductions += float(deductions)
+                total_net += float(net_salary)
+            except Exception as e:
+                print(f"خطأ في معالجة بيانات الراتب: {e}")
+                row_data = [str(idx + 1), "خطأ في البيانات", "", "", "", "", "", "", ""]
             
-            x_pos = 30.0
-            for i, cell_data in reversed(list(enumerate(row_data))):
-                pdf.set_xy(x_pos, y_pos)
-                if i == 1 or i == 2:  # اسم الموظف والرقم الوظيفي
-                    text = get_display(arabic_reshaper.reshape(str(cell_data)))
-                    align = 'R'
-                else:
-                    text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
-                    align = 'C'
-                pdf.cell(col_widths[i], 10.0, text, 1, 0, align, fill)
+            # كتابة كل خلية
+            for i, cell_data in enumerate(row_data):
+                align = 'R' if i >= 4 else 'C'  # محاذاة المبالغ إلى اليمين
+                pdf.arabic_text(x_pos + col_widths[i]/2, y_pos + 4, cell_data, align)
                 x_pos += col_widths[i]
-        
-        # صف المجموع
-        y_pos += 10.0
-        pdf.set_fill_color(*pdf.primary_color)
-        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        
-        # تنسيق المجاميع
-        total_basic_str = f"{total_basic:.2f}"
-        total_allowances_str = f"{total_allowances:.2f}"
-        total_deductions_str = f"{total_deductions:.2f}"
-        total_bonus_str = f"{total_bonus:.2f}"
-        total_net_str = f"{total_net:.2f}"
-        
-        # بيانات المجموع
-        summary_data = [
-            "",
-            "المجموع",
-            "",
-            total_basic_str,
-            total_allowances_str,
-            total_deductions_str,
-            total_bonus_str,
-            total_net_str
-        ]
-        
-        x_pos = 30.0
-        pdf.set_font('Arial', 'B', 10)
-        for i, cell_data in reversed(list(enumerate(summary_data))):
-            pdf.set_xy(x_pos, y_pos)
-            if i == 1:  # نص "المجموع"
-                text = get_display(arabic_reshaper.reshape(str(cell_data)))
-                align = 'R'
-            else:
-                text = str(cell_data)  # تحويل إلى نص بغض النظر عن النوع
-                align = 'C'
-            pdf.cell(col_widths[i], 10.0, text, 1, 0, align, True)
-            x_pos += col_widths[i]
-        
-        # ملخص الرواتب
-        if len(clean_salaries_data) > 5:
-            summary_y = 135.0  # إذا كان هناك عدد كبير من الموظفين، نضع الجدول في مكان ثابت
-        else:
-            summary_y = y_pos + 35.0  # مكان متناسب مع موضع جدول الرواتب
-        
-        # عنوان ملخص الرواتب
-        summary_title_x = pdf.page_width - 70.0
-        summary_title_y = summary_y - 15.0
-        
-        pdf.set_text_color(*pdf.primary_color)
-        pdf.set_font('Arial', 'B', 12)
-        pdf.arabic_text(summary_title_x, summary_title_y, "ملخص الرواتب", 'R', 100)
-        
-        # إضافة خط تحت عنوان ملخص الرواتب
-        pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(summary_title_x - 60.0, summary_title_y + 6.0, summary_title_x, summary_title_y + 6.0)
-        
-        # جدول الملخص
-        summary_headers = ["البيان", "المبلغ"]
-        summary_items = [
-            ["إجمالي الرواتب الأساسية", total_basic_str],
-            ["إجمالي البدلات", total_allowances_str],
-            ["إجمالي الخصومات", total_deductions_str],
-            ["إجمالي المكافآت", total_bonus_str],
-            ["إجمالي صافي الرواتب", total_net_str]
-        ]
-        
-        # رسم جدول الملخص
-        pdf.set_font('Arial', 'B', 10)
-        
-        # ضبط أبعاد وموضع جدول الملخص بشكل أفضل
-        col1_width = 40.0  # عمود المبلغ
-        col2_width = 70.0  # عمود البيان
-        summary_table_width = col1_width + col2_width
-        
-        # ضبط موضع X بشكل أفضل
-        summary_table_x = pdf.page_width - 80.0 - summary_table_width
-        
-        pdf.set_fill_color(*pdf.primary_color)
-        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        pdf.set_xy(summary_table_x, summary_y)
-        pdf.cell(col1_width, 10.0, get_display(arabic_reshaper.reshape(summary_headers[1])), 1, 0, 'C', True)
-        pdf.cell(col2_width, 10.0, get_display(arabic_reshaper.reshape(summary_headers[0])), 1, 1, 'C', True)
-        
-        # بيانات جدول الملخص
-        pdf.set_text_color(0, 0, 0)  # إعادة النص للون الأسود
-        pdf.set_font('Arial', '', 10)
-        for i, item in enumerate(summary_items):
-            fill = i % 2 == 1  # صفوف بديلة
-            if fill:
-                pdf.set_fill_color(*pdf.table_row_alt_color)
-            else:
-                pdf.set_fill_color(255, 255, 255)  # خلفية بيضاء للصفوف غير المظللة
             
-            if i == len(summary_items) - 1:  # الصف الأخير
+            # الانتقال للصف التالي
+            y_pos += 8
+            
+            # إذا وصلنا إلى نهاية الصفحة، نضيف صفحة جديدة
+            if y_pos > 180:
+                pdf.add_page()
+                
+                # نعيد رسم رأس الجدول
+                y_pos = 40
                 pdf.set_fill_color(*pdf.primary_color)
-                pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-                fill = True
+                pdf.rect(10, y_pos, 277, 10, style='F')
+                
+                # كتابة عناوين الأعمدة
                 pdf.set_font('Arial', 'B', 10)
-            
-            # استخدام summary_table_x الذي تم تعريفه للجدول
-            pdf.set_xy(summary_table_x, pdf.get_y())
-            pdf.cell(col1_width, 10.0, item[1], 1, 0, 'C', fill)
-            pdf.cell(col2_width, 10.0, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
+                pdf.set_text_color(255, 255, 255)
+                
+                x_pos = 10
+                for i, header in enumerate(headers):
+                    pdf.arabic_text(x_pos + col_widths[i]/2, y_pos + 5, header, 'C')
+                    x_pos += col_widths[i]
+                
+                # إعادة تعيين نمط النص
+                y_pos += 10
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_font('Arial', '', 9)
         
-        # معلومات التقرير
-        pdf.set_text_color(0, 0, 0)
+        # رسم صف المجموع
+        pdf.set_fill_color(*pdf.primary_color_light)
+        pdf.rect(10, y_pos, 277, 10, style='F')
+        
+        # كتابة بيانات المجموع
         pdf.set_font('Arial', 'B', 10)
         
-        # عنوان المعلومات
-        info_x = 30.0
-        info_y = summary_y
-        pdf.set_xy(info_x, info_y - 15.0)
-        pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(120.0, info_y - 15.0, "معلومات التقرير", 'R')
+        # كتابة كلمة "المجموع" في العمود الثاني
+        x_pos = 10
+        pdf.arabic_text(x_pos + col_widths[0]/2, y_pos + 5, "", 'C')
+        x_pos += col_widths[0]
         
-        # إضافة خط تحت عنوان معلومات التقرير
-        pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(50.0, info_y - 7.0, 120.0, info_y - 7.0)
+        pdf.arabic_text(x_pos + col_widths[1]/2, y_pos + 5, "المجموع", 'C')
+        x_pos += col_widths[1]
         
-        # إطار للمعلومات
-        pdf.set_draw_color(*pdf.secondary_color)
-        pdf.rect(info_x, info_y, 110.0, 45.0)
+        # تخطي العمود الثالث والرابع
+        pdf.arabic_text(x_pos + col_widths[2]/2, y_pos + 5, "", 'C')
+        x_pos += col_widths[2]
         
-        # معلومات التقرير داخل إطار
-        pdf.set_text_color(0, 0, 0)
-        pdf.set_font('Arial', '', 10)
-        pdf.arabic_text(120.0, info_y + 10.0, "إجمالي عدد الموظفين: " + str(len(clean_salaries_data)), 'R')
+        pdf.arabic_text(x_pos + col_widths[3]/2, y_pos + 5, "", 'C')
+        x_pos += col_widths[3]
         
-        # التأكد من عدم القسمة على صفر
-        if len(clean_salaries_data) > 0:
-            avg_basic = total_basic / len(clean_salaries_data)
-            avg_net = total_net / len(clean_salaries_data)
-        else:
-            avg_basic = 0.0
-            avg_net = 0.0
+        # كتابة مجاميع المبالغ
+        totals = [
+            "{:,.2f}".format(total_basic),
+            "{:,.2f}".format(total_allowances),
+            "{:,.2f}".format(total_bonus),
+            "{:,.2f}".format(total_deductions),
+            "{:,.2f}".format(total_net)
+        ]
         
-        # تنسيق القيم وتحويلها إلى نصوص    
-        avg_basic_str = f"{avg_basic:.2f}"
-        avg_net_str = f"{avg_net:.2f}"
-            
-        pdf.arabic_text(120.0, info_y + 25.0, "متوسط الراتب الأساسي: " + avg_basic_str, 'R')
-        pdf.arabic_text(120.0, info_y + 40.0, "متوسط صافي الراتب: " + avg_net_str, 'R')
+        for i, total in enumerate(totals):
+            pdf.arabic_text(x_pos + col_widths[i+4]/2, y_pos + 5, total, 'R')
+            x_pos += col_widths[i+4]
+        
+        # إضافة معلومات إحصائية
+        y_pos += 15
+        pdf.set_font('Arial', 'B', 10)
+        pdf.set_text_color(*pdf.secondary_color)
+        pdf.arabic_text(20, y_pos, f"إجمالي عدد الموظفين: {len(salaries_data)}", 'R')
+        pdf.arabic_text(100, y_pos, f"إجمالي الرواتب: {total_net:,.2f}", 'R')
+        pdf.arabic_text(190, y_pos, f"متوسط الراتب: {total_net/len(salaries_data) if len(salaries_data) > 0 else 0:,.2f}", 'R')
         
         # التذييل
         pdf.set_xy(10.0, 190.0)
@@ -677,280 +583,217 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         current_year = str(datetime.now().year)
         pdf.arabic_text(280.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year, 'C')
         
-        # إنشاء الملف كبيانات ثنائية
-        buffer = BytesIO()
-        pdf.output(buffer)
-        buffer.seek(0)
-        
-        return buffer.getvalue()
+        # إنشاء الملف كبيانات ثنائية - تحديث للإصدار الجديد من FPDF
+        # استخدام dest='S' لإرجاع المحتوى كسلسلة نصية ثم تحويله إلى بايت
+        pdf_content = pdf.output(dest='S').encode('latin1')
+        return pdf_content
         
     except Exception as e:
         print(f"خطأ في إنشاء تقرير الرواتب PDF الجديد: {str(e)}")
         raise e
 
-
-def generate_vehicle_handover_pdf(handover_data):
+def generate_workshop_receipts_pdf(delivery_data, pickup_data, vehicle):
     """
-    إنشاء نموذج تسليم/استلام سيارة كملف PDF
+    إنشاء إشعار تسليم/استلام من الورشة كملف PDF
     
     Args:
-        handover_data: قاموس يحتوي على بيانات التسليم/الاستلام
+        delivery_data: بيانات تسليم المركبة للورشة
+        pickup_data: بيانات استلام المركبة من الورشة
+        vehicle: بيانات المركبة
         
     Returns:
         bytes يحتوي على ملف PDF
     """
     try:
-        # التأكد من أن جميع البيانات من النوع النصي
-        vehicle_data = {
-            'plate_number': str(handover_data.get('vehicle', {}).get('plate_number', '')),
-            'make': str(handover_data.get('vehicle', {}).get('make', '')),
-            'model': str(handover_data.get('vehicle', {}).get('model', '')),
-            'year': str(handover_data.get('vehicle', {}).get('year', '')),
-            'color': str(handover_data.get('vehicle', {}).get('color', ''))
-        }
-        
-        handover_type = str(handover_data.get('handover_type', ''))
-        handover_date = str(handover_data.get('handover_date', ''))
-        person_name = str(handover_data.get('person_name', ''))
-        vehicle_condition = str(handover_data.get('vehicle_condition', ''))
-        fuel_level = str(handover_data.get('fuel_level', ''))
-        mileage = str(handover_data.get('mileage', ''))
-        
-        # تحويل القيم المنطقية إلى نص
-        has_spare_tire = "نعم" if handover_data.get('has_spare_tire') else "لا"
-        has_fire_extinguisher = "نعم" if handover_data.get('has_fire_extinguisher') else "لا"
-        has_first_aid_kit = "نعم" if handover_data.get('has_first_aid_kit') else "لا"
-        has_warning_triangle = "نعم" if handover_data.get('has_warning_triangle') else "لا"
-        has_tools = "نعم" if handover_data.get('has_tools') else "لا"
-        
-        notes = str(handover_data.get('notes', ''))
-        form_link = str(handover_data.get('form_link', ''))
-        
-        # تحديد عنوان المستند بناءً على نوع التسليم
-        if handover_type == 'استلام':
-            doc_title = "نموذج استلام سيارة"
-        else:
-            doc_title = "نموذج تسليم سيارة"
-        
         # إنشاء PDF جديد
         pdf = ArabicPDF()
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        y_pos = pdf.add_company_header("نظام إدارة المركبات - شركة التقنية المتطورة", doc_title)
+        y_pos = pdf.add_company_header("نظام إدارة المركبات - شركة التقنية المتطورة", "إشعار تسليم واستلام من الورشة")
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
         pdf.set_line_width(0.3)
         pdf.rect(10.0, 40.0, 190.0, 230.0)  # إطار خارجي
         
-        # معلومات السيارة
+        # بيانات المركبة
         pdf.set_font('Arial', 'B', 14)
         pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190, y_pos + 5, "بيانات السيارة", 'R')
+        pdf.arabic_text(190, y_pos + 5, "بيانات المركبة", 'R')
         
-        # إضافة خط تحت عنوان بيانات السيارة
+        # إضافة خط تحت عنوان بيانات المركبة
         pdf.set_draw_color(*pdf.primary_color)
         pdf.line(60.0, y_pos + 15.0, 190.0, y_pos + 15.0)
         
-        # بيانات السيارة
+        # تحضير بيانات المركبة
+        vehicle_make = vehicle.get('make', '')
+        vehicle_model = vehicle.get('model', '')
+        vehicle_year = vehicle.get('year', '')
+        vehicle_plate = vehicle.get('plate_number', '')
+        vehicle_type = vehicle.get('vehicle_type', '')
+        
+        # بيانات المركبة
         pdf.set_font('Arial', '', 12)
         pdf.set_text_color(0, 0, 0)
         
-        # إنشاء جدول لبيانات السيارة
-        vehicle_info_y = y_pos + 20.0
+        # إنشاء جدول لبيانات المركبة
+        veh_info_y = y_pos + 20.0
+        pdf.set_xy(20.0, veh_info_y)
         
-        # الصف الأول - رقم اللوحة والشركة المصنعة
+        # الصف الأول
         pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(190.0, vehicle_info_y, "رقم اللوحة:", 'R')
+        pdf.arabic_text(190.0, veh_info_y, "نوع المركبة:", 'R')
         pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(140.0, vehicle_info_y, vehicle_data['plate_number'], 'R')
-        
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, vehicle_info_y, "الشركة المصنعة:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, vehicle_info_y, vehicle_data['make'], 'R')
-        
-        # الصف الثاني - الموديل والسنة
-        vehicle_info_y += 12.0
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(190.0, vehicle_info_y, "الموديل:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(140.0, vehicle_info_y, vehicle_data['model'], 'R')
+        pdf.arabic_text(140.0, veh_info_y, vehicle_make + " " + vehicle_model, 'R')
         
         pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, vehicle_info_y, "سنة الصنع:", 'R')
+        pdf.arabic_text(100.0, veh_info_y, "رقم اللوحة:", 'R')
         pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, vehicle_info_y, vehicle_data['year'], 'R')
+        pdf.arabic_text(50.0, veh_info_y, vehicle_plate, 'R')
         
-        # الصف الثالث - اللون
-        vehicle_info_y += 12.0
+        # الصف الثاني
+        veh_info_y += 12.0
         pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(190.0, vehicle_info_y, "اللون:", 'R')
+        pdf.arabic_text(190.0, veh_info_y, "سنة الصنع:", 'R')
         pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(140.0, vehicle_info_y, vehicle_data['color'], 'R')
+        pdf.arabic_text(140.0, veh_info_y, vehicle_year, 'R')
         
-        # معلومات التسليم/الاستلام
-        handover_title_y = vehicle_info_y + 25.0
+        pdf.set_font('Arial', 'B', 11)
+        pdf.arabic_text(100.0, veh_info_y, "فئة المركبة:", 'R')
+        pdf.set_font('Arial', '', 11)
+        pdf.arabic_text(50.0, veh_info_y, vehicle_type, 'R')
+        
+        # قسم تسليم المركبة للورشة
+        delivery_y = veh_info_y + 25.0
         pdf.set_font('Arial', 'B', 14)
         pdf.set_text_color(*pdf.primary_color)
-        
-        if handover_type == 'استلام':
-            pdf.arabic_text(190.0, handover_title_y, "بيانات الاستلام", 'R')
-        else:
-            pdf.arabic_text(190.0, handover_title_y, "بيانات التسليم", 'R')
+        pdf.arabic_text(190.0, delivery_y, "تسليم المركبة للورشة", 'R')
         
         # إضافة خط تحت العنوان
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(60.0, handover_title_y + 10.0, 190.0, handover_title_y + 10.0)
+        pdf.line(60.0, delivery_y + 10.0, 190.0, delivery_y + 10.0)
         
-        # بيانات التسليم/الاستلام
-        pdf.set_font('Arial', '', 12)
+        # تحضير بيانات التسليم
+        delivery_date = delivery_data.get('delivery_date', '')
+        delivery_odometer = delivery_data.get('delivery_odometer', '')
+        delivery_condition = delivery_data.get('delivery_condition', '')
+        delivery_notes = delivery_data.get('delivery_notes', '')
+        workshop_name = delivery_data.get('workshop_name', '')
+        estimated_completion = delivery_data.get('estimated_completion', '')
+        
+        # بيانات التسليم
+        pdf.set_font('Arial', '', 11)
         pdf.set_text_color(0, 0, 0)
         
-        # إنشاء جدول لبيانات التسليم/الاستلام
-        handover_info_y = handover_title_y + 20.0
+        # إنشاء جدول لبيانات التسليم
+        del_info_y = delivery_y + 15.0
         
-        # الصف الأول - تاريخ التسليم/الاستلام واسم الشخص
-        pdf.set_font('Arial', 'B', 11)
+        # الصف الأول
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, del_info_y, "تاريخ التسليم:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.arabic_text(140.0, del_info_y, delivery_date, 'R')
         
-        if handover_type == 'استلام':
-            pdf.arabic_text(190.0, handover_info_y, "تاريخ الاستلام:", 'R')
-        else:
-            pdf.arabic_text(190.0, handover_info_y, "تاريخ التسليم:", 'R')
-            
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(140.0, handover_info_y, handover_date, 'R')
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(100.0, del_info_y, "اسم الورشة:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.arabic_text(50.0, del_info_y, workshop_name, 'R')
         
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, handover_info_y, "اسم الشخص:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, handover_info_y, person_name, 'R')
+        # الصف الثاني
+        del_info_y += 10.0
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, del_info_y, "قراءة العداد:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.arabic_text(140.0, del_info_y, str(delivery_odometer) + " كم", 'R')
         
-        # الصف الثاني - عداد الكيلومترات ومستوى الوقود
-        handover_info_y += 12.0
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(190.0, handover_info_y, "عداد الكيلومترات:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(140.0, handover_info_y, mileage, 'R')
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(100.0, del_info_y, "التاريخ المتوقع للإنجاز:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.arabic_text(50.0, del_info_y, estimated_completion, 'R')
         
-        pdf.set_font('Arial', 'B', 11)
-        pdf.arabic_text(100.0, handover_info_y, "مستوى الوقود:", 'R')
-        pdf.set_font('Arial', '', 11)
-        pdf.arabic_text(50.0, handover_info_y, fuel_level, 'R')
+        # الصف الثالث - حالة المركبة عند التسليم
+        del_info_y += 10.0
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, del_info_y, "حالة المركبة عند التسليم:", 'R')
+        pdf.set_font('Arial', '', 10)
+        # استخدام مساحة أوسع لوصف الحالة
+        pdf.set_xy(20.0, del_info_y + 5.0)
+        pdf.rect(20.0, del_info_y + 5.0, 170.0, 15.0)
+        pdf.set_xy(25.0, del_info_y + 8.0)
+        pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(delivery_condition)), 0, 'R')
         
-        # قسم المحتويات والملحقات
-        accessories_title_y = handover_info_y + 25.0
+        # ملاحظات التسليم
+        del_info_y += 25.0
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, del_info_y, "ملاحظات:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.set_xy(20.0, del_info_y + 5.0)
+        pdf.rect(20.0, del_info_y + 5.0, 170.0, 15.0)
+        pdf.set_xy(25.0, del_info_y + 8.0)
+        pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(delivery_notes)), 0, 'R')
+        
+        # قسم استلام المركبة من الورشة
+        pickup_y = del_info_y + 30.0
         pdf.set_font('Arial', 'B', 14)
         pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190.0, accessories_title_y, "المحتويات والملحقات", 'R')
+        pdf.arabic_text(190.0, pickup_y, "استلام المركبة من الورشة", 'R')
         
         # إضافة خط تحت العنوان
         pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(60.0, accessories_title_y + 10.0, 190.0, accessories_title_y + 10.0)
+        pdf.line(60.0, pickup_y + 10.0, 190.0, pickup_y + 10.0)
         
-        # بيانات المحتويات والملحقات
-        accessories_info_y = accessories_title_y + 20.0
-        pdf.set_font('Arial', 'B', 11)
-        pdf.set_text_color(0, 0, 0)
+        # تحضير بيانات الاستلام
+        pickup_date = pickup_data.get('pickup_date', '')
+        pickup_odometer = pickup_data.get('pickup_odometer', '')
+        maintenance_cost = pickup_data.get('maintenance_cost', '')
+        maintenance_details = pickup_data.get('maintenance_details', '')
+        pickup_notes = pickup_data.get('pickup_notes', '')
         
-        # جدول المحتويات
-        accessory_items = [
-            ["إطار احتياطي", has_spare_tire],
-            ["طفاية حريق", has_fire_extinguisher],
-            ["حقيبة إسعافات أولية", has_first_aid_kit],
-            ["مثلث تحذيري", has_warning_triangle],
-            ["عدة أدوات", has_tools]
-        ]
-        
-        # تحديد عرض الجدول
-        col1_width = 30.0  # عمود الحالة
-        col2_width = 60.0  # عمود البيان
-        
-        # رسم جدول المحتويات
-        pdf.set_fill_color(*pdf.primary_color)
-        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
-        pdf.set_xy(80.0, accessories_info_y)
-        pdf.cell(col1_width, 10.0, get_display(arabic_reshaper.reshape("الحالة")), 1, 0, 'C', True)
-        pdf.cell(col2_width, 10.0, get_display(arabic_reshaper.reshape("البيان")), 1, 1, 'C', True)
-        
-        # بيانات جدول المحتويات
-        pdf.set_text_color(0, 0, 0)  # إعادة النص للون الأسود
-        for i, item in enumerate(accessory_items):
-            fill = i % 2 == 1  # صفوف بديلة
-            if fill:
-                pdf.set_fill_color(*pdf.table_row_alt_color)
-            else:
-                pdf.set_fill_color(255, 255, 255)  # خلفية بيضاء للصفوف غير المظللة
-            
-            pdf.set_xy(80.0, pdf.get_y())
-            pdf.cell(col1_width, 10.0, get_display(arabic_reshaper.reshape(item[1])), 1, 0, 'C', fill)
-            pdf.cell(col2_width, 10.0, get_display(arabic_reshaper.reshape(item[0])), 1, 1, 'R', fill)
-        
-        # قسم حالة السيارة
-        condition_title_y = pdf.get_y() + 15.0
-        pdf.set_font('Arial', 'B', 14)
-        pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190.0, condition_title_y, "حالة السيارة", 'R')
-        
-        # إضافة خط تحت العنوان
-        pdf.set_draw_color(*pdf.primary_color)
-        pdf.line(60.0, condition_title_y + 10.0, 190.0, condition_title_y + 10.0)
-        
-        # حالة السيارة
-        pdf.set_xy(20.0, condition_title_y + 15.0)
+        # بيانات الاستلام
         pdf.set_font('Arial', '', 11)
         pdf.set_text_color(0, 0, 0)
         
-        # إطار لوصف حالة السيارة
-        pdf.rect(20.0, condition_title_y + 15.0, 170.0, 25.0)
-        pdf.set_xy(25.0, condition_title_y + 20.0)
-        pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(vehicle_condition)), 0, 'R')
+        # إنشاء جدول لبيانات الاستلام
+        pickup_info_y = pickup_y + 15.0
         
-        # الملاحظات
-        notes_y = condition_title_y + 50.0
-        if notes:
-            pdf.set_font('Arial', 'B', 12)
-            pdf.set_text_color(*pdf.primary_color)
-            pdf.arabic_text(190.0, notes_y, "ملاحظات:", 'R')
-            
-            pdf.set_xy(20.0, notes_y + 5.0)
-            pdf.set_font('Arial', '', 10)
-            pdf.set_text_color(0, 0, 0)
-            
-            # إطار للملاحظات
-            pdf.rect(20.0, notes_y + 5.0, 170.0, 20.0)
-            pdf.set_xy(25.0, notes_y + 10.0)
-            pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(notes)), 0, 'R')
+        # الصف الأول
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, pickup_info_y, "تاريخ الاستلام:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.arabic_text(140.0, pickup_info_y, pickup_date, 'R')
         
-        # رابط النموذج الإلكتروني
-        if form_link:
-            form_link_y = notes_y + 35.0 if notes else notes_y + 10.0
-            pdf.set_font('Arial', 'B', 11)
-            pdf.set_text_color(*pdf.primary_color)
-            pdf.arabic_text(190.0, form_link_y, "رابط النموذج الإلكتروني:", 'R')
-            
-            pdf.set_font('Arial', '', 10)
-            pdf.set_text_color(0, 0, 255)  # لون أزرق للرابط
-            pdf.arabic_text(100.0, form_link_y, form_link, 'R')
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(100.0, pickup_info_y, "قراءة العداد:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.arabic_text(50.0, pickup_info_y, str(pickup_odometer) + " كم", 'R')
         
-        # التوقيعات
-        signature_y = pdf.get_y() + 20.0
-        pdf.set_font('Arial', 'B', 11)
-        pdf.set_text_color(*pdf.secondary_color)
+        # الصف الثاني
+        pickup_info_y += 10.0
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, pickup_info_y, "تكلفة الصيانة:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.arabic_text(140.0, pickup_info_y, maintenance_cost + " ريال", 'R')
         
-        if handover_type == 'استلام':
-            pdf.arabic_text(170.0, signature_y, "توقيع المستلم", 'C')
-            pdf.arabic_text(40.0, signature_y, "توقيع مسؤول السيارات", 'C')
-        else:
-            pdf.arabic_text(170.0, signature_y, "توقيع المسلم", 'C')
-            pdf.arabic_text(40.0, signature_y, "توقيع مسؤول السيارات", 'C')
+        # تفاصيل الصيانة
+        pickup_info_y += 10.0
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, pickup_info_y, "تفاصيل الصيانة:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.set_xy(20.0, pickup_info_y + 5.0)
+        pdf.rect(20.0, pickup_info_y + 5.0, 170.0, 15.0)
+        pdf.set_xy(25.0, pickup_info_y + 8.0)
+        pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(maintenance_details)), 0, 'R')
         
-        # خطوط التوقيع
-        pdf.set_xy(20.0, signature_y + 10.0)
-        pdf.cell(60.0, 10.0, "__________________", 0, 0, 'C')
-        pdf.cell(50.0, 10.0, "", 0, 0, 'C')  # فراغ في الوسط
-        pdf.cell(60.0, 10.0, "__________________", 0, 1, 'C')
+        # ملاحظات الاستلام
+        pickup_info_y += 25.0
+        pdf.set_font('Arial', 'B', 10)
+        pdf.arabic_text(190.0, pickup_info_y, "ملاحظات:", 'R')
+        pdf.set_font('Arial', '', 10)
+        pdf.set_xy(20.0, pickup_info_y + 5.0)
+        pdf.rect(20.0, pickup_info_y + 5.0, 170.0, 15.0)
+        pdf.set_xy(25.0, pickup_info_y + 8.0)
+        pdf.multi_cell(160.0, 5.0, get_display(arabic_reshaper.reshape(pickup_notes)), 0, 'R')
         
         # التذييل
         pdf.set_xy(10.0, 270.0)
@@ -961,12 +804,10 @@ def generate_vehicle_handover_pdf(handover_data):
         current_year = str(datetime.now().year)
         pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year, 'C')
         
-        # إنشاء الملف كبيانات ثنائية
-        buffer = BytesIO()
-        pdf.output(buffer)
-        buffer.seek(0)
-        
-        return buffer.getvalue()
+        # إنشاء الملف كبيانات ثنائية - تحديث للإصدار الجديد من FPDF
+        # استخدام dest='S' لإرجاع المحتوى كسلسلة نصية ثم تحويله إلى بايت
+        pdf_content = pdf.output(dest='S').encode('latin1')
+        return pdf_content
         
     except Exception as e:
         print(f"خطأ في إنشاء نموذج تسليم/استلام PDF: {str(e)}")
