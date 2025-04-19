@@ -27,22 +27,26 @@ def generate_salary_notification_pdf(salary):
         }
         month_name = month_names.get(month, str(month))
         
-        # تحضير البيانات للقالب مع التأكد من تحويل جميع البيانات إلى نوع مناسب
-        data = {
-            'employee_name': str(salary.employee.name),
-            'employee_id': str(salary.employee.employee_id),
-            'job_title': str(salary.employee.job_title),
-            'department_name': str(salary.employee.department.name) if salary.employee.department else None,
-            'month_name': str(month_name),
-            'year': str(salary.year) if isinstance(salary.year, (int, float)) else salary.year,
-            'basic_salary': float(salary.basic_salary),
-            'allowances': float(salary.allowances),
-            'bonus': float(salary.bonus),
-            'deductions': float(salary.deductions),
-            'net_salary': float(salary.net_salary),
-            'notes': str(salary.notes) if salary.notes else None,
-            'current_date': datetime.now().strftime('%Y-%m-%d')
-        }
+        # تحضير البيانات للقالب مع التأكد من تحويل جميع البيانات إلى قاموس
+        # لتجنب استخدام salary.get() الذي يسبب الخطأ 'Salary' object has no attribute 'get'
+        data = {}
+        
+        # معلومات الموظف
+        data['employee_name'] = str(salary.employee.name)
+        data['employee_id'] = str(salary.employee.employee_id)
+        data['job_title'] = str(salary.employee.job_title)
+        data['department_name'] = str(salary.employee.department.name) if salary.employee.department else ''
+        
+        # معلومات الراتب
+        data['month_name'] = str(month_name)
+        data['year'] = str(salary.year) if isinstance(salary.year, (int, float)) else salary.year
+        data['basic_salary'] = float(salary.basic_salary)
+        data['allowances'] = float(salary.allowances)
+        data['bonus'] = float(salary.bonus)
+        data['deductions'] = float(salary.deductions)
+        data['net_salary'] = float(salary.net_salary)
+        data['notes'] = str(salary.notes) if salary.notes else ''
+        data['current_date'] = datetime.now().strftime('%Y-%m-%d')
         
         # إنشاء ملف PDF باستخدام FPDF
         return generate_fpdf_notification(data)
