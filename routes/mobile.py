@@ -872,27 +872,13 @@ def maintenance_details(maintenance_id):
     # جلب صور الصيانة إن وجدت
     images = VehicleMaintenanceImage.query.filter_by(maintenance_id=maintenance_id).all()
     
-    # تنسيق البيانات لعرضها
-    formatted_data = {
-        'id': maintenance.id,
-        'date': maintenance.date,
-        'maintenance_type': maintenance.maintenance_type,
-        'description': maintenance.description,
-        'status': maintenance.status,
-        'status_class': status_class,
-        'cost': maintenance.cost,
-        'technician': maintenance.technician,
-        'receipt_image_url': maintenance.receipt_image_url,
-        'parts_replaced': maintenance.parts_replaced,
-        'actions_taken': maintenance.actions_taken,
-        'notes': maintenance.notes,
-        'created_at': maintenance.created_at,
-        'updated_at': maintenance.updated_at,
-        'images': images
-    }
+    # تعيين حالة الصيانة لاستخدامها في العرض
+    maintenance.status_class = status_class
+    # إضافة الصور إلى كائن الصيانة
+    maintenance.images = images
     
     return render_template('mobile/maintenance_details.html',
-                           maintenance=formatted_data,
+                           maintenance=maintenance,
                            vehicle=vehicle)
 
 
