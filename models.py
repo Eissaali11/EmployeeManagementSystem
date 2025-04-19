@@ -432,6 +432,7 @@ class VehicleMaintenance(db.Model):
     status = db.Column(db.String(20), nullable=False)  # حالة الصيانة: قيد الانتظار، قيد التنفيذ، منجزة، ملغية
     cost = db.Column(db.Float, default=0.0)  # تكلفة الصيانة
     technician = db.Column(db.String(100), nullable=False)  # الفني المسؤول
+    receipt_image_url = db.Column(db.String(255))  # رابط صورة الإيصال
     parts_replaced = db.Column(db.Text)  # قطع الغيار المستبدلة
     actions_taken = db.Column(db.Text)  # الإجراءات المتخذة
     notes = db.Column(db.Text)  # ملاحظات إضافية

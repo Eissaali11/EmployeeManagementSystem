@@ -893,6 +893,71 @@ def maintenance_details(maintenance_id):
                            vehicle=vehicle)
 
 
+# تعديل سجل صيانة - النسخة المحمولة
+@mobile_bp.route('/vehicles/maintenance/edit/<int:maintenance_id>', methods=['GET', 'POST'])
+@login_required
+def edit_maintenance(maintenance_id):
+    """تعديل سجل صيانة للنسخة المحمولة"""
+    # جلب سجل الصيانة
+    maintenance = VehicleMaintenance.query.get_or_404(maintenance_id)
+    
+    # الحصول على قائمة السيارات
+    vehicles = Vehicle.query.all()
+    
+    if request.method == 'POST':
+        try:
+            # استخراج البيانات من النموذج
+            vehicle_id = request.form.get('vehicle_id')
+            maintenance_type = request.form.get('maintenance_type')
+            description = request.form.get('description')
+            cost = request.form.get('cost', 0.0, type=float)
+            date_str = request.form.get('date')
+            status = request.form.get('status')
+            technician = request.form.get('technician')
+            notes = request.form.get('notes', '')
+            parts_replaced = request.form.get('parts_replaced', '')
+            actions_taken = request.form.get('actions_taken', '')
+            
+            # التحقق من تعبئة الحقول المطلوبة
+            if not vehicle_id or not maintenance_type or not description or not date_str or not status or not technician:
+                flash('يرجى ملء جميع الحقول المطلوبة', 'warning')
+                return render_template('mobile/edit_maintenance.html', 
+                                     maintenance=maintenance,
+                                     vehicles=vehicles, 
+                                     now=datetime.now())
+            
+            # تحويل التاريخ إلى كائن Date
+            maintenance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            
+            # تحديث سجل الصيانة
+            maintenance.vehicle_id = vehicle_id
+            maintenance.date = maintenance_date
+            maintenance.maintenance_type = maintenance_type
+            maintenance.description = description
+            maintenance.status = status
+            maintenance.cost = cost
+            maintenance.technician = technician
+            maintenance.parts_replaced = parts_replaced
+            maintenance.actions_taken = actions_taken
+            maintenance.notes = notes
+            
+            # حفظ التغييرات في قاعدة البيانات
+            db.session.commit()
+            
+            flash('تم تحديث سجل الصيانة بنجاح', 'success')
+            return redirect(url_for('mobile.maintenance_details', maintenance_id=maintenance.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تحديث سجل الصيانة: {str(e)}', 'danger')
+    
+    # عرض نموذج تعديل سجل الصيانة
+    return render_template('mobile/edit_maintenance.html', 
+                         maintenance=maintenance, 
+                         vehicles=vehicles, 
+                         now=datetime.now())
+
+
 # حذف سجل صيانة - النسخة المحمولة
 @mobile_bp.route('/vehicles/maintenance/delete/<int:maintenance_id>')
 @login_required
