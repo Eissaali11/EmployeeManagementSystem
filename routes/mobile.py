@@ -838,6 +838,88 @@ def add_maintenance():
     # عرض نموذج إضافة صيانة جديدة
     return render_template('mobile/add_maintenance.html', vehicles=vehicles, now=datetime.now())
 
+# تفاصيل الصيانة - النسخة المحمولة
+@mobile_bp.route('/vehicles/maintenance/<int:maintenance_id>')
+@login_required
+def maintenance_details(maintenance_id):
+    """تفاصيل الصيانة للنسخة المحمولة"""
+    # جلب سجل الصيانة من قاعدة البيانات
+    maintenance = VehicleMaintenance.query.get_or_404(maintenance_id)
+    
+    # جلب بيانات السيارة
+    vehicle = Vehicle.query.get(maintenance.vehicle_id)
+    
+    # تحديد الفئة المناسبة لحالة الصيانة
+    status_class = ""
+    if maintenance.status == "قيد التنفيذ":
+        status_class = "ongoing"
+    elif maintenance.status == "منجزة":
+        status_class = "completed"
+    elif maintenance.status == "قيد الانتظار":
+        if maintenance.date < datetime.now().date():
+            status_class = "late"
+        else:
+            status_class = "scheduled"
+    elif maintenance.status == "ملغية":
+        status_class = "canceled"
+    
+    # جلب صور الصيانة إن وجدت
+    images = VehicleMaintenanceImage.query.filter_by(maintenance_id=maintenance_id).all()
+    
+    # تنسيق البيانات لعرضها
+    formatted_data = {
+        'id': maintenance.id,
+        'date': maintenance.date,
+        'maintenance_type': maintenance.maintenance_type,
+        'description': maintenance.description,
+        'status': maintenance.status,
+        'status_class': status_class,
+        'cost': maintenance.cost,
+        'technician': maintenance.technician,
+        'parts_replaced': maintenance.parts_replaced,
+        'actions_taken': maintenance.actions_taken,
+        'notes': maintenance.notes,
+        'created_at': maintenance.created_at,
+        'updated_at': maintenance.updated_at,
+        'images': images
+    }
+    
+    return render_template('mobile/maintenance_details.html',
+                           maintenance=formatted_data,
+                           vehicle=vehicle)
+
+
+# حذف سجل صيانة - النسخة المحمولة
+@mobile_bp.route('/vehicles/maintenance/delete/<int:maintenance_id>')
+@login_required
+def delete_maintenance(maintenance_id):
+    """حذف سجل صيانة للنسخة المحمولة"""
+    try:
+        # جلب سجل الصيانة
+        maintenance = VehicleMaintenance.query.get_or_404(maintenance_id)
+        
+        # حذف جميع الصور المرتبطة (إن وجدت)
+        images = VehicleMaintenanceImage.query.filter_by(maintenance_id=maintenance_id).all()
+        for image in images:
+            # حذف ملف الصورة من المجلد (يمكن تنفيذه لاحقًا)
+            # image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image.image_path)
+            # if os.path.exists(image_path):
+            #    os.remove(image_path)
+            
+            # حذف السجل من قاعدة البيانات
+            db.session.delete(image)
+        
+        # حذف سجل الصيانة
+        db.session.delete(maintenance)
+        db.session.commit()
+        
+        flash('تم حذف سجل الصيانة بنجاح', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء محاولة حذف سجل الصيانة: {str(e)}', 'danger')
+    
+    return redirect(url_for('mobile.vehicle_maintenance'))
+
 # وثائق السيارات - النسخة المحمولة
 @mobile_bp.route('/vehicles/documents')
 @login_required

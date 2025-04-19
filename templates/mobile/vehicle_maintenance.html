@@ -22,7 +22,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-wrench"></i>
       </div>
-      <div class="mobile-summary-value">5</div>
+      <div class="mobile-summary-value">{{ stats.ongoing }}</div>
       <div class="mobile-summary-label">قيد التنفيذ</div>
     </div>
     
@@ -30,7 +30,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-check-circle"></i>
       </div>
-      <div class="mobile-summary-value">23</div>
+      <div class="mobile-summary-value">{{ stats.completed }}</div>
       <div class="mobile-summary-label">منجزة</div>
     </div>
     
@@ -38,7 +38,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-exclamation-triangle"></i>
       </div>
-      <div class="mobile-summary-value">3</div>
+      <div class="mobile-summary-value">{{ stats.late }}</div>
       <div class="mobile-summary-label">متأخرة</div>
     </div>
     
@@ -46,7 +46,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-calendar-day"></i>
       </div>
-      <div class="mobile-summary-value">2</div>
+      <div class="mobile-summary-value">{{ stats.today }}</div>
       <div class="mobile-summary-label">اليوم</div>
     </div>
   </div>
@@ -67,126 +67,128 @@
     
     <!-- فلاتر البحث (مخفية افتراضياً) -->
     <div class="mobile-card-body" id="filtersSection" style="display: none;">
-      <div class="mobile-form-group">
-        <label class="mobile-form-label">السيارة</label>
-        <select class="mobile-form-select">
-          <option value="">جميع السيارات</option>
-          <option value="1">تويوتا كامري</option>
-          <option value="2">هونداي سوناتا</option>
-          <option value="3">نيسان باترول</option>
-        </select>
-      </div>
-      
-      <div class="mobile-form-group">
-        <label class="mobile-form-label">نوع الصيانة</label>
-        <select class="mobile-form-select">
-          <option value="">جميع الأنواع</option>
-          <option value="regular">صيانة دورية</option>
-          <option value="repair">إصلاح عطل</option>
-          <option value="inspection">فحص</option>
-          <option value="other">أخرى</option>
-        </select>
-      </div>
-      
-      <div class="mobile-form-group">
-        <label class="mobile-form-label">الحالة</label>
-        <select class="mobile-form-select">
-          <option value="">جميع الحالات</option>
-          <option value="pending">قيد الانتظار</option>
-          <option value="in_progress">قيد التنفيذ</option>
-          <option value="completed">منجزة</option>
-          <option value="canceled">ملغية</option>
-        </select>
-      </div>
-      
-      <div class="mobile-form-actions">
-        <button class="mobile-btn mobile-btn-primary" onclick="applyFilters()">
-          <i class="fas fa-search"></i>
-          تطبيق الفلتر
-        </button>
-      </div>
+      <form id="filterForm" action="{{ url_for('mobile.vehicle_maintenance') }}" method="GET">
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">السيارة</label>
+          <select class="mobile-form-select" name="vehicle_id">
+            <option value="">جميع السيارات</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}" {% if selected_vehicle == vehicle.id %}selected{% endif %}>
+              {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">نوع الصيانة</label>
+          <select class="mobile-form-select" name="maintenance_type">
+            <option value="">جميع الأنواع</option>
+            <option value="دورية" {% if selected_type == 'دورية' %}selected{% endif %}>صيانة دورية</option>
+            <option value="طارئة" {% if selected_type == 'طارئة' %}selected{% endif %}>صيانة طارئة</option>
+            <option value="إصلاح" {% if selected_type == 'إصلاح' %}selected{% endif %}>إصلاح عطل</option>
+            <option value="فحص" {% if selected_type == 'فحص' %}selected{% endif %}>فحص</option>
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">الحالة</label>
+          <select class="mobile-form-select" name="status">
+            <option value="">جميع الحالات</option>
+            <option value="قيد الانتظار" {% if selected_status == 'قيد الانتظار' %}selected{% endif %}>قيد الانتظار</option>
+            <option value="قيد التنفيذ" {% if selected_status == 'قيد التنفيذ' %}selected{% endif %}>قيد التنفيذ</option>
+            <option value="منجزة" {% if selected_status == 'منجزة' %}selected{% endif %}>منجزة</option>
+            <option value="ملغية" {% if selected_status == 'ملغية' %}selected{% endif %}>ملغية</option>
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">من تاريخ</label>
+          <input type="date" class="mobile-form-input" name="date_from" value="{{ date_from }}">
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">إلى تاريخ</label>
+          <input type="date" class="mobile-form-input" name="date_to" value="{{ date_to }}">
+        </div>
+        
+        <div class="mobile-form-actions">
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-search"></i>
+            تطبيق الفلتر
+          </button>
+          
+          <button type="button" class="mobile-btn mobile-btn-secondary" onclick="resetFilters()">
+            <i class="fas fa-redo"></i>
+            إعادة تعيين
+          </button>
+        </div>
+      </form>
     </div>
     
     <div class="mobile-maintenance-list">
-      <!-- مهمة صيانة -->
-      <div class="mobile-maintenance-item active">
-        <div class="mobile-maintenance-status ongoing">قيد التنفيذ</div>
-        <div class="mobile-maintenance-content">
-          <div class="mobile-maintenance-title">تغيير زيت المحرك وفلتر</div>
-          <div class="mobile-maintenance-vehicle">تويوتا كامري - أ ب ج ١٢٣٤</div>
-          <div class="mobile-maintenance-meta">
-            <span><i class="fas fa-calendar"></i> ١٥ أبريل ٢٠٢٥</span>
-            <span><i class="fas fa-user"></i> فني: أحمد محمد</span>
+      {% if maintenance_records %}
+        {% for record in maintenance_records %}
+          {% set vehicle = record.vehicle %}
+          
+          <!-- تحديد فئة المهمة (استنادًا إلى الحالة والتاريخ) -->
+          {% set item_class = "mobile-maintenance-item" %}
+          {% if loop.first %}
+            {% set item_class = item_class ~ " active" %}
+          {% endif %}
+          
+          <!-- تحديد نوع الحالة للعرض -->
+          {% set status_class = "" %}
+          {% set status_text = record.status %}
+          
+          {% if record.status == "قيد التنفيذ" %}
+            {% set status_class = "ongoing" %}
+          {% elif record.status == "منجزة" %}
+            {% set status_class = "completed" %}
+          {% elif record.status == "قيد الانتظار" %}
+            {% set is_late = record.date < now().date() %}
+            {% if is_late %}
+              {% set status_class = "late" %}
+              {% set status_text = "متأخرة" %}
+            {% else %}
+              {% set status_class = "scheduled" %}
+              {% set status_text = "مجدولة" %}
+            {% endif %}
+          {% elif record.status == "ملغية" %}
+            {% set status_class = "canceled" %}
+          {% endif %}
+          
+          <div class="{{ item_class }}">
+            <div class="mobile-maintenance-status {{ status_class }}">{{ status_text }}</div>
+            <div class="mobile-maintenance-content">
+              <div class="mobile-maintenance-title">{{ record.description }}</div>
+              <div class="mobile-maintenance-vehicle">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</div>
+              <div class="mobile-maintenance-meta">
+                <span><i class="fas fa-calendar"></i> {{ record.date.strftime('%d/%m/%Y') }}</span>
+                <span><i class="fas fa-user"></i> فني: {{ record.technician }}</span>
+                {% if record.cost > 0 %}
+                <span><i class="fas fa-money-bill-wave"></i> {{ "{:,.2f}".format(record.cost) }} ريال</span>
+                {% endif %}
+              </div>
+            </div>
+            <button class="mobile-btn-icon mobile-maintenance-more" onclick="viewMaintenance({{ record.id }})">
+              <i class="fas fa-chevron-left"></i>
+            </button>
           </div>
-        </div>
-        <button class="mobile-btn-icon mobile-maintenance-more" onclick="viewMaintenance(1)">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- مهمة صيانة -->
-      <div class="mobile-maintenance-item">
-        <div class="mobile-maintenance-status late">متأخرة</div>
-        <div class="mobile-maintenance-content">
-          <div class="mobile-maintenance-title">فحص منظومة التعليق</div>
-          <div class="mobile-maintenance-vehicle">هونداي سوناتا - س ع د ٥٦٧٨</div>
-          <div class="mobile-maintenance-meta">
-            <span><i class="fas fa-calendar"></i> ١٠ أبريل ٢٠٢٥</span>
-            <span><i class="fas fa-user"></i> فني: ماجد سعيد</span>
+        {% endfor %}
+      {% else %}
+        <div class="mobile-empty-state">
+          <div class="mobile-empty-icon">
+            <i class="fas fa-tools"></i>
           </div>
+          <h3>لا توجد سجلات صيانة</h3>
+          <p>لم يتم العثور على سجلات صيانة تطابق معايير البحث.</p>
+          <button class="mobile-btn mobile-btn-primary" onclick="resetFilters()">
+            <i class="fas fa-redo"></i>
+            إعادة تعيين الفلاتر
+          </button>
         </div>
-        <button class="mobile-btn-icon mobile-maintenance-more" onclick="viewMaintenance(2)">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- مهمة صيانة -->
-      <div class="mobile-maintenance-item">
-        <div class="mobile-maintenance-status scheduled">مجدولة</div>
-        <div class="mobile-maintenance-content">
-          <div class="mobile-maintenance-title">تغيير إطارات</div>
-          <div class="mobile-maintenance-vehicle">نيسان باترول - ك و ي ٩٨٧٦</div>
-          <div class="mobile-maintenance-meta">
-            <span><i class="fas fa-calendar"></i> ٢٠ أبريل ٢٠٢٥</span>
-            <span><i class="fas fa-user"></i> فني: محمد سامي</span>
-          </div>
-        </div>
-        <button class="mobile-btn-icon mobile-maintenance-more" onclick="viewMaintenance(3)">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- مهمة صيانة -->
-      <div class="mobile-maintenance-item">
-        <div class="mobile-maintenance-status completed">منجزة</div>
-        <div class="mobile-maintenance-content">
-          <div class="mobile-maintenance-title">صيانة نظام التبريد</div>
-          <div class="mobile-maintenance-vehicle">تويوتا كامري - أ ب ج ١٢٣٤</div>
-          <div class="mobile-maintenance-meta">
-            <span><i class="fas fa-calendar"></i> ٥ أبريل ٢٠٢٥</span>
-            <span><i class="fas fa-user"></i> فني: أحمد محمد</span>
-          </div>
-        </div>
-        <button class="mobile-btn-icon mobile-maintenance-more" onclick="viewMaintenance(4)">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- مهمة صيانة -->
-      <div class="mobile-maintenance-item">
-        <div class="mobile-maintenance-status completed">منجزة</div>
-        <div class="mobile-maintenance-content">
-          <div class="mobile-maintenance-title">فحص وتنظيف دورة الوقود</div>
-          <div class="mobile-maintenance-vehicle">هونداي سوناتا - س ع د ٥٦٧٨</div>
-          <div class="mobile-maintenance-meta">
-            <span><i class="fas fa-calendar"></i> ١ أبريل ٢٠٢٥</span>
-            <span><i class="fas fa-user"></i> فني: ماجد سعيد</span>
-          </div>
-        </div>
-        <button class="mobile-btn-icon mobile-maintenance-more" onclick="viewMaintenance(5)">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
+      {% endif %}
     </div>
   </div>
   
@@ -273,6 +275,33 @@
     left: 16px;
     transform: translateY(-50%);
   }
+  
+  .mobile-empty-state {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-muted);
+  }
+  
+  .mobile-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    opacity: 0.5;
+  }
+  
+  .mobile-empty-state h3 {
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+  
+  .mobile-empty-state p {
+    margin-bottom: 24px;
+  }
+  
+  .mobile-maintenance-status.canceled {
+    background-color: rgba(var(--secondary-rgb), 0.1);
+    color: var(--secondary-color);
+  }
 </style>
 {% endblock %}
 
@@ -287,15 +316,30 @@
     }
   }
   
-  function applyFilters() {
-    // تنفيذ عملية الفلترة
-    alert('تم تطبيق الفلتر');
-    toggleFilters();
+  function resetFilters() {
+    // إعادة تعيين جميع قيم الفلاتر
+    document.querySelectorAll('#filterForm select').forEach(select => {
+      select.value = '';
+    });
+    
+    document.querySelectorAll('#filterForm input[type="date"]').forEach(input => {
+      input.value = '';
+    });
+    
+    // إرسال النموذج
+    document.getElementById('filterForm').submit();
   }
   
   function viewMaintenance(id) {
-    // انتقال إلى صفحة تفاصيل الصيانة - حاليًا نعود لصفحة السيارات الرئيسية
-    location.href = '{{ url_for("mobile.vehicles") }}';
+    // انتقال إلى صفحة تفاصيل الصيانة
+    location.href = '{{ url_for("mobile.vehicle_maintenance") }}/' + id;
   }
+  
+  // عرض قسم الفلاتر تلقائيًا عند وجود فلاتر مطبقة
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if selected_vehicle or selected_status or selected_type or date_from or date_to %}
+      document.getElementById('filtersSection').style.display = 'block';
+    {% endif %}
+  });
 </script>
 {% endblock %}
