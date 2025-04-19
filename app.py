@@ -9,6 +9,14 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 
+# استيراد مكتبة dotenv لقراءة ملف .env
+from dotenv import load_dotenv
+load_dotenv()  # تحميل المتغيرات البيئية من ملف .env
+
+# استيراد مكتبة SQLAlchemy للتعامل مع MySQL
+import pymysql
+pymysql.install_as_MySQLdb()  # استخدام PyMySQL كبديل لـ MySQLdb
+
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
