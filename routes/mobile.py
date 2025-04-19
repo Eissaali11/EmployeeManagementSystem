@@ -3,8 +3,8 @@
 نظام إدارة الموظفين - النسخة المحمولة
 """
 
-from datetime import datetime, timedelta
-from sqlalchemy import extract
+from datetime import datetime, timedelta, date
+from sqlalchemy import extract, func, cast, Date
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
@@ -12,7 +12,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 
 # إنشاء مخطط المسارات
