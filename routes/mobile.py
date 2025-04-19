@@ -806,6 +806,8 @@ def add_maintenance():
             parts_replaced = request.form.get('parts_replaced', '')
             actions_taken = request.form.get('actions_taken', '')
             receipt_image_url = request.form.get('receipt_image_url', '')
+            delivery_receipt_url = request.form.get('delivery_receipt_url', '')
+            pickup_receipt_url = request.form.get('pickup_receipt_url', '')
             
             # التحقق من تعبئة الحقول المطلوبة
             if not vehicle_id or not maintenance_type or not description or not date_str or not status or not technician:
@@ -825,6 +827,8 @@ def add_maintenance():
                 cost=cost,
                 technician=technician,
                 receipt_image_url=receipt_image_url,
+                delivery_receipt_url=delivery_receipt_url,
+                pickup_receipt_url=pickup_receipt_url,
                 parts_replaced=parts_replaced,
                 actions_taken=actions_taken,
                 notes=notes
@@ -920,8 +924,10 @@ def edit_maintenance(maintenance_id):
             # تحويل التاريخ إلى كائن Date
             maintenance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             
-            # استخراج رابط صورة الإيصال
+            # استخراج روابط الإيصالات
             receipt_image_url = request.form.get('receipt_image_url', '')
+            delivery_receipt_url = request.form.get('delivery_receipt_url', '')
+            pickup_receipt_url = request.form.get('pickup_receipt_url', '')
             
             # تحديث سجل الصيانة
             maintenance.vehicle_id = vehicle_id
@@ -932,6 +938,8 @@ def edit_maintenance(maintenance_id):
             maintenance.cost = cost
             maintenance.technician = technician
             maintenance.receipt_image_url = receipt_image_url
+            maintenance.delivery_receipt_url = delivery_receipt_url
+            maintenance.pickup_receipt_url = pickup_receipt_url
             maintenance.parts_replaced = parts_replaced
             maintenance.actions_taken = actions_taken
             maintenance.notes = notes
