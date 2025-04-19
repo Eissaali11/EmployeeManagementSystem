@@ -1,165 +1,110 @@
 {% extends 'mobile/layout.html' %}
 
-{% block title %}إضافة سجل صيانة{% endblock %}
-{% block header_title %}إضافة سجل صيانة{% endblock %}
+{% block title %}إضافة صيانة جديدة{% endblock %}
+{% block header_title %}إضافة صيانة جديدة{% endblock %}
 
 {% block content %}
 <div class="mobile-section">
   <div class="mobile-section-header">
     <h2 class="mobile-section-title">
       <i class="fas fa-tools"></i>
-      إضافة سجل صيانة جديد
+      إضافة صيانة جديدة
     </h2>
     <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-secondary">
       <i class="fas fa-arrow-right"></i>
       عودة
     </a>
   </div>
-
-  <!-- نموذج إضافة سجل صيانة -->
+  
   <div class="mobile-card">
     <div class="mobile-card-body">
-      <form method="post" action="{{ url_for('mobile.vehicles') }}" enctype="multipart/form-data" id="maintenanceForm">
-        {{ form.csrf_token if form and form.csrf_token }}
-        
-        <!-- بيانات الصيانة الأساسية -->
-        <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">بيانات الصيانة الأساسية</h3>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">السيارة</label>
-            <select class="mobile-form-select" name="vehicle_id" required>
-              <option value="" selected disabled>اختر السيارة</option>
-              <option value="1">تويوتا كامري - أ ب ج ١٢٣٤</option>
-              <option value="2">هونداي سوناتا - س ع د ٥٦٧٨</option>
-              <option value="3">نيسان باترول - ك و ي ٩٨٧٦</option>
-            </select>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">نوع الصيانة</label>
-            <select class="mobile-form-select" name="maintenance_type" required>
-              <option value="" selected disabled>اختر نوع الصيانة</option>
-              <option value="regular">صيانة دورية</option>
-              <option value="emergency">صيانة طارئة</option>
-              <option value="inspection">فحص</option>
-              <option value="repair">إصلاح</option>
-              <option value="other">أخرى</option>
-            </select>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">عنوان الصيانة</label>
-            <input type="text" class="mobile-form-input" name="title" required placeholder="مثال: تغيير زيت المحرك وفلتر">
-          </div>
-          
-          <div class="mobile-form-row">
-            <div class="mobile-form-group">
-              <label class="mobile-form-label">تاريخ البدء</label>
-              <input type="date" class="mobile-form-input" name="start_date" required>
-            </div>
-            
-            <div class="mobile-form-group">
-              <label class="mobile-form-label">تاريخ الانتهاء المتوقع</label>
-              <input type="date" class="mobile-form-input" name="expected_end_date">
-            </div>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">الحالة</label>
-            <select class="mobile-form-select" name="status" required>
-              <option value="scheduled">مجدولة</option>
-              <option value="ongoing" selected>قيد التنفيذ</option>
-              <option value="completed">منجزة</option>
-              <option value="canceled">ملغية</option>
-            </select>
-          </div>
+      <form action="{{ url_for('mobile.add_maintenance') }}" method="POST" id="maintenanceForm">
+        <!-- السيارة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">السيارة <span class="text-danger">*</span></label>
+          <select name="vehicle_id" class="mobile-form-select" required>
+            <option value="">اختر السيارة</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</option>
+            {% endfor %}
+          </select>
         </div>
         
-        <!-- بيانات الفني والتكلفة -->
-        <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">بيانات الفني والتكلفة</h3>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">الفني المسؤول</label>
-            <input type="text" class="mobile-form-input" name="technician_name" placeholder="مثال: أحمد محمد">
-          </div>
-          
-          <div class="mobile-form-row">
-            <div class="mobile-form-group">
-              <label class="mobile-form-label">جهة الصيانة</label>
-              <input type="text" class="mobile-form-input" name="service_provider" placeholder="مثال: الوكالة الرسمية">
-            </div>
-            
-            <div class="mobile-form-group">
-              <label class="mobile-form-label">رقم الهاتف</label>
-              <input type="tel" class="mobile-form-input" name="phone_number" placeholder="مثال: 05xxxxxxxx">
-            </div>
-          </div>
-          
-          <div class="mobile-form-row">
-            <div class="mobile-form-group">
-              <label class="mobile-form-label">التكلفة المتوقعة</label>
-              <input type="number" step="0.01" class="mobile-form-input" name="expected_cost" placeholder="بالريال السعودي">
-            </div>
-            
-            <div class="mobile-form-group">
-              <label class="mobile-form-label">التكلفة الفعلية</label>
-              <input type="number" step="0.01" class="mobile-form-input" name="actual_cost" placeholder="بالريال السعودي">
-            </div>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">قراءة العداد (كم)</label>
-            <input type="number" class="mobile-form-input" name="odometer" placeholder="مثال: 12500">
-          </div>
+        <!-- نوع الصيانة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">نوع الصيانة <span class="text-danger">*</span></label>
+          <select name="maintenance_type" class="mobile-form-select" required>
+            <option value="">اختر نوع الصيانة</option>
+            <option value="دورية">صيانة دورية</option>
+            <option value="طارئة">صيانة طارئة</option>
+            <option value="إصلاح">إصلاح عطل</option>
+            <option value="فحص">فحص فني</option>
+            <option value="أخرى">أخرى</option>
+          </select>
         </div>
         
-        <!-- تفاصيل إضافية -->
-        <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">تفاصيل إضافية</h3>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">وصف الصيانة</label>
-            <textarea class="mobile-form-textarea" name="description" rows="3" placeholder="وصف تفصيلي لأعمال الصيانة"></textarea>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">الأعطال المكتشفة</label>
-            <textarea class="mobile-form-textarea" name="issues_discovered" rows="3" placeholder="الأعطال التي تم اكتشافها أثناء الصيانة"></textarea>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">القطع المستبدلة</label>
-            <textarea class="mobile-form-textarea" name="parts_replaced" rows="3" placeholder="القطع التي تم استبدالها"></textarea>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">ملاحظات</label>
-            <textarea class="mobile-form-textarea" name="notes" rows="3" placeholder="أي ملاحظات إضافية حول الصيانة"></textarea>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">إيصال الصيانة</label>
-            <div class="mobile-form-file">
-              <input type="file" id="receiptImage" name="receipt_image" accept="image/*" class="mobile-form-file-input">
-              <label for="receiptImage" class="mobile-form-file-label">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span>اختر صورة الإيصال</span>
-              </label>
-              <div class="mobile-form-file-preview" id="imagePreview"></div>
-            </div>
-          </div>
+        <!-- وصف الصيانة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">وصف الصيانة <span class="text-danger">*</span></label>
+          <input type="text" name="description" class="mobile-form-input" placeholder="وصف مختصر للصيانة" required>
         </div>
         
+        <!-- تاريخ الصيانة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">تاريخ الصيانة <span class="text-danger">*</span></label>
+          <input type="date" name="date" class="mobile-form-input" value="{{ now.strftime('%Y-%m-%d') }}" required>
+        </div>
+        
+        <!-- حالة الصيانة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">حالة الصيانة <span class="text-danger">*</span></label>
+          <select name="status" class="mobile-form-select" required>
+            <option value="قيد الانتظار">قيد الانتظار</option>
+            <option value="قيد التنفيذ">قيد التنفيذ</option>
+            <option value="منجزة">منجزة</option>
+            <option value="ملغية">ملغية</option>
+          </select>
+        </div>
+        
+        <!-- تكلفة الصيانة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">تكلفة الصيانة <span class="text-danger">*</span></label>
+          <input type="number" name="cost" class="mobile-form-input" placeholder="تكلفة الصيانة" step="0.01" min="0" required>
+        </div>
+        
+        <!-- ملاحظات -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">ملاحظات</label>
+          <textarea name="notes" class="mobile-form-textarea" placeholder="أي ملاحظات إضافية حول الصيانة" rows="4"></textarea>
+        </div>
+        
+        <!-- قطع الغيار المستبدلة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">قطع الغيار المستبدلة</label>
+          <textarea name="parts_replaced" class="mobile-form-textarea" placeholder="قطع الغيار التي تم استبدالها (فلتر زيت، شمعات، إلخ)" rows="3"></textarea>
+        </div>
+        
+        <!-- الإجراءات المتخذة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">الإجراءات المتخذة</label>
+          <textarea name="actions_taken" class="mobile-form-textarea" placeholder="الإجراءات التي تم اتخاذها أثناء الصيانة" rows="3"></textarea>
+        </div>
+        
+        <!-- الفني المسؤول -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">الفني المسؤول <span class="text-danger">*</span></label>
+          <input type="text" name="technician" class="mobile-form-input" placeholder="اسم الفني المسؤول" required>
+        </div>
+        
+        <!-- أزرار التحكم -->
         <div class="mobile-form-actions">
+          <button type="reset" class="mobile-btn mobile-btn-secondary">
+            <i class="fas fa-redo"></i>
+            إعادة تعيين
+          </button>
           <button type="submit" class="mobile-btn mobile-btn-primary">
             <i class="fas fa-save"></i>
-            حفظ سجل الصيانة
-          </button>
-          <button type="reset" class="mobile-btn mobile-btn-secondary">
-            <i class="fas fa-undo"></i>
-            إعادة تعيين
+            حفظ الصيانة
           </button>
         </div>
       </form>
@@ -170,107 +115,53 @@
 
 {% block styles %}
 <style>
-  .mobile-form-file {
-    position: relative;
-    margin-bottom: 16px;
+  .mobile-form-group {
+    margin-bottom: 1.5rem;
   }
   
-  .mobile-form-file-input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
+  .mobile-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
   }
   
-  .mobile-form-file-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background-color: var(--card-bg);
-    border: 1px dashed var(--border-color);
+  .mobile-form-input,
+  .mobile-form-select,
+  .mobile-form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
     border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: all var(--transition-normal);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    font-size: var(--font-size-normal);
+    transition: border-color var(--transition-normal);
   }
   
-  .mobile-form-file-label:hover {
+  .mobile-form-input:focus,
+  .mobile-form-select:focus,
+  .mobile-form-textarea:focus {
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    outline: none;
   }
   
-  .mobile-form-file-preview {
-    margin-top: 8px;
-    width: 100%;
-    height: 150px;
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    overflow: hidden;
+  .mobile-form-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-  }
-  
-  .mobile-form-file-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .mobile-form-section {
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-light);
-  }
-  
-  .mobile-form-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-  }
-  
-  .mobile-form-section-title {
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-medium);
-    margin-bottom: 16px;
-    color: var(--text-primary);
-  }
-  
-  .mobile-form-row {
-    display: flex;
-    gap: 16px;
-  }
-  
-  .mobile-form-row .mobile-form-group {
-    flex: 1;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
   }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  // معاينة الصورة قبل الرفع
-  document.getElementById('receiptImage').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const preview = document.getElementById('imagePreview');
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('maintenanceForm');
     
-    if (file) {
-      const reader = new FileReader();
-      
-      reader.onload = function(e) {
-        preview.innerHTML = `<img src="${e.target.result}" alt="معاينة الصورة">`;
-      };
-      
-      reader.readAsDataURL(file);
-    } else {
-      preview.innerHTML = '';
-    }
+    form.addEventListener('submit', function(event) {
+      // إضافة التحقق من صحة البيانات هنا إذا لزم الأمر
+    });
   });
 </script>
 {% endblock %}

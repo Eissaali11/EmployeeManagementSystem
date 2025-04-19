@@ -764,7 +764,7 @@ def add_maintenance():
         return redirect(url_for('mobile.vehicle_maintenance'))
     
     # عرض نموذج إضافة صيانة جديدة
-    return render_template('mobile/add_maintenance.html', vehicles=vehicles)
+    return render_template('mobile/add_maintenance.html', vehicles=vehicles, now=datetime.now())
 
 # وثائق السيارات - النسخة المحمولة
 @mobile_bp.route('/vehicles/documents')
