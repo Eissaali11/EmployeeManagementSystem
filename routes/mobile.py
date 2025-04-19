@@ -1537,51 +1537,129 @@ def add_fuel_consumption():
     
     if request.method == 'POST':
         try:
-            # معالجة النموذج المرسل
-            vehicle_id = request.form.get('vehicle_id', type=int)
-            date_str = request.form.get('date')
-            liters = request.form.get('liters', type=float)
-            cost = request.form.get('cost', type=float)
-            kilometer_reading = request.form.get('kilometer_reading', type=int)
-            driver_name = request.form.get('driver_name')
-            fuel_type = request.form.get('fuel_type')
-            filling_station = request.form.get('filling_station')
-            notes = request.form.get('notes')
+            # التحقق من نوع الطلب (واحد أو متعدد)
+            repeat_type = request.form.get('repeat_type')
             
-            # التحقق من البيانات المطلوبة
-            if not (vehicle_id and date_str and liters and cost):
-                flash('جميع الحقول المطلوبة يجب ملؤها', 'danger')
-                return render_template('mobile/add_fuel_consumption.html', 
-                                    vehicles=vehicles,
-                                    now=datetime.now())
-            
-            # تحويل التاريخ
-            consumption_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            
-            # إنشاء سجل جديد لتعبئة الوقود
-            new_fuel_record = VehicleFuelConsumption(
-                vehicle_id=vehicle_id,
-                date=consumption_date,
-                liters=liters,
-                cost=cost,
-                kilometer_reading=kilometer_reading,
-                driver_name=driver_name,
-                fuel_type=fuel_type,
-                filling_station=filling_station,
-                notes=notes
-            )
-            
-            # حفظ السجل في قاعدة البيانات
-            db.session.add(new_fuel_record)
-            db.session.commit()
-            
-            flash('تم إضافة تعبئة الوقود بنجاح', 'success')
-            return redirect(url_for('mobile.vehicle_expenses'))
+            # إذا كان هناك تكرار لعدة أيام
+            if repeat_type and repeat_type != 'none' and 'dates[]' in request.form:
+                # الحصول على البيانات المشتركة
+                vehicle_id = request.form.get('vehicle_id', type=int)
+                liters = request.form.get('liters', type=float)
+                cost = request.form.get('cost', type=float)
+                kilometer_reading = request.form.get('kilometer_reading', type=int)
+                driver_name = request.form.get('driver_name')
+                fuel_type = request.form.get('fuel_type')
+                filling_station = request.form.get('filling_station')
+                notes = request.form.get('notes')
+                
+                # التحقق من البيانات المطلوبة
+                if not (vehicle_id and liters and cost):
+                    return jsonify({
+                        'status': 'error',
+                        'message': 'جميع الحقول المطلوبة يجب ملؤها'
+                    })
+                
+                # الحصول على التواريخ
+                dates = request.form.getlist('dates[]')
+                if not dates:
+                    return jsonify({
+                        'status': 'error',
+                        'message': 'لم يتم تحديد أي تواريخ للتكرار'
+                    })
+                
+                # إنشاء سجلات متعددة
+                records_count = 0
+                for date_str in dates:
+                    try:
+                        # تحويل التاريخ
+                        consumption_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                        
+                        # إنشاء سجل جديد لتعبئة الوقود
+                        new_fuel_record = VehicleFuelConsumption(
+                            vehicle_id=vehicle_id,
+                            date=consumption_date,
+                            liters=liters,
+                            cost=cost,
+                            kilometer_reading=kilometer_reading,
+                            driver_name=driver_name,
+                            fuel_type=fuel_type,
+                            filling_station=filling_station,
+                            notes=notes
+                        )
+                        
+                        # إضافة السجل إلى قاعدة البيانات
+                        db.session.add(new_fuel_record)
+                        records_count += 1
+                    except Exception as e:
+                        print(f"خطأ في إضافة سجل لتاريخ {date_str}: {str(e)}")
+                
+                # حفظ جميع السجلات
+                if records_count > 0:
+                    db.session.commit()
+                    
+                    return jsonify({
+                        'status': 'success',
+                        'message': f'تم إضافة {records_count} سجل لتعبئة الوقود بنجاح',
+                        'redirect_url': url_for('mobile.vehicle_expenses')
+                    })
+                else:
+                    return jsonify({
+                        'status': 'error',
+                        'message': 'لم يتم إضافة أي سجلات'
+                    })
+                
+            else:
+                # معالجة النموذج العادي (تعبئة واحدة)
+                vehicle_id = request.form.get('vehicle_id', type=int)
+                date_str = request.form.get('date')
+                liters = request.form.get('liters', type=float)
+                cost = request.form.get('cost', type=float)
+                kilometer_reading = request.form.get('kilometer_reading', type=int)
+                driver_name = request.form.get('driver_name')
+                fuel_type = request.form.get('fuel_type')
+                filling_station = request.form.get('filling_station')
+                notes = request.form.get('notes')
+                
+                # التحقق من البيانات المطلوبة
+                if not (vehicle_id and date_str and liters and cost):
+                    flash('جميع الحقول المطلوبة يجب ملؤها', 'danger')
+                    return render_template('mobile/add_fuel_consumption.html', 
+                                        vehicles=vehicles,
+                                        now=datetime.now())
+                
+                # تحويل التاريخ
+                consumption_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                
+                # إنشاء سجل جديد لتعبئة الوقود
+                new_fuel_record = VehicleFuelConsumption(
+                    vehicle_id=vehicle_id,
+                    date=consumption_date,
+                    liters=liters,
+                    cost=cost,
+                    kilometer_reading=kilometer_reading,
+                    driver_name=driver_name,
+                    fuel_type=fuel_type,
+                    filling_station=filling_station,
+                    notes=notes
+                )
+                
+                # حفظ السجل في قاعدة البيانات
+                db.session.add(new_fuel_record)
+                db.session.commit()
+                
+                flash('تم إضافة تعبئة الوقود بنجاح', 'success')
+                return redirect(url_for('mobile.vehicle_expenses'))
             
         except Exception as e:
             db.session.rollback()
-            flash(f'حدث خطأ أثناء حفظ البيانات: {str(e)}', 'danger')
-            print(f"خطأ في إضافة تعبئة الوقود: {str(e)}")
+            if request.is_xhr or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    'status': 'error',
+                    'message': f'حدث خطأ أثناء حفظ البيانات: {str(e)}'
+                })
+            else:
+                flash(f'حدث خطأ أثناء حفظ البيانات: {str(e)}', 'danger')
+                print(f"خطأ في إضافة تعبئة الوقود: {str(e)}")
     
     # عرض النموذج
     return render_template('mobile/add_fuel_consumption.html', 
@@ -1596,32 +1674,69 @@ def fuel_consumption_stats():
     """صفحة إحصائيات استهلاك الوقود - النسخة المحمولة"""
     # الحصول على معلمات الفلاتر
     vehicle_id = request.args.get('vehicle_id', type=int)
-    period = request.args.get('period', 'month')  # الفترة الزمنية: week, month, quarter, year
+    fuel_type = request.args.get('fuel_type', '')
+    period = request.args.get('period', 'month')  # الفترة الزمنية: week, month, quarter, year, custom
     
-    # تحديد تاريخ البداية حسب الفترة
+    # فلاتر التاريخ المخصصة
+    start_date_str = request.args.get('start_date', '')
+    end_date_str = request.args.get('end_date', '')
+    
+    # فلاتر أيام الأسبوع
+    weekdays = request.args.getlist('weekdays')
+    
+    # تحويل أيام الأسبوع إلى أرقام صحيحة
+    selected_weekdays = weekdays.copy()
+    weekday_filter = [int(day) for day in weekdays if day.isdigit()]
+    
+    # تحديد تاريخ البداية والنهاية حسب الفترة
     today = date.today()
-    if period == 'week':
+    end_date = today
+    
+    if period == 'custom' and start_date_str and end_date_str:
+        # استخدام التاريخ المخصص
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            period_text = f'من {start_date_str} إلى {end_date_str}'
+        except ValueError:
+            # إذا كان التاريخ غير صالح، استخدم الشهر الحالي كافتراضي
+            start_date = today.replace(day=1)
+            period_text = 'الشهر الحالي'
+    elif period == 'week':
         start_date = today - timedelta(days=7)
         period_text = 'آخر أسبوع'
     elif period == 'month':
         start_date = today - timedelta(days=30)
-        period_text = 'آخر شهر'
+        period_text = 'آخر 30 يوم'
     elif period == 'quarter':
         start_date = today - timedelta(days=90)
-        period_text = 'آخر ثلاثة أشهر'
+        period_text = 'آخر 3 أشهر'
     elif period == 'year':
         start_date = today - timedelta(days=365)
         period_text = 'آخر سنة'
     else:
+        # الافتراضي: آخر شهر
         start_date = today - timedelta(days=30)
         period_text = 'آخر 30 يوم'
     
     # استعلام سجلات الوقود
-    query = VehicleFuelConsumption.query.filter(VehicleFuelConsumption.date >= start_date)
+    query = VehicleFuelConsumption.query.filter(
+        VehicleFuelConsumption.date >= start_date,
+        VehicleFuelConsumption.date <= end_date
+    )
     
     # تطبيق فلتر السيارة إذا تم تحديده
     if vehicle_id:
         query = query.filter_by(vehicle_id=vehicle_id)
+    
+    # تطبيق فلتر نوع الوقود إذا تم تحديده
+    if fuel_type:
+        query = query.filter_by(fuel_type=fuel_type)
+    
+    # تطبيق فلتر أيام الأسبوع إذا تم تحديدها
+    if weekday_filter:
+        # إضافة وظيفة استخراج يوم الأسبوع من التاريخ
+        query = query.filter(extract('dow', VehicleFuelConsumption.date).in_(weekday_filter))
     
     # ترتيب السجلات حسب التاريخ (الأحدث أولاً)
     fuel_records = query.order_by(VehicleFuelConsumption.date.desc()).all()
@@ -1631,27 +1746,81 @@ def fuel_consumption_stats():
     total_cost = sum(record.cost for record in fuel_records) if fuel_records else 0
     
     # حساب متوسط التكلفة اليومي
-    days_in_period = (today - start_date).days or 1  # تجنب القسمة على صفر
-    daily_avg_cost = total_cost / days_in_period
+    days_in_period = (end_date - start_date).days + 1
+    daily_avg_cost = total_cost / days_in_period if days_in_period > 0 else 0
     
     # حساب متوسط تكلفة اللتر
     avg_cost_per_liter = total_cost / total_liters if total_liters > 0 else 0
     
+    # إحصائيات حسب نوع الوقود
+    fuel_types_stats = {}
+    for record in fuel_records:
+        fuel_type_name = record.fuel_type if record.fuel_type else 'غير محدد'
+        
+        if fuel_type_name not in fuel_types_stats:
+            fuel_types_stats[fuel_type_name] = {
+                'liters': 0,
+                'cost': 0,
+                'count': 0,
+                'percentage': 0
+            }
+        
+        fuel_types_stats[fuel_type_name]['liters'] += record.liters
+        fuel_types_stats[fuel_type_name]['cost'] += record.cost
+        fuel_types_stats[fuel_type_name]['count'] += 1
+    
+    # حساب النسبة المئوية لكل نوع وقود
+    for fuel_type_name, stats in fuel_types_stats.items():
+        if total_cost > 0:
+            stats['percentage'] = (stats['cost'] / total_cost) * 100
+    
     # إعداد بيانات الرسم البياني
-    # تجميع البيانات حسب التاريخ
+    # تجميع البيانات حسب التاريخ والنوع
     chart_data = {}
+    fuel_type_chart_data = {}
+    
     for record in fuel_records:
         date_str = record.date.strftime('%Y-%m-%d')
+        fuel_type_name = record.fuel_type if record.fuel_type else 'غير محدد'
+        
+        # البيانات الإجمالية
         if date_str not in chart_data:
             chart_data[date_str] = {'liters': 0, 'cost': 0}
         chart_data[date_str]['liters'] += record.liters
         chart_data[date_str]['cost'] += record.cost
+        
+        # البيانات حسب نوع الوقود
+        if fuel_type_name not in fuel_type_chart_data:
+            fuel_type_chart_data[fuel_type_name] = {
+                'liters': {},
+                'costs': {}
+            }
+        
+        if date_str not in fuel_type_chart_data[fuel_type_name]['liters']:
+            fuel_type_chart_data[fuel_type_name]['liters'][date_str] = 0
+            fuel_type_chart_data[fuel_type_name]['costs'][date_str] = 0
+            
+        fuel_type_chart_data[fuel_type_name]['liters'][date_str] += record.liters
+        fuel_type_chart_data[fuel_type_name]['costs'][date_str] += record.cost
     
     # ترتيب البيانات حسب التاريخ
     sorted_dates = sorted(chart_data.keys())
     chart_labels = sorted_dates
     chart_liters = [chart_data[date]['liters'] for date in sorted_dates]
     chart_costs = [chart_data[date]['cost'] for date in sorted_dates]
+    
+    # معالجة بيانات الرسم البياني حسب نوع الوقود
+    for fuel_type_name, data in fuel_type_chart_data.items():
+        # ضمان وجود جميع التواريخ
+        for date_str in sorted_dates:
+            if date_str not in data['liters']:
+                data['liters'][date_str] = 0
+            if date_str not in data['costs']:
+                data['costs'][date_str] = 0
+        
+        # ترتيب البيانات حسب التاريخ
+        data['liters'] = [data['liters'].get(date, 0) for date in sorted_dates]
+        data['costs'] = [data['costs'].get(date, 0) for date in sorted_dates]
     
     # الحصول على جميع السيارات للفلاتر
     vehicles = Vehicle.query.order_by(Vehicle.make, Vehicle.model).all()
@@ -1660,12 +1829,18 @@ def fuel_consumption_stats():
                           fuel_records=fuel_records,
                           vehicles=vehicles,
                           selected_vehicle=vehicle_id,
+                          selected_fuel_type=fuel_type,
+                          selected_weekdays=selected_weekdays,
                           period=period,
                           period_text=period_text,
+                          start_date=start_date_str,
+                          end_date=end_date_str,
                           total_liters=total_liters,
                           total_cost=total_cost,
                           daily_avg_cost=daily_avg_cost,
                           avg_cost_per_liter=avg_cost_per_liter,
+                          fuel_types_stats=fuel_types_stats,
+                          fuel_type_chart_data=fuel_type_chart_data,
                           chart_labels=chart_labels,
                           chart_liters=chart_liters,
                           chart_costs=chart_costs)
