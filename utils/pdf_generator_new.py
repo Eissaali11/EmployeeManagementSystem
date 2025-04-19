@@ -285,10 +285,10 @@ def generate_salary_notification_pdf(data):
         pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
         pdf.set_font('Amiri', 'B', 14)
         
-        # استخدام دالة arabic_text بدلاً من cell للنصوص العربية
+        # استخدام دالة cell مع معالجة النص بدلاً من arabic_text للتأكد من المحاذاة الصحيحة
         # عرض رأس الجدول
         header_title_y = table_y + row_height/2
-        # نحتاج إلى عرض المبلغ (الخلية اليسرى) والبيان (الخلية اليمنى) بشكل منفصل لمحاذاة صحيحة
+        
         # لرسم خلفية الخلايا
         pdf.set_fill_color(29, 161, 142)
         pdf.rect(table_x, table_y, col1_width, row_height, 'F')  # خلفية خلية المبلغ
@@ -299,9 +299,16 @@ def generate_salary_notification_pdf(data):
         pdf.rect(table_x, table_y, col1_width, row_height)  # إطار خلية المبلغ
         pdf.rect(table_x + col1_width, table_y, col2_width, row_height)  # إطار خلية البيان
         
-        # نص الخلايا
-        pdf.arabic_text(table_x + col1_width/2, header_title_y, "المبلغ", 'C')
-        pdf.arabic_text(table_x + col1_width + col2_width/2, header_title_y, "البيان", 'C')
+        # نص الخلايا - استخدام cell للمحاذاة الدقيقة داخل الخلايا
+        # عنوان "المبلغ"
+        pdf.set_xy(table_x, table_y)
+        amount_text = get_display(arabic_reshaper.reshape("المبلغ"))
+        pdf.cell(col1_width, row_height, amount_text, 0, 0, 'C', False)
+        
+        # عنوان "البيان"
+        pdf.set_xy(table_x + col1_width, table_y)
+        description_text = get_display(arabic_reshaper.reshape("البيان"))
+        pdf.cell(col2_width, row_height, description_text, 0, 0, 'C', False)
         
         # تنسيق صيغة الأرقام المالية بدقة رقمين بعد الفاصلة
         basic_salary_str = f"{basic_salary:.2f}"
@@ -346,10 +353,32 @@ def generate_salary_notification_pdf(data):
             pdf.rect(table_x, current_y, col1_width, row_height)  # إطار خلية المبلغ
             pdf.rect(table_x + col1_width, current_y, col2_width, row_height)  # إطار خلية البيان
             
-            # نص الخلايا
+            # نص الخلايا - تحسين المحاذاة
             cell_middle_y = current_y + row_height/2
-            pdf.arabic_text(table_x + col1_width/2, cell_middle_y, item[1], 'C')
-            pdf.arabic_text(table_x + col1_width + col2_width/2, cell_middle_y, item[0], 'C')
+            
+            # المبلغ - محاذاة وسطية أفقياً
+            pdf.set_xy(table_x, current_y)
+            if use_fill:
+                # استخدام CELL لأرقام المبالغ (لا تحتاج إلى معالجة عربية)
+                pdf.cell(col1_width, row_height, item[1], 0, 0, 'C', False)
+            else:
+                pdf.cell(col1_width, row_height, item[1], 0, 0, 'C', False)
+            
+            # النص العربي - محاذاة يمينية
+            # للتأكد من محاذاة النص بشكل صحيح داخل الخلية، نستخدم نقطة أقرب للجانب الأيمن
+            right_aligned_x = table_x + col1_width + col2_width - 5  # هامش 5 مم من اليمين
+            
+            # استخدام طريقة مختلفة للمحاذاة اليمينية للنص العربي
+            if use_fill:
+                pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+            else:
+                pdf.set_text_color(0, 0, 0)  # لون أسود للنص
+            
+            # محاذاة النص بدقة داخل الخلية
+            pdf.set_xy(table_x + col1_width, current_y)
+            reshaped_text = arabic_reshaper.reshape(item[0])
+            bidi_text = get_display(reshaped_text)
+            pdf.cell(col2_width, row_height, bidi_text, 0, 0, 'R', False)
             
             # الانتقال للسطر التالي
             current_y += row_height
