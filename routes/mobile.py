@@ -12,7 +12,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 
 # إنشاء مخطط المسارات
@@ -697,47 +697,88 @@ def add_vehicle():
 @login_required
 def vehicle_maintenance():
     """سجل صيانة السيارات للنسخة المحمولة"""
-    # الحصول على قائمة السيارات الحقيقية من قاعدة البيانات
-    vehicles_data = Vehicle.query.all()
+    # معايير التصفية
+    status_filter = request.args.get('status', '')
+    vehicle_id = request.args.get('vehicle_id', '', type=int)
+    maintenance_type = request.args.get('maintenance_type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
     
-    # تحويل بيانات السيارات إلى الصيغة المطلوبة للعرض
-    vehicles = [
-        {
-            'id': vehicle.id,
-            'name': f"{vehicle.make} {vehicle.model}",
-            'plate_number': vehicle.plate_number,
-        } for vehicle in vehicles_data
-    ]
+    # استعلام قاعدة البيانات
+    query = VehicleMaintenance.query
     
-    # هنا يجب استعلام سجلات الصيانة الحقيقية من قاعدة البيانات
-    # لكن قد نحتاج لإضافة العلاقات أولاً
-    maintenance_records = []
+    # تطبيق الفلاتر
+    if status_filter:
+        query = query.filter(VehicleMaintenance.status == status_filter)
     
-    # إضافة بعض البيانات الإفتراضية للعرض
-    if not maintenance_records and vehicles:
-        for i, vehicle in enumerate(vehicles[:3]):  # نأخذ أول 3 سيارات فقط
-            maintenance_records.append({
-                'id': i + 1,
-                'date': datetime.now().date() - timedelta(days=30 * (i + 1)),
-                'maintenance_type': 'دورية' if i == 0 else 'إصلاح' if i == 1 else 'طارئة',
-                'description': 'تغيير زيت وفلتر' if i == 0 else 'إصلاح نظام التكييف' if i == 1 else 'تغيير بطارية',
-                'cost': 500.00 + (i * 350),
-                'vehicle': vehicle
-            })
+    if vehicle_id:
+        query = query.filter(VehicleMaintenance.vehicle_id == vehicle_id)
     
-    # ملخص تكاليف الصيانة
+    if maintenance_type:
+        query = query.filter(VehicleMaintenance.maintenance_type == maintenance_type)
+    
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(VehicleMaintenance.date >= date_from_obj)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            query = query.filter(VehicleMaintenance.date <= date_to_obj)
+        except ValueError:
+            pass
+    
+    # الحصول على سجلات الصيانة
+    maintenance_records = query.order_by(VehicleMaintenance.date.desc()).all()
+    
+    # الحصول على قائمة السيارات
+    vehicles = Vehicle.query.all()
+    
+    # حساب إحصائيات الصيانة
+    ongoing_count = VehicleMaintenance.query.filter(VehicleMaintenance.status == 'قيد التنفيذ').count()
+    completed_count = VehicleMaintenance.query.filter(VehicleMaintenance.status == 'منجزة').count()
+    
+    # تحديد السجلات المتأخرة (قيد الانتظار وتاريخها قبل اليوم)
+    today = datetime.now().date()
+    late_count = VehicleMaintenance.query.filter(
+        VehicleMaintenance.status == 'قيد الانتظار',
+        VehicleMaintenance.date < today
+    ).count()
+    
+    # سجلات اليوم
+    today_count = VehicleMaintenance.query.filter(VehicleMaintenance.date == today).count()
+    
+    # حساب إجمالي التكاليف حسب نوع الصيانة
+    all_records = VehicleMaintenance.query.all()
     cost_summary = {
-        'total': sum(record['cost'] for record in maintenance_records),
-        'periodic': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] == 'دورية'),
-        'emergency': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] == 'طارئة'),
-        'repair': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] == 'إصلاح'),
-        'other': sum(record['cost'] for record in maintenance_records if record['maintenance_type'] not in ['دورية', 'طارئة', 'إصلاح'])
+        'total': sum(record.cost for record in all_records),
+        'periodic': sum(record.cost for record in all_records if record.maintenance_type == 'دورية'),
+        'emergency': sum(record.cost for record in all_records if record.maintenance_type == 'طارئة'),
+        'repair': sum(record.cost for record in all_records if record.maintenance_type == 'إصلاح'),
+        'other': sum(record.cost for record in all_records if record.maintenance_type not in ['دورية', 'طارئة', 'إصلاح'])
+    }
+    
+    # إحصائيات سريعة
+    stats = {
+        'ongoing': ongoing_count,
+        'completed': completed_count,
+        'late': late_count,
+        'today': today_count
     }
     
     return render_template('mobile/vehicle_maintenance.html',
                          vehicles=vehicles,
                          maintenance_records=maintenance_records,
-                         cost_summary=cost_summary)
+                         cost_summary=cost_summary,
+                         stats=stats,
+                         selected_status=status_filter,
+                         selected_vehicle=vehicle_id,
+                         selected_type=maintenance_type,
+                         date_from=date_from,
+                         date_to=date_to)
 
 # إضافة صيانة جديدة - النسخة المحمولة
 @mobile_bp.route('/vehicles/maintenance/add', methods=['GET', 'POST'])
@@ -748,20 +789,51 @@ def add_maintenance():
     vehicles = Vehicle.query.all()
     
     if request.method == 'POST':
-        # معالجة إرسال النموذج
-        vehicle_id = request.form.get('vehicle_id')
-        maintenance_type = request.form.get('maintenance_type')
-        description = request.form.get('description')
-        cost = request.form.get('cost')
-        date = request.form.get('date')
-        status = request.form.get('status')
-        notes = request.form.get('notes')
-        
-        # هنا سيتم إضافة السجل لقاعدة البيانات (عند إنشاء جدول صيانة المركبات)
-        # حالياً نعرض رسالة نجاح ونعيد التوجيه إلى صفحة الصيانة
-        
-        flash('تمت إضافة سجل الصيانة بنجاح', 'success')
-        return redirect(url_for('mobile.vehicle_maintenance'))
+        try:
+            # استخراج البيانات من النموذج
+            vehicle_id = request.form.get('vehicle_id')
+            maintenance_type = request.form.get('maintenance_type')
+            description = request.form.get('description')
+            cost = request.form.get('cost', 0.0, type=float)
+            date_str = request.form.get('date')
+            status = request.form.get('status')
+            technician = request.form.get('technician')
+            notes = request.form.get('notes', '')
+            parts_replaced = request.form.get('parts_replaced', '')
+            actions_taken = request.form.get('actions_taken', '')
+            
+            # التحقق من تعبئة الحقول المطلوبة
+            if not vehicle_id or not maintenance_type or not description or not date_str or not status or not technician:
+                flash('يرجى ملء جميع الحقول المطلوبة', 'warning')
+                return render_template('mobile/add_maintenance.html', vehicles=vehicles, now=datetime.now())
+            
+            # تحويل التاريخ إلى كائن Date
+            maintenance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            
+            # إنشاء سجل صيانة جديد
+            new_maintenance = VehicleMaintenance(
+                vehicle_id=vehicle_id,
+                date=maintenance_date,
+                maintenance_type=maintenance_type,
+                description=description,
+                status=status,
+                cost=cost,
+                technician=technician,
+                parts_replaced=parts_replaced,
+                actions_taken=actions_taken,
+                notes=notes
+            )
+            
+            # حفظ البيانات في قاعدة البيانات
+            db.session.add(new_maintenance)
+            db.session.commit()
+            
+            flash('تمت إضافة سجل الصيانة بنجاح', 'success')
+            return redirect(url_for('mobile.vehicle_maintenance'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء إضافة سجل الصيانة: {str(e)}', 'danger')
     
     # عرض نموذج إضافة صيانة جديدة
     return render_template('mobile/add_maintenance.html', vehicles=vehicles, now=datetime.now())

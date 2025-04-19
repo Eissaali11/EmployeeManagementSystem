@@ -422,4 +422,43 @@ class VehicleChecklistItem(db.Model):
         return f'<VehicleChecklistItem {self.id} {self.item_name} status: {self.status}>'
 
 
+class VehicleMaintenance(db.Model):
+    """سجل صيانة المركبات"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    date = db.Column(db.Date, nullable=False)  # تاريخ الصيانة
+    maintenance_type = db.Column(db.String(30), nullable=False)  # نوع الصيانة: دورية، طارئة، إصلاح، فحص
+    description = db.Column(db.String(200), nullable=False)  # وصف الصيانة
+    status = db.Column(db.String(20), nullable=False)  # حالة الصيانة: قيد الانتظار، قيد التنفيذ، منجزة، ملغية
+    cost = db.Column(db.Float, default=0.0)  # تكلفة الصيانة
+    technician = db.Column(db.String(100), nullable=False)  # الفني المسؤول
+    parts_replaced = db.Column(db.Text)  # قطع الغيار المستبدلة
+    actions_taken = db.Column(db.Text)  # الإجراءات المتخذة
+    notes = db.Column(db.Text)  # ملاحظات إضافية
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', backref=db.backref('maintenance_records', cascade='all, delete-orphan'))
+    images = db.relationship('VehicleMaintenanceImage', back_populates='maintenance_record', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<VehicleMaintenance {self.id} {self.maintenance_type} for vehicle {self.vehicle_id}>'
+
+
+class VehicleMaintenanceImage(db.Model):
+    """صور توثيقية لصيانة السيارة"""
+    id = db.Column(db.Integer, primary_key=True)
+    maintenance_id = db.Column(db.Integer, db.ForeignKey('vehicle_maintenance.id', ondelete='CASCADE'), nullable=False)
+    image_path = db.Column(db.String(255), nullable=False)  # مسار الصورة
+    image_type = db.Column(db.String(20), nullable=False)  # النوع: قبل الصيانة، بعد الصيانة
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    maintenance_record = db.relationship('VehicleMaintenance', back_populates='images')
+    
+    def __repr__(self):
+        return f'<VehicleMaintenanceImage {self.id} for maintenance {self.maintenance_id}>'
+
+
 
