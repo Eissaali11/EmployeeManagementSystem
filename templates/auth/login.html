@@ -159,17 +159,17 @@
             margin-bottom: 30px;
         }
         
-        .logo-circle {
-            width: 80px;
-            height: 80px;
-            background-color: #3498db;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .logo-img {
+            width: 150px;
+            height: auto;
             margin: 0 auto;
-            color: white;
-            font-size: 40px;
+        }
+        
+        .logo-img img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         
         .system-name {
@@ -382,8 +382,8 @@
             <!-- قسم نموذج تسجيل الدخول (الجانب الأيسر) -->
             <div class="login-form">
                 <div class="logo-container">
-                    <div class="logo-circle">
-                        <i class="fas fa-user"></i>
+                    <div class="logo-img">
+                        <img src="{{ url_for('static', filename='img/eissa_logo.png') }}" alt="Eissa HR Logo">
                     </div>
                     <h2 class="system-name">نظام إدارة الموظفين</h2>
                 </div>
