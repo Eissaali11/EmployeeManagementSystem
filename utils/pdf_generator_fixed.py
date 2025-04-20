@@ -394,7 +394,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         pdf.arabic_text(280.0, pdf.get_y(), "تم إنشاء هذا التقرير في " + current_timestamp, 'C')
         current_year = str(datetime.now().year)
-        pdf.arabic_text(280.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year, 'C')
+        pdf.arabic_text(280.0, pdf.get_y() + 5.0, "نُظم - جميع الحقوق محفوظة © " + current_year, 'C')
         
         # إرجاع كائن FPDF
         return pdf
@@ -594,7 +594,7 @@ def create_vehicle_handover_pdf(handover_data):
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         pdf.arabic_text(105.0, pdf.get_y(), "تم إنشاء هذا النموذج في " + current_timestamp, 'C')
         current_year = str(datetime.now().year)
-        pdf.arabic_text(105.0, pdf.get_y() + 5.0, "Eissa HR - جميع الحقوق محفوظة © " + current_year, 'C')
+        pdf.arabic_text(105.0, pdf.get_y() + 5.0, "نُظم - جميع الحقوق محفوظة © " + current_year, 'C')
         
         return pdf
     except Exception as e:

@@ -220,7 +220,7 @@ def generate_salary_notification_pdf(data):
         c.setFont(ARABIC_FONT, 8)
         c.setFillColorRGB(0.5, 0.5, 0.5)  # لون رمادي
         c.drawCentredString(page_width/2, 2*cm, reshape_arabic_text(f"تم إصدار هذا الإشعار في {data.get('current_date', datetime.now().strftime('%Y-%m-%d'))}"))
-        c.drawCentredString(page_width/2, 1.5*cm, reshape_arabic_text("نظام إدارة الموظفين - جميع الحقوق محفوظة"))
+        c.drawCentredString(page_width/2, 1.5*cm, reshape_arabic_text("نُظم - جميع الحقوق محفوظة"))
         
         # إتمام الصفحة
         c.save()
@@ -478,7 +478,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         c.setFillColorRGB(0.5, 0.5, 0.5)  # لون رمادي
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         c.drawCentredString(page_width/2, 1.5*cm, reshape_arabic_text(f"تم إنشاء هذا التقرير في {current_date}"))
-        c.drawCentredString(page_width/2, 1*cm, reshape_arabic_text("نظام إدارة الموظفين - جميع الحقوق محفوظة"))
+        c.drawCentredString(page_width/2, 1*cm, reshape_arabic_text("نُظم - جميع الحقوق محفوظة"))
         
         # إتمام الصفحة
         c.save()
