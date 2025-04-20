@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - نظام Eissa HR</title>
+    <title>تسجيل الدخول - نُظم</title>
     
     <!-- Bootstrap RTL CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
@@ -160,16 +160,23 @@
         }
         
         .logo-img {
-            width: 150px;
-            height: auto;
+            width: 100px;
+            height: 100px;
             margin: 0 auto;
+            border-radius: 50%;
+            background-color: #1e3c72;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
         }
         
-        .logo-img img {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        .logo-text {
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         
         .system-name {
@@ -383,9 +390,9 @@
             <div class="login-form">
                 <div class="logo-container">
                     <div class="logo-img">
-                        <img src="{{ url_for('static', filename='img/eissa_logo.png') }}" alt="Eissa HR Logo">
+                        <span class="logo-text">نُظم</span>
                     </div>
-                    <h2 class="system-name">نظام إدارة الموظفين</h2>
+                    <h2 class="system-name">نظام إدارة متكامل</h2>
                 </div>
                 
                 <h1>تسجيل الدخول</h1>
@@ -452,15 +459,15 @@
                 </div>
                 
                 <div class="login-footer">
-                    Eissa HR &copy; 2024 | نظام متكامل لإدارة الموارد البشرية
+                    نُظم &copy; 2024 | نظام إدارة متكامل
                 </div>
             </div>
             
             <!-- قسم المعلومات (الجانب الأيمن) -->
             <div class="login-info">
-                <h2 class="system-title">Eissa HR</h2>
+                <h2 class="system-title">نُظم</h2>
                 <p class="system-description">
-                    نظام Eissa HR هو منصة متكاملة لإدارة الموارد البشرية مصممة خصيصًا للشركات السعودية. يجمع النظام بين سهولة الاستخدام والميزات المتقدمة لتلبية جميع احتياجات إدارة شؤون الموظفين.
+                    نُظم هو نظام إدارة متكامل مصمم خصيصًا للشركات، يجمع بين سهولة الاستخدام والميزات المتقدمة لتلبية جميع احتياجات إدارة الشركة من موظفين ومركبات وموارد.
                 </p>
                 
                 <div class="feature-list">
