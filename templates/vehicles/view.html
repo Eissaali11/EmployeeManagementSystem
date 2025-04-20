@@ -314,168 +314,147 @@
                                     </a>
                                 </div>
                                 
-                                <!-- نافذة عرض التفاصيل -->
-                                <div class="modal fade" id="workshopDetails{{ record.id }}" tabindex="-1" aria-labelledby="workshopDetailsLabel{{ record.id }}" aria-hidden="true" data-bs-backdrop="static">
-                                    <div class="modal-dialog modal-fullscreen-md-down modal-dialog-centered modal-dialog-scrollable">
+                                <!-- نافذة عرض التفاصيل - نموذج جديد بتصميم أبسط -->
+                                <div class="modal fade" id="workshopDetails{{ record.id }}" tabindex="-1" aria-labelledby="workshopDetailsLabel{{ record.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
                                         <div class="modal-content">
-                                            <div class="modal-header bg-light position-sticky top-0 z-1 shadow-sm">
+                                            <div class="modal-header">
                                                 <h5 class="modal-title" id="workshopDetailsLabel{{ record.id }}">
                                                     <i class="fas fa-tools ms-2"></i>
                                                     تفاصيل سجل الورشة
                                                 </h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
                                             </div>
-                                            <style>
-                                                .modal-body {
-                                                    max-height: 80vh;
-                                                    overflow-y: auto;
-                                                    padding: 1.5rem;
-                                                }
-                                                
-                                                @media (max-width: 768px) {
-                                                    .modal-body {
-                                                        max-height: 70vh;
-                                                        padding: 1rem;
-                                                    }
-                                                }
-                                                
-                                                .modal-footer {
-                                                    position: sticky;
-                                                    bottom: 0;
-                                                    background-color: white;
-                                                    z-index: 1;
-                                                    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
-                                                }
-                                            </style>
                                             <div class="modal-body">
-                                                <div class="row g-4 mb-4">
-                                                    <div class="col-lg-6">
-                                                        <h6 class="fw-bold mb-3">المعلومات الأساسية</h6>
-                                                        <ul class="list-group shadow-sm">
-                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                                                                <span>سبب الدخول:</span>
-                                                                {% if record.reason == 'maintenance' %}
-                                                                    <span class="badge bg-info">صيانة دورية</span>
-                                                                {% elif record.reason == 'breakdown' %}
-                                                                    <span class="badge bg-warning text-dark">عطل</span>
-                                                                {% elif record.reason == 'accident' %}
-                                                                    <span class="badge bg-danger">حادث</span>
-                                                                {% else %}
-                                                                    <span class="badge bg-secondary">{{ record.reason }}</span>
-                                                                {% endif %}
-                                                            </li>
-                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                                                                <span>حالة الإصلاح:</span>
-                                                                {% if record.repair_status == 'in_progress' %}
-                                                                    <span class="badge bg-warning text-dark">قيد التنفيذ</span>
-                                                                {% elif record.repair_status == 'completed' %}
-                                                                    <span class="badge bg-success">تم الإصلاح</span>
-                                                                {% elif record.repair_status == 'pending_approval' %}
-                                                                    <span class="badge bg-info">بانتظار الموافقة</span>
-                                                                {% endif %}
-                                                            </li>
-                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                                                                <span>تاريخ الدخول:</span>
-                                                                <span class="fw-bold">{{ record.formatted_entry_date }}</span>
-                                                            </li>
-                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                                                                <span>تاريخ الخروج:</span>
-                                                                {% if record.exit_date %}
-                                                                    <span class="fw-bold">{{ record.formatted_exit_date }}</span>
-                                                                {% else %}
-                                                                    <span class="text-warning">ما زالت في الورشة</span>
-                                                                {% endif %}
-                                                            </li>
-                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                                                                <span>التكلفة:</span>
-                                                                <span class="fw-bold">{{ "{:,.2f}".format(record.cost) }} ريال</span>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                    
-                                                    <div class="col-lg-6">
-                                                        <h6 class="fw-bold mb-3">معلومات الورشة</h6>
-                                                        <ul class="list-group shadow-sm">
-                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                                                                <span>اسم الورشة:</span>
-                                                                <span>{{ record.workshop_name or 'غير محدد' }}</span>
-                                                            </li>
-                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                                                                <span>اسم الفني:</span>
-                                                                <span>{{ record.technician_name or 'غير محدد' }}</span>
-                                                            </li>
-                                                            
-                                                            {% if record.delivery_link %}
-                                                            <li class="list-group-item">
-                                                                <div class="d-flex justify-content-between mb-1">
-                                                                    <span>رابط تسليم ورشة:</span>
-                                                                </div>
-                                                                <a href="{{ record.delivery_link }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
-                                                                    <i class="fas fa-external-link-alt ms-1"></i>
-                                                                    فتح نموذج التسليم
-                                                                </a>
-                                                            </li>
+                                                <div class="table-responsive mb-4">
+                                                    <table class="table table-bordered table-striped">
+                                                        <tbody>
+                                                            <tr>
+                                                                <th scope="row" class="table-light" width="30%">سبب الدخول</th>
+                                                                <td>
+                                                                    {% if record.reason == 'maintenance' %}
+                                                                        <span class="badge bg-info">صيانة دورية</span>
+                                                                    {% elif record.reason == 'breakdown' %}
+                                                                        <span class="badge bg-warning text-dark">عطل</span>
+                                                                    {% elif record.reason == 'accident' %}
+                                                                        <span class="badge bg-danger">حادث</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-secondary">{{ record.reason }}</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row" class="table-light">حالة الإصلاح</th>
+                                                                <td>
+                                                                    {% if record.repair_status == 'in_progress' %}
+                                                                        <span class="badge bg-warning text-dark">قيد التنفيذ</span>
+                                                                    {% elif record.repair_status == 'completed' %}
+                                                                        <span class="badge bg-success">تم الإصلاح</span>
+                                                                    {% elif record.repair_status == 'pending_approval' %}
+                                                                        <span class="badge bg-info">بانتظار الموافقة</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row" class="table-light">تاريخ الدخول</th>
+                                                                <td>{{ record.formatted_entry_date }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row" class="table-light">تاريخ الخروج</th>
+                                                                <td>
+                                                                    {% if record.exit_date %}
+                                                                        {{ record.formatted_exit_date }}
+                                                                    {% else %}
+                                                                        <span class="text-warning">ما زالت في الورشة</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row" class="table-light">اسم الورشة</th>
+                                                                <td>{{ record.workshop_name or 'غير محدد' }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row" class="table-light">اسم الفني</th>
+                                                                <td>{{ record.technician_name or 'غير محدد' }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th scope="row" class="table-light">التكلفة</th>
+                                                                <td>{{ "{:,.2f}".format(record.cost) }} ريال</td>
+                                                            </tr>
+                                                            {% if record.delivery_link or record.reception_link %}
+                                                            <tr>
+                                                                <th scope="row" class="table-light">الروابط</th>
+                                                                <td>
+                                                                    {% if record.delivery_link %}
+                                                                    <a href="{{ record.delivery_link }}" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
+                                                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                                                        نموذج التسليم
+                                                                    </a>
+                                                                    {% endif %}
+                                                                    
+                                                                    {% if record.reception_link %}
+                                                                    <a href="{{ record.reception_link }}" target="_blank" class="btn btn-sm btn-outline-success mb-2">
+                                                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                                                        نموذج الاستلام
+                                                                    </a>
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
                                                             {% endif %}
-                                                            
-                                                            {% if record.reception_link %}
-                                                            <li class="list-group-item">
-                                                                <div class="d-flex justify-content-between mb-1">
-                                                                    <span>رابط استلام من ورشة:</span>
-                                                                </div>
-                                                                <a href="{{ record.reception_link }}" target="_blank" class="btn btn-sm btn-outline-success w-100">
-                                                                    <i class="fas fa-external-link-alt ms-1"></i>
-                                                                    فتح نموذج الاستلام
-                                                                </a>
-                                                            </li>
-                                                            {% endif %}
-                                                        </ul>
-                                                    </div>
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                                 
-                                                <h6 class="fw-bold mb-2">وصف العطل أو الصيانة</h6>
-                                                <div class="card mb-4">
-                                                    <div class="card-body bg-light">
-                                                        {{ record.description|nl2br|safe or 'لا يوجد وصف' }}
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold mb-2">وصف العطل أو الصيانة</h6>
+                                                    <div class="card">
+                                                        <div class="card-body bg-light">
+                                                            {{ record.description|nl2br|safe or 'لا يوجد وصف' }}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 
                                                 {% if record.notes %}
-                                                <h6 class="fw-bold mb-2">ملاحظات إضافية</h6>
-                                                <div class="card mb-3">
-                                                    <div class="card-body bg-light">
-                                                        {{ record.notes|nl2br|safe }}
+                                                <div class="mb-4">
+                                                    <h6 class="fw-bold mb-2">ملاحظات إضافية</h6>
+                                                    <div class="card">
+                                                        <div class="card-body bg-light">
+                                                            {{ record.notes|nl2br|safe }}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 {% endif %}
                                                 
                                                 {% if record.images %}
-                                                <h6 class="fw-bold mb-2">الصور</h6>
-                                                <div class="row">
-                                                    {% for image in record.images %}
-                                                        {% if image.image_type == 'before' %}
-                                                            <div class="col-md-3 mb-3">
-                                                                <div class="card">
-                                                                    <div class="card-header bg-warning text-dark py-1 small">قبل الإصلاح</div>
-                                                                    <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة قبل الإصلاح">
+                                                <div>
+                                                    <h6 class="fw-bold mb-2">الصور</h6>
+                                                    <div class="row">
+                                                        {% for image in record.images %}
+                                                            {% if image.image_type == 'before' %}
+                                                                <div class="col-md-3 mb-3">
+                                                                    <div class="card">
+                                                                        <div class="card-header bg-warning text-dark py-1 small">قبل الإصلاح</div>
+                                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة قبل الإصلاح">
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                    
-                                                    {% for image in record.images %}
-                                                        {% if image.image_type == 'after' %}
-                                                            <div class="col-md-3 mb-3">
-                                                                <div class="card">
-                                                                    <div class="card-header bg-success text-white py-1 small">بعد الإصلاح</div>
-                                                                    <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة بعد الإصلاح">
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        
+                                                        {% for image in record.images %}
+                                                            {% if image.image_type == 'after' %}
+                                                                <div class="col-md-3 mb-3">
+                                                                    <div class="card">
+                                                                        <div class="card-header bg-success text-white py-1 small">بعد الإصلاح</div>
+                                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة بعد الإصلاح">
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        {% endif %}
-                                                    {% endfor %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
                                                 </div>
                                                 {% endif %}
                                             </div>
-                                            <div class="modal-footer shadow-sm position-sticky bottom-0 bg-white">
+                                            <div class="modal-footer">
                                                 <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="btn btn-warning">
                                                     <i class="fas fa-edit ms-1"></i>
                                                     تعديل السجل

@@ -1,0 +1,165 @@
+{% extends 'layout.html' %}
+
+{% block title %}تفاصيل سجل الورشة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <i class="fas fa-tools ms-2"></i>
+                تفاصيل سجل الورشة للسيارة: {{ vehicle.plate_number }}
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    عودة للسيارة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row" class="table-light" width="25%">سبب الدخول</th>
+                            <td>
+                                {% if record.reason == 'maintenance' %}
+                                    <span class="badge bg-info">صيانة دورية</span>
+                                {% elif record.reason == 'breakdown' %}
+                                    <span class="badge bg-warning text-dark">عطل</span>
+                                {% elif record.reason == 'accident' %}
+                                    <span class="badge bg-danger">حادث</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ record.reason }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="table-light">حالة الإصلاح</th>
+                            <td>
+                                {% if record.repair_status == 'in_progress' %}
+                                    <span class="badge bg-warning text-dark">قيد التنفيذ</span>
+                                {% elif record.repair_status == 'completed' %}
+                                    <span class="badge bg-success">تم الإصلاح</span>
+                                {% elif record.repair_status == 'pending_approval' %}
+                                    <span class="badge bg-info">بانتظار الموافقة</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="table-light">تاريخ الدخول</th>
+                            <td>{{ record.formatted_entry_date }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="table-light">تاريخ الخروج</th>
+                            <td>
+                                {% if record.exit_date %}
+                                    {{ record.formatted_exit_date }}
+                                {% else %}
+                                    <span class="text-warning">ما زالت في الورشة</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="table-light">اسم الورشة</th>
+                            <td>{{ record.workshop_name or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="table-light">اسم الفني</th>
+                            <td>{{ record.technician_name or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="table-light">التكلفة</th>
+                            <td>{{ "{:,.2f}".format(record.cost) }} ريال</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row mb-4">
+                {% if record.delivery_link or record.reception_link %}
+                <div class="col-lg-6 mb-4">
+                    <h5 class="fw-bold mb-3">روابط النماذج</h5>
+                    <div class="d-grid gap-2">
+                        {% if record.delivery_link %}
+                        <a href="{{ record.delivery_link }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt ms-1"></i>
+                            فتح نموذج التسليم
+                        </a>
+                        {% endif %}
+                        
+                        {% if record.reception_link %}
+                        <a href="{{ record.reception_link }}" target="_blank" class="btn btn-outline-success">
+                            <i class="fas fa-external-link-alt ms-1"></i>
+                            فتح نموذج الاستلام
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3">وصف العطل أو الصيانة</h5>
+                <div class="card">
+                    <div class="card-body bg-light">
+                        {{ record.description|nl2br|safe or 'لا يوجد وصف' }}
+                    </div>
+                </div>
+            </div>
+            
+            {% if record.notes %}
+            <div class="mb-4">
+                <h5 class="fw-bold mb-3">ملاحظات إضافية</h5>
+                <div class="card">
+                    <div class="card-body bg-light">
+                        {{ record.notes|nl2br|safe }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if record.images %}
+            <div>
+                <h5 class="fw-bold mb-3">الصور</h5>
+                <div class="row">
+                    {% for image in record.images %}
+                        {% if image.image_type == 'before' %}
+                            <div class="col-md-3 mb-3">
+                                <div class="card">
+                                    <div class="card-header bg-warning text-dark py-1 small">قبل الإصلاح</div>
+                                    <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة قبل الإصلاح">
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for image in record.images %}
+                        {% if image.image_type == 'after' %}
+                            <div class="col-md-3 mb-3">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white py-1 small">بعد الإصلاح</div>
+                                    <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة بعد الإصلاح">
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-between mt-5">
+                <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit ms-1"></i>
+                    تعديل السجل
+                </a>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    عودة للسيارة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
