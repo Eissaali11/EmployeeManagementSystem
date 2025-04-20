@@ -54,12 +54,19 @@ class ArabicPDF(FPDF):
         """إضافة صفحة جديدة مع ترويسة موحدة"""
         self.add_page()
         
-        # إضافة الشعار إذا كان موجودًا
-        if logo_path and os.path.exists(logo_path):
-            try:
-                self.image(logo_path, x=10, y=10, w=30)
-            except Exception as e:
-                print(f"تعذر تحميل الشعار: {str(e)}")
+        # إضافة شعار دائري للنظام
+        center_x = 20
+        center_y = 15
+        radius = 10
+        
+        # رسم الدائرة الخارجية
+        self.set_fill_color(30, 60, 114)  # اللون الأزرق الداكن
+        self.ellipse(center_x, center_y, radius, radius, 'F')
+        
+        # إضافة نص نُظم في الدائرة
+        self.set_font('Arabic', 'B', 14)
+        self.set_text_color(255, 255, 255)  # لون أبيض للنص
+        self.arabic_text(center_x - 4, center_y - 3, "نُظم")
         
         # إضافة عنوان التقرير
         self.set_font('Arabic', 'B', 16)
@@ -147,10 +154,24 @@ class ArabicPDF(FPDF):
         
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة"""
+        # إضافة شعار دائري للنظام
+        center_x = 20
+        center_y = 20
+        radius = 10
+        
+        # رسم الدائرة الخارجية
+        self.set_fill_color(30, 60, 114)  # اللون الأزرق الداكن
+        self.ellipse(center_x, center_y, radius, radius, 'F')
+        
+        # إضافة نص نُظم في الدائرة
+        self.set_font('Arabic', 'B', 14)
+        self.set_text_color(255, 255, 255)  # لون أبيض للنص
+        self.arabic_text(center_x - 4, center_y - 3, "نُظم")
+        
         # عنوان التقرير
         self.set_font('Arabic', 'B', 18)
         self.set_text_color(*self.primary_color)
-        self.arabic_text(140, 20, title, 'C')
+        self.arabic_text(140, 20, "نُظم - نظام إدارة متكامل", 'C')
         
         # العنوان الفرعي
         if subtitle:
@@ -221,7 +242,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         
         # إضافة ترويسة الشركة
         subtitle = "تقرير الرواتب - شهر " + str(month_str) + " " + str(year_str)
-        pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
+        pdf.add_company_header("نُظم", subtitle)
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
