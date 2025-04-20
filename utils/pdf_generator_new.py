@@ -221,7 +221,7 @@ def generate_salary_notification_pdf(data):
         # استخدام خط Amiri للنصوص العربية لأنه يتعامل مع العربية بشكل أفضل
         pdf.set_font('Amiri', 'B', 16)
         pdf.set_text_color(29, 161, 142)  # اللون الأخضر التركوازي
-        title = "نظام إدارة الموظفين - شركة التقنية المتطورة"
+        title = "نُظم - نظام إدارة متكامل"
         # استخدام طريقة arabic_text بدلاً من cell
         pdf.arabic_text(105, 15, title, 'C')
         
@@ -454,7 +454,7 @@ def generate_salary_notification_pdf(data):
         # حقوق النشر
         pdf.set_xy(105 - 40, footer_y + 8)
         current_year = str(datetime.now().year)
-        copyright_text = get_display(arabic_reshaper.reshape(f"شركة التقنية المتطورة - جميع الحقوق محفوظة © {current_year}"))
+        copyright_text = get_display(arabic_reshaper.reshape(f"نُظم - جميع الحقوق محفوظة © {current_year}"))
         pdf.cell(80, 8, copyright_text, 0, 0, 'C')
         
         # إرجاع المستند كبيانات ثنائية
@@ -502,7 +502,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # إضافة ترويسة الشركة
         subtitle = "تقرير الرواتب - شهر " + month_name + " " + year
-        y_pos = pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
+        y_pos = pdf.add_company_header("نُظم - نظام إدارة متكامل", subtitle)
         
         # إنشاء جدول الرواتب
         headers = ["م", "اسم الموظف", "الرقم الوظيفي", "القسم", "الراتب الأساسي", "البدلات", "المكافآت", "الخصومات", "صافي الراتب"]
@@ -666,7 +666,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         pdf.arabic_text(280.0, pdf.get_y(), "تم إنشاء هذا التقرير في " + current_timestamp, 'C')
         current_year = str(datetime.now().year)
-        pdf.arabic_text(280.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year, 'C')
+        pdf.arabic_text(280.0, pdf.get_y() + 5.0, "نُظم - جميع الحقوق محفوظة © " + current_year, 'C')
         
         # إنشاء الملف كبيانات ثنائية - تحديث للإصدار الجديد من FPDF
         # استخدام dest='S' لإرجاع المحتوى كسلسلة نصية ثم تحويله إلى بايت
