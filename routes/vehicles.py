@@ -13,6 +13,7 @@ from app import db
 from models import Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.vehicle_report import generate_complete_vehicle_report
+from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
@@ -1509,10 +1510,10 @@ def print_workshop_records(id):
     )
 
 
-# إنشاء تقرير شامل للسيارة
-@vehicles_bp.route('/vehicle-report/<int:id>')
+# إنشاء تقرير شامل للسيارة (PDF) - محتفظ به ولكن قد لا يعمل بشكل صحيح مع النصوص العربية
+@vehicles_bp.route('/vehicle-report-pdf/<int:id>')
 @login_required
-def generate_vehicle_report(id):
+def generate_vehicle_report_pdf(id):
     """إنشاء تقرير شامل للسيارة بصيغة PDF"""
     from flask import send_file, flash, redirect, url_for, make_response
     import io
@@ -1550,10 +1551,60 @@ def generate_vehicle_report(id):
         ))
         
         # تسجيل الإجراء
-        log_audit('generate_report', 'vehicle', id, f'تم إنشاء تقرير شامل للسيارة: {vehicle.plate_number}')
+        log_audit('generate_report', 'vehicle', id, f'تم إنشاء تقرير شامل للسيارة (PDF): {vehicle.plate_number}')
         
         return response
         
     except Exception as e:
-        flash(f'حدث خطأ أثناء إنشاء التقرير: {str(e)}', 'danger')
+        flash(f'حدث خطأ أثناء إنشاء التقرير PDF: {str(e)}', 'danger')
+        return redirect(url_for('vehicles.view', id=id))
+
+
+# إنشاء تقرير Excel شامل للسيارة
+@vehicles_bp.route('/vehicle-report/<int:id>')
+@login_required
+def generate_vehicle_report(id):
+    """إنشاء تقرير شامل للسيارة بصيغة Excel"""
+    from flask import send_file, flash, redirect, url_for, make_response
+    import io
+    
+    try:
+        # الحصول على بيانات المركبة
+        vehicle = Vehicle.query.get_or_404(id)
+        
+        # الحصول على بيانات الإيجار النشط
+        rental = VehicleRental.query.filter_by(vehicle_id=id, is_active=True).first()
+        
+        # الحصول على سجلات الورشة
+        workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(
+            VehicleWorkshop.entry_date.desc()
+        ).all()
+        
+        # هذا الموديل قد لا يكون موجودًا، لذلك سنتجاهله الآن
+        documents = None
+        
+        # إنشاء التقرير الشامل
+        excel_bytes = generate_complete_vehicle_excel_report(
+            vehicle, 
+            rental=rental, 
+            workshop_records=workshop_records,
+            documents=documents
+        )
+        
+        # إرسال الملف للمستخدم
+        buffer = io.BytesIO(excel_bytes)
+        response = make_response(send_file(
+            buffer,
+            download_name=f'تقرير_شامل_{vehicle.plate_number}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True
+        ))
+        
+        # تسجيل الإجراء
+        log_audit('generate_report', 'vehicle', id, f'تم إنشاء تقرير شامل للسيارة (Excel): {vehicle.plate_number}')
+        
+        return response
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء إنشاء تقرير Excel: {str(e)}', 'danger')
         return redirect(url_for('vehicles.view', id=id))
