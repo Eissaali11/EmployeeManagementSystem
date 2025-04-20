@@ -8,29 +8,25 @@
 {% endblock %}
 
 {% block content %}
-<div class="workshop-details-page">
-    <!-- ترويسة الصفحة مع معلومات السيارة -->
+<div class="workshop-details-container">
+    <!-- شريط العنوان مع معلومات السيارة -->
     <div class="page-header">
         <div class="container">
-            <div class="vehicle-info">
-                <div>
-                    <div class="plate-number">{{ vehicle.plate_number }}</div>
-                    <div class="vehicle-type">{{ vehicle.make }} {{ vehicle.model }}</div>
-                </div>
-                <div class="other-info">
-                    <div class="info-item">
-                        <span class="info-icon"><i class="fas fa-calendar-alt"></i></span>
-                        <span>{{ vehicle.year }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-icon"><i class="fas fa-palette"></i></span>
-                        <span>{{ vehicle.color }}</span>
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <div class="vehicle-plate me-3">
+                            <h1 class="plate">{{ vehicle.plate_number }}</h1>
+                            <span class="vehicle-model">{{ vehicle.make }} {{ vehicle.model }}, {{ vehicle.year }}</span>
+                        </div>
                     </div>
                 </div>
-                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="back-btn">
-                    <i class="fas fa-arrow-right ms-1"></i>
-                    العودة للسيارة
-                </a>
+                <div class="col-md-4 text-md-end">
+                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-light btn-sm back-btn">
+                        <i class="fas fa-arrow-right me-1"></i>
+                        العودة للسيارة
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -242,76 +238,95 @@
         
         <!-- صور توثيقية -->
         {% if record.images %}
-        <h4 class="section-title">صور توثيقية</h4>
-        <div class="info-card mb-4">
-            <div class="card-header">
-                <h5><i class="fas fa-images"></i> صور الإصلاح</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <!-- صور قبل الإصلاح -->
-                        <h6 class="gallery-subtitle">
-                            <i class="fas fa-tools ms-2"></i>
-                            صور قبل الإصلاح
-                        </h6>
-                        <div class="row image-gallery">
-                            {% set has_before_images = false %}
-                            {% for image in record.images %}
-                                {% if image.image_type == 'before' %}
-                                    {% set has_before_images = true %}
-                                    <div class="col-md-6 col-lg-4 mb-3">
-                                        <div class="image-card before-image">
-                                            <div class="image-type">قبل الإصلاح</div>
-                                            <a href="{{ url_for('static', filename=image.image_path) }}" target="_blank" class="image-link">
-                                                <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة قبل الإصلاح">
-                                            </a>
-                                            {% if image.notes %}
-                                            <div class="image-notes">{{ image.notes }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            {% if not has_before_images %}
-                            <div class="col-12">
-                                <div class="no-images-message">لا توجد صور قبل الإصلاح</div>
-                            </div>
-                            {% endif %}
-                        </div>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card main-card">
+                    <div class="card-header main-card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-images ms-2"></i>
+                            صور توثيقية
+                        </h4>
                     </div>
-                    
-                    <div class="col-md-6">
-                        <!-- صور بعد الإصلاح -->
-                        <h6 class="gallery-subtitle">
-                            <i class="fas fa-check-circle ms-2"></i>
-                            صور بعد الإصلاح
-                        </h6>
-                        <div class="row image-gallery">
-                            {% set has_after_images = false %}
-                            {% for image in record.images %}
-                                {% if image.image_type == 'after' %}
-                                    {% set has_after_images = true %}
-                                    <div class="col-md-6 col-lg-4 mb-3">
-                                        <div class="image-card after-image">
-                                            <div class="image-type">بعد الإصلاح</div>
-                                            <a href="{{ url_for('static', filename=image.image_path) }}" target="_blank" class="image-link">
-                                                <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة بعد الإصلاح">
-                                            </a>
-                                            {% if image.notes %}
-                                            <div class="image-notes">{{ image.notes }}</div>
-                                            {% endif %}
+                    <div class="card-body">
+                        <ul class="nav nav-tabs mb-4" id="workshopImageTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="before-tab" data-bs-toggle="tab" data-bs-target="#before-images" type="button" role="tab" aria-controls="before-images" aria-selected="true">
+                                    <i class="fas fa-tools ms-1"></i>
+                                    صور قبل الإصلاح
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="after-tab" data-bs-toggle="tab" data-bs-target="#after-images" type="button" role="tab" aria-controls="after-images" aria-selected="false">
+                                    <i class="fas fa-check-circle ms-1"></i>
+                                    صور بعد الإصلاح
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="workshopImageTabsContent">
+                            <!-- صور قبل الإصلاح -->
+                            <div class="tab-pane fade show active" id="before-images" role="tabpanel" aria-labelledby="before-tab">
+                                <div class="row">
+                                    {% set has_before_images = false %}
+                                    {% for image in record.images %}
+                                        {% if image.image_type == 'before' %}
+                                            {% set has_before_images = true %}
+                                            <div class="col-md-4 col-lg-3 mb-4">
+                                                <div class="image-card">
+                                                    <div class="image-badge before-badge">قبل الإصلاح</div>
+                                                    <a href="{{ url_for('static', filename=image.image_path) }}" data-fancybox="before-gallery" class="gallery-link">
+                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة قبل الإصلاح">
+                                                    </a>
+                                                    {% if image.notes %}
+                                                    <div class="image-notes">{{ image.notes }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if not has_before_images %}
+                                    <div class="col-12">
+                                        <div class="no-images-alert">
+                                            <i class="fas fa-exclamation-circle ms-2"></i>
+                                            لا توجد صور قبل الإصلاح
                                         </div>
                                     </div>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            {% if not has_after_images %}
-                            <div class="col-12">
-                                <div class="no-images-message">لا توجد صور بعد الإصلاح</div>
+                                    {% endif %}
+                                </div>
                             </div>
-                            {% endif %}
+                            
+                            <!-- صور بعد الإصلاح -->
+                            <div class="tab-pane fade" id="after-images" role="tabpanel" aria-labelledby="after-tab">
+                                <div class="row">
+                                    {% set has_after_images = false %}
+                                    {% for image in record.images %}
+                                        {% if image.image_type == 'after' %}
+                                            {% set has_after_images = true %}
+                                            <div class="col-md-4 col-lg-3 mb-4">
+                                                <div class="image-card">
+                                                    <div class="image-badge after-badge">بعد الإصلاح</div>
+                                                    <a href="{{ url_for('static', filename=image.image_path) }}" data-fancybox="after-gallery" class="gallery-link">
+                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة بعد الإصلاح">
+                                                    </a>
+                                                    {% if image.notes %}
+                                                    <div class="image-notes">{{ image.notes }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if not has_after_images %}
+                                    <div class="col-12">
+                                        <div class="no-images-alert">
+                                            <i class="fas fa-exclamation-circle ms-2"></i>
+                                            لا توجد صور بعد الإصلاح
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -320,23 +335,29 @@
         {% endif %}
         
         <!-- أزرار أسفل الصفحة -->
-        <div class="action-buttons">
-            <div class="action-buttons-container">
-                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="action-btn back-btn">
-                    <i class="fas fa-arrow-right ms-1"></i>
-                    العودة إلى السيارة
-                </a>
-                
-                <div class="action-btn-group">
-                    <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="action-btn edit-btn">
-                        <i class="fas fa-edit ms-1"></i>
-                        تعديل السجل
-                    </a>
-                    
-                    <button onclick="window.print()" class="action-btn print-btn">
-                        <i class="fas fa-print ms-1"></i>
-                        طباعة
-                    </button>
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="action-buttons">
+                        <div class="action-buttons-container">
+                            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="action-btn back-btn">
+                                <i class="fas fa-arrow-right ms-1"></i>
+                                العودة إلى السيارة
+                            </a>
+                            
+                            <div class="action-btn-group">
+                                <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="action-btn edit-btn">
+                                    <i class="fas fa-edit ms-1"></i>
+                                    تعديل السجل
+                                </a>
+                                
+                                <button onclick="window.print()" class="action-btn print-btn">
+                                    <i class="fas fa-print ms-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -358,437 +379,4 @@
 
 {% block scripts %}
 {{ super() }}
-    
-    .maintenance-header {
-        background: linear-gradient(120deg, #7957ff, #4630ab);
-        color: white;
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .header-icon {
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.25);
-        margin-left: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .header-icon:before {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0));
-        transform: translateX(-50%);
-        animation: shine 3s infinite linear;
-    }
-    
-    @keyframes shine {
-        0% { transform: translateX(-100%) rotate(45deg); }
-        100% { transform: translateX(100%) rotate(45deg); }
-    }
-    
-    .maintenance-title {
-        font-size: 1.4rem;
-        font-weight: 600;
-        margin: 0;
-        position: relative;
-    }
-    
-    .details-rows {
-        padding: 0.5rem;
-    }
-    
-    .detail-row {
-        display: flex;
-        border-radius: 12px;
-        margin-bottom: 0.5rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-        transition: all 0.3s ease;
-        padding: 0.5rem;
-        background-color: rgba(255, 255, 255, 0.7);
-    }
-    
-    .detail-row:hover {
-        background-color: rgba(247, 250, 252, 0.9);
-        transform: translateX(-5px);
-        box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.05);
-    }
-    
-    .detail-row:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-    }
-    
-    .detail-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        margin-left: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        color: white;
-        flex-shrink: 0;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background: linear-gradient(135deg, #5e35b1, #3949ab);
-    }
-    
-    .detail-content {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .detail-header {
-        margin-bottom: 0.4rem;
-    }
-    
-    .detail-header h6 {
-        margin: 0;
-        color: #546e7a;
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-    
-    .detail-data {
-        display: flex;
-        align-items: center;
-        flex-direction: row-reverse;
-        justify-content: flex-start;
-    }
-    
-    /* شارات الحالة والوسوم - التصميم المميز */
-    /* وسوم سبب الدخول */
-    .reason-tag, .status-tag {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        border-radius: 30px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .reason-tag i, .status-tag i {
-        margin-left: 0.5rem;
-    }
-    
-    .reason-tag:hover, .status-tag:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .maintenance-tag {
-        background: linear-gradient(120deg, #00b0ff, #0091ea);
-        color: white;
-    }
-    
-    .breakdown-tag {
-        background: linear-gradient(120deg, #ff9800, #f57c00);
-        color: white;
-    }
-    
-    .accident-tag {
-        background: linear-gradient(120deg, #f44336, #d32f2f);
-        color: white;
-    }
-    
-    .other-tag {
-        background: linear-gradient(120deg, #78909c, #546e7a);
-        color: white;
-    }
-    
-    /* وسوم حالة الإصلاح */
-    .in-progress-tag {
-        background: linear-gradient(120deg, #ffb300, #fb8c00);
-        color: white;
-    }
-    
-    .completed-tag {
-        background: linear-gradient(120deg, #43a047, #2e7d32);
-        color: white;
-    }
-    
-    .pending-tag {
-        background: linear-gradient(120deg, #7b1fa2, #6a1b9a);
-        color: white;
-    }
-    
-    .workshop-tag {
-        background: linear-gradient(120deg, #ff5722, #e64a19);
-        color: white;
-    }
-    
-    /* عرض التواريخ والنصوص */
-    .date-display, .text-display {
-        display: flex;
-        align-items: center;
-        font-weight: 500;
-        color: #37474f;
-    }
-    
-    .date-display i {
-        margin-left: 0.5rem;
-        color: #757de8;
-    }
-    
-    .cost-display {
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: #1e88e5;
-        display: flex;
-        align-items: baseline;
-    }
-    
-    .cost-display .amount {
-        margin-left: 0.3rem;
-    }
-    
-    .cost-display .currency {
-        font-size: 0.9rem;
-        opacity: 0.8;
-        color: #546e7a;
-    }
-    
-    /* تنسيقات تأثيرات التحويم */
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    
-    .detail-row:nth-child(3n+1) .detail-icon { background: linear-gradient(135deg, #5e35b1, #3949ab); }
-    .detail-row:nth-child(3n+2) .detail-icon { background: linear-gradient(135deg, #00897b, #006064); }
-    .detail-row:nth-child(3n+3) .detail-icon { background: linear-gradient(135deg, #8e24aa, #6a1b9a); }
-    
-    /* تنسيقات إضافية للتعديل العميق */
-    .description-content, .notes-content {
-        background-color: rgba(250, 250, 250, 0.5);
-        border-radius: 8px;
-        padding: 1rem;
-        color: #37474f;
-        line-height: 1.6;
-        min-height: 100px;
-        white-space: pre-line;
-    }
-    
-    /* وصف العطل والملاحظات */
-    .description-content, .notes-content {
-        background-color: rgba(250, 250, 250, 0.5);
-        border-radius: 8px;
-        padding: 1rem;
-        color: #37474f;
-        line-height: 1.6;
-        min-height: 100px;
-        white-space: pre-line;
-    }
-    
-    /* النماذج والروابط */
-    .links-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    
-    .document-link {
-        display: flex;
-        align-items: center;
-        background-color: #f5f5f5;
-        padding: 0.8rem 1.2rem;
-        border-radius: 8px;
-        color: #333;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        font-weight: 500;
-        width: 100%;
-    }
-    
-    .delivery-link {
-        border-left: 4px solid #3f51b5;
-    }
-    
-    .reception-link {
-        border-left: 4px solid #4caf50;
-    }
-    
-    .document-link:hover {
-        background-color: #e0e0e0;
-        transform: translateX(-5px);
-    }
-    
-    /* معرض الصور */
-    .gallery-subtitle {
-        color: #555;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-        font-weight: 600;
-    }
-    
-    .image-gallery {
-        margin-bottom: 1.5rem;
-    }
-    
-    .image-card {
-        position: relative;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .image-type {
-        position: absolute;
-        top: 0;
-        right: 0;
-        padding: 0.3rem 0.6rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        z-index: 2;
-    }
-    
-    .before-image .image-type {
-        background-color: #ff9800;
-        color: white;
-    }
-    
-    .after-image .image-type {
-        background-color: #4caf50;
-        color: white;
-    }
-    
-    .gallery-image {
-        width: 100%;
-        height: 160px;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-    }
-    
-    .image-link:hover .gallery-image {
-        transform: scale(1.1);
-    }
-    
-    .image-notes {
-        padding: 0.5rem;
-        font-size: 0.8rem;
-        background-color: rgba(0, 0, 0, 0.05);
-        color: #555;
-    }
-    
-    .no-images-message {
-        background-color: rgba(3, 169, 244, 0.1);
-        color: #0288d1;
-        text-align: center;
-        padding: 1rem;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-    
-    /* أزرار الإجراءات */
-    .action-buttons {
-        margin: 2rem 0;
-    }
-    
-    .action-buttons-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .action-btn-group {
-        display: flex;
-        gap: 1rem;
-    }
-    
-    .action-btn {
-        padding: 0.7rem 1.3rem;
-        border-radius: 30px;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        border: none;
-    }
-    
-    .edit-btn {
-        background: linear-gradient(45deg, #ffa000, #ff6f00);
-        color: white;
-    }
-    
-    .print-btn {
-        background: linear-gradient(45deg, #00acc1, #0097a7);
-        color: white;
-    }
-    
-    .action-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        color: white;
-    }
-    
-    /* تنسيقات الطباعة */
-    @media print {
-        .action-buttons, .back-btn, .navbar, footer, .sidebar {
-            display: none !important;
-        }
-        
-        .workshop-details-page {
-            background-color: white;
-        }
-        
-        .bg-glass {
-            box-shadow: none;
-            background-color: white;
-            page-break-inside: avoid;
-        }
-        
-        .page-title-bar {
-            color: black;
-            background: none;
-            box-shadow: none;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .vehicle-main-card {
-            background-color: white;
-            color: black;
-            box-shadow: none;
-            border: 1px solid #ddd;
-        }
-        
-        .card-header {
-            background: none !important;
-            color: black !important;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .status-badge {
-            border: 1px solid #ddd;
-            background-color: white !important;
-        }
-        
-        body {
-            font-size: 12pt;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 100%;
-        }
-    }
-</style>
 {% endblock %}
