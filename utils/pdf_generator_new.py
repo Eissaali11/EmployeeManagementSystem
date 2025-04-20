@@ -122,7 +122,10 @@ class ArabicPDF(FPDF):
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة مع الشعار والعنوان"""
         # إضافة الشعار
-        logo_path = os.path.join('static', 'images', 'logo.png')
+        logo_path = os.path.join('static', 'images', 'logo_new.png')
+        # إذا لم يكن الشعار الجديد موجوداً، استخدم الشعار القديم
+        if not os.path.exists(logo_path):
+            logo_path = os.path.join('static', 'images', 'logo.png')
         
         # تحديد الموضع والأبعاد بشكل مناسب حسب اتجاه الصفحة
         is_landscape = self.page_no() > 0 and getattr(self, 'cur_orientation', 'P') == 'L'
@@ -207,13 +210,13 @@ def generate_salary_notification_pdf(data):
         pdf = ArabicPDF()
         pdf.add_page()
         
-        # ------ إضافة الشعار ------
-        logo_path = os.path.join('static', 'images', 'logo.png')
+        # ------ إضافة الشعار الجديد ------
+        logo_path = os.path.join('static', 'images', 'logo_new.png')
         if os.path.exists(logo_path):
             pdf.image(logo_path, 10, 8, 30)
         else:
-            # يمكن استخدام صورة بديلة للشعار من المجلد static
-            alt_logo_path = os.path.join('static', 'img', 'logo.png')
+            # يمكن استخدام الشعار القديم كبديل
+            alt_logo_path = os.path.join('static', 'images', 'logo.png')
             if os.path.exists(alt_logo_path):
                 pdf.image(alt_logo_path, 10, 8, 30)
         
@@ -695,7 +698,7 @@ def generate_workshop_receipts_pdf(delivery_data, pickup_data, vehicle):
         pdf.add_page()
         
         # إضافة ترويسة الشركة
-        y_pos = pdf.add_company_header("نظام إدارة المركبات - شركة التقنية المتطورة", "إشعار تسليم واستلام من الورشة")
+        y_pos = pdf.add_company_header("نُظم - نظام إدارة متكامل", "إشعار تسليم واستلام من الورشة")
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
@@ -887,7 +890,7 @@ def generate_workshop_receipts_pdf(delivery_data, pickup_data, vehicle):
         current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         pdf.arabic_text(200.0, pdf.get_y(), "تم إنشاء هذا المستند في " + current_timestamp, 'C')
         current_year = str(datetime.now().year)
-        pdf.arabic_text(200.0, pdf.get_y() + 5.0, "شركة التقنية المتطورة - جميع الحقوق محفوظة © " + current_year, 'C')
+        pdf.arabic_text(200.0, pdf.get_y() + 5.0, "نُظم - جميع الحقوق محفوظة © " + current_year, 'C')
         
         # إنشاء الملف كبيانات ثنائية - تحديث للإصدار الجديد من FPDF
         # استخدام dest='S' لإرجاع المحتوى كسلسلة نصية ثم تحويله إلى بايت
