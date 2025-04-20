@@ -4,35 +4,32 @@
 
 {% block styles %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/permissions_v1.css') }}?v={{ now.timestamp()|int }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/permissions_v2.css') }}?v={{ now.timestamp()|int }}">
 {% endblock %}
 
 {% block content %}
 <div class="permissions-container">
     <div class="container">
         <div class="header-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-shield-alt fa-2x me-3"></i>
-                    <div>
-                        <h1 class="mb-0">إدارة صلاحيات المستخدم</h1>
-                        <div class="mt-2">
-                            <span class="user-role-badge role-{{ user.role.value if user.role and user.role.value else 'user' }}">
-                                <i class="fas fa-user-shield me-1"></i>
-                                {{ get_role_display_name(user.role) }}
-                            </span>
-                            <span class="text-light">{{ user.name }} ({{ user.email }})</span>
-                        </div>
+            <div class="header-content d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="user-title">إدارة صلاحيات المستخدم</h1>
+                    <div class="user-subtitle mt-3">
+                        <span class="user-role-badge role-{{ user.role.value if user.role and user.role.value else 'user' }}">
+                            <i class="fas fa-user-shield"></i>
+                            {{ get_role_display_name(user.role) }}
+                        </span>
+                        <span>{{ user.name }} <span class="opacity-75">({{ user.email }})</span></span>
                     </div>
                 </div>
-                <div>
-                    <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-light">
-                        <i class="fas fa-arrow-right ms-1"></i>
+                <div class="header-actions d-flex">
+                    <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-custom btn-light-custom me-2">
+                        <i class="fas fa-arrow-right"></i>
                         العودة للمستخدم
                     </a>
                     
-                    <button type="button" class="btn btn-warning ms-2" id="resetPermissionsBtn">
-                        <i class="fas fa-sync-alt ms-1"></i>
+                    <button type="button" class="btn btn-custom btn-warning-custom" id="resetPermissionsBtn">
+                        <i class="fas fa-sync-alt"></i>
                         إعادة ضبط
                     </button>
                 </div>
@@ -43,11 +40,13 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
             <div class="row">
-                <div class="col-md-10 offset-md-1">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle ms-2"></i>
-                        <strong>كيف تعمل الصلاحيات:</strong>
-                        <ul class="mt-2 mb-0">
+                <div class="col-lg-10 offset-lg-1">
+                    <div class="info-alert">
+                        <h5 class="info-alert-title">
+                            <i class="fas fa-info-circle"></i>
+                            كيف تعمل الصلاحيات
+                        </h5>
+                        <ul>
                             <li>يمكنك تحديد الصلاحيات لكل وحدة بشكل منفصل.</li>
                             <li>بتحديد خيار "إدارة"، سيتم منح المستخدم جميع الصلاحيات للوحدة المعنية.</li>
                             <li>يمكنك إعادة ضبط الصلاحيات إلى القيم الافتراضية استناداً إلى دور المستخدم بالضغط على "إعادة ضبط".</li>
@@ -60,71 +59,73 @@
                 {% for module in modules %}
                 {% if module != Module.USERS or user.role in [UserRole.ADMIN, UserRole.MANAGER] %}
                 <div class="col-md-6 col-xl-4">
-                    <div class="module-card">
-                        <div class="module-header d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <div class="module-icon">
-                                    {% if module == Module.EMPLOYEES %}
-                                        <i class="fas fa-users"></i>
-                                    {% elif module == Module.DEPARTMENTS %}
-                                        <i class="fas fa-sitemap"></i>
-                                    {% elif module == Module.ATTENDANCE %}
-                                        <i class="fas fa-calendar-check"></i>
-                                    {% elif module == Module.SALARIES %}
-                                        <i class="fas fa-money-bill-wave"></i>
-                                    {% elif module == Module.DOCUMENTS %}
-                                        <i class="fas fa-file-alt"></i>
-                                    {% elif module == Module.VEHICLES %}
-                                        <i class="fas fa-car"></i>
-                                    {% elif module == Module.USERS %}
-                                        <i class="fas fa-user-cog"></i>
-                                    {% elif module == Module.REPORTS %}
-                                        <i class="fas fa-chart-bar"></i>
-                                    {% elif module == Module.FEES %}
-                                        <i class="fas fa-receipt"></i>
-                                    {% else %}
-                                        <i class="fas fa-cube"></i>
-                                    {% endif %}
-                                </div>
-                                <h3 class="module-title me-2">{{ get_module_display_name(module) }}</h3>
-                            </div>
-                            <div class="form-check module-toggle">
-                                <input class="form-check-input" type="checkbox" id="module_{{ module.value }}" name="module_{{ module.value }}" {% if module.value in current_permissions %}checked{% endif %}>
-                                <label class="form-check-label" for="module_{{ module.value }}">تفعيل</label>
-                            </div>
-                        </div>
-                        <div class="permissions-body">
-                            <div class="permissions-list">
-                                {% for permission in permissions %}
-                                <div class="permission-item">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="{{ module.value }}_{{ permission }}" 
-                                               name="{{ module.value }}_{{ permission }}" 
-                                               {% if module.value in current_permissions and (current_permissions[module.value] | bitwise_and(permission)) %}checked{% endif %}
-                                               {% if permission == Permission.MANAGE %}data-is-manage="true"{% endif %}
-                                               data-module="{{ module.value }}">
-                                        <label class="form-check-label" for="{{ module.value }}_{{ permission }}">
-                                            {% if permission == Permission.VIEW %}
-                                            <i class="fas fa-eye text-primary me-1"></i>
-                                            عرض
-                                            {% elif permission == Permission.CREATE %}
-                                            <i class="fas fa-plus text-success me-1"></i>
-                                            إنشاء
-                                            {% elif permission == Permission.EDIT %}
-                                            <i class="fas fa-edit text-warning me-1"></i>
-                                            تعديل
-                                            {% elif permission == Permission.DELETE %}
-                                            <i class="fas fa-trash text-danger me-1"></i>
-                                            حذف
-                                            {% elif permission == Permission.MANAGE %}
-                                            <i class="fas fa-cogs text-info me-1"></i>
-                                            إدارة
-                                            {% endif %}
-                                        </label>
+                    <div class="module-wrapper">
+                        <div class="module-card">
+                            <div class="module-header">
+                                <div class="module-title-wrapper">
+                                    <div class="module-icon">
+                                        {% if module == Module.EMPLOYEES %}
+                                            <i class="fas fa-users"></i>
+                                        {% elif module == Module.DEPARTMENTS %}
+                                            <i class="fas fa-sitemap"></i>
+                                        {% elif module == Module.ATTENDANCE %}
+                                            <i class="fas fa-calendar-check"></i>
+                                        {% elif module == Module.SALARIES %}
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        {% elif module == Module.DOCUMENTS %}
+                                            <i class="fas fa-file-alt"></i>
+                                        {% elif module == Module.VEHICLES %}
+                                            <i class="fas fa-car"></i>
+                                        {% elif module == Module.USERS %}
+                                            <i class="fas fa-user-cog"></i>
+                                        {% elif module == Module.REPORTS %}
+                                            <i class="fas fa-chart-bar"></i>
+                                        {% elif module == Module.FEES %}
+                                            <i class="fas fa-receipt"></i>
+                                        {% else %}
+                                            <i class="fas fa-cube"></i>
+                                        {% endif %}
                                     </div>
+                                    <h3 class="module-title">{{ get_module_display_name(module) }}</h3>
                                 </div>
-                                {% endfor %}
+                                <div class="module-toggle">
+                                    <input class="form-check-input" type="checkbox" id="module_{{ module.value }}" name="module_{{ module.value }}" {% if module.value in current_permissions %}checked{% endif %}>
+                                    <label class="form-check-label" for="module_{{ module.value }}">تفعيل</label>
+                                </div>
+                            </div>
+                            <div class="permissions-body">
+                                <div class="permissions-list">
+                                    {% for permission in permissions %}
+                                    <div class="permission-item">
+                                        <div class="permission-check">
+                                            <input class="permission-check-input" type="checkbox" 
+                                                   id="{{ module.value }}_{{ permission }}" 
+                                                   name="{{ module.value }}_{{ permission }}" 
+                                                   {% if module.value in current_permissions and (current_permissions[module.value] | bitwise_and(permission)) %}checked{% endif %}
+                                                   {% if permission == Permission.MANAGE %}data-is-manage="true"{% endif %}
+                                                   data-module="{{ module.value }}">
+                                            <label class="permission-check-label" for="{{ module.value }}_{{ permission }}">
+                                                {% if permission == Permission.VIEW %}
+                                                <i class="fas fa-eye text-primary"></i>
+                                                عرض
+                                                {% elif permission == Permission.CREATE %}
+                                                <i class="fas fa-plus text-success"></i>
+                                                إنشاء
+                                                {% elif permission == Permission.EDIT %}
+                                                <i class="fas fa-edit text-warning"></i>
+                                                تعديل
+                                                {% elif permission == Permission.DELETE %}
+                                                <i class="fas fa-trash text-danger"></i>
+                                                حذف
+                                                {% elif permission == Permission.MANAGE %}
+                                                <i class="fas fa-cogs text-info"></i>
+                                                إدارة
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -133,14 +134,14 @@
                 {% endfor %}
             </div>
             
-            <div class="actions-bar d-flex justify-content-center">
-                <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-outline-secondary mx-2 px-4 py-2">
-                    <i class="fas fa-times ms-2"></i>
+            <div class="actions-bar">
+                <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-custom btn-cancel">
+                    <i class="fas fa-times"></i>
                     إلغاء
                 </a>
                 
-                <button type="submit" class="btn btn-success mx-2 px-4 py-2 shadow">
-                    <i class="fas fa-save ms-2"></i>
+                <button type="submit" class="btn btn-custom btn-save">
+                    <i class="fas fa-save"></i>
                     حفظ الصلاحيات
                 </button>
             </div>
