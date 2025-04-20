@@ -148,6 +148,7 @@ with app.app_context():
     from routes.api import api_bp
     from routes.enhanced_reports import enhanced_reports_bp
     from routes.mobile import mobile_bp
+    from routes.users import users_bp
     
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
@@ -165,6 +166,18 @@ with app.app_context():
     app.register_blueprint(api_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(mobile_bp, url_prefix='/mobile')
+    app.register_blueprint(users_bp, url_prefix='/users')
+    
+    # إضافة دوال مساعدة لقوالب Jinja
+    from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions
+    
+    @app.context_processor
+    def inject_global_template_vars():
+        return {
+            'get_role_display_name': get_role_display_name,
+            'get_module_display_name': get_module_display_name,
+            'format_permissions': format_permissions
+        }
     
     # Create database tables if they don't exist
     logger.info("Creating database tables...")

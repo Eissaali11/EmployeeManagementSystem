@@ -1,0 +1,245 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل المستخدم - {{ user.name }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .form-container {
+        background-color: #f8f9fa;
+        min-height: calc(100vh - 56px);
+        padding: 30px 0;
+    }
+    
+    .form-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .form-card .card-header {
+        background-color: #1da18e;
+        color: white;
+        font-weight: bold;
+        padding: 15px 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .form-control {
+        border-radius: 5px;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+    }
+    
+    .form-control:focus {
+        border-color: #1da18e;
+        box-shadow: 0 0 0 0.2rem rgba(29, 161, 142, 0.25);
+    }
+    
+    .form-text {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .actions-bar {
+        margin-top: 20px;
+    }
+    
+    .form-required {
+        color: #dc3545;
+        margin-right: 3px;
+    }
+    
+    .user-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-user-edit ms-2"></i>
+                        تعديل المستخدم: {{ user.name }}
+                    </h2>
+                    <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right ms-1"></i>
+                        العودة للمستخدم
+                    </a>
+                </div>
+                
+                <div class="card form-card">
+                    <div class="card-header">
+                        <i class="fas fa-user-edit me-2"></i>
+                        تعديل معلومات المستخدم
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="user-avatar">
+                            {% else %}
+                            <div class="avatar-placeholder">
+                                <i class="fas fa-user fa-3x text-muted"></i>
+                            </div>
+                            {% endif %}
+                            
+                            <div>
+                                <span class="badge bg-{{ user.role.value }}">{{ get_role_display_name(user.role) }}</span>
+                                <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">{{ 'نشط' if user.is_active else 'غير نشط' }}</span>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" action="{{ url_for('users.edit', id=user.id) }}">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.name.label(class="form-label") }}
+                                        <span class="form-required">*</span>
+                                        {{ form.name(class="form-control", placeholder="أدخل اسم المستخدم") }}
+                                        {% if form.name.errors %}
+                                            {% for error in form.name.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.email.label(class="form-label") }}
+                                        <span class="form-required">*</span>
+                                        {{ form.email(class="form-control", placeholder="أدخل البريد الإلكتروني") }}
+                                        {% if form.email.errors %}
+                                            {% for error in form.email.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.password.label(class="form-label") }}
+                                        {{ form.password(class="form-control", placeholder="أدخل كلمة المرور الجديدة") }}
+                                        {% if form.password.errors %}
+                                            {% for error in form.password.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                        <small class="form-text">اترك هذه الحقول فارغة للاحتفاظ بكلمة المرور الحالية.</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.confirm_password.label(class="form-label") }}
+                                        {{ form.confirm_password(class="form-control", placeholder="أدخل تأكيد كلمة المرور الجديدة") }}
+                                        {% if form.confirm_password.errors %}
+                                            {% for error in form.confirm_password.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.role.label(class="form-label") }}
+                                        <span class="form-required">*</span>
+                                        {{ form.role(class="form-select") }}
+                                        {% if form.role.errors %}
+                                            {% for error in form.role.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                        <small class="form-text">يحدد دور المستخدم الصلاحيات الافتراضية.</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.employee_id.label(class="form-label") }}
+                                        {{ form.employee_id(class="form-select") }}
+                                        {% if form.employee_id.errors %}
+                                            {% for error in form.employee_id.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                        <small class="form-text">اختياري: ربط المستخدم بموظف في النظام.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="form-check">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                </div>
+                                {% if form.is_active.errors %}
+                                    {% for error in form.is_active.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                {% endif %}
+                                <small class="form-text">المستخدمون غير النشطين لا يمكنهم تسجيل الدخول.</small>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle ms-2"></i>
+                                <strong>ملاحظة:</strong> سيتم تحديث الصلاحيات تلقائيًا عند تغيير دور المستخدم. يمكنك <a href="{{ url_for('users.permissions', id=user.id) }}" class="alert-link">تعديل الصلاحيات</a> يدويًا بعد الحفظ.
+                            </div>
+                            
+                            <div class="actions-bar d-flex justify-content-between">
+                                <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary">
+                                    <i class="fas fa-times ms-1"></i>
+                                    إلغاء
+                                </a>
+                                
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save ms-1"></i>
+                                    حفظ التغييرات
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

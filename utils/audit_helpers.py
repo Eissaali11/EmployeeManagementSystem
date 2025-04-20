@@ -1,150 +1,260 @@
-"""
-أدوات المراقبة ومتابعة الإجراءات
-توفر هذه الوحدة دوال مساعدة لتسجيل إجراءات المستخدمين والمراقبة
-"""
-
 import json
-from datetime import datetime
-from flask import request, current_app, g
-from app import db
-from models import SystemAudit
+import datetime
+from typing import Any, Dict, Optional, Union
+import ipaddress
+import logging
 
-def log_activity(action, entity_type, entity_id, entity_name=None, 
-                previous_data=None, new_data=None, details=None):
+from app import db
+from flask import request, g
+from models import SystemAudit, User
+
+# إعداد التسجيل
+logger = logging.getLogger(__name__)
+
+def json_serial(obj):
     """
-    تسجيل نشاط في سجل المراقبة
+    دالة مساعدة لتحويل كائنات التاريخ والوقت إلى نص في JSON
+    """
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+def serialize_sqlalchemy_obj(obj):
+    """
+    تحويل كائن SQLAlchemy إلى قاموس (لتسجيل الأنشطة)
+    """
+    if obj is None:
+        return None
+        
+    # استبعاد العلاقات والحقول المستثناة
+    excluded_keys = ['_sa_instance_state', 'query', 'query_class']
     
-    المعلمات:
-        action (str): نوع الإجراء (إضافة، تعديل، حذف)
-        entity_type (str): نوع الكيان (موظف، قسم، راتب، الخ)
-        entity_id (int): معرف الكيان
-        entity_name (str, اختياري): اسم الكيان للعرض
-        previous_data (dict, اختياري): البيانات قبل التعديل
-        new_data (dict, اختياري): البيانات بعد التعديل
-        details (str, اختياري): تفاصيل إضافية
+    # استخدام حقل __dict__ للحصول على جميع الخصائص
+    data = {}
+    for key, value in obj.__dict__.items():
+        if key not in excluded_keys:
+            try:
+                # محاولة تحويل القيمة إلى JSON
+                json.dumps(value, default=json_serial)
+                data[key] = value
+            except TypeError:
+                # إذا كانت القيمة غير قابلة للتحويل إلى JSON، حولها إلى نص
+                data[key] = str(value)
+    
+    return data
+
+def extract_entity_name(entity_obj: Any, entity_type: str) -> str:
+    """
+    استخراج اسم الكيان لعرضه في سجل النشاط
+    """
+    if entity_obj is None:
+        return "Unknown"
+        
+    if hasattr(entity_obj, 'name'):
+        return entity_obj.name
+    elif hasattr(entity_obj, 'title'):
+        return entity_obj.title
+    elif hasattr(entity_obj, 'email'):
+        return entity_obj.email
+    elif entity_type == 'user' and hasattr(entity_obj, 'email'):
+        return entity_obj.email
+    elif entity_type == 'employee' and hasattr(entity_obj, 'name'):
+        return entity_obj.name
+    elif entity_type == 'vehicle' and hasattr(entity_obj, 'plate_number'):
+        return entity_obj.plate_number
+    
+    # إذا لم يكن هناك اسم معروف، استخدم معرف الكيان
+    if hasattr(entity_obj, 'id'):
+        return f"{entity_type} #{entity_obj.id}"
+    
+    return "Unknown"
+
+def get_client_ip() -> str:
+    """
+    الحصول على عنوان IP الخاص بالمستخدم
+    """
+    if not request:
+        return "127.0.0.1"  # تعيين قيمة افتراضية إذا لم يكن هناك طلب
+        
+    # محاولة الحصول على عنوان IP من ترويسات الطلب
+    x_forwarded_for = request.headers.get('X-Forwarded-For')
+    
+    if x_forwarded_for:
+        # استخدام أول عنوان IP في حالة وجود عدة عناوين
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.remote_addr or "127.0.0.1"
+    
+    # التحقق من صحة عنوان IP
+    try:
+        ipaddress.ip_address(ip)
+        return ip
+    except ValueError:
+        return "127.0.0.1"  # إرجاع قيمة افتراضية إذا كان العنوان غير صالح
+
+def get_current_user_id() -> Optional[int]:
+    """
+    الحصول على معرف المستخدم الحالي
+    """
+    # محاولة الحصول على المستخدم من الجلسة الحالية
+    if hasattr(g, 'user') and g.user and hasattr(g.user, 'id'):
+        return g.user.id
+    
+    # محاولة الحصول على المستخدم من معرف تسجيل الدخول
+    if hasattr(g, 'user_id') and g.user_id:
+        return g.user_id
+        
+    return None
+
+def log_activity(
+    action: str,
+    entity_type: str,
+    entity_id: int,
+    entity_obj: Any = None,
+    previous_data: Dict[str, Any] = None,
+    new_data: Dict[str, Any] = None,
+    details: str = None,
+    user_id: Optional[int] = None
+) -> None:
+    """
+    تسجيل نشاط في سجل عمليات النظام
+    
+    :param action: نوع الإجراء (إضافة، تعديل، حذف، الخ)
+    :param entity_type: نوع الكيان (موظف، قسم، الخ)
+    :param entity_id: معرف الكيان
+    :param entity_obj: كائن الكيان (اختياري)
+    :param previous_data: البيانات السابقة (للتعديل)
+    :param new_data: البيانات الجديدة (للتعديل أو الإضافة)
+    :param details: تفاصيل إضافية
+    :param user_id: معرف المستخدم الذي قام بالإجراء (اختياري)
     """
     try:
-        # إنشاء كائن سجل مراقبة جديد
+        # الحصول على معرف المستخدم إذا لم يتم تمريره
+        if user_id is None:
+            user_id = get_current_user_id()
+        
+        # استخراج اسم الكيان
+        entity_name = extract_entity_name(entity_obj, entity_type)
+        
+        # تحويل البيانات إلى JSON
+        previous_data_json = None
+        if previous_data:
+            previous_data_json = json.dumps(previous_data, default=json_serial, ensure_ascii=False)
+            
+        new_data_json = None
+        if new_data:
+            new_data_json = json.dumps(new_data, default=json_serial, ensure_ascii=False)
+        
+        # إنشاء كائن SystemAudit
         audit = SystemAudit(
             action=action,
             entity_type=entity_type,
             entity_id=entity_id,
             entity_name=entity_name,
+            previous_data=previous_data_json,
+            new_data=new_data_json,
             details=details,
-            ip_address=request.remote_addr
+            ip_address=get_client_ip(),
+            user_id=user_id,
+            timestamp=datetime.datetime.utcnow()
         )
-        
-        # إضافة بيانات المستخدم إذا كان متوفراً
-        if hasattr(g, 'user') and g.user:
-            audit.user_id = g.user.id
-        
-        # تحويل البيانات إلى JSON إذا كانت متوفرة
-        if previous_data:
-            audit.previous_data = json.dumps(previous_data, ensure_ascii=False)
-        
-        if new_data:
-            audit.new_data = json.dumps(new_data, ensure_ascii=False)
         
         # حفظ السجل في قاعدة البيانات
         db.session.add(audit)
         db.session.commit()
         
-        return True
+        # تسجيل معلومات
+        logger.info(f"Activity logged: {action} on {entity_type} #{entity_id} by user #{user_id}")
+        
     except Exception as e:
-        current_app.logger.error(f"خطأ في تسجيل النشاط: {str(e)}")
+        # تسجيل الخطأ ولكن لا ترفع استثناء
+        logger.error(f"Error logging activity: {str(e)}")
+        # إلغاء العملية إذا كانت هناك مشكلة
         db.session.rollback()
-        return False
 
-def log_create(entity_type, entity, entity_name_field='name', details=None):
+def log_create(entity_type: str, entity: Any, details: str = None, user_id: Optional[int] = None) -> None:
     """
-    تسجيل عملية إنشاء كيان جديد
-    
-    المعلمات:
-        entity_type (str): نوع الكيان
-        entity (object): كائن الكيان الذي تم إنشاؤه
-        entity_name_field (str): اسم الحقل الذي يحتوي على اسم الكيان
-        details (str, اختياري): تفاصيل إضافية
+    تسجيل إضافة كيان جديد
     """
-    entity_name = getattr(entity, entity_name_field, str(entity.id)) if entity else None
-    entity_data = entity_to_dict(entity) if entity else {}
+    entity_data = serialize_sqlalchemy_obj(entity)
     
-    return log_activity(
-        action="إنشاء",
+    log_activity(
+        action="create",
         entity_type=entity_type,
         entity_id=entity.id,
-        entity_name=entity_name,
+        entity_obj=entity,
         new_data=entity_data,
-        details=details
+        details=details,
+        user_id=user_id
     )
 
-def log_update(entity_type, entity, old_data, entity_name_field='name', details=None):
+def log_update(entity_type: str, entity: Any, previous_data: Dict[str, Any], details: str = None, user_id: Optional[int] = None) -> None:
     """
-    تسجيل عملية تحديث كيان
-    
-    المعلمات:
-        entity_type (str): نوع الكيان
-        entity (object): كائن الكيان الذي تم تحديثه
-        old_data (dict): البيانات القديمة قبل التحديث
-        entity_name_field (str): اسم الحقل الذي يحتوي على اسم الكيان
-        details (str, اختياري): تفاصيل إضافية
+    تسجيل تعديل كيان
     """
-    entity_name = getattr(entity, entity_name_field, str(entity.id)) if entity else None
-    new_data = entity_to_dict(entity) if entity else {}
+    new_data = serialize_sqlalchemy_obj(entity)
     
-    return log_activity(
-        action="تعديل",
+    log_activity(
+        action="update",
         entity_type=entity_type,
         entity_id=entity.id,
-        entity_name=entity_name,
-        previous_data=old_data,
+        entity_obj=entity,
+        previous_data=previous_data,
         new_data=new_data,
-        details=details
+        details=details,
+        user_id=user_id
     )
 
-def log_delete(entity_type, entity_id, old_data, entity_name=None, details=None):
+def log_delete(entity_type: str, entity: Any, details: str = None, user_id: Optional[int] = None) -> None:
     """
-    تسجيل عملية حذف كيان
+    تسجيل حذف كيان
+    """
+    entity_data = serialize_sqlalchemy_obj(entity)
     
-    المعلمات:
-        entity_type (str): نوع الكيان
-        entity_id (int): معرف الكيان
-        old_data (dict): بيانات الكيان قبل الحذف
-        entity_name (str, اختياري): اسم الكيان
-        details (str, اختياري): تفاصيل إضافية
+    log_activity(
+        action="delete",
+        entity_type=entity_type,
+        entity_id=entity.id,
+        entity_obj=entity,
+        previous_data=entity_data,
+        details=details,
+        user_id=user_id
+    )
+
+def log_login(user: User, details: str = None) -> None:
     """
-    return log_activity(
-        action="حذف",
+    تسجيل تسجيل دخول مستخدم
+    """
+    log_activity(
+        action="login",
+        entity_type="user",
+        entity_id=user.id,
+        entity_obj=user,
+        details=details,
+        user_id=user.id
+    )
+
+def log_logout(user: User, details: str = None) -> None:
+    """
+    تسجيل تسجيل خروج مستخدم
+    """
+    log_activity(
+        action="logout",
+        entity_type="user",
+        entity_id=user.id,
+        entity_obj=user,
+        details=details,
+        user_id=user.id
+    )
+
+def log_access_denied(entity_type: str, entity_id: int, details: str = None, user_id: Optional[int] = None) -> None:
+    """
+    تسجيل محاولة وصول مرفوضة
+    """
+    log_activity(
+        action="access_denied",
         entity_type=entity_type,
         entity_id=entity_id,
-        entity_name=entity_name,
-        previous_data=old_data,
-        details=details
+        details=details,
+        user_id=user_id
     )
-
-def entity_to_dict(entity):
-    """
-    تحويل كائن قاعدة البيانات إلى قاموس
-    
-    المعلمات:
-        entity (object): كائن قاعدة البيانات
-        
-    العائد:
-        dict: قاموس يحتوي على بيانات الكائن
-    """
-    if not entity:
-        return {}
-        
-    # الحصول على قاموس من كائن SQLAlchemy
-    result = {}
-    for column in entity.__table__.columns:
-        # استثناء الحقول الخاصة
-        if column.name not in ['password_hash', 'firebase_uid']:
-            value = getattr(entity, column.name)
-            
-            # معالجة التاريخ والوقت
-            if isinstance(value, datetime):
-                value = value.isoformat()
-                
-            result[column.name] = value
-            
-    return result
