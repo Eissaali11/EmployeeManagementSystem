@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from models import User
+from models import User, UserRole
 from werkzeug.security import generate_password_hash, check_password_hash
 from email_validator import validate_email, EmailNotValidError
 
@@ -100,7 +100,7 @@ def process_auth():
                 email=data['email'],
                 name=data['name'],
                 profile_picture=data['picture'],
-                role='user',  # الدور الافتراضي للمستخدمين الجدد
+                role=UserRole.USER,  # الدور الافتراضي للمستخدمين الجدد
                 auth_type='firebase',
                 created_at=datetime.utcnow()
             )

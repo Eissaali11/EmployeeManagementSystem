@@ -1,0 +1,202 @@
+{% extends 'layout.html' %}
+
+{% block title %}إدارة المستخدمين{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .user-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+    
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .user-card .card-header {
+        background-color: #1da18e;
+        color: white;
+        font-weight: bold;
+        border-top-right-radius: 10px;
+        border-top-left-radius: 10px;
+        padding: 10px 15px;
+    }
+    
+    .user-card .card-footer {
+        border-top: 1px solid #eee;
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+    }
+    
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+    }
+    
+    .role-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .role-admin {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .role-manager {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .role-hr {
+        background-color: #20c997;
+        color: white;
+    }
+    
+    .role-finance {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .role-fleet {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .role-user {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .user-status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 5px;
+    }
+    
+    .status-active {
+        background-color: #28a745;
+    }
+    
+    .status-inactive {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-users ms-2"></i>
+            إدارة المستخدمين
+        </h2>
+        <a href="{{ url_for('users.create') }}" class="btn btn-success">
+            <i class="fas fa-plus ms-1"></i>
+            إضافة مستخدم جديد
+        </a>
+    </div>
+    
+    <div class="row mt-4">
+        {% for user in users %}
+        <div class="col-md-4 mb-4">
+            <div class="card user-card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>{{ user.name }}</span>
+                    <span class="user-status {% if user.is_active %}status-active{% else %}status-inactive{% endif %}"></span>
+                </div>
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="user-avatar">
+                    {% else %}
+                    <div class="user-avatar bg-light d-flex justify-content-center align-items-center">
+                        <i class="fas fa-user fa-2x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <h5 class="card-title mb-1">{{ user.name }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                    
+                    <div class="mt-3">
+                        <span class="role-badge role-{{ user.role.value if user.role and user.role.value else 'user' }}">
+                            {{ get_role_display_name(user.role) }}
+                        </span>
+                    </div>
+                    
+                    {% if user.employee %}
+                    <div class="mt-2">
+                        <span class="badge bg-info">
+                            <i class="fas fa-id-card ms-1"></i>
+                            موظف: {{ user.employee.name }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye ms-1"></i>
+                        عرض
+                    </a>
+                    <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit ms-1"></i>
+                        تعديل
+                    </a>
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                        <i class="fas fa-trash ms-1"></i>
+                        حذف
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">تأكيد الحذف</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            هل أنت متأكد من رغبتك في حذف المستخدم <strong>{{ user.name }}</strong>؟ 
+                            <div class="alert alert-warning mt-2">
+                                <i class="fas fa-exclamation-triangle ms-1"></i>
+                                هذا الإجراء لا يمكن التراجع عنه.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                            <form action="{{ url_for('users.delete', id=user.id) }}" method="POST">
+                                <button type="submit" class="btn btn-danger">حذف</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center py-4">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <p>لا يوجد مستخدمين بعد. قم بإنشاء أول مستخدم.</p>
+                <a href="{{ url_for('users.create') }}" class="btn btn-success mt-2">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة مستخدم جديد
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
