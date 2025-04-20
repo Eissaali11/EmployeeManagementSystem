@@ -316,21 +316,43 @@
                                 
                                 <!-- نافذة عرض التفاصيل -->
                                 <div class="modal fade" id="workshopDetails{{ record.id }}" tabindex="-1" aria-labelledby="workshopDetailsLabel{{ record.id }}" aria-hidden="true" data-bs-backdrop="static">
-                                    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                    <div class="modal-dialog modal-fullscreen-md-down modal-dialog-centered modal-dialog-scrollable">
                                         <div class="modal-content">
-                                            <div class="modal-header bg-light">
+                                            <div class="modal-header bg-light position-sticky top-0 z-1 shadow-sm">
                                                 <h5 class="modal-title" id="workshopDetailsLabel{{ record.id }}">
                                                     <i class="fas fa-tools ms-2"></i>
                                                     تفاصيل سجل الورشة
                                                 </h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
                                             </div>
+                                            <style>
+                                                .modal-body {
+                                                    max-height: 80vh;
+                                                    overflow-y: auto;
+                                                    padding: 1.5rem;
+                                                }
+                                                
+                                                @media (max-width: 768px) {
+                                                    .modal-body {
+                                                        max-height: 70vh;
+                                                        padding: 1rem;
+                                                    }
+                                                }
+                                                
+                                                .modal-footer {
+                                                    position: sticky;
+                                                    bottom: 0;
+                                                    background-color: white;
+                                                    z-index: 1;
+                                                    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+                                                }
+                                            </style>
                                             <div class="modal-body">
-                                                <div class="row mb-4">
-                                                    <div class="col-md-6">
+                                                <div class="row g-4 mb-4">
+                                                    <div class="col-lg-6">
                                                         <h6 class="fw-bold mb-3">المعلومات الأساسية</h6>
-                                                        <ul class="list-group">
-                                                            <li class="list-group-item d-flex justify-content-between">
+                                                        <ul class="list-group shadow-sm">
+                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                                                                 <span>سبب الدخول:</span>
                                                                 {% if record.reason == 'maintenance' %}
                                                                     <span class="badge bg-info">صيانة دورية</span>
@@ -342,7 +364,7 @@
                                                                     <span class="badge bg-secondary">{{ record.reason }}</span>
                                                                 {% endif %}
                                                             </li>
-                                                            <li class="list-group-item d-flex justify-content-between">
+                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                                                                 <span>حالة الإصلاح:</span>
                                                                 {% if record.repair_status == 'in_progress' %}
                                                                     <span class="badge bg-warning text-dark">قيد التنفيذ</span>
@@ -352,11 +374,11 @@
                                                                     <span class="badge bg-info">بانتظار الموافقة</span>
                                                                 {% endif %}
                                                             </li>
-                                                            <li class="list-group-item d-flex justify-content-between">
+                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                                                                 <span>تاريخ الدخول:</span>
                                                                 <span class="fw-bold">{{ record.formatted_entry_date }}</span>
                                                             </li>
-                                                            <li class="list-group-item d-flex justify-content-between">
+                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                                                                 <span>تاريخ الخروج:</span>
                                                                 {% if record.exit_date %}
                                                                     <span class="fw-bold">{{ record.formatted_exit_date }}</span>
@@ -364,21 +386,21 @@
                                                                     <span class="text-warning">ما زالت في الورشة</span>
                                                                 {% endif %}
                                                             </li>
-                                                            <li class="list-group-item d-flex justify-content-between">
+                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                                                                 <span>التكلفة:</span>
                                                                 <span class="fw-bold">{{ "{:,.2f}".format(record.cost) }} ريال</span>
                                                             </li>
                                                         </ul>
                                                     </div>
                                                     
-                                                    <div class="col-md-6">
+                                                    <div class="col-lg-6">
                                                         <h6 class="fw-bold mb-3">معلومات الورشة</h6>
-                                                        <ul class="list-group">
-                                                            <li class="list-group-item d-flex justify-content-between">
+                                                        <ul class="list-group shadow-sm">
+                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                                                                 <span>اسم الورشة:</span>
                                                                 <span>{{ record.workshop_name or 'غير محدد' }}</span>
                                                             </li>
-                                                            <li class="list-group-item d-flex justify-content-between">
+                                                            <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
                                                                 <span>اسم الفني:</span>
                                                                 <span>{{ record.technician_name or 'غير محدد' }}</span>
                                                             </li>
@@ -453,7 +475,7 @@
                                                 </div>
                                                 {% endif %}
                                             </div>
-                                            <div class="modal-footer">
+                                            <div class="modal-footer shadow-sm position-sticky bottom-0 bg-white">
                                                 <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="btn btn-warning">
                                                     <i class="fas fa-edit ms-1"></i>
                                                     تعديل السجل
