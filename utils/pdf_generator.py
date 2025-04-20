@@ -86,7 +86,7 @@ def generate_salary_report_pdf(salaries, month, year, department_name, totals):
         elements = []
         
         # إضافة اسم الشركة
-        company_name = "نظام إدارة الموظفين - شركة التقنية المتطورة"
+        company_name = "نُظم - نظام إدارة متكامل"
         company_name = get_display(arabic_reshaper.reshape(company_name))
         company_style = ParagraphStyle(
             name='CompanyTitle',

@@ -181,7 +181,7 @@ def generate_salary_notification_pdf(data):
         
         # إضافة ترويسة الشركة
         subtitle = "إشعار راتب - شهر " + month_name + " " + year
-        y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
+        y_pos = pdf.add_company_header("نُظم - نظام إدارة متكامل", subtitle)
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
@@ -397,7 +397,7 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         
         # إضافة ترويسة الشركة
         subtitle = "تقرير الرواتب - شهر " + month_name + " " + year
-        y_pos = pdf.add_company_header("نظام إدارة الموظفين RASSCO", subtitle)
+        y_pos = pdf.add_company_header("نُظم - نظام إدارة متكامل", subtitle)
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)

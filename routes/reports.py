@@ -744,7 +744,7 @@ def salaries_excel():
     # تنسيق اسم المشروع
     sheet.merge_cells('A1:G1')
     company_cell = sheet['A1']
-    company_cell.value = "نظام إدارة الموظفين - شركة التقنية المتطورة"
+    company_cell.value = "نُظم - نظام إدارة متكامل"
     company_cell.font = Font(size=18, bold=True, name='Tajawal')
     company_cell.alignment = Alignment(horizontal='center')
     
@@ -1101,7 +1101,7 @@ def documents_excel():
     # تنسيق اسم المشروع
     sheet.merge_cells('A1:H1')
     company_cell = sheet['A1']
-    company_cell.value = "نظام إدارة الموظفين - شركة التقنية المتطورة"
+    company_cell.value = "نُظم - نظام إدارة متكامل"
     company_cell.font = Font(size=18, bold=True, name='Tajawal')
     company_cell.alignment = Alignment(horizontal='center')
     
