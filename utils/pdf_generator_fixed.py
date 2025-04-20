@@ -10,6 +10,162 @@ from bidi.algorithm import get_display
 from fpdf import FPDF
 from io import BytesIO
 
+# تعريف فئة PDF العربية المحسنة
+class ArabicPDF(FPDF):
+    """فئة محسنة لإنشاء ملفات PDF باللغة العربية"""
+    
+    def __init__(self, orientation='P', unit='mm', format='A4'):
+        """إنشاء كائن FPDF جديد بدعم كامل للغة العربية"""
+        super().__init__(orientation=orientation, unit=unit, format=format)
+        # إضافة الخط العربي
+        try:
+            font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts', 'Amiri-Regular.ttf')
+            self.add_font('Arabic', '', font_path, uni=True)
+            self.set_font('Arabic', '', 14)
+        except Exception as e:
+            print(f"تعذر تحميل الخط العربي: {str(e)}")
+            self.set_font('Arial', '', 14)
+        
+        # تعيين الألوان الافتراضية
+        self.primary_color = (29, 161, 142)  # اللون الأخضر للترويسة
+        self.primary_color_light = (200, 230, 225)  # اللون الأخضر الفاتح
+        self.secondary_color = (66, 66, 66)  # رمادي داكن للنص
+        self.border_color = (200, 200, 200)  # لون رمادي فاتح للحدود
+        self.background_color = (240, 240, 240)  # رمادي فاتح جدًا للخلفية
+    
+    def arabic_text(self, x, y, txt, align='L'):
+        """طباعة نص عربي في الموضع المحدد مع دعم مناسب للغة العربية"""
+        # معالجة النص العربي
+        reshaped_text = arabic_reshaper.reshape(str(txt))
+        bidi_text = get_display(reshaped_text)
+        
+        # تعيين موضع الطباعة
+        self.set_xy(x, y)
+        
+        # طباعة النص مع المحاذاة المناسبة
+        if align == 'R':  # محاذاة لليمين
+            self.cell(0, 0, bidi_text, ln=0, align='L')
+        elif align == 'C':  # توسيط
+            self.cell(0, 0, bidi_text, ln=0, align='C')
+        else:  # محاذاة لليسار (الافتراضي)
+            self.cell(0, 0, bidi_text, ln=0, align='R')
+    
+    def add_page_with_header(self, title, logo_path=None):
+        """إضافة صفحة جديدة مع ترويسة موحدة"""
+        self.add_page()
+        
+        # إضافة الشعار إذا كان موجودًا
+        if logo_path and os.path.exists(logo_path):
+            try:
+                self.image(logo_path, x=10, y=10, w=30)
+            except Exception as e:
+                print(f"تعذر تحميل الشعار: {str(e)}")
+        
+        # إضافة عنوان التقرير
+        self.set_font('Arabic', 'B', 16)
+        self.set_text_color(*self.primary_color)
+        self.arabic_text(105, 20, title, 'C')
+        
+        # إضافة خط أفقي أسفل الترويسة
+        self.set_draw_color(*self.primary_color)
+        self.set_line_width(0.5)
+        self.line(10, 30, 200, 30)
+        
+        # إعادة ضبط الخط والألوان
+        self.set_font('Arabic', '', 12)
+        self.set_text_color(*self.secondary_color)
+        self.set_draw_color(0, 0, 0)
+    
+    def rounded_rect(self, x, y, w, h, r, style='', border_color=None, fill_color=None):
+        """رسم مستطيل بحواف مستديرة"""
+        if border_color:
+            self.set_draw_color(*border_color)
+        if fill_color:
+            self.set_fill_color(*fill_color)
+        
+        self.rounded_corner_rect(x, y, w, h, r, style)
+        
+        # إعادة تعيين الألوان الافتراضية
+        self.set_draw_color(0)
+        self.set_fill_color(255)
+    
+    def rounded_corner_rect(self, x, y, w, h, r, style=''):
+        """رسم مستطيل بزوايا مستديرة"""
+        # تحديد أسلوب الرسم
+        draw = 'D' in style.upper()
+        fill = 'F' in style.upper()
+        
+        # رسم الشكل
+        k = self.k
+        hp = self.h
+        
+        # تحويل مليمترات إلى نقاط
+        x *= k
+        y = (hp - y) * k
+        w *= k
+        h *= k
+        r *= k
+        
+        # بدء مسار الرسم
+        op = 'n' if not draw and not fill else 'S' if draw and not fill else 'f' if not draw and fill else 'B'
+        my_path = f'{x + r:.2f} {y:.2f} m'
+        
+        # الحواف المستديرة - الزاوية اليمنى العليا
+        x_plus_w = x + w
+        y_minus_h = y - h
+        my_path += f' {x_plus_w - r:.2f} {y:.2f} l'
+        my_path += f' {x_plus_w:.2f} {y - r:.2f} l'
+        
+        # الجانب الأيمن
+        my_path += f' {x_plus_w:.2f} {y_minus_h + r:.2f} l'
+        
+        # الزاوية اليمنى السفلية
+        my_path += f' {x_plus_w - r:.2f} {y_minus_h:.2f} l'
+        
+        # الجانب السفلي
+        my_path += f' {x + r:.2f} {y_minus_h:.2f} l'
+        
+        # الزاوية اليسرى السفلية
+        my_path += f' {x:.2f} {y_minus_h + r:.2f} l'
+        
+        # الجانب الأيسر
+        my_path += f' {x:.2f} {y - r:.2f} l'
+        
+        # الزاوية اليسرى العليا
+        my_path += f' {x + r:.2f} {y:.2f} l'
+        
+        # تنفيذ عملية الرسم
+        self._out(f'{my_path} {op}')
+    
+    def add_page_number(self):
+        """إضافة رقم الصفحة في تذييل الصفحة"""
+        self.set_y(-15)
+        self.set_font('Arabic', '', 8)
+        self.set_text_color(128)
+        page_number = f"صفحة {self.page_no()}"
+        self.arabic_text(105, self.get_y(), page_number, 'C')
+        
+    def add_company_header(self, title, subtitle=None):
+        """إضافة ترويسة الشركة"""
+        # عنوان التقرير
+        self.set_font('Arabic', 'B', 18)
+        self.set_text_color(*self.primary_color)
+        self.arabic_text(140, 20, title, 'C')
+        
+        # العنوان الفرعي
+        if subtitle:
+            self.set_font('Arabic', 'B', 14)
+            self.set_text_color(*self.secondary_color)
+            self.arabic_text(140, 30, subtitle, 'C')
+            
+        # خط فاصل
+        self.set_draw_color(*self.primary_color)
+        self.set_line_width(0.5)
+        self.line(10, 35, 287, 35)
+        
+        return 35  # إرجاع موضع Y الجديد بعد الترويسة
+
+
 # تحديث طريقة إنشاء PDF ليكون متوافقًا مع الإصدارات الحديثة من FPDF
 def create_pdf_bytes(pdf_function, *args, **kwargs):
     """
@@ -40,6 +196,7 @@ def create_pdf_bytes(pdf_function, *args, **kwargs):
         print(f"خطأ في إنشاء ملف PDF: {str(e)}")
         raise e
 
+
 # دالة مساعدة لإنشاء تقرير راتب واحد
 def create_salary_report_pdf(salaries_data, month, year):
     """
@@ -53,8 +210,6 @@ def create_salary_report_pdf(salaries_data, month, year):
     Returns:
         كائن FPDF
     """
-    from utils.pdf_generator_new import ArabicPDF
-    
     try:
         # تحويل المدخلات إلى النوع المناسب
         month_str = str(month)
@@ -66,7 +221,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         
         # إضافة ترويسة الشركة
         subtitle = "تقرير الرواتب - شهر " + str(month_str) + " " + str(year_str)
-        y_pos = pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
+        pdf.add_company_header("نظام إدارة الموظفين - شركة التقنية المتطورة", subtitle)
         
         # إضافة إطار للمستند
         pdf.set_draw_color(*pdf.primary_color)
@@ -89,7 +244,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         pdf.rect(10, y_start, 277, 10, style='F')
         
         # كتابة عناوين الأعمدة
-        pdf.set_font('Arial', 'B', 10)  # استخدام خط Arial بدلاً من Amiri
+        pdf.set_font('Arial', 'B', 10)
         pdf.set_text_color(255, 255, 255)  # لون النص أبيض
         
         # كتابة رأس الجدول
@@ -226,6 +381,7 @@ def create_salary_report_pdf(salaries_data, month, year):
         print(f"خطأ في إنشاء تقرير الرواتب PDF المحسن: {str(e)}")
         raise e
 
+
 # دالة واجهة رئيسية تستدعي دالة الإنشاء ثم تحول النتيجة إلى بايت
 def generate_salary_report_pdf(salaries_data, month, year):
     """
@@ -243,4 +399,200 @@ def generate_salary_report_pdf(salaries_data, month, year):
         return create_pdf_bytes(create_salary_report_pdf, salaries_data, month, year)
     except Exception as e:
         print(f"خطأ في إنشاء تقرير الرواتب PDF الجديد: {str(e)}")
+        raise e
+
+
+# نموذج تسليم واستلام المركبات
+
+def create_vehicle_handover_pdf(handover_data):
+    """
+    إنشاء نموذج تسليم/استلام المركبة كملف PDF باستخدام FPDF
+    
+    Args:
+        handover_data: بيانات التسليم/الاستلام
+        
+    Returns:
+        FPDF: كائن FPDF محتوي على التقرير
+    """
+    try:
+        # إنشاء كائن FPDF جديد
+        pdf = ArabicPDF(orientation='P', unit='mm', format='A4')
+        pdf.add_page()
+        
+        # إعداد الألوان الأساسية
+        pdf.primary_color = (13, 71, 161)  # أزرق داكن
+        pdf.secondary_color = (66, 66, 66)  # رمادي داكن
+        pdf.accent_color = (1, 135, 134)  # أزرق مخضر
+        pdf.background_color = (240, 240, 240)  # رمادي فاتح
+        
+        # إضافة العنوان
+        pdf.set_font('Arial', 'B', 18)
+        pdf.set_text_color(*pdf.primary_color)
+        title = "نموذج " + handover_data['handover_type'] + " مركبة"
+        pdf.arabic_text(105, 20, title, 'C')
+        
+        # إضافة معلومات المركبة
+        pdf.rounded_rect(10, 30, 190, 40, 3, 'DF', None, pdf.background_color)
+        
+        pdf.set_font('Arial', 'B', 13)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(190, 40, "بيانات المركبة:", 'R')
+        
+        pdf.set_font('Arial', '', 11)
+        pdf.set_text_color(*pdf.secondary_color)
+        pdf.arabic_text(190, 50, f"رقم اللوحة: {handover_data['vehicle']['plate_number']}", 'R')
+        pdf.arabic_text(190, 58, f"النوع: {handover_data['vehicle']['make']} {handover_data['vehicle']['model']}", 'R')
+        pdf.arabic_text(190, 66, f"سنة الصنع: {handover_data['vehicle']['year']} - اللون: {handover_data['vehicle']['color']}", 'R')
+        
+        # إضافة معلومات التسليم/الاستلام
+        pdf.rounded_rect(10, 80, 190, 30, 3, 'DF', None, pdf.background_color)
+        
+        pdf.set_font('Arial', 'B', 13)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(190, 90, "معلومات " + handover_data['handover_type'] + ":", 'R')
+        
+        pdf.set_font('Arial', '', 11)
+        pdf.set_text_color(*pdf.secondary_color)
+        pdf.arabic_text(190, 98, f"التاريخ: {handover_data['handover_date']}", 'R')
+        pdf.arabic_text(190, 106, f"الشخص: {handover_data['person_name']}", 'R')
+        
+        # جدول فحص المركبة
+        pdf.set_font('Arial', 'B', 13)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(105, 125, "حالة المركبة", 'C')
+        
+        # إعداد جدول الفحص
+        items = [
+            {"name": "إطار احتياطي", "checked": handover_data['has_spare_tire']},
+            {"name": "طفاية حريق", "checked": handover_data['has_fire_extinguisher']},
+            {"name": "حقيبة إسعافات أولية", "checked": handover_data['has_first_aid_kit']},
+            {"name": "مثلث تحذيري", "checked": handover_data['has_warning_triangle']},
+            {"name": "أدوات", "checked": handover_data['has_tools']}
+        ]
+        
+        # رسم جدول الفحص
+        col_width = 40
+        row_height = 10
+        pdf.set_fill_color(*pdf.background_color)
+        
+        y_position = 130
+        for i, item in enumerate(items):
+            x_position = 115 + (i % 2) * 45
+            if i % 2 == 0 and i > 0:
+                y_position += row_height
+            
+            pdf.set_font('Arial', '', 10)
+            pdf.arabic_text(x_position + 35, y_position + 5, item["name"], 'R')
+            
+            # مربع الاختيار
+            pdf.rect(x_position, y_position, 5, 5, 'D')
+            if item["checked"]:
+                pdf.set_font('ZapfDingbats', '', 10)
+                pdf.text(x_position + 1, y_position + 4, '4')  # علامة صح
+        
+        # معلومات إضافية
+        y_position = 165
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(190, y_position, "مستوى الوقود:", 'R')
+        
+        # رسم خزان الوقود
+        pdf.rounded_rect(100, y_position - 5, 70, 10, 2, 'D')
+        
+        # تلوين الجزء المملوء من خزان الوقود
+        fuel_levels = {"فارغ": 0, "ربع": 0.25, "نصف": 0.5, "ثلاثة أرباع": 0.75, "ممتلئ": 1}
+        fuel_level = fuel_levels.get(handover_data['fuel_level'], 0)
+        if fuel_level > 0:
+            pdf.set_fill_color(*pdf.accent_color)
+            pdf.rounded_rect(100, y_position - 5, 70 * fuel_level, 10, 2, 'F')
+        
+        pdf.set_font('Arial', '', 10)
+        pdf.set_text_color(*pdf.secondary_color)
+        pdf.arabic_text(90, y_position, handover_data['fuel_level'], 'R')
+        
+        # قراءة العداد
+        y_position += 15
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(190, y_position, "قراءة العداد:", 'R')
+        
+        pdf.set_font('Arial', '', 10)
+        pdf.set_text_color(*pdf.secondary_color)
+        pdf.arabic_text(100, y_position, f"{handover_data['mileage']} كم", 'R')
+        
+        # حالة المركبة
+        y_position += 10
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(190, y_position, "حالة المركبة:", 'R')
+        
+        # مربع لوصف حالة المركبة
+        pdf.rounded_rect(10, y_position + 5, 190, 25, 3, 'D')
+        
+        pdf.set_font('Arial', '', 10)
+        pdf.set_text_color(*pdf.secondary_color)
+        pdf.arabic_text(185, y_position + 15, handover_data['vehicle_condition'], 'R')
+        
+        # ملاحظات إضافية
+        if handover_data['notes']:
+            y_position += 40
+            pdf.set_font('Arial', 'B', 12)
+            pdf.set_text_color(*pdf.primary_color)
+            pdf.arabic_text(190, y_position, "ملاحظات إضافية:", 'R')
+            
+            # مربع للملاحظات
+            pdf.rounded_rect(10, y_position + 5, 190, 20, 3, 'D')
+            
+            pdf.set_font('Arial', '', 10)
+            pdf.set_text_color(*pdf.secondary_color)
+            pdf.arabic_text(185, y_position + 15, handover_data['notes'], 'R')
+        
+        # التوقيعات
+        y_position = 240
+        pdf.line(10, y_position - 5, 200, y_position - 5)
+        
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_text_color(*pdf.primary_color)
+        pdf.arabic_text(180, y_position, "التوقيعات", 'R')
+        
+        pdf.set_font('Arial', '', 10)
+        pdf.set_text_color(*pdf.secondary_color)
+        
+        # توقيع المستلم/المسلم
+        pdf.arabic_text(160, y_position + 10, "توقيع " + ("المستلم" if handover_data['handover_type'] == "تسليم" else "المسلم") + ":", 'R')
+        pdf.line(80, y_position + 10, 150, y_position + 10)
+        
+        # توقيع مدير المرآب
+        pdf.arabic_text(60, y_position + 10, "توقيع مدير المرآب:", 'R')
+        pdf.line(10, y_position + 10, 50, y_position + 10)
+        
+        # التذييل
+        pdf.set_xy(10.0, 270.0)
+        pdf.set_font('Arial', '', 8)
+        pdf.set_text_color(*pdf.secondary_color)
+        current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        pdf.arabic_text(105.0, pdf.get_y(), "تم إنشاء هذا النموذج في " + current_timestamp, 'C')
+        current_year = str(datetime.now().year)
+        pdf.arabic_text(105.0, pdf.get_y() + 5.0, "Eissa HR - جميع الحقوق محفوظة © " + current_year, 'C')
+        
+        return pdf
+    except Exception as e:
+        print(f"خطأ في إنشاء نموذج التسليم/الاستلام PDF: {str(e)}")
+        raise e
+
+
+def generate_vehicle_handover_pdf(handover_data):
+    """
+    دالة واجهة رئيسية لإنشاء نموذج تسليم/استلام المركبة وتحويله إلى بايت
+    
+    Args:
+        handover_data: بيانات التسليم/الاستلام
+        
+    Returns:
+        bytes: بيانات ثنائية للملف
+    """
+    try:
+        return create_pdf_bytes(create_vehicle_handover_pdf, handover_data)
+    except Exception as e:
+        print(f"خطأ في إنشاء نموذج التسليم/الاستلام PDF: {str(e)}")
         raise e
