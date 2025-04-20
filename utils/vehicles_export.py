@@ -218,7 +218,7 @@ def export_vehicle_pdf(vehicle, workshop_records=None, rental_records=None):
     
     # بيانات التوقيع والطباعة
     footer_text = Paragraph(
-        arabic_text(f"تم إنشاء هذا التقرير بواسطة نظام إدارة المركبات Eissa HR في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+        arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة متكامل في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
         styles['Arabic']
     )
     content.append(footer_text)
@@ -342,7 +342,7 @@ def export_workshop_records_pdf(vehicle, workshop_records):
     
     # بيانات التوقيع والطباعة
     footer_text = Paragraph(
-        arabic_text(f"تم إنشاء هذا التقرير بواسطة نظام إدارة المركبات Eissa HR في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+        arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة متكامل في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
         styles['Arabic']
     )
     content.append(footer_text)
