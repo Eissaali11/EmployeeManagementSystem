@@ -292,6 +292,34 @@ def check_email():
     
     return jsonify({'valid': True})
 
+@users_bp.route('/activity/<int:id>')
+@login_required
+@require_module_access(Module.USERS, Permission.VIEW)
+def activity_log(id):
+    """عرض سجل نشاط المستخدم"""
+    # التحقق من وجود المستخدم
+    user = User.query.get_or_404(id)
+    
+    # الحصول على عدد الأيام للعرض (افتراضي: آخر 30 يوم)
+    days = request.args.get('days', 30, type=int)
+    
+    # حساب تاريخ البداية
+    start_date = datetime.utcnow() - timedelta(days=days)
+    
+    # البحث عن سجلات النشاط للمستخدم
+    activities = SystemAudit.query.filter(
+        SystemAudit.user_id == id,
+        SystemAudit.timestamp >= start_date
+    ).order_by(desc(SystemAudit.timestamp)).all()
+    
+    # عرض صفحة سجل النشاط
+    return render_template(
+        'users/activity_log.html',
+        user=user,
+        activities=activities,
+        days=days
+    )
+
 @users_bp.route('/api/reset-permissions/<int:id>', methods=['POST'])
 @login_required
 @require_module_access(Module.USERS, Permission.EDIT)
