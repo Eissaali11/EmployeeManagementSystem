@@ -14,6 +14,7 @@ from models import Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.vehicle_report import generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
+from utils.workshop_report import generate_workshop_report_pdf
 
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
@@ -1386,19 +1387,19 @@ def export_vehicle_to_pdf(id):
 @vehicles_bp.route('/<int:id>/export/workshop/pdf')
 @login_required
 def export_workshop_to_pdf(id):
-    """تصدير سجلات الورشة للسيارة إلى ملف PDF"""
+    """تصدير سجلات الورشة للسيارة إلى ملف PDF مع الشعار الدائري الجديد"""
     vehicle = Vehicle.query.get_or_404(id)
     workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
     
-    # إنشاء ملف PDF
-    pdf_buffer = export_workshop_records_pdf(vehicle, workshop_records)
+    # إنشاء ملف PDF باستخدام الدالة الجديدة مع الشعار الدائري
+    pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
     
     # تسجيل الإجراء
-    log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF')
+    log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF بالتصميم الجديد')
     
     return send_file(
         pdf_buffer,
-        download_name=f'vehicle_workshop_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.pdf',
+        download_name=f'workshop_report_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.pdf',
         as_attachment=True,
         mimetype='application/pdf'
     )

@@ -79,8 +79,11 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     
     if os.path.exists(logo_path):
         # إنشاء دائرة باستخدام Flowable مخصص
-        class CircularImage:
+        from reportlab.platypus.flowables import Flowable
+        
+        class CircularImage(Flowable):
             def __init__(self, path, size=120):
+                Flowable.__init__(self)
                 self.path = path
                 self.size = size
                 
@@ -100,6 +103,21 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
                 # وضع الصورة داخل الدائرة
                 img = ImageReader(self.path)
                 canv.drawImage(img, x+5, y-radius+5, width=self.size-10, height=self.size-10, mask='auto')
+            
+            # دوال مطلوبة للتوافق مع Flowable
+            def getKeepWithNext(self):
+                return 0
+                
+            def setKeepWithNext(self, value):
+                pass
+                
+            def getKeepTogether(self):
+                return 0
+                
+            def split(self, availWidth, availHeight):
+                if availHeight < self.size:
+                    return []
+                return [self]
                 
         # إضافة الشعار الدائري
         circular_logo = CircularImage(logo_path, 120)
@@ -198,10 +216,16 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     
     # بيانات التوقيع والطباعة
     footer_text = Paragraph(
-        arabic_text(f"تم إنشاء هذا التقرير بواسطة نظام نُظم في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+        arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة متكامل في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+        styles['Arabic']
+    )
+    copyright_text = Paragraph(
+        arabic_text("نُظم - جميع الحقوق محفوظة © " + str(datetime.now().year)),
         styles['Arabic']
     )
     content.append(footer_text)
+    content.append(Spacer(1, 10))
+    content.append(copyright_text)
     
     # بناء الوثيقة
     doc.build(content)
