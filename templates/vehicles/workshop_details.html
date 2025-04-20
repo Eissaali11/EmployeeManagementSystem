@@ -3,264 +3,290 @@
 {% block title %}تفاصيل سجل الورشة - {{ vehicle.plate_number }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- العنوان وأزرار العودة -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-            <i class="fas fa-tools ms-2"></i>
-            تفاصيل سجل الورشة - {{ vehicle.plate_number }}
-        </h1>
-        
-        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-right ms-1"></i>
-            العودة إلى تفاصيل السيارة
-        </a>
-    </div>
-    
-    <!-- معلومات السيارة -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-car ms-2"></i>
-                معلومات السيارة
-            </h5>
+<div class="workshop-details-page">
+    <!-- بطاقة معلومات السيارة الرئيسية -->
+    <div class="vehicle-main-card">
+        <div class="vehicle-info">
+            <div class="plate-info">
+                <div class="plate-number">{{ vehicle.plate_number }}</div>
+                <div class="vehicle-type">{{ vehicle.make }} {{ vehicle.model }}</div>
+            </div>
+            <div class="other-info">
+                <div class="vehicle-year">
+                    <span class="info-label">سنة الصنع:</span>
+                    <span class="info-value">{{ vehicle.year }}</span>
+                </div>
+                <div class="vehicle-color">
+                    <span class="info-label">اللون:</span>
+                    <span class="info-value">{{ vehicle.color }}</span>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+    </div>
+
+    <!-- عنوان الصفحة -->
+    <div class="page-title-bar">
+        <div class="container">
             <div class="row">
-                <div class="col-md-6">
-                    <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
-                    <p><strong>النوع:</strong> {{ vehicle.make }} {{ vehicle.model }}</p>
+                <div class="col-md-9">
+                    <h1 class="page-title mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        <span>تفاصيل الصيانة</span>
+                    </h1>
                 </div>
-                <div class="col-md-6">
-                    <p><strong>اللون:</strong> {{ vehicle.color }}</p>
-                    <p><strong>سنة الصنع:</strong> {{ vehicle.year }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- تفاصيل سجل الورشة -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-wrench ms-2"></i>
-                تفاصيل الصيانة
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <tbody>
-                        <tr>
-                            <th scope="row" class="table-light" width="25%">سبب الدخول</th>
-                            <td>
-                                {% if record.reason == 'maintenance' %}
-                                    <span class="badge bg-info">صيانة دورية</span>
-                                {% elif record.reason == 'breakdown' %}
-                                    <span class="badge bg-warning text-dark">عطل</span>
-                                {% elif record.reason == 'accident' %}
-                                    <span class="badge bg-danger">حادث</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ record.reason }}</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row" class="table-light">حالة الإصلاح</th>
-                            <td>
-                                {% if record.repair_status == 'in_progress' %}
-                                    <span class="badge bg-warning text-dark">قيد التنفيذ</span>
-                                {% elif record.repair_status == 'completed' %}
-                                    <span class="badge bg-success">تم الإصلاح</span>
-                                {% elif record.repair_status == 'pending_approval' %}
-                                    <span class="badge bg-info">بانتظار الموافقة</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row" class="table-light">تاريخ الدخول</th>
-                            <td>{{ record.formatted_entry_date }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row" class="table-light">تاريخ الخروج</th>
-                            <td>
-                                {% if record.exit_date %}
-                                    {{ record.formatted_exit_date }}
-                                {% else %}
-                                    <span class="text-warning fw-bold">ما زالت في الورشة</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row" class="table-light">اسم الورشة</th>
-                            <td>{{ record.workshop_name or 'غير محدد' }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row" class="table-light">اسم الفني</th>
-                            <td>{{ record.technician_name or 'غير محدد' }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row" class="table-light">التكلفة</th>
-                            <td>{{ "{:,.2f}".format(record.cost) }} ريال</td>
-                        </tr>
-                        {% if record.delivery_link or record.reception_link %}
-                        <tr>
-                            <th scope="row" class="table-light">الروابط</th>
-                            <td>
-                                {% if record.delivery_link %}
-                                    <a href="{{ record.delivery_link }}" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
-                                        <i class="fas fa-external-link-alt ms-1"></i>
-                                        نموذج التسليم
-                                    </a>
-                                {% endif %}
-                                
-                                {% if record.reception_link %}
-                                    <a href="{{ record.reception_link }}" target="_blank" class="btn btn-sm btn-outline-success mb-2">
-                                        <i class="fas fa-external-link-alt ms-1"></i>
-                                        نموذج الاستلام
-                                    </a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    
-    <!-- وصف العطل والملاحظات -->
-    <div class="row">
-        <!-- وصف العطل أو الصيانة -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-info-circle ms-2"></i>
-                        وصف العطل أو الصيانة
-                    </h5>
-                </div>
-                <div class="card-body bg-light">
-                    {{ record.description|nl2br|safe or 'لا يوجد وصف' }}
-                </div>
-            </div>
-        </div>
-        
-        <!-- ملاحظات إضافية -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-sticky-note ms-2"></i>
-                        ملاحظات إضافية
-                    </h5>
-                </div>
-                <div class="card-body bg-light">
-                    {{ record.notes|nl2br|safe or 'لا توجد ملاحظات إضافية' }}
+                <div class="col-md-3 text-md-end">
+                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn back-btn">
+                        <i class="fas fa-arrow-right ms-1"></i>
+                        العودة للسيارة
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- صور توثيقية -->
-    {% if record.images %}
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-dark text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-images ms-2"></i>
-                صور توثيقية
-            </h5>
-        </div>
-        <div class="card-body">
-            <!-- صور قبل الإصلاح -->
-            <h6 class="fw-bold mb-3">صور قبل الإصلاح</h6>
-            <div class="row mb-4">
-                {% set has_before_images = false %}
-                {% for image in record.images %}
-                    {% if image.image_type == 'before' %}
-                        {% set has_before_images = true %}
-                        <div class="col-md-3 mb-3">
-                            <div class="card">
-                                <div class="card-header bg-warning text-dark py-1 small">قبل الإصلاح</div>
-                                <a href="{{ url_for('static', filename=image.image_path) }}" target="_blank">
-                                    <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة قبل الإصلاح">
-                                </a>
-                                {% if image.notes %}
-                                <div class="card-footer p-1 small">{{ image.notes }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if not has_before_images %}
-                <div class="col">
-                    <div class="alert alert-info mb-0">لا توجد صور قبل الإصلاح</div>
-                </div>
-                {% endif %}
-            </div>
-            
-            <!-- صور بعد الإصلاح -->
-            <h6 class="fw-bold mb-3">صور بعد الإصلاح</h6>
-            <div class="row">
-                {% set has_after_images = false %}
-                {% for image in record.images %}
-                    {% if image.image_type == 'after' %}
-                        {% set has_after_images = true %}
-                        <div class="col-md-3 mb-3">
-                            <div class="card">
-                                <div class="card-header bg-success text-white py-1 small">بعد الإصلاح</div>
-                                <a href="{{ url_for('static', filename=image.image_path) }}" target="_blank">
-                                    <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid" alt="صورة بعد الإصلاح">
-                                </a>
-                                {% if image.notes %}
-                                <div class="card-footer p-1 small">{{ image.notes }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if not has_after_images %}
-                <div class="col">
-                    <div class="alert alert-info mb-0">لا توجد صور بعد الإصلاح</div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- أزرار أسفل الصفحة -->
-    <div class="d-flex justify-content-between mt-4">
-        <div>
-            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-right ms-1"></i>
-                العودة إلى تفاصيل السيارة
-            </a>
-        </div>
-        
-        <div>
-            <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="btn btn-warning">
-                <i class="fas fa-edit ms-1"></i>
-                تعديل سجل الورشة
-            </a>
-            
-            <button onclick="window.print()" class="btn btn-info ms-2">
-                <i class="fas fa-print ms-1"></i>
-                طباعة
-            </button>
-        </div>
-    </div>
-    
-    <!-- توقيع وتاريخ الطباعة -->
-    <div class="d-print-block d-none mt-5 border-top pt-3">
+
+    <div class="container py-3">
+        <!-- تفاصيل سجل الورشة -->
         <div class="row">
-            <div class="col-6">
-                <p>تاريخ الطباعة: {{ current_date }}</p>
+            <div class="col-md-6">
+                <!-- معلومات الصيانة -->
+                <div class="card details-card mb-4 bg-glass">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle ms-2"></i>
+                            معلومات الصيانة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-item">
+                            <div class="detail-label">سبب الدخول:</div>
+                            <div class="detail-value">
+                                {% if record.reason == 'maintenance' %}
+                                    <span class="status-badge maintenance">صيانة دورية</span>
+                                {% elif record.reason == 'breakdown' %}
+                                    <span class="status-badge breakdown">عطل</span>
+                                {% elif record.reason == 'accident' %}
+                                    <span class="status-badge accident">حادث</span>
+                                {% else %}
+                                    <span class="status-badge other">{{ record.reason }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">حالة الإصلاح:</div>
+                            <div class="detail-value">
+                                {% if record.repair_status == 'in_progress' %}
+                                    <span class="status-badge in-progress">قيد التنفيذ</span>
+                                {% elif record.repair_status == 'completed' %}
+                                    <span class="status-badge completed">تم الإصلاح</span>
+                                {% elif record.repair_status == 'pending_approval' %}
+                                    <span class="status-badge pending">بانتظار الموافقة</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">تاريخ الدخول:</div>
+                            <div class="detail-value date-value">{{ record.formatted_entry_date }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">تاريخ الخروج:</div>
+                            <div class="detail-value">
+                                {% if record.exit_date %}
+                                    <span class="date-value">{{ record.formatted_exit_date }}</span>
+                                {% else %}
+                                    <span class="status-badge in-workshop">ما زالت في الورشة</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">اسم الورشة:</div>
+                            <div class="detail-value">{{ record.workshop_name or 'غير محدد' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">اسم الفني:</div>
+                            <div class="detail-value">{{ record.technician_name or 'غير محدد' }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">التكلفة:</div>
+                            <div class="detail-value cost-value">{{ "{:,.2f}".format(record.cost) }} <span class="currency">ريال</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- وصف العطل -->
+                <div class="card details-card mb-4 bg-glass">
+                    <div class="card-header description-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clipboard-list ms-2"></i>
+                            وصف العطل أو الصيانة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="description-content">
+                            {{ record.description|nl2br|safe or 'لا يوجد وصف' }}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-6 text-start">
-                <p>المدير المسؤول: ________________</p>
+            
+            <div class="col-md-6">
+                <!-- النماذج والروابط -->
+                {% if record.delivery_link or record.reception_link %}
+                <div class="card links-card mb-4 bg-glass">
+                    <div class="card-header links-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-link ms-2"></i>
+                            نماذج ومستندات
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="links-container">
+                            {% if record.delivery_link %}
+                                <a href="{{ record.delivery_link }}" target="_blank" class="document-link delivery-link">
+                                    <i class="fas fa-file-export ms-2"></i>
+                                    نموذج التسليم
+                                </a>
+                            {% endif %}
+                            
+                            {% if record.reception_link %}
+                                <a href="{{ record.reception_link }}" target="_blank" class="document-link reception-link">
+                                    <i class="fas fa-file-import ms-2"></i>
+                                    نموذج الاستلام
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- ملاحظات إضافية -->
+                <div class="card details-card mb-4 bg-glass">
+                    <div class="card-header notes-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-sticky-note ms-2"></i>
+                            ملاحظات إضافية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="notes-content">
+                            {{ record.notes|nl2br|safe or 'لا توجد ملاحظات إضافية' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- صور توثيقية -->
+        {% if record.images %}
+        <div class="card gallery-card mb-4 bg-glass">
+            <div class="card-header gallery-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-images ms-2"></i>
+                    صور توثيقية
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- صور قبل الإصلاح -->
+                        <h6 class="gallery-subtitle">
+                            <i class="fas fa-tools ms-2"></i>
+                            صور قبل الإصلاح
+                        </h6>
+                        <div class="row image-gallery">
+                            {% set has_before_images = false %}
+                            {% for image in record.images %}
+                                {% if image.image_type == 'before' %}
+                                    {% set has_before_images = true %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <div class="image-card before-image">
+                                            <div class="image-type">قبل الإصلاح</div>
+                                            <a href="{{ url_for('static', filename=image.image_path) }}" target="_blank" class="image-link">
+                                                <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة قبل الإصلاح">
+                                            </a>
+                                            {% if image.notes %}
+                                            <div class="image-notes">{{ image.notes }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if not has_before_images %}
+                            <div class="col-12">
+                                <div class="no-images-message">لا توجد صور قبل الإصلاح</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <!-- صور بعد الإصلاح -->
+                        <h6 class="gallery-subtitle">
+                            <i class="fas fa-check-circle ms-2"></i>
+                            صور بعد الإصلاح
+                        </h6>
+                        <div class="row image-gallery">
+                            {% set has_after_images = false %}
+                            {% for image in record.images %}
+                                {% if image.image_type == 'after' %}
+                                    {% set has_after_images = true %}
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <div class="image-card after-image">
+                                            <div class="image-type">بعد الإصلاح</div>
+                                            <a href="{{ url_for('static', filename=image.image_path) }}" target="_blank" class="image-link">
+                                                <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة بعد الإصلاح">
+                                            </a>
+                                            {% if image.notes %}
+                                            <div class="image-notes">{{ image.notes }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if not has_after_images %}
+                            <div class="col-12">
+                                <div class="no-images-message">لا توجد صور بعد الإصلاح</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- أزرار أسفل الصفحة -->
+        <div class="action-buttons">
+            <div class="action-buttons-container">
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="action-btn back-btn">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    العودة إلى السيارة
+                </a>
+                
+                <div class="action-btn-group">
+                    <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="action-btn edit-btn">
+                        <i class="fas fa-edit ms-1"></i>
+                        تعديل السجل
+                    </a>
+                    
+                    <button onclick="window.print()" class="action-btn print-btn">
+                        <i class="fas fa-print ms-1"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- توقيع وتاريخ الطباعة -->
+        <div class="d-print-block d-none mt-5 border-top pt-3">
+            <div class="row">
+                <div class="col-6">
+                    <p>تاريخ الطباعة: {{ current_date }}</p>
+                </div>
+                <div class="col-6 text-start">
+                    <p>المدير المسؤول: ________________</p>
+                </div>
             </div>
         </div>
     </div>
@@ -269,9 +295,421 @@
 
 {% block scripts %}
 <style>
+    /* تنسيقات عامة */
+    .workshop-details-page {
+        font-family: 'Tajawal', sans-serif;
+        background-color: #f5f7fa;
+    }
+    
+    .container {
+        max-width: 1200px;
+    }
+    
+    /* بطاقة معلومات السيارة الرئيسية */
+    .vehicle-main-card {
+        background: #192a56;
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 0;
+    }
+    
+    .vehicle-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .plate-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .plate-number {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    
+    .vehicle-type {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .other-info {
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        opacity: 0.7;
+        margin-left: 0.5rem;
+    }
+    
+    /* شريط العنوان */
+    .page-title-bar {
+        background: linear-gradient(60deg, #9c27b0, #7b1fa2);
+        color: white;
+        padding: 1rem 0;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .page-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+    }
+    
+    .back-btn {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 30px;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 0.9rem;
+    }
+    
+    .back-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    /* البطاقات */
+    .bg-glass {
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .bg-glass:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header {
+        border-bottom: none;
+        padding: 1.25rem 1.5rem;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .details-card .card-header {
+        background: linear-gradient(45deg, #1a237e, #283593);
+    }
+    
+    .description-header {
+        background: linear-gradient(45deg, #00897b, #009688);
+    }
+    
+    .notes-header {
+        background: linear-gradient(45deg, #546e7a, #607d8b);
+    }
+    
+    .links-header {
+        background: linear-gradient(45deg, #5c6bc0, #3f51b5);
+    }
+    
+    .gallery-header {
+        background: linear-gradient(45deg, #6a1b9a, #8e24aa);
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* تفاصيل السجل */
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #455a64;
+        width: 40%;
+    }
+    
+    .detail-value {
+        width: 60%;
+        text-align: left;
+    }
+    
+    .date-value {
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .cost-value {
+        font-weight: 700;
+        color: #1e88e5;
+    }
+    
+    .currency {
+        font-size: 0.9rem;
+        opacity: 0.7;
+    }
+    
+    /* شارات الحالة */
+    .status-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .maintenance {
+        background-color: rgba(3, 169, 244, 0.2);
+        color: #0288d1;
+    }
+    
+    .breakdown {
+        background-color: rgba(255, 152, 0, 0.2);
+        color: #ef6c00;
+    }
+    
+    .accident {
+        background-color: rgba(244, 67, 54, 0.2);
+        color: #d32f2f;
+    }
+    
+    .in-progress {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: #ff8f00;
+    }
+    
+    .completed {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #2e7d32;
+    }
+    
+    .pending {
+        background-color: rgba(156, 39, 176, 0.2);
+        color: #7b1fa2;
+    }
+    
+    .in-workshop {
+        background-color: rgba(255, 87, 34, 0.2);
+        color: #e64a19;
+        font-weight: 700;
+    }
+    
+    .other {
+        background-color: rgba(158, 158, 158, 0.2);
+        color: #424242;
+    }
+    
+    /* وصف العطل والملاحظات */
+    .description-content, .notes-content {
+        background-color: rgba(250, 250, 250, 0.5);
+        border-radius: 8px;
+        padding: 1rem;
+        color: #37474f;
+        line-height: 1.6;
+        min-height: 100px;
+        white-space: pre-line;
+    }
+    
+    /* النماذج والروابط */
+    .links-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .document-link {
+        display: flex;
+        align-items: center;
+        background-color: #f5f5f5;
+        padding: 0.8rem 1.2rem;
+        border-radius: 8px;
+        color: #333;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        width: 100%;
+    }
+    
+    .delivery-link {
+        border-left: 4px solid #3f51b5;
+    }
+    
+    .reception-link {
+        border-left: 4px solid #4caf50;
+    }
+    
+    .document-link:hover {
+        background-color: #e0e0e0;
+        transform: translateX(-5px);
+    }
+    
+    /* معرض الصور */
+    .gallery-subtitle {
+        color: #555;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        font-weight: 600;
+    }
+    
+    .image-gallery {
+        margin-bottom: 1.5rem;
+    }
+    
+    .image-card {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .image-type {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        z-index: 2;
+    }
+    
+    .before-image .image-type {
+        background-color: #ff9800;
+        color: white;
+    }
+    
+    .after-image .image-type {
+        background-color: #4caf50;
+        color: white;
+    }
+    
+    .gallery-image {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .image-link:hover .gallery-image {
+        transform: scale(1.1);
+    }
+    
+    .image-notes {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #555;
+    }
+    
+    .no-images-message {
+        background-color: rgba(3, 169, 244, 0.1);
+        color: #0288d1;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    /* أزرار الإجراءات */
+    .action-buttons {
+        margin: 2rem 0;
+    }
+    
+    .action-buttons-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .action-btn-group {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .action-btn {
+        padding: 0.7rem 1.3rem;
+        border-radius: 30px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .edit-btn {
+        background: linear-gradient(45deg, #ffa000, #ff6f00);
+        color: white;
+    }
+    
+    .print-btn {
+        background: linear-gradient(45deg, #00acc1, #0097a7);
+        color: white;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+    
+    /* تنسيقات الطباعة */
     @media print {
-        .btn, .sidebar, .navbar, footer {
+        .action-buttons, .back-btn, .navbar, footer, .sidebar {
             display: none !important;
+        }
+        
+        .workshop-details-page {
+            background-color: white;
+        }
+        
+        .bg-glass {
+            box-shadow: none;
+            background-color: white;
+            page-break-inside: avoid;
+        }
+        
+        .page-title-bar {
+            color: black;
+            background: none;
+            box-shadow: none;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .vehicle-main-card {
+            background-color: white;
+            color: black;
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+        
+        .card-header {
+            background: none !important;
+            color: black !important;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .status-badge {
+            border: 1px solid #ddd;
+            background-color: white !important;
         }
         
         body {
@@ -281,30 +719,6 @@
         .container {
             width: 100%;
             max-width: 100%;
-        }
-        
-        .card {
-            border: 1px solid #ddd;
-            page-break-inside: avoid;
-        }
-        
-        .card-header {
-            background-color: #f8f9fa !important;
-            color: #000 !important;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        h1, h5 {
-            color: #000 !important;
-        }
-        
-        .table {
-            border-collapse: collapse !important;
-        }
-        
-        .table td, .table th {
-            background-color: #fff !important;
-            border: 1px solid #ddd !important;
         }
     }
 </style>
