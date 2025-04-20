@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask_login import UserMixin
 from app import db
+import enum
 
 class Department(db.Model):
     """Department model for organizing employees"""
@@ -105,6 +106,36 @@ class Document(db.Model):
     def __repr__(self):
         return f'<Document {self.document_type} for {self.employee.name}>'
 
+# تعريف أدوار المستخدمين
+class UserRole(enum.Enum):
+    ADMIN = 'admin'        # مدير النظام - كل الصلاحيات
+    MANAGER = 'manager'    # مدير - جميع الصلاحيات عدا إدارة المستخدمين
+    HR = 'hr'              # موارد بشرية - إدارة الموظفين والمستندات
+    FINANCE = 'finance'    # مالية - إدارة الرواتب والتكاليف
+    FLEET = 'fleet'        # أسطول - إدارة السيارات والمركبات
+    USER = 'user'          # مستخدم عادي - صلاحيات محدودة للعرض
+
+# تعريف الصلاحيات
+class Permission:
+    VIEW = 0x01            # عرض البيانات فقط
+    CREATE = 0x02          # إنشاء سجلات جديدة
+    EDIT = 0x04            # تعديل السجلات
+    DELETE = 0x08          # حذف السجلات
+    MANAGE = 0x10          # إدارة القسم الخاص
+    ADMIN = 0xff           # كل الصلاحيات
+
+# صلاحيات الأقسام
+class Module(enum.Enum):
+    EMPLOYEES = 'employees'
+    ATTENDANCE = 'attendance'
+    DEPARTMENTS = 'departments'
+    SALARIES = 'salaries'
+    DOCUMENTS = 'documents'
+    VEHICLES = 'vehicles'
+    USERS = 'users'
+    REPORTS = 'reports'
+    FEES = 'fees'
+
 class User(UserMixin, db.Model):
     """User model for authentication"""
     id = db.Column(db.Integer, primary_key=True)
@@ -113,7 +144,7 @@ class User(UserMixin, db.Model):
     firebase_uid = db.Column(db.String(128), unique=True, nullable=True)  # جعلها اختيارية للسماح بتسجيل الدخول المحلي
     password_hash = db.Column(db.String(256), nullable=True)  # حقل لتخزين هاش كلمة المرور
     profile_picture = db.Column(db.String(255))
-    role = db.Column(db.String(20), default='user')  # admin, manager, user
+    role = db.Column(db.Enum(UserRole), default=UserRole.USER)  # دور المستخدم
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
@@ -122,6 +153,9 @@ class User(UserMixin, db.Model):
     # الربط مع الموظف إذا كان المستخدم موظفًا في النظام
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
     employee = db.relationship('Employee', foreign_keys=[employee_id], uselist=False)
+    
+    # العلاقة مع صلاحيات المستخدم
+    permissions = db.relationship('UserPermission', back_populates='user', cascade='all, delete-orphan')
     
     def set_password(self, password):
         """تعيين كلمة المرور المشفرة"""
@@ -135,8 +169,42 @@ class User(UserMixin, db.Model):
             return check_password_hash(self.password_hash, password)
         return False
     
+    def has_permission(self, module, permission):
+        """التحقق مما إذا كان المستخدم لديه صلاحية معينة"""
+        # المديرون لديهم كل الصلاحيات
+        if self.role == UserRole.ADMIN:
+            return True
+            
+        # التحقق من صلاحيات القسم المحدد
+        for user_permission in self.permissions:
+            if user_permission.module == module:
+                return user_permission.permissions & permission
+                
+        return False
+        
+    def has_module_access(self, module):
+        """التحقق مما إذا كان المستخدم لديه وصول إلى وحدة معينة"""
+        # المديرون لديهم وصول إلى جميع الوحدات
+        if self.role == UserRole.ADMIN:
+            return True
+            
+        return any(p.module == module for p in self.permissions)
+    
     def __repr__(self):
         return f'<User {self.email}>'
+
+class UserPermission(db.Model):
+    """صلاحيات المستخدم لكل وحدة"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    module = db.Column(db.Enum(Module), nullable=False)
+    permissions = db.Column(db.Integer, default=Permission.VIEW)  # بتات الصلاحيات
+    
+    # العلاقات
+    user = db.relationship('User', back_populates='permissions')
+    
+    def __repr__(self):
+        return f'<UserPermission {self.user_id} - {self.module}>'
 
 class RenewalFee(db.Model):
     """تكاليف رسوم تجديد أوراق الموظفين"""
@@ -194,13 +262,18 @@ class FeesCost(db.Model):
         return self.passport_fee + self.labor_office_fee + self.insurance_fee + self.social_insurance_fee
 
 class SystemAudit(db.Model):
-    """Audit trail for significant system actions"""
+    """سجل عمليات النظام للإجراءات المهمة - Audit trail"""
     id = db.Column(db.Integer, primary_key=True)
-    action = db.Column(db.String(100), nullable=False)
-    entity_type = db.Column(db.String(50), nullable=False)  # employee, department, salary, etc.
-    entity_id = db.Column(db.Integer, nullable=False)
-    details = db.Column(db.Text)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    action = db.Column(db.String(100), nullable=False)  # نوع الإجراء (إضافة، تعديل، حذف)
+    entity_type = db.Column(db.String(50), nullable=False)  # نوع الكيان (موظف، قسم، راتب، الخ)
+    entity_id = db.Column(db.Integer, nullable=False)  # معرف الكيان
+    entity_name = db.Column(db.String(255))  # اسم الكيان للعرض
+    previous_data = db.Column(db.Text)  # البيانات قبل التعديل (JSON)
+    new_data = db.Column(db.Text)  # البيانات بعد التعديل (JSON)
+    details = db.Column(db.Text)  # تفاصيل إضافية
+    ip_address = db.Column(db.String(50))  # عنوان IP لمصدر العملية
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)  # وقت العملية
+    
     # إضافة مرجع للمستخدم الذي قام بالإجراء
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     user = db.relationship('User', foreign_keys=[user_id])
