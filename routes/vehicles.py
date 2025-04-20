@@ -444,6 +444,7 @@ def create_workshop(id):
         cost = float(request.form.get('cost') or 0)
         workshop_name = request.form.get('workshop_name')
         technician_name = request.form.get('technician_name')
+        delivery_link = request.form.get('delivery_link')
         notes = request.form.get('notes')
         
         # إنشاء سجل ورشة جديد
@@ -457,6 +458,7 @@ def create_workshop(id):
             cost=cost,
             workshop_name=workshop_name,
             technician_name=technician_name,
+            delivery_link=delivery_link,
             notes=notes
         )
         
@@ -529,6 +531,8 @@ def edit_workshop(id):
         cost = float(request.form.get('cost') or 0)
         workshop_name = request.form.get('workshop_name')
         technician_name = request.form.get('technician_name')
+        delivery_link = request.form.get('delivery_link')
+        reception_link = request.form.get('reception_link')
         notes = request.form.get('notes')
         
         # تحديث سجل الورشة
@@ -540,6 +544,8 @@ def edit_workshop(id):
         workshop.cost = cost
         workshop.workshop_name = workshop_name
         workshop.technician_name = technician_name
+        workshop.delivery_link = delivery_link
+        workshop.reception_link = reception_link
         workshop.notes = notes
         workshop.updated_at = datetime.utcnow()
         
