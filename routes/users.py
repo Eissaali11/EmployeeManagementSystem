@@ -1,15 +1,16 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Optional
 
 # Flask imports
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
+from sqlalchemy import desc
 
 # Project imports
 from app import db
 from werkzeug.security import generate_password_hash
-from models import User, UserRole, Module, Permission, UserPermission, Employee
+from models import User, UserRole, Module, Permission, UserPermission, Employee, SystemAudit
 from forms.user_forms import CreateUserForm, EditUserForm, UserSearchForm, UserPermissionsForm
 from utils.user_helpers import (
     get_role_display_name, get_module_display_name, format_permissions,
