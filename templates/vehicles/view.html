@@ -302,7 +302,7 @@
                                 
                                 <div class="d-flex flex-column align-items-center">
                                     <!-- زر عرض التفاصيل -->
-                                    <a href="#workshopDetails{{ record.id }}" data-bs-toggle="modal" class="btn btn-sm btn-info mb-2 w-100" title="عرض التفاصيل">
+                                    <a href="{{ url_for('vehicles.workshop_details', workshop_id=record.id) }}" class="btn btn-sm btn-info mb-2 w-100" title="عرض التفاصيل">
                                         <i class="fas fa-eye ms-1"></i>
                                         عرض
                                     </a>

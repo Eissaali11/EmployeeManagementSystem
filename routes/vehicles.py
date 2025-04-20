@@ -1329,6 +1329,34 @@ def export_vehicles_excel():
     )
 
 
+# مسار عرض تفاصيل سجل الورشة
+@vehicles_bp.route('/workshop-details/<int:workshop_id>')
+@login_required
+def workshop_details(workshop_id):
+    """عرض تفاصيل سجل ورشة في صفحة منفصلة"""
+    # الحصول على سجل الورشة
+    record = VehicleWorkshop.query.get_or_404(workshop_id)
+    vehicle = Vehicle.query.get_or_404(record.vehicle_id)
+    
+    # تنسيق التواريخ
+    record.formatted_entry_date = format_date_arabic(record.entry_date)
+    if record.exit_date:
+        record.formatted_exit_date = format_date_arabic(record.exit_date)
+    
+    # استرجاع الصور المرتبطة بسجل الورشة
+    images = VehicleWorkshopImage.query.filter_by(workshop_id=workshop_id).all()
+    record.images = images
+    
+    # تسجيل الوقت الحالي
+    current_date = format_date_arabic(datetime.now().date())
+    
+    return render_template(
+        'vehicles/workshop_details.html',
+        vehicle=vehicle,
+        record=record,
+        current_date=current_date
+    )
+
 # مسارات التصدير والمشاركة
 @vehicles_bp.route('/<int:id>/export/pdf')
 @login_required
