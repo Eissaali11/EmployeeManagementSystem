@@ -189,10 +189,37 @@
                         سجلات الورشة
                         <span class="badge bg-secondary">{{ workshop_records|length }}</span>
                     </h5>
-                    <a href="{{ url_for('vehicles.create_workshop', id=vehicle.id) }}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus ms-1"></i>
-                        إضافة سجل جديد
-                    </a>
+                    <div>
+                        <div class="dropdown d-inline-block me-2">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-file-export ms-1"></i>
+                                تصدير / مشاركة
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('vehicles.export_workshop_to_pdf', id=vehicle.id) }}">
+                                    <i class="fas fa-file-pdf text-danger ms-1"></i>
+                                    تصدير PDF
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('vehicles.export_workshop_to_excel', id=vehicle.id) }}">
+                                    <i class="fas fa-file-excel text-success ms-1"></i>
+                                    تصدير Excel
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('vehicles.print_workshop_records', id=vehicle.id) }}" target="_blank">
+                                    <i class="fas fa-print text-primary ms-1"></i>
+                                    طباعة
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('vehicles.share_workshop_options', id=vehicle.id) }}">
+                                    <i class="fas fa-share-alt text-info ms-1"></i>
+                                    مشاركة
+                                </a></li>
+                            </ul>
+                        </div>
+                        <a href="{{ url_for('vehicles.create_workshop', id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة سجل جديد
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if workshop_records %}

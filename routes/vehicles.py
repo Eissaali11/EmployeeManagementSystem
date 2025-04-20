@@ -1327,3 +1327,153 @@ def export_vehicles_excel():
         as_attachment=True,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
+
+# مسارات التصدير والمشاركة
+@vehicles_bp.route('/<int:id>/export/pdf')
+@login_required
+def export_vehicle_to_pdf(id):
+    """تصدير بيانات السيارة إلى ملف PDF"""
+    vehicle = Vehicle.query.get_or_404(id)
+    workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
+    rental_records = VehicleRental.query.filter_by(vehicle_id=id).order_by(VehicleRental.start_date.desc()).all()
+    
+    # إنشاء ملف PDF
+    pdf_buffer = export_vehicle_pdf(vehicle, workshop_records, rental_records)
+    
+    # تسجيل الإجراء
+    log_audit('export', 'vehicle', id, f'تم تصدير بيانات السيارة {vehicle.plate_number} إلى PDF')
+    
+    return send_file(
+        pdf_buffer,
+        download_name=f'vehicle_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.pdf',
+        as_attachment=True,
+        mimetype='application/pdf'
+    )
+
+
+@vehicles_bp.route('/<int:id>/export/workshop/pdf')
+@login_required
+def export_workshop_to_pdf(id):
+    """تصدير سجلات الورشة للسيارة إلى ملف PDF"""
+    vehicle = Vehicle.query.get_or_404(id)
+    workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
+    
+    # إنشاء ملف PDF
+    pdf_buffer = export_workshop_records_pdf(vehicle, workshop_records)
+    
+    # تسجيل الإجراء
+    log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF')
+    
+    return send_file(
+        pdf_buffer,
+        download_name=f'vehicle_workshop_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.pdf',
+        as_attachment=True,
+        mimetype='application/pdf'
+    )
+
+
+@vehicles_bp.route('/<int:id>/export/excel')
+@login_required
+def export_vehicle_to_excel(id):
+    """تصدير بيانات السيارة إلى ملف Excel"""
+    vehicle = Vehicle.query.get_or_404(id)
+    workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
+    rental_records = VehicleRental.query.filter_by(vehicle_id=id).order_by(VehicleRental.start_date.desc()).all()
+    
+    # إنشاء ملف Excel
+    excel_buffer = export_vehicle_excel(vehicle, workshop_records, rental_records)
+    
+    # تسجيل الإجراء
+    log_audit('export', 'vehicle', id, f'تم تصدير بيانات السيارة {vehicle.plate_number} إلى Excel')
+    
+    return send_file(
+        excel_buffer,
+        download_name=f'vehicle_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.xlsx',
+        as_attachment=True,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+
+@vehicles_bp.route('/<int:id>/export/workshop/excel')
+@login_required
+def export_workshop_to_excel(id):
+    """تصدير سجلات الورشة للسيارة إلى ملف Excel"""
+    vehicle = Vehicle.query.get_or_404(id)
+    workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
+    
+    # إنشاء ملف Excel
+    excel_buffer = export_workshop_records_excel(vehicle, workshop_records)
+    
+    # تسجيل الإجراء
+    log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى Excel')
+    
+    return send_file(
+        excel_buffer,
+        download_name=f'vehicle_workshop_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.xlsx',
+        as_attachment=True,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+
+@vehicles_bp.route('/<int:id>/share/workshop')
+@login_required
+def share_workshop_options(id):
+    """خيارات مشاركة سجلات الورشة للسيارة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # إنشاء روابط التصدير والمشاركة
+    app_url = request.host_url.rstrip('/')
+    pdf_url = f"{app_url}{url_for('vehicles.export_workshop_to_pdf', id=id)}"
+    excel_url = f"{app_url}{url_for('vehicles.export_workshop_to_excel', id=id)}"
+    
+    # إنشاء روابط المشاركة
+    whatsapp_text = f"سجلات ورشة السيارة: {vehicle.plate_number} - {vehicle.make} {vehicle.model}"
+    whatsapp_url = f"https://wa.me/?text={urllib.parse.quote(whatsapp_text)} PDF: {urllib.parse.quote(pdf_url)}"
+    
+    email_subject = f"سجلات ورشة السيارة: {vehicle.plate_number}"
+    email_body = f"مرفق سجلات ورشة السيارة: {vehicle.plate_number} - {vehicle.make} {vehicle.model}\n\nرابط تحميل PDF: {pdf_url}\n\nرابط تحميل Excel: {excel_url}"
+    email_url = f"mailto:?subject={urllib.parse.quote(email_subject)}&body={urllib.parse.quote(email_body)}"
+    
+    return render_template(
+        'vehicles/share_workshop.html',
+        vehicle=vehicle,
+        pdf_url=pdf_url,
+        excel_url=excel_url,
+        whatsapp_url=whatsapp_url,
+        email_url=email_url
+    )
+
+
+@vehicles_bp.route('/<int:id>/print/workshop')
+@login_required
+def print_workshop_records(id):
+    """عرض سجلات الورشة للطباعة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
+    
+    # تنسيق التواريخ
+    for record in workshop_records:
+        record.formatted_entry_date = format_date_arabic(record.entry_date)
+        if record.exit_date:
+            record.formatted_exit_date = format_date_arabic(record.exit_date)
+    
+    # حساب تكلفة الإصلاحات الإجمالية
+    total_maintenance_cost = db.session.query(func.sum(VehicleWorkshop.cost)).filter_by(vehicle_id=id).scalar() or 0
+    
+    # حساب عدد الأيام في الورشة
+    days_in_workshop = 0
+    for record in workshop_records:
+        if record.exit_date:
+            days_in_workshop += (record.exit_date - record.entry_date).days
+        else:
+            days_in_workshop += (datetime.now().date() - record.entry_date).days
+    
+    return render_template(
+        'vehicles/print_workshop.html',
+        vehicle=vehicle,
+        workshop_records=workshop_records,
+        total_maintenance_cost=total_maintenance_cost,
+        days_in_workshop=days_in_workshop,
+        current_date=format_date_arabic(datetime.now().date())
+    )

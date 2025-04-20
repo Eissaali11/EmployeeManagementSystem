@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة سجلات الورشة للسيارة: {{ vehicle.plate_number }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #fff;
+        }
+        .print-header {
+            margin-bottom: 30px;
+        }
+        .print-footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #777;
+            text-align: center;
+        }
+        .print-only {
+            display: block;
+        }
+        .no-print {
+            display: none;
+        }
+        .company-logo {
+            max-height: 60px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            background-color: #f5f5f5;
+        }
+        .badge {
+            font-size: 0.8rem;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            border-top: 1px solid #999;
+            width: 200px;
+            padding-top: 5px;
+            text-align: center;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+            }
+            .card {
+                border: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                size: A4;
+                margin: 1cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- زر طباعة - لن يظهر عند الطباعة -->
+        <div class="d-flex justify-content-between mb-4 no-print">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print ms-1"></i>
+                طباعة التقرير
+            </button>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right ms-1"></i>
+                عودة للسيارة
+            </a>
+        </div>
+
+        <!-- رأس الصفحة -->
+        <div class="print-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2>تقرير سجلات الورشة</h2>
+                <p class="text-muted">{{ current_date }}</p>
+            </div>
+            <div class="text-start">
+                <!-- يمكن إضافة شعار الشركة هنا -->
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="شعار الشركة" class="company-logo">
+            </div>
+        </div>
+
+        <!-- معلومات السيارة -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">معلومات السيارة</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <strong>النوع:</strong> {{ vehicle.make }} {{ vehicle.model }}
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <strong>سنة الصنع:</strong> {{ vehicle.year }}
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <strong>اللون:</strong> {{ vehicle.color }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- إحصائيات الورشة -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">إجمالي تكاليف الصيانة</h5>
+                        <p class="display-5 fw-bold text-success">{{ "{:,.2f}".format(total_maintenance_cost) }} ريال</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">إجمالي أيام الورشة</h5>
+                        <p class="display-5 fw-bold text-danger">{{ days_in_workshop }} يوم</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول سجلات الورشة -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">سجلات الورشة</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    {% if workshop_records %}
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>سبب الدخول</th>
+                                <th>تاريخ الدخول</th>
+                                <th>تاريخ الخروج</th>
+                                <th>حالة الإصلاح</th>
+                                <th>التكلفة (ريال)</th>
+                                <th>اسم الورشة</th>
+                                <th>الفني المسؤول</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in workshop_records %}
+                            <tr>
+                                <td>
+                                    {% if record.reason == 'maintenance' %}
+                                    <span class="badge bg-info">صيانة دورية</span>
+                                    {% elif record.reason == 'breakdown' %}
+                                    <span class="badge bg-warning text-dark">عطل</span>
+                                    {% elif record.reason == 'accident' %}
+                                    <span class="badge bg-danger">حادث</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ record.reason }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.formatted_entry_date }}</td>
+                                <td>
+                                    {% if record.exit_date %}
+                                    {{ record.formatted_exit_date }}
+                                    {% else %}
+                                    <span class="text-danger">ما زالت في الورشة</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.repair_status == 'in_progress' %}
+                                    <span class="badge bg-warning text-dark">قيد التنفيذ</span>
+                                    {% elif record.repair_status == 'completed' %}
+                                    <span class="badge bg-success">تم الإصلاح</span>
+                                    {% elif record.repair_status == 'pending_approval' %}
+                                    <span class="badge bg-info">بانتظار الموافقة</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">{{ "{:,.2f}".format(record.cost) }}</td>
+                                <td>{{ record.workshop_name or '-' }}</td>
+                                <td>{{ record.technician_name or '-' }}</td>
+                            </tr>
+                            {% if record.description %}
+                            <tr>
+                                <td colspan="7" class="bg-light">
+                                    <strong>الوصف:</strong> {{ record.description }}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if record.notes %}
+                            <tr>
+                                <td colspan="7" class="bg-light">
+                                    <strong>ملاحظات:</strong> {{ record.notes }}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if loop.index != loop.length %}
+                            <tr class="no-border">
+                                <td colspan="7" class="border-0 py-2"></td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light fw-bold">
+                                <td colspan="4" class="text-center">الإجمالي</td>
+                                <td class="text-end">{{ "{:,.2f}".format(total_maintenance_cost) }}</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    {% else %}
+                    <div class="alert alert-info">
+                        لا توجد سجلات ورشة لهذه السيارة
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم التوقيعات -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <p>توقيع مدير الورشة</p>
+            </div>
+            <div class="signature-box">
+                <p>توقيع مدير قسم النقليات</p>
+            </div>
+            <div class="signature-box">
+                <p>اعتماد المدير العام</p>
+            </div>
+        </div>
+
+        <!-- ذيل الصفحة -->
+        <div class="print-footer">
+            <p>تم إنشاء هذا التقرير بواسطة نظام إدارة المركبات Eissa HR بتاريخ {{ current_date }}</p>
+        </div>
+    </div>
+</body>
+</html>
