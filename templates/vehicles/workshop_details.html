@@ -2,44 +2,35 @@
 
 {% block title %}تفاصيل سجل الورشة - {{ vehicle.plate_number }}{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/workshop_details.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="workshop-details-page">
-    <!-- بطاقة معلومات السيارة الرئيسية -->
-    <div class="vehicle-main-card">
-        <div class="vehicle-info">
-            <div class="plate-info">
-                <div class="plate-number">{{ vehicle.plate_number }}</div>
-                <div class="vehicle-type">{{ vehicle.make }} {{ vehicle.model }}</div>
-            </div>
-            <div class="other-info">
-                <div class="vehicle-year">
-                    <span class="info-label">سنة الصنع:</span>
-                    <span class="info-value">{{ vehicle.year }}</span>
-                </div>
-                <div class="vehicle-color">
-                    <span class="info-label">اللون:</span>
-                    <span class="info-value">{{ vehicle.color }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- عنوان الصفحة -->
-    <div class="page-title-bar">
+    <!-- ترويسة الصفحة مع معلومات السيارة -->
+    <div class="page-header">
         <div class="container">
-            <div class="row">
-                <div class="col-md-9">
-                    <h1 class="page-title mb-0">
-                        <i class="fas fa-tools me-2"></i>
-                        <span>تفاصيل الصيانة</span>
-                    </h1>
+            <div class="vehicle-info">
+                <div>
+                    <div class="plate-number">{{ vehicle.plate_number }}</div>
+                    <div class="vehicle-type">{{ vehicle.make }} {{ vehicle.model }}</div>
                 </div>
-                <div class="col-md-3 text-md-end">
-                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn back-btn">
-                        <i class="fas fa-arrow-right ms-1"></i>
-                        العودة للسيارة
-                    </a>
+                <div class="other-info">
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-calendar-alt"></i></span>
+                        <span>{{ vehicle.year }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-palette"></i></span>
+                        <span>{{ vehicle.color }}</span>
+                    </div>
                 </div>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="back-btn">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    العودة للسيارة
+                </a>
             </div>
         </div>
     </div>
@@ -49,43 +40,37 @@
         <div class="row">
             <div class="col-md-6">
                 <!-- معلومات الصيانة -->
-                <!-- تفاصيل الصيانة -->
-                <div class="maintenance-details-container">
-                    <div class="maintenance-header">
-                        <div class="header-icon">
-                            <i class="fas fa-tools"></i>
-                        </div>
-                        <h5 class="maintenance-title">معلومات الصيانة</h5>
+                <h4 class="section-title">معلومات الصيانة</h4>
+                <div class="info-card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-tools"></i> تفاصيل الصيانة</h5>
                     </div>
-                    
-                    <div class="details-rows">
+                    <div class="card-body">
                         <!-- صف سبب الدخول -->
-                        <div class="detail-row">
-                            <div class="detail-icon">
+                        <div class="info-row">
+                            <div class="info-icon">
                                 <i class="fas fa-question-circle"></i>
                             </div>
-                            <div class="detail-content">
-                                <div class="detail-header">
-                                    <h6>سبب الدخول</h6>
-                                </div>
-                                <div class="detail-data">
+                            <div class="info-content">
+                                <div class="info-label">سبب الدخول</div>
+                                <div class="info-value">
                                     {% if record.reason == 'maintenance' %}
-                                        <div class="reason-tag maintenance-tag">
+                                        <div class="tag maintenance-tag">
                                             <i class="fas fa-cog"></i>
                                             <span>صيانة دورية</span>
                                         </div>
                                     {% elif record.reason == 'breakdown' %}
-                                        <div class="reason-tag breakdown-tag">
+                                        <div class="tag breakdown-tag">
                                             <i class="fas fa-exclamation-triangle"></i>
                                             <span>عطل</span>
                                         </div>
                                     {% elif record.reason == 'accident' %}
-                                        <div class="reason-tag accident-tag">
+                                        <div class="tag accident-tag">
                                             <i class="fas fa-car-crash"></i>
                                             <span>حادث</span>
                                         </div>
                                     {% else %}
-                                        <div class="reason-tag other-tag">
+                                        <div class="tag other-tag">
                                             <i class="fas fa-info-circle"></i>
                                             <span>{{ record.reason }}</span>
                                         </div>
@@ -95,27 +80,25 @@
                         </div>
                         
                         <!-- صف حالة الإصلاح -->
-                        <div class="detail-row">
-                            <div class="detail-icon">
+                        <div class="info-row">
+                            <div class="info-icon">
                                 <i class="fas fa-tasks"></i>
                             </div>
-                            <div class="detail-content">
-                                <div class="detail-header">
-                                    <h6>حالة الإصلاح</h6>
-                                </div>
-                                <div class="detail-data">
+                            <div class="info-content">
+                                <div class="info-label">حالة الإصلاح</div>
+                                <div class="info-value">
                                     {% if record.repair_status == 'in_progress' %}
-                                        <div class="status-tag in-progress-tag">
+                                        <div class="tag in-progress-tag">
                                             <i class="fas fa-spinner fa-pulse"></i>
                                             <span>قيد التنفيذ</span>
                                         </div>
                                     {% elif record.repair_status == 'completed' %}
-                                        <div class="status-tag completed-tag">
+                                        <div class="tag completed-tag">
                                             <i class="fas fa-check-circle"></i>
                                             <span>تم الإصلاح</span>
                                         </div>
                                     {% elif record.repair_status == 'pending_approval' %}
-                                        <div class="status-tag pending-tag">
+                                        <div class="tag pending-tag">
                                             <i class="fas fa-clock"></i>
                                             <span>بانتظار الموافقة</span>
                                         </div>
@@ -125,15 +108,13 @@
                         </div>
                         
                         <!-- صف تاريخ الدخول -->
-                        <div class="detail-row">
-                            <div class="detail-icon">
+                        <div class="info-row">
+                            <div class="info-icon">
                                 <i class="fas fa-calendar-plus"></i>
                             </div>
-                            <div class="detail-content">
-                                <div class="detail-header">
-                                    <h6>تاريخ الدخول</h6>
-                                </div>
-                                <div class="detail-data">
+                            <div class="info-content">
+                                <div class="info-label">تاريخ الدخول</div>
+                                <div class="info-value">
                                     <div class="date-display">
                                         <i class="fas fa-calendar-day"></i>
                                         <span>{{ record.formatted_entry_date }}</span>
@@ -143,22 +124,20 @@
                         </div>
                         
                         <!-- صف تاريخ الخروج -->
-                        <div class="detail-row">
-                            <div class="detail-icon">
+                        <div class="info-row">
+                            <div class="info-icon">
                                 <i class="fas fa-calendar-check"></i>
                             </div>
-                            <div class="detail-content">
-                                <div class="detail-header">
-                                    <h6>تاريخ الخروج</h6>
-                                </div>
-                                <div class="detail-data">
+                            <div class="info-content">
+                                <div class="info-label">تاريخ الخروج</div>
+                                <div class="info-value">
                                     {% if record.exit_date %}
                                         <div class="date-display">
                                             <i class="fas fa-calendar-day"></i>
                                             <span>{{ record.formatted_exit_date }}</span>
                                         </div>
                                     {% else %}
-                                        <div class="status-tag workshop-tag">
+                                        <div class="tag workshop-tag">
                                             <i class="fas fa-clock"></i>
                                             <span>ما زالت في الورشة</span>
                                         </div>
@@ -168,49 +147,39 @@
                         </div>
                         
                         <!-- صف اسم الورشة -->
-                        <div class="detail-row">
-                            <div class="detail-icon">
+                        <div class="info-row">
+                            <div class="info-icon">
                                 <i class="fas fa-warehouse"></i>
                             </div>
-                            <div class="detail-content">
-                                <div class="detail-header">
-                                    <h6>اسم الورشة</h6>
-                                </div>
-                                <div class="detail-data">
-                                    <div class="text-display">
-                                        {{ record.workshop_name or 'غير محدد' }}
-                                    </div>
+                            <div class="info-content">
+                                <div class="info-label">اسم الورشة</div>
+                                <div class="info-value">
+                                    {{ record.workshop_name or 'غير محدد' }}
                                 </div>
                             </div>
                         </div>
                         
                         <!-- صف اسم الفني -->
-                        <div class="detail-row">
-                            <div class="detail-icon">
+                        <div class="info-row">
+                            <div class="info-icon">
                                 <i class="fas fa-user-cog"></i>
                             </div>
-                            <div class="detail-content">
-                                <div class="detail-header">
-                                    <h6>اسم الفني</h6>
-                                </div>
-                                <div class="detail-data">
-                                    <div class="text-display">
-                                        {{ record.technician_name or 'غير محدد' }}
-                                    </div>
+                            <div class="info-content">
+                                <div class="info-label">اسم الفني</div>
+                                <div class="info-value">
+                                    {{ record.technician_name or 'غير محدد' }}
                                 </div>
                             </div>
                         </div>
                         
                         <!-- صف التكلفة -->
-                        <div class="detail-row">
-                            <div class="detail-icon">
+                        <div class="info-row">
+                            <div class="info-icon">
                                 <i class="fas fa-money-bill-wave"></i>
                             </div>
-                            <div class="detail-content">
-                                <div class="detail-header">
-                                    <h6>التكلفة</h6>
-                                </div>
-                                <div class="detail-data">
+                            <div class="info-content">
+                                <div class="info-label">التكلفة</div>
+                                <div class="info-value">
                                     <div class="cost-display">
                                         <span class="amount">{{ "{:,.2f}".format(record.cost) }}</span>
                                         <span class="currency">ريال</span>
@@ -222,17 +191,12 @@
                 </div>
                 
                 <!-- وصف العطل -->
-                <div class="card details-card mb-4 bg-glass">
-                    <div class="card-header description-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-clipboard-list ms-2"></i>
-                            وصف العطل أو الصيانة
-                        </h5>
+                <div class="info-card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clipboard-list"></i> وصف العطل أو الصيانة</h5>
                     </div>
                     <div class="card-body">
-                        <div class="description-content">
-                            {{ record.description|nl2br|safe or 'لا يوجد وصف' }}
-                        </div>
+                        {{ record.description|nl2br|safe or 'لا يوجد وصف' }}
                     </div>
                 </div>
             </div>
@@ -240,45 +204,37 @@
             <div class="col-md-6">
                 <!-- النماذج والروابط -->
                 {% if record.delivery_link or record.reception_link %}
-                <div class="card links-card mb-4 bg-glass">
-                    <div class="card-header links-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-link ms-2"></i>
-                            نماذج ومستندات
-                        </h5>
+                <h4 class="section-title">النماذج والوثائق</h4>
+                <div class="info-card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-link"></i> نماذج ومستندات</h5>
                     </div>
                     <div class="card-body">
-                        <div class="links-container">
-                            {% if record.delivery_link %}
-                                <a href="{{ record.delivery_link }}" target="_blank" class="document-link delivery-link">
-                                    <i class="fas fa-file-export ms-2"></i>
-                                    نموذج التسليم
-                                </a>
-                            {% endif %}
-                            
-                            {% if record.reception_link %}
-                                <a href="{{ record.reception_link }}" target="_blank" class="document-link reception-link">
-                                    <i class="fas fa-file-import ms-2"></i>
-                                    نموذج الاستلام
-                                </a>
-                            {% endif %}
-                        </div>
+                        {% if record.delivery_link %}
+                            <a href="{{ record.delivery_link }}" target="_blank" class="document-link">
+                                <i class="fas fa-file-export ms-2"></i>
+                                نموذج التسليم
+                            </a>
+                        {% endif %}
+                        
+                        {% if record.reception_link %}
+                            <a href="{{ record.reception_link }}" target="_blank" class="document-link">
+                                <i class="fas fa-file-import ms-2"></i>
+                                نموذج الاستلام
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
                 
                 <!-- ملاحظات إضافية -->
-                <div class="card details-card mb-4 bg-glass">
-                    <div class="card-header notes-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-sticky-note ms-2"></i>
-                            ملاحظات إضافية
-                        </h5>
+                <h4 class="section-title">ملاحظات</h4>
+                <div class="info-card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-sticky-note"></i> ملاحظات إضافية</h5>
                     </div>
                     <div class="card-body">
-                        <div class="notes-content">
-                            {{ record.notes|nl2br|safe or 'لا توجد ملاحظات إضافية' }}
-                        </div>
+                        {{ record.notes|nl2br|safe or 'لا توجد ملاحظات إضافية' }}
                     </div>
                 </div>
             </div>
@@ -286,12 +242,10 @@
         
         <!-- صور توثيقية -->
         {% if record.images %}
-        <div class="card gallery-card mb-4 bg-glass">
-            <div class="card-header gallery-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-images ms-2"></i>
-                    صور توثيقية
-                </h5>
+        <h4 class="section-title">صور توثيقية</h4>
+        <div class="info-card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-images"></i> صور الإصلاح</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -403,155 +357,7 @@
 {% endblock %}
 
 {% block scripts %}
-<style>
-    /* تنسيقات عامة */
-    .workshop-details-page {
-        font-family: 'Tajawal', sans-serif;
-        background-color: #f5f7fa;
-    }
-    
-    .container {
-        max-width: 1200px;
-    }
-    
-    /* بطاقة معلومات السيارة الرئيسية */
-    .vehicle-main-card {
-        background: #192a56;
-        color: white;
-        padding: 1.5rem;
-        border-radius: 0;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        margin-bottom: 0;
-    }
-    
-    .vehicle-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .plate-info {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .plate-number {
-        font-size: 1.8rem;
-        font-weight: bold;
-    }
-    
-    .vehicle-type {
-        font-size: 1.2rem;
-        opacity: 0.9;
-    }
-    
-    .other-info {
-        text-align: left;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        font-size: 1.1rem;
-    }
-    
-    .info-label {
-        font-weight: bold;
-        opacity: 0.7;
-        margin-left: 0.5rem;
-    }
-    
-    /* شريط العنوان */
-    .page-title-bar {
-        background: linear-gradient(60deg, #9c27b0, #7b1fa2);
-        color: white;
-        padding: 1rem 0;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    .page-title {
-        font-size: 1.6rem;
-        font-weight: 600;
-    }
-    
-    .back-btn {
-        color: white;
-        background-color: rgba(255, 255, 255, 0.2);
-        border-radius: 30px;
-        padding: 0.5rem 1rem;
-        transition: all 0.3s ease;
-        border: none;
-        font-size: 0.9rem;
-    }
-    
-    .back-btn:hover {
-        background-color: rgba(255, 255, 255, 0.3);
-        color: white;
-        transform: translateY(-2px);
-    }
-    
-    /* البطاقات */
-    .bg-glass {
-        background-color: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .bg-glass:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    }
-    
-    .card-header {
-        border-bottom: none;
-        padding: 1.25rem 1.5rem;
-        font-weight: 600;
-        color: white;
-    }
-    
-    .details-card .card-header {
-        background: linear-gradient(45deg, #1a237e, #283593);
-    }
-    
-    .description-header {
-        background: linear-gradient(45deg, #00897b, #009688);
-    }
-    
-    .notes-header {
-        background: linear-gradient(45deg, #546e7a, #607d8b);
-    }
-    
-    .links-header {
-        background: linear-gradient(45deg, #5c6bc0, #3f51b5);
-    }
-    
-    .gallery-header {
-        background: linear-gradient(45deg, #6a1b9a, #8e24aa);
-    }
-    
-    .card-body {
-        padding: 1.5rem;
-    }
-    
-    /* تفاصيل السجل - التصميم المميز الجديد */
-    .maintenance-details-container {
-        background-color: rgba(255, 255, 255, 0.97);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-    
-    .maintenance-details-container:hover {
-        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
-        transform: translateY(-5px);
-    }
+{{ super() }}
     
     .maintenance-header {
         background: linear-gradient(120deg, #7957ff, #4630ab);
