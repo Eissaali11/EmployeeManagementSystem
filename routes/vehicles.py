@@ -865,7 +865,8 @@ def handover_pdf(id):
     import io
     import os
     from datetime import datetime
-    from utils.pdf_generator_new import generate_vehicle_handover_pdf
+    # استخدام ملف pdf_generator_fixed بدلاً من pdf_generator_new
+    from utils.pdf_generator_fixed import generate_vehicle_handover_pdf
     
     try:
         # التأكد من تحويل المعرف إلى عدد صحيح
@@ -1344,7 +1345,7 @@ def workshop_details(workshop_id):
         record.formatted_exit_date = format_date_arabic(record.exit_date)
     
     # استرجاع الصور المرتبطة بسجل الورشة
-    images = VehicleWorkshopImage.query.filter_by(workshop_id=workshop_id).all()
+    images = VehicleWorkshopImage.query.filter_by(workshop_record_id=workshop_id).all()
     record.images = images
     
     # تسجيل الوقت الحالي
