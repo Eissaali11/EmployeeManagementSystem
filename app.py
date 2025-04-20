@@ -169,20 +169,38 @@ with app.app_context():
     app.register_blueprint(users_bp, url_prefix='/users')
     
     # إضافة دوال مساعدة لقوالب Jinja
-    from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions
+    from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions, check_module_access
     
     # إضافة مرشح bitwise_and لاستخدامه في قوالب Jinja2
     @app.template_filter('bitwise_and')
     def bitwise_and_filter(value1, value2):
         """تنفيذ عملية bitwise AND بين قيمتين"""
         return value1 & value2
+    
+    # إضافة مرشح للتحقق من صلاحيات المستخدم
+    @app.template_filter('check_module_access')
+    def check_module_access_filter(user, module, permission=None):
+        """
+        مرشح للتحقق من صلاحيات المستخدم للوصول إلى وحدة معينة
+        
+        :param user: كائن المستخدم
+        :param module: الوحدة المطلوب التحقق منها
+        :param permission: الصلاحية المطلوبة (اختياري)
+        :return: True إذا كان المستخدم لديه الصلاحية، False غير ذلك
+        """
+        from models import Permission
+        return check_module_access(user, module, permission or Permission.VIEW)
         
     @app.context_processor
     def inject_global_template_vars():
+        from models import Module, UserRole, Permission
         return {
             'get_role_display_name': get_role_display_name,
             'get_module_display_name': get_module_display_name,
-            'format_permissions': format_permissions
+            'format_permissions': format_permissions,
+            'Module': Module,
+            'UserRole': UserRole,
+            'Permission': Permission
         }
     
     # Create database tables if they don't exist

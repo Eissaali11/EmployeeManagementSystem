@@ -43,64 +43,99 @@
                                 <span>لوحة التحكم</span>
                             </a>
                         </li>
+                        
+                        {# التحقق من صلاحيات الموظفين #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.EMPLOYEES) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('employees.index') }}" class="nav-link nav-link-custom {% if '/employees' in request.path %}active{% endif %}">
                                 <i class="fas fa-users me-2"></i>
                                 <span>الموظفين</span>
                             </a>
                         </li>
+                        {% endif %}
+                        
+                        {# التحقق من صلاحيات الأقسام #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.DEPARTMENTS) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('departments.index') }}" class="nav-link nav-link-custom {% if '/departments' in request.path %}active{% endif %}">
                                 <i class="fas fa-sitemap me-2"></i>
                                 <span>الأقسام</span>
                             </a>
                         </li>
+                        {% endif %}
+                        
+                        {# إحصائيات الموظفين متاحة لمن لديه صلاحية العرض على الموظفين #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.EMPLOYEES, Permission.VIEW) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('dashboard.employee_stats') }}" class="nav-link nav-link-custom {% if '/employee-stats' in request.path %}active{% endif %}">
                                 <i class="fas fa-chart-pie me-2"></i>
                                 <span>إحصائيات الموظفين</span>
                             </a>
                         </li>
+                        {% endif %}
+                        
+                        {# التحقق من صلاحيات الحضور #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.ATTENDANCE) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('attendance.index') }}" class="nav-link nav-link-custom {% if '/attendance' in request.path %}active{% endif %}">
                                 <i class="fas fa-calendar-check me-2"></i>
                                 <span>الحضور</span>
                             </a>
                         </li>
+                        {% endif %}
+                        
+                        {# التحقق من صلاحيات الرواتب #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.SALARIES) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('salaries.index') }}" class="nav-link nav-link-custom {% if '/salaries' in request.path %}active{% endif %}">
                                 <i class="fas fa-money-bill-wave me-2"></i>
                                 <span>الرواتب</span>
                             </a>
                         </li>
+                        {% endif %}
+                        
+                        {# التحقق من صلاحيات الوثائق #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.DOCUMENTS) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('documents.index') }}" class="nav-link nav-link-custom {% if '/documents' in request.path %}active{% endif %}">
                                 <i class="fas fa-file-alt me-2"></i>
                                 <span>الوثائق</span>
                             </a>
                         </li>
+                        {% endif %}
                         
+                        {# التحقق من صلاحيات تكاليف الرسوم #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.FEES) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('fees_costs.index') }}" class="nav-link nav-link-custom {% if '/fees-costs' in request.path %}active{% endif %}">
                                 <i class="fas fa-money-check-alt me-2"></i>
                                 <span>تكاليف الرسوم</span>
                             </a>
                         </li>
-
+                        {% endif %}
+                        
+                        {# التحقق من صلاحيات المركبات #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.VEHICLES) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('vehicles.index') }}" class="nav-link nav-link-custom {% if '/vehicles' in request.path %}active{% endif %}">
                                 <i class="fas fa-car me-2"></i>
                                 <span>إدارة السيارات</span>
                             </a>
                         </li>
+                        {% endif %}
+                        
+                        {# التحقق من صلاحيات التقارير #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.REPORTS) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('reports.index') }}" class="nav-link nav-link-custom {% if '/reports' in request.path %}active{% endif %}">
                                 <i class="fas fa-chart-pie me-2"></i>
                                 <span>التقارير</span>
                             </a>
                         </li>
+                        {% endif %}
                         
-                        {% if current_user.role and current_user.role.value in ['admin', 'manager'] %}
+                        {# التحقق من صلاحيات المستخدمين #}
+                        {% if current_user.role in [UserRole.ADMIN, UserRole.MANAGER] or current_user|check_module_access(Module.USERS) %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('users.index') }}" class="nav-link nav-link-custom {% if '/users' in request.path %}active{% endif %}">
                                 <i class="fas fa-users-cog me-2"></i>
@@ -117,7 +152,8 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
                             <li><a class="dropdown-item" href="{{ url_for('users.profile') }}"><i class="fas fa-user me-2"></i>الملف الشخصي</a></li>
-                            {% if current_user.role and current_user.role.value in ['admin', 'manager'] %}
+                            {# التحقق من صلاحيات المستخدمين #}
+                            {% if current_user.role in [UserRole.ADMIN, UserRole.MANAGER] or current_user|check_module_access(Module.USERS) %}
                             <li><a class="dropdown-item" href="{{ url_for('users.index') }}"><i class="fas fa-users-cog me-2"></i>إدارة المستخدمين</a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
