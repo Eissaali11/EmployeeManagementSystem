@@ -171,6 +171,12 @@ with app.app_context():
     # إضافة دوال مساعدة لقوالب Jinja
     from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions
     
+    # إضافة مرشح bitwise_and لاستخدامه في قوالب Jinja2
+    @app.template_filter('bitwise_and')
+    def bitwise_and_filter(value1, value2):
+        """تنفيذ عملية bitwise AND بين قيمتين"""
+        return value1 & value2
+        
     @app.context_processor
     def inject_global_template_vars():
         return {
