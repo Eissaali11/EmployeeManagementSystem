@@ -4,7 +4,13 @@
 
 {% block styles %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/permissions_v3.css') }}?v={{ now.timestamp()|int }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/permissions_v4.css') }}?v={{ now.timestamp()|int }}_{{ range(1000, 9999)|random }}">
+<style>
+    /* تعريف أسلوب مباشر للنص */
+    .module-title, .permission-check-label, .info-alert-title, .info-alert li, .user-title, .user-subtitle {
+        color: #000000 !important;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
