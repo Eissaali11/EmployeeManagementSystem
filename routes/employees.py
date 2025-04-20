@@ -5,20 +5,26 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
+from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission
 from utils.excel import parse_employee_excel, generate_employee_excel
 from utils.date_converter import parse_date
+from utils.user_helpers import require_module_access
 
 employees_bp = Blueprint('employees', __name__)
 
 @employees_bp.route('/')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def index():
     """List all employees"""
     employees = Employee.query.all()
     return render_template('employees/index.html', employees=employees)
 
 @employees_bp.route('/create', methods=['GET', 'POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.CREATE)
 def create():
     """Create a new employee"""
     if request.method == 'POST':
@@ -83,6 +89,8 @@ def create():
     return render_template('employees/create.html', departments=departments)
 
 @employees_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.EDIT)
 def edit(id):
     """Edit an existing employee"""
     employee = Employee.query.get_or_404(id)
@@ -133,6 +141,8 @@ def edit(id):
     return render_template('employees/edit.html', employee=employee, departments=departments)
 
 @employees_bp.route('/<int:id>/view')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def view(id):
     """View detailed employee information"""
     employee = Employee.query.get_or_404(id)
@@ -190,6 +200,8 @@ def view(id):
                           salaries=salaries)
 
 @employees_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.DELETE)
 def delete(id):
     """Delete an employee"""
     employee = Employee.query.get_or_404(id)
@@ -216,6 +228,8 @@ def delete(id):
     return redirect(url_for('employees.index'))
 
 @employees_bp.route('/import', methods=['GET', 'POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.CREATE)
 def import_excel():
     """Import employees from Excel file"""
     if request.method == 'POST':
@@ -302,6 +316,8 @@ def import_excel():
     return render_template('employees/import.html')
 
 @employees_bp.route('/export')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def export_excel():
     """Export employees to Excel file"""
     try:
