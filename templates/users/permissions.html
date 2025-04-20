@@ -18,6 +18,30 @@
     .module-header {
         background: white !important;
     }
+    
+    /* تنسيق خاص لأزرار الصفحة */
+    .btn-save {
+        background-color: #1e88e5 !important;
+        color: white !important;
+        border-color: #1e88e5 !important;
+    }
+    
+    .btn-save:hover {
+        background-color: #1565c0 !important;
+        border-color: #1565c0 !important;
+    }
+    
+    /* زر الإلغاء */
+    .actions-bar .btn-secondary {
+        background-color: #6c757d !important;
+        color: white !important;
+        border-color: #6c757d !important;
+    }
+    
+    .actions-bar .btn-secondary:hover {
+        background-color: #5a6268 !important;
+        border-color: #5a6268 !important;
+    }
 </style>
 {% endblock %}
 
@@ -149,12 +173,12 @@
             </div>
             
             <div class="actions-bar">
-                <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary btn-custom">
+                <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary btn-custom" style="background-color: #6c757d !important; color: white !important; border-color: #6c757d !important;">
                     <i class="fas fa-times"></i>
                     إلغاء
                 </a>
                 
-                <button type="submit" class="btn btn-primary btn-custom btn-save">
+                <button type="submit" class="btn btn-primary btn-custom btn-save" style="background-color: #1e88e5 !important; color: white !important; border-color: #1e88e5 !important;">
                     <i class="fas fa-save"></i>
                     حفظ الصلاحيات
                 </button>
@@ -173,6 +197,15 @@
         elementsToChange.forEach(function(element) {
             element.style.color = "#000000";
         });
+        
+        // تطبيق الألوان على الأزرار
+        document.querySelector('.btn-save').style.backgroundColor = "#1e88e5";
+        document.querySelector('.btn-save').style.color = "white";
+        document.querySelector('.btn-save').style.borderColor = "#1e88e5";
+        
+        document.querySelector('.actions-bar .btn-secondary').style.backgroundColor = "#6c757d";
+        document.querySelector('.actions-bar .btn-secondary').style.color = "white";
+        document.querySelector('.actions-bar .btn-secondary').style.borderColor = "#6c757d";
         
         // التحقق من تحديد/إلغاء الوحدة
         document.querySelectorAll('input[id^="module_"]').forEach(function(checkbox) {
