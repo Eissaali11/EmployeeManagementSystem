@@ -49,65 +49,174 @@
         <div class="row">
             <div class="col-md-6">
                 <!-- معلومات الصيانة -->
-                <div class="card details-card mb-4 bg-glass">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-info-circle ms-2"></i>
-                            معلومات الصيانة
-                        </h5>
+                <!-- تفاصيل الصيانة -->
+                <div class="maintenance-details-container">
+                    <div class="maintenance-header">
+                        <div class="header-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <h5 class="maintenance-title">معلومات الصيانة</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="detail-item">
-                            <div class="detail-label">سبب الدخول:</div>
-                            <div class="detail-value">
-                                {% if record.reason == 'maintenance' %}
-                                    <span class="status-badge maintenance">صيانة دورية</span>
-                                {% elif record.reason == 'breakdown' %}
-                                    <span class="status-badge breakdown">عطل</span>
-                                {% elif record.reason == 'accident' %}
-                                    <span class="status-badge accident">حادث</span>
-                                {% else %}
-                                    <span class="status-badge other">{{ record.reason }}</span>
-                                {% endif %}
+                    
+                    <div class="details-rows">
+                        <!-- صف سبب الدخول -->
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-header">
+                                    <h6>سبب الدخول</h6>
+                                </div>
+                                <div class="detail-data">
+                                    {% if record.reason == 'maintenance' %}
+                                        <div class="reason-tag maintenance-tag">
+                                            <i class="fas fa-cog"></i>
+                                            <span>صيانة دورية</span>
+                                        </div>
+                                    {% elif record.reason == 'breakdown' %}
+                                        <div class="reason-tag breakdown-tag">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span>عطل</span>
+                                        </div>
+                                    {% elif record.reason == 'accident' %}
+                                        <div class="reason-tag accident-tag">
+                                            <i class="fas fa-car-crash"></i>
+                                            <span>حادث</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="reason-tag other-tag">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span>{{ record.reason }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">حالة الإصلاح:</div>
-                            <div class="detail-value">
-                                {% if record.repair_status == 'in_progress' %}
-                                    <span class="status-badge in-progress">قيد التنفيذ</span>
-                                {% elif record.repair_status == 'completed' %}
-                                    <span class="status-badge completed">تم الإصلاح</span>
-                                {% elif record.repair_status == 'pending_approval' %}
-                                    <span class="status-badge pending">بانتظار الموافقة</span>
-                                {% endif %}
+                        
+                        <!-- صف حالة الإصلاح -->
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-header">
+                                    <h6>حالة الإصلاح</h6>
+                                </div>
+                                <div class="detail-data">
+                                    {% if record.repair_status == 'in_progress' %}
+                                        <div class="status-tag in-progress-tag">
+                                            <i class="fas fa-spinner fa-pulse"></i>
+                                            <span>قيد التنفيذ</span>
+                                        </div>
+                                    {% elif record.repair_status == 'completed' %}
+                                        <div class="status-tag completed-tag">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>تم الإصلاح</span>
+                                        </div>
+                                    {% elif record.repair_status == 'pending_approval' %}
+                                        <div class="status-tag pending-tag">
+                                            <i class="fas fa-clock"></i>
+                                            <span>بانتظار الموافقة</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">تاريخ الدخول:</div>
-                            <div class="detail-value date-value">{{ record.formatted_entry_date }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">تاريخ الخروج:</div>
-                            <div class="detail-value">
-                                {% if record.exit_date %}
-                                    <span class="date-value">{{ record.formatted_exit_date }}</span>
-                                {% else %}
-                                    <span class="status-badge in-workshop">ما زالت في الورشة</span>
-                                {% endif %}
+                        
+                        <!-- صف تاريخ الدخول -->
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <i class="fas fa-calendar-plus"></i>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-header">
+                                    <h6>تاريخ الدخول</h6>
+                                </div>
+                                <div class="detail-data">
+                                    <div class="date-display">
+                                        <i class="fas fa-calendar-day"></i>
+                                        <span>{{ record.formatted_entry_date }}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">اسم الورشة:</div>
-                            <div class="detail-value">{{ record.workshop_name or 'غير محدد' }}</div>
+                        
+                        <!-- صف تاريخ الخروج -->
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-header">
+                                    <h6>تاريخ الخروج</h6>
+                                </div>
+                                <div class="detail-data">
+                                    {% if record.exit_date %}
+                                        <div class="date-display">
+                                            <i class="fas fa-calendar-day"></i>
+                                            <span>{{ record.formatted_exit_date }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="status-tag workshop-tag">
+                                            <i class="fas fa-clock"></i>
+                                            <span>ما زالت في الورشة</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">اسم الفني:</div>
-                            <div class="detail-value">{{ record.technician_name or 'غير محدد' }}</div>
+                        
+                        <!-- صف اسم الورشة -->
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-header">
+                                    <h6>اسم الورشة</h6>
+                                </div>
+                                <div class="detail-data">
+                                    <div class="text-display">
+                                        {{ record.workshop_name or 'غير محدد' }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-label">التكلفة:</div>
-                            <div class="detail-value cost-value">{{ "{:,.2f}".format(record.cost) }} <span class="currency">ريال</span></div>
+                        
+                        <!-- صف اسم الفني -->
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <i class="fas fa-user-cog"></i>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-header">
+                                    <h6>اسم الفني</h6>
+                                </div>
+                                <div class="detail-data">
+                                    <div class="text-display">
+                                        {{ record.technician_name or 'غير محدد' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- صف التكلفة -->
+                        <div class="detail-row">
+                            <div class="detail-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-header">
+                                    <h6>التكلفة</h6>
+                                </div>
+                                <div class="detail-data">
+                                    <div class="cost-display">
+                                        <span class="amount">{{ "{:,.2f}".format(record.cost) }}</span>
+                                        <span class="currency">ريال</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -427,93 +536,247 @@
         padding: 1.5rem;
     }
     
-    /* تفاصيل السجل */
-    .detail-item {
+    /* تفاصيل السجل - التصميم المميز الجديد */
+    .maintenance-details-container {
+        background-color: rgba(255, 255, 255, 0.97);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
+    .maintenance-details-container:hover {
+        box-shadow: 0 12px 40px rgba(31, 38, 135, 0.25);
+        transform: translateY(-5px);
+    }
+    
+    .maintenance-header {
+        background: linear-gradient(120deg, #7957ff, #4630ab);
+        color: white;
+        padding: 1.5rem;
         display: flex;
-        justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        align-items: center;
+        position: relative;
+        overflow: hidden;
     }
     
-    .detail-item:last-child {
+    .header-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.25);
+        margin-left: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .header-icon:before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0));
+        transform: translateX(-50%);
+        animation: shine 3s infinite linear;
+    }
+    
+    @keyframes shine {
+        0% { transform: translateX(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) rotate(45deg); }
+    }
+    
+    .maintenance-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin: 0;
+        position: relative;
+    }
+    
+    .details-rows {
+        padding: 0.5rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        border-radius: 12px;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+        padding: 0.5rem;
+        background-color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .detail-row:hover {
+        background-color: rgba(247, 250, 252, 0.9);
+        transform: translateX(-5px);
+        box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .detail-row:last-child {
         border-bottom: none;
+        margin-bottom: 0;
     }
     
-    .detail-label {
-        font-weight: 600;
-        color: #455a64;
-        width: 40%;
+    .detail-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        margin-left: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: white;
+        flex-shrink: 0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #5e35b1, #3949ab);
     }
     
-    .detail-value {
-        width: 60%;
-        text-align: left;
+    .detail-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
     }
     
-    .date-value {
-        color: #333;
-        font-weight: 500;
+    .detail-header {
+        margin-bottom: 0.4rem;
     }
     
-    .cost-value {
-        font-weight: 700;
-        color: #1e88e5;
-    }
-    
-    .currency {
+    .detail-header h6 {
+        margin: 0;
+        color: #546e7a;
         font-size: 0.9rem;
-        opacity: 0.7;
-    }
-    
-    /* شارات الحالة */
-    .status-badge {
-        display: inline-block;
-        padding: 0.35rem 0.75rem;
-        border-radius: 30px;
-        font-size: 0.85rem;
         font-weight: 600;
-        text-align: center;
     }
     
-    .maintenance {
-        background-color: rgba(3, 169, 244, 0.2);
-        color: #0288d1;
+    .detail-data {
+        display: flex;
+        align-items: center;
+        flex-direction: row-reverse;
+        justify-content: flex-start;
     }
     
-    .breakdown {
-        background-color: rgba(255, 152, 0, 0.2);
-        color: #ef6c00;
+    /* شارات الحالة والوسوم - التصميم المميز */
+    /* وسوم سبب الدخول */
+    .reason-tag, .status-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
     }
     
-    .accident {
-        background-color: rgba(244, 67, 54, 0.2);
-        color: #d32f2f;
+    .reason-tag i, .status-tag i {
+        margin-left: 0.5rem;
     }
     
-    .in-progress {
-        background-color: rgba(255, 193, 7, 0.2);
-        color: #ff8f00;
+    .reason-tag:hover, .status-tag:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
     
-    .completed {
-        background-color: rgba(76, 175, 80, 0.2);
-        color: #2e7d32;
+    .maintenance-tag {
+        background: linear-gradient(120deg, #00b0ff, #0091ea);
+        color: white;
     }
     
-    .pending {
-        background-color: rgba(156, 39, 176, 0.2);
-        color: #7b1fa2;
+    .breakdown-tag {
+        background: linear-gradient(120deg, #ff9800, #f57c00);
+        color: white;
     }
     
-    .in-workshop {
-        background-color: rgba(255, 87, 34, 0.2);
-        color: #e64a19;
+    .accident-tag {
+        background: linear-gradient(120deg, #f44336, #d32f2f);
+        color: white;
+    }
+    
+    .other-tag {
+        background: linear-gradient(120deg, #78909c, #546e7a);
+        color: white;
+    }
+    
+    /* وسوم حالة الإصلاح */
+    .in-progress-tag {
+        background: linear-gradient(120deg, #ffb300, #fb8c00);
+        color: white;
+    }
+    
+    .completed-tag {
+        background: linear-gradient(120deg, #43a047, #2e7d32);
+        color: white;
+    }
+    
+    .pending-tag {
+        background: linear-gradient(120deg, #7b1fa2, #6a1b9a);
+        color: white;
+    }
+    
+    .workshop-tag {
+        background: linear-gradient(120deg, #ff5722, #e64a19);
+        color: white;
+    }
+    
+    /* عرض التواريخ والنصوص */
+    .date-display, .text-display {
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        color: #37474f;
+    }
+    
+    .date-display i {
+        margin-left: 0.5rem;
+        color: #757de8;
+    }
+    
+    .cost-display {
         font-weight: 700;
+        font-size: 1.1rem;
+        color: #1e88e5;
+        display: flex;
+        align-items: baseline;
     }
     
-    .other {
-        background-color: rgba(158, 158, 158, 0.2);
-        color: #424242;
+    .cost-display .amount {
+        margin-left: 0.3rem;
+    }
+    
+    .cost-display .currency {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        color: #546e7a;
+    }
+    
+    /* تنسيقات تأثيرات التحويم */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .detail-row:nth-child(3n+1) .detail-icon { background: linear-gradient(135deg, #5e35b1, #3949ab); }
+    .detail-row:nth-child(3n+2) .detail-icon { background: linear-gradient(135deg, #00897b, #006064); }
+    .detail-row:nth-child(3n+3) .detail-icon { background: linear-gradient(135deg, #8e24aa, #6a1b9a); }
+    
+    /* تنسيقات إضافية للتعديل العميق */
+    .description-content, .notes-content {
+        background-color: rgba(250, 250, 250, 0.5);
+        border-radius: 8px;
+        padding: 1rem;
+        color: #37474f;
+        line-height: 1.6;
+        min-height: 100px;
+        white-space: pre-line;
     }
     
     /* وصف العطل والملاحظات */
