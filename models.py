@@ -267,6 +267,8 @@ class VehicleWorkshop(db.Model):
     cost = db.Column(db.Float, default=0.0)  # تكلفة الإصلاح
     workshop_name = db.Column(db.String(100))  # اسم الورشة
     technician_name = db.Column(db.String(100))  # اسم الفني المسؤول
+    delivery_link = db.Column(db.String(255))  # رابط تسليم ورشة
+    reception_link = db.Column(db.String(255))  # رابط استلام من ورشة
     notes = db.Column(db.Text)  # ملاحظات
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
