@@ -4,7 +4,58 @@
 
 {% block styles %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/workshop_details.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/workshop_details_v2.css') }}?v={{ now|int }}">
+<style>
+/* نمط مباشر للتأكد من تطبيق التصميم الجديد */
+.workshop-details-container {
+    background-color: #f9f9f9;
+    min-height: 100vh;
+    font-family: 'Tajawal', sans-serif;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #1da18e 0%, #145a50 100%);
+    color: white;
+    padding: 20px 0;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.info-card {
+    border: none;
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.info-card .card-header {
+    background-color: #1da18e;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+}
+
+.info-card .card-header h5 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.main-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+}
+
+.main-card-header {
+    background-color: #1da18e;
+    color: white;
+    border-bottom: none;
+    padding: 15px 20px;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -44,29 +95,29 @@
                     <div class="card-body">
                         <!-- صف سبب الدخول -->
                         <div class="info-row">
-                            <div class="info-icon">
+                            <div class="info-icon" style="background-color: #e1f5fe; color: #0288d1;">
                                 <i class="fas fa-question-circle"></i>
                             </div>
                             <div class="info-content">
                                 <div class="info-label">سبب الدخول</div>
                                 <div class="info-value">
                                     {% if record.reason == 'maintenance' %}
-                                        <div class="tag maintenance-tag">
+                                        <div class="tag maintenance-tag" style="background-color: #e1f5fe; color: #0288d1;">
                                             <i class="fas fa-cog"></i>
                                             <span>صيانة دورية</span>
                                         </div>
                                     {% elif record.reason == 'breakdown' %}
-                                        <div class="tag breakdown-tag">
+                                        <div class="tag breakdown-tag" style="background-color: #fff8e1; color: #ff8f00;">
                                             <i class="fas fa-exclamation-triangle"></i>
                                             <span>عطل</span>
                                         </div>
                                     {% elif record.reason == 'accident' %}
-                                        <div class="tag accident-tag">
+                                        <div class="tag accident-tag" style="background-color: #ffebee; color: #d32f2f;">
                                             <i class="fas fa-car-crash"></i>
                                             <span>حادث</span>
                                         </div>
                                     {% else %}
-                                        <div class="tag other-tag">
+                                        <div class="tag other-tag" style="background-color: #f5f5f5; color: #616161;">
                                             <i class="fas fa-info-circle"></i>
                                             <span>{{ record.reason }}</span>
                                         </div>
