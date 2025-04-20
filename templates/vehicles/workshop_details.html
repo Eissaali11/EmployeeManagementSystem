@@ -249,39 +249,82 @@
             </div>
             
             <div class="col-md-6">
-                <!-- النماذج والروابط -->
-                {% if record.delivery_link or record.reception_link %}
-                <h4 class="section-title">النماذج والوثائق</h4>
-                <div class="info-card mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-link"></i> نماذج ومستندات</h5>
+                <!-- النماذج والمستندات -->
+                <div class="card main-card mb-4">
+                    <div class="card-header main-card-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-file-alt ms-2"></i>
+                            المستندات والملاحظات
+                        </h4>
                     </div>
-                    <div class="card-body">
-                        {% if record.delivery_link %}
-                            <a href="{{ record.delivery_link }}" target="_blank" class="document-link">
-                                <i class="fas fa-file-export ms-2"></i>
-                                نموذج التسليم
-                            </a>
-                        {% endif %}
-                        
-                        {% if record.reception_link %}
-                            <a href="{{ record.reception_link }}" target="_blank" class="document-link">
-                                <i class="fas fa-file-import ms-2"></i>
-                                نموذج الاستلام
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endif %}
-                
-                <!-- ملاحظات إضافية -->
-                <h4 class="section-title">ملاحظات</h4>
-                <div class="info-card mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-sticky-note"></i> ملاحظات إضافية</h5>
-                    </div>
-                    <div class="card-body">
-                        {{ record.notes|nl2br|safe or 'لا توجد ملاحظات إضافية' }}
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <!-- قسم النماذج -->
+                            <div class="list-group-item border-0">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="document-icon">
+                                        <i class="fas fa-link"></i>
+                                    </div>
+                                    <h5 class="mb-0 me-2">النماذج والمستندات</h5>
+                                </div>
+                                
+                                {% if record.delivery_link or record.reception_link %}
+                                <div class="document-container">
+                                    {% if record.delivery_link %}
+                                    <a href="{{ record.delivery_link }}" target="_blank" class="document-card delivery-card">
+                                        <div class="document-icon">
+                                            <i class="fas fa-file-export"></i>
+                                        </div>
+                                        <div class="document-info">
+                                            <h6>نموذج التسليم</h6>
+                                            <small class="text-muted">انقر للعرض أو التحميل</small>
+                                        </div>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if record.reception_link %}
+                                    <a href="{{ record.reception_link }}" target="_blank" class="document-card reception-card">
+                                        <div class="document-icon">
+                                            <i class="fas fa-file-import"></i>
+                                        </div>
+                                        <div class="document-info">
+                                            <h6>نموذج الاستلام</h6>
+                                            <small class="text-muted">انقر للعرض أو التحميل</small>
+                                        </div>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="alert alert-light">
+                                    <i class="fas fa-info-circle ms-2"></i>
+                                    لا توجد نماذج مرفقة
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- قسم الملاحظات -->
+                            <div class="list-group-item border-0">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="document-icon notes-icon">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </div>
+                                    <h5 class="mb-0 me-2">ملاحظات إضافية</h5>
+                                </div>
+                                
+                                <div class="notes-container">
+                                    {% if record.notes %}
+                                    <div class="notes-content">
+                                        {{ record.notes|nl2br|safe }}
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-light">
+                                        <i class="fas fa-info-circle ms-2"></i>
+                                        لا توجد ملاحظات إضافية
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
