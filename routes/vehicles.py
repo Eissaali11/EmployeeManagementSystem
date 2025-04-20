@@ -1,15 +1,17 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import extract, func, or_
 import os
 import uuid
 import io
+import urllib.parse
 from fpdf import FPDF
 
 from app import db
 from models import Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit
+from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
