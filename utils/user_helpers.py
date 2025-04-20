@@ -440,7 +440,7 @@ def require_module_access(module: Module, permission: int = Permission.VIEW):
     :param permission: الصلاحية المطلوبة (القيمة الافتراضية هي العرض)
     """
     from functools import wraps
-    from flask import flash, redirect, url_for
+    from flask import flash, redirect, url_for, abort
     from flask_login import current_user, login_required
     
     def decorator(f):
