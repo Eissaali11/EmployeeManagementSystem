@@ -11,7 +11,7 @@
 
     <div class="row">
         {% for department in departments %}
-        <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-4" data-department-id="{{ department.id }}">
             <div class="department-card card shadow-sm">
                 <div class="department-header">
                     <h4><i class="fas fa-building me-2"></i>{{ department.name }}</h4>
@@ -74,13 +74,17 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                            <form action="{{ url_for('departments.delete', id=department.id) }}" method="post">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-danger delete-confirm"
-                                        {% if department.employees|length > 0 %}disabled{% endif %}>
+                            {% if department.employees|length == 0 %}
+                                <button type="button" 
+                                        class="btn btn-danger delete-confirm"
+                                        onclick="deleteDepartment({{ department.id }}, '{{ csrf_token() }}')">
                                     تأكيد الحذف
                                 </button>
-                            </form>
+                            {% else %}
+                                <button type="button" class="btn btn-danger delete-confirm" disabled>
+                                    تأكيد الحذف
+                                </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -96,4 +100,76 @@
         {% endfor %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteDepartment(departmentId, csrfToken) {
+    // تعطيل زر الحذف أثناء المعالجة
+    const deleteButton = document.querySelector(`#deleteModal${departmentId} .delete-confirm`);
+    deleteButton.disabled = true;
+    deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحذف...';
+    
+    // إرسال طلب الحذف باستخدام AJAX
+    fetch(`/departments/${departmentId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ csrf_token: csrfToken }),
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('حدث خطأ أثناء محاولة الحذف');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // إغلاق النافذة وعرض رسالة النجاح
+        const modal = bootstrap.Modal.getInstance(document.getElementById(`deleteModal${departmentId}`));
+        modal.hide();
+        
+        // عرض رسالة نجاح
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <strong><i class="fas fa-check-circle"></i> تم!</strong> ${data.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // إضافة التنبيه في أعلى الصفحة
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // حذف بطاقة القسم من الواجهة
+        const departmentCard = document.querySelector(`.col-md-4[data-department-id="${departmentId}"]`);
+        if (departmentCard) {
+            departmentCard.remove();
+        } else {
+            // إعادة تحميل الصفحة إذا لم يتم العثور على البطاقة
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        // إعادة تمكين زر الحذف
+        deleteButton.disabled = false;
+        deleteButton.textContent = 'تأكيد الحذف';
+        
+        // عرض رسالة الخطأ
+        const errorAlert = document.createElement('div');
+        errorAlert.className = 'alert alert-danger mt-2';
+        errorAlert.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${error.message || 'حدث خطأ أثناء محاولة الحذف'}`;
+        
+        // إضافة رسالة الخطأ داخل النافذة
+        const modalBody = document.querySelector(`#deleteModal${departmentId} .modal-body`);
+        modalBody.appendChild(errorAlert);
+    });
+}
+</script>
 {% endblock %}

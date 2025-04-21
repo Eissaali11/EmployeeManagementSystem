@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from app import db
@@ -219,12 +219,18 @@ def delete(id):
     # Add current_user to the audit
     user_id = current_user.id if current_user.is_authenticated else None
     
+    # تحقق من نوع الطلب وإرجاع استجابة مناسبة
+    is_ajax = request.headers.get('Content-Type') == 'application/json'
+    
     try:
         # Check if department has employees
         employees = Employee.query.filter_by(department_id=id).count()
         if employees > 0:
-            flash(f'لا يمكن حذف القسم لأنه يحتوي على {employees} موظف', 'danger')
-            return redirect(url_for('departments.index'))
+            if is_ajax:
+                return jsonify({'success': False, 'message': f'لا يمكن حذف القسم لأنه يحتوي على {employees} موظف', 'count': employees}), 400
+            else:
+                flash(f'لا يمكن حذف القسم لأنه يحتوي على {employees} موظف', 'danger')
+                return redirect(url_for('departments.index'))
         
         db.session.delete(department)
         
@@ -239,10 +245,19 @@ def delete(id):
         db.session.add(audit)
         db.session.commit()
         
-        flash('تم حذف القسم بنجاح', 'success')
+        if is_ajax:
+            return jsonify({'success': True, 'message': f'تم حذف القسم {name} بنجاح'})
+        else:
+            flash('تم حذف القسم بنجاح', 'success')
+            return redirect(url_for('departments.index'))
+            
     except Exception as e:
         db.session.rollback()
-        flash(f'حدث خطأ أثناء حذف القسم: {str(e)}', 'danger')
+        error_message = f'حدث خطأ أثناء حذف القسم: {str(e)}'
         print(f"حدث خطأ في حذف القسم: {str(e)}")  # Add logging for debugging
-    
-    return redirect(url_for('departments.index'))
+        
+        if is_ajax:
+            return jsonify({'success': False, 'message': error_message}), 500
+        else:
+            flash(error_message, 'danger')
+            return redirect(url_for('departments.index'))
