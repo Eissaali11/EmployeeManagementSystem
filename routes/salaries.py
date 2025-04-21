@@ -144,6 +144,50 @@ def create():
                           current_month=now.month,
                           current_year=now.year)
 
+@salaries_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+def edit(id):
+    """تعديل سجل راتب"""
+    # الحصول على سجل الراتب
+    salary = Salary.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            # تحديث بيانات الراتب
+            salary.basic_salary = float(request.form['basic_salary'])
+            salary.allowances = float(request.form.get('allowances', 0))
+            salary.deductions = float(request.form.get('deductions', 0))
+            salary.bonus = float(request.form.get('bonus', 0))
+            salary.notes = request.form.get('notes', '')
+            
+            # إعادة حساب صافي الراتب
+            salary.net_salary = salary.basic_salary + salary.allowances + salary.bonus - salary.deductions
+            
+            # تسجيل العملية
+            audit = SystemAudit(
+                action='update',
+                entity_type='salary',
+                entity_id=salary.id,
+                details=f'تم تعديل سجل راتب للموظف: {salary.employee.name} لشهر {salary.month}/{salary.year}'
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            flash('تم تعديل سجل الراتب بنجاح', 'success')
+            return redirect(url_for('salaries.index', month=salary.month, year=salary.year))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تعديل سجل الراتب: {str(e)}', 'danger')
+    
+    # الحصول على قائمة الموظفين للاختيار من القائمة المنسدلة
+    employees = Employee.query.order_by(Employee.name).all()
+    
+    return render_template('salaries/edit.html',
+                          salary=salary,
+                          employees=employees)
+
+
 @salaries_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
     """Delete a salary record"""

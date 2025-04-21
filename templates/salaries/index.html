@@ -158,6 +158,11 @@
                             <td>{{ salary.bonus }}</td>
                             <td class="fw-bold">{{ salary.net_salary }}</td>
                             <td class="text-center">
+                                <!-- زر تعديل الراتب -->
+                                <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn btn-sm btn-info mb-1" title="تعديل الراتب">
+                                    <i class="fas fa-edit me-1"></i> تعديل
+                                </a>
+                                
                                 <!-- زر طباعة الراتب -->
                                 <a href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}" class="btn btn-sm btn-primary mb-1" title="طباعة الراتب">
                                     <i class="fas fa-print me-1"></i> طباعة الراتب
@@ -188,6 +193,12 @@
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('salaries.edit', id=salary.id) }}">
+                                                <i class="fas fa-edit me-1"></i> تعديل الراتب
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <a class="dropdown-item" href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}">
                                                 <i class="fas fa-file-pdf me-1"></i> إشعار راتب PDF
