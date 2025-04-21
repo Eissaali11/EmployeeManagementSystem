@@ -75,6 +75,7 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                             <form action="{{ url_for('departments.delete', id=department.id) }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-danger delete-confirm"
                                         {% if department.employees|length > 0 %}disabled{% endif %}>
                                     تأكيد الحذف

@@ -209,6 +209,8 @@ def import_employees(id):
     return render_template('departments/import_employees.html', department=department)
 
 @departments_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.DELETE)
 def delete(id):
     """Delete a department"""
     department = Department.query.get_or_404(id)
