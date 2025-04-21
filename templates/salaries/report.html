@@ -24,33 +24,43 @@
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 rounded-3" style="background-color: #F0F8FF;">
-                                <h6 class="text-muted mb-1">إجمالي الرواتب الأساسية</h6>
-                                <h4 style="color: #4169E1;">{{ total_basic|round(2) }}</h4>
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #F0F8FF; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي الرواتب الأساسية</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #4169E1;">{{ total_basic|round(2) }}</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 rounded-3" style="background-color: #E6F2FF;">
-                                <h6 class="text-muted mb-1">إجمالي البدلات</h6>
-                                <h4 style="color: #1E90FF;">{{ total_allowances|round(2) }}</h4>
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #E6F2FF; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي البدلات</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #1E90FF;">{{ total_allowances|round(2) }}</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 rounded-3" style="background-color: #F0FFFF;">
-                                <h6 class="text-muted mb-1">إجمالي الخصومات</h6>
-                                <h4 style="color: #4682B4;">{{ total_deductions|round(2) }}</h4>
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #F0FFFF; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي الخصومات</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #4682B4;">{{ total_deductions|round(2) }}</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 rounded-3" style="background-color: #F5FFFA;">
-                                <h6 class="text-muted mb-1">إجمالي المكافآت</h6>
-                                <h4 style="color: #20B2AA;">{{ total_bonus|round(2) }}</h4>
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #F5FFFA; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي المكافآت</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #20B2AA;">{{ total_bonus|round(2) }}</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="p-3 mb-3 rounded-3" style="background-color: #104E8B; color: white;">
-                                <h6 class="mb-1" style="color: #ADD8E6;">إجمالي صافي الرواتب</h6>
-                                <h3 class="fw-bold" style="color: white;">{{ total_net|round(2) }}</h3>
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #104E8B; color: white; height: 120px;">
+                                <h5 class="fw-bold mb-2" style="color: #ADD8E6;">إجمالي صافي الرواتب</h5>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: white; font-size: 1.8rem;">{{ total_net|round(2) }}</h3>
+                                </div>
                             </div>
                         </div>
                     </div>
