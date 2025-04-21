@@ -31,26 +31,25 @@ def index():
     employee_id = request.args.get('employee_id', '')
     department_id = request.args.get('department_id', '')
     
-    # إذا تم تحديد قيمة خالية للشهر، فهذا يعني تصفية كل الشهور
-    show_all_months = False
-    if month == '':  # اختار المستخدم "جميع الشهور" بشكل صريح
-        show_all_months = True
+    # إذا تم تحديد قيمة خالية للشهر أو السنة، فهذا يعني تصفية كل الشهور أو كل السنوات
+    show_all_months = month == ''  # اختار المستخدم "جميع الشهور" بشكل صريح
+    show_all_years = year == ''    # اختار المستخدم "جميع السنوات" بشكل صريح
     
-    # البحث عن الشهر والسنة التي تحتوي على بيانات إذا لم يتم تحديدها (فقط إذا لم يطلب المستخدم كل الشهور)
-    if (not month and not show_all_months) or not year:
+    # البحث عن الشهر والسنة التي تحتوي على بيانات إذا لم يتم تحديدها (فقط إذا لم يطلب المستخدم كل الشهور أو كل السنوات)
+    if (not month and not show_all_months) or (not year and not show_all_years):
         # محاولة العثور على آخر شهر/سنة يحتوي على بيانات
         latest_salary = Salary.query.order_by(Salary.year.desc(), Salary.month.desc()).first()
         if latest_salary:
-            # فقط إذا لم يطلب المستخدم كل الشهور
+            # تحديد قيم افتراضية فقط إذا لم يطلب المستخدم "جميع..." بشكل صريح
             if not month and not show_all_months:
                 month = str(latest_salary.month)
-            if not year:
+            if not year and not show_all_years:
                 year = str(latest_salary.year)
         else:
             # إذا لم توجد بيانات، استخدم الشهر والسنة الحالية
             if not month and not show_all_months:
                 month = str(current_month)
-            if not year:
+            if not year and not show_all_years:
                 year = str(current_year)
     
     # بناء استعلام قاعدة البيانات
@@ -70,8 +69,9 @@ def index():
         if not show_all_months:
             query = query.filter(Salary.month == filter_month)
             
-        # إضافة فلتر السنة (دائمًا)
-        query = query.filter(Salary.year == filter_year)
+        # إضافة فلتر السنة (فقط إذا لم يطلب المستخدم كل السنوات)
+        if not show_all_years:
+            query = query.filter(Salary.year == filter_year)
         
         # إضافة تصفية الموظف إذا تم تحديدها
         if filter_employee:
@@ -97,8 +97,33 @@ def index():
                 
             active_employees = active_employees_query.all()
             
-            # في حالة عرض جميع الشهور، نحتاج فقط إلى إظهار الموظفين الذين ليس لديهم رواتب
-            if show_all_months:
+            # معالجة حالات الفلترة المختلفة
+            if show_all_months and show_all_years:
+                # عرض جميع الشهور وجميع السنوات - عرض جميع السجلات وإضافة الموظفين الذين ليس لديهم سجلات
+                # في هذه الحالة نعتمد على السجلات المجمعة مما ورد من قاعدة البيانات
+                print(f"تم العثور على {len(salaries)} سجل في جميع الشهور وجميع السنوات")
+                
+                # إضافة الموظفين الذين ليس لديهم سجلات على الإطلاق
+                employee_ids_with_salaries = db.session.query(Salary.employee_id).distinct().all()
+                employee_ids_with_salaries_set = {id[0] for id in employee_ids_with_salaries}
+                employees_without_salaries = [e for e in active_employees if e.id not in employee_ids_with_salaries_set]
+                
+                for employee in employees_without_salaries:
+                    temp_salary = Salary(
+                        employee_id=employee.id,
+                        employee=employee,
+                        month=1,  # شهر افتراضي
+                        year=current_year,  # سنة افتراضية (الحالية)
+                        basic_salary=0,
+                        allowances=0,
+                        deductions=0,
+                        bonus=0,
+                        net_salary=0
+                    )
+                    employee_records.append(temp_salary)
+                
+            elif show_all_months and not show_all_years:
+                # عرض جميع الشهور لسنة محددة
                 # الحصول على قائمة الموظفين الذين لديهم رواتب في السنة المحددة
                 employee_ids_with_salaries = db.session.query(Salary.employee_id).filter(
                     Salary.year == filter_year
@@ -127,6 +152,32 @@ def index():
                     employee_records.append(temp_salary)
                 
                 print(f"تم العثور على {len(salaries)} سجل راتب للسنة {filter_year} مع {len(employee_records)} موظف بدون رواتب")
+                
+            elif not show_all_months and show_all_years:
+                # عرض شهر محدد لجميع السنوات
+                # هنا نبحث عن الموظفين الذين ليس لديهم سجلات في هذا الشهر بغض النظر عن السنة
+                employee_ids_with_salaries = db.session.query(Salary.employee_id).filter(
+                    Salary.month == filter_month
+                ).distinct().all()
+                
+                employee_ids_with_salaries_set = {id[0] for id in employee_ids_with_salaries}
+                employees_without_salaries = [e for e in active_employees if e.id not in employee_ids_with_salaries_set]
+                
+                for employee in employees_without_salaries:
+                    temp_salary = Salary(
+                        employee_id=employee.id,
+                        employee=employee,
+                        month=filter_month,
+                        year=current_year,  # سنة افتراضية (الحالية)
+                        basic_salary=0,
+                        allowances=0,
+                        deductions=0,
+                        bonus=0,
+                        net_salary=0
+                    )
+                    employee_records.append(temp_salary)
+                    
+                print(f"تم العثور على {len(salaries)} سجل راتب للشهر {filter_month} في جميع السنوات مع {len(employee_records)} موظف بدون سجلات")
             else:
                 # إنشاء كائنات مؤقتة لعرض الموظفين بدون رواتب للشهر المحدد
                 for employee in active_employees:
@@ -154,8 +205,12 @@ def index():
                 
                 print(f"لا توجد سجلات رواتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
         else:
-            if show_all_months:
-                print(f"تم العثور على {len(salaries)} سجل للسنة {filter_year}")
+            if show_all_months and show_all_years:
+                print(f"تم العثور على {len(salaries)} سجل في جميع الشهور والسنوات")
+            elif show_all_months and not show_all_years:
+                print(f"تم العثور على {len(salaries)} سجل في جميع الشهور للسنة {filter_year}")
+            elif not show_all_months and show_all_years:
+                print(f"تم العثور على {len(salaries)} سجل للشهر {filter_month} في جميع السنوات")
             else:
                 print(f"تم العثور على {len(salaries)} سجل للشهر {filter_month} والسنة {filter_year}")
     except Exception as e:
@@ -179,15 +234,17 @@ def index():
     # عرض جميع الشهور (1-12) بغض النظر عن وجودها في قاعدة البيانات
     available_months = [(i,) for i in range(1, 13)]
     
+    # إضافة عدة سنوات ثابتة (3 سنوات سابقة + السنة الحالية + 2 سنوات قادمة)
+    fixed_years = [(current_year + i,) for i in range(-3, 3)]  # مثلا: 2022, 2023, 2024, 2025, 2026, 2027
+    
     # الحصول على السنوات المتاحة من قاعدة البيانات
     db_years = db.session.query(Salary.year).distinct().order_by(Salary.year.desc()).all()
     
-    # التأكد من أن السنة الحالية موجودة في القائمة
-    current_year_tuple = (current_year,)
-    if current_year_tuple not in db_years:
-        available_years = [current_year_tuple] + db_years
-    else:
-        available_years = db_years
+    # دمج السنوات الثابتة مع السنوات الموجودة في قاعدة البيانات وإزالة التكرار
+    all_years = set(fixed_years + db_years)
+    
+    # ترتيب السنوات تنازليًا
+    available_years = sorted(list(all_years), reverse=True)
     
     # معالجة السجلات المؤقتة والفعلية لعرضها
     if show_all_months:
