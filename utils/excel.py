@@ -833,8 +833,10 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
         attendances = []
         if employee.attendances:
             for attendance in employee.attendances:
-                if start_date <= attendance.date <= end_date:
+                # التأكد من وجود تاريخ للحضور
+                if attendance.date and start_date <= attendance.date <= end_date:
                     attendances.append(attendance)
+                    # استخدام اليوم من تاريخ الحضور كمفتاح
                     attendance_dict[attendance.date.day] = attendance
         
         # تحضير البيانات للإكسل
@@ -855,14 +857,37 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
             
             # إنشاء بيانات الصف
             attendance = attendance_dict.get(day)
+            
+            # تحديد حالة الحضور
+            status_text = ''
+            if attendance:
+                status_text = status_map.get(attendance.status, '')
+            elif is_weekend:
+                status_text = 'عطلة أسبوعية'
+            
+            # وقت الحضور
+            check_in_time = ''
+            if attendance and attendance.check_in:
+                check_in_time = attendance.check_in.strftime('%H:%M')
+            
+            # وقت الانصراف
+            check_out_time = ''
+            if attendance and attendance.check_out:
+                check_out_time = attendance.check_out.strftime('%H:%M')
+            
+            # الملاحظات
+            notes = ''
+            if attendance and attendance.notes:
+                notes = attendance.notes
+            
             row = {
                 'اليوم': day,
                 'التاريخ': date_obj.strftime('%Y-%m-%d'),
                 'اليوم من الأسبوع': date_obj.strftime('%A'),
-                'الحالة': status_map.get(attendance.status, '') if attendance else ('عطلة أسبوعية' if is_weekend else ''),
-                'وقت الحضور': attendance.check_in.strftime('%H:%M') if attendance and attendance.check_in else '',
-                'وقت الانصراف': attendance.check_out.strftime('%H:%M') if attendance and attendance.check_out else '',
-                'الملاحظات': attendance.notes if attendance and attendance.notes else ''
+                'الحالة': status_text,
+                'وقت الحضور': check_in_time,
+                'وقت الانصراف': check_out_time,
+                'الملاحظات': notes
             }
             data.append(row)
         

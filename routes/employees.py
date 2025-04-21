@@ -450,9 +450,18 @@ def export_attendance_excel(id):
         
         # تحويل البيانات إلى أرقام صحيحة إذا كانت موجودة
         if month:
-            month = int(month)
+            try:
+                month = int(month)
+            except (ValueError, TypeError):
+                flash('قيمة الشهر غير صالحة، تم استخدام الشهر الحالي', 'warning')
+                month = None
+                
         if year:
-            year = int(year)
+            try:
+                year = int(year)
+            except (ValueError, TypeError):
+                flash('قيمة السنة غير صالحة، تم استخدام السنة الحالية', 'warning')
+                year = None
         
         # توليد ملف الإكسل
         output = export_employee_attendance_to_excel(employee, month, year)
@@ -464,7 +473,10 @@ def export_attendance_excel(id):
         if month and year:
             filename = f"attendance_{employee.name}_{year}_{month}_{current_date}.xlsx"
         else:
-            filename = f"attendance_{employee.name}_{current_date}.xlsx"
+            # استخدام الشهر والسنة الحالية إذا لم يتم توفيرهما
+            current_month = datetime.now().month
+            current_year = datetime.now().year
+            filename = f"attendance_{employee.name}_{current_year}_{current_month}_{current_date}.xlsx"
         
         # تسجيل الإجراء
         audit = SystemAudit(
@@ -485,5 +497,10 @@ def export_attendance_excel(id):
         )
         
     except Exception as e:
+        # طباعة تتبع الخطأ في سجل الخادم للمساعدة في التشخيص
+        import traceback
+        print(f"Error exporting attendance: {str(e)}")
+        print(traceback.format_exc())
+        
         flash(f'حدث خطأ أثناء تصدير ملف الحضور: {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))
