@@ -217,8 +217,8 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // إعادة تحميل الصفحة عند تغيير الشهر أو السنة أو الموظف
-        const filterFields = ['month', 'year', 'employee_id'];
+        // إعادة تحميل الصفحة عند تغيير الشهر أو السنة أو الموظف أو القسم
+        const filterFields = ['month', 'year', 'employee_id', 'department_id'];
         
         filterFields.forEach(function(field) {
             const element = document.getElementById(field);
@@ -231,6 +231,79 @@
                 });
             }
         });
+        
+        // JavaScript لحساب صافي الراتب تلقائيًا عند إدخال البيانات في الحقول (للسجلات الجديدة)
+        const salaryInputs = document.querySelectorAll('.salary-input');
+        if (salaryInputs.length > 0) {
+            salaryInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const employeeId = this.getAttribute('data-employee');
+                    calculateNetSalary(employeeId);
+                });
+            });
+        }
+        
+        // دالة لحساب صافي الراتب
+        function calculateNetSalary(employeeId) {
+            const basicSalary = parseFloat(document.querySelector(`.salary-input[data-field="basic_salary"][data-employee="${employeeId}"]`)?.value || 0);
+            const allowances = parseFloat(document.querySelector(`.salary-input[data-field="allowances"][data-employee="${employeeId}"]`)?.value || 0);
+            const deductions = parseFloat(document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`)?.value || 0);
+            const bonus = parseFloat(document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`)?.value || 0);
+            
+            const netSalary = basicSalary + allowances + bonus - deductions;
+            
+            // عرض صافي الراتب
+            const netSalaryDisplay = document.querySelector(`.net-salary-display[data-employee="${employeeId}"]`);
+            if (netSalaryDisplay) {
+                netSalaryDisplay.textContent = netSalary.toFixed(2);
+            }
+        }
+        
+        // تفعيل زر حفظ الراتب
+        const saveSalaryButtons = document.querySelectorAll('.save-salary-btn');
+        if (saveSalaryButtons.length > 0) {
+            saveSalaryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const employeeId = this.getAttribute('data-employee');
+                    const month = this.getAttribute('data-month');
+                    const year = this.getAttribute('data-year');
+                    
+                    // جمع بيانات الراتب
+                    const basicSalary = document.querySelector(`.salary-input[data-field="basic_salary"][data-employee="${employeeId}"]`).value;
+                    const allowances = document.querySelector(`.salary-input[data-field="allowances"][data-employee="${employeeId}"]`).value;
+                    const deductions = document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`).value;
+                    const bonus = document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`).value;
+                    
+                    // إنشاء نموذج وإرساله
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/salaries/create';
+                    
+                    // إضافة حقول النموذج
+                    const fields = {
+                        'employee_id': employeeId,
+                        'month': month,
+                        'year': year,
+                        'basic_salary': basicSalary,
+                        'allowances': allowances,
+                        'deductions': deductions,
+                        'bonus': bonus
+                    };
+                    
+                    for (const key in fields) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = fields[key];
+                        form.appendChild(input);
+                    }
+                    
+                    // إضافة النموذج للصفحة وإرساله
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+            });
+        }
     });
 </script>
 {% endblock %}
