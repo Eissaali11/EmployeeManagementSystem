@@ -181,15 +181,39 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // --- 1. تعريف المتغيرات الأساسية ---
-        const csrfToken = "{{ csrf_token() }}";
+        let csrfToken = "";
+        try {
+            csrfToken = "{{ csrf_token() }}";
+            console.log("تم استخراج رمز CSRF بنجاح");
+        } catch (error) {
+            console.error("خطأ في استخراج رمز CSRF:", error);
+        }
         const departmentId = {{ department.id }};
         
-        // أزرار التحكم
+        console.log(`تهيئة الصفحة: معرف القسم=${departmentId}`);
+        
+        // أزرار التحكم (مع التعامل مع حالة عدم وجود العنصر)
         const checkAllBox = document.getElementById('checkAllEmployees');
         const selectAllBtn = document.getElementById('selectAllEmployees');
         const deselectAllBtn = document.getElementById('deselectAllEmployees');
         const exportBtn = document.getElementById('exportSelectedEmployees');
         const deleteBtn = document.getElementById('deleteSelectedEmployees');
+        
+        // التحقق من وجود العناصر المطلوبة
+        if (!exportBtn || !deleteBtn) {
+            console.error("تعذر العثور على الأزرار المطلوبة!");
+            // نقوم بإنشاء رسالة خطأ على الصفحة
+            const container = document.querySelector('.container-fluid');
+            if (container) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-danger mt-3`;
+                alertDiv.innerHTML = `
+                    <strong><i class="fas fa-exclamation-triangle"></i> خطأ!</strong> 
+                    لم يتم العثور على بعض عناصر واجهة المستخدم المطلوبة. يرجى تحديث الصفحة والمحاولة مرة أخرى.
+                `;
+                container.prepend(alertDiv);
+            }
+        }
         
         // خانات اختيار الموظفين
         const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
@@ -240,20 +264,31 @@
             const selectedIds = getSelectedEmployeeIds();
             const count = selectedIds.length;
             
-            // تحديث نص الأزرار
-            exportBtn.innerHTML = count ? `<i class="fas fa-file-export me-1"></i> تصدير (${count})` : 
-                                          `<i class="fas fa-file-export me-1"></i> تصدير`;
+            console.log(`تحديث حالة الأزرار - العناصر المحددة: ${count}`);
             
-            deleteBtn.innerHTML = count ? `<i class="fas fa-trash me-1"></i> حذف (${count})` : 
-                                          `<i class="fas fa-trash me-1"></i> حذف`;
+            // تحديث نص الأزرار (إذا كانت موجودة)
+            if (exportBtn) {
+                exportBtn.innerHTML = count ? `<i class="fas fa-file-export me-1"></i> تصدير (${count})` : 
+                                            `<i class="fas fa-file-export me-1"></i> تصدير`;
+                                            
+                // تعطيل/تفعيل زر التصدير
+                if (count > 0) {
+                    exportBtn.classList.remove('disabled');
+                } else {
+                    exportBtn.classList.add('disabled');
+                }
+            }
             
-            // تعطيل/تفعيل الأزرار
-            if (count > 0) {
-                exportBtn.classList.remove('disabled');
-                deleteBtn.classList.remove('disabled');
-            } else {
-                exportBtn.classList.add('disabled');
-                deleteBtn.classList.add('disabled');
+            if (deleteBtn) {
+                deleteBtn.innerHTML = count ? `<i class="fas fa-trash me-1"></i> حذف (${count})` : 
+                                            `<i class="fas fa-trash me-1"></i> حذف`;
+                                            
+                // تعطيل/تفعيل زر الحذف
+                if (count > 0) {
+                    deleteBtn.classList.remove('disabled');
+                } else {
+                    deleteBtn.classList.add('disabled');
+                }
             }
             
             // تحديث حالة مربع "تحديد الكل"
