@@ -85,8 +85,9 @@ def index():
         # تنفيذ الاستعلام
         salaries = query.all()
         
-        # إذا لم تكن هناك سجلات رواتب للشهر/السنة المحددين، قم بعرض جميع الموظفين النشطين
-        if not salaries and not filter_employee:
+        # إذا لم تكن هناك سجلات رواتب أو كانت البيانات مصفاة حسب جميع الشهور ويريد المستخدم عرض الموظفين النشطين
+        # فقط إذا لم يتم تحديد موظف معين
+        if (not salaries or show_all_months) and not filter_employee:
             # الحصول على قائمة الموظفين النشطين
             active_employees_query = Employee.query.filter_by(status='active')
             
@@ -96,25 +97,61 @@ def index():
                 
             active_employees = active_employees_query.all()
             
-            # إنشاء كائنات مؤقتة لعرض الموظفين بدون رواتب
-            for employee in active_employees:
-                # إنشاء كائن راتب مؤقت فقط لأغراض العرض (لن يتم حفظه)
-                temp_salary = Salary(
-                    employee_id=employee.id,
-                    employee=employee,
-                    month=filter_month,
-                    year=filter_year,
-                    basic_salary=0,
-                    allowances=0,
-                    deductions=0,
-                    bonus=0,
-                    net_salary=0
-                )
-                employee_records.append(temp_salary)
-            
+            # في حالة عرض جميع الشهور، نحتاج فقط إلى إظهار الموظفين الذين ليس لديهم رواتب
             if show_all_months:
-                print(f"لا توجد سجلات رواتب للسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
+                # الحصول على قائمة الموظفين الذين لديهم رواتب في السنة المحددة
+                employee_ids_with_salaries = db.session.query(Salary.employee_id).filter(
+                    Salary.year == filter_year
+                ).distinct().all()
+                
+                # تحويل القائمة إلى مجموعة (set) للبحث بسرعة
+                employee_ids_with_salaries_set = {id[0] for id in employee_ids_with_salaries}
+                
+                # إنشاء قائمة بالموظفين الذين ليس لديهم رواتب في السنة المحددة
+                employees_without_salaries = [e for e in active_employees if e.id not in employee_ids_with_salaries_set]
+                
+                # إذا كان هناك موظفين بدون رواتب، قم بإنشاء سجلات مؤقتة لهم
+                for employee in employees_without_salaries:
+                    # إنشاء كائن راتب مؤقت فقط لأغراض العرض (لن يتم حفظه)
+                    temp_salary = Salary(
+                        employee_id=employee.id,
+                        employee=employee,
+                        month=1,  # شهر افتراضي
+                        year=filter_year,
+                        basic_salary=0,
+                        allowances=0,
+                        deductions=0,
+                        bonus=0,
+                        net_salary=0
+                    )
+                    employee_records.append(temp_salary)
+                
+                print(f"تم العثور على {len(salaries)} سجل راتب للسنة {filter_year} مع {len(employee_records)} موظف بدون رواتب")
             else:
+                # إنشاء كائنات مؤقتة لعرض الموظفين بدون رواتب للشهر المحدد
+                for employee in active_employees:
+                    # التحقق مما إذا كان الموظف لديه راتب للشهر والسنة المحددين
+                    has_salary = False
+                    for s in salaries:
+                        if s.employee_id == employee.id:
+                            has_salary = True
+                            break
+                            
+                    # إذا لم يكن لديه راتب، أضف سجل مؤقت
+                    if not has_salary:
+                        temp_salary = Salary(
+                            employee_id=employee.id,
+                            employee=employee,
+                            month=filter_month,
+                            year=filter_year,
+                            basic_salary=0,
+                            allowances=0,
+                            deductions=0,
+                            bonus=0,
+                            net_salary=0
+                        )
+                        employee_records.append(temp_salary)
+                
                 print(f"لا توجد سجلات رواتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
         else:
             if show_all_months:
@@ -139,13 +176,28 @@ def index():
     departments = Department.query.order_by(Department.name).all()
     
     # Get available months and years for dropdown
-    available_months = db.session.query(Salary.month).distinct().order_by(Salary.month).all()
-    available_years = db.session.query(Salary.year).distinct().order_by(Salary.year.desc()).all()
+    # عرض جميع الشهور (1-12) بغض النظر عن وجودها في قاعدة البيانات
+    available_months = [(i,) for i in range(1, 13)]
     
-    # إذا كانت هناك سجلات مؤقتة (موظفين بدون رواتب)، استخدمها للعرض
-    if not salaries and employee_records:
+    # الحصول على السنوات المتاحة من قاعدة البيانات
+    db_years = db.session.query(Salary.year).distinct().order_by(Salary.year.desc()).all()
+    
+    # التأكد من أن السنة الحالية موجودة في القائمة
+    current_year_tuple = (current_year,)
+    if current_year_tuple not in db_years:
+        available_years = [current_year_tuple] + db_years
+    else:
+        available_years = db_years
+    
+    # معالجة السجلات المؤقتة والفعلية لعرضها
+    if show_all_months:
+        # في حالة "جميع الشهور"، نعرض السجلات الفعلية مع السجلات المؤقتة للموظفين الذين ليس لهم سجلات
+        display_records = list(salaries) + employee_records
+    elif not salaries and employee_records:
+        # إذا لم تكن هناك سجلات في شهر محدد، استخدم السجلات المؤقتة فقط
         display_records = employee_records
     else:
+        # في حالة الشهر المحدد، عرض السجلات الفعلية فقط
         display_records = salaries
         
     return render_template('salaries/index.html',

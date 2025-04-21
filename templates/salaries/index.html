@@ -30,7 +30,12 @@
                         <option value="">جميع الشهور</option>
                         {% for month_tuple in available_months %}
                         <option value="{{ month_tuple[0] }}" {% if selected_month == month_tuple[0]|string %}selected{% endif %}>
-                            {{ month_tuple[0] }}
+                            {% set arabic_months = {
+                                1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل", 
+                                5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس",
+                                9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر"
+                            } %}
+                            {{ arabic_months[month_tuple[0]] }} ({{ month_tuple[0] }})
                         </option>
                         {% endfor %}
                     </select>
