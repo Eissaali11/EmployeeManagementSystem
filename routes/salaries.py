@@ -29,6 +29,7 @@ def index():
     month = request.args.get('month', None)
     year = request.args.get('year', None)
     employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
     
     # البحث عن الشهر والسنة التي تحتوي على بيانات إذا لم يتم تحديدها
     if not month or not year:
@@ -54,6 +55,7 @@ def index():
         filter_month = int(month) if month and month.isdigit() else current_month
         filter_year = int(year) if year and year.isdigit() else current_year
         filter_employee = int(employee_id) if employee_id and employee_id.isdigit() else None
+        filter_department = int(department_id) if department_id and department_id.isdigit() else None
         
         # بناء الاستعلام الأساسي
         query = Salary.query.filter(
@@ -64,6 +66,11 @@ def index():
         # إضافة تصفية الموظف إذا تم تحديدها
         if filter_employee:
             query = query.filter(Salary.employee_id == filter_employee)
+            
+        # إضافة تصفية القسم إذا تم تحديدها
+        if filter_department:
+            # هنا نقوم بعمل join مع جدول الموظفين ثم الأقسام للفلترة
+            query = query.join(Employee).filter(Employee.department_id == filter_department)
         
         # تنفيذ الاستعلام
         salaries = query.all()
@@ -71,7 +78,13 @@ def index():
         # إذا لم تكن هناك سجلات رواتب للشهر/السنة المحددين، قم بعرض جميع الموظفين النشطين
         if not salaries and not filter_employee:
             # الحصول على قائمة الموظفين النشطين
-            active_employees = Employee.query.filter_by(status='active').all()
+            active_employees_query = Employee.query.filter_by(status='active')
+            
+            # إذا تم تحديد قسم، قم بتصفية الموظفين حسب القسم
+            if filter_department:
+                active_employees_query = active_employees_query.filter_by(department_id=filter_department)
+                
+            active_employees = active_employees_query.all()
             
             # إنشاء كائنات مؤقتة لعرض الموظفين بدون رواتب
             for employee in active_employees:
@@ -106,6 +119,9 @@ def index():
     # Get all employees for filter dropdown
     employees = Employee.query.filter_by(status='active').all()
     
+    # Get all departments for filter dropdown
+    departments = Department.query.order_by(Department.name).all()
+    
     # Get available months and years for dropdown
     available_months = db.session.query(Salary.month).distinct().order_by(Salary.month).all()
     available_years = db.session.query(Salary.year).distinct().order_by(Salary.year.desc()).all()
@@ -120,11 +136,13 @@ def index():
                           salaries=display_records,
                           has_salary_data=(len(salaries) > 0),  # علامة توضح ما إذا كانت هناك بيانات رواتب فعلية
                           employees=employees,
+                          departments=departments,
                           available_months=available_months,
                           available_years=available_years,
                           selected_month=month,
                           selected_year=year,
                           selected_employee=employee_id,
+                          selected_department=department_id,
                           total_basic=total_basic,
                           total_allowances=total_allowances,
                           total_deductions=total_deductions,
