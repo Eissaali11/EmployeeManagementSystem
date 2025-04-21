@@ -17,13 +17,47 @@ class ArabicPDF(FPDF):
     def __init__(self, orientation='P', unit='mm', format='A4'):
         """إنشاء كائن FPDF جديد بدعم كامل للغة العربية"""
         super().__init__(orientation=orientation, unit=unit, format=format)
-        # إضافة الخط العربي
+        # إضافة الخط العربي (العادي والعريض)
         try:
-            font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts', 'Amiri-Regular.ttf')
-            self.add_font('Arabic', '', font_path, uni=True)
-            self.set_font('Arabic', '', 14)
+            # مسار الخط العادي
+            font_regular_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts', 'Amiri-Regular.ttf')
+            # مسار الخط العريض
+            font_bold_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts', 'Amiri-Bold.ttf')
+            
+            # التحقق من وجود الملفات
+            if os.path.exists(font_regular_path) and os.path.exists(font_bold_path):
+                # إضافة الخط العادي والعريض
+                self.add_font('Arabic', '', font_regular_path, uni=True)
+                self.add_font('Arabic', 'B', font_bold_path, uni=True)
+                print("تم تحميل الخط العربي (العادي والعريض) بنجاح")
+                self.set_font('Arabic', '', 14)
+            else:
+                # المسارات البديلة للخطوط
+                font_regular_path = os.path.join('static', 'fonts', 'Amiri-Regular.ttf')
+                font_bold_path = os.path.join('static', 'fonts', 'Amiri-Bold.ttf')
+                
+                if os.path.exists(font_regular_path) and os.path.exists(font_bold_path):
+                    self.add_font('Arabic', '', font_regular_path, uni=True)
+                    self.add_font('Arabic', 'B', font_bold_path, uni=True)
+                    print("تم تحميل الخط العربي من المسار البديل بنجاح")
+                    self.set_font('Arabic', '', 14)
+                else:
+                    # استخدام خط Tajawal كبديل إذا كان متاحًا
+                    tajawal_regular = os.path.join('static', 'fonts', 'Tajawal-Regular.ttf')
+                    tajawal_bold = os.path.join('static', 'fonts', 'Tajawal-Bold.ttf')
+                    
+                    if os.path.exists(tajawal_regular) and os.path.exists(tajawal_bold):
+                        self.add_font('Arabic', '', tajawal_regular, uni=True)
+                        self.add_font('Arabic', 'B', tajawal_bold, uni=True)
+                        print("تم تحميل خط Tajawal كبديل")
+                        self.set_font('Arabic', '', 14)
+                    else:
+                        # استخدام خط Arial كحل أخير
+                        print("لم يتم العثور على الخطوط العربية، سيتم استخدام Arial")
+                        self.set_font('Arial', '', 14)
         except Exception as e:
             print(f"تعذر تحميل الخط العربي: {str(e)}")
+            # محاولة استخدام Arial مع تعطيل الخطوط الثقيلة
             self.set_font('Arial', '', 14)
         
         # تعيين الألوان الافتراضية
