@@ -832,12 +832,17 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
         # فلترة سجلات الحضور للشهر المحدد
         attendances = []
         if employee.attendances:
+            print(f"Processing {len(employee.attendances)} attendance records")
             for attendance in employee.attendances:
+                print(f"Attendance date: {attendance.date}")
                 # التأكد من وجود تاريخ للحضور
                 if attendance.date and start_date <= attendance.date <= end_date:
+                    print(f"Adding attendance for {attendance.date}")
                     attendances.append(attendance)
                     # استخدام اليوم من تاريخ الحضور كمفتاح
                     attendance_dict[attendance.date.day] = attendance
+                else:
+                    print(f"Skipping attendance: {attendance.date}, not in range {start_date} - {end_date}")
         
         # تحضير البيانات للإكسل
         data = []
