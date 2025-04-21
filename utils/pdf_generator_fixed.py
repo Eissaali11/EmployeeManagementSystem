@@ -188,19 +188,41 @@ class ArabicPDF(FPDF):
         
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة"""
-        # إضافة شعار دائري للنظام
-        center_x = 20
-        center_y = 20
-        radius = 10
-        
-        # رسم الدائرة الخارجية
-        self.set_fill_color(30, 60, 114)  # اللون الأزرق الداكن
-        self.ellipse(center_x, center_y, radius, radius, 'F')
-        
-        # إضافة نص نُظم في الدائرة
-        self.set_font('Arabic', 'B', 14)
-        self.set_text_color(255, 255, 255)  # لون أبيض للنص
-        self.arabic_text(center_x - 4, center_y - 3, "نُظم")
+        # استخدام شعار نُظم الدائري
+        logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
+        if os.path.exists(logo_path):
+            # إضافة صورة الشعار
+            try:
+                self.image(logo_path, x=20, y=10, w=20, h=20)
+            except Exception as e:
+                print(f"خطأ في إضافة الشعار: {str(e)}")
+                # إضافة شعار دائري بديل للنظام
+                center_x = 20
+                center_y = 20
+                radius = 10
+                
+                # رسم الدائرة الخارجية
+                self.set_fill_color(30, 60, 114)  # اللون الأزرق الداكن
+                self.ellipse(center_x, center_y, radius, radius, 'F')
+                
+                # إضافة نص نُظم في الدائرة
+                self.set_font('Arabic', 'B', 14)
+                self.set_text_color(255, 255, 255)  # لون أبيض للنص
+                self.arabic_text(center_x - 4, center_y - 3, "نُظم")
+        else:
+            # إضافة شعار دائري بديل للنظام
+            center_x = 20
+            center_y = 20
+            radius = 10
+            
+            # رسم الدائرة الخارجية
+            self.set_fill_color(30, 60, 114)  # اللون الأزرق الداكن
+            self.ellipse(center_x, center_y, radius, radius, 'F')
+            
+            # إضافة نص نُظم في الدائرة
+            self.set_font('Arabic', 'B', 14)
+            self.set_text_color(255, 255, 255)  # لون أبيض للنص
+            self.arabic_text(center_x - 4, center_y - 3, "نُظم")
         
         # عنوان التقرير
         self.set_font('Arabic', 'B', 18)

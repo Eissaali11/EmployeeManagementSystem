@@ -72,10 +72,10 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     from reportlab.pdfgen import canvas
     
     # تحديد مسار الشعار
-    logo_path = os.path.join(current_app.static_folder, 'images', 'workshop_logo.png')
+    logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
     if not os.path.exists(logo_path):
-        # استخدام الشعار الأساسي للنظام كبديل
-        logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
+        # استخدام الشعار الثانوي كبديل
+        logo_path = os.path.join(current_app.static_folder, 'images', 'workshop_logo.png')
     
     if os.path.exists(logo_path):
         # إنشاء دائرة باستخدام Flowable مخصص
