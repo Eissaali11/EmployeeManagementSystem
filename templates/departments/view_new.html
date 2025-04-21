@@ -52,11 +52,57 @@
     /* أنيميشن البحث */
     .search-highlight {
         animation: highlight 1.5s ease-in-out;
+        background-color: rgba(255, 193, 7, 0.3) !important;
     }
     
     @keyframes highlight {
-        0% { background-color: rgba(255, 193, 7, 0.1); }
-        100% { background-color: transparent; }
+        0% { background-color: rgba(255, 193, 7, 0.5) !important; }
+        50% { background-color: rgba(255, 193, 7, 0.8) !important; }
+        100% { background-color: rgba(255, 193, 7, 0.3) !important; }
+    }
+    
+    /* تمييز النص المطابق */
+    .search-text-highlight {
+        background-color: #ffeb3b;
+        color: #000;
+        padding: 0 3px;
+        border-radius: 3px;
+        font-weight: bold;
+        animation: text-highlight-pulse 1.5s ease-in-out;
+    }
+    
+    @keyframes text-highlight-pulse {
+        0% { background-color: #fff9c4; }
+        50% { background-color: #ffeb3b; }
+        100% { background-color: #fff176; }
+    }
+    
+    /* تحسينات مربع البحث */
+    #employeeSearch {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        transition: all 0.3s ease;
+    }
+    
+    #employeeSearch:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        border-color: #86b7fe;
+        z-index: 5;
+    }
+    
+    #searchBtn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        transition: all 0.2s ease;
+    }
+    
+    #searchBtn:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    #searchBtn:active {
+        transform: translateY(1px);
     }
     
     /* تنسيق مربع الحوار */
@@ -472,6 +518,99 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
     
+    // تمييز النص المطابق للبحث
+    function highlightMatchingText(row, searchTerm) {
+        console.log("تمييز النص المطابق في الصف");
+        
+        // تجاهل الأعمدة التي قد تحتوي على محتوى معقد (مثل الإجراءات والخانات)
+        const textCells = Array.from(row.querySelectorAll('td')).filter((cell, index) => {
+            // تجاهل عمود الإجراءات
+            if (index === 0 || index === row.cells.length - 1) {
+                return false;
+            }
+            return true;
+        });
+        
+        // تمييز النص في كل خلية من الخلايا النصية
+        textCells.forEach(cell => {
+            // تجاهل الخلايا التي تحتوي على أزرار أو عناصر معقدة
+            if (cell.querySelector('button') || cell.querySelector('select') || cell.querySelector('.dropdown')) {
+                return;
+            }
+            
+            // الحصول على النص الأصلي للخلية
+            const originalText = cell.innerText;
+            
+            // إذا لم يتم العثور على النص، تجاهل هذه الخلية
+            if (!originalText.toLowerCase().includes(searchTerm.toLowerCase())) {
+                return;
+            }
+            
+            // تحفظ المحتوى الأصلي إذا كان معقداً (يحتوي على عناصر HTML)
+            if (cell.children.length > 0) {
+                // لا نريد تغيير المحتوى المعقد، فقط نضيف التمييز للنص
+                let tempElement = document.createElement('div');
+                tempElement.innerHTML = cell.innerHTML;
+                const textNodes = getAllTextNodes(tempElement);
+                
+                textNodes.forEach(node => {
+                    const nodeText = node.textContent;
+                    if (nodeText.toLowerCase().includes(searchTerm.toLowerCase())) {
+                        const newText = nodeText.replace(
+                            new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi'),
+                            '<span class="search-text-highlight">$1</span>'
+                        );
+                        
+                        const tempElement = document.createElement('span');
+                        tempElement.innerHTML = newText;
+                        
+                        // استبدال العقدة النصية بالعنصر الجديد
+                        const fragment = document.createDocumentFragment();
+                        for (let i = 0; i < tempElement.childNodes.length; i++) {
+                            fragment.appendChild(tempElement.childNodes[i].cloneNode(true));
+                        }
+                        
+                        node.parentNode.replaceChild(fragment, node);
+                    }
+                });
+                
+                cell.innerHTML = tempElement.innerHTML;
+            } else {
+                // لخلايا النصية البسيطة، يمكننا استبدال النص مباشرة
+                const newText = originalText.replace(
+                    new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi'),
+                    '<span class="search-text-highlight">$1</span>'
+                );
+                cell.innerHTML = newText;
+            }
+        });
+        
+        return true;
+    }
+    
+    // الحصول على جميع عقد النص من عنصر
+    function getAllTextNodes(element) {
+        let nodes = [];
+        
+        function getTextNodes(node) {
+            if (node.nodeType === 3) { // Node.TEXT_NODE
+                nodes.push(node);
+            } else {
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    getTextNodes(node.childNodes[i]);
+                }
+            }
+        }
+        
+        getTextNodes(element);
+        return nodes;
+    }
+    
+    // هروب حروف خاصة في التعبيرات النمطية
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
     // ==== وظائف البحث ====
     // التأكد من وجود عناصر البحث
     console.log("تهيئة وظائف البحث...");
@@ -516,12 +655,26 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log(`صف ${index+1}:`, isMatch ? "مطابق" : "غير مطابق");
             
+            // إزالة أي تمييزات سابقة للنص
+            if (row.hasAttribute('data-original-html')) {
+                row.innerHTML = row.getAttribute('data-original-html');
+                row.removeAttribute('data-original-html');
+            }
+            
             if (isMatch || searchTerm === '') {
                 row.style.display = '';
                 matchCount++;
                 
-                if (searchTerm !== '') {
-                    // إضافة تأثير تمييز مؤقت
+                if (searchTerm !== '' && isMatch) {
+                    // حفظ النص الأصلي للصف
+                    if (!row.hasAttribute('data-original-html')) {
+                        row.setAttribute('data-original-html', row.innerHTML);
+                    }
+                    
+                    // تمييز النص المطابق
+                    const highlightedText = highlightMatchingText(row, searchTerm);
+                    
+                    // إضافة تأثير تمييز مؤقت للصف كامل
                     row.classList.add('search-highlight');
                     setTimeout(() => {
                         row.classList.remove('search-highlight');
