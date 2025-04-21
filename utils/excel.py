@@ -788,3 +788,163 @@ def parse_document_excel(file):
         print(f"Error parsing document Excel: {str(e)}")
         print(traceback.format_exc())
         raise Exception(f"Error parsing document Excel file: {str(e)}")
+
+def export_employee_attendance_to_excel(employee, month=None, year=None):
+    """
+    تصدير بيانات الحضور لموظف معين إلى ملف إكسل
+    
+    Args:
+        employee: كائن الموظف
+        month: الشهر (اختياري)
+        year: السنة (اختياري)
+        
+    Returns:
+        BytesIO object containing the Excel file
+    """
+    try:
+        # تحديد الشهر والسنة إذا لم يتم توفيرهما
+        current_date = datetime.now()
+        if not year:
+            year = current_date.year
+        if not month:
+            month = current_date.month
+            
+        # الحصول على عدد أيام الشهر
+        _, days_in_month = monthrange(year, month)
+        
+        # إنشاء اسم الشهر بالعربية
+        month_names_ar = {
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'إبريل', 5: 'مايو', 6: 'يونيو',
+            7: 'يوليو', 8: 'أغسطس', 9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+        }
+        month_name_ar = month_names_ar.get(month, str(month))
+        
+        # إنشاء عنوان الملف
+        title = f"سجل حضور {employee.name} - {month_name_ar} {year}"
+        
+        # إنشاء قاموس لسجلات الحضور مفهرسة بالتاريخ
+        attendance_dict = {}
+        
+        # تحديد نطاق التواريخ للشهر المحدد
+        start_date = datetime(year, month, 1).date()
+        end_date = datetime(year, month, days_in_month).date()
+        
+        # فلترة سجلات الحضور للشهر المحدد
+        attendances = []
+        if employee.attendances:
+            for attendance in employee.attendances:
+                if start_date <= attendance.date <= end_date:
+                    attendances.append(attendance)
+                    attendance_dict[attendance.date.day] = attendance
+        
+        # تحضير البيانات للإكسل
+        data = []
+        status_map = {
+            'present': 'حاضر',
+            'absent': 'غائب',
+            'leave': 'إجازة',
+            'sick': 'مرضي'
+        }
+        
+        # إضافة صف لكل يوم في الشهر
+        for day in range(1, days_in_month + 1):
+            date_obj = datetime(year, month, day).date()
+            
+            # تخطي أيام العطلة الأسبوعية (الجمعة والسبت)
+            is_weekend = date_obj.weekday() >= 5  # 5 = السبت، 6 = الأحد
+            
+            # إنشاء بيانات الصف
+            attendance = attendance_dict.get(day)
+            row = {
+                'اليوم': day,
+                'التاريخ': date_obj.strftime('%Y-%m-%d'),
+                'اليوم من الأسبوع': date_obj.strftime('%A'),
+                'الحالة': status_map.get(attendance.status, '') if attendance else ('عطلة أسبوعية' if is_weekend else ''),
+                'وقت الحضور': attendance.check_in.strftime('%H:%M') if attendance and attendance.check_in else '',
+                'وقت الانصراف': attendance.check_out.strftime('%H:%M') if attendance and attendance.check_out else '',
+                'الملاحظات': attendance.notes if attendance and attendance.notes else ''
+            }
+            data.append(row)
+        
+        # إنشاء DataFrame
+        df = pd.DataFrame(data)
+        
+        # معلومات الموظف
+        employee_info = pd.DataFrame([{
+            'البيان': 'معلومات الموظف',
+            '': '',
+            'الاسم': employee.name,
+            'الرقم الوظيفي': employee.employee_id,
+            'المسمى الوظيفي': employee.job_title,
+            'القسم': employee.department.name if employee.department else '',
+            'الشهر': f"{month_name_ar} {year}"
+        }])
+        
+        # إحصائيات الحضور
+        present_count = len([a for a in attendances if a.status == 'present'])
+        absent_count = len([a for a in attendances if a.status == 'absent'])
+        leave_count = len([a for a in attendances if a.status == 'leave'])
+        sick_count = len([a for a in attendances if a.status == 'sick'])
+        
+        stats_info = pd.DataFrame([{
+            'البيان': 'إحصائيات الحضور',
+            '': '',
+            'أيام الحضور': present_count,
+            'أيام الغياب': absent_count,
+            'أيام الإجازة': leave_count,
+            'أيام المرضي': sick_count,
+            'المجموع': present_count + absent_count + leave_count + sick_count
+        }])
+        
+        # إنشاء ملف إكسل في الذاكرة
+        output = BytesIO()
+        
+        # الكاتب
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            # كتابة بيانات الموظف
+            employee_info.to_excel(writer, sheet_name='تقرير الحضور', startrow=0, index=False)
+            
+            # كتابة إحصائيات الحضور
+            stats_info.to_excel(writer, sheet_name='تقرير الحضور', startrow=3, index=False)
+            
+            # كتابة بيانات الحضور
+            df.to_excel(writer, sheet_name='تقرير الحضور', startrow=7, index=False)
+            
+            # الحصول على ورقة العمل
+            worksheet = writer.sheets['تقرير الحضور']
+            
+            # تنسيق ورقة العمل
+            workbook = writer.book
+            header_format = workbook.add_format({
+                'bold': True,
+                'align': 'center',
+                'valign': 'vcenter',
+                'bg_color': '#D8E4BC',
+                'border': 1
+            })
+            
+            # تطبيق التنسيق على رؤوس الأعمدة
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(7, col_num, value, header_format)
+            
+            # ضبط عرض الأعمدة
+            worksheet.set_column('A:G', 15)
+            
+            # إضافة عنوان للتقرير
+            title_format = workbook.add_format({
+                'bold': True,
+                'font_size': 14,
+                'align': 'center',
+                'valign': 'vcenter'
+            })
+            worksheet.merge_range('A1:G1', title, title_format)
+        
+        # إعادة مؤشر الذاكرة إلى البداية
+        output.seek(0)
+        
+        return output
+    except Exception as e:
+        import traceback
+        print(f"Error generating attendance Excel file: {str(e)}")
+        print(traceback.format_exc())
+        raise

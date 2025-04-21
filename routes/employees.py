@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
 from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission
-from utils.excel import parse_employee_excel, generate_employee_excel
+from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 
@@ -434,3 +434,56 @@ def export_excel():
     except Exception as e:
         flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
         return redirect(url_for('employees.index'))
+        
+@employees_bp.route('/<int:id>/export_attendance_excel')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def export_attendance_excel(id):
+    """تصدير بيانات الحضور كملف إكسل"""
+    try:
+        # الحصول على بيانات الموظف
+        employee = Employee.query.get_or_404(id)
+        
+        # الحصول على الشهر والسنة من معاملات الطلب
+        month = request.args.get('month')
+        year = request.args.get('year')
+        
+        # تحويل البيانات إلى أرقام صحيحة إذا كانت موجودة
+        if month:
+            month = int(month)
+        if year:
+            year = int(year)
+        
+        # توليد ملف الإكسل
+        output = export_employee_attendance_to_excel(employee, month, year)
+        
+        # تعيين اسم الملف مع التاريخ الحالي
+        current_date = datetime.now().strftime('%Y%m%d')
+        
+        # إضافة الشهر والسنة إلى اسم الملف إذا كانا موجودين
+        if month and year:
+            filename = f"attendance_{employee.name}_{year}_{month}_{current_date}.xlsx"
+        else:
+            filename = f"attendance_{employee.name}_{current_date}.xlsx"
+        
+        # تسجيل الإجراء
+        audit = SystemAudit(
+            action='export',
+            entity_type='attendance',
+            entity_id=employee.id,
+            details=f'تم تصدير سجل الحضور للموظف: {employee.name}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إرسال ملف الإكسل
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تصدير ملف الحضور: {str(e)}', 'danger')
+        return redirect(url_for('employees.view', id=id))
