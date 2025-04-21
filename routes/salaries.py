@@ -20,57 +20,48 @@ salaries_bp = Blueprint('salaries', __name__)
 
 @salaries_bp.route('/')
 def index():
-    """List salary records with filtering options"""
-    # تهيئة المتغيرات الافتراضية
+    """عرض سجلات الرواتب مع خيارات التصفية"""
+    # الحصول على الشهر والسنة الحالية
     current_month = datetime.now().month
     current_year = datetime.now().year
-    month = current_month
-    year = current_year
-    employee_id = None
-    salaries = []
     
+    # الحصول على بيانات التصفية من الطلب
+    month = request.args.get('month', str(current_month))
+    year = request.args.get('year', str(current_year))
+    employee_id = request.args.get('employee_id', '')
+    
+    # بناء استعلام قاعدة البيانات
+    salaries = []
     try:
-        # الحصول على قيم التصفية من الطلب
-        month_param = request.args.get('month', '')
-        year_param = request.args.get('year', '')
-        employee_id_param = request.args.get('employee_id', '')
+        # استخدام القيم الافتراضية في حالة عدم وجود قيم في الرابط
+        filter_month = int(month) if month and month.isdigit() else current_month
+        filter_year = int(year) if year and year.isdigit() else current_year
+        filter_employee = int(employee_id) if employee_id and employee_id.isdigit() else None
         
-        # تحويل القيم إلى أعداد صحيحة إذا كانت صالحة
-        if month_param and month_param.isdigit():
-            month = int(month_param)
+        # بناء الاستعلام الأساسي
+        query = Salary.query.filter(
+            Salary.month == filter_month,
+            Salary.year == filter_year
+        )
         
-        if year_param and year_param.isdigit():
-            year = int(year_param)
-        
-        if employee_id_param and employee_id_param.isdigit():
-            employee_id = int(employee_id_param)
-        
-        # بناء الاستعلام
-        query = Salary.query
-        
-        # تطبيق التصفية
-        query = query.filter(Salary.month == month, Salary.year == year)
-        
-        if employee_id:
-            query = query.filter(Salary.employee_id == employee_id)
+        # إضافة تصفية الموظف إذا تم تحديدها
+        if filter_employee:
+            query = query.filter(Salary.employee_id == filter_employee)
         
         # تنفيذ الاستعلام
         salaries = query.all()
         
+        print(f"تم العثور على {len(salaries)} سجل للشهر {filter_month} والسنة {filter_year}")
     except Exception as e:
-        # في حالة وجود أي خطأ، نعرض رسالة
-        print(f"خطأ في الاستعلام: {str(e)}")
-        flash('حدث خطأ أثناء استرجاع بيانات الرواتب', 'danger')
+        print(f"خطأ في استرجاع بيانات الرواتب: {str(e)}")
+        flash(f'حدث خطأ أثناء استرجاع بيانات الرواتب: {str(e)}', 'danger')
     
     # حساب الإحصائيات
-    if salaries:
-        total_basic = sum(s.basic_salary for s in salaries)
-        total_allowances = sum(s.allowances for s in salaries)
-        total_deductions = sum(s.deductions for s in salaries)
-        total_bonus = sum(s.bonus for s in salaries)
-        total_net = sum(s.net_salary for s in salaries)
-    else:
-        total_basic = total_allowances = total_deductions = total_bonus = total_net = 0
+    total_basic = sum(s.basic_salary for s in salaries)
+    total_allowances = sum(s.allowances for s in salaries)
+    total_deductions = sum(s.deductions for s in salaries)
+    total_bonus = sum(s.bonus for s in salaries)
+    total_net = sum(s.net_salary for s in salaries)
     
     # Get all employees for filter dropdown
     employees = Employee.query.filter_by(status='active').all()
