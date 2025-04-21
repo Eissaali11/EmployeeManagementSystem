@@ -106,7 +106,7 @@
                                 <tr data-employee-id="{{ employee.id }}">
                                     <td>
                                         <div class="form-check">
-                                            <input class="form-check-input employee-checkbox" type="checkbox" value="{{ employee.id }}">
+                                            <input class="form-check-input employee-checkbox" type="checkbox" name="employee_checkbox" value="{{ employee.id }}" id="employee_{{ employee.id }}">
                                         </div>
                                     </td>
                                     <td>{{ employee.employee_id }}</td>
@@ -233,38 +233,68 @@
             }
         }
         
-        // تحديد/إلغاء تحديد جميع الموظفين
+        // تحديد/إلغاء تحديد جميع الموظفين عن طريق خانة الاختيار في الجدول
         if (checkAllEmployees) {
+            // طباعة عنصر checkAllEmployees للتأكد من وجوده
+            console.log("عنصر checkAllEmployees:", checkAllEmployees);
+            
             checkAllEmployees.addEventListener('click', function() {
-                console.log(`تحديد/إلغاء الكل: ${this.checked}`);
+                const isChecked = this.checked;
+                console.log(`تم النقر على خانة تحديد الكل. الحالة: ${isChecked ? 'محدد' : 'غير محدد'}`);
+                
                 employeeCheckboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
+                    checkbox.checked = isChecked;
                 });
+                
                 updateSelectedCount();
             });
         }
         
-        // زر تحديد الكل
+        // زر تحديد الكل من القائمة
         if (selectAllEmployeesBtn) {
+            console.log("عنصر selectAllEmployeesBtn:", selectAllEmployeesBtn);
+            
             selectAllEmployeesBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('تم النقر على زر تحديد الكل');
-                employeeCheckboxes.forEach(checkbox => {
+                console.log('تم النقر على زر تحديد الكل من القائمة');
+                
+                // تحديد جميع خانات الاختيار في الجدول
+                document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
                     checkbox.checked = true;
                 });
+                
+                // تحديث حالة خانة اختيار "تحديد الكل" الرئيسية
+                if (checkAllEmployees) {
+                    checkAllEmployees.checked = true;
+                    checkAllEmployees.indeterminate = false;
+                }
+                
                 updateSelectedCount();
+                console.log('تم تحديد جميع الموظفين');
             });
         }
         
         // زر إلغاء تحديد الكل
         if (deselectAllEmployeesBtn) {
+            console.log("عنصر deselectAllEmployeesBtn:", deselectAllEmployeesBtn);
+            
             deselectAllEmployeesBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 console.log('تم النقر على زر إلغاء تحديد الكل');
-                employeeCheckboxes.forEach(checkbox => {
+                
+                // إلغاء تحديد جميع خانات الاختيار في الجدول
+                document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
                     checkbox.checked = false;
                 });
+                
+                // تحديث حالة خانة اختيار "تحديد الكل" الرئيسية
+                if (checkAllEmployees) {
+                    checkAllEmployees.checked = false;
+                    checkAllEmployees.indeterminate = false;
+                }
+                
                 updateSelectedCount();
+                console.log('تم إلغاء تحديد جميع الموظفين');
             });
         }
         
@@ -307,8 +337,11 @@
                 e.preventDefault();
                 console.log('تم النقر على زر حذف المحدد');
                 
-                const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
-                    .map(checkbox => checkbox.value);
+                // جمع معرفات الموظفين المحددين
+                const selectedIds = [];
+                document.querySelectorAll('.employee-checkbox:checked').forEach(checkbox => {
+                    selectedIds.push(checkbox.value);
+                });
                 console.log('المعرفات المحددة للحذف:', selectedIds);
                 
                 if (selectedIds.length === 0) {
@@ -322,6 +355,7 @@
                     deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
                     deleteBtn.classList.add('disabled');
                     
+                    console.log('جاري إرسال طلب الحذف للخادم...');
                     // إرسال طلب للخادم لحذف الموظفين المحددين
                     fetch(`/departments/{{ department.id }}/delete_employees`, {
                         method: 'POST',
