@@ -164,12 +164,31 @@
                             <td>{{ salary.employee.name }}</td>
                             <td>{{ salary.employee.employee_id }}</td>
                             <td>{{ salary.month }}/{{ salary.year }}</td>
+                            {% if has_salary_data and salary.id %}
                             <td>{{ salary.basic_salary }}</td>
                             <td>{{ salary.allowances }}</td>
                             <td>{{ salary.deductions }}</td>
                             <td>{{ salary.bonus }}</td>
                             <td class="fw-bold">{{ salary.net_salary }}</td>
+                            {% else %}
+                            <td>
+                                <input type="number" class="form-control form-control-sm salary-input" data-field="basic_salary" data-employee="{{ salary.employee_id }}" placeholder="الراتب الأساسي" required>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm salary-input" data-field="allowances" data-employee="{{ salary.employee_id }}" placeholder="البدلات" value="0">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm salary-input" data-field="deductions" data-employee="{{ salary.employee_id }}" placeholder="الخصومات" value="0">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm salary-input" data-field="bonus" data-employee="{{ salary.employee_id }}" placeholder="المكافآت" value="0">
+                            </td>
+                            <td class="fw-bold">
+                                <span class="net-salary-display" data-employee="{{ salary.employee_id }}">0</span>
+                            </td>
+                            {% endif %}
                             <td class="text-center">
+                                {% if has_salary_data and salary.id %}
                                 <!-- زر تعديل الراتب -->
                                 <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn btn-sm btn-info mb-1" title="تعديل الراتب">
                                     <i class="fas fa-edit me-1"></i> تعديل
@@ -191,6 +210,15 @@
                                     <i class="fab fa-whatsapp me-1"></i> إشعار الخصم
                                 </a>
                                 {% endif %}
+                                
+                                {% else %}
+                                <!-- زر لإضافة راتب جديد للموظف -->
+                                <button class="btn btn-sm btn-success mb-1 save-salary-btn" data-employee="{{ salary.employee_id }}" data-month="{{ salary.month }}" data-year="{{ salary.year }}" title="حفظ الراتب">
+                                    <i class="fas fa-save me-1"></i> حفظ
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
