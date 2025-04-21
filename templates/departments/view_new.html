@@ -1,0 +1,692 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .badge {
+        transition: all 0.2s ease;
+    }
+    
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .table tr {
+        transition: background-color 0.2s;
+    }
+    
+    .table tr:hover {
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+    
+    .search-highlight {
+        animation: highlight 1.5s ease-in-out;
+    }
+    
+    @keyframes highlight {
+        0% { background-color: rgba(255, 193, 7, 0.1); }
+        100% { background-color: transparent; }
+    }
+</style>
+{% endblock %}
+
+{% block title %}{{ department.name }}{% endblock %}
+
+{% block content %}
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">
+                        <i class="fas fa-users-cog fa-fw text-primary me-2"></i>
+                        قسم: {{ department.name }}
+                    </h2>
+                    <div>
+                        <a href="{{ url_for('routes.departments.index') }}" class="btn btn-outline-secondary ms-1">
+                            <i class="fas fa-arrow-right me-1"></i> العودة للأقسام
+                        </a>
+                        <a href="{{ url_for('routes.departments.edit', id=department.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i> تعديل القسم
+                        </a>
+                    </div>
+                </div>
+                <hr>
+            </div>
+        </div>
+        
+        <!-- إحصائيات موظفي القسم -->
+        <div class="row mb-4">
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="display-4 text-success mb-3">
+                            <i class="fas fa-user-check fa-fw"></i>
+                        </div>
+                        <h5 class="card-title mb-0">الموظفون النشطون</h5>
+                        <div class="display-6 fw-bold mt-3">{{ active_count }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="display-4 text-warning mb-3">
+                            <i class="fas fa-user-clock fa-fw"></i>
+                        </div>
+                        <h5 class="card-title mb-0">موظفون في إجازة</h5>
+                        <div class="display-6 fw-bold mt-3">{{ on_leave_count }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="display-4 text-danger mb-3">
+                            <i class="fas fa-user-times fa-fw"></i>
+                        </div>
+                        <h5 class="card-title mb-0">موظفون غير نشطين</h5>
+                        <div class="display-6 fw-bold mt-3">{{ inactive_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قائمة الموظفين مع أدوات التحكم -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users fa-fw text-primary me-2"></i>
+                            قائمة الموظفين
+                            <span class="badge bg-secondary ms-2" id="employeeCount">{{ employees|length }} موظف</span>
+                        </h5>
+                        <div>
+                            <a href="{{ url_for('routes.employees.create', department_id=department.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-1"></i> إضافة موظف
+                            </a>
+                            <a href="{{ url_for('routes.departments.import_employees', id=department.id) }}" class="btn btn-outline-secondary ms-1">
+                                <i class="fas fa-file-import me-1"></i> استيراد من Excel
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- شريط البحث والتصفية -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" id="employeeSearch" class="form-control" placeholder="بحث عن موظف...">
+                                    <button class="btn btn-secondary" type="button" id="searchBtn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex justify-content-end">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-secondary" id="selectAllBtn">
+                                        <i class="fas fa-check-square me-1"></i> تحديد الكل
+                                    </button>
+                                    <button type="button" class="btn btn-light" id="deselectAllBtn">
+                                        <i class="fas fa-square me-1"></i> إلغاء التحديد
+                                    </button>
+                                    <button type="button" class="btn btn-success disabled" id="exportBtn">
+                                        <i class="fas fa-file-export me-1"></i> تصدير
+                                    </button>
+                                    <button type="button" class="btn btn-danger disabled" id="deleteBtn">
+                                        <i class="fas fa-trash me-1"></i> حذف
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- جدول الموظفين -->
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="checkAll">
+                                            </div>
+                                        </th>
+                                        <th>رقم الموظف</th>
+                                        <th>الموظف</th>
+                                        <th>رقم الهوية</th>
+                                        <th>الجنسية</th>
+                                        <th>رقم الجوال</th>
+                                        <th>الوظيفة</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeesTable">
+                                    {% for employee in employees %}
+                                    <tr data-employee-id="{{ employee.id }}">
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input employee-checkbox" type="checkbox" value="{{ employee.id }}">
+                                            </div>
+                                        </td>
+                                        <td>{{ employee.employee_number or '' }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <div class="avatar bg-light rounded-circle text-center" style="width: 40px; height: 40px; line-height: 40px;">
+                                                        <i class="fas fa-user text-secondary"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="ms-3">
+                                                    <h6 class="mb-0">{{ employee.name }}</h6>
+                                                    <small class="text-muted">{{ employee.email or '' }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ employee.id_number or '' }}</td>
+                                        <td>{{ employee.nationality or '' }}</td>
+                                        <td>{{ employee.phone or '' }}</td>
+                                        <td>{{ employee.job_title or '' }}</td>
+                                        <td>
+                                            <div class="dropdown">
+                                                {% if employee.status == 'active' %}
+                                                <button type="button" class="btn btn-sm btn-outline-success dropdown-toggle status-dropdown-btn" id="status-{{ employee.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-user-check me-1"></i> نشط
+                                                </button>
+                                                {% elif employee.status == 'on_leave' %}
+                                                <button type="button" class="btn btn-sm btn-outline-warning dropdown-toggle status-dropdown-btn" id="status-{{ employee.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-user-clock me-1"></i> في إجازة
+                                                </button>
+                                                {% else %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger dropdown-toggle status-dropdown-btn" id="status-{{ employee.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-user-times me-1"></i> غير نشط
+                                                </button>
+                                                {% endif %}
+                                                <ul class="dropdown-menu" aria-labelledby="status-{{ employee.id }}">
+                                                    <li><h6 class="dropdown-header">تغيير الحالة إلى</h6></li>
+                                                    <li>
+                                                        <a class="dropdown-item status-change-btn" href="#" data-employee-id="{{ employee.id }}" data-status="active">
+                                                            <i class="fas fa-user-check me-2 text-success"></i> نشط
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item status-change-btn" href="#" data-employee-id="{{ employee.id }}" data-status="on_leave">
+                                                            <i class="fas fa-user-clock me-2 text-warning"></i> في إجازة
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item status-change-btn" href="#" data-employee-id="{{ employee.id }}" data-status="inactive">
+                                                            <i class="fas fa-user-times me-2 text-danger"></i> غير نشط
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('routes.employees.show', id=employee.id) }}" class="btn btn-sm btn-primary" title="عرض">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('routes.employees.edit', id=employee.id) }}" class="btn btn-sm btn-info" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger delete-employee-btn" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal" data-id="{{ employee.id }}" data-name="{{ employee.name }}" title="حذف">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if not employees %}
+                        <div class="text-center py-5">
+                            <div class="display-6 text-muted mb-3">
+                                <i class="fas fa-users-slash"></i>
+                            </div>
+                            <h5 class="text-muted">لا يوجد موظفين في هذا القسم حالياً</h5>
+                            <p class="mb-4">يمكنك إضافة موظفين جدد أو استيرادهم من ملف Excel</p>
+                            <div class="mt-3">
+                                <a href="{{ url_for('routes.employees.create', department_id=department.id) }}" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle me-1"></i> إضافة موظف
+                                </a>
+                                <a href="{{ url_for('routes.departments.import_employees', id=department.id) }}" class="btn btn-outline-secondary ms-1">
+                                    <i class="fas fa-file-import me-1"></i> استيراد من Excel
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- مربع حوار تأكيد حذف موظف -->
+    <div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تأكيد الحذف</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-trash-alt text-danger fa-4x mb-3"></i>
+                        <h5>هل أنت متأكد من حذف الموظف؟</h5>
+                        <p class="text-muted">
+                            سيتم حذف جميع بيانات الموظف: <strong id="employeeNameToDelete"></strong> وسجلاته المرتبطة به نهائياً ولا يمكن استعادة البيانات بعد الحذف.
+                        </p>
+                    </div>
+                    <form id="deleteEmployeeForm" method="POST" action="">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash me-1"></i> تأكيد الحذف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // الثوابت
+    const departmentId = {{ department.id }};
+    const csrfToken = "{{ csrf_token() }}";
+    
+    // ==== وظائف مساعدة ====
+    
+    // عرض رسالة تنبيه
+    function showAlert(message, type) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        const alertContainer = document.createElement('div');
+        alertContainer.innerHTML = alertHtml;
+        const alert = alertContainer.firstChild;
+        
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(alert, cardBody.firstChild);
+        
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 3000);
+    }
+    
+    // ==== وظائف البحث ====
+    const searchInput = document.getElementById('employeeSearch');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    // تفعيل البحث
+    function performSearch() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#employeesTable tr');
+        let matchCount = 0;
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isMatch = text.includes(searchTerm);
+            
+            if (isMatch || searchTerm === '') {
+                row.style.display = '';
+                matchCount++;
+                
+                if (searchTerm !== '') {
+                    row.classList.add('search-highlight');
+                    setTimeout(() => {
+                        row.classList.remove('search-highlight');
+                    }, 1500);
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // تحديث العداد
+        document.getElementById('employeeCount').textContent = matchCount + ' موظف';
+        
+        // عرض رسالة
+        if (searchTerm !== '') {
+            if (matchCount > 0) {
+                showAlert(`تم العثور على ${matchCount} موظف مطابق للبحث`, 'success');
+            } else {
+                showAlert('لا توجد نتائج مطابقة للبحث', 'warning');
+            }
+        }
+    }
+    
+    // أحداث البحث
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+    
+    // ==== وظائف تحديد الموظفين ====
+    const checkAll = document.getElementById('checkAll');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const checkboxes = document.querySelectorAll('.employee-checkbox');
+    
+    // الحصول على المعرفات المحددة
+    function getSelectedIds() {
+        const selectedIds = [];
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                selectedIds.push(parseInt(checkbox.value));
+            }
+        });
+        return selectedIds;
+    }
+    
+    // تحديث حالة الأزرار
+    function updateButtonsState() {
+        const selectedIds = getSelectedIds();
+        const count = selectedIds.length;
+        
+        // زر التصدير
+        if (exportBtn) {
+            exportBtn.innerHTML = count ? 
+                `<i class="fas fa-file-export me-1"></i> تصدير (${count})` : 
+                `<i class="fas fa-file-export me-1"></i> تصدير`;
+            
+            if (count > 0) {
+                exportBtn.classList.remove('disabled');
+            } else {
+                exportBtn.classList.add('disabled');
+            }
+        }
+        
+        // زر الحذف
+        if (deleteBtn) {
+            deleteBtn.innerHTML = count ? 
+                `<i class="fas fa-trash me-1"></i> حذف (${count})` : 
+                `<i class="fas fa-trash me-1"></i> حذف`;
+            
+            if (count > 0) {
+                deleteBtn.classList.remove('disabled');
+            } else {
+                deleteBtn.classList.add('disabled');
+            }
+        }
+        
+        // خانة التحديد الرئيسية
+        if (checkAll) {
+            checkAll.checked = (checkboxes.length > 0 && count === checkboxes.length);
+            checkAll.indeterminate = (count > 0 && count < checkboxes.length);
+        }
+    }
+    
+    // تحديد كافة الموظفين
+    function selectAll() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        
+        if (checkAll) checkAll.checked = true;
+        updateButtonsState();
+        showAlert('تم تحديد جميع الموظفين', 'info');
+    }
+    
+    // إلغاء تحديد كافة الموظفين
+    function deselectAll() {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        
+        if (checkAll) checkAll.checked = false;
+        updateButtonsState();
+        showAlert('تم إلغاء تحديد جميع الموظفين', 'info');
+    }
+    
+    // تصدير الموظفين المحددين
+    function exportEmployees(ids) {
+        if (ids.length === 0) {
+            showAlert('الرجاء تحديد موظف واحد على الأقل للتصدير', 'warning');
+            return;
+        }
+        
+        // إعداد النموذج
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = `/departments/${departmentId}/export_employees`;
+        form.target = '_blank';
+        form.style.display = 'none';
+        
+        // إضافة المعرفات
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids';
+        input.value = ids.join(',');
+        form.appendChild(input);
+        
+        // إضافة النموذج وإرساله
+        document.body.appendChild(form);
+        
+        // تغيير حالة الزر
+        if (exportBtn) {
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التصدير...';
+            exportBtn.disabled = true;
+        }
+        
+        // إرسال النموذج
+        form.submit();
+        
+        // إعادة تعيين الزر بعد ثوان
+        setTimeout(() => {
+            if (exportBtn) {
+                exportBtn.disabled = false;
+                updateButtonsState();
+            }
+            
+            // إزالة النموذج
+            document.body.removeChild(form);
+        }, 2000);
+        
+        showAlert('جاري تصدير بيانات الموظفين...', 'success');
+    }
+    
+    // حذف الموظفين المحددين
+    function deleteEmployees(ids) {
+        if (ids.length === 0) {
+            showAlert('الرجاء تحديد موظف واحد على الأقل للحذف', 'warning');
+            return;
+        }
+        
+        if (confirm(`هل أنت متأكد من حذف ${ids.length} موظف؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+            // إعداد النموذج
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/departments/${departmentId}/delete_employees`;
+            form.style.display = 'none';
+            
+            // إضافة المعرفات
+            ids.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'employee_ids';
+                input.value = id;
+                form.appendChild(input);
+            });
+            
+            // إضافة رمز CSRF
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
+            // تغيير حالة الزر
+            if (deleteBtn) {
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+                deleteBtn.disabled = true;
+            }
+            
+            // إضافة النموذج وإرساله
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // ==== ربط أحداث الأزرار ====
+    
+    // خانة التحديد الرئيسية
+    if (checkAll) {
+        checkAll.addEventListener('change', function() {
+            const isChecked = this.checked;
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateButtonsState();
+        });
+    }
+    
+    // زر تحديد الكل
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            selectAll();
+        });
+    }
+    
+    // زر إلغاء التحديد
+    if (deselectAllBtn) {
+        deselectAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            deselectAll();
+        });
+    }
+    
+    // زر التصدير
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            exportEmployees(getSelectedIds());
+        });
+    }
+    
+    // زر الحذف
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            deleteEmployees(getSelectedIds());
+        });
+    }
+    
+    // خانات الاختيار الفردية
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateButtonsState);
+    });
+    
+    // ==== إعداد نافذة حذف الموظف الفردي ====
+    const deleteButtons = document.querySelectorAll('.delete-employee-btn');
+    const deleteForm = document.getElementById('deleteEmployeeForm');
+    const employeeNameElement = document.getElementById('employeeNameToDelete');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    
+    // ربط أزرار الحذف الفردية
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const employeeId = this.getAttribute('data-id');
+            const employeeName = this.getAttribute('data-name');
+            
+            if (employeeNameElement) {
+                employeeNameElement.textContent = employeeName;
+            }
+            
+            if (deleteForm) {
+                deleteForm.action = `/employees/${employeeId}/delete`;
+            }
+        });
+    });
+    
+    // زر تأكيد الحذف
+    if (confirmDeleteBtn && deleteForm) {
+        confirmDeleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                deleteForm.submit();
+            }, 300);
+        });
+    }
+    
+    // ==== ربط أزرار تغيير الحالة ====
+    const statusButtons = document.querySelectorAll('.status-change-btn');
+    
+    statusButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const employeeId = this.getAttribute('data-employee-id');
+            const status = this.getAttribute('data-status');
+            
+            if (!employeeId || !status) return;
+            
+            // إنشاء نموذج لتغيير الحالة
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/employees/${employeeId}/update_status`;
+            form.style.display = 'none';
+            
+            // إضافة الحالة الجديدة
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'status';
+            statusInput.value = status;
+            form.appendChild(statusInput);
+            
+            // إضافة رمز CSRF
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
+            // إضافة عنوان العودة
+            const returnInput = document.createElement('input');
+            returnInput.type = 'hidden';
+            returnInput.name = 'return_to';
+            returnInput.value = window.location.pathname;
+            form.appendChild(returnInput);
+            
+            // إضافة النموذج وإرساله
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+    
+    // التهيئة الأولية
+    updateButtonsState();
+});
+</script>
+{% endblock %}
