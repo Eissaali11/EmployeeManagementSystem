@@ -333,34 +333,105 @@
         </div>
     </div>
     
-    <!-- مربع حوار تأكيد حذف موظف -->
-    <div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
+    <!-- مربع حوار تأكيد حذف موظف (محسن) -->
+    <style>
+        /* تنسيقات مخصصة للمربع المنبثق */
+        .custom-modal .modal-content {
+            background-color: white !important;
+            border: none !important;
+            border-radius: 10px !important;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
+        }
+        
+        .custom-modal .modal-header {
+            background-color: #f8f9fa !important;
+            border-bottom: 1px solid #eee !important;
+            padding: 15px 20px !important;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .custom-modal .modal-body {
+            padding: 25px !important;
+            background-color: white !important;
+        }
+        
+        .custom-modal .modal-footer {
+            background-color: #f8f9fa !important;
+            border-top: 1px solid #eee !important;
+            padding: 15px 20px !important;
+            border-radius: 0 0 10px 10px !important;
+        }
+        
+        .custom-modal .trash-icon {
+            font-size: 4rem !important;
+            color: #dc3545 !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        .custom-modal .alert-custom {
+            background-color: #fff3cd !important;
+            border: 1px solid #ffeeba !important;
+            color: #333 !important;
+            border-radius: 8px !important;
+            padding: 15px !important;
+            margin-top: 1rem !important;
+        }
+        
+        .custom-modal .btn-cancel {
+            background-color: #6c757d !important;
+            color: white !important;
+            border-radius: 5px !important;
+            padding: 8px 20px !important;
+            border: none !important;
+        }
+        
+        .custom-modal .btn-confirm {
+            background-color: #dc3545 !important;
+            color: white !important;
+            border-radius: 5px !important;
+            padding: 8px 20px !important;
+            border: none !important;
+        }
+        
+        .custom-modal .modal-title {
+            color: #333 !important;
+            font-weight: 600 !important;
+        }
+        
+        /* تعديل طبقة الخلفية المعتمة */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+    </style>
+
+    <div class="modal fade custom-modal" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-white">
-                <div class="modal-header bg-light">
+            <div class="modal-content">
+                <div class="modal-header">
                     <h5 class="modal-title" id="deleteEmployeeModalLabel">تأكيد الحذف</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <div class="mb-4">
-                        <div class="text-danger mb-3" style="font-size: 4rem;">
+                    <div class="mb-3">
+                        <div class="trash-icon">
                             <i class="fas fa-trash-alt"></i>
                         </div>
-                        <h5 class="mb-3 text-dark">هل أنت متأكد من حذف الموظف؟</h5>
-                        <div class="alert alert-warning">
-                            سيتم حذف جميع بيانات الموظف: <strong id="employeeNameToDelete" class="text-dark"></strong> وسجلاته المرتبطة به نهائياً
-                            <br>ولا يمكن استعادة البيانات بعد الحذف.
+                        <h4 class="mb-3 fw-bold">هل أنت متأكد من حذف الموظف؟</h4>
+                        <div class="alert-custom">
+                            <p class="mb-1">سيتم حذف جميع بيانات الموظف:</p>
+                            <h5 class="mb-2 mt-2 fw-bold" id="employeeNameToDelete">إسم الموظف</h5>
+                            <p class="mb-0">وسجلاته المرتبطة به نهائياً ولا يمكن استعادة البيانات بعد الحذف.</p>
                         </div>
                     </div>
                     <form id="deleteEmployeeForm" method="POST" action="">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     </form>
                 </div>
-                <div class="modal-footer justify-content-center bg-light">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-cancel px-4 me-2" data-bs-dismiss="modal">
                         <i class="fas fa-times me-1"></i> إلغاء
                     </button>
-                    <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">
+                    <button type="button" class="btn btn-confirm px-4" id="confirmDeleteBtn">
                         <i class="fas fa-trash me-1"></i> تأكيد الحذف
                     </button>
                 </div>
@@ -679,6 +750,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteForm = document.getElementById('deleteEmployeeForm');
     const employeeNameElement = document.getElementById('employeeNameToDelete');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const deleteModal = document.getElementById('deleteEmployeeModal');
+    
+    // تسجيل حدث عندما يتم فتح مربع الحوار
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function () {
+            // التأكد من أن مربع الحوار يظهر بشكل صحيح
+            document.body.classList.add('modal-open');
+        });
+    }
     
     // ربط أزرار الحذف الفردية
     deleteButtons.forEach(button => {
@@ -689,10 +769,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("تحضير حذف الموظف:", employeeId, employeeName);
             
             if (employeeNameElement) {
+                // تعيين اسم الموظف في نافذة الحذف
                 employeeNameElement.textContent = employeeName || "غير معروف";
             }
             
             if (deleteForm) {
+                // تعيين مسار الحذف في النموذج
                 deleteForm.action = `/employees/${employeeId}/delete`;
                 console.log("تم تحديث مسار الحذف:", deleteForm.action);
             }
@@ -712,12 +794,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log("تنفيذ عملية الحذف:", deleteForm.action);
             
+            // تغيير نص وحالة زر الحذف
             this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جارٍ الحذف...';
             this.disabled = true;
             
             // تأخير قصير قبل الإرسال لتحسين تجربة المستخدم
             setTimeout(() => {
                 try {
+                    // إرسال نموذج الحذف
                     deleteForm.submit();
                 } catch (error) {
                     console.error("حدث خطأ أثناء إرسال نموذج الحذف:", error);
@@ -726,8 +810,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     // إعادة الزر إلى حالته الأصلية
                     this.innerHTML = '<i class="fas fa-trash me-1"></i> تأكيد الحذف';
                     this.disabled = false;
+                    
+                    // إغلاق مربع الحوار
+                    const modal = bootstrap.Modal.getInstance(deleteModal);
+                    if (modal) {
+                        modal.hide();
+                    }
                 }
             }, 300);
+        });
+    }
+    
+    // إعادة تعيين مربع الحوار عند إغلاقه
+    if (deleteModal) {
+        deleteModal.addEventListener('hidden.bs.modal', function () {
+            // إعادة زر الحذف إلى حالته الأصلية
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i> تأكيد الحذف';
+                confirmDeleteBtn.disabled = false;
+            }
         });
     }
     
