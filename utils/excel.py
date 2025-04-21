@@ -270,7 +270,10 @@ def generate_employee_excel(employees, output=None):
         df = pd.DataFrame(data)
         
         # Write to Excel using openpyxl engine
-        output = BytesIO()
+        if output is None:
+            # إذا لم يتم توفير output، قم بإنشاء كائن BytesIO جديد
+            output = BytesIO()
+            
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Employees', index=False)
             
@@ -286,6 +289,7 @@ def generate_employee_excel(employees, output=None):
         return output
     
     except Exception as e:
+        print(f"خطأ في إنشاء ملف Excel: {str(e)}")
         raise Exception(f"Error generating Excel file: {str(e)}")
 
 def parse_salary_excel(file, month, year):

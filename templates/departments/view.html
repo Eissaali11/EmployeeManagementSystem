@@ -172,6 +172,8 @@
 {% block scripts %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        console.log("تهيئة إدارة الموظفين المحددين");
+        
         // نموذج للتحقق من رمز CSRF
         const csrfToken = "{{ csrf_token() }}";
         
@@ -181,12 +183,33 @@
         const deselectAllEmployeesBtn = document.getElementById('deselectAllEmployees');
         const exportSelectedEmployeesBtn = document.getElementById('exportSelectedEmployees');
         const deleteSelectedEmployeesBtn = document.getElementById('deleteSelectedEmployees');
+        
+        // التحقق من وجود العناصر في الصفحة
+        if (!checkAllEmployees) {
+            console.error('لم يتم العثور على عنصر checkAllEmployees');
+        }
+        if (!selectAllEmployeesBtn) {
+            console.error('لم يتم العثور على زر تحديد الكل');
+        }
+        if (!deselectAllEmployeesBtn) {
+            console.error('لم يتم العثور على زر إلغاء تحديد الكل');
+        }
+        if (!exportSelectedEmployeesBtn) {
+            console.error('لم يتم العثور على زر تصدير المحدد');
+        }
+        if (!deleteSelectedEmployeesBtn) {
+            console.error('لم يتم العثور على زر حذف المحدد');
+        }
+
+        // الحصول على جميع خانات اختيار الموظفين
         const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
+        console.log(`تم العثور على ${employeeCheckboxes.length} خانة اختيار للموظفين`);
         
         // تحديث عدد العناصر المحددة
         function updateSelectedCount() {
             const selectedCount = document.querySelectorAll('.employee-checkbox:checked').length;
             const totalCount = employeeCheckboxes.length;
+            console.log(`تم تحديد ${selectedCount} من ${totalCount} موظف`);
             
             // تحديث زر الحذف وتصدير لإظهار عدد العناصر المحددة
             if (selectedCount > 0) {
@@ -204,131 +227,158 @@
             }
             
             // تحديث حالة خانة اختيار "تحديد الكل"
-            checkAllEmployees.checked = selectedCount > 0 && selectedCount === totalCount;
-            checkAllEmployees.indeterminate = selectedCount > 0 && selectedCount < totalCount;
+            if (checkAllEmployees) {
+                checkAllEmployees.checked = selectedCount > 0 && selectedCount === totalCount;
+                checkAllEmployees.indeterminate = selectedCount > 0 && selectedCount < totalCount;
+            }
         }
         
         // تحديد/إلغاء تحديد جميع الموظفين
-        checkAllEmployees.addEventListener('change', function() {
-            employeeCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
+        if (checkAllEmployees) {
+            checkAllEmployees.addEventListener('click', function() {
+                console.log(`تحديد/إلغاء الكل: ${this.checked}`);
+                employeeCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                updateSelectedCount();
             });
-            updateSelectedCount();
-        });
+        }
         
         // زر تحديد الكل
-        selectAllEmployeesBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            employeeCheckboxes.forEach(checkbox => {
-                checkbox.checked = true;
+        if (selectAllEmployeesBtn) {
+            selectAllEmployeesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر تحديد الكل');
+                employeeCheckboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateSelectedCount();
             });
-            updateSelectedCount();
-        });
+        }
         
         // زر إلغاء تحديد الكل
-        deselectAllEmployeesBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            employeeCheckboxes.forEach(checkbox => {
-                checkbox.checked = false;
+        if (deselectAllEmployeesBtn) {
+            deselectAllEmployeesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر إلغاء تحديد الكل');
+                employeeCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateSelectedCount();
             });
-            updateSelectedCount();
-        });
+        }
         
         // إضافة مستمع لكل خانة اختيار موظف
         employeeCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updateSelectedCount);
+            checkbox.addEventListener('change', function() {
+                console.log(`تغيير حالة الموظف ${this.value}: ${this.checked}`);
+                updateSelectedCount();
+            });
         });
         
         // زر تصدير المحدد
-        exportSelectedEmployeesBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
-                .map(checkbox => checkbox.value);
-            
-            if (selectedIds.length === 0) {
-                showAlert('يجب تحديد موظف واحد على الأقل للتصدير', 'warning');
-                return;
-            }
-            
-            // إنشاء عنوان URL للتصدير مع معرفات الموظفين المحددين
-            const departmentId = {{ department.id }};
-            const exportUrl = `/departments/${departmentId}/export_employees?ids=${selectedIds.join(',')}`;
-            
-            // فتح عنوان URL في نافذة جديدة للتنزيل
-            window.open(exportUrl, '_blank');
-        });
+        if (exportSelectedEmployeesBtn) {
+            exportSelectedEmployeesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر تصدير المحدد');
+                
+                const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
+                    .map(checkbox => checkbox.value);
+                console.log('المعرفات المحددة:', selectedIds);
+                
+                if (selectedIds.length === 0) {
+                    showAlert('يجب تحديد موظف واحد على الأقل للتصدير', 'warning');
+                    return;
+                }
+                
+                // إنشاء عنوان URL للتصدير مع معرفات الموظفين المحددين
+                const departmentId = {{ department.id }};
+                const exportUrl = `/departments/${departmentId}/export_employees?ids=${selectedIds.join(',')}`;
+                console.log('URL التصدير:', exportUrl);
+                
+                // فتح عنوان URL في نافذة جديدة للتنزيل
+                window.open(exportUrl, '_blank');
+            });
+        }
         
         // زر حذف المحدد
-        deleteSelectedEmployeesBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
-                .map(checkbox => checkbox.value);
-            
-            if (selectedIds.length === 0) {
-                showAlert('يجب تحديد موظف واحد على الأقل للحذف', 'warning');
-                return;
-            }
-            
-            if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} موظف؟ هذا الإجراء لا يمكن التراجع عنه.`)) {
-                // إظهار مؤشر التحميل
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
-                this.classList.add('disabled');
+        if (deleteSelectedEmployeesBtn) {
+            deleteSelectedEmployeesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر حذف المحدد');
                 
-                // إرسال طلب للخادم لحذف الموظفين المحددين
-                fetch(`/departments/{{ department.id }}/delete_employees`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({ 
-                        employee_ids: selectedIds,
-                        csrf_token: csrfToken
+                const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
+                    .map(checkbox => checkbox.value);
+                console.log('المعرفات المحددة للحذف:', selectedIds);
+                
+                if (selectedIds.length === 0) {
+                    showAlert('يجب تحديد موظف واحد على الأقل للحذف', 'warning');
+                    return;
+                }
+                
+                if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} موظف؟ هذا الإجراء لا يمكن التراجع عنه.`)) {
+                    const deleteBtn = this;
+                    // إظهار مؤشر التحميل
+                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+                    deleteBtn.classList.add('disabled');
+                    
+                    // إرسال طلب للخادم لحذف الموظفين المحددين
+                    fetch(`/departments/{{ department.id }}/delete_employees`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ 
+                            employee_ids: selectedIds,
+                            csrf_token: csrfToken
+                        })
                     })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('فشل في حذف الموظفين');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // عرض رسالة النجاح
-                    showAlert(data.message || 'تم حذف الموظفين بنجاح', 'success');
-                    
-                    // إزالة الصفوف المحذوفة من الجدول
-                    selectedIds.forEach(id => {
-                        const row = document.querySelector(`tr[data-employee-id="${id}"]`);
-                        if (row) {
-                            row.remove();
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error('استجابة الخادم غير ناجحة:', response.status);
+                            throw new Error('فشل في حذف الموظفين');
                         }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('استجابة الخادم:', data);
+                        // عرض رسالة النجاح
+                        showAlert(data.message || 'تم حذف الموظفين بنجاح', 'success');
+                        
+                        // إزالة الصفوف المحذوفة من الجدول
+                        selectedIds.forEach(id => {
+                            const row = document.querySelector(`tr[data-employee-id="${id}"]`);
+                            if (row) {
+                                row.remove();
+                            }
+                        });
+                        
+                        // تحديث عدد الموظفين المعروض
+                        const countElement = document.querySelector('.card-header .text-white.small span');
+                        const remainingCount = document.querySelectorAll('tr[data-employee-id]').length;
+                        if (countElement) {
+                            countElement.textContent = `${remainingCount} موظف`;
+                        }
+                        
+                        // إعادة تعيين حالة العرض
+                        updateSelectedCount();
+                    })
+                    .catch(error => {
+                        console.error('حدث خطأ أثناء الحذف:', error);
+                        showAlert('حدث خطأ أثناء محاولة الحذف', 'danger');
+                        
+                        // إعادة تمكين الزر
+                        deleteBtn.classList.remove('disabled');
+                        updateSelectedCount();
                     });
-                    
-                    // تحديث عدد الموظفين المعروض
-                    const countElement = document.querySelector('.card-header .text-white.small span');
-                    const remainingCount = document.querySelectorAll('tr[data-employee-id]').length;
-                    if (countElement) {
-                        countElement.textContent = `${remainingCount} موظف`;
-                    }
-                    
-                    // إعادة تعيين حالة العرض
-                    updateSelectedCount();
-                })
-                .catch(error => {
-                    console.error('حدث خطأ:', error);
-                    showAlert('حدث خطأ أثناء محاولة الحذف', 'danger');
-                    
-                    // إعادة تمكين الزر
-                    this.classList.remove('disabled');
-                    updateSelectedCount();
-                });
-            }
-        });
+                }
+            });
+        }
         
         // عرض تنبيه على الشاشة
         function showAlert(message, type = 'success') {
+            console.log(`عرض تنبيه: ${message} (${type})`);
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
             alertDiv.innerHTML = `
@@ -350,6 +400,7 @@
         
         // تهيئة أولية
         updateSelectedCount();
+        console.log("تم تهيئة إدارة الموظفين المحددين بنجاح");
     });
 </script>
 {% endblock %}

@@ -6,6 +6,7 @@ from models import Department, Employee, SystemAudit, Module, Permission
 from utils.excel import parse_employee_excel, export_employees_to_excel
 from utils.user_helpers import require_module_access
 import io
+from io import BytesIO
 import os
 from datetime import datetime
 
