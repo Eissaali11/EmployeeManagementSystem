@@ -598,531 +598,314 @@
 
 {% block scripts %}
 <script>
-    // تهيئة المتغيرات العامة
-    var csrfToken = "{{ csrf_token() }}";
-    var departmentId = {{ department.id }};
-
-    // دالة عرض تنبيه على الشاشة
-    function showAlert(message, type, timeout) {
-        type = type || 'success';
-        timeout = timeout || 5000;
-        
-        var alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show mt-3';
-        alertDiv.innerHTML = '<strong><i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-triangle') + '"></i></strong> ' + 
-                            message + 
-                            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-        
-        // إضافة التنبيه في أعلى الصفحة
-        var container = document.querySelector('.container-fluid');
-        if (container) {
-            var content = container.querySelector('.row');
-            container.insertBefore(alertDiv, content);
-            
-            // إزالة التنبيه تلقائيًا
-            setTimeout(function() {
-                alertDiv.classList.remove('show');
-                setTimeout(function() {
-                    if (alertDiv.parentNode) {
-                        alertDiv.parentNode.removeChild(alertDiv);
-                    }
-                }, 300);
-            }, timeout);
-        }
-        
-        return alertDiv;
+document.addEventListener("DOMContentLoaded", function() {
+    // المتغيرات والعناصر الأساسية
+    const csrfToken = "{{ csrf_token() }}";
+    const departmentId = {{ department.id }};
+    
+    // عناصر واجهة المستخدم
+    const checkAllBox = document.getElementById('checkAllEmployees');
+    const selectAllBtn = document.getElementById('selectAllEmployees');
+    const deselectAllBtn = document.getElementById('deselectAllEmployees');
+    const exportBtn = document.getElementById('exportSelectedEmployees');
+    const deleteBtn = document.getElementById('deleteSelectedEmployees');
+    
+    // التحقق من خانات الاختيار
+    const checkboxes = document.querySelectorAll('input.employee-checkbox');
+    console.log("تم العثور على " + checkboxes.length + " خانة اختيار");
+    
+    // تحديد الكل
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            checkboxes.forEach(cb => cb.checked = true);
+            if (checkAllBox) checkAllBox.checked = true;
+            updateButtonState();
+            showAlert("تم تحديد جميع الموظفين", "info");
+        });
     }
-
-    // إعداد وظائف التحكم بالموظفين المحددين
-    function setupBatchOperations() {
-        console.log('تهيئة العمليات المجمعة...');
-        
-        // الوصول للعناصر
-        var checkAllBox = document.getElementById('checkAllEmployees');
-        var selectAllBtn = document.getElementById('selectAllEmployees');
-        var deselectAllBtn = document.getElementById('deselectAllEmployees');
-        var exportBtn = document.getElementById('exportSelectedEmployees');
-        var deleteBtn = document.getElementById('deleteSelectedEmployees');
-        
-        // التحقق من وجود العناصر المطلوبة
-        if (!exportBtn || !deleteBtn || !selectAllBtn || !deselectAllBtn) {
-            console.error('تعذر العثور على الأزرار المطلوبة!');
-            showAlert('تعذر العثور على بعض العناصر المطلوبة في واجهة المستخدم. يرجى تحديث الصفحة.', 'danger');
-            return;
-        }
-        
-        // الحصول على معرفات الموظفين المحددين
-        function getSelectedEmployeeIds() {
-            var ids = [];
-            var checkboxes = document.querySelectorAll('input.employee-checkbox');
+    
+    // إلغاء تحديد الكل
+    if (deselectAllBtn) {
+        deselectAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            checkboxes.forEach(cb => cb.checked = false);
+            if (checkAllBox) checkAllBox.checked = false;
+            updateButtonState();
+            showAlert("تم إلغاء تحديد جميع الموظفين", "info");
+        });
+    }
+    
+    // خانة تحديد الكل
+    if (checkAllBox) {
+        checkAllBox.addEventListener('click', function() {
+            const isChecked = this.checked;
+            checkboxes.forEach(cb => cb.checked = isChecked);
+            updateButtonState();
+        });
+    }
+    
+    // أحداث خانات اختيار الموظفين
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateButtonState);
+    });
+    
+    // زر تصدير المحدد
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selectedIds = getSelectedIds();
             
-            console.log('فحص خانات الاختيار: ' + checkboxes.length);
-            
-            for (var i = 0; i < checkboxes.length; i++) {
-                var checkbox = checkboxes[i];
-                if (checkbox.checked && checkbox.value) {
-                    var id = parseInt(checkbox.value);
-                    if (!isNaN(id)) {
-                        ids.push(id);
-                    }
-                }
+            if (selectedIds.length === 0) {
+                showAlert("الرجاء تحديد موظف واحد على الأقل للتصدير", "warning");
+                return;
             }
             
-            console.log('الموظفين المحددين: ' + ids.length);
-            return ids;
-        }
+            // إنشاء نموذج التصدير
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = `/departments/${departmentId}/export_employees`;
+            form.target = '_blank';
+            form.style.display = 'none';
+            
+            // إضافة معرفات الموظفين
+            const idsInput = document.createElement('input');
+            idsInput.type = 'hidden';
+            idsInput.name = 'ids';
+            idsInput.value = selectedIds.join(',');
+            form.appendChild(idsInput);
+            
+            // إظهار مؤشر التحميل
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التصدير...';
+            this.disabled = true;
+            
+            // إرسال النموذج
+            document.body.appendChild(form);
+            form.submit();
+            
+            // إعادة تعيين الزر بعد ثواني
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-file-export me-1"></i> تصدير';
+                this.disabled = false;
+                updateButtonState();
+            }, 2000);
+        });
+    }
+    
+    // زر حذف المحدد
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selectedIds = getSelectedIds();
+            
+            if (selectedIds.length === 0) {
+                showAlert("الرجاء تحديد موظف واحد على الأقل للحذف", "warning");
+                return;
+            }
+            
+            if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} موظف؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+                // إنشاء نموذج الحذف
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/departments/${departmentId}/delete_employees`;
+                form.style.display = 'none';
+                
+                // إضافة معرفات الموظفين
+                selectedIds.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'employee_ids';
+                    input.value = id;
+                    form.appendChild(input);
+                });
+                
+                // إضافة CSRF token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+                
+                // إظهار مؤشر التحميل
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+                this.disabled = true;
+                
+                // إرسال النموذج
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+    
+    // تحديث حالة الأزرار
+    function updateButtonState() {
+        const selectedIds = getSelectedIds();
+        const count = selectedIds.length;
         
-        // تحديث حالة الأزرار بناءً على التحديد
-        function updateButtonsState() {
-            var selectedIds = getSelectedEmployeeIds();
-            var count = selectedIds.length;
-            var totalCheckboxes = document.querySelectorAll('input.employee-checkbox').length;
-            
-            console.log('تحديث حالة الأزرار - عدد المحدد: ' + count);
-            
-            // تحديث زر التصدير
+        // تحديث زر التصدير
+        if (exportBtn) {
             exportBtn.innerHTML = count ? 
-                '<i class="fas fa-file-export me-1"></i> تصدير (' + count + ')' : 
-                '<i class="fas fa-file-export me-1"></i> تصدير';
+                `<i class="fas fa-file-export me-1"></i> تصدير (${count})` : 
+                `<i class="fas fa-file-export me-1"></i> تصدير`;
             
             if (count > 0) {
                 exportBtn.classList.remove('disabled');
             } else {
                 exportBtn.classList.add('disabled');
             }
-            
-            // تحديث زر الحذف
+        }
+        
+        // تحديث زر الحذف
+        if (deleteBtn) {
             deleteBtn.innerHTML = count ? 
-                '<i class="fas fa-trash me-1"></i> حذف (' + count + ')' : 
-                '<i class="fas fa-trash me-1"></i> حذف';
+                `<i class="fas fa-trash me-1"></i> حذف (${count})` : 
+                `<i class="fas fa-trash me-1"></i> حذف`;
             
             if (count > 0) {
                 deleteBtn.classList.remove('disabled');
             } else {
                 deleteBtn.classList.add('disabled');
             }
-            
-            // تحديث حالة خانة "تحديد الكل"
-            if (checkAllBox) {
-                checkAllBox.checked = (count > 0 && count === totalCheckboxes);
-                checkAllBox.indeterminate = (count > 0 && count < totalCheckboxes);
-            }
         }
         
-        // تحديد كل خانات الاختيار
-        function selectAll() {
-            var checkboxes = document.querySelectorAll('input.employee-checkbox');
-            for (var i = 0; i < checkboxes.length; i++) {
-                checkboxes[i].checked = true;
-            }
-            
-            if (checkAllBox) {
-                checkAllBox.checked = true;
-            }
-            
-            updateButtonsState();
-            showAlert('تم تحديد ' + checkboxes.length + ' موظف', 'info');
-        }
-        
-        // إلغاء تحديد جميع خانات الاختيار
-        function deselectAll() {
-            var checkboxes = document.querySelectorAll('input.employee-checkbox');
-            for (var i = 0; i < checkboxes.length; i++) {
-                checkboxes[i].checked = false;
-            }
-            
-            if (checkAllBox) {
-                checkAllBox.checked = false;
-            }
-            
-            updateButtonsState();
-            showAlert('تم إلغاء تحديد جميع الموظفين', 'info');
-        }
-        
-        // ربط الأحداث
-        
-        // خانة تحديد الكل
+        // تحديث حالة خانة تحديد الكل
         if (checkAllBox) {
-            checkAllBox.addEventListener('click', function() {
-                var isChecked = this.checked;
-                var checkboxes = document.querySelectorAll('input.employee-checkbox');
-                
-                for (var i = 0; i < checkboxes.length; i++) {
-                    checkboxes[i].checked = isChecked;
-                }
-                
-                updateButtonsState();
-            });
-        }
-        
-        // زر تحديد الكل
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                selectAll();
-            });
-        }
-        
-        // زر إلغاء تحديد الكل
-        if (deselectAllBtn) {
-            deselectAllBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                deselectAll();
-            });
-        }
-        
-        // أحداث خانات اختيار الموظفين
-        var employeeCheckboxes = document.querySelectorAll('input.employee-checkbox');
-        for (var i = 0; i < employeeCheckboxes.length; i++) {
-            employeeCheckboxes[i].addEventListener('change', function() {
-                updateButtonsState();
-            });
-        }
-        
-        // زر تصدير المحدد
-        if (exportBtn) {
-            exportBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                var selectedIds = getSelectedEmployeeIds();
-                if (selectedIds.length === 0) {
-                    showAlert('الرجاء تحديد موظف واحد على الأقل للتصدير', 'warning');
-                    return;
-                }
-                
-                // إنشاء النموذج
-                var form = document.createElement('form');
-                form.method = 'GET';
-                form.action = '/departments/' + departmentId + '/export_employees';
-                form.target = '_blank';
-                form.style.display = 'none';
-                
-                // إضافة معرفات الموظفين
-                var idsInput = document.createElement('input');
-                idsInput.type = 'hidden';
-                idsInput.name = 'ids';
-                idsInput.value = selectedIds.join(',');
-                form.appendChild(idsInput);
-                
-                // إضافة النموذج إلى الصفحة
-                document.body.appendChild(form);
-                
-                // إظهار مؤشر التحميل
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التصدير...';
-                this.disabled = true;
-                
-                try {
-                    console.log('تصدير الموظفين: ' + selectedIds.join(','));
-                    form.submit();
-                    showAlert('جاري تصدير ملف الموظفين...', 'success');
-                } catch (error) {
-                    console.error('خطأ في التصدير:', error);
-                    showAlert('حدث خطأ أثناء محاولة التصدير', 'danger');
-                } finally {
-                    // إعادة تعيين الزر بعد مهلة
-                    setTimeout(function() {
-                        updateButtonsState();
-                    }, 1000);
-                    
-                    // إزالة النموذج
-                    setTimeout(function() {
-                        if (form.parentNode) {
-                            form.parentNode.removeChild(form);
-                        }
-                    }, 1000);
-                }
-            });
-        }
-        
-        // زر حذف المحدد
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                var selectedIds = getSelectedEmployeeIds();
-                if (selectedIds.length === 0) {
-                    showAlert('الرجاء تحديد موظف واحد على الأقل للحذف', 'warning');
-                    return;
-                }
-                
-                if (confirm('هل أنت متأكد من حذف ' + selectedIds.length + ' موظف؟ لا يمكن التراجع عن هذا الإجراء.')) {
-                    // إظهار مؤشر التحميل
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
-                    this.disabled = true;
-                    
-                    // إنشاء النموذج
-                    var form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/departments/' + departmentId + '/delete_employees';
-                    form.style.display = 'none';
-                    
-                    // إضافة معرفات الموظفين
-                    for (var i = 0; i < selectedIds.length; i++) {
-                        var input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'employee_ids';
-                        input.value = selectedIds[i];
-                        form.appendChild(input);
-                    }
-                    
-                    // إضافة CSRF token
-                    var csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = 'csrf_token';
-                    csrfInput.value = csrfToken;
-                    form.appendChild(csrfInput);
-                    
-                    // إضافة النموذج وإرساله
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-        }
-        
-        // التهيئة الأولية
-        updateButtonsState();
-    }
-
-    // إعداد وظائف البحث والتصفية
-    function setupSearchAndFilter() {
-        var employeeSearchInput = document.getElementById('employeeSearch');
-        var searchButton = document.getElementById('searchButton');
-        var applyFiltersButton = document.getElementById('applyFilters');
-        var clearFiltersButton = document.getElementById('clearFilters');
-        var employeeCountElement = document.getElementById('employeeCount');
-        var activeFilters = ['active', 'on_leave', 'inactive'];
-        var currentSearchTerm = '';
-        
-        function updateEmployeeCount() {
-            if (employeeCountElement) {
-                var visibleRows = document.querySelectorAll('tr[data-employee-id]:not([style*="display: none"])').length;
-                employeeCountElement.textContent = visibleRows + ' موظف';
-            }
-        }
-        
-        function applyFiltersAndSearch() {
-            var allRows = document.querySelectorAll('tr[data-employee-id]');
-            var matchCount = 0;
-            
-            for (var i = 0; i < allRows.length; i++) {
-                var row = allRows[i];
-                
-                // التحقق من الحالة
-                var statusCell = row.querySelector('.status-dropdown-btn');
-                var statusMatch = false;
-                
-                if (statusCell) {
-                    if (statusCell.classList.contains('btn-outline-success') && activeFilters.includes('active')) {
-                        statusMatch = true;
-                    } else if (statusCell.classList.contains('btn-outline-warning') && activeFilters.includes('on_leave')) {
-                        statusMatch = true;
-                    } else if (statusCell.classList.contains('btn-outline-danger') && activeFilters.includes('inactive')) {
-                        statusMatch = true;
-                    }
-                }
-                
-                // التحقق من البحث
-                var searchMatch = true;
-                if (currentSearchTerm !== '') {
-                    var textContent = row.textContent.toLowerCase();
-                    searchMatch = textContent.includes(currentSearchTerm);
-                }
-                
-                // عرض أو إخفاء الصف
-                if (statusMatch && searchMatch) {
-                    row.style.display = '';
-                    matchCount++;
-                    
-                    if (currentSearchTerm !== '') {
-                        row.classList.add('search-highlight');
-                        setTimeout(function(r) {
-                            return function() {
-                                r.classList.remove('search-highlight');
-                            };
-                        }(row), 1500);
-                    }
-                } else {
-                    row.style.display = 'none';
-                }
-            }
-            
-            updateEmployeeCount();
-            
-            if (currentSearchTerm !== '') {
-                if (matchCount > 0) {
-                    showAlert('تم العثور على ' + matchCount + ' موظف مطابق للبحث', 'info', 2000);
-                } else {
-                    showAlert('لا توجد نتائج مطابقة للبحث', 'warning', 2000);
-                }
-            }
-        }
-        
-        // أحداث البحث
-        if (employeeSearchInput) {
-            // الكتابة في حقل البحث
-            employeeSearchInput.addEventListener('input', function() {
-                currentSearchTerm = this.value.trim().toLowerCase();
-                applyFiltersAndSearch();
-            });
-            
-            // زر البحث
-            if (searchButton) {
-                searchButton.addEventListener('click', function() {
-                    currentSearchTerm = employeeSearchInput.value.trim().toLowerCase();
-                    applyFiltersAndSearch();
-                });
-            }
-            
-            // البحث بالضغط على Enter
-            employeeSearchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    currentSearchTerm = this.value.trim().toLowerCase();
-                    applyFiltersAndSearch();
-                    e.preventDefault();
-                }
-            });
-        }
-        
-        // أحداث التصفية
-        var statusCheckboxes = document.querySelectorAll('.filter-status');
-        for (var i = 0; i < statusCheckboxes.length; i++) {
-            statusCheckboxes[i].addEventListener('change', function() {
-                var value = this.value;
-                
-                if (this.checked && !activeFilters.includes(value)) {
-                    activeFilters.push(value);
-                } else if (!this.checked && activeFilters.includes(value)) {
-                    activeFilters = activeFilters.filter(function(f) { 
-                        return f !== value; 
-                    });
-                }
-            });
-        }
-        
-        // تطبيق التصفية
-        if (applyFiltersButton) {
-            applyFiltersButton.addEventListener('click', function() {
-                applyFiltersAndSearch();
-            });
-        }
-        
-        // إلغاء التصفية
-        if (clearFiltersButton) {
-            clearFiltersButton.addEventListener('click', function() {
-                // إعادة تعيين خانات الاختيار
-                for (var i = 0; i < statusCheckboxes.length; i++) {
-                    statusCheckboxes[i].checked = true;
-                }
-                
-                activeFilters = ['active', 'on_leave', 'inactive'];
-                
-                if (employeeSearchInput) {
-                    employeeSearchInput.value = '';
-                    currentSearchTerm = '';
-                }
-                
-                applyFiltersAndSearch();
-                showAlert('تم إلغاء جميع عوامل التصفية', 'info');
-            });
-        }
-        
-        // تهيئة أولية
-        updateEmployeeCount();
-    }
-
-    // إعداد وظائف حذف الموظف الفردي
-    function setupIndividualEmployeeOperations() {
-        // نافذة حذف الموظف الفردي
-        var deleteModal = document.getElementById('deleteEmployeeModal');
-        var employeeNameElement = document.getElementById('employeeNameToDelete');
-        var deleteForm = document.getElementById('deleteEmployeeForm');
-        var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-        
-        // أزرار حذف الموظف الفردي
-        var deleteButtons = document.querySelectorAll('.delete-employee-btn');
-        for (var i = 0; i < deleteButtons.length; i++) {
-            deleteButtons[i].addEventListener('click', function() {
-                var employeeId = this.getAttribute('data-id');
-                var employeeName = this.getAttribute('data-name');
-                
-                if (employeeNameElement) {
-                    employeeNameElement.textContent = employeeName;
-                }
-                
-                if (deleteForm) {
-                    deleteForm.action = '/employees/' + employeeId + '/delete';
-                }
-            });
-        }
-        
-        // زر تأكيد الحذف
-        if (confirmDeleteBtn && deleteForm) {
-            confirmDeleteBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
-                this.disabled = true;
-                
-                // إرسال النموذج بعد تأخير قصير لإظهار مؤشر التحميل
-                setTimeout(function() {
-                    deleteForm.submit();
-                }, 300);
-            });
-        }
-        
-        // أزرار تغيير حالة الموظف
-        var statusButtons = document.querySelectorAll('.status-change-btn');
-        for (var i = 0; i < statusButtons.length; i++) {
-            statusButtons[i].addEventListener('click', function() {
-                var employeeId = this.getAttribute('data-employee-id');
-                var status = this.getAttribute('data-status');
-                
-                if (employeeId && status) {
-                    // إنشاء نموذج لتغيير الحالة
-                    var form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/employees/' + employeeId + '/change_status';
-                    form.style.display = 'none';
-                    
-                    // إضافة الحالة الجديدة
-                    var statusInput = document.createElement('input');
-                    statusInput.type = 'hidden';
-                    statusInput.name = 'status';
-                    statusInput.value = status;
-                    form.appendChild(statusInput);
-                    
-                    // إضافة CSRF token
-                    var csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = 'csrf_token';
-                    csrfInput.value = csrfToken;
-                    form.appendChild(csrfInput);
-                    
-                    // إضافة عنوان العودة
-                    var returnInput = document.createElement('input');
-                    returnInput.type = 'hidden';
-                    returnInput.name = 'return_to';
-                    returnInput.value = window.location.pathname;
-                    form.appendChild(returnInput);
-                    
-                    // إرسال النموذج
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
+            checkAllBox.checked = (count > 0 && count === checkboxes.length);
+            checkAllBox.indeterminate = (count > 0 && count < checkboxes.length);
         }
     }
-
-    // تنفيذ الوظائف بعد تحميل الصفحة بالكامل
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('تهيئة صفحة عرض القسم... معرف القسم: ' + departmentId);
+    
+    // الحصول على معرفات الموظفين المحددين
+    function getSelectedIds() {
+        const ids = [];
+        checkboxes.forEach(cb => {
+            if (cb.checked && cb.value) {
+                const id = parseInt(cb.value);
+                if (!isNaN(id)) {
+                    ids.push(id);
+                }
+            }
+        });
+        return ids;
+    }
+    
+    // وظيفة عرض تنبيه
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        alertDiv.innerHTML = `
+            <strong><i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i></strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
         
-        // تهيئة العمليات المختلفة
-        setupBatchOperations();
-        setupSearchAndFilter();
-        setupIndividualEmployeeOperations();
-        
-        console.log('تم تهيئة الصفحة بنجاح');
+        const container = document.querySelector('.container-fluid');
+        if (container) {
+            const content = container.querySelector('.row');
+            container.insertBefore(alertDiv, content);
+            
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 5000);
+        }
+    }
+    
+    // وظائف أزرار الحذف الفردية
+    const deleteButtons = document.querySelectorAll('.delete-employee-btn');
+    const deleteForm = document.getElementById('deleteEmployeeForm');
+    const employeeNameElement = document.getElementById('employeeNameToDelete');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const employeeId = this.getAttribute('data-id');
+            const employeeName = this.getAttribute('data-name');
+            
+            // تحديث اسم الموظف ورابط الحذف
+            if (employeeNameElement) {
+                employeeNameElement.textContent = employeeName;
+            }
+            
+            if (deleteForm) {
+                deleteForm.action = `/employees/${employeeId}/delete`;
+            }
+        });
     });
+    
+    // تأكيد حذف الموظف
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn && deleteForm) {
+        confirmDeleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                deleteForm.submit();
+            }, 300);
+        });
+    }
+    
+    // البحث والتصفية
+    const searchInput = document.getElementById('employeeSearch');
+    const searchButton = document.getElementById('searchButton');
+    const employeeRows = document.querySelectorAll('tr[data-employee-id]');
+    
+    if (searchInput && searchButton) {
+        searchButton.addEventListener('click', function() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            filterEmployees(searchTerm);
+        });
+        
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim().toLowerCase();
+                filterEmployees(searchTerm);
+                e.preventDefault();
+            }
+        });
+    }
+    
+    function filterEmployees(searchTerm) {
+        let matchCount = 0;
+        
+        employeeRows.forEach(row => {
+            const textContent = row.textContent.toLowerCase();
+            const isMatch = textContent.includes(searchTerm);
+            
+            if (isMatch || searchTerm === '') {
+                row.style.display = '';
+                matchCount++;
+                
+                if (searchTerm !== '') {
+                    row.classList.add('search-highlight');
+                    setTimeout(() => {
+                        row.classList.remove('search-highlight');
+                    }, 1500);
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // تحديث العداد
+        const countElement = document.getElementById('employeeCount');
+        if (countElement) {
+            countElement.textContent = `${matchCount} موظف`;
+        }
+        
+        // عرض رسالة البحث
+        if (searchTerm !== '') {
+            if (matchCount > 0) {
+                showAlert(`تم العثور على ${matchCount} موظف مطابق للبحث`, 'info');
+            } else {
+                showAlert('لا توجد نتائج مطابقة للبحث', 'warning');
+            }
+        }
+    }
+    
+    // التهيئة الأولية
+    updateButtonState();
+});
 </script>
 {% endblock %}
