@@ -370,6 +370,7 @@
                                     <td>
                                         <div class="form-check">
                                             <input class="form-check-input employee-checkbox" type="checkbox" name="employee_checkbox" value="{{ employee.id }}" id="employee_{{ employee.id }}">
+                                            <label class="form-check-label" for="employee_{{ employee.id }}"></label>
                                         </div>
                                     </td>
                                     <td>
@@ -800,10 +801,13 @@
                 `;
                 container.prepend(alertDiv);
             }
+        } else {
+            console.log("تم العثور على جميع الأزرار المطلوبة بنجاح");
         }
         
         // خانات اختيار الموظفين
         const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
+        console.log(`تم العثور على ${employeeCheckboxes.length} خانة اختيار للموظفين عند التهيئة`);
         
         console.log(`تم تهيئة إدارة الموظفين. عدد الموظفين: ${employeeCheckboxes.length}`);
         
@@ -837,12 +841,20 @@
         // الحصول على معرفات الموظفين المحددين
         function getSelectedEmployeeIds() {
             const ids = [];
-            employeeCheckboxes.forEach(cb => {
+            const checkboxes = document.querySelectorAll('input.employee-checkbox');
+            console.log(`وجدت ${checkboxes.length} خانة اختيار للموظفين`);
+            
+            checkboxes.forEach((cb, index) => {
                 if (cb.checked && cb.value) {
                     const id = parseInt(cb.value);
-                    if (!isNaN(id)) ids.push(id);
+                    if (!isNaN(id)) {
+                        ids.push(id);
+                        console.log(`تم إضافة الموظف ${id} إلى القائمة (الخانة ${index+1})`);
+                    }
                 }
             });
+            
+            console.log(`تم اختيار ${ids.length} موظف: ${ids.join(', ')}`);
             return ids;
         }
         
@@ -1188,7 +1200,6 @@
                     // إرسال النموذج
                     form.submit();
                     console.log("تم إرسال النموذج");
-                    });
                 }
             });
         }
