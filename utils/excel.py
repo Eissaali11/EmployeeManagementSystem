@@ -829,20 +829,30 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
         start_date = datetime(year, month, 1).date()
         end_date = datetime(year, month, days_in_month).date()
         
+        # استخدام استعلام أكثر فعالية للحصول على سجلات الحضور
+        from app import db
+        from models import Attendance
+        
+        # طباعة معلومات الاستعلام
+        print(f"Querying attendance for employee_id={employee.id}, start_date={start_date}, end_date={end_date}")
+        
+        # استعلام من قاعدة البيانات مباشرة للتحقق من وجود سجلات بدلاً من الاعتماد على العلاقة
+        attendances_raw = db.session.query(Attendance).filter(
+            Attendance.employee_id == employee.id,
+            Attendance.date >= start_date,
+            Attendance.date <= end_date
+        ).all()
+        
+        print(f"Found {len(attendances_raw)} attendance records from direct query")
+        
         # فلترة سجلات الحضور للشهر المحدد
         attendances = []
-        if employee.attendances:
-            print(f"Processing {len(employee.attendances)} attendance records")
-            for attendance in employee.attendances:
-                print(f"Attendance date: {attendance.date}")
-                # التأكد من وجود تاريخ للحضور
-                if attendance.date and start_date <= attendance.date <= end_date:
-                    print(f"Adding attendance for {attendance.date}")
-                    attendances.append(attendance)
-                    # استخدام اليوم من تاريخ الحضور كمفتاح
-                    attendance_dict[attendance.date.day] = attendance
-                else:
-                    print(f"Skipping attendance: {attendance.date}, not in range {start_date} - {end_date}")
+        for attendance in attendances_raw:
+            print(f"Processing attendance record ID: {attendance.id}, Date: {attendance.date}")
+            attendances.append(attendance)
+            # استخدام اليوم من تاريخ الحضور كمفتاح
+            if attendance.date:
+                attendance_dict[attendance.date.day] = attendance
         
         # تحضير البيانات للإكسل
         data = []
