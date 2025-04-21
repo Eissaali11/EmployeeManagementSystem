@@ -269,28 +269,33 @@
     </div>
     
     <!-- مربع حوار تأكيد حذف موظف -->
-    <div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">تأكيد الحذف</h5>
+            <div class="modal-content bg-white">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="deleteEmployeeModalLabel">تأكيد الحذف</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
                     <div class="mb-4">
-                        <i class="fas fa-trash-alt text-danger fa-4x mb-3"></i>
-                        <h5>هل أنت متأكد من حذف الموظف؟</h5>
-                        <p class="text-muted">
-                            سيتم حذف جميع بيانات الموظف: <strong id="employeeNameToDelete"></strong> وسجلاته المرتبطة به نهائياً ولا يمكن استعادة البيانات بعد الحذف.
-                        </p>
+                        <div class="text-danger mb-3" style="font-size: 4rem;">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                        <h5 class="mb-3 text-dark">هل أنت متأكد من حذف الموظف؟</h5>
+                        <div class="alert alert-warning">
+                            سيتم حذف جميع بيانات الموظف: <strong id="employeeNameToDelete" class="text-dark"></strong> وسجلاته المرتبطة به نهائياً
+                            <br>ولا يمكن استعادة البيانات بعد الحذف.
+                        </div>
                     </div>
                     <form id="deleteEmployeeForm" method="POST" action="">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     </form>
                 </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                <div class="modal-footer justify-content-center bg-light">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> إلغاء
+                    </button>
+                    <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">
                         <i class="fas fa-trash me-1"></i> تأكيد الحذف
                     </button>
                 </div>
@@ -616,12 +621,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const employeeId = this.getAttribute('data-id');
             const employeeName = this.getAttribute('data-name');
             
+            console.log("تحضير حذف الموظف:", employeeId, employeeName);
+            
             if (employeeNameElement) {
-                employeeNameElement.textContent = employeeName;
+                employeeNameElement.textContent = employeeName || "غير معروف";
             }
             
             if (deleteForm) {
                 deleteForm.action = `/employees/${employeeId}/delete`;
+                console.log("تم تحديث مسار الحذف:", deleteForm.action);
             }
         });
     });
@@ -631,11 +639,29 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmDeleteBtn.addEventListener('click', function(e) {
             e.preventDefault();
             
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+            // تأكد من أن مسار الحذف تم تعيينه بشكل صحيح
+            if (!deleteForm.action || deleteForm.action === '') {
+                showAlert('حدث خطأ في عملية الحذف. يرجى المحاولة مرة أخرى.', 'danger');
+                return;
+            }
+            
+            console.log("تنفيذ عملية الحذف:", deleteForm.action);
+            
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جارٍ الحذف...';
             this.disabled = true;
             
+            // تأخير قصير قبل الإرسال لتحسين تجربة المستخدم
             setTimeout(() => {
-                deleteForm.submit();
+                try {
+                    deleteForm.submit();
+                } catch (error) {
+                    console.error("حدث خطأ أثناء إرسال نموذج الحذف:", error);
+                    showAlert('حدث خطأ أثناء عملية الحذف. يرجى المحاولة مرة أخرى.', 'danger');
+                    
+                    // إعادة الزر إلى حالته الأصلية
+                    this.innerHTML = '<i class="fas fa-trash me-1"></i> تأكيد الحذف';
+                    this.disabled = false;
+                }
             }, 300);
         });
     }
