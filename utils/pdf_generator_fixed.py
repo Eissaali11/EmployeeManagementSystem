@@ -242,9 +242,10 @@ def create_pdf_bytes(pdf_function, *args, **kwargs):
             print("خطأ: لم يتم إرجاع كائن FPDF من دالة إنشاء PDF")
             return None
         
-        # إنشاء الملف كبيانات ثنائية
-        # استخدام dest='S' لإرجاع المحتوى كسلسلة نصية ثم تحويله إلى بايت
-        pdf_bytes = pdf.output(dest='S').encode('latin1')
+        # استخدام طريقة بديلة للتعامل مع النصوص العربية
+        # يقوم FPDF بدعم كافة الترميزات عندما نستخدم dest='B'
+        # لإرجاع bytes بدلاً من string ثم ترميزها بـ latin1
+        pdf_bytes = pdf.output(dest='B')
         
         return pdf_bytes
     except Exception as e:
