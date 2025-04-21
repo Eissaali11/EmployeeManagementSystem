@@ -220,12 +220,26 @@ def parse_employee_excel(file):
         print(traceback.format_exc())
         raise Exception(f"Error parsing Excel file: {str(e)}")
 
-def generate_employee_excel(employees):
+def export_employees_to_excel(employees, output=None):
+    """
+    Export employees to Excel file
+    
+    Args:
+        employees: List of Employee objects
+        output: BytesIO object to write to (optional)
+        
+    Returns:
+        BytesIO object containing the Excel file
+    """
+    return generate_employee_excel(employees, output)
+    
+def generate_employee_excel(employees, output=None):
     """
     Generate Excel file from employee data
     
     Args:
         employees: List of Employee objects
+        output: BytesIO object to write to (optional)
         
     Returns:
         BytesIO object containing the Excel file

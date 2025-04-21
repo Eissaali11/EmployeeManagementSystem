@@ -61,6 +61,18 @@
                         <i class="fas fa-users me-2"></i>موظفي القسم
                     </h5>
                     <div class="d-flex align-items-center">
+                        <div class="dropdown me-2">
+                            <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="employeeActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-cog me-1"></i> إجراءات جماعية
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="employeeActionsDropdown">
+                                <li><a class="dropdown-item" href="#" id="selectAllEmployees"><i class="fas fa-check-square me-1"></i> تحديد الكل</a></li>
+                                <li><a class="dropdown-item" href="#" id="deselectAllEmployees"><i class="fas fa-square me-1"></i> إلغاء تحديد الكل</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" id="exportSelectedEmployees"><i class="fas fa-file-export me-1"></i> تصدير المحدد</a></li>
+                                <li><a class="dropdown-item text-danger" href="#" id="deleteSelectedEmployees"><i class="fas fa-trash me-1"></i> حذف المحدد</a></li>
+                            </ul>
+                        </div>
                         <a href="{{ url_for('departments.import_employees', id=department.id) }}" class="btn btn-sm btn-light me-2">
                             <i class="fas fa-file-excel me-1"></i> استيراد من Excel
                         </a>
@@ -76,6 +88,11 @@
                         <table class="table table-striped table-hover datatable">
                             <thead>
                                 <tr>
+                                    <th style="width: 40px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="checkAllEmployees">
+                                        </div>
+                                    </th>
                                     <th>الرقم الوظيفي</th>
                                     <th>الاسم</th>
                                     <th>المسمى الوظيفي</th>
@@ -86,7 +103,12 @@
                             </thead>
                             <tbody>
                                 {% for employee in employees %}
-                                <tr>
+                                <tr data-employee-id="{{ employee.id }}">
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input employee-checkbox" type="checkbox" value="{{ employee.id }}">
+                                        </div>
+                                    </td>
                                     <td>{{ employee.employee_id }}</td>
                                     <td>
                                         {{ employee.name }}
@@ -115,9 +137,11 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-info" title="عرض">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-info" title="عرض">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -143,4 +167,189 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // نموذج للتحقق من رمز CSRF
+        const csrfToken = "{{ csrf_token() }}";
+        
+        // تحديد عناصر واجهة المستخدم
+        const checkAllEmployees = document.getElementById('checkAllEmployees');
+        const selectAllEmployeesBtn = document.getElementById('selectAllEmployees');
+        const deselectAllEmployeesBtn = document.getElementById('deselectAllEmployees');
+        const exportSelectedEmployeesBtn = document.getElementById('exportSelectedEmployees');
+        const deleteSelectedEmployeesBtn = document.getElementById('deleteSelectedEmployees');
+        const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
+        
+        // تحديث عدد العناصر المحددة
+        function updateSelectedCount() {
+            const selectedCount = document.querySelectorAll('.employee-checkbox:checked').length;
+            const totalCount = employeeCheckboxes.length;
+            
+            // تحديث زر الحذف وتصدير لإظهار عدد العناصر المحددة
+            if (selectedCount > 0) {
+                exportSelectedEmployeesBtn.innerHTML = `<i class="fas fa-file-export me-1"></i> تصدير المحدد (${selectedCount})`;
+                deleteSelectedEmployeesBtn.innerHTML = `<i class="fas fa-trash me-1"></i> حذف المحدد (${selectedCount})`;
+                
+                exportSelectedEmployeesBtn.classList.remove('disabled');
+                deleteSelectedEmployeesBtn.classList.remove('disabled');
+            } else {
+                exportSelectedEmployeesBtn.innerHTML = `<i class="fas fa-file-export me-1"></i> تصدير المحدد`;
+                deleteSelectedEmployeesBtn.innerHTML = `<i class="fas fa-trash me-1"></i> حذف المحدد`;
+                
+                exportSelectedEmployeesBtn.classList.add('disabled');
+                deleteSelectedEmployeesBtn.classList.add('disabled');
+            }
+            
+            // تحديث حالة خانة اختيار "تحديد الكل"
+            checkAllEmployees.checked = selectedCount > 0 && selectedCount === totalCount;
+            checkAllEmployees.indeterminate = selectedCount > 0 && selectedCount < totalCount;
+        }
+        
+        // تحديد/إلغاء تحديد جميع الموظفين
+        checkAllEmployees.addEventListener('change', function() {
+            employeeCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateSelectedCount();
+        });
+        
+        // زر تحديد الكل
+        selectAllEmployeesBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            employeeCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateSelectedCount();
+        });
+        
+        // زر إلغاء تحديد الكل
+        deselectAllEmployeesBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            employeeCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateSelectedCount();
+        });
+        
+        // إضافة مستمع لكل خانة اختيار موظف
+        employeeCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+        
+        // زر تصدير المحدد
+        exportSelectedEmployeesBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            if (selectedIds.length === 0) {
+                showAlert('يجب تحديد موظف واحد على الأقل للتصدير', 'warning');
+                return;
+            }
+            
+            // إنشاء عنوان URL للتصدير مع معرفات الموظفين المحددين
+            const departmentId = {{ department.id }};
+            const exportUrl = `/departments/${departmentId}/export_employees?ids=${selectedIds.join(',')}`;
+            
+            // فتح عنوان URL في نافذة جديدة للتنزيل
+            window.open(exportUrl, '_blank');
+        });
+        
+        // زر حذف المحدد
+        deleteSelectedEmployeesBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            if (selectedIds.length === 0) {
+                showAlert('يجب تحديد موظف واحد على الأقل للحذف', 'warning');
+                return;
+            }
+            
+            if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} موظف؟ هذا الإجراء لا يمكن التراجع عنه.`)) {
+                // إظهار مؤشر التحميل
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+                this.classList.add('disabled');
+                
+                // إرسال طلب للخادم لحذف الموظفين المحددين
+                fetch(`/departments/{{ department.id }}/delete_employees`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ 
+                        employee_ids: selectedIds,
+                        csrf_token: csrfToken
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('فشل في حذف الموظفين');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // عرض رسالة النجاح
+                    showAlert(data.message || 'تم حذف الموظفين بنجاح', 'success');
+                    
+                    // إزالة الصفوف المحذوفة من الجدول
+                    selectedIds.forEach(id => {
+                        const row = document.querySelector(`tr[data-employee-id="${id}"]`);
+                        if (row) {
+                            row.remove();
+                        }
+                    });
+                    
+                    // تحديث عدد الموظفين المعروض
+                    const countElement = document.querySelector('.card-header .text-white.small span');
+                    const remainingCount = document.querySelectorAll('tr[data-employee-id]').length;
+                    if (countElement) {
+                        countElement.textContent = `${remainingCount} موظف`;
+                    }
+                    
+                    // إعادة تعيين حالة العرض
+                    updateSelectedCount();
+                })
+                .catch(error => {
+                    console.error('حدث خطأ:', error);
+                    showAlert('حدث خطأ أثناء محاولة الحذف', 'danger');
+                    
+                    // إعادة تمكين الزر
+                    this.classList.remove('disabled');
+                    updateSelectedCount();
+                });
+            }
+        });
+        
+        // عرض تنبيه على الشاشة
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <strong><i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i></strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            // إضافة التنبيه في أعلى العنصر بعد العنوان
+            const container = document.querySelector('.container-fluid');
+            const title = document.querySelector('.container-fluid h1').parentNode;
+            container.insertBefore(alertDiv, title.nextSibling);
+            
+            // إزالة التنبيه تلقائيًا بعد بضع ثوان
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 5000);
+        }
+        
+        // تهيئة أولية
+        updateSelectedCount();
+    });
+</script>
 {% endblock %}

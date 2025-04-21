@@ -1,10 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from app import db
 from models import Department, Employee, SystemAudit, Module, Permission
-from utils.excel import parse_employee_excel
+from utils.excel import parse_employee_excel, export_employees_to_excel
 from utils.user_helpers import require_module_access
+import io
+import os
+from datetime import datetime
 
 departments_bp = Blueprint('departments', __name__)
 
