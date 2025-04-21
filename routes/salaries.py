@@ -48,6 +48,7 @@ def index():
     
     # بناء استعلام قاعدة البيانات
     salaries = []
+    employee_records = []
     try:
         # استخدام القيم الافتراضية في حالة عدم وجود قيم في الرابط
         filter_month = int(month) if month and month.isdigit() else current_month
@@ -67,7 +68,30 @@ def index():
         # تنفيذ الاستعلام
         salaries = query.all()
         
-        print(f"تم العثور على {len(salaries)} سجل للشهر {filter_month} والسنة {filter_year}")
+        # إذا لم تكن هناك سجلات رواتب للشهر/السنة المحددين، قم بعرض جميع الموظفين النشطين
+        if not salaries and not filter_employee:
+            # الحصول على قائمة الموظفين النشطين
+            active_employees = Employee.query.filter_by(status='active').all()
+            
+            # إنشاء كائنات مؤقتة لعرض الموظفين بدون رواتب
+            for employee in active_employees:
+                # إنشاء كائن راتب مؤقت فقط لأغراض العرض (لن يتم حفظه)
+                temp_salary = Salary(
+                    employee_id=employee.id,
+                    employee=employee,
+                    month=filter_month,
+                    year=filter_year,
+                    basic_salary=0,
+                    allowances=0,
+                    deductions=0,
+                    bonus=0,
+                    net_salary=0
+                )
+                employee_records.append(temp_salary)
+            
+            print(f"لا توجد سجلات رواتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
+        else:
+            print(f"تم العثور على {len(salaries)} سجل للشهر {filter_month} والسنة {filter_year}")
     except Exception as e:
         print(f"خطأ في استرجاع بيانات الرواتب: {str(e)}")
         flash(f'حدث خطأ أثناء استرجاع بيانات الرواتب: {str(e)}', 'danger')
@@ -86,8 +110,15 @@ def index():
     available_months = db.session.query(Salary.month).distinct().order_by(Salary.month).all()
     available_years = db.session.query(Salary.year).distinct().order_by(Salary.year.desc()).all()
     
+    # إذا كانت هناك سجلات مؤقتة (موظفين بدون رواتب)، استخدمها للعرض
+    if not salaries and employee_records:
+        display_records = employee_records
+    else:
+        display_records = salaries
+        
     return render_template('salaries/index.html',
-                          salaries=salaries,
+                          salaries=display_records,
+                          has_salary_data=(len(salaries) > 0),  # علامة توضح ما إذا كانت هناك بيانات رواتب فعلية
                           employees=employees,
                           available_months=available_months,
                           available_years=available_years,

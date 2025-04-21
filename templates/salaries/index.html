@@ -152,112 +152,59 @@
                             <td>{{ salary.employee.name }}</td>
                             <td>{{ salary.employee.employee_id }}</td>
                             <td>{{ salary.month }}/{{ salary.year }}</td>
-                            <td>{{ salary.basic_salary }}</td>
-                            <td>{{ salary.allowances }}</td>
-                            <td>{{ salary.deductions }}</td>
-                            <td>{{ salary.bonus }}</td>
-                            <td class="fw-bold">{{ salary.net_salary }}</td>
-                            <td class="text-center">
-                                <!-- زر تعديل الراتب -->
-                                <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn btn-sm btn-info mb-1" title="تعديل الراتب">
-                                    <i class="fas fa-edit me-1"></i> تعديل
-                                </a>
-                                
-                                <!-- زر طباعة الراتب -->
-                                <a href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}" class="btn btn-sm btn-primary mb-1" title="طباعة الراتب">
-                                    <i class="fas fa-print me-1"></i> طباعة الراتب
-                                </a>
-                                
-                                <!-- زر مشاركة عبر الواتساب -->
-                                <a href="{{ url_for('salaries.share_salary_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-success mb-1" title="مشاركة عبر الواتساب">
-                                    <i class="fab fa-whatsapp me-1"></i> واتساب
-                                </a>
-                                
-                                {% if salary.deductions > 0 %}
-                                <!-- زر مشاركة إشعار الخصم عبر الواتساب -->
-                                <a href="{{ url_for('salaries.share_deduction_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-danger mb-1" title="مشاركة إشعار الخصم عبر الواتساب">
-                                    <i class="fab fa-whatsapp me-1"></i> إشعار الخصم
-                                </a>
-                                {% endif %}
-                                
-                                <!-- زر الحذف المباشر -->
-                                <form action="{{ url_for('salaries.delete', id=salary.id) }}" method="post" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سجل راتب للموظف {{ salary.employee.name }} لشهر {{ salary.month }}/{{ salary.year }}؟');">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="حذف">
-                                        <i class="fas fa-trash-alt"></i> حذف
+                            {% if has_salary_data %}
+                                <!-- إذا كانت هناك بيانات رواتب موجودة بالفعل، عرض القيم -->
+                                <td>{{ salary.basic_salary }}</td>
+                                <td>{{ salary.allowances }}</td>
+                                <td>{{ salary.deductions }}</td>
+                                <td>{{ salary.bonus }}</td>
+                                <td class="fw-bold">{{ salary.net_salary }}</td>
+                                <td class="text-center">
+                                    <!-- زر تعديل الراتب -->
+                                    <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn btn-sm btn-info mb-1" title="تعديل الراتب">
+                                        <i class="fas fa-edit me-1"></i> تعديل
+                                    </a>
+                                    
+                                    <!-- زر طباعة الراتب -->
+                                    <a href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}" class="btn btn-sm btn-primary mb-1" title="طباعة الراتب">
+                                        <i class="fas fa-print me-1"></i> طباعة الراتب
+                                    </a>
+                                    
+                                    <!-- زر مشاركة عبر الواتساب -->
+                                    <a href="{{ url_for('salaries.share_salary_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-success mb-1" title="مشاركة عبر الواتساب">
+                                        <i class="fab fa-whatsapp me-1"></i> واتساب
+                                    </a>
+                                    
+                                    {% if salary.deductions > 0 %}
+                                    <!-- زر مشاركة إشعار الخصم عبر الواتساب -->
+                                    <a href="{{ url_for('salaries.share_deduction_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-danger mb-1" title="مشاركة إشعار الخصم عبر الواتساب">
+                                        <i class="fab fa-whatsapp me-1"></i> إشعار الخصم
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            {% else %}
+                                <!-- إذا لم تكن هناك بيانات رواتب (مؤقت)، عرض خانات إدخال -->
+                                <td>
+                                    <input type="number" class="form-control form-control-sm salary-input" data-field="basic_salary" data-employee="{{ salary.employee.id }}" placeholder="الراتب الأساسي">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm salary-input" data-field="allowances" data-employee="{{ salary.employee.id }}" placeholder="البدلات">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm salary-input" data-field="deductions" data-employee="{{ salary.employee.id }}" placeholder="الخصومات">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm salary-input" data-field="bonus" data-employee="{{ salary.employee.id }}" placeholder="المكافآت">
+                                </td>
+                                <td class="fw-bold">
+                                    <span class="net-salary-display">0</span>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-success save-salary-btn" data-employee="{{ salary.employee.id }}" data-month="{{ salary.month }}" data-year="{{ salary.year }}">
+                                        <i class="fas fa-save me-1"></i> حفظ
                                     </button>
-                                </form>
-
-                                <!-- زر القائمة المنسدلة -->
-                                <div class="dropdown d-inline">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="إجراءات">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('salaries.edit', id=salary.id) }}">
-                                                <i class="fas fa-edit me-1"></i> تعديل الراتب
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}">
-                                                <i class="fas fa-file-pdf me-1"></i> إشعار راتب PDF
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('salaries.salary_notification_whatsapp', id=salary.id) }}">
-                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار راتب واتساب (API)
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('salaries.share_salary_via_whatsapp', id=salary.id) }}">
-                                                <i class="fab fa-whatsapp me-1"></i> مشاركة الراتب عبر واتساب
-                                            </a>
-                                        </li>
-                                        {% if salary.deductions > 0 %}
-                                        <li>
-                                            <a class="dropdown-item text-danger" href="{{ url_for('salaries.salary_deduction_notification_whatsapp', id=salary.id) }}">
-                                                <i class="fab fa-whatsapp me-1"></i> إرسال إشعار خصم واتساب (API)
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item text-danger" href="{{ url_for('salaries.share_deduction_via_whatsapp', id=salary.id) }}">
-                                                <i class="fab fa-whatsapp me-1"></i> مشاركة إشعار الخصم عبر واتساب
-                                            </a>
-                                        </li>
-                                        {% endif %}
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ salary.id }}">
-                                                <i class="fas fa-trash-alt me-1"></i> حذف
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-                                
-                                <!-- Delete Modal -->
-                                <div class="modal fade" id="deleteModal{{ salary.id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">تأكيد الحذف</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                هل أنت متأكد من حذف سجل راتب للموظف <strong>{{ salary.employee.name }}</strong> لشهر <strong>{{ salary.month }}/{{ salary.year }}</strong>؟
-                                                <p class="text-danger mt-2">هذا الإجراء لا يمكن التراجع عنه.</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                <form action="{{ url_for('salaries.delete', id=salary.id) }}" method="post">
-                                                    <button type="submit" class="btn btn-danger delete-confirm">تأكيد الحذف</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            {% endif %}
                         {% endfor %}
                     </tbody>
                 </table>
