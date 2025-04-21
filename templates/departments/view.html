@@ -312,9 +312,16 @@
                 e.preventDefault();
                 console.log('تم النقر على زر تصدير المحدد');
                 
-                const selectedIds = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
-                    .map(checkbox => checkbox.value);
-                console.log('المعرفات المحددة:', selectedIds);
+                // جمع معرفات الموظفين المحددين للتصدير
+                const selectedIds = [];
+                document.querySelectorAll('.employee-checkbox:checked').forEach(checkbox => {
+                    console.log(`إضافة المعرف ${checkbox.value} إلى قائمة التصدير`);
+                    // تأكد من أن القيمة رقمية
+                    if (checkbox.value && !isNaN(parseInt(checkbox.value))) {
+                        selectedIds.push(parseInt(checkbox.value));
+                    }
+                });
+                console.log('المعرفات المحددة للتصدير:', selectedIds);
                 
                 if (selectedIds.length === 0) {
                     showAlert('يجب تحديد موظف واحد على الأقل للتصدير', 'warning');
@@ -340,7 +347,11 @@
                 // جمع معرفات الموظفين المحددين
                 const selectedIds = [];
                 document.querySelectorAll('.employee-checkbox:checked').forEach(checkbox => {
-                    selectedIds.push(checkbox.value);
+                    console.log(`إضافة المعرف ${checkbox.value} إلى قائمة الحذف`);
+                    // تأكد من أن القيمة رقمية
+                    if (checkbox.value && !isNaN(parseInt(checkbox.value))) {
+                        selectedIds.push(parseInt(checkbox.value));
+                    }
                 });
                 console.log('المعرفات المحددة للحذف:', selectedIds);
                 

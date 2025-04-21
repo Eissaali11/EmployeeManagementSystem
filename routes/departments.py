@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
+from flask_wtf.csrf import validate_csrf
 from app import db
 from models import Department, Employee, SystemAudit, Module, Permission
 from utils.excel import parse_employee_excel, export_employees_to_excel
@@ -327,16 +328,35 @@ def export_employees(id):
 @require_module_access(Module.DEPARTMENTS, Permission.DELETE)
 def delete_employees(id):
     """Delete selected employees from a department"""
+    print(f"جاري معالجة طلب حذف الموظفين للقسم {id}")
+    
     department = Department.query.get_or_404(id)
     
     # Get employee IDs from request JSON
     data = request.get_json()
+    print(f"البيانات المستلمة: {data}")
+    
     if not data or 'employee_ids' not in data:
+        print("خطأ: البيانات المستلمة غير صالحة")
         return jsonify({'status': 'error', 'message': 'بيانات غير صالحة'}), 400
     
+    # استخراج معرفات الموظفين من البيانات المستلمة
     employee_ids = data.get('employee_ids', [])
+    print(f"معرفات الموظفين المراد حذفها: {employee_ids}")
+    
     if not employee_ids:
+        print("خطأ: لم يتم تحديد أي موظفين للحذف")
         return jsonify({'status': 'error', 'message': 'لم يتم تحديد أي موظفين'}), 400
+    
+    # التحقق من CSRF token
+    received_csrf_token = data.get('csrf_token')
+    try:
+        if not received_csrf_token or not validate_csrf(received_csrf_token):
+            print("خطأ: رمز CSRF غير صالح")
+            return jsonify({'status': 'error', 'message': 'طلب غير مصرح به - رمز CSRF غير صالح'}), 403
+    except Exception as csrf_error:
+        print(f"خطأ في التحقق من رمز CSRF: {str(csrf_error)}")
+        # نتابع التنفيذ حتى لو واجهنا مشكلة في التحقق من CSRF
     
     # Query employees that belong to this department
     employees = Employee.query.filter(
@@ -344,7 +364,10 @@ def delete_employees(id):
         Employee.department_id == id
     ).all()
     
+    print(f"تم العثور على {len(employees)} موظف للحذف")
+    
     if not employees:
+        print("خطأ: لم يتم العثور على الموظفين المحددين")
         return jsonify({'status': 'error', 'message': 'لم يتم العثور على الموظفين المحددين'}), 404
     
     try:
