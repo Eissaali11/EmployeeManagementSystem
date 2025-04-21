@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.date_converter import parse_date
 
 def parse_employee_excel(file):
@@ -163,13 +163,23 @@ def parse_employee_excel(file):
         # Print final column mapping
         print(f"Final column mapping: {detected_columns}")
         
-        # Check required columns
-        required_fields = ['name', 'employee_id', 'national_id', 'mobile', 'job_title']
-        missing_fields = [field for field in required_fields if field not in detected_columns]
+        # Check required columns - divide into essential and non-essential fields
+        essential_fields = ['name', 'employee_id', 'national_id']  # هذه مطلوبة دائمًا
+        other_fields = ['mobile', 'job_title']  # هذه يمكن إنشاء قيم افتراضية لها
         
-        if missing_fields:
-            missing_str = ", ".join(missing_fields)
+        missing_essential = [field for field in essential_fields if field not in detected_columns]
+        if missing_essential:
+            missing_str = ", ".join(missing_essential)
             raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
+        
+        # بالنسبة للحقول غير الأساسية المفقودة، سننشئ أعمدة وهمية تحتوي على قيم افتراضية
+        for field in other_fields:
+            if field not in detected_columns:
+                print(f"Warning: Creating default column for: {field}")
+                # إنشاء عمود وهمي يحتوي على قيم فارغة/افتراضية
+                dummy_column_name = f"__{field}__default"
+                df[dummy_column_name] = None  # إنشاء عمود فارغ
+                detected_columns[field] = dummy_column_name  # تعيين العمود الوهمي للحقل
         
         # Process each row
         employees = []
@@ -181,7 +191,8 @@ def parse_employee_excel(file):
                 
                 # Handle rows with missing required fields by filling with defaults
                 missing_fields = []
-                for field in required_fields:
+                all_fields = essential_fields + other_fields  # جميع الحقول المطلوبة والإضافية
+                for field in all_fields:
                     if pd.isna(row[detected_columns[field]]):
                         missing_fields.append(field)
                 
@@ -201,7 +212,7 @@ def parse_employee_excel(file):
                 employee = {}
                 
                 # Add required fields with defaults for missing values
-                for field in required_fields:
+                for field in all_fields:
                     value = row[detected_columns[field]]
                     # Convert to string and handle NaN values
                     if pd.isna(value):
@@ -404,13 +415,23 @@ def parse_salary_excel(file, month, year):
         # Print final column mapping
         print(f"Final salary column mapping: {detected_columns}")
         
-        # Check required columns
-        required_fields = ['employee_id', 'basic_salary']
-        missing_fields = [field for field in required_fields if field not in detected_columns]
+        # تقسيم الحقول المطلوبة إلى أساسية وغير أساسية
+        essential_fields = ['employee_id']  # رقم الموظف هو الأساسي الوحيد الضروري دائماً
+        other_fields = ['basic_salary', 'allowances', 'deductions', 'bonus']  # يمكن وضع قيم افتراضية لها
         
-        if missing_fields:
-            missing_str = ", ".join(missing_fields)
+        # التحقق من الحقول الأساسية
+        missing_essential = [field for field in essential_fields if field not in detected_columns]
+        if missing_essential:
+            missing_str = ", ".join(missing_essential)
             raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
+        
+        # بالنسبة للحقول غير الأساسية المفقودة، سننشئ أعمدة وهمية تحتوي على قيم افتراضية
+        for field in other_fields:
+            if field not in detected_columns:
+                print(f"Warning: Creating default column for: {field}")
+                dummy_column_name = f"__{field}__default"
+                df[dummy_column_name] = 0  # إنشاء عمود فارغ (0 للقيم المالية)
+                detected_columns[field] = dummy_column_name  # تعيين العمود الوهمي للحقل
         
         # Process each row
         salaries = []
@@ -440,10 +461,10 @@ def parse_salary_excel(file, month, year):
                 basic_salary_col = detected_columns['basic_salary']
                 basic_salary_val = row[basic_salary_col]
                 
-                # Skip rows with missing or non-numeric basic_salary
+                # تعامل مع القيم المفقودة أو غير الرقمية للراتب الأساسي
                 if pd.isna(basic_salary_val) or not isinstance(basic_salary_val, (int, float)):
-                    print(f"Skipping row {idx+1} due to invalid basic salary")
-                    continue
+                    print(f"Row {idx+1}: Using default value of 0 for basic salary")
+                    basic_salary_val = 0
                 
                 basic_salary = float(basic_salary_val)
                 
@@ -629,13 +650,31 @@ def parse_document_excel(file):
         # Print final column mapping
         print(f"Final document column mapping: {detected_columns}")
         
-        # Check required columns
-        required_fields = ['employee_id', 'document_type', 'document_number', 'issue_date', 'expiry_date']
-        missing_fields = [field for field in required_fields if field not in detected_columns]
+        # تقسيم الحقول المطلوبة إلى أساسية وغير أساسية
+        essential_fields = ['employee_id', 'document_type', 'document_number']  # الحقول الأساسية التي يجب توفرها
+        other_fields = ['issue_date', 'expiry_date', 'notes']  # الحقول التي يمكن إضافة قيم افتراضية لها
         
-        if missing_fields:
-            missing_str = ", ".join(missing_fields)
+        # التحقق من الحقول الأساسية
+        missing_essential = [field for field in essential_fields if field not in detected_columns]
+        if missing_essential:
+            missing_str = ", ".join(missing_essential)
             raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
+        
+        # بالنسبة للحقول غير الأساسية المفقودة، سننشئ أعمدة وهمية تحتوي على قيم افتراضية
+        for field in other_fields:
+            if field not in detected_columns:
+                print(f"Warning: Creating default column for: {field}")
+                dummy_column_name = f"__{field}__default"
+                # إذا كان الحقل هو تاريخ، نضيف تاريخ افتراضي (اليوم للإصدار، وبعد سنة للانتهاء)
+                if field == 'issue_date':
+                    default_value = datetime.now()
+                elif field == 'expiry_date':
+                    default_value = datetime.now() + timedelta(days=365)
+                else:
+                    default_value = ''  # للملاحظات
+                
+                df[dummy_column_name] = default_value
+                detected_columns[field] = dummy_column_name  # تعيين العمود الوهمي للحقل
         
         # Process each row
         documents = []
