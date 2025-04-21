@@ -197,29 +197,55 @@ def import_excel():
                 
                 for data in salaries_data:
                     try:
-                        # Check if record already exists
+                        # البحث عن الموظف حسب رقم الموظف (employee_id) 
+                        employee = Employee.query.filter_by(employee_id=str(data['employee_id'])).first()
+                        
+                        if not employee:
+                            print(f"لم يتم العثور على موظف برقم: {data['employee_id']}")
+                            raise ValueError(f"لم يتم العثور على موظف برقم: {data['employee_id']}")
+                            
+                        # التحقق من وجود سجل راتب لهذا الموظف في نفس الشهر والسنة
                         existing = Salary.query.filter_by(
-                            employee_id=data['employee_id'],
+                            employee_id=employee.id,  # استخدام معرف الموظف في قاعدة البيانات
                             month=month,
                             year=year
                         ).first()
                         
+                        # تحضير بيانات الراتب
+                        salary_data = {
+                            'employee_id': employee.id,  # معرف الموظف في قاعدة البيانات وليس رقم الموظف
+                            'month': month,
+                            'year': year,
+                            'basic_salary': data['basic_salary'],
+                            'allowances': data['allowances'],
+                            'deductions': data['deductions'],
+                            'bonus': data['bonus'],
+                            'net_salary': data['net_salary']
+                        }
+                        
+                        if 'notes' in data:
+                            salary_data['notes'] = data['notes']
+                        
                         if existing:
-                            # Update existing record
+                            # تحديث السجل الموجود
                             existing.basic_salary = data['basic_salary']
                             existing.allowances = data['allowances']
                             existing.deductions = data['deductions']
                             existing.bonus = data['bonus']
                             existing.net_salary = data['net_salary']
+                            if 'notes' in data:
+                                existing.notes = data['notes']
                             db.session.commit()
                         else:
-                            # Create new record
-                            salary = Salary(**data)
+                            # إنشاء سجل جديد
+                            salary = Salary(**salary_data)
                             db.session.add(salary)
                             db.session.commit()
                         
                         success_count += 1
-                    except Exception:
+                    except Exception as e:
+                        # طباعة رسالة الخطأ للسجل
+                        print(f"Error importing salary: {str(e)}")
                         db.session.rollback()
                         error_count += 1
                 
