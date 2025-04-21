@@ -410,10 +410,9 @@
                                 <tr class="status-{{ attendance.status }}">
                                     <td>
                                         {% if attendance.date %}
-                                        <span class="gregorian-date">{{ attendance.date.strftime('%d/%m/%Y') }}</span>
-                                        <span class="hijri-date" style="display: none;"></span>
+                                        {{ attendance.date.strftime('%d/%m/%Y') }}
                                         {% else %}
-                                        <span class="gregorian-date">-</span>
+                                        -
                                         {% endif %}
                                     </td>
                                     <td>
