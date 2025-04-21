@@ -302,22 +302,36 @@ def export_employees(id):
         filename = f"employees_{department.name}_{timestamp}.xlsx"
         
         # Log the export
-        audit = SystemAudit(
-            action='export',
-            entity_type='employee',
-            entity_id=id,
-            user_id=current_user.id if current_user.is_authenticated else None,
-            details=f'تم تصدير {len(employees)} موظف من قسم {department.name}'
-        )
-        db.session.add(audit)
-        db.session.commit()
+        try:
+            audit = SystemAudit(
+                action='export',
+                entity_type='employee',
+                entity_id=id,
+                user_id=current_user.id if current_user.is_authenticated else None,
+                details=f'تم تصدير {len(employees)} موظف من قسم {department.name}'
+            )
+            db.session.add(audit)
+            db.session.commit()
+            
+            print(f"تم تسجيل عملية تصدير {len(employees)} موظف من قسم {department.name}")
+        except Exception as audit_error:
+            print(f"خطأ في تسجيل عملية التصدير: {str(audit_error)}")
+            # نستمر في التصدير حتى لو فشل تسجيل العملية
         
-        return send_file(
+        # Return the Excel file as a download
+        response = send_file(
             output,
             as_attachment=True,
             download_name=filename,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
+        
+        # إضافة رأس لمنع التخزين المؤقت
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        
+        return response
     except Exception as e:
         flash(f'حدث خطأ أثناء تصدير الملف: {str(e)}', 'danger')
         return redirect(url_for('departments.view', id=id))
@@ -333,20 +347,33 @@ def delete_employees(id):
     department = Department.query.get_or_404(id)
     
     # Get employee IDs from request JSON
-    data = request.get_json()
-    print(f"البيانات المستلمة: {data}")
-    
-    if not data or 'employee_ids' not in data:
-        print("خطأ: البيانات المستلمة غير صالحة")
-        return jsonify({'status': 'error', 'message': 'بيانات غير صالحة'}), 400
-    
-    # استخراج معرفات الموظفين من البيانات المستلمة
-    employee_ids = data.get('employee_ids', [])
-    print(f"معرفات الموظفين المراد حذفها: {employee_ids}")
-    
-    if not employee_ids:
-        print("خطأ: لم يتم تحديد أي موظفين للحذف")
-        return jsonify({'status': 'error', 'message': 'لم يتم تحديد أي موظفين'}), 400
+    try:
+        data = request.get_json()
+        print(f"البيانات المستلمة: {data}")
+        
+        if not data or 'employee_ids' not in data:
+            print("خطأ: البيانات المستلمة غير صالحة")
+            return jsonify({'status': 'error', 'message': 'بيانات غير صالحة، يرجى تحديد الموظفين المراد حذفهم'}), 400
+        
+        # استخراج معرفات الموظفين من البيانات المستلمة
+        employee_ids = data.get('employee_ids', [])
+        print(f"معرفات الموظفين المراد حذفها: {employee_ids}")
+        
+        # تحقق من أن القائمة ليست فارغة وأنها قائمة بالفعل
+        if not employee_ids or not isinstance(employee_ids, list):
+            print("خطأ: لم يتم تحديد أي موظفين للحذف أو البيانات ليست قائمة")
+            return jsonify({'status': 'error', 'message': 'لم يتم تحديد أي موظفين للحذف'}), 400
+            
+        # التأكد من أن جميع المعرفات أرقام صحيحة
+        try:
+            employee_ids = [int(emp_id) for emp_id in employee_ids]
+            print(f"معرفات الموظفين بعد التحويل: {employee_ids}")
+        except (ValueError, TypeError) as e:
+            print(f"خطأ في تحويل المعرفات إلى أرقام: {str(e)}")
+            return jsonify({'status': 'error', 'message': 'معرفات الموظفين غير صالحة'}), 400
+    except Exception as e:
+        print(f"خطأ في معالجة البيانات المستلمة: {str(e)}")
+        return jsonify({'status': 'error', 'message': f'خطأ في معالجة البيانات: {str(e)}'}), 400
     
     # التحقق من CSRF token
     received_csrf_token = data.get('csrf_token')

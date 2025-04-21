@@ -200,16 +200,27 @@
         
         // تحديد الكل
         function selectAll() {
-            employeeCheckboxes.forEach(cb => cb.checked = true);
+            console.log(`تحديد جميع الموظفين. العدد: ${employeeCheckboxes.length}`);
+            employeeCheckboxes.forEach(cb => {
+                cb.checked = true;
+                console.log(`تحديد الموظف ${cb.value}`);
+            });
             if (checkAllBox) checkAllBox.checked = true;
             updateButtonsState();
+            
+            // عرض رسالة نجاح
+            showAlert(`تم تحديد ${employeeCheckboxes.length} موظف`, 'info');
         }
         
         // إلغاء تحديد الكل
         function deselectAll() {
+            console.log('إلغاء تحديد جميع الموظفين');
             employeeCheckboxes.forEach(cb => cb.checked = false);
             if (checkAllBox) checkAllBox.checked = false;
             updateButtonsState();
+            
+            // عرض رسالة تأكيد
+            showAlert('تم إلغاء تحديد جميع الموظفين', 'info');
         }
         
         // الحصول على معرفات الموظفين المحددين
@@ -322,8 +333,29 @@
                 const exportUrl = `/departments/${departmentId}/export_employees?ids=${selectedIds.join(',')}`;
                 console.log('تصدير الموظفين المحددين:', selectedIds);
                 
-                // فتح عنوان URL في نافذة جديدة للتنزيل
-                window.open(exportUrl, '_blank');
+                // إظهار مؤشر التحميل
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التصدير...';
+                this.disabled = true;
+                
+                try {
+                    // فتح عنوان URL في نافذة جديدة للتنزيل
+                    const exportWindow = window.open(exportUrl, '_blank');
+                    
+                    // إذا تم منع النافذة المنبثقة
+                    if (!exportWindow || exportWindow.closed || typeof exportWindow.closed == 'undefined') {
+                        showAlert('تم منع النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة ثم المحاولة مرة أخرى.', 'warning');
+                    } else {
+                        showAlert('جاري تنزيل ملف الموظفين...', 'success');
+                    }
+                } catch (error) {
+                    console.error('خطأ أثناء التصدير:', error);
+                    showAlert('حدث خطأ أثناء محاولة التصدير', 'danger');
+                } finally {
+                    // إعادة تعيين حالة الزر بعد ثانية
+                    setTimeout(() => {
+                        updateButtonsState();
+                    }, 1000);
+                }
             });
         }
         
@@ -341,7 +373,11 @@
                 if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} موظف؟ لا يمكن التراجع عن هذا الإجراء.`)) {
                     // إظهار مؤشر التحميل
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
-                    this.classList.add('disabled');
+                    this.disabled = true;
+                    
+                    console.log(`إرسال طلب حذف ${selectedIds.length} موظف`);
+                    console.log('المعرفات المرسلة:', selectedIds);
+                    console.log('CSRF Token:', csrfToken.substring(0, 5) + '...');
                     
                     // إرسال طلب للخادم
                     fetch(`/departments/${departmentId}/delete_employees`, {
