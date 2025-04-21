@@ -263,3 +263,120 @@ def delete_confirm(id):
         print(f"Error deleting department: {str(e)}")
     
     return redirect(url_for('departments.index'))
+
+
+@departments_bp.route('/<int:id>/export_employees')
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.VIEW)
+def export_employees(id):
+    """Export selected employees from a department to Excel"""
+    department = Department.query.get_or_404(id)
+    
+    # Get employee IDs from query parameters
+    employee_ids = request.args.get('ids', '')
+    if employee_ids:
+        employee_ids = [int(emp_id) for emp_id in employee_ids.split(',') if emp_id.isdigit()]
+        # Query only the selected employees that belong to this department
+        employees = Employee.query.filter(
+            Employee.id.in_(employee_ids),
+            Employee.department_id == id
+        ).all()
+    else:
+        # If no IDs specified, export all employees in the department
+        employees = Employee.query.filter_by(department_id=id).all()
+    
+    if not employees:
+        flash('لا يوجد موظفين للتصدير', 'warning')
+        return redirect(url_for('departments.view', id=id))
+    
+    try:
+        # Create Excel file in memory
+        output = BytesIO()
+        export_employees_to_excel(employees, output)
+        output.seek(0)
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"employees_{department.name}_{timestamp}.xlsx"
+        
+        # Log the export
+        audit = SystemAudit(
+            action='export',
+            entity_type='employee',
+            entity_id=id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            details=f'تم تصدير {len(employees)} موظف من قسم {department.name}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تصدير الملف: {str(e)}', 'danger')
+        return redirect(url_for('departments.view', id=id))
+
+
+@departments_bp.route('/<int:id>/delete_employees', methods=['POST'])
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.DELETE)
+def delete_employees(id):
+    """Delete selected employees from a department"""
+    department = Department.query.get_or_404(id)
+    
+    # Get employee IDs from request JSON
+    data = request.get_json()
+    if not data or 'employee_ids' not in data:
+        return jsonify({'status': 'error', 'message': 'بيانات غير صالحة'}), 400
+    
+    employee_ids = data.get('employee_ids', [])
+    if not employee_ids:
+        return jsonify({'status': 'error', 'message': 'لم يتم تحديد أي موظفين'}), 400
+    
+    # Query employees that belong to this department
+    employees = Employee.query.filter(
+        Employee.id.in_(employee_ids),
+        Employee.department_id == id
+    ).all()
+    
+    if not employees:
+        return jsonify({'status': 'error', 'message': 'لم يتم العثور على الموظفين المحددين'}), 404
+    
+    try:
+        deleted_count = 0
+        employee_names = []
+        
+        # Delete each employee
+        for employee in employees:
+            employee_names.append(employee.name)
+            db.session.delete(employee)
+            deleted_count += 1
+        
+        # Log the action
+        names_list = ', '.join(employee_names[:5])
+        if len(employee_names) > 5:
+            names_list += f' وغيرهم...'
+            
+        audit = SystemAudit(
+            action='delete',
+            entity_type='employee',
+            entity_id=id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            details=f'تم حذف {deleted_count} موظف من قسم {department.name}: {names_list}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'تم حذف {deleted_count} موظف بنجاح',
+            'deleted_count': deleted_count
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting employees: {str(e)}")
+        return jsonify({'status': 'error', 'message': f'حدث خطأ أثناء الحذف: {str(e)}'}), 500
