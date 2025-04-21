@@ -374,7 +374,7 @@ def parse_salary_excel(file, month, year):
         
         # Create a mapping for column detection
         column_mappings = {
-            'employee_id': ['employee_id', 'employee id', 'emp id', 'employee number', 'emp no', 'emp.id', 'emp.no', 'رقم الموظف', 'معرف الموظف', 'الرقم الوظيفي'],
+            'employee_id': ['employee_id', 'employee id', 'emp id', 'employee number', 'emp no', 'emp.id', 'emp.no', 'emp .n', 'رقم الموظف', 'معرف الموظف', 'الرقم الوظيفي'],
             'basic_salary': ['basic_salary', 'basic salary', 'salary', 'راتب', 'الراتب', 'الراتب الأساسي'],
             'allowances': ['allowances', 'بدل', 'بدلات', 'البدلات'],
             'deductions': ['deductions', 'خصم', 'خصومات', 'الخصومات'],
@@ -400,6 +400,7 @@ def parse_salary_excel(file, month, year):
         # Handle special case for Excel files with specific column names
         explicit_mappings = {
             'Employee ID': 'employee_id',
+            'Emp .N': 'employee_id',  # شكل آخر لرقم الموظف
             'Basic Salary': 'basic_salary',
             'Allowances': 'allowances',
             'Deductions': 'deductions',
@@ -716,23 +717,44 @@ def parse_document_excel(file):
                 issue_date_col = detected_columns['issue_date']
                 expiry_date_col = detected_columns['expiry_date']
                 
-                # Skip rows with missing dates
-                if pd.isna(row[issue_date_col]) or pd.isna(row[expiry_date_col]):
-                    print(f"Skipping row {idx+1} due to missing dates")
-                    continue
+                # تعامل مع التواريخ المفقودة - استخدام تاريخ اليوم للإصدار وبعد سنة للانتهاء
+                if pd.isna(row[issue_date_col]):
+                    print(f"Row {idx+1}: Using today's date for missing issue date")
+                    issue_date_val = datetime.now()
+                else:
+                    issue_date_val = row[issue_date_col]
+                    
+                if pd.isna(row[expiry_date_col]):
+                    print(f"Row {idx+1}: Using date one year from today for missing expiry date")
+                    expiry_date_val = datetime.now() + timedelta(days=365)
+                else:
+                    expiry_date_val = row[expiry_date_col]
                 
                 try:
                     # Handle different date formats and convert to datetime
-                    issue_date = parse_date(str(row[issue_date_col]))
-                    expiry_date = parse_date(str(row[expiry_date_col]))
+                    if isinstance(issue_date_val, datetime):
+                        issue_date = issue_date_val
+                    else:
+                        issue_date = parse_date(str(issue_date_val))
+                        
+                    if isinstance(expiry_date_val, datetime):
+                        expiry_date = expiry_date_val
+                    else:
+                        expiry_date = parse_date(str(expiry_date_val))
                     
-                    if not issue_date or not expiry_date:
-                        print(f"Skipping row {idx+1} due to invalid date format")
-                        continue
+                    # استخدام تواريخ افتراضية في حالة فشل تحليل التواريخ
+                    if not issue_date:
+                        print(f"Row {idx+1}: Using today's date due to invalid issue date format")
+                        issue_date = datetime.now()
+                        
+                    if not expiry_date:
+                        print(f"Row {idx+1}: Using date one year from today due to invalid expiry date format")
+                        expiry_date = datetime.now() + timedelta(days=365)
                         
                 except (ValueError, TypeError) as e:
-                    print(f"Skipping row {idx+1} due to date parsing error: {str(e)}")
-                    continue
+                    print(f"Row {idx+1}: Date parsing error: {str(e)}, using default dates")
+                    issue_date = datetime.now()
+                    expiry_date = datetime.now() + timedelta(days=365)
                 
                 # Create document dictionary
                 document = {
