@@ -50,10 +50,10 @@
                         قسم: {{ department.name }}
                     </h2>
                     <div>
-                        <a href="{{ url_for('routes.departments.index') }}" class="btn btn-outline-secondary ms-1">
+                        <a href="{{ url_for('departments.index') }}" class="btn btn-outline-secondary ms-1">
                             <i class="fas fa-arrow-right me-1"></i> العودة للأقسام
                         </a>
-                        <a href="{{ url_for('routes.departments.edit', id=department.id) }}" class="btn btn-outline-primary">
+                        <a href="{{ url_for('departments.edit', id=department.id) }}" class="btn btn-outline-primary">
                             <i class="fas fa-edit me-1"></i> تعديل القسم
                         </a>
                     </div>
@@ -110,10 +110,10 @@
                             <span class="badge bg-secondary ms-2" id="employeeCount">{{ employees|length }} موظف</span>
                         </h5>
                         <div>
-                            <a href="{{ url_for('routes.employees.create', department_id=department.id) }}" class="btn btn-primary">
+                            <a href="{{ url_for('employees.create', department_id=department.id) }}" class="btn btn-primary">
                                 <i class="fas fa-plus-circle me-1"></i> إضافة موظف
                             </a>
-                            <a href="{{ url_for('routes.departments.import_employees', id=department.id) }}" class="btn btn-outline-secondary ms-1">
+                            <a href="{{ url_for('departments.import_employees', id=department.id) }}" class="btn btn-outline-secondary ms-1">
                                 <i class="fas fa-file-import me-1"></i> استيراد من Excel
                             </a>
                         </div>
@@ -229,10 +229,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <a href="{{ url_for('routes.employees.show', id=employee.id) }}" class="btn btn-sm btn-primary" title="عرض">
+                                            <a href="{{ url_for('employees.show', id=employee.id) }}" class="btn btn-sm btn-primary" title="عرض">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ url_for('routes.employees.edit', id=employee.id) }}" class="btn btn-sm btn-info" title="تعديل">
+                                            <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-sm btn-info" title="تعديل">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-danger delete-employee-btn" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal" data-id="{{ employee.id }}" data-name="{{ employee.name }}" title="حذف">
@@ -253,10 +253,10 @@
                             <h5 class="text-muted">لا يوجد موظفين في هذا القسم حالياً</h5>
                             <p class="mb-4">يمكنك إضافة موظفين جدد أو استيرادهم من ملف Excel</p>
                             <div class="mt-3">
-                                <a href="{{ url_for('routes.employees.create', department_id=department.id) }}" class="btn btn-primary">
+                                <a href="{{ url_for('employees.create', department_id=department.id) }}" class="btn btn-primary">
                                     <i class="fas fa-plus-circle me-1"></i> إضافة موظف
                                 </a>
-                                <a href="{{ url_for('routes.departments.import_employees', id=department.id) }}" class="btn btn-outline-secondary ms-1">
+                                <a href="{{ url_for('departments.import_employees', id=department.id) }}" class="btn btn-outline-secondary ms-1">
                                     <i class="fas fa-file-import me-1"></i> استيراد من Excel
                                 </a>
                             </div>
