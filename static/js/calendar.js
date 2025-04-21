@@ -95,9 +95,9 @@ function formatDate(date) {
 function toggleCalendarType() {
     const isHijri = this.checked;
     
-    // Toggle visibility of date displays
-    const hijriElements = document.querySelectorAll('.hijri-date');
-    const gregorianElements = document.querySelectorAll('.gregorian-date');
+    // Toggle visibility of date displays - استثناء عناصر جدول الحضور
+    const hijriElements = document.querySelectorAll('.hijri-date:not(table .hijri-date)');
+    const gregorianElements = document.querySelectorAll('.gregorian-date:not(table .gregorian-date)');
     
     hijriElements.forEach(el => {
         el.style.display = isHijri ? 'inline-block' : 'none';

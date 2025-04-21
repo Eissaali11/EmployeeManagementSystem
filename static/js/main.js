@@ -313,8 +313,9 @@ function setupCalendarToggle() {
     
     if (calendarToggle) {
         calendarToggle.addEventListener('change', function() {
-            const hijriElements = document.querySelectorAll('.hijri-date');
-            const gregorianElements = document.querySelectorAll('.gregorian-date');
+            // استثناء العناصر داخل جدول الحضور لمنع اختفاء التواريخ فيه
+            const hijriElements = document.querySelectorAll('.hijri-date:not(.attendance-table .hijri-date)');
+            const gregorianElements = document.querySelectorAll('.gregorian-date:not(.attendance-table .gregorian-date)');
             
             if (this.checked) {
                 // Show Hijri dates
