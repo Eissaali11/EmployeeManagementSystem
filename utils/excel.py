@@ -3,6 +3,7 @@ import numpy as np
 from io import BytesIO
 from datetime import datetime, timedelta
 from utils.date_converter import parse_date
+from calendar import monthrange
 
 def parse_employee_excel(file):
     """
