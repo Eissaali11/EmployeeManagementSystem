@@ -199,13 +199,40 @@ def view(id):
                           attendances=attendances,
                           salaries=salaries)
 
-@employees_bp.route('/<int:id>/delete', methods=['POST'])
+@employees_bp.route('/<int:id>/confirm_delete')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.DELETE)
+def confirm_delete(id):
+    """صفحة تأكيد حذف الموظف"""
+    employee = Employee.query.get_or_404(id)
+    
+    # تحديد عنوان الصفحة التي تم تحويلنا منها للعودة إليها عند الإلغاء
+    return_url = request.referrer
+    if not return_url or '/employees/' in return_url:
+        return_url = url_for('employees.index')
+    
+    return render_template('employees/confirm_delete.html', 
+                          employee=employee, 
+                          return_url=return_url)
+
+@employees_bp.route('/<int:id>/delete', methods=['GET', 'POST'])
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.DELETE)
 def delete(id):
     """Delete an employee"""
     employee = Employee.query.get_or_404(id)
     name = employee.name
+    
+    # إذا كان الطلب GET، نعرض صفحة التأكيد
+    if request.method == 'GET':
+        return redirect(url_for('employees.confirm_delete', id=id))
+    
+    # إذا كان الطلب POST، نتحقق من تأكيد الحذف
+    confirmed = request.form.get('confirmed', 'no')
+    
+    if confirmed != 'yes':
+        flash('لم يتم تأكيد عملية الحذف', 'warning')
+        return redirect(url_for('employees.view', id=id))
     
     try:
         db.session.delete(employee)
@@ -224,6 +251,15 @@ def delete(id):
     except Exception as e:
         db.session.rollback()
         flash(f'حدث خطأ أثناء حذف الموظف: {str(e)}', 'danger')
+    
+    # التحقق من مصدر الطلب للعودة إلى الصفحة المناسبة
+    referrer = request.form.get('return_url')
+    if referrer and '/departments/' in referrer:
+        try:
+            department_id = referrer.split('/departments/')[1].split('/')[0]
+            return redirect(url_for('departments.view', id=department_id))
+        except:
+            pass
     
     return redirect(url_for('employees.index'))
 

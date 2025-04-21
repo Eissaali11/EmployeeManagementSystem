@@ -299,9 +299,9 @@
                                                 <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-info" title="تعديل">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-danger delete-employee-btn" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal" data-id="{{ employee.id }}" data-name="{{ employee.name }}" title="حذف">
+                                                <a href="{{ url_for('employees.confirm_delete', id=employee.id) }}" class="btn btn-danger" title="حذف">
                                                     <i class="fas fa-trash"></i>
-                                                </button>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
