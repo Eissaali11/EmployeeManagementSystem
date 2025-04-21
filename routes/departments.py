@@ -216,6 +216,9 @@ def delete(id):
     department = Department.query.get_or_404(id)
     name = department.name
     
+    # Add current_user to the audit
+    user_id = current_user.id if current_user.is_authenticated else None
+    
     try:
         # Check if department has employees
         employees = Employee.query.filter_by(department_id=id).count()
@@ -230,6 +233,7 @@ def delete(id):
             action='delete',
             entity_type='department',
             entity_id=id,
+            user_id=user_id,
             details=f'تم حذف القسم: {name}'
         )
         db.session.add(audit)
@@ -239,5 +243,6 @@ def delete(id):
     except Exception as e:
         db.session.rollback()
         flash(f'حدث خطأ أثناء حذف القسم: {str(e)}', 'danger')
+        print(f"حدث خطأ في حذف القسم: {str(e)}")  # Add logging for debugging
     
     return redirect(url_for('departments.index'))
