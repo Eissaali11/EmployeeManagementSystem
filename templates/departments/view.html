@@ -540,7 +540,7 @@
                     </button>
                     <form id="deleteEmployeeForm" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-danger">
+                        <button type="submit" class="btn btn-danger" id="confirmDeleteBtn">
                             <i class="fas fa-trash me-1"></i> تأكيد الحذف
                         </button>
                     </form>
@@ -603,12 +603,15 @@
         const employeeNameElement = document.getElementById('employeeNameToDelete');
         const deleteForm = document.getElementById('deleteEmployeeForm');
         const deleteButtons = document.querySelectorAll('.delete-employee-btn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
         
         // إضافة استماع للأحداث لكل زر حذف
         deleteButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const employeeId = this.getAttribute('data-id');
                 const employeeName = this.getAttribute('data-name');
+                
+                console.log(`تحضير لحذف الموظف: ID=${employeeId}, الاسم=${employeeName}`);
                 
                 // تحديث اسم الموظف في النافذة
                 if (employeeNameElement) {
@@ -618,9 +621,31 @@
                 // تحديث نموذج الحذف
                 if (deleteForm) {
                     deleteForm.action = `/employees/${employeeId}/delete`;
+                    console.log(`تم تعيين عنوان النموذج إلى: ${deleteForm.action}`);
                 }
             });
         });
+        
+        // زر تأكيد الحذف
+        if (confirmDeleteBtn && deleteForm) {
+            confirmDeleteBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // منع السلوك الافتراضي للزر
+                
+                // إظهار مؤشر التحميل
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
+                this.disabled = true;
+                
+                console.log(`إرسال طلب حذف الموظف إلى: ${deleteForm.action}`);
+                
+                // تأخير قصير لإظهار مؤشر التحميل
+                setTimeout(() => {
+                    // إرسال النموذج
+                    deleteForm.submit();
+                }, 300);
+            });
+        } else {
+            console.error("لم يتم العثور على زر تأكيد الحذف أو نموذج الحذف!");
+        }
         
         // --- تهيئة مربع حوار تغيير حالة الموظف ---
         const statusModal = document.getElementById('changeStatusModal');
