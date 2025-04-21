@@ -1,18 +1,24 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from app import db
-from models import Department, Employee, SystemAudit
+from models import Department, Employee, SystemAudit, Module, Permission
 from utils.excel import parse_employee_excel
+from utils.user_helpers import require_module_access
 
 departments_bp = Blueprint('departments', __name__)
 
 @departments_bp.route('/')
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.VIEW)
 def index():
     """List all departments"""
     departments = Department.query.all()
     return render_template('departments/index.html', departments=departments)
 
 @departments_bp.route('/create', methods=['GET', 'POST'])
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.CREATE)
 def create():
     """Create a new department"""
     if request.method == 'POST':
@@ -56,6 +62,8 @@ def create():
     return render_template('departments/create.html', employees=employees)
 
 @departments_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.EDIT)
 def edit(id):
     """Edit an existing department"""
     department = Department.query.get_or_404(id)
@@ -91,6 +99,8 @@ def edit(id):
     return render_template('departments/edit.html', department=department, employees=employees)
 
 @departments_bp.route('/<int:id>/view')
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.VIEW)
 def view(id):
     """View department details and its employees"""
     department = Department.query.get_or_404(id)
@@ -98,6 +108,8 @@ def view(id):
     return render_template('departments/view.html', department=department, employees=employees)
 
 @departments_bp.route('/<int:id>/import_employees', methods=['GET', 'POST'])
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.EDIT)
 def import_employees(id):
     """Import employees for specific department from Excel file"""
     department = Department.query.get_or_404(id)
