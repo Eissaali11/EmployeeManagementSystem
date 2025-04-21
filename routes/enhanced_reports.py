@@ -100,6 +100,55 @@ def salaries_pdf():
         print(f"حدث خطأ أثناء إنشاء تقرير الرواتب: {str(e)}")
         return jsonify({"error": "حدث خطأ أثناء إنشاء تقرير الرواتب"}), 500
 
+@enhanced_reports_bp.route('/salaries/excel')
+def salaries_excel():
+    """
+    تصدير تقرير الرواتب إلى ملف Excel
+    """
+    # الحصول على معلمات الفلتر
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    
+    month = int(request.args.get('month', current_month))
+    year = int(request.args.get('year', current_year))
+    department_id = request.args.get('department_id', '')
+    
+    # استعلام الرواتب
+    salaries_query = Salary.query.filter_by(
+        month=month,
+        year=year
+    )
+    
+    # تطبيق فلتر القسم إذا كان محدداً
+    if department_id:
+        # الحصول على معرفات الموظفين في القسم المحدد
+        dept_employee_ids = [e.id for e in Employee.query.filter_by(department_id=department_id).all()]
+        salaries_query = salaries_query.filter(Salary.employee_id.in_(dept_employee_ids))
+        department = Department.query.get(department_id)
+        department_name = department.name if department else ""
+    else:
+        department_name = "جميع الأقسام"
+    
+    # الحصول على بيانات الرواتب كقائمة كائنات
+    salaries = salaries_query.all()
+    
+    try:
+        # استدعاء دالة إنشاء ملف Excel
+        excel_data = generate_salary_excel(salaries)
+        
+        # إرجاع البيانات كملف تنزيل
+        return send_file(
+            excel_data,
+            as_attachment=True,
+            download_name=f"salaries_report_{year}_{month}.xlsx",
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    
+    except Exception as e:
+        # في حالة حدوث خطأ، نسجله ونعرض رسالة خطأ للمستخدم
+        print(f"حدث خطأ أثناء إنشاء تقرير الرواتب Excel: {str(e)}")
+        return jsonify({"error": "حدث خطأ أثناء إنشاء تقرير الرواتب Excel"}), 500
+
 @enhanced_reports_bp.route('/salary_notification/<int:salary_id>/pdf')
 def salary_notification_pdf(salary_id):
     """
