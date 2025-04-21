@@ -22,22 +22,31 @@ salaries_bp = Blueprint('salaries', __name__)
 def index():
     """List salary records with filtering options"""
     # Get filter parameters
-    month = request.args.get('month', str(datetime.now().month))
-    year = request.args.get('year', str(datetime.now().year))
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    # النص الافتراضي للشهر والسنة هو الشهر والسنة الحاليين
+    month = request.args.get('month', str(current_month))
+    year = request.args.get('year', str(current_year))
     employee_id = request.args.get('employee_id', '')
     
     # Build query
     query = Salary.query
     
     # Apply filters
-    if month and month.isdigit():
-        query = query.filter(Salary.month == int(month))
-    
-    if year and year.isdigit():
-        query = query.filter(Salary.year == int(year))
-    
-    if employee_id and employee_id.isdigit():
-        query = query.filter(Salary.employee_id == int(employee_id))
+    try:
+        if month and month.strip():
+            query = query.filter(Salary.month == int(month))
+        
+        if year and year.strip():
+            query = query.filter(Salary.year == int(year))
+        
+        if employee_id and employee_id.strip():
+            query = query.filter(Salary.employee_id == int(employee_id))
+    except ValueError:
+        # في حالة وجود خطأ في تحويل القيم، نستخدم القيم الافتراضية
+        flash('حدث خطأ في تصفية البيانات، يتم عرض بيانات الشهر والسنة الحالية', 'warning')
+        query = query.filter(Salary.month == current_month, Salary.year == current_year)
     
     # Execute query
     salaries = query.all()
