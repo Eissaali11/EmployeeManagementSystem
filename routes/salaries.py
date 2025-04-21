@@ -197,11 +197,31 @@ def import_excel():
                 
                 for data in salaries_data:
                     try:
-                        # البحث عن الموظف حسب رقم الموظف (employee_id) 
-                        employee = Employee.query.filter_by(employee_id=str(data['employee_id'])).first()
+                        # تنظيف رقم الموظف المستورد (إزالة الأصفار الزائدة والمسافات)
+                        employee_id_str = str(data['employee_id']).strip()
                         
+                        # محاولة البحث عن الموظف بأكثر من طريقة
+                        # 1. البحث المباشر
+                        employee = Employee.query.filter_by(employee_id=employee_id_str).first()
+                        
+                        # 2. البحث بعد إزالة الأصفار من البداية
                         if not employee:
-                            print(f"لم يتم العثور على موظف برقم: {data['employee_id']}")
+                            clean_id = employee_id_str.lstrip('0')
+                            employee = Employee.query.filter_by(employee_id=clean_id).first()
+                            
+                        # 3. البحث بإضافة أصفار للبداية (حتى 6 أرقام إجمالاً)
+                        if not employee:
+                            padded_id = employee_id_str.zfill(6)
+                            employee = Employee.query.filter_by(employee_id=padded_id).first()
+                            
+                        # 4. البحث باستخدام like للعثور على تطابق جزئي
+                        if not employee:
+                            employee = Employee.query.filter(
+                                Employee.employee_id.like(f"%{employee_id_str}%")
+                            ).first()
+                            
+                        if not employee:
+                            print(f"لم يتم العثور على موظف برقم: {data['employee_id']} بعد محاولة البحث بعدة طرق")
                             raise ValueError(f"لم يتم العثور على موظف برقم: {data['employee_id']}")
                             
                         # التحقق من وجود سجل راتب لهذا الموظف في نفس الشهر والسنة
