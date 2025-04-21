@@ -394,7 +394,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if employee.attendances %}
+                    {% if attendances %}
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
@@ -406,7 +406,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for attendance in employee.attendances[-5:] %}
+                                {% for attendance in attendances[:5] %}
                                 <tr class="status-{{ attendance.status }}">
                                     <td>
                                         {% if attendance.date %}
