@@ -32,17 +32,18 @@ def index():
     department_id = request.args.get('department_id', '')
     
     # البحث عن الشهر والسنة التي تحتوي على بيانات إذا لم يتم تحديدها
-    if not month or not year:
+    # ملاحظة: إذا كان month فارغًا (وليس None)، سنعامله كقيمة غير محددة
+    if not month or month == '' or not year:
         # محاولة العثور على آخر شهر/سنة يحتوي على بيانات
         latest_salary = Salary.query.order_by(Salary.year.desc(), Salary.month.desc()).first()
         if latest_salary:
-            if not month:
+            if not month or month == '':
                 month = str(latest_salary.month)
             if not year:
                 year = str(latest_salary.year)
         else:
             # إذا لم توجد بيانات، استخدم الشهر والسنة الحالية
-            if not month:
+            if not month or month == '':
                 month = str(current_month)
             if not year:
                 year = str(current_year)
