@@ -473,24 +473,55 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ==== وظائف البحث ====
+    // التأكد من وجود عناصر البحث
+    console.log("تهيئة وظائف البحث...");
+    
+    // الحصول على عناصر البحث
     const searchInput = document.getElementById('employeeSearch');
     const searchBtn = document.getElementById('searchBtn');
     
+    console.log("عنصر مربع البحث:", searchInput ? "موجود" : "غير موجود");
+    console.log("عنصر زر البحث:", searchBtn ? "موجود" : "غير موجود");
+    
     // تفعيل البحث
     function performSearch() {
+        console.log("تنفيذ البحث...");
+        
+        // التأكد من أن مربع البحث موجود
+        if (!searchInput) {
+            console.error("مربع البحث غير موجود!");
+            return;
+        }
+        
+        // الحصول على نص البحث
         const searchTerm = searchInput.value.trim().toLowerCase();
-        const rows = document.querySelectorAll('#employeesTable tr');
+        console.log("كلمة البحث:", searchTerm);
+        
+        // الحصول على صفوف الجدول
+        const tableBody = document.getElementById('employeesTable');
+        if (!tableBody) {
+            console.error("جدول الموظفين غير موجود!");
+            return;
+        }
+        
+        const rows = tableBody.querySelectorAll('tr');
+        console.log("عدد صفوف الجدول:", rows.length);
+        
         let matchCount = 0;
         
-        rows.forEach(row => {
+        // تطبيق البحث على كل صف
+        rows.forEach((row, index) => {
             const text = row.textContent.toLowerCase();
             const isMatch = text.includes(searchTerm);
+            
+            console.log(`صف ${index+1}:`, isMatch ? "مطابق" : "غير مطابق");
             
             if (isMatch || searchTerm === '') {
                 row.style.display = '';
                 matchCount++;
                 
                 if (searchTerm !== '') {
+                    // إضافة تأثير تمييز مؤقت
                     row.classList.add('search-highlight');
                     setTimeout(() => {
                         row.classList.remove('search-highlight');
@@ -501,10 +532,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // تحديث العداد
-        document.getElementById('employeeCount').textContent = matchCount + ' موظف';
+        // تحديث عداد الموظفين
+        const countElement = document.getElementById('employeeCount');
+        if (countElement) {
+            countElement.textContent = matchCount + ' موظف';
+        }
         
-        // عرض رسالة
+        // عرض رسالة نتيجة البحث
         if (searchTerm !== '') {
             if (matchCount > 0) {
                 showAlert(`تم العثور على ${matchCount} موظف مطابق للبحث`, 'success');
@@ -512,16 +546,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 showAlert('لا توجد نتائج مطابقة للبحث', 'warning');
             }
         }
+        
+        console.log("اكتمل البحث. النتائج:", matchCount);
     }
     
-    // أحداث البحث
+    // إضافة حدث النقر على زر البحث
     if (searchBtn) {
-        searchBtn.addEventListener('click', performSearch);
+        console.log("إضافة حدث النقر على زر البحث");
+        searchBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            performSearch();
+        });
     }
     
+    // إضافة حدث الضغط على Enter في مربع البحث
     if (searchInput) {
+        console.log("إضافة حدث الضغط على Enter في مربع البحث");
         searchInput.addEventListener('keyup', function(e) {
             if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+        
+        // تنفيذ البحث عند كتابة نص في مربع البحث (اختياري)
+        searchInput.addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                // إذا كان مربع البحث فارغاً، أعد عرض جميع الصفوف
                 performSearch();
             }
         });
