@@ -315,6 +315,61 @@ def import_excel():
     
     return render_template('employees/import.html')
 
+@employees_bp.route('/<int:id>/update_status', methods=['POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.EDIT)
+def update_status(id):
+    """تحديث حالة الموظف"""
+    employee = Employee.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            new_status = request.form.get('status')
+            if new_status not in ['active', 'inactive', 'on_leave']:
+                flash('حالة غير صالحة', 'danger')
+                return redirect(url_for('employees.view', id=id))
+            
+            old_status = employee.status
+            employee.status = new_status
+            
+            note = request.form.get('note', '')
+            
+            # توثيق التغيير في السجل
+            status_names = {
+                'active': 'نشط',
+                'inactive': 'غير نشط',
+                'on_leave': 'في إجازة'
+            }
+            
+            details = f'تم تغيير حالة الموظف {employee.name} من "{status_names.get(old_status, old_status)}" إلى "{status_names.get(new_status, new_status)}"'
+            if note:
+                details += f" - ملاحظات: {note}"
+                
+            # تسجيل العملية
+            audit = SystemAudit(
+                action='update_status',
+                entity_type='employee',
+                entity_id=employee.id,
+                details=details
+            )
+            db.session.add(audit)
+            db.session.commit()
+            
+            flash(f'تم تحديث حالة الموظف إلى {status_names.get(new_status, new_status)} بنجاح', 'success')
+            
+            # العودة إلى الصفحة السابقة
+            referrer = request.referrer
+            if referrer and '/departments/' in referrer:
+                department_id = referrer.split('/departments/')[1].split('/')[0]
+                return redirect(url_for('departments.view', id=department_id))
+            
+            return redirect(url_for('employees.view', id=id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تحديث حالة الموظف: {str(e)}', 'danger')
+            return redirect(url_for('employees.view', id=id))
+
 @employees_bp.route('/export')
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
