@@ -660,39 +660,43 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (confirm(`هل أنت متأكد من حذف ${ids.length} موظف؟ لا يمكن التراجع عن هذا الإجراء.`)) {
-            // إعداد النموذج
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/departments/${departmentId}/delete_employees`;
-            form.style.display = 'none';
-            
-            // إضافة المعرفات
-            ids.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'employee_ids';
-                input.value = id;
-                form.appendChild(input);
-            });
-            
-            // إضافة رمز CSRF
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = 'csrf_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
-            
-            // تغيير حالة الزر
-            if (deleteBtn) {
-                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...';
-                deleteBtn.disabled = true;
-            }
-            
-            // إضافة النموذج وإرساله
-            document.body.appendChild(form);
-            form.submit();
+        // إذا كان هناك موظف واحد فقط، ننتقل إلى صفحة تأكيد الحذف الخاصة به
+        if (ids.length === 1) {
+            window.location.href = `/employees/${ids[0]}/confirm_delete`;
+            return;
         }
+        
+        // إذا كان هناك أكثر من موظف واحد، ننتقل إلى صفحة مخصصة لحذف المجموعة
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/departments/${departmentId}/confirm_delete_employees`;
+        form.style.display = 'none';
+        
+        // إضافة المعرفات
+        ids.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'employee_ids';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        // إضافة رمز CSRF
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // تغيير حالة الزر
+        if (deleteBtn) {
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التحضير...';
+            deleteBtn.disabled = true;
+        }
+        
+        // إضافة النموذج وإرساله
+        document.body.appendChild(form);
+        form.submit();
     }
     
     // ==== ربط أحداث الأزرار ====

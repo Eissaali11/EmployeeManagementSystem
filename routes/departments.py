@@ -349,6 +349,43 @@ def export_employees(id):
         return redirect(url_for('departments.view', id=id))
 
 
+@departments_bp.route('/<int:id>/confirm_delete_employees', methods=['POST'])
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.DELETE)
+def confirm_delete_employees(id):
+    """صفحة تأكيد حذف مجموعة من الموظفين"""
+    department = Department.query.get_or_404(id)
+    
+    # الحصول على معرفات الموظفين المراد حذفهم
+    employee_ids = request.form.getlist('employee_ids')
+    
+    if not employee_ids:
+        flash('لم يتم تحديد أي موظف للحذف', 'warning')
+        return redirect(url_for('departments.view', id=id))
+    
+    # تحويل المعرفات إلى أرقام صحيحة
+    employee_ids = [int(emp_id) for emp_id in employee_ids if emp_id.isdigit()]
+    
+    # الحصول على بيانات الموظفين
+    employees = Employee.query.filter(
+        Employee.id.in_(employee_ids),
+        Employee.department_id == id
+    ).all()
+    
+    if not employees:
+        flash('لم يتم العثور على أي موظف مطابق للمعرفات المحددة', 'warning')
+        return redirect(url_for('departments.view', id=id))
+    
+    # تحديد عنوان الصفحة التي تم تحويلنا منها للعودة إليها عند الإلغاء
+    return_url = request.referrer
+    if not return_url:
+        return_url = url_for('departments.view', id=id)
+    
+    return render_template('departments/confirm_delete_employees.html', 
+                          department=department, 
+                          employees=employees,
+                          return_url=return_url)
+
 @departments_bp.route('/<int:id>/delete_employees', methods=['POST'])
 @login_required
 @require_module_access(Module.DEPARTMENTS, Permission.DELETE)
