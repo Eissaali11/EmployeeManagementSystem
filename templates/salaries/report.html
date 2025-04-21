@@ -18,39 +18,39 @@
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header bg-success text-white">
+                <div class="card-header text-white" style="background-color: #4B91F1;">
                     <h5 class="card-title mb-0">إحصائيات الرواتب</h5>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 bg-light rounded-3">
+                            <div class="p-3 mb-3 rounded-3" style="background-color: #F0F8FF;">
                                 <h6 class="text-muted mb-1">إجمالي الرواتب الأساسية</h6>
-                                <h4>{{ total_basic|round(2) }}</h4>
+                                <h4 style="color: #4169E1;">{{ total_basic|round(2) }}</h4>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 bg-light rounded-3">
+                            <div class="p-3 mb-3 rounded-3" style="background-color: #E6F2FF;">
                                 <h6 class="text-muted mb-1">إجمالي البدلات</h6>
-                                <h4>{{ total_allowances|round(2) }}</h4>
+                                <h4 style="color: #1E90FF;">{{ total_allowances|round(2) }}</h4>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 bg-light rounded-3">
+                            <div class="p-3 mb-3 rounded-3" style="background-color: #F0FFFF;">
                                 <h6 class="text-muted mb-1">إجمالي الخصومات</h6>
-                                <h4>{{ total_deductions|round(2) }}</h4>
+                                <h4 style="color: #4682B4;">{{ total_deductions|round(2) }}</h4>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <div class="p-3 mb-3 bg-light rounded-3">
+                            <div class="p-3 mb-3 rounded-3" style="background-color: #F5FFFA;">
                                 <h6 class="text-muted mb-1">إجمالي المكافآت</h6>
-                                <h4>{{ total_bonus|round(2) }}</h4>
+                                <h4 style="color: #20B2AA;">{{ total_bonus|round(2) }}</h4>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="p-3 mb-3 bg-success bg-opacity-25 rounded-3">
-                                <h6 class="text-muted mb-1">إجمالي صافي الرواتب</h6>
-                                <h3 class="text-success fw-bold">{{ total_net|round(2) }}</h3>
+                            <div class="p-3 mb-3 rounded-3" style="background-color: #104E8B; color: white;">
+                                <h6 class="mb-1" style="color: #ADD8E6;">إجمالي صافي الرواتب</h6>
+                                <h3 class="fw-bold" style="color: white;">{{ total_net|round(2) }}</h3>
                             </div>
                         </div>
                     </div>
