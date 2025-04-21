@@ -346,22 +346,43 @@ def delete_employees(id):
     
     department = Department.query.get_or_404(id)
     
-    # Get employee IDs from request JSON
+    # معالجة كل من JSON و FORM data
+    print("طريقة الطلب:", request.method)
+    print("نوع المحتوى:", request.content_type)
+    
+    employee_ids = []
+    received_csrf_token = None
+    
     try:
-        data = request.get_json()
-        print(f"البيانات المستلمة: {data}")
+        # محاولة قراءة البيانات من JSON
+        if request.is_json:
+            data = request.get_json()
+            print(f"البيانات المستلمة (JSON): {data}")
+            
+            if data and 'employee_ids' in data:
+                employee_ids = data.get('employee_ids', [])
+                received_csrf_token = data.get('csrf_token')
         
-        if not data or 'employee_ids' not in data:
-            print("خطأ: البيانات المستلمة غير صالحة")
-            return jsonify({'status': 'error', 'message': 'بيانات غير صالحة، يرجى تحديد الموظفين المراد حذفهم'}), 400
+        # محاولة قراءة البيانات من FORM
+        elif request.form:
+            print(f"البيانات المستلمة (FORM): {request.form}")
+            
+            employee_ids = request.form.getlist('employee_ids')
+            received_csrf_token = request.form.get('csrf_token')
         
-        # استخراج معرفات الموظفين من البيانات المستلمة
-        employee_ids = data.get('employee_ids', [])
+        # محاولة قراءة البيانات من ARGS (URL parameters)
+        elif request.args and 'employee_ids' in request.args:
+            employee_ids_str = request.args.get('employee_ids', '')
+            employee_ids = employee_ids_str.split(',') if employee_ids_str else []
+            received_csrf_token = request.args.get('csrf_token')
+            
+        # طباعة البيانات المستلمة للتشخيص
         print(f"معرفات الموظفين المراد حذفها: {employee_ids}")
-        
-        # تحقق من أن القائمة ليست فارغة وأنها قائمة بالفعل
-        if not employee_ids or not isinstance(employee_ids, list):
-            print("خطأ: لم يتم تحديد أي موظفين للحذف أو البيانات ليست قائمة")
+        print(f"رمز CSRF: {received_csrf_token[:5] if received_csrf_token else 'غير موجود'}...")
+            
+        # التحقق من البيانات
+        if not employee_ids:
+            print("خطأ: لم يتم تحديد أي موظفين للحذف")
             return jsonify({'status': 'error', 'message': 'لم يتم تحديد أي موظفين للحذف'}), 400
             
         # التأكد من أن جميع المعرفات أرقام صحيحة
@@ -371,12 +392,12 @@ def delete_employees(id):
         except (ValueError, TypeError) as e:
             print(f"خطأ في تحويل المعرفات إلى أرقام: {str(e)}")
             return jsonify({'status': 'error', 'message': 'معرفات الموظفين غير صالحة'}), 400
+            
     except Exception as e:
         print(f"خطأ في معالجة البيانات المستلمة: {str(e)}")
         return jsonify({'status': 'error', 'message': f'خطأ في معالجة البيانات: {str(e)}'}), 400
     
-    # التحقق من CSRF token
-    received_csrf_token = data.get('csrf_token')
+    # طباعة معلومات CSRF token للتشخيص
     if received_csrf_token:
         print(f"رمز CSRF المستلم: {received_csrf_token[:5]}... (مختصر للأمان)")
     else:
@@ -431,11 +452,18 @@ def delete_employees(id):
         db.session.add(audit)
         db.session.commit()
         
-        return jsonify({
-            'status': 'success',
-            'message': f'تم حذف {deleted_count} موظف بنجاح',
-            'deleted_count': deleted_count
-        })
+        # التحقق من نوع الطلب الأصلي (AJAX أو FORM)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            # إذا كان الطلب AJAX نعيد JSON
+            return jsonify({
+                'status': 'success',
+                'message': f'تم حذف {deleted_count} موظف بنجاح',
+                'deleted_count': deleted_count
+            })
+        else:
+            # إذا كان الطلب العادي نعيد توجيه مع رسالة
+            flash(f'تم حذف {deleted_count} موظف بنجاح', 'success')
+            return redirect(url_for('departments.view', id=id))
     except Exception as e:
         db.session.rollback()
         print(f"Error deleting employees: {str(e)}")

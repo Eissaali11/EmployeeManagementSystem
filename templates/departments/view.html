@@ -364,24 +364,32 @@
                     return;
                 }
                 
-                // إنشاء عنوان URL للتصدير
-                const exportUrl = `/departments/${departmentId}/export_employees?ids=${selectedIds.join(',')}`;
-                console.log('تصدير الموظفين المحددين:', selectedIds);
+                // إنشاء نموذج وإرساله بشكل مباشر (بدلاً من استخدام window.open)
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = `/departments/${departmentId}/export_employees`;
+                form.target = '_blank'; // فتح في نافذة منفصلة
+                form.style.display = 'none';
+                
+                // إضافة معرفات الموظفين
+                const idsInput = document.createElement('input');
+                idsInput.type = 'hidden';
+                idsInput.name = 'ids';
+                idsInput.value = selectedIds.join(',');
+                form.appendChild(idsInput);
+                
+                // إضافة النموذج إلى الصفحة
+                document.body.appendChild(form);
+                console.log(`تصدير الموظفين المحددين: ${selectedIds.join(',')}`);
                 
                 // إظهار مؤشر التحميل
                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التصدير...';
                 this.disabled = true;
                 
                 try {
-                    // فتح عنوان URL في نافذة جديدة للتنزيل
-                    const exportWindow = window.open(exportUrl, '_blank');
-                    
-                    // إذا تم منع النافذة المنبثقة
-                    if (!exportWindow || exportWindow.closed || typeof exportWindow.closed == 'undefined') {
-                        showAlert('تم منع النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة ثم المحاولة مرة أخرى.', 'warning');
-                    } else {
-                        showAlert('جاري تنزيل ملف الموظفين...', 'success');
-                    }
+                    // إرسال النموذج
+                    form.submit();
+                    showAlert('جاري تصدير ملف الموظفين...', 'success');
                 } catch (error) {
                     console.error('خطأ أثناء التصدير:', error);
                     showAlert('حدث خطأ أثناء محاولة التصدير', 'danger');
@@ -389,6 +397,11 @@
                     // إعادة تعيين حالة الزر بعد ثانية
                     setTimeout(() => {
                         updateButtonsState();
+                    }, 1000);
+                    
+                    // حذف النموذج بعد الاستخدام
+                    setTimeout(() => {
+                        document.body.removeChild(form);
                     }, 1000);
                 }
             });
@@ -414,51 +427,35 @@
                     console.log('المعرفات المرسلة:', selectedIds);
                     console.log('CSRF Token:', csrfToken.substring(0, 5) + '...');
                     
-                    // إرسال طلب للخادم
-                    fetch(`/departments/${departmentId}/delete_employees`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({ 
-                            employee_ids: selectedIds,
-                            csrf_token: csrfToken
-                        })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`خطأ في استجابة الخادم (${response.status})`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // عرض رسالة النجاح
-                        showAlert(data.message || 'تم حذف الموظفين بنجاح', 'success');
-                        
-                        // إزالة الصفوف المحذوفة من الجدول
-                        selectedIds.forEach(id => {
-                            const row = document.querySelector(`tr[data-employee-id="${id}"]`);
-                            if (row) row.remove();
-                        });
-                        
-                        // تحديث عدد الموظفين المعروض
-                        const countElement = document.querySelector('.card-header .text-white.small span');
-                        if (countElement) {
-                            const remainingCount = document.querySelectorAll('tr[data-employee-id]').length;
-                            countElement.textContent = `${remainingCount} موظف`;
-                        }
-                        
-                        // إعادة تعيين حالة الأزرار
-                        updateButtonsState();
-                    })
-                    .catch(error => {
-                        console.error('خطأ أثناء حذف الموظفين:', error);
-                        showAlert('حدث خطأ أثناء محاولة الحذف: ' + error.message, 'danger');
-                    })
-                    .finally(() => {
-                        // إعادة تعيين حالة الزر
-                        updateButtonsState();
+                    // إنشاء نموذج وإرساله بشكل مباشر (بدلاً من استخدام AJAX)
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/departments/${departmentId}/delete_employees`;
+                    form.style.display = 'none';
+                    
+                    // إضافة معرفات الموظفين
+                    selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'employee_ids';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                    
+                    // إضافة CSRF token
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                    
+                    // إضافة النموذج إلى الصفحة
+                    document.body.appendChild(form);
+                    console.log("تم إنشاء النموذج للحذف وإضافته إلى الصفحة");
+                    
+                    // إرسال النموذج
+                    form.submit();
+                    console.log("تم إرسال النموذج");
                     });
                 }
             });
