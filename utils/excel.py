@@ -38,9 +38,9 @@ def parse_employee_excel(file):
         # Create a mapping for column detection
         column_mappings = {
             'name': ['name', 'full name', 'employee name', 'اسم', 'الاسم', 'اسم الموظف', 'full_name', 'employee_name'],
-            'employee_id': ['emp n', 'emp.n', 'emp. n', 'emp id', 'emp.id', 'emp. id', 'employee id', 'employee number', 'emp no', 'employee no', 'رقم الموظف', 'الرقم الوظيفي', 'employee_id', 'emp_id', 'emp_no'],
-            'national_id': ['id n', 'id.n', 'id. n', 'id no', 'national id', 'identity no', 'identity number', 'national number', 'هوية', 'رقم الهوية', 'الرقم الوطني', 'national_id', 'identity_no'],
-            'mobile': ['mobile', 'mobil', 'phone', 'cell', 'telephone', 'جوال', 'رقم الجوال', 'هاتف', 'mobile_no', 'phone_no'],
+            'employee_id': ['emp n', 'emp.n', 'emp. n', 'emp id', 'emp.id', 'emp. id', 'employee id', 'employee number', 'emp no', 'employee no', 'رقم الموظف', 'الرقم الوظيفي', 'employee_id', 'emp_id', 'emp_no', 'emp .n', 'empn'],
+            'national_id': ['id n', 'id.n', 'id. n', 'id no', 'national id', 'identity no', 'identity number', 'national number', 'هوية', 'رقم الهوية', 'الرقم الوطني', 'national_id', 'identity_no', 'id number'],
+            'mobile': ['mobile', 'mobil', 'phone', 'cell', 'telephone', 'جوال', 'رقم الجوال', 'هاتف', 'mobile_no', 'phone_no', 'no.mobile', 'no. mobile'],
             'job_title': ['job title', 'position', 'title', 'المسمى', 'المسمى الوظيفي', 'الوظيفة', 'job_title', 'job_position'],
             'status': ['status', 'employee status', 'emp status', 'الحالة', 'حالة', 'حالة الموظف', 'employee_status'],
             'location': ['location', 'office location', 'work location', 'موقع', 'الموقع', 'location_name'],
@@ -68,9 +68,13 @@ def parse_employee_excel(file):
         # الترتيب هنا مهم جداً كما في نموذج الموظفين
         explicit_mappings = {
             'Name': 'name',  # الاسم
-            'Emp .N': 'national_id',  # رقم الهوية (تم التبديل)
-            'ID .N': 'employee_id',  # الرقم الوظيفي (تم التبديل)
-            'Mobil': 'mobile',  # رقم الجوال
+            'Emp .N': 'employee_id',  # رقم الموظف (عادة ما يستخدم في ملفات الموظفين)
+            'ID .N': 'employee_id',  # رقم الموظف بديل
+            'ID Number': 'national_id',  # رقم الهوية
+            'Emp.N': 'employee_id',  # تنسيق آخر للرقم الوظيفي
+            'No.Mobile': 'mobile',  # رقم الجوال
+            'No.Mobile ': 'mobile',  # رقم الجوال (مع مسافة إضافية)
+            'Mobil': 'mobile',  # رقم الجوال صيغة بديلة
             'Job Title': 'job_title',  # المسمى الوظيفي
             'Status': 'status',  # الحالة
             'Location': 'location',  # الموقع
@@ -83,30 +87,73 @@ def parse_employee_excel(file):
         missing_columns = [col for col in expected_columns if col not in df.columns]
         if missing_columns:
             print(f"تحذير: العمود التالي غير موجود في الملف: {', '.join(missing_columns)}")
-            print(f"الأعمدة الموجودة هي: {df.columns.tolist()}")
-            
+            print(f"الأعمدة الموجودة هي: {[c for c in df.columns if not isinstance(c, datetime)]}")
+        
+        # التعرف على أعمدة Emp .N (قد تأتي بأشكال مختلفة)
+        employee_id_columns = ['Emp .N', 'Emp.N', 'EmpN', 'Emp N']
+        for col_name in employee_id_columns:
+            if col_name in df.columns:
+                detected_columns['employee_id'] = col_name
+                print(f"تم العثور على عمود رقم الموظف: {col_name}")
+                break
+                
+        # الاعتماد على نص "Emp" في اسم العمود للكشف عن رقم الموظف
+        if 'employee_id' not in detected_columns:
+            for col in df.columns:
+                if isinstance(col, str) and 'emp' in col.lower() and '.n' in col.lower():
+                    detected_columns['employee_id'] = col
+                    print(f"تم العثور على عمود رقم الموظف من خلال الكلمة المفتاحية: {col}")
+                    break
+                    
+        # إعطاء الأولوية لعمود Emp .N لرقم الموظف، حتى لو كان قد تم تعيينه كرقم هوية سابقا
+        if 'Emp .N' in df.columns:
+            detected_columns['employee_id'] = 'Emp .N'
+            print("إعطاء الأولوية لعمود Emp .N كرقم موظف")
+        
         # فحص ترتيب الأعمدة وإصلاحه إذا كان غير صحيح
-        if len(df.columns) >= 5:
-            # إذا كانت أسماء الأعمدة مختلفة، يمكن أن نفترض أن الترتيب صحيح ونعيد تسمية الأعمدة
-            if 'Name' not in df.columns and 'Emp .N' not in df.columns and 'ID .N' not in df.columns:
-                print("إعادة تسمية الأعمدة بناءً على ترتيبها")
-                new_columns = list(df.columns)
-                for i, col in enumerate(new_columns[:5]):
-                    if i == 0:
-                        detected_columns['name'] = col
-                        print(f"عمود الاسم: {col}")
-                    elif i == 1:
-                        detected_columns['national_id'] = col  # العمود الثاني هو رقم الهوية (تم التبديل)
-                        print(f"عمود رقم الهوية: {col}")
-                    elif i == 2:
-                        detected_columns['employee_id'] = col  # العمود الثالث هو الرقم الوظيفي (تم التبديل)
-                        print(f"عمود الرقم الوظيفي: {col}")
-                    elif i == 3:
-                        detected_columns['mobile'] = col
-                        print(f"عمود رقم الجوال: {col}")
-                    elif i == 4:
-                        detected_columns['job_title'] = col
-                        print(f"عمود المسمى الوظيفي: {col}")
+        if len(df.columns) >= 4:  # نخفض العدد المطلوب للأعمدة
+            if 'Name' in df.columns:
+                detected_columns['name'] = 'Name'
+            
+            if 'ID Number' in df.columns:
+                detected_columns['national_id'] = 'ID Number'
+            
+            if 'Job Title' in df.columns:
+                detected_columns['job_title'] = 'Job Title'
+            
+            # البحث عن أعمدة الجوال بصيغ مختلفة
+            mobile_columns = ['No.Mobile', 'No.Mobile ', 'Mobil', 'Mobile', 'Phone']
+            for col_name in mobile_columns:
+                if col_name in df.columns:
+                    detected_columns['mobile'] = col_name
+                    print(f"تم العثور على عمود رقم الجوال: {col_name}")
+                    break
+                    
+            # إذا لم يتم العثور على الأعمدة الأساسية، نحاول أن نخمنها حسب الترتيب
+            if not (set(['name', 'employee_id', 'national_id', 'job_title']).issubset(set(detected_columns.keys()))):
+                print("الأعمدة الأساسية غير موجودة، محاولة تخمينها حسب الترتيب...")
+                # نفترض أن العمود الأول هو الاسم والثاني رقم الهوية والثالث رقم الموظف
+                columns_list = [col for col in df.columns if not isinstance(col, datetime)]
+                if len(columns_list) >= 5:
+                    if 'name' not in detected_columns and len(columns_list) > 0:
+                        detected_columns['name'] = columns_list[0]
+                        print(f"تخمين: العمود الأول '{columns_list[0]}' = الاسم")
+                    
+                    if 'national_id' not in detected_columns and len(columns_list) > 1:
+                        detected_columns['national_id'] = columns_list[1]
+                        print(f"تخمين: العمود الثاني '{columns_list[1]}' = رقم الهوية")
+                    
+                    if 'employee_id' not in detected_columns and len(columns_list) > 2:
+                        detected_columns['employee_id'] = columns_list[2]
+                        print(f"تخمين: العمود الثالث '{columns_list[2]}' = رقم الموظف")
+                    
+                    if 'mobile' not in detected_columns and len(columns_list) > 3:
+                        detected_columns['mobile'] = columns_list[3]
+                        print(f"تخمين: العمود الرابع '{columns_list[3]}' = رقم الجوال")
+                    
+                    if 'job_title' not in detected_columns and len(columns_list) > 4:
+                        detected_columns['job_title'] = columns_list[4]
+                        print(f"تخمين: العمود الخامس '{columns_list[4]}' = المسمى الوظيفي")
         
         for excel_col, field in explicit_mappings.items():
             if excel_col in df.columns:
@@ -248,13 +295,13 @@ def generate_employee_excel(employees, output=None):
         # إنشاء بيانات لملف Excel بنفس ترتيب النموذج الأصلي
         data = []
         for employee in employees:
-            # ترتيب البيانات حسب النموذج الأصلي
-            # Name, Emp .N (هوية), ID .N (رقم موظف), Mobil, Job Title, Status, Location, Project, Email
+            # ترتيب البيانات حسب النموذج الأصلي - تم تصحيح ترتيب الأعمدة
+            # Name, ID Number (هوية), Emp .N (رقم موظف), No.Mobile, Job Title, Status, Location, Project, Email
             row = {
                 'Name': employee.name,  # الاسم
-                'Emp .N': employee.national_id,  # رقم الهوية (تم التبديل)
-                'ID .N': employee.employee_id,  # الرقم الوظيفي (تم التبديل)
-                'Mobil': employee.mobile,  # رقم الجوال
+                'ID Number': employee.national_id,  # رقم الهوية
+                'Emp .N': employee.employee_id,  # رقم الموظف
+                'No.Mobile': employee.mobile,  # رقم الجوال
                 'Job Title': employee.job_title,  # المسمى الوظيفي
                 'Status': employee.status,  # الحالة
                 'Location': employee.location or '',  # الموقع
