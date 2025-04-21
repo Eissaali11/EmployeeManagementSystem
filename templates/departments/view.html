@@ -805,18 +805,19 @@
             console.log("تم العثور على جميع الأزرار المطلوبة بنجاح");
         }
         
-        // خانات اختيار الموظفين
-        const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
-        console.log(`تم العثور على ${employeeCheckboxes.length} خانة اختيار للموظفين عند التهيئة`);
+        // خانات اختيار الموظفين - سيتم الوصول إليها مباشرة باستخدام document.querySelectorAll عند الحاجة
+        const checkboxCount = document.querySelectorAll('input.employee-checkbox').length;
+        console.log(`تم العثور على ${checkboxCount} خانة اختيار للموظفين عند التهيئة`);
         
-        console.log(`تم تهيئة إدارة الموظفين. عدد الموظفين: ${employeeCheckboxes.length}`);
+        console.log(`تم تهيئة إدارة الموظفين. عدد الموظفين: ${checkboxCount}`);
         
         // --- 2. وظائف المساعدة ---
         
         // تحديد الكل
         function selectAll() {
-            console.log(`تحديد جميع الموظفين. العدد: ${employeeCheckboxes.length}`);
-            employeeCheckboxes.forEach(cb => {
+            const checkboxes = document.querySelectorAll('input.employee-checkbox');
+            console.log(`تحديد جميع الموظفين. العدد: ${checkboxes.length}`);
+            checkboxes.forEach(cb => {
                 cb.checked = true;
                 console.log(`تحديد الموظف ${cb.value}`);
             });
@@ -824,13 +825,14 @@
             updateButtonsState();
             
             // عرض رسالة نجاح
-            showAlert(`تم تحديد ${employeeCheckboxes.length} موظف`, 'info');
+            showAlert(`تم تحديد ${checkboxes.length} موظف`, 'info');
         }
         
         // إلغاء تحديد الكل
         function deselectAll() {
             console.log('إلغاء تحديد جميع الموظفين');
-            employeeCheckboxes.forEach(cb => cb.checked = false);
+            const checkboxes = document.querySelectorAll('input.employee-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
             if (checkAllBox) checkAllBox.checked = false;
             updateButtonsState();
             
@@ -1037,8 +1039,9 @@
             
             // تحديث حالة مربع "تحديد الكل"
             if (checkAllBox) {
-                checkAllBox.checked = (count > 0 && count === employeeCheckboxes.length);
-                checkAllBox.indeterminate = (count > 0 && count < employeeCheckboxes.length);
+                const totalCheckboxes = document.querySelectorAll('input.employee-checkbox').length;
+                checkAllBox.checked = (count > 0 && count === totalCheckboxes);
+                checkAllBox.indeterminate = (count > 0 && count < totalCheckboxes);
             }
             
             console.log(`تم تحديث حالة الأزرار. عدد العناصر المحددة: ${count}`);
@@ -1071,7 +1074,7 @@
         if (checkAllBox) {
             checkAllBox.addEventListener('click', function() {
                 const isChecked = this.checked;
-                employeeCheckboxes.forEach(cb => cb.checked = isChecked);
+                document.querySelectorAll('input.employee-checkbox').forEach(cb => cb.checked = isChecked);
                 updateButtonsState();
             });
         }
@@ -1093,7 +1096,7 @@
         }
         
         // أحداث خانات اختيار الموظفين
-        employeeCheckboxes.forEach(checkbox => {
+        document.querySelectorAll('input.employee-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', updateButtonsState);
         });
         
@@ -1131,6 +1134,11 @@
                 this.disabled = true;
                 
                 try {
+                    // طباعة معلومات التصدير في وحدة التحكم للتحقق
+                    console.log('بيانات التصدير:');
+                    console.log('- العنوان: ' + form.action);
+                    console.log('- معرفات الموظفين: ' + idsInput.value);
+                    
                     // إرسال النموذج
                     form.submit();
                     showAlert('جاري تصدير ملف الموظفين...', 'success');
@@ -1140,6 +1148,7 @@
                 } finally {
                     // إعادة تعيين حالة الزر بعد ثانية
                     setTimeout(() => {
+                        console.log('إعادة تعيين حالة زر التصدير');
                         updateButtonsState();
                     }, 1000);
                     
