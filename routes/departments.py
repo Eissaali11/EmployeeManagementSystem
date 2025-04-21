@@ -208,30 +208,38 @@ def import_employees(id):
     
     return render_template('departments/import_employees.html', department=department)
 
-@departments_bp.route('/<int:id>/delete', methods=['POST'])
+@departments_bp.route('/<int:id>/delete', methods=['GET'])
 @login_required
 @require_module_access(Module.DEPARTMENTS, Permission.DELETE)
 def delete(id):
-    """Delete a department"""
+    """Show delete confirmation page for a department"""
+    department = Department.query.get_or_404(id)
+    employees_count = Employee.query.filter_by(department_id=id).count()
+    
+    return render_template('departments/delete.html', 
+                          department=department, 
+                          employees_count=employees_count,
+                          can_delete=(employees_count == 0))
+
+@departments_bp.route('/<int:id>/delete_confirm', methods=['POST'])
+@login_required
+@require_module_access(Module.DEPARTMENTS, Permission.DELETE)
+def delete_confirm(id):
+    """Confirm and process department deletion"""
     department = Department.query.get_or_404(id)
     name = department.name
     
     # Add current_user to the audit
     user_id = current_user.id if current_user.is_authenticated else None
     
-    # تحقق من نوع الطلب وإرجاع استجابة مناسبة
-    is_ajax = request.headers.get('Content-Type') == 'application/json'
-    
     try:
         # Check if department has employees
-        employees = Employee.query.filter_by(department_id=id).count()
-        if employees > 0:
-            if is_ajax:
-                return jsonify({'success': False, 'message': f'لا يمكن حذف القسم لأنه يحتوي على {employees} موظف', 'count': employees}), 400
-            else:
-                flash(f'لا يمكن حذف القسم لأنه يحتوي على {employees} موظف', 'danger')
-                return redirect(url_for('departments.index'))
+        employees_count = Employee.query.filter_by(department_id=id).count()
+        if employees_count > 0:
+            flash(f'لا يمكن حذف القسم لأنه يحتوي على {employees_count} موظف', 'danger')
+            return redirect(url_for('departments.index'))
         
+        # Perform the deletion
         db.session.delete(department)
         
         # Log the action
@@ -245,19 +253,10 @@ def delete(id):
         db.session.add(audit)
         db.session.commit()
         
-        if is_ajax:
-            return jsonify({'success': True, 'message': f'تم حذف القسم {name} بنجاح'})
-        else:
-            flash('تم حذف القسم بنجاح', 'success')
-            return redirect(url_for('departments.index'))
-            
+        flash(f'تم حذف القسم {name} بنجاح', 'success')
     except Exception as e:
         db.session.rollback()
-        error_message = f'حدث خطأ أثناء حذف القسم: {str(e)}'
-        print(f"حدث خطأ في حذف القسم: {str(e)}")  # Add logging for debugging
-        
-        if is_ajax:
-            return jsonify({'success': False, 'message': error_message}), 500
-        else:
-            flash(error_message, 'danger')
-            return redirect(url_for('departments.index'))
+        flash(f'حدث خطأ أثناء حذف القسم: {str(e)}', 'danger')
+        print(f"Error deleting department: {str(e)}")
+    
+    return redirect(url_for('departments.index'))
