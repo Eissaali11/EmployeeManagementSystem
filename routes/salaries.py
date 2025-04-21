@@ -26,9 +26,25 @@ def index():
     current_year = datetime.now().year
     
     # الحصول على بيانات التصفية من الطلب
-    month = request.args.get('month', str(current_month))
-    year = request.args.get('year', str(current_year))
+    month = request.args.get('month', None)
+    year = request.args.get('year', None)
     employee_id = request.args.get('employee_id', '')
+    
+    # البحث عن الشهر والسنة التي تحتوي على بيانات إذا لم يتم تحديدها
+    if not month or not year:
+        # محاولة العثور على آخر شهر/سنة يحتوي على بيانات
+        latest_salary = Salary.query.order_by(Salary.year.desc(), Salary.month.desc()).first()
+        if latest_salary:
+            if not month:
+                month = str(latest_salary.month)
+            if not year:
+                year = str(latest_salary.year)
+        else:
+            # إذا لم توجد بيانات، استخدم الشهر والسنة الحالية
+            if not month:
+                month = str(current_month)
+            if not year:
+                year = str(current_year)
     
     # بناء استعلام قاعدة البيانات
     salaries = []
