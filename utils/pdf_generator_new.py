@@ -8,6 +8,7 @@ from datetime import datetime
 import arabic_reshaper
 from bidi.algorithm import get_display
 from fpdf import FPDF
+from flask import current_app
 
 # تعريف فئة PDF العربية
 class ArabicPDF(FPDF):
@@ -122,10 +123,12 @@ class ArabicPDF(FPDF):
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة مع الشعار والعنوان"""
         # إضافة الشعار
-        logo_path = os.path.join('static', 'images', 'logo_new.png')
-        # إذا لم يكن الشعار الجديد موجوداً، استخدم الشعار القديم
+        logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
+        # إذا لم يكن الشعار الجديد موجوداً، استخدم شعار دائري بديل
         if not os.path.exists(logo_path):
-            logo_path = os.path.join('static', 'images', 'logo.png')
+            # استخدام شعار دائري بديل
+            # هذا هو جسم الشرط الفارغ الذي سبب الخطأ
+            pass
         
         # تحديد الموضع والأبعاد بشكل مناسب حسب اتجاه الصفحة
         is_landscape = self.page_no() > 0 and getattr(self, 'cur_orientation', 'P') == 'L'
@@ -211,14 +214,23 @@ def generate_salary_notification_pdf(data):
         pdf.add_page()
         
         # ------ إضافة الشعار الجديد ------
-        logo_path = os.path.join('static', 'images', 'logo_new.png')
+        logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
         if os.path.exists(logo_path):
             pdf.image(logo_path, 10, 8, 30)
         else:
-            # يمكن استخدام الشعار القديم كبديل
-            alt_logo_path = os.path.join('static', 'images', 'logo.png')
-            if os.path.exists(alt_logo_path):
-                pdf.image(alt_logo_path, 10, 8, 30)
+            # استخدام شعار دائري بديل للنظام
+            center_x = 20
+            center_y = 20
+            radius = 10
+            
+            # رسم الدائرة الخارجية
+            pdf.set_fill_color(30, 60, 114)  # اللون الأزرق الداكن
+            pdf.ellipse(center_x, center_y, radius, radius, 'F')
+            
+            # إضافة نص نُظم في الدائرة
+            pdf.set_font('Amiri', 'B', 14)
+            pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+            pdf.arabic_text(center_x - 4, center_y - 3, "نُظم")
         
         # ------ العنوان الرئيسي ------
         # استخدام خط Amiri للنصوص العربية لأنه يتعامل مع العربية بشكل أفضل
