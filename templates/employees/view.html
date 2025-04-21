@@ -41,10 +41,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // بيانات الحضور للرسم البياني
-        {% set present_count = employee.attendances|selectattr('status', 'eq', 'present')|list|length %}
-        {% set absent_count = employee.attendances|selectattr('status', 'eq', 'absent')|list|length %}
-        {% set leave_count = employee.attendances|selectattr('status', 'eq', 'leave')|list|length %}
-        {% set sick_count = employee.attendances|selectattr('status', 'eq', 'sick')|list|length %}
+        {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
+        {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
+        {% set leave_count = attendances|selectattr('status', 'eq', 'leave')|list|length %}
+        {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
         
         // رسم بياني دائري للحضور
         const attendanceCtx = document.getElementById('attendanceChart');
@@ -141,10 +141,10 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-2">
-                                {% set present_count = employee.attendances|selectattr('status', 'eq', 'present')|list|length %}
-                                {% set absent_count = employee.attendances|selectattr('status', 'eq', 'absent')|list|length %}
-                                {% set leave_count = employee.attendances|selectattr('status', 'eq', 'leave')|list|length %}
-                                {% set sick_count = employee.attendances|selectattr('status', 'eq', 'sick')|list|length %}
+                                {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
+                                {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
+                                {% set leave_count = attendances|selectattr('status', 'eq', 'leave')|list|length %}
+                                {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
                                 {% set total_count = present_count + absent_count + leave_count + sick_count %}
                                 
                                 <div class="col-md-3 text-center">
@@ -258,8 +258,8 @@
                                 <!-- معلومات مالية -->
                                 <div class="col-12">
                                     <h6>المعلومات المالية</h6>
-                                    {% if employee.salaries %}
-                                    {% set last_salary = employee.salaries|sort(attribute='id')|last %}
+                                    {% if salaries %}
+                                    {% set last_salary = salaries|sort(attribute='id')|last %}
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>آخر راتب:</span>
                                         <span class="fw-bold">{{ last_salary.net_salary }}</span>
@@ -529,7 +529,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    {% if employee.salaries %}
+                    {% if salaries %}
                     <div class="table-responsive">
                         <table class="table table-sm">
                             <thead>
@@ -540,7 +540,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for salary in employee.salaries[-5:] %}
+                                {% for salary in salaries[:5] %}
                                 <tr>
                                     <td>{{ salary.month }}/{{ salary.year }}</td>
                                     <td>{{ salary.basic_salary }}</td>
