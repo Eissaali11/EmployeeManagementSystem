@@ -31,19 +31,24 @@ def index():
     employee_id = request.args.get('employee_id', '')
     department_id = request.args.get('department_id', '')
     
-    # البحث عن الشهر والسنة التي تحتوي على بيانات إذا لم يتم تحديدها
-    # ملاحظة: إذا كان month فارغًا (وليس None)، سنعامله كقيمة غير محددة
-    if not month or month == '' or not year:
+    # إذا تم تحديد قيمة خالية للشهر، فهذا يعني تصفية كل الشهور
+    show_all_months = False
+    if month == '':  # اختار المستخدم "جميع الشهور" بشكل صريح
+        show_all_months = True
+    
+    # البحث عن الشهر والسنة التي تحتوي على بيانات إذا لم يتم تحديدها (فقط إذا لم يطلب المستخدم كل الشهور)
+    if (not month and not show_all_months) or not year:
         # محاولة العثور على آخر شهر/سنة يحتوي على بيانات
         latest_salary = Salary.query.order_by(Salary.year.desc(), Salary.month.desc()).first()
         if latest_salary:
-            if not month or month == '':
+            # فقط إذا لم يطلب المستخدم كل الشهور
+            if not month and not show_all_months:
                 month = str(latest_salary.month)
             if not year:
                 year = str(latest_salary.year)
         else:
             # إذا لم توجد بيانات، استخدم الشهر والسنة الحالية
-            if not month or month == '':
+            if not month and not show_all_months:
                 month = str(current_month)
             if not year:
                 year = str(current_year)
@@ -59,10 +64,14 @@ def index():
         filter_department = int(department_id) if department_id and department_id.isdigit() else None
         
         # بناء الاستعلام الأساسي
-        query = Salary.query.filter(
-            Salary.month == filter_month,
-            Salary.year == filter_year
-        )
+        query = Salary.query
+        
+        # إضافة فلتر الشهر (فقط إذا لم يطلب المستخدم كل الشهور)
+        if not show_all_months:
+            query = query.filter(Salary.month == filter_month)
+            
+        # إضافة فلتر السنة (دائمًا)
+        query = query.filter(Salary.year == filter_year)
         
         # إضافة تصفية الموظف إذا تم تحديدها
         if filter_employee:
@@ -103,9 +112,15 @@ def index():
                 )
                 employee_records.append(temp_salary)
             
-            print(f"لا توجد سجلات رواتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
+            if show_all_months:
+                print(f"لا توجد سجلات رواتب للسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
+            else:
+                print(f"لا توجد سجلات رواتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
         else:
-            print(f"تم العثور على {len(salaries)} سجل للشهر {filter_month} والسنة {filter_year}")
+            if show_all_months:
+                print(f"تم العثور على {len(salaries)} سجل للسنة {filter_year}")
+            else:
+                print(f"تم العثور على {len(salaries)} سجل للشهر {filter_month} والسنة {filter_year}")
     except Exception as e:
         print(f"خطأ في استرجاع بيانات الرواتب: {str(e)}")
         flash(f'حدث خطأ أثناء استرجاع بيانات الرواتب: {str(e)}', 'danger')
