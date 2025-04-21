@@ -242,12 +242,12 @@ def create_pdf_bytes(pdf_function, *args, **kwargs):
             print("خطأ: لم يتم إرجاع كائن FPDF من دالة إنشاء PDF")
             return None
         
-        # استخدام طريقة بديلة للتعامل مع النصوص العربية
-        # يقوم FPDF بدعم كافة الترميزات عندما نستخدم dest='B'
-        # لإرجاع bytes بدلاً من string ثم ترميزها بـ latin1
-        pdf_bytes = pdf.output(dest='B')
-        
-        return pdf_bytes
+        # الطريقة النهائية للتعامل مع ملفات PDF مع النصوص العربية
+        from io import BytesIO
+        buffer = BytesIO()
+        pdf.output(buffer)
+        buffer.seek(0)
+        return buffer.read()
     except Exception as e:
         print(f"خطأ في إنشاء ملف PDF: {str(e)}")
         raise e
