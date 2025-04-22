@@ -33,7 +33,7 @@
                     <div class="d-flex justify-content-between align-items-center position-relative">
                         <div>
                             <h6 class="card-subtitle mb-2 text-body-secondary">إجمالي الموظفين</h6>
-                            <h2 class="counter-value fs-1 fw-bold text-primary" data-target="{{ total_employees }}">0</h2>
+                            <h2 class="fs-1 fw-bold text-primary">{{ total_employees }}</h2>
                         </div>
                         <div class="card-icon rounded-circle bg-primary text-white">
                             <i class="fas fa-users"></i>
@@ -55,7 +55,7 @@
                     <div class="d-flex justify-content-between align-items-center position-relative">
                         <div>
                             <h6 class="card-subtitle mb-2 text-body-secondary">الأقسام</h6>
-                            <h2 class="counter-value fs-1 fw-bold text-success" data-target="{{ total_departments }}">0</h2>
+                            <h2 class="fs-1 fw-bold text-success">{{ total_departments }}</h2>
                         </div>
                         <div class="card-icon rounded-circle bg-success text-white">
                             <i class="fas fa-sitemap"></i>
@@ -100,11 +100,11 @@
                                 <div>
                                     <h6 class="card-subtitle mb-2 text-body-secondary">إحصائيات الوثائق</h6>
                                     <div class="d-flex flex-wrap gap-2 mt-2">
-                                        <span class="badge rounded-pill bg-success">سارية: <span class="counter-value fw-bold" data-target="{{ document_stats.valid }}">0</span></span>
-                                        <span class="badge rounded-pill bg-warning">قريبة الانتهاء: <span class="counter-value fw-bold" data-target="{{ document_stats.expiring }}">0</span></span>
-                                        <span class="badge rounded-pill bg-danger">منتهية: <span class="counter-value fw-bold" data-target="{{ document_stats.expired }}">0</span></span>
+                                        <span class="badge rounded-pill bg-success">سارية: <span id="valid-docs-count">{{ document_stats.valid }}</span></span>
+                                        <span class="badge rounded-pill bg-warning">قريبة الانتهاء: <span id="expiring-docs-count">{{ document_stats.expiring }}</span></span>
+                                        <span class="badge rounded-pill bg-danger">منتهية: <span id="expired-docs-count">{{ document_stats.expired }}</span></span>
                                     </div>
-                                    <h3 class="counter-value fw-bold text-warning mt-2" data-target="{{ document_stats.total }}">0</h3>
+                                    <h3 class="fw-bold text-warning mt-2" id="total-docs-count">{{ document_stats.total }}</h3>
                                     <small class="text-muted">إجمالي الوثائق</small>
                                 </div>
                                 <div class="card-icon rounded-circle bg-warning text-white">
@@ -296,13 +296,33 @@
         const counters = document.querySelectorAll('.counter-value');
         console.log(`العثور على ${counters.length} عداد للتحديث`);
         
+        // طباعة قيم البيانات المتاحة للتصحيح
+        console.log("قيم إحصائيات الوثائق:");
+        const validDocCount = document.querySelector('[data-target="{{ document_stats.valid }}"]');
+        const expiringDocCount = document.querySelector('[data-target="{{ document_stats.expiring }}"]');
+        const expiredDocCount = document.querySelector('[data-target="{{ document_stats.expired }}"]');
+        const totalDocCount = document.querySelector('[data-target="{{ document_stats.total }}"]');
+        
+        console.log("valid:", validDocCount ? validDocCount.getAttribute('data-target') : 'غير موجود');
+        console.log("expiring:", expiringDocCount ? expiringDocCount.getAttribute('data-target') : 'غير موجود');
+        console.log("expired:", expiredDocCount ? expiredDocCount.getAttribute('data-target') : 'غير موجود');
+        console.log("total:", totalDocCount ? totalDocCount.getAttribute('data-target') : 'غير موجود');
+        
         counters.forEach(counter => {
-            const target = parseInt(counter.getAttribute('data-target') || 0);
+            // تخزين القيمة الأصلية قبل التعديل
+            const rawTarget = counter.getAttribute('data-target');
+            console.log(`عداد مع قيمة أصلية: ${rawTarget}`);
+            
+            // محاولة تحويل القيمة إلى رقم
+            const target = parseInt(rawTarget || 0);
             
             if (isNaN(target) || target <= 0) {
+                console.log(`  > قيمة غير صالحة، تعيين كـ 0`);
                 counter.textContent = '0';
                 return;
             }
+            
+            console.log(`  > بدء التحريك إلى ${target}`);
             
             let count = 0;
             const speed = Math.max(10, Math.floor(1000 / target)); // تسريع العد للأرقام الكبيرة
