@@ -98,7 +98,8 @@ def index():
                           total_docs=total_docs,
                           expired_docs=expired_docs,
                           expiring_soon=expiring_soon,
-                          safe_docs=safe_docs)
+                          safe_docs=safe_docs,
+                          now=datetime.now())
 
 @documents_bp.route('/create', methods=['GET', 'POST'])
 def create():
