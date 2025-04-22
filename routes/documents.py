@@ -174,6 +174,12 @@ def create():
                           hijri_today=hijri_today,
                           gregorian_today=gregorian_today)
 
+@documents_bp.route('/<int:id>/confirm-delete')
+def confirm_delete(id):
+    """صفحة تأكيد حذف وثيقة"""
+    document = Document.query.get_or_404(id)
+    return render_template('documents/confirm_delete.html', document=document)
+
 @documents_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
     """Delete a document record"""

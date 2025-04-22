@@ -200,47 +200,9 @@
                                 </a>
                                 
                                 <!-- زر حذف الوثيقة -->
-                                <button type="button" class="btn btn-sm btn-danger" 
-                                        data-bs-toggle="modal" data-bs-target="#deleteModal{{ document.id }}">
+                                <a href="{{ url_for('documents.confirm_delete', id=document.id) }}" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i>
-                                </button>
-                                
-                                <!-- Delete Modal -->
-                                <div class="modal fade" id="deleteModal{{ document.id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">تأكيد الحذف</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                هل أنت متأكد من حذف وثيقة 
-                                                {% if document.document_type == 'national_id' %}
-                                                الهوية الوطنية
-                                                {% elif document.document_type == 'passport' %}
-                                                جواز السفر
-                                                {% elif document.document_type == 'health_certificate' %}
-                                                الشهادة الصحية
-                                                {% elif document.document_type == 'work_permit' %}
-                                                تصريح العمل
-                                                {% elif document.document_type == 'education_certificate' %}
-                                                الشهادة الدراسية
-                                                {% else %}
-                                                {{ document.document_type }}
-                                                {% endif %}
-                                                للموظف <strong>{{ document.employee.name }}</strong>؟
-                                                <p class="text-danger mt-2">هذا الإجراء لا يمكن التراجع عنه.</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                <form action="{{ url_for('documents.delete', id=document.id) }}" method="post">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn btn-danger delete-confirm">تأكيد الحذف</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
