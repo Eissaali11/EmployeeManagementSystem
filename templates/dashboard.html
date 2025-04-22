@@ -262,10 +262,13 @@
         }
         
         // تهيئة عدادات الأرقام
-        animateCounters();
-        
-        // إضافة سجل تحميل
-        console.log("تم تحميل كافة مكونات لوحة المعلومات بنجاح");
+        setTimeout(function() {
+            animateCounters();
+            console.log("تم تشغيل عدادات الأرقام");
+            
+            // إضافة سجل تحميل
+            console.log("تم تحميل كافة مكونات لوحة المعلومات بنجاح");
+        }, 500);
         
         // عرض التاريخ الحالي
         displayCurrentDate();
@@ -287,6 +290,33 @@
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             currentDateElement.textContent = now.toLocaleDateString('ar-SA', options);
         }
+    }
+    
+    function animateCounters() {
+        const counters = document.querySelectorAll('.counter-value');
+        console.log(`العثور على ${counters.length} عداد للتحديث`);
+        
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target') || 0);
+            
+            if (isNaN(target) || target <= 0) {
+                counter.textContent = '0';
+                return;
+            }
+            
+            let count = 0;
+            const speed = Math.max(10, Math.floor(1000 / target)); // تسريع العد للأرقام الكبيرة
+            
+            const updateCount = setInterval(() => {
+                count += 1;
+                counter.textContent = count;
+                
+                if (count >= target) {
+                    counter.textContent = target;
+                    clearInterval(updateCount);
+                }
+            }, speed);
+        });
     }
     
     function initializeDepartmentChart() {
