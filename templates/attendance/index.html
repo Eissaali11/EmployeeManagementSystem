@@ -11,6 +11,9 @@
             <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary">
                 <i class="fas fa-users me-1"></i> تسجيل حضور لقسم
             </a>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exportModal">
+                <i class="fas fa-file-excel me-1"></i> تصدير لملف إكسل
+            </button>
         </div>
     </div>
 
@@ -167,6 +170,43 @@
         </div>
     </div>
 </div>
+    <!-- Modal لتصدير البيانات -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportModalLabel">تصدير بيانات الحضور</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="exportForm" action="{{ url_for('attendance.export_excel') }}" method="get">
+                        <div class="mb-3">
+                            <label for="export_start_date" class="form-label">تاريخ البداية</label>
+                            <input type="date" class="form-control" id="export_start_date" name="start_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="export_end_date" class="form-label">تاريخ النهاية</label>
+                            <input type="date" class="form-control" id="export_end_date" name="end_date">
+                            <small class="form-text text-muted">إذا تركت هذا الحقل فارغاً، سيتم تصدير بيانات يوم البداية فقط</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="export_department_id" class="form-label">القسم</label>
+                            <select class="form-select" id="export_department_id" name="department_id">
+                                <option value="">جميع الأقسام</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}">{{ department.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('exportForm').submit();">تصدير</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -181,6 +221,23 @@
                     form.submit();
                 }
             });
+        }
+        
+        // ملء التاريخ الحالي في نموذج التصدير
+        const currentDate = '{{ date.strftime("%Y-%m-%d") if date else "" }}';
+        if (currentDate) {
+            document.getElementById('export_start_date').value = currentDate;
+        } else {
+            // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('export_start_date').value = formattedDate;
+        }
+        
+        // نسخ قيمة القسم المحدد في الفلتر إلى نموذج التصدير
+        const selectedDepartment = '{{ selected_department }}';
+        if (selectedDepartment) {
+            document.getElementById('export_department_id').value = selectedDepartment;
         }
     });
 </script>
