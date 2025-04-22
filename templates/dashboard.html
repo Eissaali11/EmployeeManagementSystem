@@ -251,14 +251,31 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize charts when the DOM is loaded
-        initializeDepartmentCharts();
-        initializeSalaryChart();
-        initializeDocumentChart();
+        // تهيئة أدوات متطورة للواجهة
+        initializeTooltips();
         
-        // Display current date
+        // تهيئة الرسوم البيانية
+        if (typeof Chart !== 'undefined') {
+            initializeDepartmentCharts();
+            initializeSalaryChart();
+            initializeDocumentChart();
+        }
+        
+        // تهيئة عدادات الأرقام
+        animateCounters();
+        
+        // عرض التاريخ الحالي
         displayCurrentDate();
     });
+    
+    function initializeTooltips() {
+        if (typeof bootstrap !== 'undefined') {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    }
     
     function displayCurrentDate() {
         const currentDateElement = document.getElementById('current-date');
@@ -267,6 +284,79 @@
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             currentDateElement.textContent = now.toLocaleDateString('ar-SA', options);
         }
+    }
+    
+    function initializeSalaryChart() {
+        const salaryChartElement = document.getElementById('salaryChart');
+        if (!salaryChartElement) return;
+        
+        const labels = JSON.parse(salaryChartElement.getAttribute('data-labels') || '[]');
+        const values = JSON.parse(salaryChartElement.getAttribute('data-values') || '[]');
+        
+        // إذا لم تكن هناك بيانات، قم بعرض رسالة بدلاً من الرسم البياني
+        if (labels.length === 0 || values.length === 0) {
+            new Chart(salaryChartElement, {
+                type: 'bar',
+                data: {
+                    labels: ['لا توجد بيانات'],
+                    datasets: [{
+                        label: 'إجمالي الرواتب',
+                        data: [0],
+                        backgroundColor: 'rgba(33, 150, 243, 0.4)',
+                        borderColor: 'rgba(33, 150, 243, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            return;
+        }
+        
+        new Chart(salaryChartElement, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'إجمالي الرواتب',
+                    data: values,
+                    backgroundColor: 'rgba(33, 150, 243, 0.4)',
+                    borderColor: 'rgba(33, 150, 243, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                // تنسيق المبالغ المالية
+                                return value.toLocaleString('ar-SA') + ' ر.س';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                // تنسيق المبلغ في tooltip
+                                let value = context.raw;
+                                return `إجمالي الرواتب: ${value.toLocaleString('ar-SA')} ر.س`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
     
     function initializeDocumentChart() {
