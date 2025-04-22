@@ -33,6 +33,12 @@
         width: 100%;
         margin-top: 15px;
     }
+    /* تعليمات خاصة لعدم تأثر عناصر التاريخ في جدول الحضور */
+    .attendance-date span {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
 </style>
 {% endblock %}
 
@@ -408,11 +414,11 @@
                             <tbody>
                                 {% for attendance in attendances[:5] %}
                                 <tr class="status-{{ attendance.status }}">
-                                    <td>
+                                    <td class="attendance-date" data-date="{{ attendance.date }}">
                                         {% if attendance.date %}
-                                        {{ attendance.date.strftime('%d/%m/%Y') }}
+                                        <span style="display: inline-block;">{{ attendance.date.strftime('%d/%m/%Y') }}</span>
                                         {% else %}
-                                        -
+                                        <span style="display: inline-block;">-</span>
                                         {% endif %}
                                     </td>
                                     <td>
