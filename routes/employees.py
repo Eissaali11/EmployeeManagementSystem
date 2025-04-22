@@ -185,8 +185,8 @@ def view(id):
         # Store document by type
         documents_by_type[doc.document_type] = doc
     
-    # Get attendance records
-    attendances = Attendance.query.filter_by(employee_id=id).order_by(Attendance.date.desc()).limit(30).all()
+    # Get all attendance records for this employee
+    attendances = Attendance.query.filter_by(employee_id=id).order_by(Attendance.date.desc()).all()
     
     # Get salary records
     salaries = Salary.query.filter_by(employee_id=id).order_by(Salary.year.desc(), Salary.month.desc()).all()
