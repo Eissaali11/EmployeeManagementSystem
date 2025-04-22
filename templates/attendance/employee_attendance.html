@@ -1,0 +1,322 @@
+{% extends 'layout.html' %}
+
+{% block title %}سجلات حضور {{ employee.name }}{% endblock %}
+
+{% block styles %}
+<style>
+    .month-calendar {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 2px;
+    }
+    .month-calendar th, .month-calendar td {
+        border-radius: 4px;
+        text-align: center;
+        padding: 8px;
+    }
+    .month-calendar th {
+        background-color: #f8f9fa;
+    }
+    .month-calendar td {
+        cursor: pointer;
+        height: 60px;
+        vertical-align: top;
+        transition: all 0.2s;
+    }
+    .month-calendar td:hover {
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .status-present {
+        background-color: rgba(40, 167, 69, 0.2);
+        border: 1px solid rgba(40, 167, 69, 0.4);
+    }
+    .status-absent {
+        background-color: rgba(220, 53, 69, 0.2);
+        border: 1px solid rgba(220, 53, 69, 0.4);
+    }
+    .status-leave {
+        background-color: rgba(255, 193, 7, 0.2);
+        border: 1px solid rgba(255, 193, 7, 0.4);
+    }
+    .status-sick {
+        background-color: rgba(23, 162, 184, 0.2);
+        border: 1px solid rgba(23, 162, 184, 0.4);
+    }
+    .calendar-day-number {
+        font-weight: bold;
+        font-size: 1.2em;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .calendar-status {
+        margin-top: 5px;
+        display: inline-block;
+    }
+    .month-year-selector {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .btn-month {
+        margin: 3px;
+        min-width: 45px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- معلومات الموظف والعنوان -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>سجلات حضور {{ employee.name }}</h1>
+            <p class="text-muted">{{ employee.job_title }} - {{ employee.department.name if employee.department else "غير محدد" }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right ml-1"></i> العودة لبيانات الموظف
+            </a>
+            <a href="{{ url_for('employees.export_attendance_excel', id=employee.id) }}" class="btn btn-success">
+                <i class="fas fa-file-excel ml-1"></i> تصدير إلى إكسل
+            </a>
+        </div>
+    </div>
+
+    <!-- محدد الشهر والسنة -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-calendar-alt ml-2"></i> اختر الشهر والسنة</h5>
+        </div>
+        <div class="card-body">
+            <div class="month-year-selector">
+                <!-- اختيار السنة -->
+                <div class="mb-3">
+                    <h6>السنة:</h6>
+                    <div class="btn-group">
+                        {% for y in attendance_periods.keys()|sort(reverse=true) %}
+                        <a href="{{ url_for('attendance.employee_attendance', employee_id=employee.id, year=y, month=month) }}" 
+                            class="btn {% if y == selected_year %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            {{ y }}
+                        </a>
+                        {% else %}
+                        <span class="text-muted">لا توجد بيانات</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- اختيار الشهر -->
+                <div>
+                    <h6>الشهر:</h6>
+                    <div class="btn-group flex-wrap">
+                        {% set months = {
+                            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
+                            5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+                            9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+                        } %}
+                        
+                        {% for m in range(1, 13) %}
+                        <a href="{{ url_for('attendance.employee_attendance', employee_id=employee.id, year=selected_year, month=m) }}"
+                            class="btn btn-month {% if m == selected_month %}btn-primary{% else %}btn-outline-primary{% endif %} {% if selected_year in attendance_periods and m not in attendance_periods[selected_year] %}disabled opacity-50{% endif %}">
+                            {{ months[m] }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- عرض تقويم الشهر -->
+    <div class="card">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-calendar-check ml-2"></i>
+                سجلات حضور شهر {{ {
+                    1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
+                    5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+                    9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+                }[month] }} {{ year }}
+            </h5>
+            <span class="badge bg-light text-dark">
+                <i class="fas fa-user-clock ml-1"></i>
+                إجمالي السجلات: {{ attendances|length }}
+            </span>
+        </div>
+        <div class="card-body">
+            {% if attendances %}
+            <div class="table-responsive">
+                <!-- جدول تقويم الشهر -->
+                <table class="month-calendar">
+                    <thead>
+                        <tr>
+                            <th>الأحد</th>
+                            <th>الاثنين</th>
+                            <th>الثلاثاء</th>
+                            <th>الأربعاء</th>
+                            <th>الخميس</th>
+                            <th>الجمعة</th>
+                            <th>السبت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set first_day_weekday = datetime(year, month, 1).weekday() %}
+                        {% set adjusted_weekday = (first_day_weekday + 1) % 7 %}  <!-- تعديل لبدء الأسبوع من الأحد -->
+                        
+                        <tr>
+                            {% for i in range(adjusted_weekday) %}
+                            <td></td>
+                            {% endfor %}
+                            
+                            {% for day in range(1, days_in_month + 1) %}
+                            {% set current_weekday = (adjusted_weekday + day - 1) % 7 %}
+                            
+                            {% if day == 1 or current_weekday == 0 %}
+                            {% if day != 1 %}</tr>{% endif %}
+                            <tr>
+                            {% endif %}
+                            
+                            {% if day in attendance_by_day %}
+                            {% set attendance = attendance_by_day[day] %}
+                            <td class="status-{{ attendance.status }}" 
+                                data-bs-toggle="tooltip" 
+                                title="{{ attendance.date.strftime('%d/%m/%Y') }} - {{ {
+                                    'present': 'حاضر',
+                                    'absent': 'غائب',
+                                    'leave': 'إجازة',
+                                    'sick': 'مرضي'
+                                }[attendance.status] }}">
+                                <span class="calendar-day-number">{{ day }}</span>
+                                <span class="calendar-status badge bg-{{ {
+                                    'present': 'success',
+                                    'absent': 'danger',
+                                    'leave': 'warning',
+                                    'sick': 'info'
+                                }[attendance.status] }}">
+                                    {{ {
+                                        'present': 'حاضر',
+                                        'absent': 'غائب',
+                                        'leave': 'إجازة',
+                                        'sick': 'مرضي'
+                                    }[attendance.status] }}
+                                </span>
+                                {% if attendance.check_in %}
+                                <div class="small mt-1">
+                                    <i class="fas fa-sign-in-alt"></i> {{ attendance.check_in.strftime('%H:%M') }}
+                                </div>
+                                {% endif %}
+                                {% if attendance.check_out %}
+                                <div class="small">
+                                    <i class="fas fa-sign-out-alt"></i> {{ attendance.check_out.strftime('%H:%M') }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="calendar-day-number text-muted">{{ day }}</span>
+                            </td>
+                            {% endif %}
+                            
+                            {% if day == days_in_month %}
+                            {% for i in range(6 - current_weekday) %}
+                            <td></td>
+                            {% endfor %}
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- مفتاح الألوان -->
+            <div class="d-flex justify-content-center mt-4 flex-wrap">
+                <div class="me-3 mb-2 d-flex align-items-center">
+                    <div class="status-present" style="width: 20px; height: 20px; border-radius: 4px; margin-left: 5px;"></div>
+                    <span>حاضر</span>
+                </div>
+                <div class="me-3 mb-2 d-flex align-items-center">
+                    <div class="status-absent" style="width: 20px; height: 20px; border-radius: 4px; margin-left: 5px;"></div>
+                    <span>غائب</span>
+                </div>
+                <div class="me-3 mb-2 d-flex align-items-center">
+                    <div class="status-leave" style="width: 20px; height: 20px; border-radius: 4px; margin-left: 5px;"></div>
+                    <span>إجازة</span>
+                </div>
+                <div class="me-3 mb-2 d-flex align-items-center">
+                    <div class="status-sick" style="width: 20px; height: 20px; border-radius: 4px; margin-left: 5px;"></div>
+                    <span>مرضي</span>
+                </div>
+            </div>
+            
+            {% else %}
+            <div class="alert alert-warning text-center">
+                <i class="fas fa-exclamation-triangle ml-2"></i>
+                لا توجد سجلات حضور لهذا الشهر
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- جدول تفصيلي لسجلات الحضور -->
+    {% if attendances %}
+    <div class="card mt-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-list-ul ml-2"></i> قائمة تفصيلية بسجلات الحضور</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>الحالة</th>
+                            <th>وقت الحضور</th>
+                            <th>وقت الانصراف</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attendance in attendances %}
+                        <tr>
+                            <td>{{ attendance.date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <span class="badge bg-{{ {
+                                    'present': 'success',
+                                    'absent': 'danger',
+                                    'leave': 'warning',
+                                    'sick': 'info'
+                                }[attendance.status] }}">
+                                    {{ {
+                                        'present': 'حاضر',
+                                        'absent': 'غائب',
+                                        'leave': 'إجازة',
+                                        'sick': 'مرضي'
+                                    }[attendance.status] }}
+                                </span>
+                            </td>
+                            <td>{{ attendance.check_in.strftime('%H:%M') if attendance.check_in else '-' }}</td>
+                            <td>{{ attendance.check_out.strftime('%H:%M') if attendance.check_out else '-' }}</td>
+                            <td>{{ attendance.notes or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تفعيل التلميحات
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}

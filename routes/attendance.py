@@ -312,3 +312,59 @@ def get_department_employees(department_id):
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+        
+@attendance_bp.route('/employee/<int:employee_id>')
+def employee_attendance(employee_id):
+    """عرض سجلات الحضور التفصيلية للموظف مرتبة حسب الشهر والسنة"""
+    
+    # الحصول على بيانات الموظف
+    employee = Employee.query.get_or_404(employee_id)
+    
+    # الحصول على سنة وشهر محددين من معاملات الاستعلام (إذا وجدت)
+    year = request.args.get('year', datetime.now().year, type=int)
+    month = request.args.get('month', datetime.now().month, type=int)
+    
+    # الحصول على قائمة السنوات والشهور التي يوجد بها سجلات حضور للموظف
+    years_months = db.session.query(
+        func.extract('year', Attendance.date).label('year'),
+        func.extract('month', Attendance.date).label('month')
+    ).filter(
+        Attendance.employee_id == employee_id
+    ).distinct().order_by('year', 'month').all()
+    
+    # تنظيم السنوات والشهور
+    attendance_periods = {}
+    for year_month in years_months:
+        y = int(year_month.year)
+        m = int(year_month.month)
+        if y not in attendance_periods:
+            attendance_periods[y] = []
+        attendance_periods[y].append(m)
+    
+    # الحصول على سجلات الحضور للشهر والسنة المحددين
+    attendances = Attendance.query.filter(
+        Attendance.employee_id == employee_id,
+        func.extract('year', Attendance.date) == year,
+        func.extract('month', Attendance.date) == month
+    ).order_by(Attendance.date.desc()).all()
+    
+    # تنظيم سجلات الحضور حسب اليوم
+    attendance_by_day = {}
+    for attendance in attendances:
+        day = attendance.date.day
+        attendance_by_day[day] = attendance
+    
+    # تحديد أيام الشهر
+    from calendar import monthrange
+    days_in_month = monthrange(year, month)[1]
+    
+    return render_template('attendance/employee_attendance.html',
+                          employee=employee,
+                          attendances=attendances,
+                          attendance_by_day=attendance_by_day,
+                          attendance_periods=attendance_periods,
+                          year=year,
+                          month=month,
+                          days_in_month=days_in_month,
+                          selected_year=year,
+                          selected_month=month)
