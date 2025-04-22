@@ -358,6 +358,10 @@ def employee_attendance(employee_id):
     from calendar import monthrange
     days_in_month = monthrange(year, month)[1]
     
+    # حساب ال weekday لليوم الأول من الشهر
+    first_day = datetime(year, month, 1)
+    first_day_weekday = first_day.weekday()
+    
     return render_template('attendance/employee_attendance.html',
                           employee=employee,
                           attendances=attendances,
@@ -367,4 +371,5 @@ def employee_attendance(employee_id):
                           month=month,
                           days_in_month=days_in_month,
                           selected_year=year,
-                          selected_month=month)
+                          selected_month=month,
+                          first_day_weekday=first_day_weekday)
