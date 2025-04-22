@@ -256,13 +256,16 @@
         
         // تهيئة الرسوم البيانية
         if (typeof Chart !== 'undefined') {
-            initializeDepartmentCharts();
+            initializeDepartmentChart();
             initializeSalaryChart();
             initializeDocumentChart();
         }
         
         // تهيئة عدادات الأرقام
         animateCounters();
+        
+        // إضافة سجل تحميل
+        console.log("تم تحميل كافة مكونات لوحة المعلومات بنجاح");
         
         // عرض التاريخ الحالي
         displayCurrentDate();
@@ -284,6 +287,80 @@
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             currentDateElement.textContent = now.toLocaleDateString('ar-SA', options);
         }
+    }
+    
+    function initializeDepartmentChart() {
+        const departmentChartElement = document.getElementById('departmentChart');
+        if (!departmentChartElement) return;
+        
+        // قراءة البيانات من السمات المخصصة
+        const labels = JSON.parse(departmentChartElement.getAttribute('data-labels') || '[]');
+        const values = JSON.parse(departmentChartElement.getAttribute('data-values') || '[]');
+        
+        // إذا لم تكن هناك بيانات، قم بعرض رسالة بدلاً من الرسم البياني
+        if (labels.length === 0 || values.length === 0) {
+            new Chart(departmentChartElement, {
+                type: 'doughnut',
+                data: {
+                    labels: ['لا توجد بيانات'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e9ecef'],
+                        borderColor: ['#dee2e6'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            return;
+        }
+        
+        // إنشاء رسم بياني دائري للأقسام
+        new Chart(departmentChartElement, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
+                        '#6f42c1', '#fd7e14', '#20c9a6', '#5a5c69', '#858796'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                let percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} موظف (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
     
     function initializeSalaryChart() {
