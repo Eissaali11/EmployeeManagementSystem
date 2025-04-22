@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from sqlalchemy import func
 from datetime import datetime, time, timedelta
 from app import db
 from models import Attendance, Employee, Department, SystemAudit
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
+from utils.excel import export_attendance_by_department
 
 attendance_bp = Blueprint('attendance', __name__)
 
@@ -283,6 +284,64 @@ def stats():
         'end_date': end_date.isoformat(),
         'stats': result
     })
+
+@attendance_bp.route('/export_excel')
+def export_excel():
+    """تصدير بيانات الحضور إلى ملف Excel"""
+    try:
+        # الحصول على معايير التصفية
+        start_date_str = request.args.get('start_date')
+        end_date_str = request.args.get('end_date')
+        department_id = request.args.get('department_id', '')
+        
+        # معالجة التواريخ
+        try:
+            start_date = parse_date(start_date_str) if start_date_str else datetime.now().date()
+            end_date = parse_date(end_date_str) if end_date_str else start_date
+        except ValueError:
+            start_date = datetime.now().date()
+            end_date = start_date
+        
+        # الحصول على جميع الموظفين النشطين
+        employees_query = Employee.query.filter_by(status='active')
+        
+        # تطبيق فلتر القسم إذا تم تحديده
+        if department_id and department_id != '':
+            employees_query = employees_query.filter(Employee.department_id == department_id)
+        
+        employees = employees_query.all()
+        
+        # الحصول على سجلات الحضور للفترة المحددة
+        attendance_query = Attendance.query.filter(
+            Attendance.date.between(start_date, end_date)
+        )
+        
+        # تطبيق فلتر القسم إذا تم تحديده
+        if department_id and department_id != '':
+            attendance_query = attendance_query.join(Employee).filter(Employee.department_id == department_id)
+        
+        attendances = attendance_query.all()
+        
+        # تصدير البيانات إلى ملف إكسل
+        output = export_attendance_by_department(employees, attendances, start_date, end_date)
+        
+        # تحديد اسم الملف
+        if start_date == end_date:
+            filename = f"سجل_الحضور_{start_date.strftime('%Y-%m-%d')}.xlsx"
+        else:
+            filename = f"سجل_الحضور_{start_date.strftime('%Y-%m-%d')}_إلى_{end_date.strftime('%Y-%m-%d')}.xlsx"
+        
+        # إرسال الملف للتنزيل
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
+        return redirect(url_for('attendance.index'))
 
 @attendance_bp.route('/api/departments/<int:department_id>/employees')
 def get_department_employees(department_id):

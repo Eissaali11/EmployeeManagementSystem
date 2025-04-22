@@ -989,3 +989,274 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
         print(f"Error generating attendance Excel file: {str(e)}")
         print(traceback.format_exc())
         raise
+
+def export_attendance_by_department(employees, attendances, start_date, end_date=None):
+    """
+    تصدير بيانات الحضور إلى ملف إكسل في صيغة جدول
+    حيث تكون معلومات الموظفين في الأعمدة الأولى
+    وتواريخ الحضور في الأعمدة الباقية مع استخدام P للحضور
+
+    Args:
+        employees: قائمة بجميع الموظفين
+        attendances: قائمة بسجلات الحضور
+        start_date: تاريخ البداية
+        end_date: تاريخ النهاية (اختياري، إذا لم يتم تحديده سيتم استخدام تاريخ البداية فقط)
+
+    Returns:
+        BytesIO: كائن يحتوي على ملف اكسل
+    """
+    try:
+        output = BytesIO()
+        
+        # إنشاء ملف إكسل جديد باستخدام xlsxwriter
+        workbook = xlsxwriter.Workbook(output)
+        
+        # تعريف التنسيقات
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#00B0B0',  # لون أخضر فاتح مائل للأزرق
+            'font_color': 'white',
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
+        
+        date_header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#00B0B0',  # لون أخضر فاتح مائل للأزرق
+            'font_color': 'white',
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
+        
+        normal_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter'
+        })
+        
+        right_aligned_format = workbook.add_format({
+            'border': 1,
+            'align': 'right',
+            'valign': 'vcenter'
+        })
+        
+        present_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bold': True,
+            'font_color': '#006100'  # اللون الأخضر لحرف P
+        })
+        
+        absent_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bold': True,
+            'font_color': '#FF0000'  # اللون الأحمر لحرف A
+        })
+        
+        leave_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'font_color': '#FF9900'  # اللون البرتقالي لحرف L
+        })
+        
+        sick_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'font_color': '#0070C0'  # اللون الأزرق لحرف S
+        })
+        
+        # تحديد الفترة الزمنية
+        if end_date is None:
+            end_date = start_date
+        
+        # تحديد قائمة التواريخ
+        date_list = []
+        current_date = start_date
+        while current_date <= end_date:
+            date_list.append(current_date)
+            current_date += timedelta(days=1)
+        
+        # تنظيم الموظفين حسب الأقسام
+        departments = {}
+        for employee in employees:
+            dept_name = employee.department.name if employee.department else 'بدون قسم'
+            if dept_name not in departments:
+                departments[dept_name] = []
+            departments[dept_name].append(employee)
+        
+        # تنظيم بيانات الحضور حسب الموظفين
+        attendance_data = {}
+        for attendance in attendances:
+            emp_id = attendance.employee_id
+            if emp_id not in attendance_data:
+                attendance_data[emp_id] = {}
+            
+            # تخزين حالة الحضور لهذا اليوم
+            attendance_data[emp_id][attendance.date] = {
+                'status': attendance.status
+            }
+        
+        # عمل قائمة بأيام الأسبوع للعناوين
+        weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        
+        # إنشاء ورقة عمل لكل قسم
+        for dept_name, dept_employees in departments.items():
+            # تحويل الاسم ليكون صالحًا كاسم ورقة Excel
+            sheet_name = dept_name[:31]  # Excel يدعم حد أقصى 31 حرف لأسماء الأوراق
+            worksheet = workbook.add_worksheet(sheet_name)
+            
+            # تحديد أسماء الأعمدة الثابتة وترتيبها كما في الصورة
+            col_headers = ["Name", "ID Number", "Emp. No.", "Job Title", "No. Mobile", "Car", "Location", "Project", "Total"]
+            
+            # كتابة العناوين الرئيسية
+            for col_idx, header in enumerate(col_headers):
+                worksheet.write(1, col_idx, header, header_format)
+            
+            # كتابة عناوين أيام الأسبوع
+            first_date_col = len(col_headers)
+            
+            # إنشاء الصف الأول بعناوين أيام الأسبوع
+            for col_idx, date in enumerate(date_list):
+                day_of_week = weekdays[date.weekday()]
+                col = first_date_col + col_idx
+                worksheet.write(0, col, day_of_week, date_header_format)
+                
+                # كتابة رقم اليوم
+                # تنسيق اليوم 01, 02, 03, ...
+                worksheet.write(1, col, f"{date.day:02d}", date_header_format)
+            
+            # ضبط عرض الأعمدة
+            worksheet.set_column(0, 0, 30)  # عمود الاسم
+            worksheet.set_column(1, 1, 15)  # عمود ID Number
+            worksheet.set_column(2, 2, 10)  # عمود Emp. No.
+            worksheet.set_column(3, 3, 15)  # عمود Job Title
+            worksheet.set_column(4, 4, 15)  # عمود No. Mobile
+            worksheet.set_column(5, 5, 13)  # عمود Car
+            worksheet.set_column(6, 6, 13)  # عمود Location
+            worksheet.set_column(7, 7, 13)  # عمود Project
+            worksheet.set_column(8, 8, 8)   # عمود Total
+            worksheet.set_column(first_date_col, first_date_col + len(date_list) - 1, 5)  # أعمدة التواريخ
+            
+            # كتابة بيانات الموظفين وسجلات الحضور
+            for row_idx, employee in enumerate(sorted(dept_employees, key=lambda e: e.name)):
+                row = row_idx + 2  # صف البيانات (بعد صفي العناوين)
+                
+                # استخراج رقم الهاتف من المعلومات الإضافية إن وجد
+                phone_number = ""
+                if hasattr(employee, 'phone'):
+                    phone_number = employee.phone
+                
+                # كتابة معلومات الموظف
+                worksheet.write(row, 0, employee.name, normal_format)  # Name
+                worksheet.write(row, 1, employee.national_id or "", normal_format)  # ID Number
+                worksheet.write(row, 2, employee.employee_id or "", normal_format)  # Emp. No.
+                worksheet.write(row, 3, employee.job_title or "courier", normal_format)  # Job Title
+                worksheet.write(row, 4, phone_number, normal_format)  # No. Mobile
+                
+                # معلومات إضافية (قد تحتاج لتكييفها حسب هيكل البيانات الفعلي)
+                car = ""  # يمكن إضافة منطق لاستخراج رقم السيارة إن وجد
+                worksheet.write(row, 5, car, normal_format)  # Car
+                
+                # أحضر اسم الموقع من القسم
+                location = "AL QASSIM"  # قيمة افتراضية أو استخراجها من الموظف
+                if employee.department:
+                    location = employee.department.name[:20]  # استخدام اسم القسم كموقع
+                worksheet.write(row, 6, location, normal_format)  # Location
+                
+                # اسم المشروع
+                project = "ARAMEX"  # قيمة افتراضية، يمكن استخراجها من بيانات الموظف
+                worksheet.write(row, 7, project, normal_format)  # Project
+                
+                # عداد للحضور
+                present_days = 0
+                
+                # كتابة سجلات الحضور لكل يوم
+                for col_idx, date in enumerate(date_list):
+                    col = first_date_col + col_idx  # بداية أعمدة التواريخ
+                    cell_value = ""  # القيمة الافتراضية فارغة
+                    cell_format = normal_format
+                    
+                    if employee.id in attendance_data and date in attendance_data[employee.id]:
+                        att_data = attendance_data[employee.id][date]
+                        
+                        if att_data['status'] == 'present':
+                            cell_value = "P"  # استخدام حرف P للحضور
+                            cell_format = present_format
+                            present_days += 1
+                        elif att_data['status'] == 'absent':
+                            cell_value = "A"  # استخدام حرف A للغياب
+                            cell_format = absent_format
+                        elif att_data['status'] == 'leave':
+                            cell_value = "L"  # استخدام حرف L للإجازة
+                            cell_format = leave_format
+                        elif att_data['status'] == 'sick':
+                            cell_value = "S"  # استخدام حرف S للمرض
+                            cell_format = sick_format
+                    else:
+                        # إذا لم يوجد سجل لهذا اليوم، نفترض أنه حاضر (كما في الصورة المرفقة)
+                        cell_value = "P"
+                        cell_format = present_format
+                        present_days += 1
+                    
+                    worksheet.write(row, col, cell_value, cell_format)
+                
+                # كتابة إجمالي أيام الحضور
+                worksheet.write(row, 8, present_days, normal_format)  # Total
+        
+        # إضافة تفسير للرموز المستخدمة في صفحة منفصلة
+        legend_sheet = workbook.add_worksheet('دليل الرموز')
+        
+        # تنسيق العناوين
+        title_format = workbook.add_format({
+            'bold': True,
+            'font_size': 14,
+            'align': 'center',
+            'valign': 'vcenter'
+        })
+        
+        # تنسيق الشرح
+        description_format = workbook.add_format({
+            'align': 'right',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
+        
+        # كتابة العنوان
+        legend_sheet.merge_range('A1:B1', 'دليل رموز الحضور والغياب', title_format)
+        
+        # ضبط عرض الأعمدة
+        legend_sheet.set_column(0, 0, 10)
+        legend_sheet.set_column(1, 1, 40)
+        
+        # إضافة تفسير الرموز
+        legend_sheet.write(2, 0, 'P', present_format)
+        legend_sheet.write(2, 1, 'حاضر (Present)', description_format)
+        
+        legend_sheet.write(3, 0, 'A', absent_format)
+        legend_sheet.write(3, 1, 'غائب (Absent)', description_format)
+        
+        legend_sheet.write(4, 0, 'L', leave_format)
+        legend_sheet.write(4, 1, 'إجازة (Leave)', description_format)
+        
+        legend_sheet.write(5, 0, 'S', sick_format)
+        legend_sheet.write(5, 1, 'مرضي (Sick Leave)', description_format)
+        
+        # إغلاق الملف وإعادة المخرجات
+        workbook.close()
+        output.seek(0)
+        return output
+    
+    except Exception as e:
+        import traceback
+        print(f"Error generating attendance Excel file: {str(e)}")
+        print(traceback.format_exc())
+        raise
