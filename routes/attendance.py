@@ -343,6 +343,21 @@ def export_excel():
         flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
         return redirect(url_for('attendance.index'))
 
+# صفحة تصدير بيانات الحضور
+@attendance_bp.route('/export')
+def export_page():
+    """صفحة تصدير بيانات الحضور إلى ملف Excel"""
+    # الحصول على جميع الأقسام
+    departments = Department.query.order_by(Department.name).all()
+    
+    # إعداد القيم الافتراضية
+    today = datetime.now().date()
+    default_start_date = today.strftime('%Y-%m-%d')
+    
+    return render_template('attendance/export.html', 
+                          departments=departments,
+                          default_start_date=default_start_date)
+
 @attendance_bp.route('/api/departments/<int:department_id>/employees')
 def get_department_employees(department_id):
     """API endpoint to get all employees in a department"""
