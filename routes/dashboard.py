@@ -15,14 +15,38 @@ def index():
     total_employees = Employee.query.filter_by(status='active').count()
     total_departments = Department.query.count()
     
+    # Get current date and time for calculations
+    now = datetime.now()
+    today = now.date()
+    
     # Get attendance for today
-    today = datetime.now().date()
     today_attendance = Attendance.query.filter_by(date=today).count()
     
-    # Get documents expiring in the next 30 days
-    expiry_date = today + timedelta(days=30)
-    expiring_documents = Document.query.filter(Document.expiry_date <= expiry_date, 
-                                              Document.expiry_date >= today).count()
+    # Get documents statistics
+    all_documents = Document.query.all()
+    total_documents = len(all_documents)
+    
+    # Calculate document expiry statistics
+    valid_documents = 0
+    expired_documents = 0
+    expiring_documents = 0
+    
+    for doc in all_documents:
+        days_remaining = (doc.expiry_date - today).days
+        if days_remaining < 0:
+            expired_documents += 1
+        elif days_remaining <= 30:
+            expiring_documents += 1
+        else:
+            valid_documents += 1
+    
+    # Document statistics for template
+    document_stats = {
+        'total': total_documents,
+        'valid': valid_documents,
+        'expired': expired_documents,
+        'expiring': expiring_documents
+    }
     
     # Get department statistics
     departments = db.session.query(
@@ -36,7 +60,7 @@ def index():
     recent_employees = Employee.query.order_by(Employee.created_at.desc()).limit(5).all()
     
     # Get monthly salary totals for the current year
-    current_year = datetime.now().year
+    current_year = now.year
     monthly_salaries = db.session.query(
         Salary.month,
         func.sum(Salary.net_salary).label('total')
@@ -62,9 +86,11 @@ def index():
         salary_data = [0]
     
     return render_template('dashboard.html',
+                          now=now,
                           total_employees=total_employees,
                           total_departments=total_departments,
                           today_attendance=today_attendance,
+                          document_stats=document_stats,
                           expiring_documents=expiring_documents,
                           recent_employees=recent_employees,
                           dept_labels=dept_labels,

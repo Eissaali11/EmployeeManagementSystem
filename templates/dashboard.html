@@ -98,17 +98,26 @@
                             <div class="card-icon-bg bg-warning-subtle position-absolute opacity-25 rounded-circle"></div>
                             <div class="d-flex justify-content-between align-items-center position-relative">
                                 <div>
-                                    <h6 class="card-subtitle mb-2 text-body-secondary">وثائق قاربت على الانتهاء</h6>
-                                    <h2 class="counter-value fs-1 fw-bold text-warning" data-target="{{ expiring_documents }}">0</h2>
+                                    <h6 class="card-subtitle mb-2 text-body-secondary">إحصائيات الوثائق</h6>
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <span class="badge rounded-pill bg-success">سارية: <span class="counter-value fw-bold" data-target="{{ document_stats.valid }}">0</span></span>
+                                        <span class="badge rounded-pill bg-warning">قريبة الانتهاء: <span class="counter-value fw-bold" data-target="{{ document_stats.expiring }}">0</span></span>
+                                        <span class="badge rounded-pill bg-danger">منتهية: <span class="counter-value fw-bold" data-target="{{ document_stats.expired }}">0</span></span>
+                                    </div>
+                                    <h3 class="counter-value fw-bold text-warning mt-2" data-target="{{ document_stats.total }}">0</h3>
+                                    <small class="text-muted">إجمالي الوثائق</small>
                                 </div>
                                 <div class="card-icon rounded-circle bg-warning text-white">
                                     <i class="fas fa-file-alt"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-transparent border-0">
-                            <a href="{{ url_for('documents.expiring') }}" class="btn btn-sm btn-outline-warning w-100">
-                                عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
+                        <div class="card-footer bg-transparent border-0 d-flex">
+                            <a href="{{ url_for('documents.index') }}" class="btn btn-sm btn-outline-warning flex-grow-1 me-1">
+                                كل الوثائق
+                            </a>
+                            <a href="{{ url_for('documents.expiring') }}" class="btn btn-sm btn-outline-warning flex-grow-1">
+                                وثائق منتهية
                             </a>
                         </div>
                     </div>
@@ -117,30 +126,54 @@
             
             <!-- Charts Row -->
             <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card">
+                <div class="col-md-4">
+                    <div class="card h-100">
                         <div class="card-header">
-                            <h5 class="card-title mb-0">توزيع الموظفين حسب الأقسام</h5>
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-pie ms-1"></i>
+                                توزيع الموظفين حسب الأقسام
+                            </h5>
                         </div>
                         <div class="card-body">
                             <canvas id="departmentChart" 
                                     data-labels='{{ dept_labels|tojson if dept_labels else "[]" }}' 
                                     data-values='{{ dept_data|tojson if dept_data else "[]" }}' 
-                                    height="250"></canvas>
+                                    height="200"></canvas>
                         </div>
                     </div>
                 </div>
                 
-                <div class="col-md-6">
-                    <div class="card">
+                <div class="col-md-4">
+                    <div class="card h-100">
                         <div class="card-header">
-                            <h5 class="card-title mb-0">إجمالي الرواتب الشهرية</h5>
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-money-bill-wave ms-1"></i>
+                                إجمالي الرواتب الشهرية
+                            </h5>
                         </div>
                         <div class="card-body">
                             <canvas id="salaryChart" 
                                     data-labels='{{ salary_labels|tojson if salary_labels else "[]" }}' 
                                     data-values='{{ salary_data|tojson if salary_data else "[]" }}' 
-                                    height="250"></canvas>
+                                    height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-alt ms-1"></i>
+                                توزيع حالة الوثائق
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="documentChart" 
+                                    data-valid="{{ document_stats.valid }}" 
+                                    data-expiring="{{ document_stats.expiring }}" 
+                                    data-expired="{{ document_stats.expired }}" 
+                                    height="200"></canvas>
                         </div>
                     </div>
                 </div>
@@ -220,6 +253,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize charts when the DOM is loaded
         initializeDepartmentCharts();
+        initializeSalaryChart();
+        initializeDocumentChart();
         
         // Display current date
         displayCurrentDate();
@@ -232,6 +267,83 @@
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             currentDateElement.textContent = now.toLocaleDateString('ar-SA', options);
         }
+    }
+    
+    function initializeDocumentChart() {
+        const documentChartElement = document.getElementById('documentChart');
+        if (!documentChartElement) return;
+        
+        const validCount = parseInt(documentChartElement.getAttribute('data-valid')) || 0;
+        const expiringCount = parseInt(documentChartElement.getAttribute('data-expiring')) || 0;
+        const expiredCount = parseInt(documentChartElement.getAttribute('data-expired')) || 0;
+        
+        // تعيين قيم افتراضية إذا لم تكن هناك بيانات
+        if (validCount === 0 && expiringCount === 0 && expiredCount === 0) {
+            new Chart(documentChartElement, {
+                type: 'doughnut',
+                data: {
+                    labels: ['لا توجد بيانات'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e9ecef'],
+                        borderColor: ['#dee2e6'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            return;
+        }
+        
+        // إنشاء الرسم البياني مع البيانات الفعلية
+        new Chart(documentChartElement, {
+            type: 'doughnut',
+            data: {
+                labels: ['وثائق سارية', 'وثائق تنتهي قريباً', 'وثائق منتهية'],
+                datasets: [{
+                    data: [validCount, expiringCount, expiredCount],
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                    borderColor: ['#28a745', '#ffc107', '#dc3545'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                let percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 </script>
 {% endblock %}
