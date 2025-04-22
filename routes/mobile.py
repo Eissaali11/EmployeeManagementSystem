@@ -201,6 +201,38 @@ def attendance():
                           today_stats=today_stats,
                           pagination=None)
 
+# صفحة تصدير بيانات الحضور - النسخة المحمولة
+@mobile_bp.route('/attendance/export', methods=['GET', 'POST'])
+@login_required
+def export_attendance():
+    """صفحة تصدير بيانات الحضور إلى Excel للنسخة المحمولة"""
+    # الحصول على قائمة الأقسام للاختيار
+    departments = Department.query.order_by(Department.name).all()
+    
+    if request.method == 'POST':
+        # معالجة النموذج المرسل
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        department_id = request.form.get('department_id')
+        
+        # إعادة توجيه إلى مسار التصدير في النسخة غير المحمولة مع وسيطات البحث
+        redirect_url = url_for('attendance.export_excel')
+        params = []
+        
+        if start_date:
+            params.append(f'start_date={start_date}')
+        if end_date:
+            params.append(f'end_date={end_date}')
+        if department_id:
+            params.append(f'department_id={department_id}')
+        
+        if params:
+            redirect_url = f"{redirect_url}?{'&'.join(params)}"
+        
+        return redirect(redirect_url)
+    
+    return render_template('mobile/attendance_export.html', departments=departments)
+
 # إضافة سجل حضور جديد - النسخة المحمولة
 @mobile_bp.route('/attendance/add', methods=['GET', 'POST'])
 @login_required
