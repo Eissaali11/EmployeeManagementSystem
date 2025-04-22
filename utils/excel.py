@@ -898,7 +898,7 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
             
             row = {
                 'اليوم': day,
-                'التاريخ': date_obj.strftime('%Y-%m-%d'),
+                'التاريخ': date_obj.strftime('%d/%m/%Y'),
                 'اليوم من الأسبوع': date_obj.strftime('%A'),
                 'الحالة': status_text,
                 'وقت الحضور': check_in_time,
@@ -1130,9 +1130,9 @@ def export_attendance_by_department(employees, attendances, start_date, end_date
                 col = first_date_col + col_idx
                 worksheet.write(0, col, day_of_week, date_header_format)
                 
-                # كتابة رقم اليوم
-                # تنسيق اليوم 01, 02, 03, ...
-                worksheet.write(1, col, f"{date.day:02d}", date_header_format)
+                # كتابة التاريخ كاملاً (يوم/شهر/سنة)
+                date_str = date.strftime("%d/%m/%Y")
+                worksheet.write(1, col, date_str, date_header_format)
             
             # ضبط عرض الأعمدة
             worksheet.set_column(0, 0, 30)  # عمود الاسم
