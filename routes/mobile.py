@@ -2322,13 +2322,9 @@ def create_handover(vehicle_id):
         mileage = int(mileage_str) if mileage_str and mileage_str.isdigit() else 0
         has_spare_tire = 'has_spare_tire' in request.form
         has_fire_extinguisher = 'has_fire_extinguisher' in request.form
-        has_jack = 'has_jack' in request.form
         has_tools = 'has_tools' in request.form
-        has_first_aid = 'has_first_aid' in request.form
+        has_first_aid_kit = 'has_first_aid_kit' in request.form
         has_warning_triangle = 'has_warning_triangle' in request.form
-        vehicle_cleanliness = request.form.get('vehicle_cleanliness')
-        injuries = request.form.get('injuries', '')
-        damages = request.form.get('damages', '')
         notes = request.form.get('notes', '')
         
         # إنشاء سجل تسليم/استلام جديد
@@ -2342,13 +2338,9 @@ def create_handover(vehicle_id):
             mileage=mileage,
             has_spare_tire=has_spare_tire,
             has_fire_extinguisher=has_fire_extinguisher,
-            has_jack=has_jack,
             has_tools=has_tools,
-            has_first_aid=has_first_aid,
+            has_first_aid_kit=has_first_aid_kit,
             has_warning_triangle=has_warning_triangle,
-            vehicle_cleanliness=vehicle_cleanliness,
-            injuries=injuries,
-            damages=damages,
             notes=notes
         )
         
@@ -2432,13 +2424,9 @@ def handover_pdf(handover_id):
             'mileage': handover.mileage,
             'has_spare_tire': handover.has_spare_tire,
             'has_fire_extinguisher': handover.has_fire_extinguisher,
-            'has_jack': handover.has_jack,
             'has_tools': handover.has_tools,
-            'has_first_aid': handover.has_first_aid,
+            'has_first_aid_kit': handover.has_first_aid_kit,
             'has_warning_triangle': handover.has_warning_triangle,
-            'cleanliness': handover.vehicle_cleanliness,
-            'injuries': handover.injuries,
-            'damages': handover.damages,
             'notes': handover.notes,
             'image_paths': [image.image_path for image in images] if images else []
         }
