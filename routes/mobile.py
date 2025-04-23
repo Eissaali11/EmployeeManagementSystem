@@ -2196,7 +2196,7 @@ def notifications_new():
         notifications.append({
             'id': f'doc_{doc.id}',
             'type': 'document',
-            'title': f'وثيقة على وشك الانتهاء: {doc.document_name}',
+            'title': f'وثيقة على وشك الانتهاء: {doc.document_type}',
             'description': f'متبقي {remaining_days} يوم على انتهاء {doc.document_type} للموظف {doc.employee.name}',
             'date': doc.expiry_date,
             'url': url_for('mobile.document_details', document_id=doc.id),
@@ -2205,11 +2205,12 @@ def notifications_new():
     
     for fee in due_fees:
         remaining_days = (fee.due_date - current_date).days
+        document_type = fee.document.document_type if hasattr(fee, 'document') and fee.document else "غير معروف"
         notifications.append({
             'id': f'fee_{fee.id}',
             'type': 'fee',
-            'title': f'رسوم مستحقة قريباً: {fee.document_type}',
-            'description': f'رسوم مستحقة بعد {remaining_days} يوم للوثيقة {fee.document.document_name}',
+            'title': f'رسوم مستحقة قريباً: {fee.name}',
+            'description': f'رسوم مستحقة بعد {remaining_days} يوم بقيمة {fee.amount}',
             'date': fee.due_date,
             'url': url_for('mobile.fee_details', fee_id=fee.id),
             'is_read': False
