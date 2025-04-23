@@ -123,6 +123,7 @@ def record():
                     action='create',
                     entity_type='attendance',
                     entity_id=new_attendance.id,
+                    entity_name=employee.name,
                     details=f'تم تسجيل حضور للموظف: {employee.name} بتاريخ {date}'
                 )
                 db.session.add(audit)
@@ -199,6 +200,7 @@ def department_attendance():
                 action='mass_update',
                 entity_type='attendance',
                 entity_id=0,
+                entity_name=department.name,
                 details=f'تم تسجيل حضور لقسم {department.name} بتاريخ {date} لعدد {count} موظف'
             )
             db.session.add(audit)
@@ -343,6 +345,7 @@ def delete(id):
             action='delete',
             entity_type='attendance',
             entity_id=id,
+            entity_name=employee_name,
             details=f'تم حذف سجل حضور للموظف: {employee_name} بتاريخ {date}'
         )
         db.session.add(audit)
