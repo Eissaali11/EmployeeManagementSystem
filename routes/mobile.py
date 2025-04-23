@@ -184,11 +184,25 @@ def employee_details(employee_id):
     """صفحة تفاصيل الموظف للنسخة المحمولة"""
     employee = Employee.query.get_or_404(employee_id)
     
-    # الحصول على بيانات إضافية للموظف (يمكن استكمالها لاحقًا)
-    attendance_records = []  # سجلات الحضور
-    salary = None  # معلومات الراتب
-    documents = []  # الوثائق
+    # الحصول على التاريخ الحالي وتاريخ بداية ونهاية الشهر الحالي
     current_date = datetime.now().date()
+    current_month_start = date(current_date.year, current_date.month, 1)
+    next_month = current_date.month + 1 if current_date.month < 12 else 1
+    next_year = current_date.year if current_date.month < 12 else current_date.year + 1
+    current_month_end = date(next_year, next_month, 1) - timedelta(days=1)
+    
+    # استعلام سجلات الحضور للموظف خلال الشهر الحالي
+    attendance_records = Attendance.query.filter(
+        Attendance.employee_id == employee_id,
+        Attendance.date >= current_month_start.strftime('%Y-%m-%d'),
+        Attendance.date <= current_month_end.strftime('%Y-%m-%d')
+    ).order_by(Attendance.date.desc()).all()
+    
+    # استعلام أحدث راتب للموظف
+    salary = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.date.desc()).first()
+    
+    # استعلام الوثائق الخاصة بالموظف
+    documents = Document.query.filter_by(employee_id=employee_id).all()
     
     return render_template('mobile/employee_details.html', 
                           employee=employee,
