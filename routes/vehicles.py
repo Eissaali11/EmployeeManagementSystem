@@ -1618,6 +1618,300 @@ def generate_vehicle_report_pdf(id):
         return redirect(url_for('vehicles.view', id=id))
 
 
+# مسارات إدارة الفحص الدوري
+@vehicles_bp.route('/<int:id>/inspections', methods=['GET'])
+@login_required
+def vehicle_inspections(id):
+    """عرض سجلات الفحص الدوري لسيارة محددة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
+    
+    # تنسيق التواريخ
+    for inspection in inspections:
+        inspection.formatted_inspection_date = format_date_arabic(inspection.inspection_date)
+        inspection.formatted_expiry_date = format_date_arabic(inspection.expiry_date)
+    
+    return render_template(
+        'vehicles/inspections.html',
+        vehicle=vehicle,
+        inspections=inspections,
+        inspection_types=INSPECTION_TYPE_CHOICES,
+        inspection_statuses=INSPECTION_STATUS_CHOICES
+    )
+
+@vehicles_bp.route('/<int:id>/inspections/create', methods=['GET', 'POST'])
+@login_required
+def create_inspection(id):
+    """إضافة سجل فحص دوري جديد"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        inspection_date = datetime.strptime(request.form.get('inspection_date'), '%Y-%m-%d').date()
+        expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d').date()
+        inspection_number = request.form.get('inspection_number')
+        inspector_name = request.form.get('inspector_name')
+        inspection_type = request.form.get('inspection_type')
+        inspection_status = 'valid'  # الحالة الافتراضية ساري
+        cost = float(request.form.get('cost') or 0)
+        results = request.form.get('results')
+        recommendations = request.form.get('recommendations')
+        notes = request.form.get('notes')
+        
+        # حفظ شهادة الفحص إذا تم تحميلها
+        certificate_file = None
+        if 'certificate_file' in request.files and request.files['certificate_file']:
+            certificate_file = save_image(request.files['certificate_file'], 'inspections')
+        
+        # إنشاء سجل فحص جديد
+        inspection = VehiclePeriodicInspection(
+            vehicle_id=id,
+            inspection_date=inspection_date,
+            expiry_date=expiry_date,
+            inspection_number=inspection_number,
+            inspector_name=inspector_name,
+            inspection_type=inspection_type,
+            inspection_status=inspection_status,
+            cost=cost,
+            results=results,
+            recommendations=recommendations,
+            certificate_file=certificate_file,
+            notes=notes
+        )
+        
+        db.session.add(inspection)
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('create', 'vehicle_inspection', inspection.id, f'تم إضافة سجل فحص دوري للسيارة: {vehicle.plate_number}')
+        
+        flash('تم إضافة سجل الفحص الدوري بنجاح!', 'success')
+        return redirect(url_for('vehicles.vehicle_inspections', id=id))
+    
+    return render_template(
+        'vehicles/inspection_create.html',
+        vehicle=vehicle,
+        inspection_types=INSPECTION_TYPE_CHOICES
+    )
+
+@vehicles_bp.route('/inspection/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_inspection(id):
+    """تعديل سجل فحص دوري"""
+    inspection = VehiclePeriodicInspection.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(inspection.vehicle_id)
+    
+    if request.method == 'POST':
+        inspection.inspection_date = datetime.strptime(request.form.get('inspection_date'), '%Y-%m-%d').date()
+        inspection.expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d').date()
+        inspection.inspection_number = request.form.get('inspection_number')
+        inspection.inspector_name = request.form.get('inspector_name')
+        inspection.inspection_type = request.form.get('inspection_type')
+        inspection.inspection_status = request.form.get('inspection_status')
+        inspection.cost = float(request.form.get('cost') or 0)
+        inspection.results = request.form.get('results')
+        inspection.recommendations = request.form.get('recommendations')
+        inspection.notes = request.form.get('notes')
+        inspection.updated_at = datetime.utcnow()
+        
+        # حفظ شهادة الفحص الجديدة إذا تم تحميلها
+        if 'certificate_file' in request.files and request.files['certificate_file']:
+            inspection.certificate_file = save_image(request.files['certificate_file'], 'inspections')
+        
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('update', 'vehicle_inspection', inspection.id, f'تم تعديل سجل فحص دوري للسيارة: {vehicle.plate_number}')
+        
+        flash('تم تعديل سجل الفحص الدوري بنجاح!', 'success')
+        return redirect(url_for('vehicles.vehicle_inspections', id=vehicle.id))
+    
+    return render_template(
+        'vehicles/inspection_edit.html',
+        inspection=inspection,
+        vehicle=vehicle,
+        inspection_types=INSPECTION_TYPE_CHOICES,
+        inspection_statuses=INSPECTION_STATUS_CHOICES
+    )
+
+@vehicles_bp.route('/inspection/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_inspection(id):
+    """حذف سجل فحص دوري"""
+    inspection = VehiclePeriodicInspection.query.get_or_404(id)
+    vehicle_id = inspection.vehicle_id
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    # تسجيل الإجراء قبل الحذف
+    log_audit('delete', 'vehicle_inspection', id, f'تم حذف سجل فحص دوري للسيارة: {vehicle.plate_number}')
+    
+    db.session.delete(inspection)
+    db.session.commit()
+    
+    flash('تم حذف سجل الفحص الدوري بنجاح!', 'success')
+    return redirect(url_for('vehicles.vehicle_inspections', id=vehicle_id))
+
+# مسارات إدارة فحص السلامة
+@vehicles_bp.route('/<int:id>/safety-checks', methods=['GET'])
+@login_required
+def vehicle_safety_checks(id):
+    """عرض سجلات فحص السلامة لسيارة محددة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
+    
+    # تنسيق التواريخ
+    for check in checks:
+        check.formatted_check_date = format_date_arabic(check.check_date)
+    
+    return render_template(
+        'vehicles/safety_checks.html',
+        vehicle=vehicle,
+        checks=checks,
+        check_types=SAFETY_CHECK_TYPE_CHOICES,
+        check_statuses=SAFETY_CHECK_STATUS_CHOICES
+    )
+
+@vehicles_bp.route('/<int:id>/safety-checks/create', methods=['GET', 'POST'])
+@login_required
+def create_safety_check(id):
+    """إضافة سجل فحص سلامة جديد"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # الحصول على قائمة السائقين والمشرفين
+    supervisors = Employee.query.filter(Employee.job_title.contains('مشرف')).all()
+    
+    if request.method == 'POST':
+        check_date = datetime.strptime(request.form.get('check_date'), '%Y-%m-%d').date()
+        check_type = request.form.get('check_type')
+        
+        # معلومات السائق
+        driver_id = request.form.get('driver_id')
+        driver_name = request.form.get('driver_name')
+        if driver_id:
+            driver = Employee.query.get(driver_id)
+            if driver:
+                driver_name = driver.name
+        
+        # معلومات المشرف
+        supervisor_id = request.form.get('supervisor_id')
+        supervisor_name = request.form.get('supervisor_name')
+        if supervisor_id:
+            supervisor = Employee.query.get(supervisor_id)
+            if supervisor:
+                supervisor_name = supervisor.name
+        
+        status = request.form.get('status')
+        check_form_link = request.form.get('check_form_link')
+        issues_found = bool(request.form.get('issues_found'))
+        issues_description = request.form.get('issues_description')
+        actions_taken = request.form.get('actions_taken')
+        notes = request.form.get('notes')
+        
+        # إنشاء سجل فحص سلامة جديد
+        safety_check = VehicleSafetyCheck(
+            vehicle_id=id,
+            check_date=check_date,
+            check_type=check_type,
+            driver_id=driver_id,
+            driver_name=driver_name,
+            supervisor_id=supervisor_id,
+            supervisor_name=supervisor_name,
+            status=status,
+            check_form_link=check_form_link,
+            issues_found=issues_found,
+            issues_description=issues_description,
+            actions_taken=actions_taken,
+            notes=notes
+        )
+        
+        db.session.add(safety_check)
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('create', 'vehicle_safety_check', safety_check.id, f'تم إضافة سجل فحص سلامة للسيارة: {vehicle.plate_number}')
+        
+        flash('تم إضافة سجل فحص السلامة بنجاح!', 'success')
+        return redirect(url_for('vehicles.vehicle_safety_checks', id=id))
+    
+    return render_template(
+        'vehicles/safety_check_create.html',
+        vehicle=vehicle,
+        supervisors=supervisors,
+        check_types=SAFETY_CHECK_TYPE_CHOICES,
+        check_statuses=SAFETY_CHECK_STATUS_CHOICES
+    )
+
+@vehicles_bp.route('/safety-check/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_safety_check(id):
+    """تعديل سجل فحص سلامة"""
+    safety_check = VehicleSafetyCheck.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(safety_check.vehicle_id)
+    
+    # الحصول على قائمة السائقين والمشرفين
+    supervisors = Employee.query.filter(Employee.job_title.contains('مشرف')).all()
+    
+    if request.method == 'POST':
+        safety_check.check_date = datetime.strptime(request.form.get('check_date'), '%Y-%m-%d').date()
+        safety_check.check_type = request.form.get('check_type')
+        
+        # معلومات السائق
+        safety_check.driver_id = request.form.get('driver_id')
+        safety_check.driver_name = request.form.get('driver_name')
+        if safety_check.driver_id:
+            driver = Employee.query.get(safety_check.driver_id)
+            if driver:
+                safety_check.driver_name = driver.name
+        
+        # معلومات المشرف
+        safety_check.supervisor_id = request.form.get('supervisor_id')
+        safety_check.supervisor_name = request.form.get('supervisor_name')
+        if safety_check.supervisor_id:
+            supervisor = Employee.query.get(safety_check.supervisor_id)
+            if supervisor:
+                safety_check.supervisor_name = supervisor.name
+        
+        safety_check.status = request.form.get('status')
+        safety_check.check_form_link = request.form.get('check_form_link')
+        safety_check.issues_found = bool(request.form.get('issues_found'))
+        safety_check.issues_description = request.form.get('issues_description')
+        safety_check.actions_taken = request.form.get('actions_taken')
+        safety_check.notes = request.form.get('notes')
+        safety_check.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('update', 'vehicle_safety_check', safety_check.id, f'تم تعديل سجل فحص سلامة للسيارة: {vehicle.plate_number}')
+        
+        flash('تم تعديل سجل فحص السلامة بنجاح!', 'success')
+        return redirect(url_for('vehicles.vehicle_safety_checks', id=vehicle.id))
+    
+    return render_template(
+        'vehicles/safety_check_edit.html',
+        safety_check=safety_check,
+        vehicle=vehicle,
+        supervisors=supervisors,
+        check_types=SAFETY_CHECK_TYPE_CHOICES,
+        check_statuses=SAFETY_CHECK_STATUS_CHOICES
+    )
+
+@vehicles_bp.route('/safety-check/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_safety_check(id):
+    """حذف سجل فحص سلامة"""
+    safety_check = VehicleSafetyCheck.query.get_or_404(id)
+    vehicle_id = safety_check.vehicle_id
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    # تسجيل الإجراء قبل الحذف
+    log_audit('delete', 'vehicle_safety_check', id, f'تم حذف سجل فحص سلامة للسيارة: {vehicle.plate_number}')
+    
+    db.session.delete(safety_check)
+    db.session.commit()
+    
+    flash('تم حذف سجل فحص السلامة بنجاح!', 'success')
+    return redirect(url_for('vehicles.vehicle_safety_checks', id=vehicle_id))
+
 # إنشاء تقرير Excel شامل للسيارة
 @vehicles_bp.route('/vehicle-report/<int:id>')
 @login_required
