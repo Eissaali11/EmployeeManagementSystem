@@ -2,11 +2,11 @@ import os
 import logging
 from datetime import datetime
 
-from flask import Flask, session, redirect, url_for
+from flask import Flask, session, redirect, url_for, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_login import LoginManager, current_user
+from flask_login import LoginManager, current_user, login_required
 from flask_wtf.csrf import CSRFProtect
 
 # استيراد مكتبة dotenv لقراءة ملف .env
@@ -109,6 +109,7 @@ def inject_csrf_token():
 @app.route('/')
 def root():
     from flask import request
+    from models import Module, UserRole
     
     user_agent = request.headers.get('User-Agent', '').lower()
     mobile_devices = ['android', 'iphone', 'ipad', 'mobile']
@@ -125,7 +126,11 @@ def root():
     
     # إذا كان المستخدم يستخدم جهاز كمبيوتر
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard.index'))
+        # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم
+        if current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.DASHBOARD):
+            return redirect(url_for('dashboard.index'))
+        else:
+            return render_template('restricted.html')
     else:
         return redirect(url_for('auth.login'))
 
@@ -202,6 +207,8 @@ with app.app_context():
             'UserRole': UserRole,
             'Permission': Permission
         }
+    
+    # ملاحظة: تم دمج هذا الكود مع مسار الجذر الرئيسي
     
     # Create database tables if they don't exist
     logger.info("Creating database tables...")
