@@ -25,6 +25,15 @@
             </a>
         </div>
     </div>
+    
+    {% if inspection_warnings %}
+    <div class="alert alert-warning mb-4">
+        <i class="fas fa-exclamation-triangle ms-2"></i>
+        {% for warning in inspection_warnings %}
+            <span>{{ warning }}</span>{% if not loop.last %} | {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- بطاقة المعلومات الرئيسية -->
     <div class="row mb-4">
@@ -182,6 +191,199 @@
         </div>
     </div>
 
+    <!-- فحوصات السيارة -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-check ms-2"></i>
+                        الفحص الدوري
+                        {% if periodic_inspections %}
+                        <span class="badge bg-secondary">{{ periodic_inspections|length }}</span>
+                        {% endif %}
+                    </h5>
+                    <div>
+                        <a href="{{ url_for('vehicles.vehicle_inspections', id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye ms-1"></i>
+                            عرض الكل
+                        </a>
+                        <a href="{{ url_for('vehicles.create_inspection', id=vehicle.id) }}" class="btn btn-sm btn-success me-1">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة فحص
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if periodic_inspections %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الفحص</th>
+                                        <th>تاريخ الفحص</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>النوع</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inspection in periodic_inspections[:3] %}
+                                    <tr class="{% if inspection.is_expired %}table-danger{% elif inspection.is_expiring_soon %}table-warning{% endif %}">
+                                        <td>{{ inspection.inspection_number }}</td>
+                                        <td>{{ inspection.formatted_inspection_date }}</td>
+                                        <td>{{ inspection.formatted_expiry_date }}</td>
+                                        <td>
+                                            {% if inspection.inspection_type == 'technical' %}
+                                                <span class="badge bg-info">فحص فني</span>
+                                            {% elif inspection.inspection_type == 'periodic' %}
+                                                <span class="badge bg-primary">فحص دوري</span>
+                                            {% elif inspection.inspection_type == 'safety' %}
+                                                <span class="badge bg-warning text-dark">فحص أمان</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ inspection.inspection_type }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if inspection.inspection_status == 'valid' %}
+                                                <span class="badge bg-success">ساري</span>
+                                            {% elif inspection.inspection_status == 'expired' %}
+                                                <span class="badge bg-danger">منتهي</span>
+                                            {% elif inspection.inspection_status == 'expiring_soon' %}
+                                                <span class="badge bg-warning text-dark">ينتهي قريبًا</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ inspection.inspection_status }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if periodic_inspections|length > 3 %}
+                            <div class="text-center mt-2">
+                                <a href="{{ url_for('vehicles.vehicle_inspections', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary">
+                                    عرض كل السجلات ({{ periodic_inspections|length }})
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-clipboard fa-4x text-muted"></i>
+                            </div>
+                            <h5>لا توجد سجلات فحص دوري</h5>
+                            <p class="text-muted">يمكنك إضافة سجل فحص دوري جديد من خلال النقر على زر "إضافة فحص"</p>
+                            <a href="{{ url_for('vehicles.create_inspection', id=vehicle.id) }}" class="btn btn-success mt-2">
+                                <i class="fas fa-plus ms-1"></i>
+                                إضافة فحص دوري
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt ms-2"></i>
+                        فحوصات السلامة
+                        {% if safety_checks %}
+                        <span class="badge bg-secondary">{{ safety_checks|length }}</span>
+                        {% endif %}
+                    </h5>
+                    <div>
+                        <a href="{{ url_for('vehicles.vehicle_safety_checks', id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye ms-1"></i>
+                            عرض الكل
+                        </a>
+                        <a href="{{ url_for('vehicles.create_safety_check', id=vehicle.id) }}" class="btn btn-sm btn-success me-1">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة فحص
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if safety_checks %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>النوع</th>
+                                        <th>السائق</th>
+                                        <th>المشرف</th>
+                                        <th>الحالة</th>
+                                        <th>مشاكل</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for check in safety_checks[:3] %}
+                                    <tr>
+                                        <td>{{ check.formatted_check_date }}</td>
+                                        <td>
+                                            {% if check.check_type == 'daily' %}
+                                                <span class="badge bg-info">يومي</span>
+                                            {% elif check.check_type == 'weekly' %}
+                                                <span class="badge bg-warning text-dark">أسبوعي</span>
+                                            {% elif check.check_type == 'monthly' %}
+                                                <span class="badge bg-danger">شهري</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ check.check_type }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ check.driver_name }}</td>
+                                        <td>{{ check.supervisor_name }}</td>
+                                        <td>
+                                            {% if check.status == 'completed' %}
+                                                <span class="badge bg-success">مكتمل</span>
+                                            {% elif check.status == 'in_progress' %}
+                                                <span class="badge bg-warning text-dark">قيد التنفيذ</span>
+                                            {% elif check.status == 'needs_review' %}
+                                                <span class="badge bg-danger">بحاجة للمراجعة</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ check.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if check.issues_found %}
+                                                <span class="badge bg-danger">نعم</span>
+                                            {% else %}
+                                                <span class="badge bg-success">لا</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if safety_checks|length > 3 %}
+                            <div class="text-center mt-2">
+                                <a href="{{ url_for('vehicles.vehicle_safety_checks', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary">
+                                    عرض كل السجلات ({{ safety_checks|length }})
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-shield-alt fa-4x text-muted"></i>
+                            </div>
+                            <h5>لا توجد سجلات فحص سلامة</h5>
+                            <p class="text-muted">يمكنك إضافة سجل فحص سلامة جديد من خلال النقر على زر "إضافة فحص"</p>
+                            <a href="{{ url_for('vehicles.create_safety_check', id=vehicle.id) }}" class="btn btn-success mt-2">
+                                <i class="fas fa-plus ms-1"></i>
+                                إضافة فحص سلامة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- القسم الثاني: سجلات الورشة والمشاريع -->
     <div class="row mb-4">
         <!-- سجلات الورشة -->
