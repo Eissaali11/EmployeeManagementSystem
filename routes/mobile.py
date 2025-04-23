@@ -2205,12 +2205,18 @@ def notifications_new():
     
     for fee in due_fees:
         remaining_days = (fee.due_date - current_date).days
-        document_type = fee.document.document_type if hasattr(fee, 'document') and fee.document else "غير معروف"
+        document_type = fee.document_type if hasattr(fee, 'document_type') else "غير معروف"
+        total_amount = fee.total_fees if hasattr(fee, 'total_fees') else sum([
+            fee.passport_fee or 0,
+            fee.labor_office_fee or 0,
+            fee.insurance_fee or 0,
+            fee.social_insurance_fee or 0
+        ])
         notifications.append({
             'id': f'fee_{fee.id}',
             'type': 'fee',
-            'title': f'رسوم مستحقة قريباً: {fee.name}',
-            'description': f'رسوم مستحقة بعد {remaining_days} يوم بقيمة {fee.amount}',
+            'title': f'رسوم مستحقة قريباً: {document_type}',
+            'description': f'رسوم مستحقة بعد {remaining_days} يوم بقيمة {total_amount:.2f}',
             'date': fee.due_date,
             'url': url_for('mobile.fee_details', fee_id=fee.id),
             'is_read': False
