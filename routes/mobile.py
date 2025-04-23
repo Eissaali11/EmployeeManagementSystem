@@ -2316,6 +2316,8 @@ def create_handover(vehicle_id):
         handover_type = request.form.get('handover_type')
         handover_date = datetime.strptime(request.form.get('handover_date'), '%Y-%m-%d').date()
         person_name = request.form.get('person_name')
+        supervisor_name = request.form.get('supervisor_name', '')
+        form_link = request.form.get('form_link', '')
         vehicle_condition = request.form.get('vehicle_condition')
         fuel_level = request.form.get('fuel_level')
         mileage_str = request.form.get('mileage', '0')
@@ -2333,6 +2335,8 @@ def create_handover(vehicle_id):
             handover_type=handover_type,
             handover_date=handover_date,
             person_name=person_name,
+            supervisor_name=supervisor_name,
+            form_link=form_link,
             vehicle_condition=vehicle_condition,
             fuel_level=fuel_level,
             mileage=mileage,
@@ -2412,6 +2416,8 @@ def handover_pdf(handover_id):
             'type': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
             'date': handover.handover_date.strftime('%Y-%m-%d'),
             'person_name': handover.person_name,
+            'supervisor_name': handover.supervisor_name or '',
+            'form_link': handover.form_link or '',
             'vehicle': {
                 'plate_number': vehicle.plate_number,
                 'make': vehicle.make,

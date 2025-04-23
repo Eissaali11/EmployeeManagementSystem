@@ -46,9 +46,22 @@
                     {{ handover.person_name }}
                 </div>
                 <div class="col-6 mb-3">
+                    <strong class="d-block text-muted small">المشرف:</strong>
+                    {{ handover.supervisor_name or 'غير محدد' }}
+                </div>
+                <div class="col-6 mb-3">
                     <strong class="d-block text-muted small">قراءة العداد:</strong>
                     {{ handover.mileage }} كم
                 </div>
+                {% if handover.form_link %}
+                <div class="col-6 mb-3">
+                    <strong class="d-block text-muted small">رابط النموذج:</strong>
+                    <a href="{{ handover.form_link }}" target="_blank" class="text-primary">
+                        <i class="fas fa-external-link-alt ms-1"></i>
+                        فتح الرابط
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
