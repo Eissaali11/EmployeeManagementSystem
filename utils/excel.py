@@ -805,7 +805,10 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
     try:
         output = BytesIO()
         workbook = xlsxwriter.Workbook(output)
-        worksheet = workbook.add_worksheet(f"Attendance-{employee.name}")
+        
+        # اختصار اسم ورقة Excel لتكون أقل من 31 حرفاً (الحد الأقصى المسموح به)
+        sheet_name = f"Attendance-{employee.employee_id}"
+        worksheet = workbook.add_worksheet(sheet_name)
         
         # تنسيقات الخلايا
         header_format = workbook.add_format({
