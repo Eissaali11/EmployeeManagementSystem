@@ -2360,7 +2360,6 @@ def create_handover(vehicle_id):
                 'VehicleHandover',
                 handover.id,
                 description,
-                vehicle.plate_number,
                 entity_name=f"سيارة: {vehicle.plate_number}"
             )
             
