@@ -1786,7 +1786,10 @@ def create_safety_check(id):
         # معلومات السائق
         driver_id = request.form.get('driver_id')
         driver_name = request.form.get('driver_name')
-        if driver_id:
+        # تحويل قيمة فارغة إلى None
+        if not driver_id or driver_id == '':
+            driver_id = None
+        else:
             driver = Employee.query.get(driver_id)
             if driver:
                 driver_name = driver.name
@@ -1794,7 +1797,10 @@ def create_safety_check(id):
         # معلومات المشرف
         supervisor_id = request.form.get('supervisor_id')
         supervisor_name = request.form.get('supervisor_name')
-        if supervisor_id:
+        # تحويل قيمة فارغة إلى None
+        if not supervisor_id or supervisor_id == '':
+            supervisor_id = None
+        else:
             supervisor = Employee.query.get(supervisor_id)
             if supervisor:
                 supervisor_name = supervisor.name
@@ -1855,18 +1861,28 @@ def edit_safety_check(id):
         safety_check.check_type = request.form.get('check_type')
         
         # معلومات السائق
-        safety_check.driver_id = request.form.get('driver_id')
+        driver_id = request.form.get('driver_id')
         safety_check.driver_name = request.form.get('driver_name')
-        if safety_check.driver_id:
-            driver = Employee.query.get(safety_check.driver_id)
+        
+        # تحويل قيمة فارغة إلى None
+        if not driver_id or driver_id == '':
+            safety_check.driver_id = None
+        else:
+            safety_check.driver_id = driver_id
+            driver = Employee.query.get(driver_id)
             if driver:
                 safety_check.driver_name = driver.name
         
         # معلومات المشرف
-        safety_check.supervisor_id = request.form.get('supervisor_id')
+        supervisor_id = request.form.get('supervisor_id')
         safety_check.supervisor_name = request.form.get('supervisor_name')
-        if safety_check.supervisor_id:
-            supervisor = Employee.query.get(safety_check.supervisor_id)
+        
+        # تحويل قيمة فارغة إلى None
+        if not supervisor_id or supervisor_id == '':
+            safety_check.supervisor_id = None
+        else:
+            safety_check.supervisor_id = supervisor_id
+            supervisor = Employee.query.get(supervisor_id)
             if supervisor:
                 safety_check.supervisor_name = supervisor.name
         
