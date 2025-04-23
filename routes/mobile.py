@@ -764,45 +764,83 @@ def vehicle_details(vehicle_id):
     # الحصول على بيانات السيارة من قاعدة البيانات
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     
-    # الحصول على سجل الصيانة الخاص بالسيارة
-    maintenance_records = []
+    # الحصول على سجلات مختلفة للسيارة
     try:
-        # محاولة جلب سجلات الصيانة إذا كان النموذج متوفر
+        # الحصول على سجل الصيانة الخاص بالسيارة
         maintenance_records = VehicleMaintenance.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleMaintenance.date.desc()).limit(5).all()
-    except Exception as e:
-        print(f"خطأ في جلب سجلات الصيانة: {str(e)}")
-    
-    # الحصول على سجلات الفحص الدوري
-    periodic_inspections = []
-    try:
-        # محاولة جلب سجلات الفحص الدوري إذا كان النموذج متوفر
+        
+        # الحصول على سجلات الورشة
+        workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleWorkshop.entry_date.desc()).limit(5).all()
+        
+        # الحصول على تعيينات المشاريع
+        project_assignments = VehicleProject.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleProject.start_date.desc()).limit(5).all()
+        
+        # الحصول على سجلات التسليم والاستلام
+        handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).limit(5).all()
+        
+        # الحصول على سجلات الفحص الدوري
         periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle_id).order_by(VehiclePeriodicInspection.inspection_date.desc()).limit(3).all()
+        
+        # الحصول على سجلات فحص السلامة
+        safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleSafetyCheck.check_date.desc()).limit(3).all()
+        
+        # حساب تكلفة الإصلاحات الإجمالية
+        total_maintenance_cost = db.session.query(func.sum(VehicleWorkshop.cost)).filter_by(vehicle_id=vehicle_id).scalar() or 0
+        
+        # حساب عدد الأيام في الورشة (للسنة الحالية)
+        current_year = datetime.now().year
+        days_in_workshop = 0
+        for record in workshop_records:
+            if record.entry_date.year == current_year:
+                if record.exit_date:
+                    days_in_workshop += (record.exit_date - record.entry_date).days
+                else:
+                    days_in_workshop += (datetime.now().date() - record.entry_date).days
+        
+        # ملاحظات تنبيهية عن انتهاء الفحص الدوري
+        inspection_warnings = []
+        for inspection in periodic_inspections:
+            if hasattr(inspection, 'is_expired') and inspection.is_expired:
+                inspection_warnings.append(f"الفحص الدوري منتهي الصلاحية منذ {(datetime.now().date() - inspection.expiry_date).days} يومًا")
+                break
+            elif hasattr(inspection, 'is_expiring_soon') and inspection.is_expiring_soon:
+                days_remaining = (inspection.expiry_date - datetime.now().date()).days
+                inspection_warnings.append(f"الفحص الدوري سينتهي خلال {days_remaining} يومًا")
+                break
+            
     except Exception as e:
-        print(f"خطأ في جلب سجلات الفحص الدوري: {str(e)}")
+        print(f"خطأ في جلب بيانات السيارة: {str(e)}")
+        maintenance_records = []
+        workshop_records = []
+        project_assignments = []
+        handover_records = []
+        periodic_inspections = []
+        safety_checks = []
+        total_maintenance_cost = 0
+        days_in_workshop = 0
+        inspection_warnings = []
     
     # الحصول على وثائق السيارة
     documents = []
-    # يمكننا إضافة منطق لجلب الوثائق لاحقاً
+    # سيتم إضافة منطق لجلب الوثائق لاحقًا
     
     # الحصول على رسوم السيارة
     fees = []
-    # يمكننا إضافة منطق لجلب الرسوم لاحقاً
-    
-    # الحصول على سجلات التسليم والاستلام
-    handover_records = []
-    try:
-        # محاولة جلب سجلات التسليم والاستلام إذا كان النموذج متوفر
-        handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).limit(5).all()
-    except Exception as e:
-        print(f"خطأ في جلب سجلات التسليم والاستلام: {str(e)}")
+    # سيتم إضافة منطق لجلب الرسوم لاحقًا
     
     return render_template('mobile/vehicle_details.html',
                          vehicle=vehicle,
                          maintenance_records=maintenance_records,
-                         periodic_inspections=periodic_inspections,
-                         documents=documents,
+                         workshop_records=workshop_records,
+                         project_assignments=project_assignments,
                          handover_records=handover_records,
-                         fees=fees)
+                         periodic_inspections=periodic_inspections,
+                         safety_checks=safety_checks,
+                         documents=documents,
+                         fees=fees,
+                         total_maintenance_cost=total_maintenance_cost,
+                         days_in_workshop=days_in_workshop,
+                         inspection_warnings=inspection_warnings)
 
 # إضافة سيارة جديدة - النسخة المحمولة
 @mobile_bp.route('/vehicles/add', methods=['GET', 'POST'])
