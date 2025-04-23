@@ -1057,7 +1057,10 @@ def dashboard():
         alerts.append({
             'type': 'workshop',
             'message': f'السيارة {vehicle.plate_number} في الورشة منذ {days} يوم',
-            'vehicle_id': vehicle.id
+            'vehicle_id': vehicle.id,
+            'plate_number': vehicle.plate_number,
+            'make': vehicle.make,
+            'model': vehicle.model
         })
     
     # تنبيهات الإيجارات التي ستنتهي قريباً (خلال أسبوع)
@@ -1074,7 +1077,10 @@ def dashboard():
         alerts.append({
             'type': 'rental',
             'message': f'إيجار السيارة {vehicle.plate_number} سينتهي خلال {days} يوم',
-            'vehicle_id': vehicle.id
+            'vehicle_id': vehicle.id,
+            'plate_number': vehicle.plate_number,
+            'make': vehicle.make,
+            'model': vehicle.model
         })
     
     # إعداد بيانات حالة السيارات بالتنسيق المطلوب في القالب
