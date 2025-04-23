@@ -27,8 +27,24 @@ class LoginForm(FlaskForm):
 
 # الصفحة الرئيسية - النسخة المحمولة
 @mobile_bp.route('/')
+@login_required
 def index():
     """الصفحة الرئيسية للنسخة المحمولة"""
+    # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم
+    from models import Module, UserRole
+    
+    # إذا كان المستخدم لا يملك صلاحيات لرؤية لوحة التحكم، توجيهه إلى أول وحدة مصرح له بالوصول إليها
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.DASHBOARD)):
+        # توجيه المستخدم إلى أول وحدة مصرح له بالوصول إليها
+        if current_user.has_module_access(Module.EMPLOYEES):
+            return redirect(url_for('mobile.employees'))
+        elif current_user.has_module_access(Module.DEPARTMENTS):
+            return redirect(url_for('mobile.departments'))
+        elif current_user.has_module_access(Module.ATTENDANCE):
+            return redirect(url_for('mobile.attendance'))
+        elif current_user.has_module_access(Module.VEHICLES):
+            return redirect(url_for('mobile.vehicles'))
+        # يمكن إضافة المزيد من الوحدات المتاحة على الجوال هنا
     # الإحصائيات الأساسية
     stats = {
         'employees_count': Employee.query.count(),

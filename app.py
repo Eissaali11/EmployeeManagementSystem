@@ -129,7 +129,28 @@ def root():
         # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم
         if current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.DASHBOARD):
             return redirect(url_for('dashboard.index'))
+        
+        # توجيه المستخدم إلى أول وحدة مصرح له بالوصول إليها
+        if current_user.has_module_access(Module.EMPLOYEES):
+            return redirect(url_for('employees.index'))
+        elif current_user.has_module_access(Module.DEPARTMENTS):
+            return redirect(url_for('departments.index'))
+        elif current_user.has_module_access(Module.ATTENDANCE):
+            return redirect(url_for('attendance.index'))
+        elif current_user.has_module_access(Module.SALARIES):
+            return redirect(url_for('salaries.index'))
+        elif current_user.has_module_access(Module.DOCUMENTS):
+            return redirect(url_for('documents.index'))
+        elif current_user.has_module_access(Module.VEHICLES):
+            return redirect(url_for('vehicles.index'))
+        elif current_user.has_module_access(Module.REPORTS):
+            return redirect(url_for('reports.index'))
+        elif current_user.has_module_access(Module.FEES):
+            return redirect(url_for('fees_costs.index'))
+        elif current_user.has_module_access(Module.USERS):
+            return redirect(url_for('users.index'))
         else:
+            # إذا لم يكن له أي صلاحية، عرض الصفحة المقيدة
             return render_template('restricted.html')
     else:
         return redirect(url_for('auth.login'))
