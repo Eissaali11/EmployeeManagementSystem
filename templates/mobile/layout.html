@@ -175,9 +175,22 @@
             </a>
           </li>
           <li class="sidebar-menu-item">
-            <a href="{{ url_for('mobile.fees') }}" class="sidebar-menu-link {{ 'active' if 'fees' in request.endpoint }}">
+            <a href="{{ url_for('mobile.fees_old') }}" class="sidebar-menu-link {{ 'active' if 'fees' in request.endpoint }}">
               <span class="sidebar-menu-icon"><i class="fas fa-dollar-sign"></i></span>
               <span class="sidebar-menu-text">الرسوم والتكاليف</span>
+            </a>
+          </li>
+          <!-- الميزات الجديدة المضافة للتطبيق المحمول -->
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.users_new') }}" class="sidebar-menu-link {{ 'active' if 'users_new' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-user-cog"></i></span>
+              <span class="sidebar-menu-text">إدارة المستخدمين</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.fees_new') }}" class="sidebar-menu-link {{ 'active' if 'fees_new' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-receipt"></i></span>
+              <span class="sidebar-menu-text">الرسوم والتكاليف (مطور)</span>
             </a>
           </li>
         </ul>
@@ -283,17 +296,17 @@
         </div>
         <div class="mobile-footer-text">السيارات</div>
       </a>
-      <a href="{{ url_for('mobile.vehicle_checklist_list') }}" class="mobile-footer-item {{ 'active' if 'vehicle_checklist' in request.endpoint }}">
+      <a href="{{ url_for('mobile.users_new') }}" class="mobile-footer-item {{ 'active' if 'users_new' in request.endpoint }}">
         <div class="mobile-footer-icon">
-          <i class="fas fa-clipboard-check"></i>
+          <i class="fas fa-user-cog"></i>
         </div>
-        <div class="mobile-footer-text">تشيك لست</div>
+        <div class="mobile-footer-text">المستخدمين</div>
       </a>
-      <a href="{{ url_for('mobile.settings') }}" class="mobile-footer-item {{ 'active' if request.endpoint == 'mobile.settings' }}">
+      <a href="{{ url_for('mobile.notifications_new') }}" class="mobile-footer-item {{ 'active' if 'notifications_new' in request.endpoint }}">
         <div class="mobile-footer-icon">
-          <i class="fas fa-cog"></i>
+          <i class="fas fa-bell"></i>
         </div>
-        <div class="mobile-footer-text">الإعدادات</div>
+        <div class="mobile-footer-text">الإشعارات</div>
       </a>
     </footer>
   </div>
