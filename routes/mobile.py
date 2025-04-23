@@ -2304,4 +2304,158 @@ def notifications_new():
                           pagination=pagination,
                           current_date=current_date)
 
+# إنشاء نموذج تسليم/استلام - النسخة المحمولة
+@mobile_bp.route('/vehicles/handover/create/<int:vehicle_id>', methods=['GET', 'POST'])
+@login_required
+def create_handover(vehicle_id):
+    """إنشاء نموذج تسليم/استلام للسيارة للنسخة المحمولة"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        # استخراج البيانات من النموذج
+        handover_type = request.form.get('handover_type')
+        handover_date = datetime.strptime(request.form.get('handover_date'), '%Y-%m-%d').date()
+        person_name = request.form.get('person_name')
+        vehicle_condition = request.form.get('vehicle_condition')
+        fuel_level = request.form.get('fuel_level')
+        mileage = int(request.form.get('mileage'))
+        has_spare_tire = 'has_spare_tire' in request.form
+        has_fire_extinguisher = 'has_fire_extinguisher' in request.form
+        has_jack = 'has_jack' in request.form
+        has_tools = 'has_tools' in request.form
+        has_first_aid = 'has_first_aid' in request.form
+        has_warning_triangle = 'has_warning_triangle' in request.form
+        vehicle_cleanliness = request.form.get('vehicle_cleanliness')
+        injuries = request.form.get('injuries', '')
+        damages = request.form.get('damages', '')
+        notes = request.form.get('notes', '')
+        
+        # إنشاء سجل تسليم/استلام جديد
+        handover = VehicleHandover(
+            vehicle_id=vehicle_id,
+            handover_type=handover_type,
+            handover_date=handover_date,
+            person_name=person_name,
+            vehicle_condition=vehicle_condition,
+            fuel_level=fuel_level,
+            mileage=mileage,
+            has_spare_tire=has_spare_tire,
+            has_fire_extinguisher=has_fire_extinguisher,
+            has_jack=has_jack,
+            has_tools=has_tools,
+            has_first_aid=has_first_aid,
+            has_warning_triangle=has_warning_triangle,
+            vehicle_cleanliness=vehicle_cleanliness,
+            injuries=injuries,
+            damages=damages,
+            notes=notes
+        )
+        
+        try:
+            db.session.add(handover)
+            db.session.commit()
+            
+            # تسجيل نشاط النظام
+            description = f"تم إنشاء نموذج {'تسليم' if handover_type == 'delivery' else 'استلام'} للسيارة {vehicle.plate_number}"
+            SystemAudit.create_audit_record(
+                current_user.id,
+                'إنشاء',
+                'VehicleHandover',
+                handover.id,
+                description,
+                vehicle.plate_number,
+                entity_name=f"سيارة: {vehicle.plate_number}"
+            )
+            
+            flash('تم إنشاء نموذج التسليم/الاستلام بنجاح', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء إنشاء النموذج: {str(e)}', 'danger')
+    
+    # عرض نموذج إنشاء تسليم/استلام
+    return render_template('mobile/create_handover.html', 
+                           vehicle=vehicle,
+                           now=datetime.now())
+
+# عرض تفاصيل نموذج تسليم/استلام - النسخة المحمولة
+@mobile_bp.route('/vehicles/handover/<int:handover_id>')
+@login_required
+def view_handover(handover_id):
+    """عرض تفاصيل نموذج تسليم/استلام للنسخة المحمولة"""
+    handover = VehicleHandover.query.get_or_404(handover_id)
+    vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+    images = VehicleHandoverImage.query.filter_by(handover_record_id=handover_id).all()
+    
+    # تنسيق التاريخ للعرض
+    handover.formatted_handover_date = handover.handover_date.strftime('%Y-%m-%d')
+    
+    handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
+    
+    return render_template('mobile/handover_view.html',
+                           handover=handover,
+                           vehicle=vehicle,
+                           images=images,
+                           handover_type_name=handover_type_name)
+
+# إنشاء ملف PDF لنموذج تسليم/استلام - النسخة المحمولة
+@mobile_bp.route('/vehicles/handover/<int:handover_id>/pdf')
+@login_required
+def handover_pdf(handover_id):
+    """إنشاء نموذج تسليم/استلام كملف PDF للنسخة المحمولة"""
+    from flask import send_file
+    import io
+    from utils.pdf_generator_fixed import generate_vehicle_handover_pdf
+    
+    try:
+        # الحصول على بيانات التسليم/الاستلام
+        handover = VehicleHandover.query.get_or_404(handover_id)
+        vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+        images = VehicleHandoverImage.query.filter_by(handover_record_id=handover_id).all()
+        
+        # تجهيز البيانات لملف PDF
+        handover_data = {
+            'id': handover.id,
+            'type': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
+            'date': handover.handover_date.strftime('%Y-%m-%d'),
+            'person_name': handover.person_name,
+            'vehicle': {
+                'plate_number': vehicle.plate_number,
+                'make': vehicle.make,
+                'model': vehicle.model,
+                'year': vehicle.year,
+                'color': vehicle.color
+            },
+            'condition': handover.vehicle_condition,
+            'fuel_level': handover.fuel_level,
+            'mileage': handover.mileage,
+            'has_spare_tire': handover.has_spare_tire,
+            'has_fire_extinguisher': handover.has_fire_extinguisher,
+            'has_jack': handover.has_jack,
+            'has_tools': handover.has_tools,
+            'has_first_aid': handover.has_first_aid,
+            'has_warning_triangle': handover.has_warning_triangle,
+            'cleanliness': handover.vehicle_cleanliness,
+            'injuries': handover.injuries,
+            'damages': handover.damages,
+            'notes': handover.notes,
+            'image_paths': [image.image_path for image in images] if images else []
+        }
+        
+        # إنشاء ملف PDF
+        pdf_bytes = generate_vehicle_handover_pdf(handover_data)
+        
+        # إرسال الملف كاستجابة
+        filename = f"نموذج_{handover_data['type']}_{vehicle.plate_number}_{handover.handover_date.strftime('%Y%m%d')}.pdf"
+        
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء إنشاء ملف PDF: {str(e)}', 'danger')
+        return redirect(url_for('mobile.view_handover', handover_id=handover_id))
+
 
