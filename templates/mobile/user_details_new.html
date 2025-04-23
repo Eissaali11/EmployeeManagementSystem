@@ -137,35 +137,35 @@
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                {% if permission.permissions & 1 %}
+                                {% if permission.permissions|bitwise_and(1) %}
                                 <span class="text-success"><i class="fas fa-check-circle"></i></span>
                                 {% else %}
                                 <span class="text-danger"><i class="fas fa-times-circle"></i></span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                {% if permission.permissions & 2 %}
+                                {% if permission.permissions|bitwise_and(2) %}
                                 <span class="text-success"><i class="fas fa-check-circle"></i></span>
                                 {% else %}
                                 <span class="text-danger"><i class="fas fa-times-circle"></i></span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                {% if permission.permissions & 4 %}
+                                {% if permission.permissions|bitwise_and(4) %}
                                 <span class="text-success"><i class="fas fa-check-circle"></i></span>
                                 {% else %}
                                 <span class="text-danger"><i class="fas fa-times-circle"></i></span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                {% if permission.permissions & 8 %}
+                                {% if permission.permissions|bitwise_and(8) %}
                                 <span class="text-success"><i class="fas fa-check-circle"></i></span>
                                 {% else %}
                                 <span class="text-danger"><i class="fas fa-times-circle"></i></span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                {% if permission.permissions & 16 %}
+                                {% if permission.permissions|bitwise_and(16) %}
                                 <span class="text-success"><i class="fas fa-check-circle"></i></span>
                                 {% else %}
                                 <span class="text-danger"><i class="fas fa-times-circle"></i></span>

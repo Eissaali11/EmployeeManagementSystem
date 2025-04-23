@@ -2231,10 +2231,19 @@ def notifications_new():
     end_idx = min(start_idx + per_page, total_notifications)
     current_notifications = notifications[start_idx:end_idx]
     
-    # إنشاء كائن تقسيم صفحات يدوي
-    from flask_sqlalchemy import Pagination
-    pagination = Pagination(query=None, page=page, per_page=per_page, 
-                           total=total_notifications, items=current_notifications)
+    # إنشاء كائن تقسيم صفحات بسيط
+    # نستخدم قاموس بدلاً من كائن Pagination لتبسيط التنفيذ
+    pagination = {
+        'page': page,
+        'per_page': per_page,
+        'total': total_notifications,
+        'pages': (total_notifications + per_page - 1) // per_page,
+        'items': current_notifications,
+        'has_prev': page > 1,
+        'has_next': page < ((total_notifications + per_page - 1) // per_page),
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page < ((total_notifications + per_page - 1) // per_page) else None
+    }
     
     return render_template('mobile/notifications_new.html',
                           notifications=current_notifications,
