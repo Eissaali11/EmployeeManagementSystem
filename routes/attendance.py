@@ -301,6 +301,7 @@ def multi_day_department_attendance():
                 action='mass_update_range',
                 entity_type='attendance',
                 entity_id=0,
+                entity_name=department.name,
                 details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {len(employees)} موظف'
             )
             db.session.add(audit)
