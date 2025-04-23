@@ -130,10 +130,10 @@
             الفحص الدوري
         </h6>
         <div>
-            <button class="btn btn-sm btn-success">
+            <a href="{{ url_for('vehicles.create_periodic_inspection', id=vehicle.id) }}" class="btn btn-sm btn-success">
                 <i class="fas fa-plus ms-1"></i>
                 إضافة فحص
-            </button>
+            </a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -178,10 +178,10 @@
             فحوصات السلامة
         </h6>
         <div>
-            <button class="btn btn-sm btn-success">
+            <a href="{{ url_for('vehicles.create_safety_check', id=vehicle.id) }}" class="btn btn-sm btn-success">
                 <i class="fas fa-plus ms-1"></i>
                 فحص جديد
-            </button>
+            </a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -249,7 +249,7 @@
             الوثائق والمرفقات
         </h6>
         <div>
-            <button class="btn btn-sm btn-success">
+            <button class="btn btn-sm btn-success" disabled>
                 <i class="fas fa-plus ms-1"></i>
                 إضافة وثيقة
             </button>
