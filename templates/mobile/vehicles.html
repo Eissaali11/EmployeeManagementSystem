@@ -202,8 +202,10 @@
 {% if pagination and pagination.pages > 1 %}
 <div class="pagination-container mt-3">
     {% if pagination.has_prev %}
-    {% set args = request.args.copy() %}
-    {% if args.get('page') %}{% do args.pop('page') %}{% endif %}
+    {% set args = {} %}
+    {% for key, value in request.args.items() if key != 'page' %}
+        {% set _ = args.update({key: value}) %}
+    {% endfor %}
     <a href="{{ url_for('mobile.vehicles', page=pagination.prev_num, **args) }}" class="pagination-item">
         <i class="fas fa-chevron-right"></i>
     </a>
@@ -212,8 +214,10 @@
     {% for page in pagination.iter_pages() %}
         {% if page %}
             {% if page != pagination.page %}
-            {% set args = request.args.copy() %}
-            {% if args.get('page') %}{% do args.pop('page') %}{% endif %}
+            {% set args = {} %}
+            {% for key, value in request.args.items() if key != 'page' %}
+                {% set _ = args.update({key: value}) %}
+            {% endfor %}
             <a href="{{ url_for('mobile.vehicles', page=page, **args) }}" class="pagination-item">{{ page }}</a>
             {% else %}
             <span class="pagination-item active">{{ page }}</span>
@@ -224,8 +228,10 @@
     {% endfor %}
     
     {% if pagination.has_next %}
-    {% set args = request.args.copy() %}
-    {% if args.get('page') %}{% do args.pop('page') %}{% endif %}
+    {% set args = {} %}
+    {% for key, value in request.args.items() if key != 'page' %}
+        {% set _ = args.update({key: value}) %}
+    {% endfor %}
     <a href="{{ url_for('mobile.vehicles', page=pagination.next_num, **args) }}" class="pagination-item">
         <i class="fas fa-chevron-left"></i>
     </a>

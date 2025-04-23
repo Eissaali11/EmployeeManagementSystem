@@ -2526,10 +2526,8 @@ def create_safety_check(vehicle_id):
             # استخراج البيانات من النموذج
             check_date = datetime.strptime(request.form.get('check_date'), '%Y-%m-%d').date()
             check_type = request.form.get('check_type')
-            driver_id_str = request.form.get('driver_id', '')
-            driver_id = int(driver_id_str) if driver_id_str and driver_id_str.isdigit() else None
-            supervisor_id_str = request.form.get('supervisor_id', '')
-            supervisor_id = int(supervisor_id_str) if supervisor_id_str and supervisor_id_str.isdigit() else None
+            driver_name = request.form.get('driver_name', '')
+            supervisor_name = request.form.get('supervisor_name', '')
             result = request.form.get('result')
             notes = request.form.get('notes', '')
             
@@ -2538,8 +2536,8 @@ def create_safety_check(vehicle_id):
                 vehicle_id=vehicle_id,
                 check_date=check_date,
                 check_type=check_type,
-                driver_id=driver_id,
-                supervisor_id=supervisor_id,
+                driver_name=driver_name,
+                supervisor_name=supervisor_name,
                 result=result,
                 notes=notes
             )

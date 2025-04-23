@@ -55,24 +55,14 @@
 
                 <!-- السائق -->
                 <div class="mb-3">
-                    <label for="driver_id" class="form-label">السائق</label>
-                    <select class="form-select" id="driver_id" name="driver_id">
-                        <option value="">-- اختر السائق --</option>
-                        {% for driver in drivers %}
-                        <option value="{{ driver.id }}">{{ driver.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <label for="driver_name" class="form-label">اسم السائق</label>
+                    <input type="text" class="form-control" id="driver_name" name="driver_name" placeholder="أدخل اسم السائق">
                 </div>
 
                 <!-- المشرف -->
                 <div class="mb-3">
-                    <label for="supervisor_id" class="form-label">المشرف</label>
-                    <select class="form-select" id="supervisor_id" name="supervisor_id">
-                        <option value="">-- اختر المشرف --</option>
-                        {% for supervisor in supervisors %}
-                        <option value="{{ supervisor.id }}">{{ supervisor.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <label for="supervisor_name" class="form-label">اسم المشرف</label>
+                    <input type="text" class="form-control" id="supervisor_name" name="supervisor_name" placeholder="أدخل اسم المشرف">
                 </div>
 
                 <!-- نتيجة الفحص -->
