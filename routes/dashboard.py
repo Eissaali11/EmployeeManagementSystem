@@ -1,14 +1,16 @@
-from flask import Blueprint, render_template, jsonify, redirect, url_for
+from flask import Blueprint, render_template, jsonify, redirect, url_for, flash
 from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 from flask_login import login_required, current_user
-from models import Employee, Department, Attendance, Document, Salary
+from models import Employee, Department, Attendance, Document, Salary, Module, UserRole
 from app import db
+from utils.decorators import module_access_required
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/')
 @login_required
+@module_access_required(Module.DASHBOARD)
 def index():
     """Main dashboard with overview of system statistics"""
     # Get basic statistics

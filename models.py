@@ -126,6 +126,7 @@ class Permission:
 
 # صلاحيات الأقسام
 class Module(enum.Enum):
+    DASHBOARD = 'dashboard'   # لوحة التحكم
     EMPLOYEES = 'employees'
     ATTENDANCE = 'attendance'
     DEPARTMENTS = 'departments'
