@@ -236,14 +236,21 @@ def multi_day_department_attendance():
             status = request.form['status']
             
             # تحليل التواريخ
-            start_date = parse_date(start_date_str)
-            end_date = parse_date(end_date_str)
-            
-            # التحقق من صحة النطاق
-            if end_date < start_date:
-                flash('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له.', 'danger')
+            try:
+                start_date = parse_date(start_date_str)
+                end_date = parse_date(end_date_str)
+                
+                if not start_date or not end_date:
+                    raise ValueError("تاريخ غير صالح")
+                
+                # التحقق من صحة النطاق
+                if end_date < start_date:
+                    flash('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له.', 'danger')
+                    return redirect(url_for('attendance.multi_day_department_attendance'))
+            except (ValueError, TypeError) as e:
+                flash(f'خطأ في تنسيق التاريخ: {str(e)}', 'danger')
                 return redirect(url_for('attendance.multi_day_department_attendance'))
-            
+                
             # الحصول على جميع الموظفين في القسم
             employees = Employee.query.filter_by(
                 department_id=department_id,
@@ -375,8 +382,8 @@ def stats():
         result[status] = count
     
     return jsonify({
-        'start_date': start_date.isoformat(),
-        'end_date': end_date.isoformat(),
+        'start_date': start_date.isoformat() if start_date else None,
+        'end_date': end_date.isoformat() if end_date else None,
         'stats': result
     })
 
@@ -421,10 +428,15 @@ def export_excel():
         output = export_attendance_by_department(employees, attendances, start_date, end_date)
         
         # تحديد اسم الملف
-        if start_date == end_date:
-            filename = f"سجل_الحضور_{start_date.strftime('%Y-%m-%d')}.xlsx"
+        if start_date is not None and end_date is not None:
+            if start_date == end_date:
+                filename = f"سجل_الحضور_{start_date.strftime('%Y-%m-%d')}.xlsx"
+            else:
+                filename = f"سجل_الحضور_{start_date.strftime('%Y-%m-%d')}_إلى_{end_date.strftime('%Y-%m-%d')}.xlsx"
         else:
-            filename = f"سجل_الحضور_{start_date.strftime('%Y-%m-%d')}_إلى_{end_date.strftime('%Y-%m-%d')}.xlsx"
+            # حالة احتياطية
+            today = datetime.now().date()
+            filename = f"سجل_الحضور_{today.strftime('%Y-%m-%d')}.xlsx"
         
         # إرسال الملف للتنزيل
         return send_file(

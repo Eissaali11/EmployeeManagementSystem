@@ -8,9 +8,14 @@
             <a href="{{ url_for('attendance.record') }}" class="btn btn-success">
                 <i class="fas fa-user-check me-1"></i> تسجيل حضور لموظف
             </a>
-            <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary">
-                <i class="fas fa-users me-1"></i> تسجيل حضور لقسم
-            </a>
+            <div class="btn-group me-2">
+                <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary">
+                    <i class="fas fa-users me-1"></i> تسجيل حضور لقسم
+                </a>
+                <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn btn-secondary">
+                    <i class="fas fa-calendar-week me-1"></i> تسجيل لعدة أيام
+                </a>
+            </div>
             <a href="{{ url_for('attendance.export_page') }}" class="btn btn-info text-white">
                 <i class="fas fa-file-excel me-1"></i> تصدير لملف إكسل
             </a>
@@ -163,6 +168,9 @@
                     </a>
                     <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary mx-2">
                         <i class="fas fa-users me-1"></i> تسجيل حضور لقسم
+                    </a>
+                    <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn btn-secondary mx-2">
+                        <i class="fas fa-calendar-week me-1"></i> تسجيل لعدة أيام
                     </a>
                 </div>
             </div>
