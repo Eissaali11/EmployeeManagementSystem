@@ -12,7 +12,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
 
@@ -765,32 +765,33 @@ def vehicle_details(vehicle_id):
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     
     # الحصول على سجل الصيانة الخاص بالسيارة
-    # تحتاج هذه العملية إلى تعديل في النموذج لكي تعمل، الآن نستخدم بيانات تجريبية
     maintenance_records = []
+    try:
+        # محاولة جلب سجلات الصيانة إذا كان النموذج متوفر
+        maintenance_records = VehicleMaintenance.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleMaintenance.date.desc()).limit(5).all()
+    except Exception as e:
+        print(f"خطأ في جلب سجلات الصيانة: {str(e)}")
     
-    # الحصول على وثائق السيارة من قاعدة البيانات
+    # الحصول على سجلات الفحص الدوري
+    periodic_inspections = []
+    try:
+        # محاولة جلب سجلات الفحص الدوري إذا كان النموذج متوفر
+        periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle_id).order_by(VehiclePeriodicInspection.inspection_date.desc()).limit(3).all()
+    except Exception as e:
+        print(f"خطأ في جلب سجلات الفحص الدوري: {str(e)}")
+    
+    # الحصول على وثائق السيارة
     documents = []
+    # يمكننا إضافة منطق لجلب الوثائق لاحقاً
     
-    # الحصول على رسوم السيارة من قاعدة البيانات
+    # الحصول على رسوم السيارة
     fees = []
-    
-    # تحويل البيانات إلى التنسيق المطلوب للعرض في النسخة المحمولة
-    vehicle_data = {
-        'id': vehicle.id,
-        'name': f"{vehicle.make} {vehicle.model}",
-        'plate_number': vehicle.plate_number,
-        'model': vehicle.model,
-        'year': vehicle.year,
-        'color': vehicle.color,
-        'status': vehicle.status,
-        'status_display': vehicle.status,  # يمكن إضافة معالجة للترجمة
-        # التحقق من وجود الحقول قبل إضافتها لتفادي أخطاء AttributeError
-        'notes': vehicle.notes if hasattr(vehicle, 'notes') else ''
-    }
+    # يمكننا إضافة منطق لجلب الرسوم لاحقاً
     
     return render_template('mobile/vehicle_details.html',
-                         vehicle=vehicle_data,
+                         vehicle=vehicle,
                          maintenance_records=maintenance_records,
+                         periodic_inspections=periodic_inspections,
                          documents=documents,
                          fees=fees)
 
