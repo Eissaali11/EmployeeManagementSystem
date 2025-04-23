@@ -453,7 +453,8 @@ def salaries():
     selected_month = request.args.get('month', current_month, type=int)
     
     # فلترة الموظف
-    employee_id = request.args.get('employee_id', None, type=int)
+    employee_id_str = request.args.get('employee_id', '')
+    employee_id = int(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
     
     # تحويل الشهر إلى اسمه بالعربية
     month_names = {
@@ -520,7 +521,8 @@ def salary_details(salary_id):
 def documents():
     """صفحة الوثائق للنسخة المحمولة"""
     # فلترة الوثائق بناءً على البارامترات
-    employee_id = request.args.get('employee_id', type=int)
+    employee_id_str = request.args.get('employee_id', '')
+    employee_id = int(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
     document_type = request.args.get('document_type')
     status = request.args.get('status')  # valid, expiring, expired
     page = request.args.get('page', 1, type=int)
@@ -774,7 +776,8 @@ def vehicle_maintenance():
     """سجل صيانة السيارات للنسخة المحمولة"""
     # معايير التصفية
     status_filter = request.args.get('status', '')
-    vehicle_id = request.args.get('vehicle_id', '', type=int)
+    vehicle_id_str = request.args.get('vehicle_id', '')
+    vehicle_id = int(vehicle_id_str) if vehicle_id_str and vehicle_id_str.isdigit() else None
     maintenance_type = request.args.get('maintenance_type', '')
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
@@ -1523,7 +1526,8 @@ def check_connection():
 def vehicle_expenses():
     """صفحة مصروفات الوقود للسيارات - النسخة المحمولة"""
     # الحصول على معلمات الفلاتر
-    vehicle_id = request.args.get('vehicle_id', type=int)
+    vehicle_id_str = request.args.get('vehicle_id', '')
+    vehicle_id = int(vehicle_id_str) if vehicle_id_str and vehicle_id_str.isdigit() else None
     period = request.args.get('period', 'month')  # الفترة الزمنية: week, month, quarter, year
     
     # تحديد تاريخ البداية حسب الفترة
@@ -1748,7 +1752,8 @@ def add_fuel_consumption():
 def fuel_consumption_stats():
     """صفحة إحصائيات استهلاك الوقود - النسخة المحمولة"""
     # الحصول على معلمات الفلاتر
-    vehicle_id = request.args.get('vehicle_id', type=int)
+    vehicle_id_str = request.args.get('vehicle_id', '')
+    vehicle_id = int(vehicle_id_str) if vehicle_id_str and vehicle_id_str.isdigit() else None
     fuel_type = request.args.get('fuel_type', '')
     period = request.args.get('period', 'month')  # الفترة الزمنية: week, month, quarter, year, custom
     
