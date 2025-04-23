@@ -322,10 +322,10 @@
             {% endif %}
         </h6>
         <div>
-            <button class="btn btn-sm btn-primary">
+            <a href="{{ url_for('mobile.create_handover', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
                 <i class="fas fa-plus ms-1"></i>
                 إضافة تسليم/استلام
-            </button>
+            </a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -354,10 +354,10 @@
                         <td>{{ record.person_name }}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="#" class="btn btn-outline-primary">
+                                <a href="{{ url_for('mobile.view_handover', handover_id=record.id) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="#" class="btn btn-outline-danger">
+                                <a href="{{ url_for('mobile.handover_pdf', handover_id=record.id) }}" class="btn btn-outline-danger">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                             </div>
