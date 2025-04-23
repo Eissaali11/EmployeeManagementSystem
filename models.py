@@ -300,6 +300,8 @@ class Vehicle(db.Model):
     workshop_records = db.relationship('VehicleWorkshop', back_populates='vehicle', cascade='all, delete-orphan')
     project_assignments = db.relationship('VehicleProject', back_populates='vehicle', cascade='all, delete-orphan')
     handover_records = db.relationship('VehicleHandover', back_populates='vehicle', cascade='all, delete-orphan')
+    periodic_inspections = db.relationship('VehiclePeriodicInspection', back_populates='vehicle', cascade='all, delete-orphan')
+    safety_checks = db.relationship('VehicleSafetyCheck', back_populates='vehicle', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Vehicle {self.plate_number} {self.make} {self.model}>'

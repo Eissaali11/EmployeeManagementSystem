@@ -10,7 +10,11 @@ import urllib.parse
 from fpdf import FPDF
 
 from app import db
-from models import Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit
+from models import (
+    Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
+    VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
+    VehiclePeriodicInspection, VehicleSafetyCheck, Employee
+)
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.vehicle_report import generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
@@ -45,6 +49,34 @@ REPAIR_STATUS_CHOICES = [
 HANDOVER_TYPE_CHOICES = [
     'delivery',  # تسليم
     'return'  # استلام
+]
+
+# قائمة بأنواع الفحص الدوري
+INSPECTION_TYPE_CHOICES = [
+    'technical',  # فحص فني
+    'periodic',   # فحص دوري
+    'safety'      # فحص أمان
+]
+
+# قائمة بحالات الفحص الدوري
+INSPECTION_STATUS_CHOICES = [
+    'valid',          # ساري
+    'expired',        # منتهي
+    'expiring_soon'   # على وشك الانتهاء
+]
+
+# قائمة بأنواع فحص السلامة
+SAFETY_CHECK_TYPE_CHOICES = [
+    'daily',    # يومي
+    'weekly',   # أسبوعي
+    'monthly'   # شهري
+]
+
+# قائمة بحالات فحص السلامة
+SAFETY_CHECK_STATUS_CHOICES = [
+    'completed',      # مكتمل
+    'in_progress',    # قيد التنفيذ
+    'needs_review'    # بحاجة للمراجعة
 ]
 
 # الوظائف المساعدة
@@ -221,6 +253,10 @@ def view(id):
     project_assignments = VehicleProject.query.filter_by(vehicle_id=id).order_by(VehicleProject.start_date.desc()).all()
     handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
     
+    # الحصول على سجلات الفحص الدوري وفحص السلامة
+    periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
+    safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
+    
     # حساب تكلفة الإصلاحات الإجمالية
     total_maintenance_cost = db.session.query(func.sum(VehicleWorkshop.cost)).filter_by(vehicle_id=id).scalar() or 0
     
@@ -248,10 +284,28 @@ def view(id):
     for record in handover_records:
         record.formatted_handover_date = format_date_arabic(record.handover_date)
     
+    for record in periodic_inspections:
+        record.formatted_inspection_date = format_date_arabic(record.inspection_date)
+        record.formatted_expiry_date = format_date_arabic(record.expiry_date)
+    
+    for record in safety_checks:
+        record.formatted_check_date = format_date_arabic(record.check_date)
+    
     if rental:
         rental.formatted_start_date = format_date_arabic(rental.start_date)
         if rental.end_date:
             rental.formatted_end_date = format_date_arabic(rental.end_date)
+    
+    # ملاحظات تنبيهية عن انتهاء الفحص الدوري
+    inspection_warnings = []
+    for inspection in periodic_inspections:
+        if inspection.is_expired:
+            inspection_warnings.append(f"الفحص الدوري منتهي الصلاحية منذ {(datetime.now().date() - inspection.expiry_date).days} يومًا")
+            break
+        elif inspection.is_expiring_soon:
+            days_remaining = (inspection.expiry_date - datetime.now().date()).days
+            inspection_warnings.append(f"الفحص الدوري سينتهي خلال {days_remaining} يومًا")
+            break
     
     return render_template(
         'vehicles/view.html',
@@ -260,8 +314,11 @@ def view(id):
         workshop_records=workshop_records,
         project_assignments=project_assignments,
         handover_records=handover_records,
+        periodic_inspections=periodic_inspections,
+        safety_checks=safety_checks,
         total_maintenance_cost=total_maintenance_cost,
-        days_in_workshop=days_in_workshop
+        days_in_workshop=days_in_workshop,
+        inspection_warnings=inspection_warnings
     )
 
 @vehicles_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
