@@ -729,11 +729,9 @@ def vehicles():
     if search_filter:
         search_pattern = f"%{search_filter}%"
         query = query.filter(
-            db.or_(
-                Vehicle.plate_number.like(search_pattern),
-                Vehicle.make.like(search_pattern),
-                Vehicle.model.like(search_pattern)
-            )
+            (Vehicle.plate_number.like(search_pattern)) |
+            (Vehicle.make.like(search_pattern)) |
+            (Vehicle.model.like(search_pattern))
         )
     
     # الحصول على قائمة الشركات المصنعة المتوفرة
