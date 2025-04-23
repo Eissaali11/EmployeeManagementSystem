@@ -1,121 +1,261 @@
 {% extends 'mobile/layout.html' %}
 
-{% block title %}تفاصيل السيارة - نظام إدارة الموظفين{% endblock %}
+{% block title %}تفاصيل السيارة: {{ vehicle.plate_number if vehicle.plate_number else '' }}{% endblock %}
 
 {% block header_title %}تفاصيل السيارة{% endblock %}
 
 {% block content %}
 <!-- التحقق من وجود بيانات السيارة -->
-{% if vehicle %}
-<!-- تعريف متغيرات الروابط التي تسبب الأخطاء -->
-{% set maintenance_details_url = "#" %}
-{% set edit_vehicle_url = url_for('mobile.vehicles') %}
-{% set fee_details_url = "#" %}
-{% else %}
-<!-- عرض رسالة إذا لم يتم العثور على بيانات السيارة -->
-<div class="mobile-card">
-    <div class="mobile-card-content p-4 text-center">
-        <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
-        <h3>عفواً!</h3>
+{% if not vehicle %}
+<div class="alert alert-warning mx-3 mt-3">
+    <div class="text-center py-4">
+        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+        <h5>عفواً!</h5>
         <p>لم يتم العثور على بيانات السيارة المطلوبة.</p>
-        <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-primary mt-3">
-            <i class="fas fa-arrow-right"></i> العودة لقائمة السيارات
+        <a href="{{ url_for('mobile.vehicles') }}" class="btn btn-primary mt-2">
+            <i class="fas fa-arrow-right ms-1"></i> العودة لقائمة السيارات
         </a>
     </div>
 </div>
-{% endif %}
+{% else %}
 
-{% if vehicle %}
-<!-- بطاقة معلومات السيارة -->
-<div class="mobile-card">
-    <div class="vehicle-header" style="background-color: {{ vehicle.color | lower if vehicle.color else '#f8f9fa' }}">
-        <div class="vehicle-name">{{ vehicle.name }}</div>
-        <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
-        <div class="vehicle-status 
-                    {% if vehicle.status == 'active' %}badge bg-success
-                    {% elif vehicle.status == 'maintenance' %}badge bg-warning
-                    {% else %}badge bg-secondary{% endif %}">
-            {{ vehicle.status_display }}
+<!-- شريط الإجراءات -->
+<div class="action-bar my-3 mx-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-car ms-2"></i>
+            <span class="vehicle-plate-display">{{ vehicle.plate_number }}</span>
+        </h5>
+        <div>
+            <a href="{{ url_for('mobile.vehicles') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-right ms-1"></i>
+                العودة
+            </a>
         </div>
     </div>
     
-    <div class="mobile-card-content px-0">
-        <div class="vehicle-details">
-            <div class="detail-section">
-                <h4 class="detail-title">
-                    <i class="fas fa-info-circle"></i> معلومات أساسية
-                </h4>
-                <div class="detail-content">
-                    <div class="detail-item">
-                        <div class="detail-label">الطراز</div>
-                        <div class="detail-value">{{ vehicle.model }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">سنة الصنع</div>
-                        <div class="detail-value">{{ vehicle.year }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">اللون</div>
-                        <div class="detail-value">{{ vehicle.color }}</div>
-                    </div>
-                    <!-- حذف حقول غير موجودة للتجنب الأخطاء -->
-                    <!-- <div class="detail-item">
-                        <div class="detail-label">تاريخ الشراء</div>
-                        <div class="detail-value">{{ vehicle.purchase_date.strftime('%Y-%m-%d') if vehicle.purchase_date else 'غير متوفر' }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">سعر الشراء</div>
-                        <div class="detail-value">{{ '{:,.2f}'.format(vehicle.purchase_price) if vehicle.purchase_price else 'غير متوفر' }}</div>
-                    </div> -->
-                </div>
+    {% if vehicle.status == 'in_workshop' %}
+    <div class="alert alert-warning mt-2 mb-0 py-2 px-3">
+        <i class="fas fa-exclamation-triangle ms-2"></i>
+        هذه السيارة حالياً في الورشة
+    </div>
+    {% endif %}
+</div>
+
+<!-- بطاقة معلومات السيارة الأساسية -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white">
+        <h6 class="mb-0">
+            <i class="fas fa-info-circle ms-2"></i>
+            معلومات السيارة
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="info-row">
+            <div class="info-label">رقم اللوحة:</div>
+            <div class="info-value">{{ vehicle.plate_number }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">النوع:</div>
+            <div class="info-value">{{ vehicle.make }} {{ vehicle.model }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">سنة الصنع:</div>
+            <div class="info-value">{{ vehicle.year }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">اللون:</div>
+            <div class="info-value">
+                <span class="color-badge" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                    {{ vehicle.color }}
+                </span>
             </div>
-            
-            <div class="detail-section">
-                <h4 class="detail-title">
-                    <i class="fas fa-clipboard-check"></i> معلومات التشغيل
-                </h4>
-                <div class="detail-content">
-                    <!-- تم تعليق الحقول غير الموجودة في النموذج -->
-                    <!-- <div class="detail-item">
-                        <div class="detail-label">عداد الكيلومترات</div>
-                        <div class="detail-value">{{ '{:,}'.format(vehicle.odometer) if vehicle.odometer else 0 }} كم</div>
-                    </div> -->
-                    <!-- <div class="detail-item">
-                        <div class="detail-label">نوع الوقود</div>
-                        <div class="detail-value">{{ vehicle.fuel_type }}</div>
-                    </div> -->
-                    <!-- <div class="detail-item">
-                        <div class="detail-label">السائق</div>
-                        <div class="detail-value">{{ vehicle.driver }}</div>
-                    </div> -->
-                    <!-- <div class="detail-item">
-                        <div class="detail-label">القسم</div>
-                        <div class="detail-value">{{ vehicle.department }}</div>
-                    </div> -->
-                </div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">الحالة:</div>
+            <div class="info-value">
+                {% if vehicle.status == 'available' %}
+                    <span class="badge bg-success">متاحة</span>
+                {% elif vehicle.status == 'rented' %}
+                    <span class="badge bg-primary">مؤجرة</span>
+                {% elif vehicle.status == 'in_project' %}
+                    <span class="badge bg-info">في المشروع</span>
+                {% elif vehicle.status == 'in_workshop' %}
+                    <span class="badge bg-warning text-dark">في الورشة</span>
+                {% elif vehicle.status == 'accident' %}
+                    <span class="badge bg-danger">حادث</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                {% endif %}
             </div>
-            
-            {% if vehicle.notes %}
-            <div class="detail-section">
-                <h4 class="detail-title">
-                    <i class="fas fa-clipboard"></i> ملاحظات
-                </h4>
-                <div class="detail-content">
-                    <div class="vehicle-notes">{{ vehicle.notes }}</div>
-                </div>
+        </div>
+        
+        {% if vehicle.notes %}
+        <div class="mt-3">
+            <div class="info-section-title">ملاحظات:</div>
+            <div class="alert alert-light">{{ vehicle.notes }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- معلومات الإيجار -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-money-bill-wave ms-2"></i>
+            معلومات الإيجار
+        </h6>
+        <button class="btn btn-sm btn-primary">
+            <i class="fas fa-plus ms-1"></i>
+            إضافة إيجار
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="text-center py-4">
+            <div class="mb-3">
+                <i class="fas fa-file-contract fa-3x text-muted"></i>
             </div>
-            {% endif %}
+            <h6>لا يوجد إيجار نشط حالياً</h6>
+            <p class="text-muted small px-3">يمكنك إضافة معلومات الإيجار للسيارة من خلال النقر على زر "إضافة إيجار"</p>
         </div>
     </div>
 </div>
 
-<!-- وثائق السيارة -->
-<div class="mobile-card">
-    <div class="mobile-card-title">
-        <i class="fas fa-file-alt"></i> الوثائق
+<!-- الفحص الدوري -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-clipboard-check ms-2"></i>
+            الفحص الدوري
+        </h6>
+        <div>
+            <button class="btn btn-sm btn-success">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة فحص
+            </button>
+        </div>
     </div>
-    
-    <div class="mobile-card-content p-0">
+    <div class="card-body p-0">
+        {% if periodic_inspections %}
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>تاريخ الفحص</th>
+                        <th>تاريخ الانتهاء</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inspection in periodic_inspections[:3] %}
+                    <tr>
+                        <td>{{ inspection.inspection_date }}</td>
+                        <td>{{ inspection.expiry_date }}</td>
+                        <td>
+                            <span class="badge bg-success">ساري</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+            <h6>لا توجد سجلات فحص دوري</h6>
+            <p class="text-muted small px-3">يمكنك إضافة سجل فحص دوري جديد من خلال النقر على زر "إضافة فحص"</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- فحوصات السلامة -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-shield-alt ms-2"></i>
+            فحوصات السلامة
+        </h6>
+        <div>
+            <button class="btn btn-sm btn-success">
+                <i class="fas fa-plus ms-1"></i>
+                فحص جديد
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="text-center py-4">
+            <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+            <h6>لا توجد فحوصات سلامة مسجلة</h6>
+            <p class="text-muted small px-3">يمكنك إضافة فحص سلامة جديد من خلال النقر على زر "فحص جديد"</p>
+        </div>
+    </div>
+</div>
+
+<!-- سجل الصيانة -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-tools ms-2"></i>
+            سجل الصيانة
+        </h6>
+        <div>
+            <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye ms-1"></i>
+                عرض الكل
+            </a>
+            <a href="{{ url_for('mobile.add_maintenance', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-success">
+                <i class="fas fa-plus ms-1"></i>
+                صيانة جديدة
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if maintenance_records %}
+        <div class="maintenance-list">
+            {% for record in maintenance_records %}
+            <a href="#" class="maintenance-item">
+                <div class="maintenance-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
+                <div class="maintenance-content">
+                    <div class="maintenance-type 
+                             {% if record.maintenance_type == 'دورية' %}badge bg-info
+                             {% elif record.maintenance_type == 'طارئة' %}badge bg-warning
+                             {% elif record.maintenance_type == 'إصلاح' %}badge bg-danger
+                             {% else %}badge bg-secondary{% endif %}">
+                        {{ record.maintenance_type }}
+                    </div>
+                    <div class="maintenance-description">{{ record.description }}</div>
+                </div>
+                <div class="maintenance-cost">{{ '{:,.2f}'.format(record.cost) }}</div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+            <h6>لا توجد سجلات صيانة</h6>
+            <p class="text-muted small px-3">يمكنك إضافة سجل صيانة جديد من خلال النقر على زر "صيانة جديدة"</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- مرفقات السيارة -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-paperclip ms-2"></i>
+            الوثائق والمرفقات
+        </h6>
+        <div>
+            <button class="btn btn-sm btn-success">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة وثيقة
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
         <div class="document-stats">
             <div class="doc-stat">
                 <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'valid')|list|length }}</div>
@@ -128,10 +268,6 @@
             <div class="doc-stat danger">
                 <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'expired')|list|length }}</div>
                 <div class="stat-label">منتهية</div>
-            </div>
-            <div class="doc-stat info">
-                <div class="stat-value">{{ documents|length }}</div>
-                <div class="stat-label">الإجمالي</div>
             </div>
         </div>
         
@@ -166,334 +302,203 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="empty-list">
-            <div class="text-center py-4">
-                <i class="fas fa-file fa-3x text-secondary mb-3"></i>
-                <p>لا توجد وثائق مسجلة لهذه السيارة</p>
-            </div>
+        <div class="text-center py-4">
+            <i class="fas fa-file fa-3x text-muted mb-3"></i>
+            <h6>لا توجد وثائق مسجلة</h6>
+            <p class="text-muted small px-3">يمكنك إضافة وثيقة جديدة من خلال النقر على زر "إضافة وثيقة"</p>
         </div>
         {% endif %}
     </div>
 </div>
 
-<!-- سجل الصيانة -->
-<div class="mobile-card">
-    <div class="mobile-card-title">
-        <i class="fas fa-tools"></i> سجل الصيانة
-        <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="title-link">عرض الكل</a>
-    </div>
-    
-    <div class="mobile-card-content p-0">
-        {% if maintenance_records %}
-        <div class="maintenance-list">
-            {% for record in maintenance_records %}
-            <a href="{{ maintenance_details_url }}" class="maintenance-item">
-                <div class="maintenance-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
-                <div class="maintenance-content">
-                    <div class="maintenance-type 
-                             {% if record.maintenance_type == 'دورية' %}badge bg-info
-                             {% elif record.maintenance_type == 'طارئة' %}badge bg-warning
-                             {% elif record.maintenance_type == 'إصلاح' %}badge bg-danger
-                             {% else %}badge bg-secondary{% endif %}">
-                        {{ record.maintenance_type }}
-                    </div>
-                    <div class="maintenance-description">{{ record.description }}</div>
-                </div>
-                <div class="maintenance-cost">{{ '{:,.2f}'.format(record.cost) }}</div>
+<!-- الإجراءات والروابط السريعة -->
+<div class="action-buttons-container mb-4 mx-3">
+    <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="btn btn-info btn-lg w-100 mb-2">
+        <i class="fas fa-tools ms-1"></i>
+        إضافة صيانة جديدة
+    </a>
+    <div class="row gx-2">
+        <div class="col-6">
+            <a href="#" class="btn btn-outline-secondary w-100">
+                <i class="fas fa-car-crash ms-1"></i>
+                تسجيل حادث
             </a>
-            {% endfor %}
-            
-            <div class="text-center py-3">
-                <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-primary">
-                    <i class="fas fa-plus"></i> إضافة صيانة جديدة
-                </a>
-            </div>
         </div>
-        {% else %}
-        <div class="empty-list">
-            <div class="text-center py-4">
-                <i class="fas fa-tools fa-3x text-secondary mb-3"></i>
-                <p>لا توجد سجلات صيانة لهذه السيارة</p>
-                <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-primary mt-2">
-                    <i class="fas fa-plus"></i> إضافة صيانة جديدة
-                </a>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<!-- الرسوم المستحقة -->
-<div class="mobile-card">
-    <div class="mobile-card-title">
-        <i class="fas fa-money-bill-wave"></i> الرسوم المستحقة
-        <a href="{{ url_for('mobile.fees_new') }}?vehicle_id={{ vehicle.id }}" class="title-link">عرض الكل</a>
-    </div>
-    
-    <div class="mobile-card-content p-0">
-        {% if fees %}
-        <div class="fees-list">
-            {% for fee in fees %}
-            <a href="#" class="fee-item">
-                <div class="fee-icon">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                </div>
-                <div class="fee-content">
-                    <div class="fee-name">{{ fee.name }}</div>
-                    <div class="fee-date">تاريخ الاستحقاق: {{ fee.due_date.strftime('%Y-%m-%d') }}</div>
-                </div>
-                <div class="fee-amount">{{ '{:,.2f}'.format(fee.amount) }}</div>
-                <div class="fee-status 
-                          {% if fee.status == 'pending' %}badge bg-warning
-                          {% elif fee.status == 'paid' %}badge bg-success
-                          {% else %}badge bg-danger{% endif %}">
-                    {% if fee.status == 'pending' %}مستحق{% elif fee.status == 'paid' %}مدفوع{% else %}متأخر{% endif %}
-                </div>
+        <div class="col-6">
+            <a href="#" class="btn btn-outline-secondary w-100">
+                <i class="fas fa-gas-pump ms-1"></i>
+                إضافة وقود
             </a>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="empty-list">
-            <div class="text-center py-4">
-                <i class="fas fa-money-bill-wave fa-3x text-secondary mb-3"></i>
-                <p>لا توجد رسوم مستحقة لهذه السيارة</p>
-            </div>
-        </div>
-        {% endif %}
     </div>
-</div>
-
-<!-- أزرار الإجراءات -->
-<div class="action-buttons">
-    <a href="{{ edit_vehicle_url }}" class="mobile-btn mobile-btn-primary">
-        <i class="fas fa-edit"></i> تعديل
-    </a>
-    <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="mobile-btn mobile-btn-info">
-        <i class="fas fa-tools"></i> سجل الصيانة
-    </a>
-    <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
-        <i class="fas fa-arrow-right"></i> العودة للسيارات
-    </a>
 </div>
 
 <style>
-.vehicle-header {
-    padding: 20px;
-    color: #212121;
-    background-color: #f8f9fa;
-    text-align: center;
-    border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+/* تنسيقات شريط الإجراءات */
+.action-bar {
+    background-color: white;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.vehicle-name {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 5px;
+.vehicle-plate-display {
+    font-family: Arial, sans-serif;
+    letter-spacing: 1px;
 }
 
-.vehicle-plate {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    direction: ltr;
-    text-align: center;
+/* تنسيقات البطاقات */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
 }
 
-.vehicle-status {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 50px;
-    font-size: 0.8rem;
+.card-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 15px;
 }
 
-.vehicle-details {
-    padding: 0;
-}
-
-.detail-section {
-    border-bottom: 1px solid var(--border-color);
-    padding: 0;
-}
-
-.detail-section:last-child {
-    border-bottom: none;
-}
-
-.detail-title {
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 15px;
-    margin: 0;
-    background-color: #f8f9fa;
+/* تنسيقات معلومات السيارة */
+.info-row {
     display: flex;
+    margin-bottom: 12px;
     align-items: center;
 }
 
-.detail-title i {
-    margin-left: 8px;
-    color: var(--primary-color);
-}
-
-.detail-content {
-    padding: 15px;
-}
-
-.detail-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.detail-item:last-child {
+.info-row:last-child {
     margin-bottom: 0;
 }
 
-.detail-label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+.info-label {
+    width: 110px;
+    font-size: 0.85rem;
+    color: #6c757d;
 }
 
-.detail-value {
+.info-value {
+    flex: 1;
     font-weight: 500;
 }
 
-.vehicle-notes {
-    line-height: 1.6;
+.info-section-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #495057;
 }
 
+.color-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+}
+
+/* تنسيقات قائمة الوثائق */
 .document-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    display: flex;
+    justify-content: space-between;
     padding: 15px;
     background-color: #f8f9fa;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #e9ecef;
 }
 
 .doc-stat {
     text-align: center;
-    padding: 10px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.doc-stat.warning {
-    color: #ffc107;
+.doc-stat.warning .stat-value {
+    color: #fd7e14;
 }
 
-.doc-stat.danger {
+.doc-stat.danger .stat-value {
     color: #dc3545;
-}
-
-.doc-stat.info {
-    color: #0dcaf0;
 }
 
 .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 5px;
+    line-height: 1.2;
 }
 
 .stat-label {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    font-size: 0.7rem;
+    color: #6c757d;
 }
 
-.document-list, .maintenance-list, .fees-list {
-    padding: 0;
+.document-list, .maintenance-list {
+    border-top: 1px solid #f0f0f0;
 }
 
-.document-item, .maintenance-item, .fee-item {
+.document-item, .maintenance-item {
     display: flex;
     align-items: center;
-    padding: 15px;
-    border-bottom: 1px solid var(--border-color);
-    text-decoration: none;
-    color: inherit;
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
 }
 
-.document-item:last-child, .maintenance-item:last-child, .fee-item:last-child {
+.document-item:last-child, .maintenance-item:last-child {
     border-bottom: none;
 }
 
-.document-icon, .fee-icon {
+.document-icon {
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
     background-color: #f8f9fa;
     border-radius: 50%;
-    margin-left: 15px;
-    color: var(--text-secondary);
+    margin-left: 12px;
+    color: #6c757d;
 }
 
-.document-content, .fee-content {
+.document-content {
     flex: 1;
 }
 
-.document-name, .fee-name {
+.document-name {
     font-weight: 500;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
+    font-size: 0.9rem;
 }
 
-.document-expiry, .fee-date {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+.document-expiry {
+    font-size: 0.8rem;
 }
 
-.document-status, .fee-status {
-    margin-right: 10px;
-}
-
+/* تنسيقات سجل الصيانة */
 .maintenance-date {
-    min-width: 80px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    width: 80px;
+    font-size: 0.8rem;
+    color: #6c757d;
 }
 
 .maintenance-content {
     flex: 1;
+    padding: 0 10px;
 }
 
 .maintenance-type {
     display: inline-block;
-    margin-bottom: 5px;
-    font-size: 0.75rem;
+    margin-bottom: 4px;
+    font-size: 0.7rem;
 }
 
 .maintenance-description {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .maintenance-cost {
     font-weight: 600;
-    color: var(--primary-color);
+    color: #0d6efd;
+    font-size: 0.85rem;
 }
 
-.empty-list {
-    padding: 20px;
-    color: var(--text-secondary);
-}
-
-.title-link {
-    font-size: 0.8rem;
-    color: var(--primary-color);
-    text-decoration: none;
-    margin-right: auto;
-}
-
-.action-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 20px;
-}
-
-.action-buttons a:first-child {
-    grid-column: span 2;
+/* تنسيقات الأزرار */
+.action-buttons-container {
+    margin-top: 20px;
 }
 </style>
 {% endif %}
