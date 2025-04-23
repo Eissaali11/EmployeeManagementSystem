@@ -26,8 +26,20 @@ class LoginForm(FlaskForm):
     remember = BooleanField('تذكرني')
     submit = SubmitField('تسجيل الدخول')
 
+# صفحة الـ Splash Screen
+@mobile_bp.route('/splash')
+def splash():
+    """صفحة البداية الترحيبية للنسخة المحمولة"""
+    return render_template('mobile/splash.html')
+
 # الصفحة الرئيسية - النسخة المحمولة
 @mobile_bp.route('/')
+def root():
+    """إعادة توجيه إلى صفحة البداية الترحيبية"""
+    return redirect(url_for('mobile.splash'))
+
+# لوحة المعلومات - النسخة المحمولة
+@mobile_bp.route('/dashboard')
 @login_required
 def index():
     """الصفحة الرئيسية للنسخة المحمولة"""
