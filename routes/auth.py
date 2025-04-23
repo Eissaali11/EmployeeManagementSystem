@@ -12,13 +12,14 @@ auth_bp = Blueprint('auth', __name__)
 # مسار افتراضي لإعادة التوجيه للمسجلين
 @auth_bp.route('/index')
 def index():
-    return redirect(url_for('dashboard.index'))
+    # إعادة توجيه المستخدم إلى المسار الرئيسي حيث سيتم التحقق من صلاحياته
+    return redirect(url_for('root'))
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """صفحة تسجيل الدخول بالبريد الإلكتروني وكلمة المرور أو Firebase"""
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('root'))
     
     if request.method == 'POST':
         email = request.form.get('email')
@@ -51,7 +52,7 @@ def login():
         db.session.commit()
         
         flash('تم تسجيل الدخول بنجاح', 'success')
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('root'))
     
     return render_template(
         'auth/login.html',
@@ -118,7 +119,7 @@ def process_auth():
     return jsonify({
         'status': 'success',
         'message': 'Login successful',
-        'redirect': url_for('dashboard.index')
+        'redirect': url_for('root')
     })
 
 @auth_bp.route('/logout')

@@ -80,6 +80,7 @@ def index():
 def login():
     """صفحة تسجيل الدخول للنسخة المحمولة"""
     if current_user.is_authenticated:
+        # نستخدم لوجيك التوجيه المدمج في mobile.index
         return redirect(url_for('mobile.index'))
     
     form = LoginForm()
