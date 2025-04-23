@@ -225,6 +225,101 @@ def department_attendance():
                           hijri_date=hijri_date,
                           gregorian_date=gregorian_date)
 
+@attendance_bp.route('/multi-day-department', methods=['GET', 'POST'])
+def multi_day_department_attendance():
+    """تسجيل حضور لقسم بالكامل لفترة زمنية محددة"""
+    if request.method == 'POST':
+        try:
+            department_id = request.form['department_id']
+            start_date_str = request.form['start_date']
+            end_date_str = request.form['end_date']
+            status = request.form['status']
+            
+            # تحليل التواريخ
+            start_date = parse_date(start_date_str)
+            end_date = parse_date(end_date_str)
+            
+            # التحقق من صحة النطاق
+            if end_date < start_date:
+                flash('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له.', 'danger')
+                return redirect(url_for('attendance.multi_day_department_attendance'))
+            
+            # الحصول على جميع الموظفين في القسم
+            employees = Employee.query.filter_by(
+                department_id=department_id,
+                status='active'
+            ).all()
+            
+            # حساب عدد الأيام
+            delta = end_date - start_date
+            days_count = delta.days + 1  # لتضمين اليوم الأخير
+            
+            # التحضير لكل يوم في النطاق المحدد
+            total_count = 0
+            current_date = start_date
+            
+            while current_date <= end_date:
+                day_count = 0
+                
+                for employee in employees:
+                    # التحقق من وجود سجل حضور مسبق
+                    existing = Attendance.query.filter_by(
+                        employee_id=employee.id,
+                        date=current_date
+                    ).first()
+                    
+                    if existing:
+                        # تحديث السجل الموجود
+                        existing.status = status
+                        if status != 'present':
+                            existing.check_in = None
+                            existing.check_out = None
+                    else:
+                        # إنشاء سجل حضور جديد
+                        new_attendance = Attendance(
+                            employee_id=employee.id,
+                            date=current_date,
+                            status=status
+                        )
+                        db.session.add(new_attendance)
+                    
+                    day_count += 1
+                
+                total_count += day_count
+                current_date += timedelta(days=1)
+            
+            # تسجيل الإجراء
+            department = Department.query.get(department_id)
+            audit = SystemAudit(
+                action='mass_update_range',
+                entity_type='attendance',
+                entity_id=0,
+                details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {len(employees)} موظف'
+            )
+            db.session.add(audit)
+            db.session.commit()
+            
+            flash(f'تم تسجيل الحضور لـ {len(employees)} موظف خلال {days_count} يوم بنجاح', 'success')
+            return redirect(url_for('attendance.index'))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ: {str(e)}', 'danger')
+    
+    # الحصول على جميع الأقسام
+    departments = Department.query.all()
+    
+    # التاريخ الافتراضي (اليوم)
+    today = datetime.now().date()
+    hijri_date = format_date_hijri(today)
+    gregorian_date = format_date_gregorian(today)
+    
+    return render_template('attendance/multi_day_department.html', 
+                          departments=departments,
+                          today=today,
+                          hijri_date=hijri_date,
+                          gregorian_date=gregorian_date)
+
 @attendance_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
     """Delete an attendance record"""
