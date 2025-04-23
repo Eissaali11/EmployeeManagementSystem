@@ -473,6 +473,18 @@ def salaries():
     # تطبيق فلتر الموظف إذا تم تحديده
     if employee_id:
         query = query.filter(Salary.employee_id == employee_id)
+        
+    # تطبيق فلتر حالة الدفع إذا تم تحديده
+    is_paid = request.args.get('is_paid')
+    if is_paid is not None:
+        is_paid_bool = True if is_paid == '1' else False
+        query = query.filter(Salary.is_paid == is_paid_bool)
+        
+    # تطبيق فلتر البحث إذا تم تحديده
+    search_term = request.args.get('search', '')
+    if search_term:
+        search_pattern = f"%{search_term}%"
+        query = query.join(Employee).filter(Employee.name.like(search_pattern))
     
     # تنفيذ الاستعلام والحصول على نتائج مع التصفح
     paginator = query.order_by(Salary.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
