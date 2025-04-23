@@ -710,6 +710,9 @@ def vehicles():
     # استخدام نفس البيانات الموجودة في قاعدة البيانات
     status_filter = request.args.get('status', '')
     make_filter = request.args.get('make', '')
+    search_filter = request.args.get('search', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # عدد السيارات في الصفحة الواحدة
     
     # قاعدة الاستعلام الأساسية
     query = Vehicle.query
@@ -722,8 +725,24 @@ def vehicles():
     if make_filter:
         query = query.filter(Vehicle.make == make_filter)
     
-    # الحصول على قائمة السيارات
-    vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
+    # إضافة التصفية حسب البحث
+    if search_filter:
+        search_pattern = f"%{search_filter}%"
+        query = query.filter(
+            db.or_(
+                Vehicle.plate_number.like(search_pattern),
+                Vehicle.make.like(search_pattern),
+                Vehicle.model.like(search_pattern)
+            )
+        )
+    
+    # الحصول على قائمة الشركات المصنعة المتوفرة
+    makes = db.session.query(Vehicle.make).distinct().order_by(Vehicle.make).all()
+    makes = [make[0] for make in makes if make[0]]  # استخراج أسماء الشركات وتجاهل القيم الفارغة
+    
+    # تنفيذ الاستعلام مع الترقيم
+    pagination = query.order_by(Vehicle.status, Vehicle.plate_number).paginate(page=page, per_page=per_page, error_out=False)
+    vehicles = pagination.items
     
     # إحصائيات سريعة - نعدل المسميات لتتوافق مع النسخة المحمولة
     stats = {
@@ -733,7 +752,11 @@ def vehicles():
         'inactive': Vehicle.query.filter_by(status='accident').count() + Vehicle.query.filter_by(status='rented').count() + Vehicle.query.filter_by(status='in_project').count()
     }
     
-    return render_template('mobile/vehicles.html', vehicles=vehicles, stats=stats)
+    return render_template('mobile/vehicles.html', 
+                          vehicles=vehicles, 
+                          stats=stats,
+                          makes=makes,
+                          pagination=pagination)
     
 # تفاصيل السيارة - النسخة المحمولة
 @mobile_bp.route('/vehicles/<int:vehicle_id>')
