@@ -1259,11 +1259,11 @@ def add_vehicle_checklist():
     
     return jsonify({'status': 'error', 'message': 'طريقة غير مسموح بها'})
 
-# صفحة الرسوم والتكاليف - النسخة المحمولة
-@mobile_bp.route('/fees')
+# صفحة الرسوم والتكاليف - النسخة المحمولة (النسخة الأصلية)
+@mobile_bp.route('/fees_old')
 @login_required
-def fees():
-    """صفحة الرسوم والتكاليف للنسخة المحمولة"""
+def fees_old():
+    """صفحة الرسوم والتكاليف للنسخة المحمولة (النسخة القديمة)"""
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
     
@@ -1903,3 +1903,342 @@ def fuel_consumption_stats():
                           chart_labels=chart_labels,
                           chart_liters=chart_liters,
                           chart_costs=chart_costs)
+
+
+# ==================== مسارات إدارة المستخدمين - النسخة المحمولة المطورة ====================
+
+# صفحة إدارة المستخدمين - النسخة المحمولة المطورة
+@mobile_bp.route('/users_new')
+@login_required
+def users_new():
+    """صفحة إدارة المستخدمين للنسخة المحمولة المطورة"""
+    # التحقق من الصلاحيات
+    from models import Module, Permission, UserRole
+    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.VIEW)):
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('mobile.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # إنشاء الاستعلام الأساسي
+    query = User.query
+    
+    # تطبيق الفلترة حسب الاستعلام
+    if request.args.get('search'):
+        search_term = f"%{request.args.get('search')}%"
+        query = query.filter(
+            (User.username.like(search_term)) |
+            (User.email.like(search_term))
+        )
+    
+    # ترتيب النتائج
+    query = query.order_by(User.username)
+    
+    # تنفيذ الاستعلام مع الصفحات
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+    
+    return render_template('mobile/users_new.html',
+                          users=users,
+                          pagination=pagination)
+
+# إضافة مستخدم جديد - النسخة المحمولة المطورة
+@mobile_bp.route('/users_new/add', methods=['GET', 'POST'])
+@login_required
+def add_user_new():
+    """إضافة مستخدم جديد للنسخة المحمولة المطورة"""
+    # التحقق من الصلاحيات
+    from models import Module, Permission, UserRole
+    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.CREATE)):
+        flash('ليس لديك صلاحية لإضافة مستخدم جديد', 'danger')
+        return redirect(url_for('mobile.users_new'))
+    
+    # معالجة النموذج المرسل
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role = request.form.get('role')
+        
+        # التحقق من البيانات المطلوبة
+        if not (username and email and password and role):
+            flash('جميع الحقول المطلوبة يجب ملؤها', 'danger')
+            return render_template('mobile/add_user_new.html', roles=UserRole)
+        
+        # التحقق من عدم وجود البريد الإلكتروني مسبقاً
+        if User.query.filter_by(email=email).first():
+            flash('البريد الإلكتروني مستخدم بالفعل', 'danger')
+            return render_template('mobile/add_user_new.html', roles=UserRole)
+        
+        # إنشاء مستخدم جديد
+        new_user = User(
+            username=username,
+            email=email,
+            role=role
+        )
+        new_user.set_password(password)
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            
+            flash('تم إضافة المستخدم بنجاح', 'success')
+            return redirect(url_for('mobile.users_new'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء إضافة المستخدم: {str(e)}', 'danger')
+    
+    # عرض النموذج
+    return render_template('mobile/add_user_new.html', roles=UserRole)
+
+# تفاصيل المستخدم - النسخة المحمولة المطورة
+@mobile_bp.route('/users_new/<int:user_id>')
+@login_required
+def user_details_new(user_id):
+    """تفاصيل المستخدم للنسخة المحمولة المطورة"""
+    # التحقق من الصلاحيات
+    from models import Module, Permission, UserRole
+    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.VIEW)):
+        flash('ليس لديك صلاحية لعرض بيانات المستخدمين', 'danger')
+        return redirect(url_for('mobile.index'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    return render_template('mobile/user_details_new.html', user=user)
+
+# تعديل بيانات المستخدم - النسخة المحمولة المطورة
+@mobile_bp.route('/users_new/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user_new(user_id):
+    """تعديل بيانات المستخدم للنسخة المحمولة المطورة"""
+    # التحقق من الصلاحيات
+    from models import Module, Permission, UserRole
+    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.EDIT)):
+        flash('ليس لديك صلاحية لتعديل بيانات المستخدمين', 'danger')
+        return redirect(url_for('mobile.users_new'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    # معالجة النموذج المرسل
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        role = request.form.get('role')
+        is_active = request.form.get('is_active') == 'on'
+        
+        # التحقق من البيانات المطلوبة
+        if not (username and email and role):
+            flash('جميع الحقول المطلوبة يجب ملؤها', 'danger')
+            return render_template('mobile/edit_user_new.html', user=user, roles=UserRole)
+        
+        # التحقق من عدم وجود البريد الإلكتروني لمستخدم آخر
+        email_user = User.query.filter_by(email=email).first()
+        if email_user and email_user.id != user.id:
+            flash('البريد الإلكتروني مستخدم بالفعل', 'danger')
+            return render_template('mobile/edit_user_new.html', user=user, roles=UserRole)
+        
+        # تحديث بيانات المستخدم
+        user.username = username
+        user.email = email
+        user.role = role
+        user.is_active = is_active
+        
+        # تحديث كلمة المرور إذا تم تقديمها
+        new_password = request.form.get('password')
+        if new_password:
+            user.set_password(new_password)
+        
+        try:
+            db.session.commit()
+            flash('تم تحديث بيانات المستخدم بنجاح', 'success')
+            return redirect(url_for('mobile.user_details_new', user_id=user.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تحديث بيانات المستخدم: {str(e)}', 'danger')
+    
+    # عرض النموذج
+    return render_template('mobile/edit_user_new.html', user=user, roles=UserRole)
+
+# حذف مستخدم - النسخة المحمولة المطورة
+@mobile_bp.route('/users_new/<int:user_id>/delete', methods=['GET', 'POST'])
+@login_required
+def delete_user_new(user_id):
+    """حذف مستخدم من النسخة المحمولة المطورة"""
+    # التحقق من الصلاحيات
+    from models import Module, Permission, UserRole
+    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.DELETE)):
+        flash('ليس لديك صلاحية لحذف المستخدمين', 'danger')
+        return redirect(url_for('mobile.users_new'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    # منع حذف المستخدم الحالي
+    if user.id == current_user.id:
+        flash('لا يمكنك حذف المستخدم الحالي', 'danger')
+        return redirect(url_for('mobile.users_new'))
+    
+    if request.method == 'POST':
+        try:
+            # حذف المستخدم
+            db.session.delete(user)
+            db.session.commit()
+            
+            flash('تم حذف المستخدم بنجاح', 'success')
+            return redirect(url_for('mobile.users_new'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء حذف المستخدم: {str(e)}', 'danger')
+            return redirect(url_for('mobile.user_details_new', user_id=user.id))
+    
+    return render_template('mobile/delete_user_new.html', user=user)
+
+
+# ==================== مسارات الرسوم والتكاليف - النسخة المحمولة المطورة ====================
+
+# صفحة إدارة الرسوم والتكاليف - النسخة المحمولة المطورة
+@mobile_bp.route('/fees_new')
+@login_required
+def fees_new():
+    """صفحة الرسوم والتكاليف للنسخة المحمولة المطورة"""
+    # التحقق من الصلاحيات
+    from models import Module, Permission, UserRole
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.FEES)):
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('mobile.index'))
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    status = request.args.get('status', 'all')
+    document_type = request.args.get('document_type', 'all')
+    
+    # إنشاء الاستعلام الأساسي
+    query = Fee.query.join(Document)
+    
+    # تطبيق الفلاتر
+    if status != 'all':
+        query = query.filter(Fee.payment_status == status)
+    
+    if document_type != 'all':
+        query = query.filter(Fee.document_type == document_type)
+    
+    # البحث
+    if request.args.get('search'):
+        search_term = f"%{request.args.get('search')}%"
+        query = query.join(Document.employee).filter(
+            (Employee.name.like(search_term)) |
+            (Employee.employee_id.like(search_term)) |
+            (Document.document_number.like(search_term))
+        )
+    
+    # ترتيب النتائج حسب تاريخ الاستحقاق (الأقرب أولاً)
+    query = query.order_by(Fee.due_date)
+    
+    # تنفيذ الاستعلام مع الصفحات
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    fees = pagination.items
+    
+    # حساب إحصائيات الرسوم
+    current_date = datetime.now().date()
+    due_count = Fee.query.filter(Fee.due_date <= current_date, Fee.payment_status == 'pending').count()
+    paid_count = Fee.query.filter(Fee.payment_status == 'paid').count()
+    overdue_count = Fee.query.filter(Fee.due_date < current_date, Fee.payment_status == 'pending').count()
+    
+    stats = {
+        'due': due_count,
+        'paid': paid_count,
+        'overdue': overdue_count,
+        'total': Fee.query.count()
+    }
+    
+    # أنواع الوثائق للفلترة
+    document_types = [
+        'هوية وطنية',
+        'إقامة',
+        'جواز سفر',
+        'رخصة قيادة',
+        'شهادة صحية',
+        'شهادة تأمين',
+        'أخرى'
+    ]
+    
+    return render_template('mobile/fees_new.html',
+                          fees=fees,
+                          pagination=pagination,
+                          stats=stats,
+                          document_types=document_types,
+                          current_date=current_date,
+                          selected_status=status,
+                          selected_document_type=document_type)
+
+# ==================== مسارات الإشعارات - النسخة المحمولة المطورة ====================
+
+@mobile_bp.route('/notifications_new')
+@login_required
+def notifications_new():
+    """صفحة الإشعارات للنسخة المحمولة المطورة"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # هنا يمكن تنفيذ استعلام الإشعارات بناءً على نظام الإشعارات المستخدم
+    
+    # مثال: استعلام للوثائق التي على وشك الانتهاء كإشعارات
+    current_date = datetime.now().date()
+    expiring_30_days = current_date + timedelta(days=30)
+    expiring_documents = Document.query.filter(
+        Document.expiry_date > current_date,
+        Document.expiry_date <= expiring_30_days
+    ).order_by(Document.expiry_date).all()
+    
+    # مثال: الرسوم المستحقة
+    due_fees = Fee.query.filter(
+        Fee.due_date > current_date,
+        Fee.due_date <= current_date + timedelta(days=30),
+        Fee.payment_status == 'pending'
+    ).order_by(Fee.due_date).all()
+    
+    # تحضير قائمة الإشعارات المدمجة
+    notifications = []
+    
+    for doc in expiring_documents:
+        remaining_days = (doc.expiry_date - current_date).days
+        notifications.append({
+            'id': f'doc_{doc.id}',
+            'type': 'document',
+            'title': f'وثيقة على وشك الانتهاء: {doc.document_name}',
+            'description': f'متبقي {remaining_days} يوم على انتهاء {doc.document_type} للموظف {doc.employee.name}',
+            'date': doc.expiry_date,
+            'url': url_for('mobile.document_details', document_id=doc.id),
+            'is_read': False  # يمكن تنفيذ حالة القراءة لاحقاً
+        })
+    
+    for fee in due_fees:
+        remaining_days = (fee.due_date - current_date).days
+        notifications.append({
+            'id': f'fee_{fee.id}',
+            'type': 'fee',
+            'title': f'رسوم مستحقة قريباً: {fee.document_type}',
+            'description': f'رسوم مستحقة بعد {remaining_days} يوم للوثيقة {fee.document.document_name}',
+            'date': fee.due_date,
+            'url': url_for('mobile.fee_details', fee_id=fee.id),
+            'is_read': False
+        })
+    
+    # ترتيب الإشعارات حسب التاريخ (الأقرب أولاً)
+    notifications.sort(key=lambda x: x['date'])
+    
+    # تقسيم النتائج
+    total_notifications = len(notifications)
+    start_idx = (page - 1) * per_page
+    end_idx = min(start_idx + per_page, total_notifications)
+    current_notifications = notifications[start_idx:end_idx]
+    
+    # إنشاء كائن تقسيم صفحات يدوي
+    from flask_sqlalchemy import Pagination
+    pagination = Pagination(query=None, page=page, per_page=per_page, 
+                           total=total_notifications, items=current_notifications)
+    
+    return render_template('mobile/notifications_new.html',
+                          notifications=current_notifications,
+                          pagination=pagination,
+                          current_date=current_date)
