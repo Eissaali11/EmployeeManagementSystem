@@ -45,7 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
  * Initialize DataTables with common configurations
  */
 function initializeDataTables() {
-    $('.datatable').each(function() {
+    // تهيئة الجداول العادية
+    $('table.datatable').each(function() {
         $(this).DataTable({
             language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/ar.json'
@@ -83,7 +84,6 @@ function initializeDataTables() {
              '<"row"<"col-sm-5"i><"col-sm-7"p>>',
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "الكل"]],
     });
-}
 }
 
 /**
