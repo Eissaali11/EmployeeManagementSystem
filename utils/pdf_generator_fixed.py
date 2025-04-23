@@ -534,6 +534,16 @@ def create_vehicle_handover_pdf(handover_data):
         pdf.arabic_text(190, 98, f"التاريخ: {handover_data['date']}", 'R')
         pdf.arabic_text(190, 106, f"الشخص: {handover_data['person_name']}", 'R')
         
+        # إضافة معلومات المشرف إذا وجدت
+        if handover_data.get('supervisor_name'):
+            pdf.arabic_text(100, 106, f"المشرف: {handover_data['supervisor_name']}", 'R')
+            
+        # إضافة رابط نموذج التسليم/الاستلام إذا وجد
+        if handover_data.get('form_link'):
+            pdf.set_font('Arial', 'B', 10)
+            pdf.set_text_color(*pdf.accent_color)
+            pdf.arabic_text(190, 114, "رابط النموذج: " + handover_data['form_link'], 'R')
+        
         # جدول فحص المركبة
         pdf.set_font('Arial', 'B', 13)
         pdf.set_text_color(*pdf.primary_color)
@@ -639,6 +649,11 @@ def create_vehicle_handover_pdf(handover_data):
         # توقيع المستلم/المسلم
         pdf.arabic_text(160, y_position + 10, "توقيع " + ("المستلم" if handover_data['type'] == "تسليم" else "المسلم") + ":", 'R')
         pdf.line(80, y_position + 10, 150, y_position + 10)
+        
+        # توقيع المشرف (إذا وُجد)
+        if handover_data.get('supervisor_name'):
+            pdf.arabic_text(160, y_position + 25, "توقيع المشرف:", 'R')
+            pdf.line(80, y_position + 25, 150, y_position + 25)
         
         # توقيع مدير المرآب
         pdf.arabic_text(60, y_position + 10, "توقيع مدير المرآب:", 'R')

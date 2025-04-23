@@ -2416,8 +2416,8 @@ def handover_pdf(handover_id):
             'type': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
             'date': handover.handover_date.strftime('%Y-%m-%d'),
             'person_name': handover.person_name,
-            'supervisor_name': handover.supervisor_name or '',
-            'form_link': handover.form_link or '',
+            'supervisor_name': handover.supervisor_name,
+            'form_link': handover.form_link,
             'vehicle': {
                 'plate_number': vehicle.plate_number,
                 'make': vehicle.make,
