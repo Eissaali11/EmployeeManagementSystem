@@ -12,9 +12,9 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
-from utils.decorators import module_access_required
+from utils.decorators import module_access_required, permission_required
 
 # إنشاء مخطط المسارات
 mobile_bp = Blueprint('mobile', __name__)
@@ -1911,13 +1911,9 @@ def fuel_consumption_stats():
 # صفحة إدارة المستخدمين - النسخة المحمولة المطورة
 @mobile_bp.route('/users_new')
 @login_required
+@module_access_required('users')
 def users_new():
     """صفحة إدارة المستخدمين للنسخة المحمولة المطورة"""
-    # التحقق من الصلاحيات
-    from models import Module, Permission, UserRole
-    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.VIEW)):
-        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
-        return redirect(url_for('mobile.index'))
     
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
@@ -1929,12 +1925,12 @@ def users_new():
     if request.args.get('search'):
         search_term = f"%{request.args.get('search')}%"
         query = query.filter(
-            (User.username.like(search_term)) |
+            (User.name.like(search_term)) |
             (User.email.like(search_term))
         )
     
     # ترتيب النتائج
-    query = query.order_by(User.username)
+    query = query.order_by(User.name)
     
     # تنفيذ الاستعلام مع الصفحات
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -1947,13 +1943,9 @@ def users_new():
 # إضافة مستخدم جديد - النسخة المحمولة المطورة
 @mobile_bp.route('/users_new/add', methods=['GET', 'POST'])
 @login_required
+@module_access_required('users')
 def add_user_new():
     """إضافة مستخدم جديد للنسخة المحمولة المطورة"""
-    # التحقق من الصلاحيات
-    from models import Module, Permission, UserRole
-    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.CREATE)):
-        flash('ليس لديك صلاحية لإضافة مستخدم جديد', 'danger')
-        return redirect(url_for('mobile.users_new'))
     
     # معالجة النموذج المرسل
     if request.method == 'POST':
@@ -1996,13 +1988,9 @@ def add_user_new():
 # تفاصيل المستخدم - النسخة المحمولة المطورة
 @mobile_bp.route('/users_new/<int:user_id>')
 @login_required
+@module_access_required('users')
 def user_details_new(user_id):
     """تفاصيل المستخدم للنسخة المحمولة المطورة"""
-    # التحقق من الصلاحيات
-    from models import Module, Permission, UserRole
-    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.VIEW)):
-        flash('ليس لديك صلاحية لعرض بيانات المستخدمين', 'danger')
-        return redirect(url_for('mobile.index'))
     
     user = User.query.get_or_404(user_id)
     
@@ -2011,13 +1999,9 @@ def user_details_new(user_id):
 # تعديل بيانات المستخدم - النسخة المحمولة المطورة
 @mobile_bp.route('/users_new/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
+@module_access_required('users')
 def edit_user_new(user_id):
     """تعديل بيانات المستخدم للنسخة المحمولة المطورة"""
-    # التحقق من الصلاحيات
-    from models import Module, Permission, UserRole
-    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.EDIT)):
-        flash('ليس لديك صلاحية لتعديل بيانات المستخدمين', 'danger')
-        return redirect(url_for('mobile.users_new'))
     
     user = User.query.get_or_404(user_id)
     
@@ -2040,7 +2024,7 @@ def edit_user_new(user_id):
             return render_template('mobile/edit_user_new.html', user=user, roles=UserRole)
         
         # تحديث بيانات المستخدم
-        user.username = username
+        user.name = username
         user.email = email
         user.role = role
         user.is_active = is_active
@@ -2064,13 +2048,9 @@ def edit_user_new(user_id):
 # حذف مستخدم - النسخة المحمولة المطورة
 @mobile_bp.route('/users_new/<int:user_id>/delete', methods=['GET', 'POST'])
 @login_required
+@permission_required('users', 'delete')
 def delete_user_new(user_id):
     """حذف مستخدم من النسخة المحمولة المطورة"""
-    # التحقق من الصلاحيات
-    from models import Module, Permission, UserRole
-    if not (current_user.role == UserRole.ADMIN or current_user.has_permission(Module.USERS, Permission.DELETE)):
-        flash('ليس لديك صلاحية لحذف المستخدمين', 'danger')
-        return redirect(url_for('mobile.users_new'))
     
     user = User.query.get_or_404(user_id)
     
@@ -2100,13 +2080,9 @@ def delete_user_new(user_id):
 # صفحة إدارة الرسوم والتكاليف - النسخة المحمولة المطورة
 @mobile_bp.route('/fees_new')
 @login_required
+@module_access_required('fees')
 def fees_new():
     """صفحة الرسوم والتكاليف للنسخة المحمولة المطورة"""
-    # التحقق من الصلاحيات
-    from models import Module, Permission, UserRole
-    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.FEES)):
-        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
-        return redirect(url_for('mobile.index'))
     
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
@@ -2243,3 +2219,5 @@ def notifications_new():
                           notifications=current_notifications,
                           pagination=pagination,
                           current_date=current_date)
+
+
