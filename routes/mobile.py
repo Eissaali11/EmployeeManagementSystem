@@ -2182,12 +2182,12 @@ def notifications_new():
         Document.expiry_date <= expiring_30_days
     ).order_by(Document.expiry_date).all()
     
-    # مثال: الرسوم المستحقة
-    due_fees = Fee.query.filter(
-        Fee.due_date > current_date,
-        Fee.due_date <= current_date + timedelta(days=30),
-        Fee.payment_status == 'pending'
-    ).order_by(Fee.due_date).all()
+    # مثال: الرسوم المستحقة (استخدام النموذج المتاح Fee المستورد من FeesCost)
+    # ملاحظة: تم تعديل هذا الجزء لاستخدام النموذج المتاح بدلاً من الأصلي
+    due_fees = Fee.query.join(Document).filter(
+        Document.expiry_date > current_date,
+        Document.expiry_date <= current_date + timedelta(days=30)
+    ).order_by(Document.expiry_date).all()
     
     # تحضير قائمة الإشعارات المدمجة
     notifications = []
@@ -2205,9 +2205,14 @@ def notifications_new():
         })
     
     for fee in due_fees:
-        remaining_days = (fee.due_date - current_date).days
-        document_type = fee.document_type if hasattr(fee, 'document_type') else "غير معروف"
-        total_amount = fee.total_fees if hasattr(fee, 'total_fees') else sum([
+        # استخدام تاريخ انتهاء الوثيقة المرتبطة بالرسوم
+        doc = Document.query.get(fee.document_id)
+        if not doc:
+            continue
+            
+        remaining_days = (doc.expiry_date - current_date).days
+        document_type = fee.document_type
+        total_amount = sum([
             fee.passport_fee or 0,
             fee.labor_office_fee or 0,
             fee.insurance_fee or 0,
@@ -2218,7 +2223,7 @@ def notifications_new():
             'type': 'fee',
             'title': f'رسوم مستحقة قريباً: {document_type}',
             'description': f'رسوم مستحقة بعد {remaining_days} يوم بقيمة {total_amount:.2f}',
-            'date': fee.due_date,
+            'date': doc.expiry_date,
             'url': url_for('mobile.fee_details', fee_id=fee.id),
             'is_read': False
         })
