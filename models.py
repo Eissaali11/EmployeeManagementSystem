@@ -576,9 +576,10 @@ class VehiclePeriodicInspection(db.Model):
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
     inspection_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
     expiry_date = db.Column(db.Date, nullable=False)  # تاريخ انتهاء الفحص
-    inspection_number = db.Column(db.String(50), nullable=False)  # رقم الفحص
-    inspector_name = db.Column(db.String(100), nullable=False)  # اسم الفاحص أو مركز الفحص
-    inspection_type = db.Column(db.String(50), nullable=False)  # نوع الفحص: فني، دوري، أمان
+    inspection_center = db.Column(db.String(100), nullable=True)  # مركز الفحص
+    result = db.Column(db.String(20), nullable=True)  # نتيجة الفحص
+    driver_name = db.Column(db.String(100), nullable=True)  # اسم السائق
+    supervisor_name = db.Column(db.String(100), nullable=True)  # اسم المشرف
     inspection_status = db.Column(db.String(20), default='valid')  # حالة الفحص: ساري، منتهي، على وشك الانتهاء
     cost = db.Column(db.Float, default=0.0)  # تكلفة الفحص
     results = db.Column(db.Text)  # نتائج الفحص

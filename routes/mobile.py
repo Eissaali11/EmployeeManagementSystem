@@ -2478,6 +2478,8 @@ def create_periodic_inspection(vehicle_id):
             expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d').date()
             inspection_center = request.form.get('inspection_center')
             result = request.form.get('result')
+            driver_name = request.form.get('driver_name', '')
+            supervisor_name = request.form.get('supervisor_name', '')
             notes = request.form.get('notes', '')
             
             # إنشاء سجل فحص دوري جديد
@@ -2487,6 +2489,8 @@ def create_periodic_inspection(vehicle_id):
                 expiry_date=expiry_date,
                 inspection_center=inspection_center,
                 result=result,
+                driver_name=driver_name,
+                supervisor_name=supervisor_name,
                 notes=notes
             )
             
