@@ -281,6 +281,44 @@ class SystemAudit(db.Model):
     
     def __repr__(self):
         return f'<SystemAudit {self.action} on {self.entity_type} #{self.entity_id}>'
+        
+    @classmethod
+    def create_audit_record(cls, user_id, action, entity_type, entity_id, details, entity_name=None):
+        """
+        إنشاء سجل نشاط جديد
+        
+        :param user_id: معرف المستخدم الذي قام بالإجراء
+        :param action: نوع الإجراء (إضافة، تعديل، حذف)
+        :param entity_type: نوع الكيان
+        :param entity_id: معرف الكيان
+        :param details: تفاصيل الإجراء
+        :param entity_name: اسم الكيان (اختياري)
+        :return: كائن SystemAudit
+        """
+        # إنشاء سجل جديد
+        from flask import request
+        
+        ip_address = "127.0.0.1"
+        if request:
+            ip_address = request.remote_addr or "127.0.0.1"
+        
+        audit = cls(
+            user_id=user_id,
+            action=action,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            entity_name=entity_name,
+            details=details,
+            ip_address=ip_address,
+            timestamp=datetime.utcnow()
+        )
+        
+        # حفظ السجل في قاعدة البيانات
+        from app import db
+        db.session.add(audit)
+        db.session.commit()
+        
+        return audit
 
 # نماذج إدارة السيارات
 class Vehicle(db.Model):
