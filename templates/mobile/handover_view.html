@@ -116,12 +116,7 @@
                                 <span>طفاية الحريق</span>
                             </div>
                         </div>
-                        <div class="col-6 mb-2">
-                            <div class="d-flex align-items-center">
-                                <i class="fa {{ 'fa-check-circle text-success' if handover.has_jack else 'fa-times-circle text-danger' }} me-2"></i>
-                                <span>رافعة</span>
-                            </div>
-                        </div>
+
                         <div class="col-6 mb-2">
                             <div class="d-flex align-items-center">
                                 <i class="fa {{ 'fa-check-circle text-success' if handover.has_tools else 'fa-times-circle text-danger' }} me-2"></i>
@@ -130,7 +125,7 @@
                         </div>
                         <div class="col-6 mb-2">
                             <div class="d-flex align-items-center">
-                                <i class="fa {{ 'fa-check-circle text-success' if handover.has_first_aid else 'fa-times-circle text-danger' }} me-2"></i>
+                                <i class="fa {{ 'fa-check-circle text-success' if handover.has_first_aid_kit else 'fa-times-circle text-danger' }} me-2"></i>
                                 <span>حقيبة إسعافات أولية</span>
                             </div>
                         </div>
@@ -152,19 +147,7 @@
             <h5 class="mb-0">ملاحظات وتفاصيل</h5>
         </div>
         <div class="card-body p-3">
-            {% if handover.injuries %}
-            <div class="mb-3">
-                <strong class="d-block text-muted small">إصابات أو خدوش:</strong>
-                <p class="mb-0">{{ handover.injuries|nl2br }}</p>
-            </div>
-            {% endif %}
-            
-            {% if handover.damages %}
-            <div class="mb-3">
-                <strong class="d-block text-muted small">أضرار أخرى:</strong>
-                <p class="mb-0">{{ handover.damages|nl2br }}</p>
-            </div>
-            {% endif %}
+
             
             {% if handover.notes %}
             <div>
@@ -173,7 +156,7 @@
             </div>
             {% endif %}
 
-            {% if not handover.injuries and not handover.damages and not handover.notes %}
+            {% if not handover.notes %}
             <div class="text-center text-muted py-3">
                 <i class="fas fa-info-circle mb-2"></i>
                 <p class="mb-0">لا توجد ملاحظات مسجلة</p>
