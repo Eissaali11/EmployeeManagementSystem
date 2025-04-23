@@ -283,7 +283,7 @@ class SystemAudit(db.Model):
         return f'<SystemAudit {self.action} on {self.entity_type} #{self.entity_id}>'
         
     @classmethod
-    def create_audit_record(cls, user_id, action, entity_type, entity_id, details, entity_name=None):
+    def create_audit_record(cls, user_id, action, entity_type, entity_id, details=None, entity_name=None):
         """
         إنشاء سجل نشاط جديد
         
@@ -291,7 +291,7 @@ class SystemAudit(db.Model):
         :param action: نوع الإجراء (إضافة، تعديل، حذف)
         :param entity_type: نوع الكيان
         :param entity_id: معرف الكيان
-        :param details: تفاصيل الإجراء
+        :param details: تفاصيل الإجراء (اختياري)
         :param entity_name: اسم الكيان (اختياري)
         :return: كائن SystemAudit
         """

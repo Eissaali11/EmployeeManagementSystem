@@ -2400,8 +2400,10 @@ def view_handover(handover_id):
 @login_required
 def handover_pdf(handover_id):
     """إنشاء نموذج تسليم/استلام كملف PDF للنسخة المحمولة"""
-    from flask import send_file
+    from flask import send_file, flash, redirect, url_for
     import io
+    import os
+    from datetime import datetime
     from utils.pdf_generator_fixed import generate_vehicle_handover_pdf
     
     try:
@@ -2412,28 +2414,27 @@ def handover_pdf(handover_id):
         
         # تجهيز البيانات لملف PDF
         handover_data = {
-            'id': handover.id,
-            'type': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
-            'date': handover.handover_date.strftime('%Y-%m-%d'),
-            'person_name': handover.person_name,
-            'supervisor_name': handover.supervisor_name,
-            'form_link': handover.form_link,
             'vehicle': {
-                'plate_number': vehicle.plate_number,
-                'make': vehicle.make,
-                'model': vehicle.model,
-                'year': vehicle.year,
-                'color': vehicle.color
+                'plate_number': str(vehicle.plate_number),
+                'make': str(vehicle.make),
+                'model': str(vehicle.model),
+                'year': int(vehicle.year),
+                'color': str(vehicle.color)
             },
-            'condition': handover.vehicle_condition,
-            'fuel_level': handover.fuel_level,
-            'mileage': handover.mileage,
-            'has_spare_tire': handover.has_spare_tire,
-            'has_fire_extinguisher': handover.has_fire_extinguisher,
-            'has_tools': handover.has_tools,
-            'has_first_aid_kit': handover.has_first_aid_kit,
-            'has_warning_triangle': handover.has_warning_triangle,
-            'notes': handover.notes,
+            'handover_type': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
+            'handover_date': handover.handover_date.strftime('%Y-%m-%d'),
+            'person_name': str(handover.person_name),
+            'supervisor_name': str(handover.supervisor_name) if handover.supervisor_name else "",
+            'vehicle_condition': str(handover.vehicle_condition),
+            'fuel_level': str(handover.fuel_level),
+            'mileage': int(handover.mileage),
+            'has_spare_tire': bool(handover.has_spare_tire),
+            'has_fire_extinguisher': bool(handover.has_fire_extinguisher),
+            'has_first_aid_kit': bool(handover.has_first_aid_kit),
+            'has_warning_triangle': bool(handover.has_warning_triangle),
+            'has_tools': bool(handover.has_tools),
+            'notes': str(handover.notes) if handover.notes else "",
+            'form_link': str(handover.form_link) if handover.form_link else "",
             'image_paths': [image.image_path for image in images] if images else []
         }
         
@@ -2444,13 +2445,14 @@ def handover_pdf(handover_id):
             flash('حدث خطأ أثناء إنشاء ملف PDF', 'danger')
             return redirect(url_for('mobile.view_handover', handover_id=handover_id))
         
-        # إرسال الملف كاستجابة
-        filename = f"نموذج_{handover_data['type']}_{vehicle.plate_number}_{handover.handover_date.strftime('%Y%m%d')}.pdf"
+        # تحديد اسم الملف
+        filename = f"handover_form_{vehicle.plate_number}.pdf"
         
-        buffer = io.BytesIO(pdf_bytes)
+        # إرسال الملف للمستخدم
         return send_file(
-            buffer,
+            io.BytesIO(pdf_bytes),
             download_name=filename,
+            as_attachment=True,
             mimetype='application/pdf'
         )
         
