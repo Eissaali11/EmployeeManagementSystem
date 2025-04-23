@@ -55,13 +55,13 @@ def index():
         query = query.filter(Document.expiry_date <= future_date, 
                              Document.expiry_date >= datetime.now().date())
     
-    # فلترة الوثائق التي باقي على انتهائها أكثر من 10 أيام
+    # فلترة الوثائق التي باقي على انتهائها أكثر من 30 يوماً
     today = datetime.now().date()
     if show_all.lower() != 'true':
-        # عرض الوثائق التي تنتهي في خلال 10 أيام أو أقل أو المنتهية بالفعل
-        future_date_10_days = today + timedelta(days=10)
+        # عرض الوثائق التي تنتهي في خلال 30 يوم أو أقل أو المنتهية بالفعل
+        future_date_30_days = today + timedelta(days=30)
         query = query.filter(
-            (Document.expiry_date <= future_date_10_days) | 
+            (Document.expiry_date <= future_date_30_days) | 
             (Document.expiry_date < today)
         )
     
@@ -72,7 +72,7 @@ def index():
     total_docs = Document.query.count()
     expired_docs = Document.query.filter(Document.expiry_date < today).count()
     expiring_soon = Document.query.filter(
-        Document.expiry_date <= today + timedelta(days=10),
+        Document.expiry_date <= today + timedelta(days=30),
         Document.expiry_date >= today
     ).count()
     safe_docs = total_docs - expired_docs - expiring_soon

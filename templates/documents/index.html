@@ -39,7 +39,7 @@
             <div class="card border-0 shadow-sm bg-warning bg-gradient text-white">
                 <div class="card-body text-center">
                     <h3 class="counter-value">{{ expiring_soon }}</h3>
-                    <p class="mb-0">تنتهي خلال 10 أيام</p>
+                    <p class="mb-0">تنتهي خلال 30 يوم</p>
                 </div>
             </div>
         </div>
@@ -133,7 +133,7 @@
                 <a href="{{ url_for('documents.index', show_all='true') }}" class="btn btn-sm btn-outline-primary {% if show_all %}active{% endif %}">
                     <i class="fas fa-globe me-1"></i> عرض جميع الوثائق
                 </a>
-                <a href="{{ url_for('documents.index') }}" class="btn btn-sm btn-outline-warning {% if not show_all %}active{% endif %}">
+                <a href="{{ url_for('documents.index', show_all='false') }}" class="btn btn-sm btn-outline-warning {% if not show_all %}active{% endif %}">
                     <i class="fas fa-filter me-1"></i> عرض الوثائق المنتهية أو التي ستنتهي قريباً
                 </a>
             </div>
