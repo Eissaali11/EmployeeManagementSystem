@@ -404,6 +404,7 @@ class VehicleHandover(db.Model):
     handover_type = db.Column(db.String(20), nullable=False)  # النوع: تسليم، استلام
     handover_date = db.Column(db.Date, nullable=False)  # تاريخ التسليم/الاستلام
     person_name = db.Column(db.String(100), nullable=False)  # اسم الشخص المستلم/المسلم
+    supervisor_name = db.Column(db.String(100))  # اسم المشرف
     vehicle_condition = db.Column(db.Text, nullable=False)  # حالة السيارة عند التسليم/الاستلام
     fuel_level = db.Column(db.String(20), nullable=False)  # مستوى الوقود
     mileage = db.Column(db.Integer, nullable=False)  # عداد الكيلومترات
