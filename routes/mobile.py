@@ -12,7 +12,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
 
@@ -2318,7 +2318,8 @@ def create_handover(vehicle_id):
         person_name = request.form.get('person_name')
         vehicle_condition = request.form.get('vehicle_condition')
         fuel_level = request.form.get('fuel_level')
-        mileage = int(request.form.get('mileage'))
+        mileage_str = request.form.get('mileage', '0')
+        mileage = int(mileage_str) if mileage_str and mileage_str.isdigit() else 0
         has_spare_tire = 'has_spare_tire' in request.form
         has_fire_extinguisher = 'has_fire_extinguisher' in request.form
         has_jack = 'has_jack' in request.form
@@ -2445,11 +2446,16 @@ def handover_pdf(handover_id):
         # إنشاء ملف PDF
         pdf_bytes = generate_vehicle_handover_pdf(handover_data)
         
+        if not pdf_bytes:
+            flash('حدث خطأ أثناء إنشاء ملف PDF', 'danger')
+            return redirect(url_for('mobile.view_handover', handover_id=handover_id))
+        
         # إرسال الملف كاستجابة
         filename = f"نموذج_{handover_data['type']}_{vehicle.plate_number}_{handover.handover_date.strftime('%Y%m%d')}.pdf"
         
+        buffer = io.BytesIO(pdf_bytes)
         return send_file(
-            io.BytesIO(pdf_bytes),
+            buffer,
             download_name=filename,
             mimetype='application/pdf'
         )
