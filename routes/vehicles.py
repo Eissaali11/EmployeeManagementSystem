@@ -1733,6 +1733,22 @@ def edit_inspection(id):
         inspection_statuses=INSPECTION_STATUS_CHOICES
     )
 
+@vehicles_bp.route('/inspection/<int:id>/confirm-delete')
+@login_required
+def confirm_delete_inspection(id):
+    """عرض صفحة تأكيد حذف سجل فحص دوري"""
+    inspection = VehiclePeriodicInspection.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(inspection.vehicle_id)
+    
+    # تنسيق التاريخ
+    inspection.formatted_inspection_date = format_date_arabic(inspection.inspection_date)
+    
+    return render_template(
+        'vehicles/inspection_confirm_delete.html',
+        inspection=inspection,
+        vehicle=vehicle
+    )
+
 @vehicles_bp.route('/inspection/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_inspection(id):
@@ -1909,6 +1925,22 @@ def edit_safety_check(id):
         supervisors=supervisors,
         check_types=SAFETY_CHECK_TYPE_CHOICES,
         check_statuses=SAFETY_CHECK_STATUS_CHOICES
+    )
+
+@vehicles_bp.route('/safety-check/<int:id>/confirm-delete')
+@login_required
+def confirm_delete_safety_check(id):
+    """عرض صفحة تأكيد حذف سجل فحص سلامة"""
+    safety_check = VehicleSafetyCheck.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(safety_check.vehicle_id)
+    
+    # تنسيق التاريخ
+    safety_check.formatted_check_date = format_date_arabic(safety_check.check_date)
+    
+    return render_template(
+        'vehicles/safety_check_confirm_delete.html',
+        safety_check=safety_check,
+        vehicle=vehicle
     )
 
 @vehicles_bp.route('/safety-check/<int:id>/delete', methods=['POST'])

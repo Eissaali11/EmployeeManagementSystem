@@ -108,30 +108,9 @@
                                                 <a href="{{ url_for('vehicles.edit_safety_check', id=check.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSafetyCheckModal{{ check.id }}">
+                                                <a href="{{ url_for('vehicles.confirm_delete_safety_check', id=check.id) }}" class="btn btn-sm btn-outline-danger">
                                                     <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                            
-                                            <!-- Modal for deletion confirmation -->
-                                            <div class="modal fade" id="deleteSafetyCheckModal{{ check.id }}" tabindex="-1" aria-labelledby="deleteSafetyCheckModalLabel{{ check.id }}" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="deleteSafetyCheckModalLabel{{ check.id }}">تأكيد الحذف</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            هل أنت متأكد من رغبتك في حذف سجل فحص السلامة للسيارة {{ vehicle.plate_number }} بتاريخ {{ check.formatted_check_date }}؟
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                            <form action="{{ url_for('vehicles.delete_safety_check', id=check.id) }}" method="POST">
-                                                                <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>

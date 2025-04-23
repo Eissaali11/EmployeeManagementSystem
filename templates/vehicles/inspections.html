@@ -81,35 +81,14 @@
                                                 <a href="{{ url_for('vehicles.edit_inspection', id=inspection.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteInspectionModal{{ inspection.id }}">
+                                                <a href="{{ url_for('vehicles.confirm_delete_inspection', id=inspection.id) }}" class="btn btn-sm btn-outline-danger">
                                                     <i class="fas fa-trash"></i>
-                                                </button>
+                                                </a>
                                                 {% if inspection.certificate_file %}
                                                 <a href="{{ url_for('static', filename=inspection.certificate_file) }}" target="_blank" class="btn btn-sm btn-outline-info">
                                                     <i class="fas fa-file-pdf"></i>
                                                 </a>
                                                 {% endif %}
-                                            </div>
-                                            
-                                            <!-- Modal for deletion confirmation -->
-                                            <div class="modal fade" id="deleteInspectionModal{{ inspection.id }}" tabindex="-1" aria-labelledby="deleteInspectionModalLabel{{ inspection.id }}" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="deleteInspectionModalLabel{{ inspection.id }}">تأكيد الحذف</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            هل أنت متأكد من رغبتك في حذف سجل الفحص رقم "{{ inspection.inspection_number }}" للسيارة {{ vehicle.plate_number }}؟
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                            <form action="{{ url_for('vehicles.delete_inspection', id=inspection.id) }}" method="POST">
-                                                                <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </td>
                                     </tr>
