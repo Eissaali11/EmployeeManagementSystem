@@ -130,7 +130,7 @@
             الفحص الدوري
         </h6>
         <div>
-            <a href="{{ url_for('vehicles.create_periodic_inspection', id=vehicle.id) }}" class="btn btn-sm btn-success">
+            <a href="{{ url_for('mobile.create_periodic_inspection', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-success">
                 <i class="fas fa-plus ms-1"></i>
                 إضافة فحص
             </a>
@@ -178,7 +178,7 @@
             فحوصات السلامة
         </h6>
         <div>
-            <a href="{{ url_for('vehicles.create_safety_check', id=vehicle.id) }}" class="btn btn-sm btn-success">
+            <a href="{{ url_for('mobile.create_safety_check', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-success">
                 <i class="fas fa-plus ms-1"></i>
                 فحص جديد
             </a>

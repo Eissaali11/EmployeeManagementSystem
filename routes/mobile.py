@@ -2464,4 +2464,114 @@ def handover_pdf(handover_id):
         flash(f'حدث خطأ أثناء إنشاء ملف PDF: {str(e)}', 'danger')
         return redirect(url_for('mobile.view_handover', handover_id=handover_id))
 
+# إنشاء فحص دوري جديد للسيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/<int:vehicle_id>/periodic-inspection/create', methods=['GET', 'POST'])
+@login_required
+def create_periodic_inspection(vehicle_id):
+    """إنشاء فحص دوري جديد للسيارة - النسخة المحمولة"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        try:
+            # استخراج البيانات من النموذج
+            inspection_date = datetime.strptime(request.form.get('inspection_date'), '%Y-%m-%d').date()
+            expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d').date()
+            inspection_center = request.form.get('inspection_center')
+            result = request.form.get('result')
+            notes = request.form.get('notes', '')
+            
+            # إنشاء سجل فحص دوري جديد
+            inspection = VehiclePeriodicInspection(
+                vehicle_id=vehicle_id,
+                inspection_date=inspection_date,
+                expiry_date=expiry_date,
+                inspection_center=inspection_center,
+                result=result,
+                notes=notes
+            )
+            
+            db.session.add(inspection)
+            db.session.commit()
+            
+            # تسجيل نشاط النظام
+            SystemAudit.create_audit_record(
+                current_user.id,
+                'إنشاء',
+                'VehiclePeriodicInspection',
+                inspection.id,
+                f"تم إضافة سجل فحص دوري للسيارة: {vehicle.plate_number}",
+                entity_name=f"سيارة: {vehicle.plate_number}"
+            )
+            
+            flash('تم إضافة سجل الفحص الدوري بنجاح', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء إضافة سجل الفحص: {str(e)}', 'danger')
+    
+    # عرض صفحة إنشاء فحص دوري
+    return render_template('mobile/create_periodic_inspection.html',
+                           vehicle=vehicle,
+                           now=datetime.now())
+
+# إنشاء فحص سلامة جديد للسيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/<int:vehicle_id>/safety-check/create', methods=['GET', 'POST'])
+@login_required
+def create_safety_check(vehicle_id):
+    """إنشاء فحص سلامة جديد للسيارة - النسخة المحمولة"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        try:
+            # استخراج البيانات من النموذج
+            check_date = datetime.strptime(request.form.get('check_date'), '%Y-%m-%d').date()
+            check_type = request.form.get('check_type')
+            driver_id_str = request.form.get('driver_id', '')
+            driver_id = int(driver_id_str) if driver_id_str and driver_id_str.isdigit() else None
+            supervisor_id_str = request.form.get('supervisor_id', '')
+            supervisor_id = int(supervisor_id_str) if supervisor_id_str and supervisor_id_str.isdigit() else None
+            result = request.form.get('result')
+            notes = request.form.get('notes', '')
+            
+            # إنشاء سجل فحص سلامة جديد
+            safety_check = VehicleSafetyCheck(
+                vehicle_id=vehicle_id,
+                check_date=check_date,
+                check_type=check_type,
+                driver_id=driver_id,
+                supervisor_id=supervisor_id,
+                result=result,
+                notes=notes
+            )
+            
+            db.session.add(safety_check)
+            db.session.commit()
+            
+            # تسجيل نشاط النظام
+            SystemAudit.create_audit_record(
+                current_user.id,
+                'إنشاء',
+                'VehicleSafetyCheck',
+                safety_check.id,
+                f"تم إضافة سجل فحص سلامة للسيارة: {vehicle.plate_number}",
+                entity_name=f"سيارة: {vehicle.plate_number}"
+            )
+            
+            flash('تم إضافة سجل فحص السلامة بنجاح', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء إضافة سجل الفحص: {str(e)}', 'danger')
+    
+    # الحصول على قائمة السائقين والمشرفين
+    drivers = Employee.query.filter(Employee.job_title.like('%سائق%')).order_by(Employee.name).all()
+    supervisors = Employee.query.filter(Employee.job_title.like('%مشرف%')).order_by(Employee.name).all()
+    
+    # عرض صفحة إنشاء فحص سلامة
+    return render_template('mobile/create_safety_check.html',
+                           vehicle=vehicle,
+                           drivers=drivers,
+                           supervisors=supervisors,
+                           now=datetime.now())
+
 
