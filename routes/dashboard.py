@@ -102,6 +102,7 @@ def index():
 
 @dashboard_bp.route('/employee-stats')
 @login_required
+@module_access_required(Module.DASHBOARD)
 def employee_stats():
     """عرض إحصائيات الموظفين حسب القسم والحالة"""
     # إحصائيات الموظفين حسب القسم
@@ -155,6 +156,7 @@ def employee_stats():
 
 @dashboard_bp.route('/api/department-employee-stats')
 @login_required
+@module_access_required(Module.DASHBOARD)
 def department_employee_stats_api():
     """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
     # إحصائيات الموظفين حسب القسم
