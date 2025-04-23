@@ -567,3 +567,67 @@ class VehicleFuelConsumption(db.Model):
         return 0
 
 
+class VehiclePeriodicInspection(db.Model):
+    """سجل الفحص الدوري للسيارات"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    inspection_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
+    expiry_date = db.Column(db.Date, nullable=False)  # تاريخ انتهاء الفحص
+    inspection_number = db.Column(db.String(50), nullable=False)  # رقم الفحص
+    inspector_name = db.Column(db.String(100), nullable=False)  # اسم الفاحص أو مركز الفحص
+    inspection_type = db.Column(db.String(50), nullable=False)  # نوع الفحص: فني، دوري، أمان
+    inspection_status = db.Column(db.String(20), default='valid')  # حالة الفحص: ساري، منتهي، على وشك الانتهاء
+    cost = db.Column(db.Float, default=0.0)  # تكلفة الفحص
+    results = db.Column(db.Text)  # نتائج الفحص
+    recommendations = db.Column(db.Text)  # التوصيات
+    certificate_file = db.Column(db.String(255))  # مسار ملف شهادة الفحص
+    notes = db.Column(db.Text)  # ملاحظات إضافية
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', back_populates='periodic_inspections')
+    
+    def __repr__(self):
+        return f'<VehiclePeriodicInspection {self.id} for vehicle {self.vehicle_id} expires on {self.expiry_date}>'
+    
+    @property
+    def is_expired(self):
+        """التحقق مما إذا كان الفحص منتهي الصلاحية"""
+        return self.expiry_date < datetime.now().date()
+    
+    @property
+    def is_expiring_soon(self):
+        """التحقق مما إذا كان الفحص على وشك الانتهاء (خلال 30 يوم)"""
+        delta = self.expiry_date - datetime.now().date()
+        return 0 <= delta.days <= 30
+
+
+class VehicleSafetyCheck(db.Model):
+    """فحص السلامة للسيارات (يومي، أسبوعي، شهري)"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    check_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
+    check_type = db.Column(db.String(20), nullable=False)  # نوع الفحص: يومي، أسبوعي، شهري
+    driver_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)  # معرف السائق
+    driver_name = db.Column(db.String(100), nullable=False)  # اسم السائق
+    supervisor_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)  # معرف المشرف
+    supervisor_name = db.Column(db.String(100), nullable=False)  # اسم المشرف
+    status = db.Column(db.String(20), default='completed')  # حالة الفحص: مكتمل، قيد التنفيذ، بحاجة للمراجعة
+    check_form_link = db.Column(db.String(255))  # رابط نموذج الفحص
+    issues_found = db.Column(db.Boolean, default=False)  # هل تم العثور على مشاكل؟
+    issues_description = db.Column(db.Text)  # وصف المشاكل
+    actions_taken = db.Column(db.Text)  # الإجراءات المتخذة
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', back_populates='safety_checks')
+    driver = db.relationship('Employee', foreign_keys=[driver_id])
+    supervisor = db.relationship('Employee', foreign_keys=[supervisor_id])
+    
+    def __repr__(self):
+        return f'<VehicleSafetyCheck {self.id} {self.check_type} check for vehicle {self.vehicle_id}>'
+
+
