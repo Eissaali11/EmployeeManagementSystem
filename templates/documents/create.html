@@ -105,6 +105,26 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // تفعيل البحث في قائمة الموظفين باستخدام Select2
+        $('#employee_id').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'اختر الموظف',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
+        // تفعيل البحث في قائمة أنواع الوثائق
+        $('#document_type').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'اختر نوع الوثيقة',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
         // التحقق من أن تاريخ الانتهاء بعد تاريخ الإصدار
         const form = document.querySelector('form');
         const issueDateInput = document.getElementById('issue_date');
