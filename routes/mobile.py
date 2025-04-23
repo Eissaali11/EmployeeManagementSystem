@@ -12,7 +12,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
 
@@ -788,11 +788,20 @@ def vehicle_details(vehicle_id):
     fees = []
     # يمكننا إضافة منطق لجلب الرسوم لاحقاً
     
+    # الحصول على سجلات التسليم والاستلام
+    handover_records = []
+    try:
+        # محاولة جلب سجلات التسليم والاستلام إذا كان النموذج متوفر
+        handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).limit(5).all()
+    except Exception as e:
+        print(f"خطأ في جلب سجلات التسليم والاستلام: {str(e)}")
+    
     return render_template('mobile/vehicle_details.html',
                          vehicle=vehicle,
                          maintenance_records=maintenance_records,
                          periodic_inspections=periodic_inspections,
                          documents=documents,
+                         handover_records=handover_records,
                          fees=fees)
 
 # إضافة سيارة جديدة - النسخة المحمولة
