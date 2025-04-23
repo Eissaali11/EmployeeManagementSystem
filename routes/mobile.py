@@ -199,7 +199,8 @@ def employee_details(employee_id):
     ).order_by(Attendance.date.desc()).all()
     
     # استعلام أحدث راتب للموظف
-    salary = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.date.desc()).first()
+    # ترتيب حسب السنة ثم الشهر بترتيب تنازلي
+    salary = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.year.desc(), Salary.month.desc()).first()
     
     # استعلام الوثائق الخاصة بالموظف
     documents = Document.query.filter_by(employee_id=employee_id).all()

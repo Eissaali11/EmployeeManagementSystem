@@ -76,25 +76,28 @@
     {% if pagination and pagination.pages > 1 %}
     <div class="mobile-pagination">
         {% if pagination.has_prev %}
-        <a href="{{ url_for('mobile.employees', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+        {% set args = request.args.copy() %}
+        {% if args.get('page') %}{% set _ = args.pop('page') %}{% endif %}
+        <a href="{{ url_for('mobile.employees', page=pagination.prev_num, **args) }}" class="mobile-pagination-item">
             <i class="fas fa-chevron-right"></i>
         </a>
         {% endif %}
         
-        {% for page in pagination.iter_pages() %}
-            {% if page %}
-                {% if page != pagination.page %}
-                <a href="{{ url_for('mobile.employees', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
-                {% else %}
-                <span class="mobile-pagination-item active">{{ page }}</span>
-                {% endif %}
+        {# ترقيم الصفحات البسيط #}
+        {% for page_num in range(1, pagination.pages + 1) %}
+            {% if page_num == pagination.page %}
+                <span class="mobile-pagination-item active">{{ page_num }}</span>
             {% else %}
-                <span class="mobile-pagination-item">...</span>
+                {% set args = request.args.copy() %}
+                {% if args.get('page') %}{% set _ = args.pop('page') %}{% endif %}
+                <a href="{{ url_for('mobile.employees', page=page_num, **args) }}" class="mobile-pagination-item">{{ page_num }}</a>
             {% endif %}
         {% endfor %}
         
         {% if pagination.has_next %}
-        <a href="{{ url_for('mobile.employees', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+        {% set args = request.args.copy() %}
+        {% if args.get('page') %}{% set _ = args.pop('page') %}{% endif %}
+        <a href="{{ url_for('mobile.employees', page=pagination.next_num, **args) }}" class="mobile-pagination-item">
             <i class="fas fa-chevron-left"></i>
         </a>
         {% endif %}
