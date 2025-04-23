@@ -42,9 +42,19 @@ def index():
             return redirect(url_for('mobile.departments'))
         elif current_user.has_module_access(Module.ATTENDANCE):
             return redirect(url_for('mobile.attendance'))
+        elif current_user.has_module_access(Module.SALARIES):
+            return redirect(url_for('mobile.salaries'))
+        elif current_user.has_module_access(Module.DOCUMENTS):
+            return redirect(url_for('mobile.documents'))
         elif current_user.has_module_access(Module.VEHICLES):
             return redirect(url_for('mobile.vehicles'))
-        # يمكن إضافة المزيد من الوحدات المتاحة على الجوال هنا
+        elif current_user.has_module_access(Module.REPORTS):
+            return redirect(url_for('mobile.reports'))
+        elif current_user.has_module_access(Module.FEES):
+            return redirect(url_for('mobile.fees'))
+        elif current_user.has_module_access(Module.USERS):
+            return redirect(url_for('mobile.users'))
+        # إذا لم يجد أي صلاحيات مناسبة، عرض صفحة مقيدة
     # الإحصائيات الأساسية
     stats = {
         'employees_count': Employee.query.count(),
