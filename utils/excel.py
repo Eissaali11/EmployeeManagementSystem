@@ -900,13 +900,6 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
         else:
             end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
         
-        # إنشاء قائمة بجميع الأيام في الشهر
-        date_list = []
-        current_date = start_date
-        while current_date <= end_date:
-            date_list.append(current_date)
-            current_date += timedelta(days=1)
-        
         # استخدام استعلام أكثر فعالية للحصول على سجلات الحضور
         from app import db
         from models import Attendance
@@ -916,15 +909,20 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
             Attendance.employee_id == employee.id,
             Attendance.date >= start_date,
             Attendance.date <= end_date
-        ).all()
+        ).order_by(Attendance.date).all()
         
-        # تخزين بيانات الحضور في قاموس للوصول السريع
+        # تخزين بيانات الحضور في قاموس للوصول السريع وإنشاء قائمة بالتواريخ الفعلية للحضور
         attendance_data = {}
+        date_list = []  # فقط التواريخ التي يوجد بها سجلات حضور
+        
         for attendance in attendances:
+            # تخزين معلومات الحضور
             attendance_data[attendance.date] = {
                 'status': attendance.status,
                 'notes': attendance.notes if hasattr(attendance, 'notes') else None
             }
+            # إضافة التاريخ إلى قائمة التواريخ
+            date_list.append(attendance.date)
         
         # إعداد أيام الأسبوع
         weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -985,11 +983,7 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
                 elif att_data['status'] == 'sick':
                     cell_value = "S"  # استخدام حرف S للمرض
                     cell_format = sick_format
-            else:
-                # إذا لم يوجد سجل لهذا اليوم، نفترض أنه حاضر (كما في الصورة المرفقة)
-                cell_value = "P"
-                cell_format = present_format
-                present_days += 1
+            # لا نحتاج للحالة else هنا لأن date_list تحتوي فقط على التواريخ التي لها سجلات حضور فعلية
             
             worksheet.write(row, col, cell_value, cell_format)
         
