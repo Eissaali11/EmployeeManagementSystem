@@ -506,7 +506,7 @@ def create_vehicle_handover_pdf(handover_data):
         # إضافة العنوان
         pdf.set_font('Arial', 'B', 18)
         pdf.set_text_color(*pdf.primary_color)
-        title = "نموذج " + handover_data['handover_type'] + " مركبة"
+        title = "نموذج " + handover_data['type'] + " مركبة"
         pdf.arabic_text(105, 20, title, 'C')
         
         # إضافة معلومات المركبة
@@ -527,11 +527,11 @@ def create_vehicle_handover_pdf(handover_data):
         
         pdf.set_font('Arial', 'B', 13)
         pdf.set_text_color(*pdf.primary_color)
-        pdf.arabic_text(190, 90, "معلومات " + handover_data['handover_type'] + ":", 'R')
+        pdf.arabic_text(190, 90, "معلومات " + handover_data['type'] + ":", 'R')
         
         pdf.set_font('Arial', '', 11)
         pdf.set_text_color(*pdf.secondary_color)
-        pdf.arabic_text(190, 98, f"التاريخ: {handover_data['handover_date']}", 'R')
+        pdf.arabic_text(190, 98, f"التاريخ: {handover_data['date']}", 'R')
         pdf.arabic_text(190, 106, f"الشخص: {handover_data['person_name']}", 'R')
         
         # جدول فحص المركبة
