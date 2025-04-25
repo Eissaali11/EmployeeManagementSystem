@@ -166,8 +166,9 @@
                             <div>
                                 <h5 class="mb-0">{{ department.manager.name }}</h5>
                                 <p class="mb-0 text-muted small">{{ department.manager.job_title }}</p>
-                                <p class="mb-0 small text-primary">
-                                    رقم الهوية: {{ department.manager.national_id }}
+                                <p class="mb-0 small">
+                                    {{ department.manager.national_id }}
+                                    <span class="badge bg-primary text-white">الهوية الوطنية</span>
                                 </p>
                             </div>
                         </div>
@@ -242,7 +243,7 @@
                                                 {% endif %}
                                                 </h6>
                                                 <p class="mb-0 text-muted small">{{ employee.job_title }}</p>
-                                                <span class="badge bg-secondary bg-opacity-10 text-dark">الهوية: {{ employee.national_id }}</span>
+                                                <span class="badge bg-primary text-white">الهوية الوطنية</span> {{ employee.national_id }}
                                             </div>
                                         </div>
                                     </td>
