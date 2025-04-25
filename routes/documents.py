@@ -927,6 +927,12 @@ def export_excel():
     
     # Categorize documents
     for doc in documents:
+        # تخطي المستندات بدون تاريخ انتهاء
+        if not doc.expiry_date:
+            # نضع المستندات بدون تاريخ انتهاء في قائمة منفصلة
+            valid_docs.append(doc)
+            continue
+            
         days_remaining = (doc.expiry_date - today).days
         if days_remaining < 0:
             expired_docs.append(doc)
@@ -1022,7 +1028,14 @@ def export_excel():
     
     # Write all documents to main worksheet
     row_num = 1
-    for doc in sorted(documents, key=lambda x: x.expiry_date):
+    # نرتب المستندات حسب تاريخ الانتهاء، مع وضع المستندات التي ليس لها تاريخ انتهاء في النهاية
+    def sort_key(doc):
+        if doc.expiry_date:
+            return (0, doc.expiry_date)  # المستندات ذات تاريخ انتهاء أولاً (مفتاح فرز = 0)
+        else:
+            return (1, None)  # المستندات بدون تاريخ انتهاء في النهاية (مفتاح فرز = 1)
+            
+    for doc in sorted(documents, key=sort_key):
         # Get employee information
         employee_name = doc.employee.name if doc.employee else "غير متوفر"
         employee_id = doc.employee.employee_id if doc.employee else "غير متوفر"
@@ -1032,16 +1045,19 @@ def export_excel():
         doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
         
         # Calculate remaining days
-        days_remaining = (doc.expiry_date - today).days
-        
-        # Determine format for days remaining
         days_format = cell_format
-        if days_remaining < 0:
-            days_format = expired_format
-        elif days_remaining < 30:
-            days_format = warning_format
+        if not doc.expiry_date:
+            days_remaining = "غير محدد"
+            days_format = cell_format  # استخدام التنسيق الافتراضي
         else:
-            days_format = valid_format
+            days_remaining = (doc.expiry_date - today).days
+            # Determine format for days remaining
+            if days_remaining < 0:
+                days_format = expired_format
+            elif days_remaining < 30:
+                days_format = warning_format
+            else:
+                days_format = valid_format
         
         # Write data
         main_worksheet.write(row_num, 0, employee_name, cell_format)
@@ -1049,8 +1065,19 @@ def export_excel():
         main_worksheet.write(row_num, 2, department_name, cell_format)
         main_worksheet.write(row_num, 3, doc_type_ar, cell_format)
         main_worksheet.write(row_num, 4, doc.document_number, cell_format)
-        main_worksheet.write_datetime(row_num, 5, doc.issue_date, date_format)
-        main_worksheet.write_datetime(row_num, 6, doc.expiry_date, date_format)
+        
+        # كتابة تاريخ الإصدار - قد يكون فارغاً
+        if doc.issue_date:
+            main_worksheet.write_datetime(row_num, 5, doc.issue_date, date_format)
+        else:
+            main_worksheet.write(row_num, 5, "غير محدد", cell_format)
+            
+        # كتابة تاريخ الانتهاء - قد يكون فارغاً
+        if doc.expiry_date:
+            main_worksheet.write_datetime(row_num, 6, doc.expiry_date, date_format)
+        else:
+            main_worksheet.write(row_num, 6, "غير محدد", cell_format)
+            
         main_worksheet.write(row_num, 7, days_remaining, days_format)
         main_worksheet.write(row_num, 8, doc.notes or '', cell_format)
         row_num += 1
@@ -1085,7 +1112,14 @@ def export_excel():
             ws.write(1, col_num, data, header_format)
         
         # Write data
-        for row_num, doc in enumerate(sorted(docs, key=lambda x: x.expiry_date), 2):
+        # تعريف دالة الترتيب نفسها
+        def sort_key(doc):
+            if doc.expiry_date:
+                return (0, doc.expiry_date)  # المستندات ذات تاريخ انتهاء أولاً 
+            else:
+                return (1, None)  # المستندات بدون تاريخ انتهاء في النهاية
+                
+        for row_num, doc in enumerate(sorted(docs, key=sort_key), 2):
             # Get employee information
             employee_name = doc.employee.name if doc.employee else "غير متوفر"
             employee_id = doc.employee.employee_id if doc.employee else "غير متوفر"
@@ -1095,7 +1129,19 @@ def export_excel():
             doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
             
             # Calculate remaining days
-            days_remaining = (doc.expiry_date - today).days
+            days_format = cell_format
+            if not doc.expiry_date:
+                days_remaining = "غير محدد"
+                days_format = no_expiry_format
+            else:
+                days_remaining = (doc.expiry_date - today).days
+                # Determine format for days remaining
+                if days_remaining < 0:
+                    days_format = expired_format
+                elif days_remaining < 30:
+                    days_format = warning_format
+                else:
+                    days_format = valid_format
             
             # Write data
             ws.write(row_num, 0, employee_name, cell_format)
@@ -1103,12 +1149,21 @@ def export_excel():
             ws.write(row_num, 2, department_name, cell_format)
             ws.write(row_num, 3, doc_type_ar, cell_format)
             ws.write(row_num, 4, doc.document_number, cell_format)
-            ws.write_datetime(row_num, 5, doc.issue_date, date_format)
-            ws.write_datetime(row_num, 6, doc.expiry_date, date_format)
-            ws.write(row_num, 7, days_remaining, 
-                    expired_format if days_remaining < 0 else 
-                    warning_format if days_remaining < 30 else 
-                    valid_format)
+            
+            # كتابة تاريخ الإصدار - قد يكون فارغاً
+            if doc.issue_date:
+                ws.write_datetime(row_num, 5, doc.issue_date, date_format)
+            else:
+                ws.write(row_num, 5, "غير محدد", cell_format)
+                
+            # كتابة تاريخ الانتهاء - قد يكون فارغاً
+            if doc.expiry_date:
+                ws.write_datetime(row_num, 6, doc.expiry_date, date_format)
+            else:
+                ws.write(row_num, 6, "غير محدد", cell_format)
+                
+            # كتابة الأيام المتبقية
+            ws.write(row_num, 7, days_remaining, days_format)
             ws.write(row_num, 8, doc.notes or '', cell_format)
     
     # Create worksheets for each category
@@ -1121,11 +1176,12 @@ def export_excel():
     stats_worksheet.right_to_left()
     
     # Set up statistics
-    expired_count = sum(1 for doc in documents if (doc.expiry_date - today).days < 0)
-    expiring_30_count = sum(1 for doc in documents if 0 <= (doc.expiry_date - today).days < 30)
-    expiring_60_count = sum(1 for doc in documents if 30 <= (doc.expiry_date - today).days < 60)
-    expiring_90_count = sum(1 for doc in documents if 60 <= (doc.expiry_date - today).days < 90)
-    valid_count = sum(1 for doc in documents if (doc.expiry_date - today).days >= 90)
+    expired_count = sum(1 for doc in documents if doc.expiry_date and (doc.expiry_date - today).days < 0)
+    expiring_30_count = sum(1 for doc in documents if doc.expiry_date and 0 <= (doc.expiry_date - today).days < 30)
+    expiring_60_count = sum(1 for doc in documents if doc.expiry_date and 30 <= (doc.expiry_date - today).days < 60)
+    expiring_90_count = sum(1 for doc in documents if doc.expiry_date and 60 <= (doc.expiry_date - today).days < 90)
+    valid_count = sum(1 for doc in documents if doc.expiry_date and (doc.expiry_date - today).days >= 90)
+    no_expiry_count = sum(1 for doc in documents if not doc.expiry_date)
     
     # Document counts by type
     doc_type_counts = {}
@@ -1180,12 +1236,22 @@ def export_excel():
         'bg_color': '#D9D9D9'
     })
     
+    no_expiry_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11,
+        'bg_color': '#D3D3D3',
+        'font_color': '#666666'
+    })
+    
     stats_data = [
         ['وثائق منتهية', expired_count, expired_format],
         ['تنتهي خلال 30 يوم', expiring_30_count, warning_format],
         ['تنتهي خلال 60 يوم', expiring_60_count, cell_format],
         ['تنتهي خلال 90 يوم', expiring_90_count, cell_format],
         ['صالحة لأكثر من 90 يوم', valid_count, cell_format],
+        ['بدون تاريخ انتهاء', no_expiry_count, no_expiry_format],
         ['المجموع', len(documents), total_format]
     ]
     
