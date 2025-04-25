@@ -309,6 +309,100 @@
     </div>
 </div>
 
+<!-- بطاقات إحصائيات الموظفين -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- إجمالي الموظفين -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-primary h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">إجمالي الموظفين</h6>
+                            <h2 class="display-5 mb-0 fw-bold">{{ employees|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-primary text-white">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-primary text-white py-1">
+                    <small><i class="fas fa-info-circle me-1"></i> العدد الكلي للموظفين في القسم</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الموظفين النشطين -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-success h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">موظفين نشطين</h6>
+                            <h2 class="display-5 mb-0 fw-bold text-success">{{ employees|selectattr('status', 'equalto', 'active')|list|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-success text-white">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-success text-white py-1">
+                    <small>
+                        <i class="fas fa-percentage me-1"></i> 
+                        {{ ((employees|selectattr('status', 'equalto', 'active')|list|length / employees|length * 100) if employees|length > 0 else 0)|round|int }}% من الإجمالي
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الموظفين في إجازة -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-warning h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">في إجازة</h6>
+                            <h2 class="display-5 mb-0 fw-bold text-warning">{{ employees|selectattr('status', 'equalto', 'on_leave')|list|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-warning text-white">
+                            <i class="fas fa-user-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-warning text-white py-1">
+                    <small>
+                        <i class="fas fa-percentage me-1"></i> 
+                        {{ ((employees|selectattr('status', 'equalto', 'on_leave')|list|length / employees|length * 100) if employees|length > 0 else 0)|round|int }}% من الإجمالي
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الموظفين غير النشطين -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card border-danger h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">غير نشط</h6>
+                            <h2 class="display-5 mb-0 fw-bold text-danger">{{ employees|selectattr('status', 'equalto', 'inactive')|list|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-danger text-white">
+                            <i class="fas fa-user-times fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-danger text-white py-1">
+                    <small>
+                        <i class="fas fa-percentage me-1"></i> 
+                        {{ ((employees|selectattr('status', 'equalto', 'inactive')|list|length / employees|length * 100) if employees|length > 0 else 0)|round|int }}% من الإجمالي
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- نصوص التنبيهات -->
 <div id="alertContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 5"></div>
 

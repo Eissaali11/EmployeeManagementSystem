@@ -119,10 +119,66 @@
 </div>
 {% endif %}
 
+<!-- إحصائيات حالة الموظفين -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-bar"></i> حالة الموظفين
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <!-- بطاقات الإحصائيات -->
+        <div class="stat-grid">
+            <!-- إجمالي الموظفين -->
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|length if department.employees else 0 }}</div>
+                    <div class="stat-label">إجمالي الموظفين</div>
+                </div>
+            </div>
+            
+            <!-- الموظفين النشطين -->
+            <div class="stat-card stat-active">
+                <div class="stat-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|selectattr('status', 'equalto', 'active')|list|length if department.employees else 0 }}</div>
+                    <div class="stat-label">نشط</div>
+                </div>
+            </div>
+            
+            <!-- الموظفين في إجازة -->
+            <div class="stat-card stat-leave">
+                <div class="stat-icon">
+                    <i class="fas fa-user-clock"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|selectattr('status', 'equalto', 'on_leave')|list|length if department.employees else 0 }}</div>
+                    <div class="stat-label">في إجازة</div>
+                </div>
+            </div>
+            
+            <!-- الموظفين غير النشطين -->
+            <div class="stat-card stat-inactive">
+                <div class="stat-icon">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|selectattr('status', 'equalto', 'inactive')|list|length if department.employees else 0 }}</div>
+                    <div class="stat-label">غير نشط</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- إحصائيات ورسوم بيانية -->
 <div class="mobile-card">
     <div class="mobile-card-title">
-        <i class="fas fa-chart-pie"></i> إحصائيات القسم
+        <i class="fas fa-chart-pie"></i> توزيع الموظفين
     </div>
     
     <div class="mobile-card-content">
@@ -255,6 +311,66 @@
 .action-buttons {
     margin: 20px 1rem;
 }
+
+/* تنسيق بطاقات الإحصائيات */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-left: 15px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.stat-total {
+    background: linear-gradient(45deg, #3a7bd5, #00d2ff);
+}
+
+.stat-active {
+    background: linear-gradient(45deg, #2ecc71, #26c281);
+}
+
+.stat-leave {
+    background: linear-gradient(45deg, #f39c12, #f1c40f);
+}
+
+.stat-inactive {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+}
 </style>
 {% endblock %}
 
@@ -265,17 +381,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // بيانات الرسم البياني للقسم
     const ctx = document.getElementById('departmentChart').getContext('2d');
     
-    // أمثلة على بيانات - يمكن استبدالها بالبيانات الفعلية
+    // بيانات حالة الموظفين
     const departmentChart = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'pie',
         data: {
-            labels: ['ذكور', 'إناث'],
+            labels: ['نشط', 'في إجازة', 'غير نشط'],
             datasets: [{
-                data: [{{ (department.employees|selectattr('gender', 'equalto', 'ذكر')|list|length) if department.employees else 0 }},
-                       {{ (department.employees|selectattr('gender', 'equalto', 'أنثى')|list|length) if department.employees else 0 }}],
+                data: [
+                    {{ department.employees|selectattr('status', 'equalto', 'active')|list|length if department.employees else 0 }},
+                    {{ department.employees|selectattr('status', 'equalto', 'on_leave')|list|length if department.employees else 0 }},
+                    {{ department.employees|selectattr('status', 'equalto', 'inactive')|list|length if department.employees else 0 }}
+                ],
                 backgroundColor: [
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 99, 132, 0.7)'
+                    'rgba(46, 204, 113, 0.8)', // أخضر للنشطين
+                    'rgba(243, 156, 18, 0.8)', // أصفر للإجازات
+                    'rgba(231, 76, 60, 0.8)'   // أحمر لغير النشطين
                 ],
                 borderWidth: 1
             }]
@@ -294,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 title: {
                     display: true,
-                    text: 'توزيع الموظفين حسب الجنس',
+                    text: 'توزيع الموظفين حسب الحالة',
                     font: {
                         family: 'Tajawal, Arial',
                         size: 14
