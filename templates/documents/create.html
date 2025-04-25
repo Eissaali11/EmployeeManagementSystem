@@ -18,14 +18,44 @@
                 <div class="card-body">
                     <form action="{{ url_for('documents.create') }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <!-- اختيار طريقة الإضافة: موظف واحد أو قسم كامل -->
+                        <div class="mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="add_type" id="add_single" value="single" checked>
+                                <label class="form-check-label" for="add_single">
+                                    <i class="fas fa-user me-1"></i> إضافة لموظف واحد
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="add_type" id="add_department" value="department">
+                                <label class="form-check-label" for="add_department">
+                                    <i class="fas fa-users me-1"></i> إضافة لقسم كامل
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <!-- قسم اختيار الموظف - يظهر فقط عند اختيار "إضافة لموظف واحد" -->
+                            <div class="col-md-6 mb-3" id="employee_selection">
                                 <label for="employee_id" class="form-label required-field">الموظف</label>
-                                <select class="form-select" id="employee_id" name="employee_id" required>
+                                <select class="form-select" id="employee_id" name="employee_id">
                                     <option value="">اختر الموظف</option>
                                     {% for employee in employees %}
                                     <option value="{{ employee.id }}">
                                         {{ employee.name }} ({{ employee.employee_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- قسم اختيار القسم - يظهر فقط عند اختيار "إضافة لقسم كامل" -->
+                            <div class="col-md-6 mb-3 d-none" id="department_selection">
+                                <label for="department_id" class="form-label required-field">القسم</label>
+                                <select class="form-select" id="department_id" name="department_id">
+                                    <option value="">اختر القسم</option>
+                                    {% for department in departments %}
+                                    <option value="{{ department.id }}">
+                                        {{ department.name }} ({{ department.employees|length }} موظف)
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -115,6 +145,16 @@
             width: '100%'
         });
         
+        // تفعيل البحث في قائمة الأقسام باستخدام Select2
+        $('#department_id').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'اختر القسم',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
         // تفعيل البحث في قائمة أنواع الوثائق
         $('#document_type').select2({
             theme: 'bootstrap-5',
@@ -124,6 +164,34 @@
             language: 'ar',
             width: '100%'
         });
+        
+        // التبديل بين اختيار الموظف أو القسم
+        const addSingleRadio = document.getElementById('add_single');
+        const addDepartmentRadio = document.getElementById('add_department');
+        const employeeSelection = document.getElementById('employee_selection');
+        const departmentSelection = document.getElementById('department_selection');
+        
+        // تبديل العرض عند تغيير خيار الإضافة
+        function toggleSelectionMode() {
+            if (addSingleRadio.checked) {
+                employeeSelection.classList.remove('d-none');
+                departmentSelection.classList.add('d-none');
+                document.getElementById('employee_id').setAttribute('required', '');
+                document.getElementById('department_id').removeAttribute('required');
+            } else {
+                employeeSelection.classList.add('d-none');
+                departmentSelection.classList.remove('d-none');
+                document.getElementById('department_id').setAttribute('required', '');
+                document.getElementById('employee_id').removeAttribute('required');
+            }
+        }
+        
+        // استدعاء الدالة عند تحميل الصفحة
+        toggleSelectionMode();
+        
+        // استدعاء الدالة عند تغيير الخيار
+        addSingleRadio.addEventListener('change', toggleSelectionMode);
+        addDepartmentRadio.addEventListener('change', toggleSelectionMode);
         
         // التحقق من أن تاريخ الانتهاء بعد تاريخ الإصدار
         const form = document.querySelector('form');
@@ -139,6 +207,18 @@
                     e.preventDefault();
                     alert('يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار');
                     expiryDateInput.focus();
+                }
+                
+                // التحقق من اختيار إما موظف أو قسم
+                const addType = document.querySelector('input[name="add_type"]:checked').value;
+                if (addType === 'single' && !document.getElementById('employee_id').value) {
+                    e.preventDefault();
+                    alert('يرجى اختيار الموظف');
+                    return;
+                } else if (addType === 'department' && !document.getElementById('department_id').value) {
+                    e.preventDefault();
+                    alert('يرجى اختيار القسم');
+                    return;
                 }
             });
             

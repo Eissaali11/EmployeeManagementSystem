@@ -121,41 +121,97 @@ def create():
                 flash('خطأ في التحقق من الأمان. يرجى المحاولة مرة أخرى.', 'danger')
                 return redirect(url_for('documents.create'))
                 
-            employee_id = request.form['employee_id']
             document_type = request.form['document_type']
             document_number = request.form['document_number']
             issue_date_str = request.form['issue_date']
             expiry_date_str = request.form['expiry_date']
+            notes = request.form.get('notes', '')
+            add_type = request.form.get('add_type', 'single')
             
             # Parse dates
             issue_date = parse_date(issue_date_str)
             expiry_date = parse_date(expiry_date_str)
             
-            # Create new document record
-            document = Document(
-                employee_id=employee_id,
-                document_type=document_type,
-                document_number=document_number,
-                issue_date=issue_date,
-                expiry_date=expiry_date,
-                notes=request.form.get('notes', '')
-            )
+            # تحديد ما إذا كان الإضافة لموظف واحد أو لقسم كامل
+            if add_type == 'single':
+                # إضافة وثيقة لموظف واحد
+                employee_id = request.form.get('employee_id')
+                if not employee_id:
+                    flash('يرجى اختيار الموظف', 'danger')
+                    return redirect(url_for('documents.create'))
+                
+                # Create new document record
+                document = Document(
+                    employee_id=employee_id,
+                    document_type=document_type,
+                    document_number=document_number,
+                    issue_date=issue_date,
+                    expiry_date=expiry_date,
+                    notes=notes
+                )
+                
+                db.session.add(document)
+                
+                # Log the action
+                employee = Employee.query.get(employee_id)
+                audit = SystemAudit(
+                    action='create',
+                    entity_type='document',
+                    entity_id=employee_id,
+                    details=f'تم إضافة وثيقة جديدة من نوع {document_type} للموظف: {employee.name}',
+                    user_id=current_user.id if current_user.is_authenticated else None
+                )
+                db.session.add(audit)
+                db.session.commit()
+                
+                flash('تم إضافة الوثيقة بنجاح', 'success')
             
-            db.session.add(document)
+            else:
+                # إضافة وثيقة لقسم كامل
+                department_id = request.form.get('department_id')
+                if not department_id:
+                    flash('يرجى اختيار القسم', 'danger')
+                    return redirect(url_for('documents.create'))
+                
+                # الحصول على جميع موظفي القسم
+                department = Department.query.get(department_id)
+                employees = department.employees
+                
+                if not employees:
+                    flash(f'لا يوجد موظفين في قسم "{department.name}"', 'warning')
+                    return redirect(url_for('documents.create'))
+                
+                # إنشاء وثيقة لكل موظف في القسم
+                document_count = 0
+                for employee in employees:
+                    # تخصيص رقم الوثيقة لكل موظف (إضافة الرقم الوظيفي في نهاية رقم الوثيقة)
+                    employee_document_number = f"{document_number}-{employee.employee_id}"
+                    
+                    document = Document(
+                        employee_id=employee.id,
+                        document_type=document_type,
+                        document_number=employee_document_number,
+                        issue_date=issue_date,
+                        expiry_date=expiry_date,
+                        notes=notes
+                    )
+                    
+                    db.session.add(document)
+                    document_count += 1
+                
+                # إنشاء سجل تدقيق للعملية
+                audit = SystemAudit(
+                    action='create_bulk',
+                    entity_type='document',
+                    entity_id=department_id,
+                    details=f'تم إضافة {document_count} وثيقة من نوع {document_type} لقسم: {department.name}',
+                    user_id=current_user.id if current_user.is_authenticated else None
+                )
+                db.session.add(audit)
+                db.session.commit()
+                
+                flash(f'تم إضافة {document_count} وثائق بنجاح لجميع موظفي قسم "{department.name}"', 'success')
             
-            # Log the action
-            employee = Employee.query.get(employee_id)
-            audit = SystemAudit(
-                action='create',
-                entity_type='document',
-                entity_id=employee_id,
-                details=f'تم إضافة وثيقة جديدة من نوع {document_type} للموظف: {employee.name}',
-                user_id=current_user.id if current_user.is_authenticated else None
-            )
-            db.session.add(audit)
-            db.session.commit()
-            
-            flash('تم إضافة الوثيقة بنجاح', 'success')
             return redirect(url_for('documents.index'))
         
         except Exception as e:
@@ -164,6 +220,9 @@ def create():
     
     # Get all employees for dropdown
     employees = Employee.query.all()
+    
+    # Get all departments for dropdown
+    departments = Department.query.all()
     
     # Get document types for dropdown
     document_types = [
@@ -179,6 +238,7 @@ def create():
     
     return render_template('documents/create.html',
                           employees=employees,
+                          departments=departments,
                           document_types=document_types,
                           today=today,
                           hijri_today=hijri_today,
