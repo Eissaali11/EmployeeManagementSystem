@@ -94,8 +94,8 @@ class Document(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=False)
     document_type = db.Column(db.String(50), nullable=False)  # national_id, passport, health_certificate, etc.
     document_number = db.Column(db.String(100), nullable=False)
-    issue_date = db.Column(db.Date, nullable=False)
-    expiry_date = db.Column(db.Date, nullable=False)
+    issue_date = db.Column(db.Date, nullable=True)  # تم تعديلها للسماح بقيم NULL
+    expiry_date = db.Column(db.Date, nullable=True)  # تم تعديلها للسماح بقيم NULL
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
