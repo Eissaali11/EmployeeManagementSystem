@@ -71,7 +71,7 @@ def parse_employee_excel(file):
         explicit_mappings = {
             'Name': 'name',  # الاسم
             'Emp .N': 'employee_id',  # رقم الموظف (عادة ما يستخدم في ملفات الموظفين)
-            'ID .N': 'employee_id',  # رقم الموظف بديل
+            'ID .N': 'national_id',  # رقم الهوية الوطنية (تصحيح الخطأ)
             'ID Number': 'national_id',  # رقم الهوية
             'Emp.N': 'employee_id',  # تنسيق آخر للرقم الوظيفي
             'No.Mobile': 'mobile',  # رقم الجوال
@@ -143,7 +143,7 @@ def parse_employee_excel(file):
                     
                     if 'national_id' not in detected_columns and len(columns_list) > 1:
                         detected_columns['national_id'] = columns_list[1]
-                        print(f"تخمين: العمود الثاني '{columns_list[1]}' = رقم الهوية")
+                        print(f"تخمين: العمود الثاني '{columns_list[1]}' = رقم الهوية الوطنية")
                     
                     if 'employee_id' not in detected_columns and len(columns_list) > 2:
                         detected_columns['employee_id'] = columns_list[2]
