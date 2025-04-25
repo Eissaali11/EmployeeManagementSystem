@@ -82,16 +82,24 @@
                         <div class="row mb-2">
                             <div class="col-5 text-start fw-bold">تاريخ الإصدار:</div>
                             <div class="col-7 text-end">
+                                {% if document.issue_date %}
                                 <span class="gregorian-date">{{ document.issue_date.strftime('%d/%m/%Y') }}</span>
                                 <span class="hijri-date" style="display:none;"></span>
+                                {% else %}
+                                <span>غير محدد</span>
+                                {% endif %}
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-5 text-start fw-bold">تاريخ الانتهاء:</div>
                             <div class="col-7 text-end">
+                                {% if document.expiry_date %}
                                 <span class="gregorian-date">{{ document.expiry_date.strftime('%d/%m/%Y') }}</span>
                                 <span class="hijri-date" style="display:none;"></span>
+                                {% else %}
+                                <span>غير محدد</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
