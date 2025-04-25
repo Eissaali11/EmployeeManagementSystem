@@ -199,7 +199,7 @@
                                     <i class="fas fa-search text-primary"></i>
                                 </span>
                                 <input type="text" id="searchInput" class="form-control border-0 shadow-none" 
-                                       placeholder="ابحث عن موظف (الاسم، الرقم الوظيفي، المسمى، الحالة...)" 
+                                       placeholder="ابحث عن موظف (الاسم، الرقم الوظيفي، رقم الهوية، رقم الجوال)" 
                                        aria-label="البحث عن موظف">
                                 <button class="btn btn-primary" type="button" id="searchButton">
                                     <i class="fas fa-search me-1"></i> بحث
@@ -226,7 +226,10 @@
                             </thead>
                             <tbody>
                                 {% for employee in employees %}
-                                <tr data-employee-id="{{ employee.id }}" class="align-middle">
+                                <tr data-employee-id="{{ employee.id }}" 
+                                    data-employee-national-id="{{ employee.national_id or '' }}"
+                                    data-employee-phone="{{ employee.phone or '' }}"
+                                    class="align-middle">
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="p-2 rounded-circle bg-secondary bg-opacity-10 me-2">
@@ -370,8 +373,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const status = row.querySelector('.badge.bg-success, .badge.bg-danger, .badge.bg-warning')?.textContent.toLowerCase() || '';
             const hireDate = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
             
+            // جمع بيانات إضافية من سمات البيانات
+            const nationalId = (row.getAttribute('data-employee-national-id') || '').toLowerCase();
+            const phone = (row.getAttribute('data-employee-phone') || '').toLowerCase();
+            
             // جمع كل البيانات للبحث
-            const allText = `${employeeName} ${employeeId} ${jobTitle} ${status} ${hireDate}`;
+            const allText = `${employeeName} ${employeeId} ${jobTitle} ${status} ${hireDate} ${nationalId} ${phone}`;
             
             // التحقق من وجود كلمة البحث
             if (allText.includes(searchTerm)) {
