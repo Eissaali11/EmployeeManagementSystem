@@ -245,29 +245,9 @@
                                                     <a href="{{ url_for('fees_costs.edit', id=fee.id) }}" class="btn btn-primary">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteFeeModal{{ fee.id }}">
+                                                    <a href="{{ url_for('fees_costs.confirm_delete', id=fee.id) }}" class="btn btn-danger">
                                                         <i class="fas fa-trash"></i>
-                                                    </button>
-                                                    <!-- Modal for delete confirmation -->
-                                                    <div class="modal fade" id="deleteFeeModal{{ fee.id }}" tabindex="-1" aria-labelledby="deleteFeeModalLabel{{ fee.id }}" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title" id="deleteFeeModalLabel{{ fee.id }}">تأكيد الحذف</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    هل أنت متأكد من حذف تكاليف الرسوم للمستند {{ fee.document_type }} للموظف {{ fee.document.employee.name }}؟
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                                    <form action="{{ url_for('fees_costs.delete', id=fee.id) }}" method="post">
-                                                                        <button type="submit" class="btn btn-danger">حذف</button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>

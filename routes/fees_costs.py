@@ -165,6 +165,13 @@ def edit(id):
                           fees_cost=fees_cost,
                           today=datetime.now().date().strftime('%Y-%m-%d'))
 
+@fees_costs_bp.route('/confirm-delete/<int:id>')
+@login_required
+def confirm_delete(id):
+    """تأكيد حذف تكاليف رسوم"""
+    fees_cost = FeesCost.query.get_or_404(id)
+    return render_template('fees_costs/confirm_delete.html', fees_cost=fees_cost)
+
 @fees_costs_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete(id):
