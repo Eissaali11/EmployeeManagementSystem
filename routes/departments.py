@@ -116,8 +116,8 @@ def view(id):
     on_leave_count = sum(1 for e in employees if e.status == 'on_leave')
     inactive_count = sum(1 for e in employees if e.status == 'inactive')
     
-    # استخدام القالب الجديد
-    return render_template('departments/view_new.html', 
+    # استخدام القالب المحدث
+    return render_template('departments/view.html', 
                           department=department, 
                           employees=employees,
                           active_count=active_count,
