@@ -62,13 +62,43 @@
     
     /* تأثير تمييز نتائج البحث */
     .search-highlight {
-        background-color: rgba(255, 243, 205, 0.5) !important;
-        animation: highlightRow 1.5s ease;
+        background-color: rgba(13, 110, 253, 0.08) !important;
+        animation: highlightRow 1.5s ease infinite alternate;
+        box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.25);
     }
     
     @keyframes highlightRow {
-        0% { background-color: rgba(255, 243, 205, 0.9); }
-        100% { background-color: rgba(255, 243, 205, 0); }
+        0% { background-color: rgba(13, 110, 253, 0.05); }
+        100% { background-color: rgba(13, 110, 253, 0.15); }
+    }
+    
+    /* تأثيرات حقل البحث */
+    #employeeSearch:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+    
+    .search-container {
+        transition: all 0.3s ease;
+    }
+    
+    .search-container:has(#employeeSearch:focus) {
+        background-color: rgba(13, 110, 253, 0.03) !important;
+    }
+    
+    /* تأثير أيقونة البحث */
+    #searchButton {
+        transition: all 0.3s ease;
+    }
+    
+    #searchButton:hover {
+        transform: scale(1.05);
+    }
+    
+    /* تنسيق رسائل نتائج البحث */
+    #searchResultsInfo {
+        border-right: 3px solid #0d6efd;
+        padding-right: 10px;
+        transition: all 0.3s ease;
     }
     
     /* تحسين شكل أزرار الإجراءات */
@@ -649,43 +679,108 @@ window.onload = function() {
         };
     }
     
-    // وظيفة البحث
+    // وظيفة البحث المُحسّنة للبحث في كافة بيانات الموظفين
     function doSearch() {
-        let searchTerm = searchInput.value.toLowerCase();
+        let searchTerm = searchInput.value.trim().toLowerCase();
         let rows = document.querySelectorAll('tr[data-employee-id]');
         let foundCount = 0;
+        let searchResultsInfo = document.getElementById('searchResultsInfo');
         
-        // طباعة تفاصيل البحث
-        console.log('جاري البحث عن: ' + searchTerm);
-        console.log('عدد الصفوف: ' + rows.length);
+        // إعادة تعيين أي تأثيرات بحث سابقة
+        rows.forEach(row => {
+            row.classList.remove('search-highlight');
+        });
         
-        // فحص كل صف
-        rows.forEach(function(row) {
-            let textContent = row.textContent.toLowerCase();
-            let isMatch = textContent.includes(searchTerm);
-            
-            if (isMatch || searchTerm === '') {
+        // إذا كان مصطلح البحث فارغًا، أظهر جميع الصفوف
+        if (searchTerm === '') {
+            rows.forEach(row => {
                 row.style.display = '';
+            });
+            foundCount = rows.length;
+            
+            // إخفاء معلومات نتائج البحث
+            if (searchResultsInfo) {
+                searchResultsInfo.style.display = 'none';
+            }
+            
+            // تحديث عدد النتائج
+            let countElement = document.getElementById('employeeCount');
+            if (countElement) {
+                countElement.textContent = foundCount;
+            }
+            return;
+        }
+        
+        // البحث في الحقول الفردية لكل صف
+        rows.forEach(function(row) {
+            // الحصول على مكونات متعددة للبحث
+            const employeeName = row.querySelector('h6.mb-0')?.textContent.toLowerCase() || '';
+            const employeeId = row.querySelector('.badge.bg-secondary.bg-opacity-10')?.textContent.toLowerCase() || '';
+            const jobTitle = row.querySelector('p.mb-0.text-muted.small')?.textContent.toLowerCase() || '';
+            const status = row.querySelector('button.status-dropdown-btn')?.textContent.toLowerCase() || '';
+            const nationality = row.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
+            const hireDate = row.querySelector('td:nth-child(6)')?.textContent.toLowerCase() || '';
+            
+            // تجميع كل البيانات للبحث الشامل
+            const allData = [employeeName, employeeId, jobTitle, status, nationality, hireDate].join(' ');
+            
+            // البحث في البيانات المجمعة
+            let isMatch = allData.includes(searchTerm);
+            
+            // تطبيق نتائج البحث وإضافة تأثيرات مرئية
+            if (isMatch) {
+                row.style.display = '';
+                row.classList.add('search-highlight');
                 foundCount++;
+                
+                // إبراز النص المطابق (التمييز)
+                highlightMatchingText(row, searchTerm);
             } else {
                 row.style.display = 'none';
             }
         });
         
+        // إظهار معلومات نتائج البحث
+        if (searchResultsInfo) {
+            searchResultsInfo.style.display = 'block';
+        }
+        
         // تحديث عدد النتائج
         let countElement = document.getElementById('employeeCount');
         if (countElement) {
-            countElement.textContent = foundCount + ' موظف';
+            countElement.textContent = foundCount;
         }
         
-        // عرض رسالة
-        if (searchTerm !== '') {
-            if (foundCount > 0) {
-                showAlert('تم العثور على ' + foundCount + ' موظف', 'success');
-            } else {
-                showAlert('لا توجد نتائج مطابقة للبحث', 'warning');
-            }
+        // عرض رسالة توضيحية حسب نتائج البحث
+        if (foundCount > 0) {
+            showAlert('تم العثور على ' + foundCount + ' موظف يطابق "' + searchTerm + '"', 'success');
+        } else {
+            showAlert('لا توجد نتائج مطابقة للبحث عن "' + searchTerm + '"', 'warning');
         }
+    }
+    
+    // وظيفة لتمييز النص المطابق في البحث
+    function highlightMatchingText(element, searchTerm) {
+        // لا نطبق التمييز إذا كان مصطلح البحث فارغًا
+        if (!searchTerm || searchTerm.trim() === '') {
+            return;
+        }
+        
+        // نبحث عن العناصر النصية داخل العنصر الأب
+        const textElements = element.querySelectorAll('.mb-0, .small, .badge, td');
+        
+        textElements.forEach(el => {
+            const originalText = el.textContent;
+            // تحويل النص للأحرف الصغيرة للمقارنة
+            const lowerCaseText = originalText.toLowerCase();
+            
+            // إذا كان النص يحتوي على مصطلح البحث
+            if (lowerCaseText.includes(searchTerm)) {
+                // نضيف تأثير التمييز (نعطي العنصر خلفية بلون مختلف)
+                el.classList.add('fw-bold');
+                el.classList.add('text-primary');
+            }
+        });
     }
     
     // ======== وظائف تحديد المربعات =========
