@@ -97,16 +97,20 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="issue_date" class="form-label required-field">تاريخ الإصدار</label>
+                                <label for="issue_date" id="issue_date_label" class="form-label required-field">تاريخ الإصدار</label>
                                 <input type="date" class="form-control date-picker" id="issue_date" name="issue_date" required>
                                 <div class="mt-1">
                                     <span class="gregorian-date">{{ gregorian_today }}</span>
                                     <span class="hijri-date" style="display: none;">{{ hijri_today }}</span>
                                 </div>
+                                <small class="form-text text-muted d-none" id="date_optional_info">
+                                    <i class="fas fa-info-circle"></i>
+                                    التواريخ اختيارية عند إضافة وثائق لقسم كامل
+                                </small>
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label for="expiry_date" class="form-label required-field">تاريخ الانتهاء</label>
+                                <label for="expiry_date" id="expiry_date_label" class="form-label required-field">تاريخ الانتهاء</label>
                                 <input type="date" class="form-control date-picker" id="expiry_date" name="expiry_date" required>
                                 <div class="form-text text-muted">
                                     <i class="fas fa-info-circle"></i>
@@ -179,6 +183,11 @@
         function toggleSelectionMode() {
             const documentNumberInput = document.getElementById('document_number');
             const documentNumberInfo = document.getElementById('department_document_number_info');
+            const issueDateInput = document.getElementById('issue_date');
+            const expiryDateInput = document.getElementById('expiry_date');
+            const issueDateLabel = document.getElementById('issue_date_label');
+            const expiryDateLabel = document.getElementById('expiry_date_label');
+            const dateOptionalInfo = document.getElementById('date_optional_info');
             
             if (addSingleRadio.checked) {
                 // وضع إضافة لموظف واحد
@@ -192,6 +201,13 @@
                 documentNumberInput.removeAttribute('readonly');
                 documentNumberInput.value = '';
                 documentNumberInfo.classList.add('d-none');
+                
+                // تعيين حقول التاريخ كإلزامية
+                issueDateInput.setAttribute('required', '');
+                expiryDateInput.setAttribute('required', '');
+                issueDateLabel.classList.add('required-field');
+                expiryDateLabel.classList.add('required-field');
+                dateOptionalInfo.classList.add('d-none');
             } else {
                 // وضع إضافة لقسم كامل
                 employeeSelection.classList.add('d-none');
@@ -204,6 +220,13 @@
                 documentNumberInput.setAttribute('readonly', 'readonly');
                 documentNumberInput.value = 'سيتم استخدام رقم الهوية الخاص بكل موظف';
                 documentNumberInfo.classList.remove('d-none');
+                
+                // تعيين حقول التاريخ كاختيارية
+                issueDateInput.removeAttribute('required');
+                expiryDateInput.removeAttribute('required');
+                issueDateLabel.classList.remove('required-field');
+                expiryDateLabel.classList.remove('required-field');
+                dateOptionalInfo.classList.remove('d-none');
             }
         }
         
@@ -221,17 +244,29 @@
         
         if (form && issueDateInput && expiryDateInput) {
             form.addEventListener('submit', function(e) {
-                const issueDate = new Date(issueDateInput.value);
-                const expiryDate = new Date(expiryDateInput.value);
+                const addType = document.querySelector('input[name="add_type"]:checked').value;
                 
-                if (expiryDate <= issueDate) {
-                    e.preventDefault();
-                    alert('يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار');
-                    expiryDateInput.focus();
+                // التحقق من التواريخ فقط إذا تم إدخالها (يكون إلزامياً فقط في حالة موظف واحد)
+                if (issueDateInput.value && expiryDateInput.value) {
+                    const issueDate = new Date(issueDateInput.value);
+                    const expiryDate = new Date(expiryDateInput.value);
+                    
+                    if (expiryDate <= issueDate) {
+                        e.preventDefault();
+                        alert('يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار');
+                        expiryDateInput.focus();
+                        return;
+                    }
+                } else if (addType === 'single') {
+                    // التحقق من إدخال التواريخ فقط في حالة موظف واحد
+                    if (!issueDateInput.value || !expiryDateInput.value) {
+                        e.preventDefault();
+                        alert('يرجى إدخال تاريخ الإصدار وتاريخ الانتهاء');
+                        return;
+                    }
                 }
                 
                 // التحقق من اختيار إما موظف أو قسم
-                const addType = document.querySelector('input[name="add_type"]:checked').value;
                 if (addType === 'single' && !document.getElementById('employee_id').value) {
                     e.preventDefault();
                     alert('يرجى اختيار الموظف');
