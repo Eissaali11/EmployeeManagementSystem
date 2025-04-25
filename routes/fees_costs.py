@@ -42,7 +42,8 @@ def index():
                           total_labor_fees=total_labor_fees,
                           total_insurance_fees=total_insurance_fees,
                           total_social_insurance_fees=total_social_insurance_fees,
-                          total_fees=total_fees)
+                          total_fees=total_fees,
+                          now=datetime.now())
 
 @fees_costs_bp.route('/create', methods=['GET', 'POST'])
 @login_required
