@@ -84,7 +84,7 @@
                     </select>
                 </div>
                 
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="employee_id" class="form-label">الموظف</label>
                     <select class="form-select" id="employee_id" name="employee_id">
                         <option value="">جميع الموظفين</option>
@@ -96,7 +96,19 @@
                     </select>
                 </div>
                 
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
+                    <label for="department_id" class="form-label">القسم</label>
+                    <select class="form-select" id="department_id" name="department_id">
+                        <option value="">جميع الأقسام</option>
+                        {% for department in departments %}
+                        <option value="{{ department.id }}" {% if selected_department == department.id|string %}selected{% endif %}>
+                            {{ department.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
                     <label for="expiring" class="form-label">حالة الصلاحية</label>
                     <select class="form-select" id="expiring" name="expiring">
                         <option value="">جميع الوثائق</option>
@@ -232,7 +244,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // إعادة تحميل الصفحة عند تغيير أي من حقول البحث
-        const filterFields = ['document_type', 'employee_id', 'expiring'];
+        const filterFields = ['document_type', 'employee_id', 'department_id', 'expiring'];
         
         filterFields.forEach(function(field) {
             const element = document.getElementById(field);

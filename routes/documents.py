@@ -18,7 +18,7 @@ from reportlab.lib.units import cm
 import arabic_reshaper
 from bidi.algorithm import get_display
 from app import db
-from models import Document, Employee, SystemAudit
+from models import Document, Employee, Department, SystemAudit
 from utils.excel import parse_document_excel
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
 
@@ -30,6 +30,7 @@ def index():
     # Get filter parameters
     document_type = request.args.get('document_type', '')
     employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
     expiring = request.args.get('expiring', '')
     show_all = request.args.get('show_all', 'false')
     
@@ -42,6 +43,10 @@ def index():
     
     if employee_id and employee_id.isdigit():
         query = query.filter(Document.employee_id == int(employee_id))
+    
+    # تصفية حسب القسم
+    if department_id and department_id.isdigit():
+        query = query.join(Employee).filter(Employee.department_id == int(department_id))
     
     if expiring:
         # Get documents expiring in the next 30, 60, or 90 days
@@ -80,6 +85,9 @@ def index():
     # Get all employees for filter dropdown
     employees = Employee.query.all()
     
+    # Get all departments for filter dropdown
+    departments = Department.query.all()
+    
     # Get document types for filter dropdown
     document_types = [
         'national_id', 'passport', 'health_certificate', 
@@ -90,9 +98,11 @@ def index():
     return render_template('documents/index.html',
                           documents=documents,
                           employees=employees,
+                          departments=departments,
                           document_types=document_types,
                           selected_type=document_type,
                           selected_employee=employee_id,
+                          selected_department=department_id,
                           selected_expiring=expiring,
                           show_all=show_all.lower() == 'true',
                           total_docs=total_docs,
