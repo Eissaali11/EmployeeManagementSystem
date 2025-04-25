@@ -168,7 +168,7 @@
                     </thead>
                     <tbody>
                         {% for document in documents %}
-                        {% set days_to_expiry = (document.expiry_date - now.date()).days if now else 0 %}
+                        {% set days_to_expiry = (document.expiry_date - now.date()).days if document.expiry_date and now else 0 %}
                         <tr class="document-{{ document.document_type }}">
                             <td>{{ document.employee.name }}</td>
                             <td>
@@ -204,7 +204,9 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if days_to_expiry < 0 %}
+                                {% if not document.expiry_date %}
+                                <span class="badge bg-secondary">غير محدد</span>
+                                {% elif days_to_expiry < 0 %}
                                 <span class="badge bg-danger">منتهية منذ {{ -days_to_expiry }} يوم</span>
                                 {% elif days_to_expiry < 30 %}
                                 <span class="badge bg-warning">تنتهي خلال {{ days_to_expiry }} يوم</span>

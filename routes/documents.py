@@ -57,6 +57,7 @@ def index():
             days = 90
         
         future_date = datetime.now().date() + timedelta(days=days)
+        query = query.filter(Document.expiry_date.isnot(None))  # استبعاد الوثائق بدون تاريخ انتهاء
         query = query.filter(Document.expiry_date <= future_date, 
                              Document.expiry_date >= datetime.now().date())
     
@@ -66,8 +67,10 @@ def index():
         # عرض الوثائق التي تنتهي في خلال 30 يوم أو أقل أو المنتهية بالفعل
         future_date_30_days = today + timedelta(days=30)
         query = query.filter(
-            (Document.expiry_date <= future_date_30_days) | 
-            (Document.expiry_date < today)
+            # تتضمن الوثائق التي لها تاريخ انتهاء ويكون ضمن المدى المحدد
+            Document.expiry_date.isnot(None) & 
+            ((Document.expiry_date <= future_date_30_days) | 
+             (Document.expiry_date < today))
         )
     
     # Execute query
@@ -75,12 +78,20 @@ def index():
     
     # احسب عدد الوثائق الكلي والمنتهية والقريبة من الانتهاء
     total_docs = Document.query.count()
-    expired_docs = Document.query.filter(Document.expiry_date < today).count()
+    # حساب عدد الوثائق المنتهية (يجب أن يكون لها تاريخ انتهاء حتى تعتبر منتهية)
+    expired_docs = Document.query.filter(
+        Document.expiry_date.isnot(None),
+        Document.expiry_date < today
+    ).count()
+    # حساب عدد الوثائق التي ستنتهي قريباً
     expiring_soon = Document.query.filter(
+        Document.expiry_date.isnot(None),
         Document.expiry_date <= today + timedelta(days=30),
         Document.expiry_date >= today
     ).count()
-    safe_docs = total_docs - expired_docs - expiring_soon
+    # عدد الوثائق الآمنة والتي لها تاريخ انتهاء
+    docs_with_expiry = Document.query.filter(Document.expiry_date.isnot(None)).count()
+    safe_docs = docs_with_expiry - expired_docs - expiring_soon
     
     # Get all employees for filter dropdown
     employees = Employee.query.all()
