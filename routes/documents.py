@@ -122,15 +122,15 @@ def create():
                 return redirect(url_for('documents.create'))
                 
             document_type = request.form['document_type']
-            document_number = request.form['document_number']
-            issue_date_str = request.form['issue_date']
-            expiry_date_str = request.form['expiry_date']
+            document_number = request.form.get('document_number', '')
+            issue_date_str = request.form.get('issue_date', '')
+            expiry_date_str = request.form.get('expiry_date', '')
             notes = request.form.get('notes', '')
             add_type = request.form.get('add_type', 'single')
             
-            # Parse dates
-            issue_date = parse_date(issue_date_str)
-            expiry_date = parse_date(expiry_date_str)
+            # Parse dates (فقط إذا تم إدخالها)
+            issue_date = parse_date(issue_date_str) if issue_date_str else None
+            expiry_date = parse_date(expiry_date_str) if expiry_date_str else None
             
             # تحديد ما إذا كان الإضافة لموظف واحد أو لقسم كامل
             if add_type == 'single':
