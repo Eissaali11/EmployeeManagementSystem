@@ -8,10 +8,23 @@
             <i class="fas fa-plus me-1"></i> إضافة قسم
         </a>
     </div>
+    
+    <!-- حقل البحث -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" id="departmentSearchInput" class="form-control" placeholder="ابحث باسم القسم..." autofocus>
+                <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         {% for department in departments %}
-        <div class="col-md-4 mb-4" data-department-id="{{ department.id }}">
+        <div class="col-md-4 mb-4 department-item" data-department-id="{{ department.id }}" data-department-name="{{ department.name }}">
             <div class="department-card card shadow-sm">
                 <div class="department-header">
                     <h4><i class="fas fa-building me-2"></i>{{ department.name }}</h4>
@@ -63,4 +76,84 @@
         {% endfor %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('departmentSearchInput');
+        const clearButton = document.getElementById('clearSearchBtn');
+        const departmentItems = document.querySelectorAll('.department-item');
+        
+        // وظيفة البحث
+        function performSearch() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            let resultsFound = false;
+            
+            departmentItems.forEach(item => {
+                const departmentName = item.getAttribute('data-department-name').toLowerCase();
+                
+                if (departmentName.includes(searchTerm) || searchTerm === '') {
+                    item.style.display = 'block';
+                    resultsFound = true;
+                    
+                    // تمييز نص البحث
+                    if (searchTerm !== '') {
+                        const header = item.querySelector('.department-header h4');
+                        const originalText = item.getAttribute('data-department-name');
+                        
+                        // إعادة النص الأصلي أولاً
+                        header.innerHTML = '<i class="fas fa-building me-2"></i>' + originalText;
+                        
+                        // تمييز النص المطابق
+                        if (searchTerm !== '') {
+                            const regex = new RegExp(searchTerm, 'gi');
+                            header.innerHTML = '<i class="fas fa-building me-2"></i>' + 
+                                              originalText.replace(regex, match => 
+                                                `<span class="bg-warning text-dark">${match}</span>`);
+                        }
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // عرض رسالة عندما لا توجد نتائج
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            if (!resultsFound) {
+                if (!noResultsMessage) {
+                    const message = document.createElement('div');
+                    message.id = 'noResultsMessage';
+                    message.className = 'col-12';
+                    message.innerHTML = `
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            لا توجد نتائج مطابقة للبحث: "${searchTerm}"
+                        </div>
+                    `;
+                    document.querySelector('.row').appendChild(message);
+                }
+            } else {
+                if (noResultsMessage) {
+                    noResultsMessage.remove();
+                }
+            }
+        }
+        
+        // تشغيل البحث عند كتابة النص
+        searchInput.addEventListener('input', performSearch);
+        
+        // مسح البحث عند النقر على زر المسح
+        clearButton.addEventListener('click', function() {
+            searchInput.value = '';
+            performSearch();
+            searchInput.focus();
+        });
+        
+        // إعادة تعيين العرض عند تحميل الصفحة
+        departmentItems.forEach(item => {
+            item.style.display = 'block';
+        });
+    });
+</script>
 {% endblock %}
