@@ -49,23 +49,7 @@
                         <div class="row mb-2">
                             <div class="col-5 text-start fw-bold">نوع الوثيقة:</div>
                             <div class="col-7 text-end">
-                                {% if document.document_type == 'national_id' %}
-                                الهوية الوطنية
-                                {% elif document.document_type == 'passport' %}
-                                جواز السفر
-                                {% elif document.document_type == 'health_certificate' %}
-                                الشهادة الصحية
-                                {% elif document.document_type == 'work_permit' %}
-                                تصريح العمل
-                                {% elif document.document_type == 'education_certificate' %}
-                                الشهادة الدراسية
-                                {% elif document.document_type == 'driving_license' %}
-                                رخصة القيادة
-                                {% elif document.document_type == 'annual_leave' %}
-                                الإجازة السنوية
-                                {% else %}
-                                {{ document.document_type }}
-                                {% endif %}
+                                {{ document_type_ar }}
                             </div>
                         </div>
                         

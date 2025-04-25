@@ -282,7 +282,31 @@ def create():
 def confirm_delete(id):
     """صفحة تأكيد حذف وثيقة"""
     document = Document.query.get_or_404(id)
-    return render_template('documents/confirm_delete.html', document=document)
+    
+    # تحويل أنواع الوثائق إلى عربي للعرض
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'health_certificate': 'الشهادة الصحية',
+        'work_permit': 'تصريح العمل',
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية',
+        'residency_permit': 'تصريح الإقامة',
+        'visa': 'تأشيرة',
+        'insurance': 'التأمين',
+        'contract': 'العقد',
+        'certification': 'شهادة مهنية',
+        'training_certificate': 'شهادة تدريب',
+        'other': 'أخرى'
+    }
+    
+    # الحصول على اسم نوع الوثيقة بالعربية
+    document_type_ar = document_types_map.get(document.document_type, document.document_type)
+    
+    return render_template('documents/confirm_delete.html', 
+                          document=document, 
+                          document_type_ar=document_type_ar)
 
 @documents_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
