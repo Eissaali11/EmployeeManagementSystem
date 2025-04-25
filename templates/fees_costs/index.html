@@ -107,7 +107,7 @@
                                     </thead>
                                     <tbody>
                                         {% for doc in expired_docs %}
-                                        <tr class="{% if doc.expiry_date <= now %}table-danger{% endif %}">
+                                        <tr class="{% if doc.expiry_date <= now.date() %}table-danger{% endif %}">
                                             <td>{{ doc.document_type }}</td>
                                             <td>{{ doc.employee.name }}</td>
                                             <td>{{ doc.document_number }}</td>

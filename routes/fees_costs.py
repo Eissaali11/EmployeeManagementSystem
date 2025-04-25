@@ -224,7 +224,8 @@ def expiring_documents():
     return render_template('fees_costs/expiring_documents.html',
                           documents=documents,
                           days=days,
-                          today=today)
+                          today=today,
+                          timedelta=timedelta)
 
 @fees_costs_bp.route('/expired-documents')
 @login_required
