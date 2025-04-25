@@ -184,6 +184,16 @@ def create():
                 # إنشاء وثيقة لكل موظف في القسم
                 document_count = 0
                 for employee in employees:
+                    # التحقق من عدم وجود وثيقة من نفس النوع للموظف (منع التكرار)
+                    existing_document = Document.query.filter_by(
+                        employee_id=employee.id,
+                        document_type=document_type
+                    ).first()
+                    
+                    # تخطي الموظف إذا كان لديه وثيقة من نفس النوع بالفعل
+                    if existing_document:
+                        continue
+                        
                     # استخدام رقم الهوية الوطنية للموظف إذا كان متوفراً
                     # أو استخدام رقم الموظف التسلسلي إذا كان رقم الهوية غير متوفر
                     national_id = None
