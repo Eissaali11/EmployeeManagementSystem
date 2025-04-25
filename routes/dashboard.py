@@ -32,8 +32,13 @@ def index():
     valid_documents = 0
     expired_documents = 0
     expiring_documents = 0
+    no_expiry_documents = 0
     
     for doc in all_documents:
+        if not doc.expiry_date:
+            no_expiry_documents += 1
+            continue
+            
         days_remaining = (doc.expiry_date - today).days
         if days_remaining < 0:
             expired_documents += 1
@@ -47,7 +52,8 @@ def index():
         'total': total_documents,
         'valid': valid_documents,
         'expired': expired_documents,
-        'expiring': expiring_documents
+        'expiring': expiring_documents,
+        'no_expiry': no_expiry_documents
     }
     
     # Get department statistics

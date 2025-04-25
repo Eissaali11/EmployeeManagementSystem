@@ -1082,6 +1082,16 @@ def export_excel():
         main_worksheet.write(row_num, 8, doc.notes or '', cell_format)
         row_num += 1
         
+    # إنشاء تنسيق للمستندات بدون تاريخ انتهاء (نقلناه هنا ليكون متاحاً للدالة الفرعية)
+    no_expiry_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'font_size': 11,
+        'bg_color': '#D3D3D3',
+        'font_color': '#666666'
+    })
+    
     # Function to create a worksheet for a category of documents
     def create_category_worksheet(docs, name, title_bg_color, sheet_icon=''):
         if not docs:  # Skip if no documents in this category
@@ -1236,14 +1246,7 @@ def export_excel():
         'bg_color': '#D9D9D9'
     })
     
-    no_expiry_format = workbook.add_format({
-        'align': 'center',
-        'valign': 'vcenter',
-        'border': 1,
-        'font_size': 11,
-        'bg_color': '#D3D3D3',
-        'font_color': '#666666'
-    })
+    # إعادة استخدام تنسيق المستندات بدون تاريخ انتهاء المعرف أعلاه
     
     stats_data = [
         ['وثائق منتهية', expired_count, expired_format],
