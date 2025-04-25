@@ -212,9 +212,16 @@
                                 </a>
                                 
                                 <!-- زر حذف الوثيقة -->
-                                <a href="{{ url_for('documents.confirm_delete', id=document.id) }}" class="btn btn-sm btn-danger">
+                                <a href="{{ url_for('documents.confirm_delete', id=document.id) }}" class="btn btn-sm btn-danger mb-1">
                                     <i class="fas fa-trash"></i>
                                 </a>
+                                
+                                <!-- زر تعديل انتهاء الهوية - يظهر فقط للوثائق من نوع الهوية الوطنية -->
+                                {% if document.document_type == 'national_id' %}
+                                <a href="{{ url_for('documents.update_expiry', id=document.id) }}" class="btn btn-sm btn-warning" title="تعديل انتهاء الهوية">
+                                    <i class="fas fa-id-card"></i> تعديل انتهاء الهوية
+                                </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

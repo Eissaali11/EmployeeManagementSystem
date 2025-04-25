@@ -86,9 +86,13 @@
                             </div>
                         </div>
                         
-                        <div class="mb-3">
+                        <div class="mb-3" id="document_number_container">
                             <label for="document_number" class="form-label required-field">رقم الوثيقة</label>
                             <input type="text" class="form-control" id="document_number" name="document_number" required>
+                            <small class="form-text text-muted d-none" id="department_document_number_info">
+                                <i class="fas fa-info-circle"></i>
+                                سيتم استخدام رقم الهوية الخاص بكل موظف عند إضافة الوثائق للقسم
+                            </small>
                         </div>
                         
                         <div class="row">
@@ -173,16 +177,33 @@
         
         // تبديل العرض عند تغيير خيار الإضافة
         function toggleSelectionMode() {
+            const documentNumberInput = document.getElementById('document_number');
+            const documentNumberInfo = document.getElementById('department_document_number_info');
+            
             if (addSingleRadio.checked) {
+                // وضع إضافة لموظف واحد
                 employeeSelection.classList.remove('d-none');
                 departmentSelection.classList.add('d-none');
                 document.getElementById('employee_id').setAttribute('required', '');
                 document.getElementById('department_id').removeAttribute('required');
+                
+                // إظهار حقل رقم الوثيقة
+                documentNumberInput.setAttribute('required', '');
+                documentNumberInput.removeAttribute('readonly');
+                documentNumberInput.value = '';
+                documentNumberInfo.classList.add('d-none');
             } else {
+                // وضع إضافة لقسم كامل
                 employeeSelection.classList.add('d-none');
                 departmentSelection.classList.remove('d-none');
                 document.getElementById('department_id').setAttribute('required', '');
                 document.getElementById('employee_id').removeAttribute('required');
+                
+                // إظهار رسالة توضيحية وتعطيل حقل رقم الوثيقة
+                documentNumberInput.removeAttribute('required');
+                documentNumberInput.setAttribute('readonly', 'readonly');
+                documentNumberInput.value = 'سيتم استخدام رقم الهوية الخاص بكل موظف';
+                documentNumberInfo.classList.remove('d-none');
             }
         }
         

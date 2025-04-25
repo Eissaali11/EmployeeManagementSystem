@@ -184,13 +184,26 @@ def create():
                 # إنشاء وثيقة لكل موظف في القسم
                 document_count = 0
                 for employee in employees:
-                    # تخصيص رقم الوثيقة لكل موظف (إضافة الرقم الوظيفي في نهاية رقم الوثيقة)
-                    employee_document_number = f"{document_number}-{employee.employee_id}"
+                    # استخدام رقم الهوية الوطنية للموظف إذا كان متوفراً
+                    # أو استخدام رقم الموظف التسلسلي إذا كان رقم الهوية غير متوفر
+                    national_id = None
+                    
+                    # ابحث عن وثيقة هوية وطنية مسجلة للموظف
+                    existing_national_id = Document.query.filter_by(
+                        employee_id=employee.id,
+                        document_type='national_id'
+                    ).first()
+                    
+                    if existing_national_id:
+                        national_id = existing_national_id.document_number
+                    
+                    # إذا لم نجد رقم هوية، نستخدم الرقم الوظيفي (المسلسل) للموظف
+                    document_number_to_use = national_id if national_id else f"ID-{employee.employee_id}"
                     
                     document = Document(
                         employee_id=employee.id,
                         document_type=document_type,
-                        document_number=employee_document_number,
+                        document_number=document_number_to_use,
                         issue_date=issue_date,
                         expiry_date=expiry_date,
                         notes=notes
