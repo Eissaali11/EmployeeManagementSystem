@@ -121,7 +121,7 @@
 
     <!-- جدول الوثائق -->
     <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">
                 {% if request.args.get('status') == 'expired' %}
                     الوثائق المنتهية
@@ -150,6 +150,14 @@
                 {% endif %}
                 {% endif %}
             </h5>
+            
+            <!-- زر تصدير إلى إكسل -->
+            {% if documents %}
+            <a href="{{ url_for('documents.export_expiring_excel', status=request.args.get('status', 'expiring'), days=days, document_type=selected_type) }}" 
+               class="btn btn-success btn-sm" title="تصدير إلى إكسل">
+                <i class="fas fa-file-excel"></i> تصدير إلى إكسل
+            </a>
+            {% endif %}
         </div>
         <div class="card-body">
             {% if documents %}

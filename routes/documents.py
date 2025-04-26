@@ -1343,3 +1343,214 @@ def export_excel():
         download_name=filename,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ))
+    
+@documents_bp.route('/export_expiring_excel')
+def export_expiring_excel():
+    """تصدير الوثائق المنتهية/على وشك الانتهاء إلى ملف إكسل"""
+    # جلب معايير التصفية من الطلب
+    days = int(request.args.get('days', '30'))
+    document_type = request.args.get('document_type', '')
+    status = request.args.get('status', 'expiring')  # 'expiring' or 'expired'
+    
+    # تحديد نطاق التاريخ
+    today = datetime.now().date()
+    future_date = today + timedelta(days=days)
+    
+    # بناء الاستعلام بناءً على الحالة
+    query = Document.query
+    
+    if status == 'expired':
+        # الوثائق المنتهية
+        query = query.filter(Document.expiry_date < today)
+        title = "الوثائق المنتهية"
+    else:
+        # الوثائق التي على وشك الانتهاء
+        query = query.filter(
+            Document.expiry_date <= future_date,
+            Document.expiry_date >= today
+        )
+        title = f"الوثائق التي ستنتهي خلال {days} يوم"
+    
+    # فلتر نوع الوثيقة
+    if document_type:
+        query = query.filter(Document.document_type == document_type)
+    
+    # تنفيذ الاستعلام مع تحميل بيانات الموظف والقسم
+    query = query.options(selectinload(Document.employee).selectinload(Employee.department))
+    documents = query.all()
+    
+    # حساب الأيام المتبقية للانتهاء لكل وثيقة
+    for doc in documents:
+        if doc.expiry_date:
+            doc.days_to_expiry = (doc.expiry_date - today).days
+        else:
+            doc.days_to_expiry = None
+    
+    # إنشاء ملف اكسل في الذاكرة
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    
+    # إضافة ورقة العمل الرئيسية وتعيين اتجاهها من اليمين إلى اليسار
+    worksheet = workbook.add_worksheet(title)
+    worksheet.right_to_left()
+    
+    # إضافة التنسيقات
+    header_format = workbook.add_format({
+        'bold': True,
+        'align': 'center',
+        'valign': 'vcenter',
+        'bg_color': '#D3E0EA',
+        'border': 1,
+        'font_size': 13
+    })
+    
+    # تنسيق للخلايا العادية
+    cell_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1
+    })
+    
+    # تنسيق للتواريخ
+    date_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'num_format': 'yyyy/mm/dd'
+    })
+    
+    # تنسيق خاص للوثائق المنتهية
+    expired_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'bg_color': '#FFD9D9'
+    })
+    
+    # تنسيق خاص للوثائق التي ستنتهي قريبا
+    warning_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'bg_color': '#FFF4D9'
+    })
+
+    # تنسيق خاص للوثائق بدون تاريخ انتهاء
+    no_expiry_format = workbook.add_format({
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'bg_color': '#E6E6E6'
+    })
+    
+    # ترجمة أنواع الوثائق
+    document_types_map = {
+        'national_id': 'الهوية الوطنية',
+        'passport': 'جواز السفر',
+        'health_certificate': 'الشهادة الصحية',
+        'work_permit': 'تصريح العمل',
+        'education_certificate': 'الشهادة الدراسية',
+        'driving_license': 'رخصة القيادة',
+        'annual_leave': 'الإجازة السنوية',
+        'other': 'أخرى'
+    }
+    
+    # كتابة عنوان الملف
+    worksheet.merge_range('A1:H1', title, header_format)
+    
+    # كتابة رؤوس الأعمدة
+    headers = [
+        'الموظف',
+        'القسم',
+        'نوع الوثيقة',
+        'رقم الوثيقة',
+        'تاريخ الإصدار',
+        'تاريخ الانتهاء',
+        'المدة المتبقية',
+        'ملاحظات'
+    ]
+    
+    for col_num, header in enumerate(headers):
+        worksheet.write(1, col_num, header, header_format)
+    
+    # ضبط عرض الأعمدة
+    worksheet.set_column(0, 0, 25)  # الموظف
+    worksheet.set_column(1, 1, 20)  # القسم
+    worksheet.set_column(2, 2, 20)  # نوع الوثيقة
+    worksheet.set_column(3, 3, 20)  # رقم الوثيقة
+    worksheet.set_column(4, 4, 15)  # تاريخ الإصدار
+    worksheet.set_column(5, 5, 15)  # تاريخ الانتهاء
+    worksheet.set_column(6, 6, 15)  # المدة المتبقية
+    worksheet.set_column(7, 7, 30)  # ملاحظات
+    
+    # كتابة البيانات
+    for row_num, doc in enumerate(documents, 2):
+        # الحصول على اسم الموظف والقسم
+        employee_name = doc.employee.name if doc.employee else "غير محدد"
+        department_name = doc.employee.department.name if doc.employee and doc.employee.department else "غير محدد"
+        
+        # الحصول على نوع الوثيقة بالعربية
+        doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
+        
+        # تحديد تنسيق الخلية بناءً على حالة انتهاء الوثيقة
+        days_format = cell_format
+        if doc.days_to_expiry is not None:
+            if doc.days_to_expiry < 0:
+                days_format = expired_format
+            elif doc.days_to_expiry < 30:
+                days_format = warning_format
+        else:
+            days_format = no_expiry_format
+        
+        # كتابة بيانات الوثيقة
+        worksheet.write(row_num, 0, employee_name, cell_format)
+        worksheet.write(row_num, 1, department_name, cell_format)
+        worksheet.write(row_num, 2, doc_type_ar, cell_format)
+        worksheet.write(row_num, 3, doc.document_number, cell_format)
+        
+        # كتابة تاريخ الإصدار - قد يكون فارغاً
+        if doc.issue_date:
+            worksheet.write_datetime(row_num, 4, doc.issue_date, date_format)
+        else:
+            worksheet.write(row_num, 4, "غير محدد", cell_format)
+            
+        # كتابة تاريخ الانتهاء - قد يكون فارغاً
+        if doc.expiry_date:
+            worksheet.write_datetime(row_num, 5, doc.expiry_date, date_format)
+        else:
+            worksheet.write(row_num, 5, "غير محدد", cell_format)
+            
+        # كتابة الأيام المتبقية
+        if doc.days_to_expiry is not None:
+            days_display = doc.days_to_expiry
+            if doc.days_to_expiry < 0:
+                days_display = f"منتهية منذ {-doc.days_to_expiry} يوم"
+            else:
+                days_display = f"{doc.days_to_expiry} يوم"
+            worksheet.write(row_num, 6, days_display, days_format)
+        else:
+            worksheet.write(row_num, 6, "غير محدد", no_expiry_format)
+            
+        worksheet.write(row_num, 7, doc.notes or '', cell_format)
+    
+    # إغلاق المصنف
+    workbook.close()
+    
+    # إنشاء استجابة
+    output.seek(0)
+    
+    # توليد اسم ملف وصفي
+    filename_parts = [status]
+    if document_type:
+        filename_parts.append(document_types_map.get(document_type, document_type))
+    if status == 'expiring':
+        filename_parts.append(f"خلال_{days}_يوم")
+    
+    filename = "_".join(filename_parts) + ".xlsx"
+    
+    return make_response(send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ))
