@@ -1125,10 +1125,16 @@ def dashboard():
     # Datos para el gráfico de costos de alquiler
     rental_cost_data = {
         'labels': [],  # Nombres de meses
-        'values': []   # Valores de costos
+        'data_values': []   # Valores de costos - renombrado para evitar conflicto con el método values()
     }
     
-    # Obtener datos de los últimos 6 meses para el gráfico de costos de alquiler
+    # Datos para el gráfico de costos de mantenimiento
+    maintenance_cost_data = {
+        'labels': [],  # Nombres de meses
+        'data_values': []   # Valores de costos - renombrado para evitar conflicto con el método values()
+    }
+    
+    # Obtener datos de los últimos 6 meses para los gráficos
     current_month = datetime.now().month
     current_year = datetime.now().year
     
@@ -1143,15 +1149,22 @@ def dashboard():
             7: 'يوليو', 8: 'أغسطس', 9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
         }[month_num]
         
-        rental_cost_data['labels'].append(f"{month_name} {year}")
-        rental_cost_data['values'].append(0)  # Valor predeterminado 0, se puede reemplazar con datos reales
+        month_label = f"{month_name} {year}"
+        
+        # Añadir datos para ambos gráficos
+        rental_cost_data['labels'].append(month_label)
+        rental_cost_data['data_values'].append(0)  # Valor predeterminado 0, se puede reemplazar con datos reales
+        
+        maintenance_cost_data['labels'].append(month_label)
+        maintenance_cost_data['data_values'].append(0)  # Valor predeterminado 0, se puede reemplazar con datos reales
     
     return render_template(
         'vehicles/dashboard.html',
         stats=stats,
         monthly_costs=monthly_costs,
         alerts=alerts,
-        rental_cost_data=rental_cost_data
+        rental_cost_data=rental_cost_data,
+        maintenance_cost_data=maintenance_cost_data
     )
 
 @vehicles_bp.route('/reports')

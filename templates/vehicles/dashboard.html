@@ -448,7 +448,7 @@
                 datasets: [{
                     label: 'تكاليف الإيجار (ريال)',
                     data: [
-                        {% for value in rental_cost_data.values %}
+                        {% for value in rental_cost_data.data_values %}
                             {{ value }},
                         {% endfor %}
                     ],
@@ -497,7 +497,7 @@
                 datasets: [{
                     label: 'تكاليف الصيانة (ريال)',
                     data: [
-                        {% for value in maintenance_cost_data.values %}
+                        {% for value in maintenance_cost_data.data_values %}
                             {{ value }},
                         {% endfor %}
                     ],
