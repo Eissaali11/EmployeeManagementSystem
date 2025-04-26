@@ -363,11 +363,24 @@ def edit(id):
     
     return render_template('vehicles/edit.html', vehicle=vehicle, statuses=VEHICLE_STATUS_CHOICES)
 
+@vehicles_bp.route('/<int:id>/confirm-delete')
+@login_required
+def confirm_delete(id):
+    """صفحة تأكيد حذف السيارة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    return render_template('vehicles/confirm_delete.html', vehicle=vehicle)
+
 @vehicles_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 def delete(id):
     """حذف سيارة"""
     vehicle = Vehicle.query.get_or_404(id)
+    
+    # التحقق من إدخال تأكيد الحذف
+    confirmation = request.form.get('confirmation')
+    if confirmation != 'تأكيد':
+        flash('يجب كتابة كلمة "تأكيد" للمتابعة مع عملية الحذف!', 'danger')
+        return redirect(url_for('vehicles.confirm_delete', id=id))
     
     # تسجيل الإجراء قبل الحذف
     plate_number = vehicle.plate_number

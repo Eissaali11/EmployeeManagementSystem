@@ -100,33 +100,13 @@
         </div>
         <div class="card-body">
             <p class="text-danger">حذف هذه السيارة سيؤدي إلى حذف جميع البيانات المرتبطة بها بما في ذلك سجلات الإيجار والورشة والمشاريع وسجلات التسليم والاستلام. هذا الإجراء نهائي ولا يمكن التراجع عنه.</p>
-            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteVehicleModal">
+            <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-outline-danger">
                 <i class="fas fa-trash ms-1"></i>
                 حذف السيارة
-            </button>
+            </a>
         </div>
     </div>
     
-    <!-- Modal تأكيد الحذف -->
-    <div class="modal fade" id="deleteVehicleModal" tabindex="-1" aria-labelledby="deleteVehicleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteVehicleModalLabel">تأكيد حذف السيارة</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
-                </div>
-                <div class="modal-body">
-                    <p>هل أنت متأكد من رغبتك في حذف السيارة <strong>{{ vehicle.plate_number }}</strong>؟</p>
-                    <p class="text-danger">هذا الإجراء سيؤدي إلى حذف جميع البيانات المرتبطة بهذه السيارة ولا يمكن التراجع عنه.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <form action="{{ url_for('vehicles.delete', id=vehicle.id) }}" method="post">
-                        <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+
 </div>
 {% endblock %}
