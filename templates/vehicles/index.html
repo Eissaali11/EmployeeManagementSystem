@@ -196,30 +196,9 @@
                                         <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-sm btn-warning">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ vehicle.id }}">
+                                        <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-sm btn-danger">
                                             <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Modal للحذف -->
-                                    <div class="modal fade" id="deleteModal{{ vehicle.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ vehicle.id }}" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="deleteModalLabel{{ vehicle.id }}">تأكيد الحذف</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    هل أنت متأكد من حذف السيارة <strong>{{ vehicle.plate_number }}</strong>؟ سيتم حذف جميع البيانات المرتبطة بها أيضاً.
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                    <form action="{{ url_for('vehicles.delete', id=vehicle.id) }}" method="post">
-                                                        <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
