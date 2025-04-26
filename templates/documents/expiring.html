@@ -177,10 +177,14 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if days_to_expiry < 0 %}
-                                <span class="badge bg-danger">منتهية منذ {{ -days_to_expiry }} يوم</span>
+                                {% if document.days_to_expiry is not none %}
+                                    {% if document.days_to_expiry < 0 %}
+                                    <span class="badge bg-danger">منتهية منذ {{ -document.days_to_expiry }} يوم</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">{{ document.days_to_expiry }} يوم</span>
+                                    {% endif %}
                                 {% else %}
-                                <span class="badge bg-warning">{{ days_to_expiry }} يوم</span>
+                                    <span class="badge bg-secondary">غير محدد</span>
                                 {% endif %}
                             </td>
                             <td>{{ document.notes or '-' }}</td>

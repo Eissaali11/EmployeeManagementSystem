@@ -490,6 +490,14 @@ def expiring():
     # Execute query
     documents = query.all()
     
+    # Calculate days to expiry for each document
+    today = datetime.now().date()
+    for doc in documents:
+        if doc.expiry_date:
+            doc.days_to_expiry = (doc.expiry_date - today).days
+        else:
+            doc.days_to_expiry = None
+    
     # Get document types for filter dropdown
     document_types = [
         'national_id', 'passport', 'health_certificate', 
