@@ -16,7 +16,21 @@
         </div>
         <div class="card-body">
             <form method="get" action="{{ url_for('documents.expiring') }}" class="row">
-                <div class="col-md-6 mb-3">
+                <!-- خيار حالة الوثائق -->
+                <div class="col-12 mb-3">
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="status" id="status_expiring" value="expiring" 
+                               {% if request.args.get('status', 'expiring') == 'expiring' %}checked{% endif %} autocomplete="off">
+                        <label class="btn btn-outline-warning" for="status_expiring">الوثائق التي على وشك الانتهاء</label>
+                        
+                        <input type="radio" class="btn-check" name="status" id="status_expired" value="expired" 
+                               {% if request.args.get('status') == 'expired' %}checked{% endif %} autocomplete="off">
+                        <label class="btn btn-outline-danger" for="status_expired">الوثائق المنتهية فعلاً</label>
+                    </div>
+                </div>
+                
+                <!-- الفترة المتبقية - تظهر فقط في حالة الوثائق التي على وشك الانتهاء -->
+                <div class="col-md-6 mb-3" id="daysFilterContainer">
                     <label for="days" class="form-label">الفترة المتبقية</label>
                     <select class="form-select" id="days" name="days">
                         <option value="30" {% if days == 30 %}selected{% endif %}>خلال 30 يوم</option>
@@ -25,6 +39,7 @@
                     </select>
                 </div>
                 
+                <!-- نوع الوثيقة -->
                 <div class="col-md-6 mb-3">
                     <label for="document_type" class="form-label">نوع الوثيقة</label>
                     <select class="form-select" id="document_type" name="document_type">
@@ -41,6 +56,10 @@
                             تصريح العمل
                             {% elif doc_type == 'education_certificate' %}
                             الشهادة الدراسية
+                            {% elif doc_type == 'driving_license' %}
+                            رخصة القيادة
+                            {% elif doc_type == 'annual_leave' %}
+                            الإجازة السنوية
                             {% else %}
                             {{ doc_type }}
                             {% endif %}
@@ -104,7 +123,12 @@
     <div class="card">
         <div class="card-header">
             <h5 class="card-title mb-0">
-                الوثائق التي ستنتهي خلال {{ days }} يوم
+                {% if request.args.get('status') == 'expired' %}
+                    الوثائق المنتهية
+                {% else %}
+                    الوثائق التي ستنتهي خلال {{ days }} يوم
+                {% endif %}
+                
                 {% if selected_type %}
                 - نوع: 
                 {% if selected_type == 'national_id' %}
@@ -117,6 +141,10 @@
                 تصريح العمل
                 {% elif selected_type == 'education_certificate' %}
                 الشهادة الدراسية
+                {% elif selected_type == 'driving_license' %}
+                رخصة القيادة
+                {% elif selected_type == 'annual_leave' %}
+                الإجازة السنوية
                 {% else %}
                 {{ selected_type }}
                 {% endif %}
@@ -206,7 +234,11 @@
             {% else %}
             <div class="text-center py-4">
                 <i class="fas fa-check-circle text-success fs-1 mb-3"></i>
-                <p>لا توجد وثائق ستنتهي خلال هذه الفترة</p>
+                {% if request.args.get('status') == 'expired' %}
+                    <p>لا توجد وثائق منتهية الصلاحية حالياً</p>
+                {% else %}
+                    <p>لا توجد وثائق ستنتهي خلال {{ days }} يوم</p>
+                {% endif %}
             </div>
             {% endif %}
         </div>
@@ -217,19 +249,43 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // إظهار/إخفاء حقل اختيار الأيام بناءً على نوع الوثائق المطلوبة
+        const statusRadios = document.querySelectorAll('input[name="status"]');
+        const daysContainer = document.getElementById('daysFilterContainer');
+        
+        // دالة للتحقق من حالة الوثائق وإظهار/إخفاء حقل الأيام
+        function toggleDaysFilter() {
+            const selectedStatus = document.querySelector('input[name="status"]:checked').value;
+            if (selectedStatus === 'expired') {
+                daysContainer.style.display = 'none';
+            } else {
+                daysContainer.style.display = 'block';
+            }
+        }
+        
+        // تطبيق الحالة الأولية عند تحميل الصفحة
+        toggleDaysFilter();
+        
+        // إضافة مستمع للتغييرات في اختيار نوع الوثائق
+        statusRadios.forEach(function(radio) {
+            radio.addEventListener('change', toggleDaysFilter);
+        });
+        
         // إعادة تحميل الصفحة عند تغيير أي من حقول البحث
-        const filterFields = ['days', 'document_type'];
+        const filterFields = ['days', 'document_type', 'status'];
         
         filterFields.forEach(function(field) {
-            const element = document.getElementById(field);
-            if (element) {
-                element.addEventListener('change', function() {
-                    const form = this.closest('form');
-                    if (form) {
-                        form.submit();
-                    }
-                });
-            }
+            const elements = document.querySelectorAll(`[name="${field}"]`);
+            elements.forEach(function(element) {
+                if (element) {
+                    element.addEventListener('change', function() {
+                        const form = this.closest('form');
+                        if (form) {
+                            form.submit();
+                        }
+                    });
+                }
+            });
         });
         
         // جلب إحصائيات انتهاء الوثائق

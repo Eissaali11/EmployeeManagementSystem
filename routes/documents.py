@@ -469,19 +469,27 @@ def import_excel():
 
 @documents_bp.route('/expiring')
 def expiring():
-    """Show documents that are about to expire"""
+    """Show documents that are about to expire or already expired"""
     days = int(request.args.get('days', '30'))
     document_type = request.args.get('document_type', '')
+    status = request.args.get('status', 'expiring')  # 'expiring' or 'expired'
     
     # Calculate expiry date range
     today = datetime.now().date()
     future_date = today + timedelta(days=days)
     
-    # Build query for expiring documents
-    query = Document.query.filter(
-        Document.expiry_date <= future_date,
-        Document.expiry_date >= today
-    )
+    # Build query for documents based on status
+    query = Document.query
+    
+    if status == 'expired':
+        # Get documents that have already expired
+        query = query.filter(Document.expiry_date < today)
+    else:
+        # Get documents that are about to expire
+        query = query.filter(
+            Document.expiry_date <= future_date,
+            Document.expiry_date >= today
+        )
     
     # Apply document type filter if provided
     if document_type:
@@ -509,7 +517,8 @@ def expiring():
                           documents=documents,
                           days=days,
                           document_types=document_types,
-                          selected_type=document_type)
+                          selected_type=document_type,
+                          status=status)
 
 @documents_bp.route('/expiry_stats')
 def expiry_stats():
