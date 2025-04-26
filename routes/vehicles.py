@@ -701,6 +701,21 @@ def edit_workshop(id):
         statuses=REPAIR_STATUS_CHOICES
     )
 
+@vehicles_bp.route('/workshop/image/<int:id>/confirm-delete')
+@login_required
+def confirm_delete_workshop_image(id):
+    """صفحة تأكيد حذف صورة من سجل الورشة"""
+    image = VehicleWorkshopImage.query.get_or_404(id)
+    workshop = VehicleWorkshop.query.get_or_404(image.workshop_record_id)
+    vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
+    
+    return render_template(
+        'vehicles/confirm_delete_workshop_image.html',
+        image=image,
+        workshop=workshop,
+        vehicle=vehicle
+    )
+
 @vehicles_bp.route('/workshop/image/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_workshop_image(id):
@@ -708,6 +723,12 @@ def delete_workshop_image(id):
     image = VehicleWorkshopImage.query.get_or_404(id)
     workshop_id = image.workshop_record_id
     workshop = VehicleWorkshop.query.get_or_404(workshop_id)
+    
+    # التحقق من إدخال تأكيد الحذف
+    confirmation = request.form.get('confirmation')
+    if confirmation != 'تأكيد':
+        flash('يجب كتابة كلمة "تأكيد" للمتابعة مع عملية الحذف!', 'danger')
+        return redirect(url_for('vehicles.confirm_delete_workshop_image', id=id))
     
     # حذف الملف الفعلي إذا كان موجوداً
     file_path = os.path.join(current_app.static_folder, image.image_path)
