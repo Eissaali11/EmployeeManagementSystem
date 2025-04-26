@@ -1122,11 +1122,36 @@ def dashboard():
         ).filter_by(is_active=True).scalar() or 0
     }
     
+    # Datos para el gráfico de costos de alquiler
+    rental_cost_data = {
+        'labels': [],  # Nombres de meses
+        'values': []   # Valores de costos
+    }
+    
+    # Obtener datos de los últimos 6 meses para el gráfico de costos de alquiler
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    for i in range(5, -1, -1):
+        month_num = (current_month - i) % 12
+        if month_num == 0:
+            month_num = 12
+        year = current_year - 1 if current_month - i <= 0 else current_year
+        
+        month_name = {
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 5: 'مايو', 6: 'يونيو',
+            7: 'يوليو', 8: 'أغسطس', 9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+        }[month_num]
+        
+        rental_cost_data['labels'].append(f"{month_name} {year}")
+        rental_cost_data['values'].append(0)  # Valor predeterminado 0, se puede reemplazar con datos reales
+    
     return render_template(
         'vehicles/dashboard.html',
         stats=stats,
         monthly_costs=monthly_costs,
-        alerts=alerts
+        alerts=alerts,
+        rental_cost_data=rental_cost_data
     )
 
 @vehicles_bp.route('/reports')
