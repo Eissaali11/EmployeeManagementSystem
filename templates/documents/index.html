@@ -226,10 +226,10 @@
                                     <i class="fas fa-trash"></i>
                                 </a>
                                 
-                                <!-- زر تعديل انتهاء الهوية - يظهر فقط للوثائق من نوع الهوية الوطنية -->
+                                <!-- زر تعديل بيانات الموظف - يظهر فقط للوثائق من نوع الهوية الوطنية -->
                                 {% if document.document_type == 'national_id' %}
-                                <a href="{{ url_for('documents.update_expiry', id=document.id) }}" class="btn btn-sm btn-warning" title="تعديل انتهاء الهوية">
-                                    <i class="fas fa-id-card"></i> تعديل انتهاء الهوية
+                                <a href="{{ url_for('employees.edit', id=document.employee_id) }}" class="btn btn-sm btn-warning" title="تعديل بيانات الموظف">
+                                    <i class="fas fa-user-edit"></i> تعديل بيانات الموظف
                                 </a>
                                 {% endif %}
                             </td>
