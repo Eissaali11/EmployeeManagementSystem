@@ -112,15 +112,11 @@
                                             <td>{{ doc.employee.name }}</td>
                                             <td>{{ doc.document_number }}</td>
                                             <td>
-                                                {% if doc.issue_date %}
-                                                    {{ doc.issue_date.strftime('%Y-%m-%d') }}
-                                                {% else %}
-                                                    <span class="text-muted">غير محدد</span>
-                                                {% endif %}
+                                                {{ doc.issue_date|display_date('%Y-%m-%d', 'غير محدد') }}
                                             </td>
                                             <td>
                                                 {% if doc.expiry_date %}
-                                                    <span class="badge bg-danger">{{ doc.expiry_date.strftime('%Y-%m-%d') }}</span>
+                                                    <span class="badge bg-danger">{{ doc.expiry_date|format_date('%Y-%m-%d') }}</span>
                                                 {% else %}
                                                     <span class="badge bg-secondary">غير محدد</span>
                                                 {% endif %}
@@ -172,18 +168,10 @@
                                             <td>{{ doc.employee.name }}</td>
                                             <td>{{ doc.document_number }}</td>
                                             <td>
-                                                {% if doc.issue_date %}
-                                                    {{ doc.issue_date.strftime('%Y-%m-%d') }}
-                                                {% else %}
-                                                    <span class="text-muted">غير محدد</span>
-                                                {% endif %}
+                                                {{ doc.issue_date|display_date('%Y-%m-%d', 'غير محدد') }}
                                             </td>
                                             <td>
-                                                {% if doc.expiry_date %}
-                                                    {{ doc.expiry_date.strftime('%Y-%m-%d') }}
-                                                {% else %}
-                                                    <span class="text-muted">غير محدد</span>
-                                                {% endif %}
+                                                {{ doc.expiry_date|display_date('%Y-%m-%d', 'غير محدد') }}
                                             </td>
                                             <td>
                                                 {% if doc.expiry_date %}
@@ -266,11 +254,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if fee.due_date %}
-                                                    {{ fee.due_date.strftime('%Y-%m-%d') }}
-                                                {% else %}
-                                                    <span class="text-muted">غير محدد</span>
-                                                {% endif %}
+                                                {{ fee.due_date|display_date('%Y-%m-%d', 'غير محدد') }}
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">

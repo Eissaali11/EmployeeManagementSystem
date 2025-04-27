@@ -86,6 +86,58 @@ def nl2br_filter(s):
         return Markup(s.replace('\n', '<br>'))
     return s
 
+# إضافة فلتر لتنسيق التاريخ بشكل آمن
+@app.template_filter('format_date')
+def format_date_filter(date, format='%Y-%m-%d'):
+    """
+    فلتر آمن لتنسيق التواريخ مع التعامل مع القيم الفارغة
+    
+    :param date: كائن التاريخ (يمكن أن يكون None)
+    :param format: صيغة التنسيق (افتراضياً YYYY-MM-DD)
+    :return: التاريخ المنسق أو نص بديل
+    """
+    if date:
+        return date.strftime(format)
+    return ""
+
+# إضافة فلتر لعرض التاريخ مع نص بديل
+@app.template_filter('display_date')
+def display_date_filter(date, format='%Y-%m-%d', default="غير محدد"):
+    """
+    عرض التاريخ بشكل منسق أو نص بديل إذا كان التاريخ فارغاً
+    
+    :param date: كائن التاريخ (يمكن أن يكون None)
+    :param format: صيغة التنسيق (افتراضياً YYYY-MM-DD)
+    :param default: النص البديل للعرض
+    :return: التاريخ المنسق أو النص البديل
+    """
+    if date:
+        return date.strftime(format)
+    return default
+
+# إضافة فلتر لحساب الأيام المتبقية من تاريخ معين
+@app.template_filter('days_remaining')
+def days_remaining_filter(date, from_date=None):
+    """
+    حساب عدد الأيام المتبقية من التاريخ المحدد حتى اليوم
+    
+    :param date: تاريخ الانتهاء (يمكن أن يكون None)
+    :param from_date: تاريخ البداية (افتراضياً اليوم)
+    :return: عدد الأيام المتبقية أو None إذا كان التاريخ غير محدد
+    """
+    if not date:
+        return None
+        
+    if not from_date:
+        from_date = datetime.now().date()
+    elif hasattr(from_date, 'date'):
+        from_date = from_date.date()
+        
+    if hasattr(date, 'date'):
+        date = date.date()
+        
+    return (date - from_date).days
+
 # Context processor to add variables to all templates
 @app.context_processor
 def inject_now():
