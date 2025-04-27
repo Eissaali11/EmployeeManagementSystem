@@ -479,7 +479,7 @@ def expiring():
     future_date = today + timedelta(days=days)
     
     # Build query for documents based on status
-    query = Document.query
+    query = Document.query.filter(Document.expiry_date.isnot(None))  # فقط الوثائق التي لها تاريخ انتهاء
     
     if status == 'expired':
         # Get documents that have already expired
@@ -529,23 +529,26 @@ def expiry_stats():
     sixty_days = today + timedelta(days=60)
     ninety_days = today + timedelta(days=90)
     
+    # استبعاد الوثائق التي ليس لها تاريخ انتهاء
+    base_query = Document.query.filter(Document.expiry_date.isnot(None))
+    
     # Get count of documents expiring in different periods
-    expiring_30 = Document.query.filter(
+    expiring_30 = base_query.filter(
         Document.expiry_date <= thirty_days,
         Document.expiry_date >= today
     ).count()
     
-    expiring_60 = Document.query.filter(
+    expiring_60 = base_query.filter(
         Document.expiry_date <= sixty_days,
         Document.expiry_date > thirty_days
     ).count()
     
-    expiring_90 = Document.query.filter(
+    expiring_90 = base_query.filter(
         Document.expiry_date <= ninety_days,
         Document.expiry_date > sixty_days
     ).count()
     
-    expired = Document.query.filter(
+    expired = base_query.filter(
         Document.expiry_date < today
     ).count()
     
