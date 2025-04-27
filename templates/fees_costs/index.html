@@ -107,13 +107,23 @@
                                     </thead>
                                     <tbody>
                                         {% for doc in expired_docs %}
-                                        <tr class="{% if doc.expiry_date <= now.date() %}table-danger{% endif %}">
+                                        <tr class="{% if doc.expiry_date and doc.expiry_date <= now.date() %}table-danger{% endif %}">
                                             <td>{{ doc.document_type }}</td>
                                             <td>{{ doc.employee.name }}</td>
                                             <td>{{ doc.document_number }}</td>
-                                            <td>{{ doc.issue_date.strftime('%Y-%m-%d') }}</td>
                                             <td>
-                                                <span class="badge bg-danger">{{ doc.expiry_date.strftime('%Y-%m-%d') }}</span>
+                                                {% if doc.issue_date %}
+                                                    {{ doc.issue_date.strftime('%Y-%m-%d') }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if doc.expiry_date %}
+                                                    <span class="badge bg-danger">{{ doc.expiry_date.strftime('%Y-%m-%d') }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">غير محدد</span>
+                                                {% endif %}
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
@@ -156,17 +166,33 @@
                                     </thead>
                                     <tbody>
                                         {% for doc in expiring_docs %}
-                                        {% set days_left = (doc.expiry_date - now.date()).days %}
-                                        <tr class="{% if days_left <= 30 %}table-warning{% elif days_left <= 60 %}table-info{% endif %}">
+                                        {% set days_left = doc.expiry_date and (doc.expiry_date - now.date()).days or 0 %}
+                                        <tr class="{% if doc.expiry_date and days_left <= 30 %}table-warning{% elif doc.expiry_date and days_left <= 60 %}table-info{% endif %}">
                                             <td>{{ doc.document_type }}</td>
                                             <td>{{ doc.employee.name }}</td>
                                             <td>{{ doc.document_number }}</td>
-                                            <td>{{ doc.issue_date.strftime('%Y-%m-%d') }}</td>
-                                            <td>{{ doc.expiry_date.strftime('%Y-%m-%d') }}</td>
                                             <td>
-                                                <span class="badge {% if days_left <= 30 %}bg-warning text-dark{% elif days_left <= 60 %}bg-info{% else %}bg-primary{% endif %}">
-                                                    {{ days_left }} يوم
-                                                </span>
+                                                {% if doc.issue_date %}
+                                                    {{ doc.issue_date.strftime('%Y-%m-%d') }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if doc.expiry_date %}
+                                                    {{ doc.expiry_date.strftime('%Y-%m-%d') }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if doc.expiry_date %}
+                                                    <span class="badge {% if days_left <= 30 %}bg-warning text-dark{% elif days_left <= 60 %}bg-info{% else %}bg-primary{% endif %}">
+                                                        {{ days_left }} يوم
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">غير محدد</span>
+                                                {% endif %}
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
@@ -239,7 +265,13 @@
                                                 <span class="badge bg-danger">متأخر</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ fee.due_date.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                {% if fee.due_date %}
+                                                    {{ fee.due_date.strftime('%Y-%m-%d') }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
                                                     <a href="{{ url_for('fees_costs.edit', id=fee.id) }}" class="btn btn-primary">
