@@ -188,30 +188,25 @@
                             </td>
                             <td>{{ document.document_number }}</td>
                             <td>
-                                {% if document.issue_date %}
-                                <span class="gregorian-date">{{ document.issue_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="gregorian-date">{{ document.issue_date|display_date('%d/%m/%Y', 'لم يتم التعديل') }}</span>
                                 <span class="hijri-date" style="display: none;"></span>
-                                {% else %}
-                                <span class="text-muted">لم يتم التعديل</span>
-                                {% endif %}
                             </td>
                             <td>
-                                {% if document.expiry_date %}
-                                <span class="gregorian-date">{{ document.expiry_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="gregorian-date">{{ document.expiry_date|display_date('%d/%m/%Y', 'لم يتم التعديل') }}</span>
                                 <span class="hijri-date" style="display: none;"></span>
-                                {% else %}
-                                <span class="text-muted">لم يتم التعديل</span>
-                                {% endif %}
                             </td>
                             <td>
                                 {% if not document.expiry_date %}
                                 <span class="badge bg-secondary">غير محدد</span>
-                                {% elif days_to_expiry < 0 %}
-                                <span class="badge bg-danger">منتهية منذ {{ -days_to_expiry }} يوم</span>
-                                {% elif days_to_expiry < 30 %}
-                                <span class="badge bg-warning">تنتهي خلال {{ days_to_expiry }} يوم</span>
                                 {% else %}
-                                <span class="badge bg-success">سارية</span>
+                                    {% set days_to_expiry = document.expiry_date|days_remaining %}
+                                    {% if days_to_expiry < 0 %}
+                                    <span class="badge bg-danger">منتهية منذ {{ -days_to_expiry }} يوم</span>
+                                    {% elif days_to_expiry < 30 %}
+                                    <span class="badge bg-warning">تنتهي خلال {{ days_to_expiry }} يوم</span>
+                                    {% else %}
+                                    <span class="badge bg-success">سارية</span>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                             <td>{{ document.notes or '-' }}</td>
