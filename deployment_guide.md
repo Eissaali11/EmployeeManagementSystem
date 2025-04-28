@@ -1,18 +1,18 @@
-# دليل نشر نظام "نُظم" على خدمات جوجل السحابية
+# دليل نشر نظام "نُظم" على Google Cloud
 
-هذا الدليل يشرح الخطوات اللازمة لنشر نظام "نُظم" على منصات جوجل السحابية المختلفة.
+هذا الدليل يشرح خطوات نشر نظام "نُظم" على منصات Google Cloud المختلفة.
 
-## الخيار الأول: النشر على Google Cloud Run (الخيار الموصى به)
+## الخيار الأول: النشر على Google Cloud Run (موصى به)
 
 ### المتطلبات المسبقة
 
-1. حساب في منصة جوجل السحابية Google Cloud Platform (GCP)
-2. تثبيت أدوات Google Cloud SDK على جهاز الكمبيوتر
-3. قاعدة بيانات PostgreSQL (يمكن استخدام خدمة Cloud SQL من جوجل)
+1. حساب Google Cloud Platform (GCP)
+2. تثبيت Google Cloud SDK على جهازك
+3. قاعدة بيانات PostgreSQL (يمكن استخدام خدمة Cloud SQL من Google)
 
 ### خطوات النشر
 
-1. **تسجيل الدخول إلى جوجل كلاود:**
+1. **تسجيل الدخول إلى Google Cloud:**
 
 ```bash
 gcloud auth login
@@ -21,11 +21,11 @@ gcloud auth login
 2. **إنشاء مشروع جديد أو اختيار مشروع موجود:**
 
 ```bash
-gcloud projects create رمز_المشروع_الخاص_بك --name="نظام نُظم"
-gcloud config set project رمز_المشروع_الخاص_بك
+gcloud projects create YOUR_PROJECT_ID --name="نظام نُظم"
+gcloud config set project YOUR_PROJECT_ID
 ```
 
-3. **تفعيل الواجهات البرمجية المطلوبة:**
+3. **تمكين الواجهات البرمجية المطلوبة:**
 
 ```bash
 gcloud services enable cloudbuild.googleapis.com
@@ -35,25 +35,25 @@ gcloud services enable run.googleapis.com
 4. **بناء حاوية Docker ونشرها:**
 
 ```bash
-gcloud builds submit --tag gcr.io/رمز_المشروع_الخاص_بك/nozom-system
+gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/nozom-system
 ```
 
 5. **نشر الحاوية على Cloud Run:**
 
 ```bash
 gcloud run deploy nozom-system \
-  --image gcr.io/رمز_المشروع_الخاص_بك/nozom-system \
+  --image gcr.io/YOUR_PROJECT_ID/nozom-system \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
-  --set-env-vars="DATABASE_URL=postgresql://اسم_المستخدم:كلمة_المرور@المضيف:المنفذ/اسم_قاعدة_البيانات,FIREBASE_API_KEY=مفتاح_الواجهة_البرمجية,FIREBASE_PROJECT_ID=معرف_المشروع,FIREBASE_APP_ID=معرف_التطبيق"
+  --set-env-vars="DATABASE_URL=postgresql://user:password@host:port/database,FIREBASE_API_KEY=your_api_key,FIREBASE_PROJECT_ID=your_project_id,FIREBASE_APP_ID=your_app_id"
 ```
 
 ## الخيار الثاني: النشر على Google App Engine
 
 ### خطوات النشر
 
-1. **تفعيل خدمة App Engine:**
+1. **تمكين خدمة App Engine:**
 
 ```bash
 gcloud app create --region=us-central
@@ -69,7 +69,7 @@ gcloud app deploy
 
 ## الخيار الثالث: استخدام Firebase Hosting + Cloud Functions (للواجهة الأمامية فقط)
 
-هذا الخيار مناسب فقط لواجهة المستخدم الأمامية، ويتطلب إعادة هيكلة التطبيق ليكون واجهة برمجية (API) منفصلة.
+هذا الخيار مناسب فقط لواجهة المستخدم الأمامية، ويتطلب إعادة هيكلة التطبيق ليكون API منفصل.
 
 ### خطوات النشر
 
@@ -113,12 +113,12 @@ gcloud sql databases create nozom_database --instance=nozom-db
 ```bash
 gcloud sql users create nozom_user \
   --instance=nozom-db \
-  --password=كلمة_مرور_آمنة
+  --password=YOUR_SECURE_PASSWORD
 ```
 
 ## تكوين Firebase Authentication
 
-1. افتح لوحة تحكم Firebase: https://console.firebase.google.com/
+1. افتح وحدة التحكم Firebase: https://console.firebase.google.com/
 2. انتقل إلى "Authentication" وقم بتفعيل طرق تسجيل الدخول المطلوبة
 3. أضف النطاقات المسموح بها إلى "Authorized domains"
 
@@ -128,7 +128,3 @@ gcloud sql users create nozom_user \
 - للنشر على Firebase، يمكنك استخدام Cloud Functions for Firebase أو Cloud Run
 - عند استخدام Cloud SQL، تأكد من إعداد الاتصال الآمن وإدارة الوصول بشكل صحيح
 - قم بنسخ ملف `.env.example` إلى `.env` وملأه بالقيم الصحيحة
-
-## الاستضافة على خدمات أخرى
-
-إذا كنت تفضل استخدام خدمة استضافة أخرى مثل Heroku أو DigitalOcean أو AWS، فيمكنك استخدام ملف `Dockerfile` الموجود في المشروع لبناء حاوية Docker ونشرها على أي خدمة تدعم حاويات Docker.
