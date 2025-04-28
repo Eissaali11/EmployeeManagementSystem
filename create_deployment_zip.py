@@ -53,14 +53,24 @@ def create_deployment_zip():
         '.env.example',  # سيتم إعادة تسميته إلى .env في مرحلة لاحقة
         'check_installation.py',
         'deploy_guide.md',
-        'domain_deployment.md'
+        'دليل_النشر_على_الاستضافة.md',
+        'domain_deployment.md',
+        # ملفات النشر على Google Cloud
+        'Dockerfile',
+        'app.yaml',
+        '.gcloudignore',
+        # ملفات النشر على Firebase
+        'firebase.json',
+        '.firebaserc'
     ]
     
     include_dirs = [
         'static',
         'templates',
         'routes',
-        'utils'
+        'utils',
+        'functions',  # لملفات وظائف Firebase Cloud Functions
+        'public'      # للملفات الثابتة لـ Firebase Hosting
     ]
     
     # المجلدات والملفات المستبعدة
@@ -108,28 +118,39 @@ def create_deployment_zip():
                     print_warning(f"المجلد غير موجود: {directory}")
             
             # إضافة ملف بتعليمات النشر
-            readme_content = """# حزمة نشر نظام إدارة الموظفين
+            readme_content = """# حزمة نشر نظام "نُظم" لإدارة الموظفين والمركبات
 
-هذه الحزمة تحتوي على جميع الملفات اللازمة لنشر نظام إدارة الموظفين على خادم ويب.
+هذه الحزمة تحتوي على جميع الملفات اللازمة لنشر نظام "نُظم" على خدمات الاستضافة المختلفة.
 
-## خطوات النشر
+## خيارات النشر
 
-1. قم باستخراج جميع الملفات إلى المجلد الرئيسي للموقع على الخادم
-2. أعد تسمية الملف `requirements_deploy.txt` إلى `requirements.txt`
-3. أعد تسمية الملف `.env.example` إلى `.env` وحدّث القيم حسب إعدادات خادمك
-4. قم بضبط أذونات الملفات والمجلدات:
-   - 644 للملفات العادية
-   - 755 للمجلدات
-   - 755 للملفات القابلة للتنفيذ مثل *.py
-5. اتبع التعليمات الموجودة في ملف `deploy_guide.md` للإعداد الكامل
+تتضمن هذه الحزمة ملفات تكوين لثلاثة خيارات مختلفة للنشر:
+
+1. **خادم الويب التقليدي**:
+   - قم باستخراج جميع الملفات إلى مجلد المستضيف
+   - انظر ملف `domain_deployment.md` للتفاصيل
+
+2. **Google Cloud Run / App Engine**:
+   - يوفر المشروع ملف `Dockerfile` و `app.yaml`
+   - انظر ملف `deploy_guide.md` للتفاصيل
+
+3. **Firebase Hosting + Cloud Functions**:
+   - يستخدم ملفات `firebase.json` و `.firebaserc`
+   - انظر ملف `دليل_النشر_على_الاستضافة.md` للتفاصيل
+
+## خطوات عامة:
+
+1. أعد تسمية الملف `requirements_deploy.txt` إلى `requirements.txt`
+2. أعد تسمية الملف `.env.example` إلى `.env` وحدّث القيم حسب إعدادات خادمك
+3. قم بضبط المتغيرات البيئية حسب خدمة الاستضافة المستخدمة
 
 ## ملاحظات هامة
 
-- تأكد من دعم خادمك لـ Python 3.9 أو أحدث
-- تأكد من وجود قاعدة بيانات PostgreSQL
-- قم بتعيين المتغيرات البيئية المطلوبة في ملف `.env`
+- تأكد من استخدام Python 3.11 أو أحدث
+- تأكد من إعداد قاعدة بيانات PostgreSQL وضبط متغيرات الاتصال بشكل صحيح
+- قم بتعيين مفاتيح Firebase و Twilio و SendGrid المطلوبة في ملف `.env`
 
-للمزيد من المساعدة، راجع ملفات `deploy_guide.md` و `domain_deployment.md`
+للمزيد من المساعدة، راجع ملفات `deploy_guide.md` (بالإنجليزية) و `دليل_النشر_على_الاستضافة.md` (بالعربية)
 """
             zipf.writestr('README.txt', readme_content)
             print_success("تمت إضافة ملف README.txt")
