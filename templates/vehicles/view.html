@@ -15,6 +15,10 @@
                 <i class="fas fa-edit ms-1"></i>
                 تعديل السيارة
             </a>
+            <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-danger me-2">
+                <i class="fas fa-trash ms-1"></i>
+                حذف السيارة
+            </a>
             <a href="{{ url_for('vehicles.generate_vehicle_report', id=vehicle.id) }}" class="btn btn-info me-2" target="_blank">
                 <i class="fas fa-file-excel ms-1"></i>
                 إنشاء تقرير شامل (Excel)
