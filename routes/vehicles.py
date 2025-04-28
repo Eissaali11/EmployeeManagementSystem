@@ -1496,6 +1496,55 @@ def workshop_details(workshop_id):
         current_date=current_date
     )
 
+
+# مسارات حذف سجلات الورشة
+@vehicles_bp.route('/workshop/confirm-delete/<int:id>')
+@login_required
+def confirm_delete_workshop(id):
+    """تأكيد حذف سجل ورشة"""
+    record = VehicleWorkshop.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(record.vehicle_id)
+    
+    # تنسيق التواريخ
+    record.formatted_entry_date = format_date_arabic(record.entry_date)
+    if record.exit_date:
+        record.formatted_exit_date = format_date_arabic(record.exit_date)
+    
+    return render_template(
+        'vehicles/confirm_delete_workshop.html',
+        record=record,
+        vehicle=vehicle
+    )
+
+
+@vehicles_bp.route('/workshop/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_workshop(id):
+    """حذف سجل ورشة"""
+    record = VehicleWorkshop.query.get_or_404(id)
+    vehicle_id = record.vehicle_id
+    
+    # التحقق من وجود كلمة التأكيد الصحيحة
+    confirmation = request.form.get('confirmation', '')
+    if confirmation != 'تأكيد':
+        flash('كلمة التأكيد غير صحيحة. لم يتم حذف السجل.', 'danger')
+        return redirect(url_for('vehicles.confirm_delete_workshop', id=id))
+    
+    # تسجيل الإجراء قبل الحذف
+    log_audit('delete', 'VehicleWorkshop', id, f'تم حذف سجل الورشة للسيارة رقم {vehicle_id}')
+    
+    try:
+        # حذف سجل الورشة سيحذف تلقائياً جميع الصور المرتبطة به بفضل cascade='all, delete-orphan'
+        db.session.delete(record)
+        db.session.commit()
+        flash('تم حذف سجل الورشة بنجاح', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حذف سجل الورشة: {str(e)}', 'danger')
+    
+    return redirect(url_for('vehicles.view', id=vehicle_id))
+
+
 # مسارات التصدير والمشاركة
 @vehicles_bp.route('/<int:id>/export/pdf')
 @login_required

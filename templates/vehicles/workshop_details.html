@@ -49,6 +49,18 @@
     margin-bottom: 25px;
 }
 
+/* نمط زر الحذف */
+.action-btn.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.action-btn.delete-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
 .main-card-header {
     background-color: #1da18e;
     color: white;
@@ -443,6 +455,11 @@
                                 <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" class="action-btn edit-btn">
                                     <i class="fas fa-edit ms-1"></i>
                                     تعديل السجل
+                                </a>
+                                
+                                <a href="{{ url_for('vehicles.confirm_delete_workshop', id=record.id) }}" class="action-btn delete-btn">
+                                    <i class="fas fa-trash ms-1"></i>
+                                    حذف السجل
                                 </a>
                                 
                                 <button onclick="window.print()" class="action-btn print-btn">
