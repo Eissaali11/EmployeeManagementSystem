@@ -180,19 +180,26 @@ def generate_vehicle_handover_pdf(handover_data):
         # إنشاء نص توجيهي
         link_desc = Paragraph(arabic_text("انقر هنا لفتح النموذج"), styles['Arabic'])
         
-        # إنشاء أيقونة قابلة للنقر
-        icon_style = ParagraphStyle(
-            name='IconStyle', 
+        # استخدام زر نصي واضح ومنسق كأيقونة
+        # إنشاء أنماط مخصصة للزر
+        button_style = ParagraphStyle(
+            name='ButtonStyle', 
             parent=styles['Arabic'],
-            textColor=colors.blue,
-            fontSize=16,
-            alignment=1  # توسيط
+            textColor=colors.white,  # نص أبيض
+            backColor=colors.blue,   # خلفية زرقاء
+            fontSize=12,
+            alignment=1,  # توسيط
+            borderWidth=1,
+            borderColor=colors.blue,
+            borderPadding=5,
+            spaceBefore=5,
+            spaceAfter=5
         )
         
-        # استخدام رمز مناسب (رمز مستند أو ملف)
+        # إنشاء زر بنص توضيحي بدلاً من الرابط الفعلي
         link_icon = Paragraph(
-            f'<a href="{link_value}" color="blue"><b>&#128196;</b></a>',  # رمز مستند
-            icon_style
+            f'<a href="{link_value}" color="white" backcolor="blue"><strong>فتح المستند</strong></a>', 
+            button_style
         )
 
         # إنشاء جدول داخلي للنص والأيقونة
