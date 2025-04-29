@@ -166,14 +166,25 @@ def generate_vehicle_handover_pdf(handover_data):
             textColor=blue,
             underline=True
         )
-        # إنشاء نص بالرابط
-        link_value = handover_data['form_link']
-        # إنشاء الرابط مع تسمية وصفية أفضل
-        link_text = Paragraph(
-            f'<a href="{link_value}" color="blue" underline="1">انقر هنا لفتح النموذج</a>', 
-            link_style
-        )
-        handover_info_data.append([arabic_text("رابط النموذج"), link_text])
+        # استخدام نهج مختلف للروابط
+        from reportlab.platypus.flowables import HRFlowable
+        
+        # إنشاء رابط نصي واضح للاستخدام
+        link_desc = Paragraph(arabic_text("انقر هنا لفتح النموذج"), link_style)
+        
+        # إضافة الرابط الفعلي كنص عادي في سطر منفصل
+        form_link_text = Paragraph(handover_data['form_link'], styles['Arabic'])
+
+        # إنشاء جدول داخلي للرابط
+        link_table = Table([[link_desc], [form_link_text]], colWidths=[300])
+        link_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (0, -1), 'MIDDLE'),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.blue),
+            ('BOTTOMPADDING', (0, 0), (0, 0), 6),
+            ('TOPPADDING', (0, 0), (0, 0), 6),
+        ]))
+        handover_info_data.append([arabic_text("رابط النموذج"), link_table])
     
     # إضافة مستوى الوقود وعداد المسافة
     handover_info_data.append([arabic_text("مستوى الوقود"), arabic_text(handover_data['fuel_level'])])
