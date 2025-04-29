@@ -10,7 +10,7 @@ from flask import current_app
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, Link
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from arabic_reshaper import reshape
@@ -58,7 +58,19 @@ def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
     if text is None:
         return ""
-    return get_display(reshape(str(text)))
+    # إضافة معالجة إضافية للنصوص العربية
+    try:
+        # تحويل النص إلى سلسلة أحرف
+        text_str = str(text)
+        # إعادة تشكيل النص باستخدام arabic_reshaper
+        reshaped_text = reshape(text_str)
+        # تطبيق خوارزمية BIDI لدعم اتجاه الكتابة من اليمين إلى اليسار
+        bidi_text = get_display(reshaped_text)
+        return bidi_text
+    except Exception as e:
+        print(f"خطأ في معالجة النص العربي: {str(e)}")
+        # إذا فشلت المعالجة، أعد النص الأصلي
+        return str(text)
 
 def generate_vehicle_handover_pdf(handover_data):
     """
@@ -187,30 +199,51 @@ def generate_vehicle_handover_pdf(handover_data):
             'static', 'images', 'icons', 'click_here.svg'
         )
         
-        # إنشاء زر مميز للرابط مشابه للزر الأزرق الداكن الذي أرسله المستخدم
-        # إنشاء أنماط للزر
-        button_style = ParagraphStyle(
-            name='ViewRecordButtonStyle', 
-            parent=styles['Arabic'],
-            textColor=colors.white,  # نص أبيض
-            backColor=colors.Color(0.10, 0.16, 0.35),  # خلفية زرقاء داكنة مطابقة للصورة
-            borderColor=colors.Color(0.10, 0.16, 0.35),
-            borderWidth=0,
-            borderPadding=8,
-            borderRadius=5,  # تقريب الزوايا مثل الصورة
-            fontSize=12,
-            alignment=1,  # توسيط
-            leading=20,  # المسافة الرأسية بين السطور
-            spaceBefore=5,
-            spaceAfter=5,
-            endDots=False  # بدون نقاط في نهاية النص
-        )
+        # إنشاء صورة "Eye Icon" باستخدام شكل دائري
+        from reportlab.graphics.shapes import Drawing, Circle, String, Group, Rect
+        from reportlab.graphics import renderPDF
+
+        # إنشاء رسم للزر بالكامل
+        d = Drawing(185, 25)  # حجم الزر الكامل
         
-        # إنشاء الرابط بنص "مشاهدة سجل التسليم"
-        link_icon = Paragraph(
-            f'<a href="{link_value}" color="white"><strong>مشاهدة سجل التسليم</strong></a>', 
-            button_style
-        )
+        # إضافة مستطيل أزرق داكن كخلفية للزر
+        r = Rect(0, 0, 185, 25, fillColor=colors.Color(0.10, 0.16, 0.35), strokeColor=colors.Color(0.10, 0.16, 0.35), strokeWidth=0)
+        d.add(r)
+        
+        # مجموعة لرسم رمز العين
+        g = Group()
+        
+        # رسم دائرة للعين
+        c1 = Circle(15, 12.5, 7, fillColor=None, strokeColor=colors.white, strokeWidth=1)
+        g.add(c1)
+        
+        # رسم بؤبؤ العين
+        c2 = Circle(15, 12.5, 3, fillColor=colors.white, strokeColor=None)
+        g.add(c2)
+        
+        # إضافة مجموعة العين إلى الرسم
+        d.add(g)
+        
+        # إضافة نص مشاهدة سجل التسليم
+        # إنشاء نص أبيض ومحاذاته لليمين
+        button_text = String(160, 12.5, arabic_text("مشاهدة سجل التسليم"), fontName='Amiri', fontSize=12, fillColor=colors.white, textAnchor='end')
+        d.add(button_text)
+        
+        # تحويل الرسم إلى كائن صورة قابل للاستخدام في ReportLab
+        from io import BytesIO
+        img_data = BytesIO()
+        renderPDF.draw(d, img_data, 0, 0)
+        img_data.seek(0)
+        
+        from reportlab.lib.utils import ImageReader
+        button_img = ImageReader(img_data)
+        
+        # بناء زر بشكل صورة
+        button = Image(button_img, width=185, height=25)
+        button.hAlign = 'CENTER'  # توسيط الصورة
+        
+        # إنشاء رابط يشير إلى الرابط الفعلي
+        link_icon = Link(button, link_value)
 
         # إنشاء جدول داخلي للنص والأيقونة
         link_table = Table([[link_desc], [link_icon]], colWidths=[300])
