@@ -4,160 +4,220 @@
 
 {% block styles %}
 <style>
-    /* تأثير الخلفية المتدرجة للصفحة */
-    .custom-bg {
+    /* تأثير الخلفية الرئيسية */
+    .main-wrapper {
         min-height: 100vh;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4e6f1 100%);
+        background: #1a2035;
         padding: 20px 0;
     }
-    /* تأثير 3D للبطاقات */
-    .card {
-        transition: transform 0.3s, box-shadow 0.3s;
+
+    /* تصميم البطاقات الرئيسية */
+    .main-card {
         border: none;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.1);
-        transform: perspective(1000px) rotateX(0deg);
+        border-radius: 15px;
         overflow: hidden;
+        margin-bottom: 25px;
+        background-color: #202940;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
     
-    .card:hover {
-        transform: perspective(1000px) rotateX(2deg) translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2), 0 10px 10px rgba(0,0,0,0.1);
-    }
-    
-    /* تحسين مظهر رؤوس البطاقات */
-    .card-header {
-        border-bottom: none;
+    /* رأس البطاقة الرئيسية */
+    .main-card .card-header {
+        border: none;
+        padding: 20px;
         font-weight: bold;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
     
-    /* تغيير لون خلفية البطاقات */
-    .card-body {
-        background: linear-gradient(145deg, #e9ecef, #f3f5f7);
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+    /* جسم البطاقة الرئيسية */
+    .main-card .card-body {
+        background-color: #202940;
+        color: #e9ecef;
+        padding: 25px;
     }
     
-    /* تأثير على الجداول */
-    .table-info-box {
-        background-color: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    /* البطاقات الفرعية */
+    .inner-card {
+        border: none;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        background-color: #283046;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
     }
     
-    .table-info-box tr:nth-child(even) {
-        background-color: rgba(0,0,0,0.03);
+    .inner-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
     }
     
-    .table-info-box th {
-        background-color: #e9ecef;
-        padding: 12px 15px;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
+    /* رأس البطاقة الفرعية */
+    .inner-card .card-header {
+        border: none;
+        padding: 15px 20px;
+        font-weight: bold;
     }
     
-    .table-info-box td {
-        padding: 12px 15px;
+    /* جسم البطاقة الفرعية */
+    .inner-card .card-body {
+        background-color: #283046;
+        color: #e9ecef;
+        padding: 20px;
     }
-    
-    /* تأثير الصور */
-    .image-preview {
-        position: relative;
-        margin-bottom: 15px;
-        transform: translateZ(0);
-        transition: transform 0.3s;
-    }
-    
-    .image-preview:hover {
-        transform: scale(1.02);
-    }
-    
-    .image-preview img {
+
+    /* تصميم الجداول */
+    .info-table {
         width: 100%;
-        height: auto;
-        border-radius: 8px;
-        box-shadow: 0 6px 10px rgba(0,0,0,0.15);
-    }
-    
-    .image-description {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0,0,0,0.7);
-        color: white;
-        padding: 5px 10px;
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
-    }
-    
-    /* تحسين مظهر العنوان */
-    .handover-header {
-        position: relative;
-        padding-right: 15px;
-    }
-    
-    /* تأثير مميز للنصوص في المناطق الفاتحة */
-    .bg-light.text-dark {
-        background-color: #eaecf4 !important;
         border-radius: 10px;
-        box-shadow: inset 0 0 6px rgba(0,0,0,0.05);
+        overflow: hidden;
+        background-color: #323c50;
+        color: #e9ecef;
+        margin-bottom: 15px;
     }
     
-    /* تحسين مظهر الأزرار */
+    .info-table th {
+        background-color: #1e2639;
+        padding: 12px 15px;
+        color: #e9ecef;
+        font-weight: 600;
+    }
+    
+    .info-table td {
+        padding: 12px 15px;
+        color: #e9ecef;
+    }
+    
+    .info-table tr:nth-child(even) {
+        background-color: #28314a;
+    }
+    
+    /* تصميم مربع المعلومات */
+    .info-box {
+        background-color: #323c50;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        color: #e9ecef;
+    }
+    
+    /* تأثير 3D للأزرار */
     .btn {
         border-radius: 8px;
+        padding: 8px 15px;
+        margin: 5px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: all 0.3s;
     }
     
     .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.2);
     }
     
-    /* تأثير 3D للمؤشرات */
-    .badge {
-        padding: 0.5em 0.8em;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* تعديل زر الإجراء */
+    .btn-action {
+        border-radius: 50px;
+        padding: 8px 20px;
+        font-weight: 600;
+    }
+    
+    /* تصميم صور التسليم */
+    .handover-image {
+        position: relative;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transition: transform 0.3s;
+    }
+    
+    .handover-image:hover {
+        transform: scale(1.03);
+    }
+    
+    .handover-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    .image-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        font-size: 14px;
+    }
+    
+    /* تأثير خاص حسب نوع النموذج */
+    .delivery-card {
+        border-right: 4px solid #28a745 !important;
+    }
+    
+    .return-card {
+        border-right: 4px solid #17a2b8 !important;
+    }
+    
+    /* ألوان النص والخلفية للعناصر المختلفة */
+    .text-positive {
+        color: #4CAF50;
+    }
+    
+    .text-negative {
+        color: #F44336;
+    }
+    
+    /* شريط التنقل العلوي */
+    .page-navigator {
+        background-color: #202940;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="custom-bg">
+<div class="main-wrapper">
 <div class="container py-4">
-    <div class="card shadow-sm">
-        <div class="card-header {{ 'bg-success' if handover.handover_type == 'delivery' else 'bg-info' }} text-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0 handover-header {{ 'delivery' if handover.handover_type == 'delivery' else 'return' }}">
-                {% if handover.handover_type == 'delivery' %}
-                    <i class="fas fa-share ms-2"></i>
-                {% else %}
-                    <i class="fas fa-reply ms-2"></i>
-                {% endif %}
-                نموذج {{ handover_type_name }} السيارة: {{ vehicle.plate_number }}
-            </h3>
-            <div>
-                <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" class="btn btn-danger">
-                    <i class="fas fa-file-pdf ms-1"></i>
-                    تصدير PDF
-                </a>
-                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-car ms-1"></i>
-                    تفاصيل السيارة
-                </a>
-                <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
-                    <i class="fas fa-arrow-right ms-1"></i>
-                    قائمة السيارات
-                </a>
-            </div>
+    <!-- شريط التنقل العلوي -->
+    <div class="page-navigator d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-white mb-0">
+            {% if handover.handover_type == 'delivery' %}
+                <i class="fas fa-share ms-2 text-success"></i>
+            {% else %}
+                <i class="fas fa-reply ms-2 text-info"></i>
+            {% endif %}
+            نموذج {{ handover_type_name }} السيارة: {{ vehicle.plate_number }}
+        </h3>
+        <div>
+            <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" class="btn btn-danger btn-action">
+                <i class="fas fa-file-pdf ms-1"></i>
+                تصدير PDF
+            </a>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-primary btn-action me-2">
+                <i class="fas fa-car ms-1"></i>
+                تفاصيل السيارة
+            </a>
+            <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary btn-action me-2">
+                <i class="fas fa-arrow-right ms-1"></i>
+                قائمة السيارات
+            </a>
         </div>
+    </div>
+    
+    <!-- البطاقة الرئيسية -->
+    <div class="main-card {{ 'delivery-card' if handover.handover_type == 'delivery' else 'return-card' }}">
         <div class="card-body">
             <div class="row">
                 <!-- معلومات النموذج والسيارة -->
                 <div class="col-md-8">
                     <div class="row">
                         <div class="col-12 mb-4">
-                            <div class="card">
+                            <div class="inner-card {{ 'delivery-card' if handover.handover_type == 'delivery' else 'return-card' }}">
                                 <div class="card-header {{ 'bg-success text-white' if handover.handover_type == 'delivery' else 'bg-info text-white' }}">
                                     <h5 class="mb-0">
                                         <i class="fas fa-info-circle ms-2"></i>
@@ -273,7 +333,7 @@
                         </div>
                         
                         <div class="col-12">
-                            <div class="card">
+                            <div class="inner-card">
                                 <div class="card-header bg-primary text-white">
                                     <h5 class="mb-0">
                                         <i class="fas fa-car ms-2"></i>
