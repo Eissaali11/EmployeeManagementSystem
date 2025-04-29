@@ -112,15 +112,17 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             
             # تم إزالة المستطيل الأزرق وفقاً لطلب المستخدم
             
-            # إضافة شعار نُظم الجديد
+            # إضافة شعار نُظم الجديد في منتصف الصفحة
             try:
-                logo_size = 20*mm
+                logo_size = 30*mm  # حجم الشعار أكبر
                 logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
                 logo_img = ImageReader(logo_path)
-                logo_x = x + self.width - logo_size - 10*mm  # موضع الشعار من اليمين مع هامش
-                logo_y = y + self.height + logo_size/2  # موضع الشعار من الأعلى
                 
-                # رسم الشعار
+                # موضع الشعار في وسط الصفحة
+                logo_x = x + self.width/2  # الوسط الأفقي للصفحة
+                logo_y = y + self.height + logo_size/2 + 10*mm  # موضع الشعار في أعلى الصفحة بهامش إضافي
+                
+                # رسم الشعار مع مراعاة مركز الشعار
                 canv.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
                 
             except Exception as e:

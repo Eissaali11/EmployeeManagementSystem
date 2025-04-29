@@ -160,16 +160,18 @@ def generate_vehicle_handover_pdf(handover_data):
             # رسم مستطيل أزرق في الأعلى
             canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
             
-            # إستخدام صورة الشعار الجديدة بدلاً من رسمها
+            # إضافة الشعار في وسط الصفحة بالأعلى
             try:
-                logo_size = 20*mm
+                logo_size = 30*mm  # حجم الشعار أكبر
                 logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
                 from reportlab.lib.utils import ImageReader
                 logo_img = ImageReader(logo_path)
-                logo_x = x + self.width - logo_size - 10*mm  # موضع الشعار من اليمين مع هامش
-                logo_y = y + self.height + logo_size/2  # موضع الشعار من الأعلى
                 
-                # رسم الشعار
+                # موضع الشعار في وسط الصفحة من الأعلى
+                logo_x = x + self.width/2  # الوسط الأفقي للصفحة
+                logo_y = y + self.height + 5*mm  # موضع الشعار فوق الصفحة
+                
+                # رسم الشعار مع مراعاة مركز الشعار
                 canv.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
                 
             except Exception as e:
