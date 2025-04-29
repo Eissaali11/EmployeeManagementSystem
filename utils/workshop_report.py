@@ -70,17 +70,15 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     def add_header_footer(canvas, doc):
         canvas.saveState()
         
-        # رسم شريط أزرق في الجزء العلوي من الصفحة
-        navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن
-        canvas.setFillColor(navy_blue)
-        canvas.rect(30, 800, A4[0]-60, 3*mm, fill=1, stroke=0)
+        # لا نضيف شريط أزرق هنا - تم إزالته تماماً
         
         # لا نضيف الشعار هنا - يوجد فقط في PageHeader لمنع التكرار
             
         # إضافة اسم النظام
+        navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن
         canvas.setFillColor(navy_blue)
         canvas.setFont('Amiri-Bold', 16)
-        system_name = "نظام إدارة متكامل"
+        system_name = arabic_text("نظام إدارة متكامل")
         system_width = canvas.stringWidth(system_name, 'Amiri-Bold', 16)
         # نستخدم ثابتاً لموضع النص بدلاً من الاعتماد على متغير logo_x
         name_x = A4[0] - 110  # موضع اسم النظام من يمين الصفحة
@@ -89,7 +87,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
         # إضافة معلومات في التذييل إذا لزم الأمر
         canvas.setFont('Amiri', 8)
         canvas.setFillColor(Color(0.5, 0.5, 0.5)) # رمادي
-        footer_text = f"تم إنشاء هذا التقرير بواسطة نُظم - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        footer_text = arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'Amiri', 8)/2, 30, footer_text)
         
         canvas.restoreState()
@@ -116,12 +114,11 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             return (self.width, self.height)
             
         def drawOn(self, canv, x, y, _sW=0):
-            # رسم شريط أزرق في أعلى الصفحة
-            navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن للشعار
+            # لون أزرق داكن للشعار والنص
+            navy_blue = Color(0.05, 0.15, 0.45)
             canv.setFillColor(navy_blue)
             
-            # رسم مستطيل أزرق في الأعلى
-            canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
+            # تم إزالة المستطيل الأزرق وفقاً لطلب المستخدم
             
             # إضافة شعار نُظم الجديد
             try:
@@ -138,11 +135,11 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
                 print(f"خطأ في تحميل الشعار في PageHeader: {e}")
                 # في حالة الخطأ، لا نرسم شيئاً
             
-            # إضافة اسم النظام أسفل الشريط الأزرق
+            # إضافة اسم النظام
             canv.setFillColor(navy_blue)
             canv.setFont('Amiri-Bold', 16)
-            # طباعة اسم النظام على يسار الشعار
-            system_name = "نظام إدارة متكامل"
+            # استخدام دالة arabic_text لمعالجة النص العربي بشكل صحيح
+            system_name = arabic_text("نظام إدارة متكامل")
             system_width = canv.stringWidth(system_name, 'Amiri-Bold', 16)
             system_x = x + self.width - 120  # موضع النص من يمين الصفحة
             system_y = y + self.height - 5  # موضع النص من أعلى الصفحة
