@@ -10,7 +10,8 @@ from flask import current_app
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, Link
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.platypus.flowables import Flowable
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from arabic_reshaper import reshape
@@ -242,8 +243,9 @@ def generate_vehicle_handover_pdf(handover_data):
         button = Image(button_img, width=185, height=25)
         button.hAlign = 'CENTER'  # توسيط الصورة
         
-        # إنشاء رابط يشير إلى الرابط الفعلي
-        link_icon = Link(button, link_value)
+        # استخدام الصورة كما هي بدون روابط قابلة للنقر
+        # في ملفات PDF لن يكون هناك روابط قابلة للنقر
+        link_icon = button
 
         # إنشاء جدول داخلي للنص والأيقونة
         link_table = Table([[link_desc], [link_icon]], colWidths=[300])
