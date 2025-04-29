@@ -623,44 +623,38 @@ def create_workshop(id):
 @login_required
 def edit_workshop(id):
     """تعديل سجل ورشة"""
+    # الحصول على سجل الورشة والسيارة
     workshop = VehicleWorkshop.query.get_or_404(id)
     vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
     
-    # الحصول على الصور الحالية مفصولة حسب النوع
-    before_images = VehicleWorkshopImage.query.filter_by(
-        workshop_record_id=id, image_type='before').all()
-    after_images = VehicleWorkshopImage.query.filter_by(
-        workshop_record_id=id, image_type='after').all()
+    # الحصول على الصور الحالية
+    before_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='before').all()
+    after_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='after').all()
     
-    # إنشاء نموذج فارغ بدون حقول إضافية فقط للتحقق من CSRF
-    class SimpleForm(FlaskForm):
-        pass
-    
-    form = SimpleForm()
+    # إنشاء نموذج فارغ لحماية CSRF
+    form = FlaskForm()
     
     if request.method == 'POST':
-        current_app.logger.info(f"POST request received to edit workshop {id}")
+        current_app.logger.info(f"تم استلام طلب POST لتعديل سجل الورشة: {id}")
         
         try:
-            # استخراج البيانات من النموذج
-            entry_date_str = request.form.get('entry_date', '')
-            exit_date_str = request.form.get('exit_date', '')
-            reason = request.form.get('reason', '')
-            description = request.form.get('description', '')
-            repair_status = request.form.get('repair_status', '')
+            # الحصول على البيانات من الطلب
+            entry_date_str = request.form.get('entry_date')
+            exit_date_str = request.form.get('exit_date')
+            reason = request.form.get('reason')
+            description = request.form.get('description')
+            repair_status = request.form.get('repair_status')
             cost_str = request.form.get('cost', '0')
-            workshop_name = request.form.get('workshop_name', '')
-            technician_name = request.form.get('technician_name', '')
-            delivery_link = request.form.get('delivery_link', '')
-            reception_link = request.form.get('reception_link', '')
-            notes = request.form.get('notes', '')
+            workshop_name = request.form.get('workshop_name')
+            technician_name = request.form.get('technician_name')
+            delivery_link = request.form.get('delivery_link')
+            reception_link = request.form.get('reception_link')
+            notes = request.form.get('notes')
             
-            current_app.logger.info(f"Form data: entry_date={entry_date_str}, exit_date={exit_date_str}, reason={reason}")
-            
-            # تحويل البيانات
+            # تحويل التواريخ والتكلفة
             entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date() if entry_date_str else None
             exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
-            cost = float(cost_str) if cost_str and cost_str.strip() else 0.0
+            cost = float(cost_str.replace(',', '.')) if cost_str and cost_str.strip() else 0.0
             
             # تحديث سجل الورشة
             workshop.entry_date = entry_date
@@ -676,9 +670,8 @@ def edit_workshop(id):
             workshop.notes = notes
             workshop.updated_at = datetime.utcnow()
             
-            # تحديث حالة السيارة
+            # تحديث حالة السيارة إذا خرجت من الورشة
             if exit_date and repair_status == 'completed':
-                # التحقق من وجود سجلات ورشة أخرى نشطة
                 other_active_records = VehicleWorkshop.query.filter(
                     VehicleWorkshop.vehicle_id == vehicle.id,
                     VehicleWorkshop.id != id,
@@ -686,7 +679,7 @@ def edit_workshop(id):
                 ).count()
                 
                 if other_active_records == 0:
-                    # تحديث حالة السيارة
+                    # لا توجد سجلات ورشة نشطة أخرى
                     active_rental = VehicleRental.query.filter_by(vehicle_id=vehicle.id, is_active=True).first()
                     active_project = VehicleProject.query.filter_by(vehicle_id=vehicle.id, is_active=True).first()
                     
@@ -697,50 +690,51 @@ def edit_workshop(id):
                     else:
                         vehicle.status = 'available'
             
+            # تحديث السيارة
             vehicle.updated_at = datetime.utcnow()
             db.session.commit()
             
-            # معالجة الصور المرفقة الجديدة
-            before_images = request.files.getlist('before_images')
-            after_images = request.files.getlist('after_images')
+            # معالجة الصور المرفقة
+            before_image_files = request.files.getlist('before_images')
+            after_image_files = request.files.getlist('after_images')
             
-            for image in before_images:
+            for image in before_image_files:
                 if image and image.filename:
                     image_path = save_image(image, 'workshop')
                     if image_path:
-                        new_image = VehicleWorkshopImage(
+                        workshop_image = VehicleWorkshopImage(
                             workshop_record_id=id,
                             image_type='before',
                             image_path=image_path
                         )
-                        db.session.add(new_image)
+                        db.session.add(workshop_image)
             
-            for image in after_images:
+            for image in after_image_files:
                 if image and image.filename:
                     image_path = save_image(image, 'workshop')
                     if image_path:
-                        new_image = VehicleWorkshopImage(
+                        workshop_image = VehicleWorkshopImage(
                             workshop_record_id=id,
                             image_type='after',
                             image_path=image_path
                         )
-                        db.session.add(new_image)
+                        db.session.add(workshop_image)
             
             db.session.commit()
             
             # تسجيل الإجراء
             log_audit('update', 'vehicle_workshop', workshop.id, 
-                    f'تم تعديل سجل الورشة للسيارة: {vehicle.plate_number}')
+                     f'تم تعديل سجل الورشة للسيارة {vehicle.plate_number}')
             
             flash('تم تعديل سجل الورشة بنجاح!', 'success')
             return redirect(url_for('vehicles.view', id=vehicle.id))
             
         except Exception as e:
-            current_app.logger.error(f"Error saving workshop: {str(e)}")
+            current_app.logger.error(f"خطأ في حفظ سجل الورشة: {str(e)}")
             db.session.rollback()
             flash(f'حدث خطأ أثناء حفظ التعديلات: {str(e)}', 'danger')
     
-    # عرض القالب مع البيانات
+    # عرض النموذج
     return render_template(
         'vehicles/workshop_edit.html', 
         workshop=workshop, 

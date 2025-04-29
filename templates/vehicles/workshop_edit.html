@@ -69,7 +69,7 @@
                         <span>إذا حددت تاريخ الخروج من الورشة وكانت حالة الإصلاح "تم الإصلاح"، سيتم تغيير حالة السيارة تلقائيًا من "في الورشة".</span>
                     </div>
                     
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post" action="{{ url_for('vehicles.edit_workshop', id=workshop.id) }}" enctype="multipart/form-data">
                         {% if form %}
                         {{ form.csrf_token() }}
                         {% endif %}
@@ -258,24 +258,13 @@
             }
         });
         
-        // إضافة معالج النموذج
-        const form = document.querySelector('form');
+        // إضافة معالج لزر الحفظ
         const submitButton = document.querySelector('button[type="submit"]');
         
-        form.addEventListener('submit', function(event) {
-            // منع السلوك الافتراضي
-            event.preventDefault();
-            
-            // تعطيل زر الحفظ لمنع النقرات المتعددة
+        submitButton.addEventListener('click', function() {
+            // تعطيل الزر لمنع النقر المتعدد
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
-            
-            console.log('إرسال نموذج تعديل الورشة');
-            
-            // إرسال النموذج
-            setTimeout(function() {
-                form.submit();
-            }, 100);
         });
     });
 </script>
