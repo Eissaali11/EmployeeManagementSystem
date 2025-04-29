@@ -75,29 +75,28 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
         canvas.setFillColor(navy_blue)
         canvas.rect(30, 800, A4[0]-60, 3*mm, fill=1, stroke=0)
         
-        # إضافة شعار نُظم
-        logo_size = 20*mm
-        logo_radius = logo_size/2
-        logo_x = A4[0] - 60 - logo_size/2  # يمين الصفحة
-        logo_y = 810  # فوق الشريط الأزرق
-        
-        # رسم دائرة للشعار
-        canvas.setFillColor(navy_blue)
-        canvas.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
-        
-        # إضافة النص "نُظم" في الدائرة
-        canvas.setFillColor(Color(1, 1, 1))  # لون أبيض
-        canvas.setFont('Amiri-Bold', 14)
-        text = "نُظم"
-        text_width = canvas.stringWidth(text, 'Amiri-Bold', 14)
-        canvas.drawString(logo_x - text_width/2, logo_y - 5, text)
-        
+        # إضافة شعار نُظم الجديد
+        try:
+            logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
+            logo_img = ImageReader(logo_path)
+            logo_size = 20*mm
+            logo_x = A4[0] - 80  # يمين الصفحة
+            logo_y = 810 - logo_size/2  # فوق الشريط الأزرق
+            
+            # رسم الشعار
+            canvas.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
+            
+        except Exception as e:
+            print(f"خطأ في تحميل الشعار: {e}")
+            
         # إضافة اسم النظام
         canvas.setFillColor(navy_blue)
         canvas.setFont('Amiri-Bold', 16)
         system_name = "نظام إدارة متكامل"
         system_width = canvas.stringWidth(system_name, 'Amiri-Bold', 16)
-        canvas.drawString(logo_x - logo_size - system_width - 5*mm, logo_y - 5, system_name)
+        # نستخدم ثابتاً لموضع النص بدلاً من الاعتماد على متغير logo_x
+        name_x = A4[0] - 110  # موضع اسم النظام من يمين الصفحة
+        canvas.drawString(name_x - system_width, 810 - 5, system_name)
         
         # إضافة معلومات في التذييل إذا لزم الأمر
         canvas.setFont('Amiri', 8)
@@ -136,21 +135,20 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             # رسم مستطيل أزرق في الأعلى
             canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
             
-            # رسم دائرة الشعار في الزاوية اليمنى العليا
-            logo_size = 20*mm
-            logo_radius = logo_size/2
-            logo_x = x + self.width - logo_size - 10*mm  # موضع الشعار من اليمين مع هامش
-            logo_y = y + self.height + logo_radius  # موضع الشعار من الأعلى
-            
-            # رسم دائرة الشعار
-            canv.setFillColor(navy_blue)
-            canv.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
-            
-            # إضافة نص "نُظم" بالخط الأبيض
-            canv.setFillColor(white)
-            canv.setFont('Amiri-Bold', 14)
-            text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 14)
-            canv.drawString(logo_x - text_width/2, logo_y - 5, "نُظم")
+            # إضافة شعار نُظم الجديد
+            try:
+                logo_size = 20*mm
+                logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
+                logo_img = ImageReader(logo_path)
+                logo_x = x + self.width - logo_size - 10*mm  # موضع الشعار من اليمين مع هامش
+                logo_y = y + self.height + logo_size/2  # موضع الشعار من الأعلى
+                
+                # رسم الشعار
+                canv.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
+                
+            except Exception as e:
+                print(f"خطأ في تحميل الشعار في PageHeader: {e}")
+                # في حالة الخطأ، لا نرسم شيئاً
             
             # إضافة اسم النظام أسفل الشريط الأزرق
             canv.setFillColor(navy_blue)
@@ -158,7 +156,9 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             # طباعة اسم النظام على يسار الشعار
             system_name = "نظام إدارة متكامل"
             system_width = canv.stringWidth(system_name, 'Amiri-Bold', 16)
-            canv.drawString(logo_x - logo_size - system_width - 5*mm, logo_y - 5, system_name)
+            system_x = x + self.width - 120  # موضع النص من يمين الصفحة
+            system_y = y + self.height - 5  # موضع النص من أعلى الصفحة
+            canv.drawString(system_x - system_width, system_y, system_name)
 
         # دوال مطلوبة للتوافق مع Flowable
         def getKeepWithNext(self):
