@@ -631,12 +631,7 @@ def edit_workshop(id):
     before_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='before').all()
     after_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='after').all()
     
-    # إنشاء نموذج فارغ لحماية CSRF
-    form = FlaskForm()
-    
     if request.method == 'POST':
-        current_app.logger.info(f"تم استلام طلب POST لتعديل سجل الورشة: {id}")
-        
         try:
             # الحصول على البيانات من الطلب
             entry_date_str = request.form.get('entry_date')
@@ -654,7 +649,10 @@ def edit_workshop(id):
             # تحويل التواريخ والتكلفة
             entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date() if entry_date_str else None
             exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
-            cost = float(cost_str.replace(',', '.')) if cost_str and cost_str.strip() else 0.0
+            try:
+                cost = float(cost_str.replace(',', '.')) if cost_str and cost_str.strip() else 0.0
+            except ValueError:
+                cost = 0.0
             
             # تحديث سجل الورشة
             workshop.entry_date = entry_date
@@ -742,8 +740,7 @@ def edit_workshop(id):
         before_images=before_images,
         after_images=after_images,
         reasons=WORKSHOP_REASON_CHOICES,
-        statuses=REPAIR_STATUS_CHOICES,
-        form=form
+        statuses=REPAIR_STATUS_CHOICES
     )
 
 @vehicles_bp.route('/workshop/image/<int:id>/confirm-delete')

@@ -94,23 +94,17 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
                 center_y = y
                 radius = self.size / 2
                 
-                # رسم دائرة زرقاء كخلفية (نفس لون الشعار الأصلي)
-                navy_blue = Color(0.13, 0.24, 0.49) # اللون الأزرق الداكن المطابق للشعار
+                # رسم دائرة زرقاء داكنة كخلفية للشعار
+                navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن جميل للشعار
                 canv.setFillColor(navy_blue)
                 canv.circle(center_x, center_y, radius, fill=1)
                 
-                # وضع الصورة داخل الدائرة
-                try:
-                    img = ImageReader(self.path)
-                    # استخدام الشعار مباشرة دون تعديل لأنه بالفعل على خلفية شفافة
-                    canv.drawImage(img, x, y-radius, width=self.size, height=self.size, mask='auto')
-                except Exception as e:
-                    print(f"خطأ في عرض الصورة: {str(e)}")
-                    # إذا فشل عرض الصورة، اكتب كلمة "نُظم" بالأبيض
-                    canv.setFillColor(white)
-                    canv.setFont('Amiri-Bold', 30)
-                    text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 30)
-                    canv.drawString(center_x - text_width/2, center_y - 10, "نُظم")
+                # إضافة نص "نُظم" بالخط الأبيض مباشرة
+                # لضمان ظهور متناسق في جميع التقارير
+                canv.setFillColor(white)
+                canv.setFont('Amiri-Bold', 30)
+                text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 30)
+                canv.drawString(center_x - text_width/2, center_y - 10, "نُظم")
             
             # دوال مطلوبة للتوافق مع Flowable
             def getKeepWithNext(self):

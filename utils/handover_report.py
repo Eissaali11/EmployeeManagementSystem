@@ -116,12 +116,12 @@ def generate_vehicle_handover_pdf(handover_data):
                 logo_path = None
         
         if logo_path and os.path.exists(logo_path):
-            # إنشاء خلفية دائرية زرقاء للشعار
+            # إنشاء شعار مع خلفية دائرية زرقاء
             from reportlab.lib.colors import Color
             from reportlab.platypus.flowables import Flowable
 
             class CircularLogoImage(Flowable):
-                def __init__(self, path, size=30*mm):
+                def __init__(self, path, size=40*mm):
                     Flowable.__init__(self)
                     self.path = path
                     self.size = size
@@ -130,21 +130,27 @@ def generate_vehicle_handover_pdf(handover_data):
                     return (self.size, self.size)
                     
                 def drawOn(self, canv, x, y, _sW=0):
-                    # تحديد اللون الأزرق للخلفية (لون مطابق للشعار)
-                    navy_blue = Color(0.13, 0.24, 0.49)
+                    # تحديد اللون الأزرق الداكن للخلفية
+                    navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن للشعار
                     
-                    # رسم دائرة زرقاء
+                    # رسم دائرة زرقاء للخلفية
                     canv.setFillColor(navy_blue)
-                    center_x = x + self.size/2
-                    center_y = y - self.size/2
                     radius = self.size/2
+                    center_x = x + radius
+                    center_y = y - radius
                     canv.circle(center_x, center_y, radius, fill=1)
                     
-                    # إضافة الشعار فوق الدائرة
-                    canv.drawImage(self.path, x, y-self.size, width=self.size, height=self.size, mask='auto')
+                    # إضافة نص "نُظم" بالخط الأبيض في الدائرة
+                    canv.setFillColor(Color(1, 1, 1))  # اللون الأبيض
+                    canv.setFont('Amiri-Bold', 18)
+                    text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 18)
+                    canv.drawString(center_x - text_width/2, center_y - 6, "نُظم")
+                    
+                    # يمكن أيضًا إضافة الشعار كصورة إذا لزم الأمر
+                    # canv.drawImage(self.path, x, y-self.size, width=self.size, height=self.size, mask='auto')
             
             # إضافة الشعار الدائري إلى المحتوى
-            circular_logo = CircularLogoImage(logo_path, 30*mm)
+            circular_logo = CircularLogoImage(logo_path, 40*mm)
             content.append(circular_logo)
     except Exception as e:
         print(f"خطأ في إضافة الشعار: {str(e)}")
