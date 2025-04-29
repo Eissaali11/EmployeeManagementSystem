@@ -167,13 +167,13 @@
                                     
                                     <div class="mt-3">
                                         <h6>حالة السيارة:</h6>
-                                        <div class="p-3 bg-light rounded">{{ handover.vehicle_condition }}</div>
+                                        <div class="p-3 bg-light text-dark rounded">{{ handover.vehicle_condition }}</div>
                                     </div>
                                     
                                     {% if handover.form_link %}
                                     <div class="mt-3">
                                         <h6>رابط فورم التسليم/الاستلام:</h6>
-                                        <div class="p-3 bg-light rounded">
+                                        <div class="p-3 bg-light text-dark rounded">
                                             <a href="{{ handover.form_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-external-link-alt ms-1"></i>
                                                 فتح النموذج الإلكتروني
@@ -185,7 +185,7 @@
                                     {% if handover.notes %}
                                     <div class="mt-3">
                                         <h6>ملاحظات إضافية:</h6>
-                                        <div class="p-3 bg-light rounded">{{ handover.notes }}</div>
+                                        <div class="p-3 bg-light text-dark rounded">{{ handover.notes }}</div>
                                     </div>
                                     {% endif %}
                                 </div>
@@ -301,7 +301,7 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="text-center py-5">
+                                <div class="text-center py-5 text-dark">
                                     <i class="fas fa-camera fa-4x text-muted mb-3"></i>
                                     <p>لا توجد صور توثيقية لهذا النموذج</p>
                                 </div>
