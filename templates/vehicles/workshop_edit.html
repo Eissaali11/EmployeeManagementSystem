@@ -69,8 +69,10 @@
                         <span>إذا حددت تاريخ الخروج من الورشة وكانت حالة الإصلاح "تم الإصلاح"، سيتم تغيير حالة السيارة تلقائيًا من "في الورشة".</span>
                     </div>
                     
-                    <form method="post" action="{{ url_for('vehicles.edit_workshop', id=workshop.id) }}" enctype="multipart/form-data">
-                        {{ form.csrf_token() if form }}
+                    <form method="post" enctype="multipart/form-data">
+                        {% if form %}
+                        {{ form.csrf_token() }}
+                        {% endif %}
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="entry_date" class="form-label required">تاريخ دخول الورشة</label>
@@ -254,6 +256,26 @@
             if (exitDateInput.value && exitDateInput.value < entryDateInput.value) {
                 exitDateInput.value = '';
             }
+        });
+        
+        // إضافة معالج النموذج
+        const form = document.querySelector('form');
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        form.addEventListener('submit', function(event) {
+            // منع السلوك الافتراضي
+            event.preventDefault();
+            
+            // تعطيل زر الحفظ لمنع النقرات المتعددة
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
+            
+            console.log('إرسال نموذج تعديل الورشة');
+            
+            // إرسال النموذج
+            setTimeout(function() {
+                form.submit();
+            }, 100);
         });
     });
 </script>
