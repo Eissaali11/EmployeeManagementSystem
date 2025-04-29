@@ -74,15 +74,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
         
         # لا نضيف الشعار هنا - يوجد فقط في PageHeader لمنع التكرار
             
-        # إضافة اسم النظام
-        navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن
-        canvas.setFillColor(navy_blue)
-        canvas.setFont('Amiri-Bold', 16)
-        system_name = arabic_text("نظام إدارة متكامل")
-        system_width = canvas.stringWidth(system_name, 'Amiri-Bold', 16)
-        # نستخدم ثابتاً لموضع النص بدلاً من الاعتماد على متغير logo_x
-        name_x = A4[0] - 110  # موضع اسم النظام من يمين الصفحة
-        canvas.drawString(name_x - system_width, 810 - 5, system_name)
+        # نترك إضافة اسم النظام فقط في دالة PageHeader لمنع التكرار
         
         # إضافة معلومات في التذييل إذا لزم الأمر
         canvas.setFont('Amiri', 8)
@@ -135,15 +127,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
                 print(f"خطأ في تحميل الشعار في PageHeader: {e}")
                 # في حالة الخطأ، لا نرسم شيئاً
             
-            # إضافة اسم النظام
-            canv.setFillColor(navy_blue)
-            canv.setFont('Amiri-Bold', 16)
-            # استخدام دالة arabic_text لمعالجة النص العربي بشكل صحيح
-            system_name = arabic_text("نظام إدارة متكامل")
-            system_width = canv.stringWidth(system_name, 'Amiri-Bold', 16)
-            system_x = x + self.width - 120  # موضع النص من يمين الصفحة
-            system_y = y + self.height - 5  # موضع النص من أعلى الصفحة
-            canv.drawString(system_x - system_width, system_y, system_name)
+            # لا نضيف نص تحت الشعار لأن شعار نُظم يكفي بمفرده
 
         # دوال مطلوبة للتوافق مع Flowable
         def getKeepWithNext(self):
@@ -259,7 +243,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     
     # بيانات التوقيع والطباعة
     footer_text = Paragraph(
-        arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة متكامل في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+        arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
         styles['Arabic']
     )
     copyright_text = Paragraph(
