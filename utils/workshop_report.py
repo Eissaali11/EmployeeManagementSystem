@@ -66,65 +66,75 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     # تحضير المحتوى
     content = []
     
-    # إضافة شعار الشركة الجديد بشكل دائري
+    # إضافة شعار الشركة الجديد بشكل دائري في رأس الصفحة
     from reportlab.lib.utils import ImageReader
     from reportlab.lib.colors import blue, white, Color
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
     
-    # تحديد مسار الشعار
-    logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
+    # إنشاء Flowable مخصص لرأس الصفحة مع شعار
+    from reportlab.platypus.flowables import Flowable
     
-    if os.path.exists(logo_path):
-        # إنشاء دائرة باستخدام Flowable مخصص
-        from reportlab.platypus.flowables import Flowable
-        
-        class CircularImage(Flowable):
-            def __init__(self, path, size=120):
-                Flowable.__init__(self)
-                self.path = path
-                self.size = size
-                
-            def wrap(self, width, height):
-                return (self.size, self.size)
-                
-            def drawOn(self, canv, x, y, _sW=0):
-                # حساب موضع مركز الدائرة
-                center_x = x + self.size / 2
-                center_y = y
-                radius = self.size / 2
-                
-                # رسم دائرة زرقاء داكنة كخلفية للشعار
-                navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن جميل للشعار
-                canv.setFillColor(navy_blue)
-                canv.circle(center_x, center_y, radius, fill=1)
-                
-                # إضافة نص "نُظم" بالخط الأبيض مباشرة
-                # لضمان ظهور متناسق في جميع التقارير
-                canv.setFillColor(white)
-                canv.setFont('Amiri-Bold', 30)
-                text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 30)
-                canv.drawString(center_x - text_width/2, center_y - 10, "نُظم")
+    class PageHeader(Flowable):
+        def __init__(self, width, height=25*mm):
+            Flowable.__init__(self)
+            self.width = width
+            self.height = height
             
-            # دوال مطلوبة للتوافق مع Flowable
-            def getKeepWithNext(self):
-                return 0
-                
-            def setKeepWithNext(self, value):
-                pass
-                
-            def getKeepTogether(self):
-                return 0
-                
-            def split(self, availWidth, availHeight):
-                if availHeight < self.size:
-                    return []
-                return [self]
-                
-        # إضافة الشعار الدائري
-        circular_logo = CircularImage(logo_path, 100)
-        content.append(circular_logo)
-        content.append(Spacer(1, 20))
+        def wrap(self, width, height):
+            return (self.width, self.height)
+            
+        def drawOn(self, canv, x, y, _sW=0):
+            # رسم شريط أزرق في أعلى الصفحة
+            navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن للشعار
+            canv.setFillColor(navy_blue)
+            
+            # رسم مستطيل أزرق في الأعلى
+            canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
+            
+            # رسم دائرة الشعار في الزاوية اليمنى العليا
+            logo_size = 20*mm
+            logo_radius = logo_size/2
+            logo_x = x + self.width - logo_size - 10*mm  # موضع الشعار من اليمين مع هامش
+            logo_y = y + self.height + logo_radius  # موضع الشعار من الأعلى
+            
+            # رسم دائرة الشعار
+            canv.setFillColor(navy_blue)
+            canv.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
+            
+            # إضافة نص "نُظم" بالخط الأبيض
+            canv.setFillColor(white)
+            canv.setFont('Amiri-Bold', 14)
+            text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 14)
+            canv.drawString(logo_x - text_width/2, logo_y - 5, "نُظم")
+            
+            # إضافة اسم النظام أسفل الشريط الأزرق
+            canv.setFillColor(navy_blue)
+            canv.setFont('Amiri-Bold', 16)
+            # طباعة اسم النظام على يسار الشعار
+            system_name = "نظام إدارة متكامل"
+            system_width = canv.stringWidth(system_name, 'Amiri-Bold', 16)
+            canv.drawString(logo_x - logo_size - system_width - 5*mm, logo_y - 5, system_name)
+
+        # دوال مطلوبة للتوافق مع Flowable
+        def getKeepWithNext(self):
+            return 0
+            
+        def setKeepWithNext(self, value):
+            pass
+            
+        def getKeepTogether(self):
+            return 0
+            
+        def split(self, availWidth, availHeight):
+            if availHeight < self.height:
+                return []
+            return [self]
+    
+    # إضافة الشعار ورأس الصفحة
+    header = PageHeader(doc.width)
+    content.append(header)
+    content.append(Spacer(1, 30*mm))
     
     # عنوان التقرير
     title = Paragraph(arabic_text(f"تقرير سجلات الورشة للسيارة: {vehicle.plate_number}"), styles['ArabicTitle'])
