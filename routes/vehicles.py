@@ -2328,8 +2328,8 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
         # الحصول على سجلات الفحص
         if inspections is None:
             # جلب السجلات إذا لم يتم توفيرها
-            inspections = VehicleInspection.query.filter_by(vehicle_id=vehicle.id).order_by(
-                VehicleInspection.inspection_date.desc()
+            inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle.id).order_by(
+                VehiclePeriodicInspection.inspection_date.desc()
             ).all()
         
         # إضافة سجلات الفحص
@@ -2393,6 +2393,8 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
     return output.getvalue()
 
 
+@vehicles_bp.route('/vehicle-report/<int:id>')
+@login_required
 def generate_vehicle_report(id):
     """إنشاء تقرير شامل للسيارة بصيغة Excel"""
     from flask import send_file, flash, redirect, url_for, make_response
@@ -2416,8 +2418,8 @@ def generate_vehicle_report(id):
         ).all()
         
         # الحصول على سجلات الفحص
-        inspections = VehicleInspection.query.filter_by(vehicle_id=id).order_by(
-            VehicleInspection.inspection_date.desc()
+        inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(
+            VehiclePeriodicInspection.inspection_date.desc()
         ).all()
         
         # هذا الموديل قد لا يكون موجودًا، لذلك سنتجاهله الآن
