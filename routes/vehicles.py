@@ -1081,8 +1081,8 @@ def handover_pdf(id):
     import io
     import os
     from datetime import datetime
-    # استخدام ملف pdf_generator_fixed بدلاً من pdf_generator_new
-    from utils.pdf_generator_fixed import generate_vehicle_handover_pdf
+    # استخدام ملف handover_report الجديد بدلاً من pdf_generator_fixed
+    from utils.handover_report import generate_vehicle_handover_pdf
     
     try:
         # التأكد من تحويل المعرف إلى عدد صحيح
@@ -1116,7 +1116,11 @@ def handover_pdf(id):
             'form_link': str(handover.form_link) if handover.form_link else ""
         }
         
-        # إنشاء ملف PDF باستخدام الوظيفة الجديدة
+        # إضافة معلومات المشرف إذا وجدت
+        if hasattr(handover, 'supervisor_name') and handover.supervisor_name:
+            handover_data['supervisor_name'] = str(handover.supervisor_name)
+        
+        # إنشاء ملف PDF باستخدام مكتبة ReportLab
         pdf_bytes = generate_vehicle_handover_pdf(handover_data)
         
         # تحديد اسم الملف
