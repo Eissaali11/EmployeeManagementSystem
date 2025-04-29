@@ -187,27 +187,28 @@ def generate_vehicle_handover_pdf(handover_data):
             'static', 'images', 'icons', 'click_here.svg'
         )
         
-        # إنشاء زر مميز للرابط بنفس شكل "هنا هنا"
+        # إنشاء زر مميز للرابط مشابه للزر الأزرق الداكن الذي أرسله المستخدم
         # إنشاء أنماط للزر
         button_style = ParagraphStyle(
-            name='ClickHereStyle', 
+            name='ViewRecordButtonStyle', 
             parent=styles['Arabic'],
-            textColor=colors.blue,  # لون أزرق مشابه للصورة
-            backColor=colors.lightgrey,  # خلفية رمادية فاتحة
-            borderColor=colors.black,
-            borderWidth=1,
+            textColor=colors.white,  # نص أبيض
+            backColor=colors.Color(0.10, 0.16, 0.35),  # خلفية زرقاء داكنة مطابقة للصورة
+            borderColor=colors.Color(0.10, 0.16, 0.35),
+            borderWidth=0,
             borderPadding=8,
-            borderRadius=10,  # لتقريب الشكل من المستطيل للصورة
-            fontSize=14,
+            borderRadius=5,  # تقريب الزوايا مثل الصورة
+            fontSize=12,
             alignment=1,  # توسيط
             leading=20,  # المسافة الرأسية بين السطور
-            spaceBefore=10,
-            spaceAfter=10
+            spaceBefore=5,
+            spaceAfter=5,
+            endDots=False  # بدون نقاط في نهاية النص
         )
         
-        # إنشاء الرابط بنص "هنا هنا"
+        # إنشاء الرابط بنص "مشاهدة سجل التسليم"
         link_icon = Paragraph(
-            f'<a href="{link_value}" color="blue"><strong>هنا هنا</strong></a>', 
+            f'<a href="{link_value}" color="white"><strong>مشاهدة سجل التسليم</strong></a>', 
             button_style
         )
 
