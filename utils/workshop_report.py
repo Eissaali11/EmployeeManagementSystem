@@ -70,15 +70,11 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     def add_header_footer(canvas, doc):
         canvas.saveState()
         
-        # لا نضيف شريط أزرق هنا - تم إزالته تماماً
+        # تم حذف كل شيء من رأس الصفحة بناءً على طلب المستخدم
         
-        # لا نضيف الشعار هنا - يوجد فقط في PageHeader لمنع التكرار
-            
-        # نترك إضافة اسم النظام فقط في دالة PageHeader لمنع التكرار
-        
-        # إضافة معلومات في التذييل إذا لزم الأمر
+        # إضافة معلومات في التذييل فقط
         canvas.setFont('Amiri', 8)
-        canvas.setFillColor(Color(0.5, 0.5, 0.5)) # رمادي
+        canvas.setFillColor(colors.gray) # رمادي
         footer_text = arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'Amiri', 8)/2, 30, footer_text)
         
@@ -93,7 +89,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import mm
     
-    # إنشاء Flowable مخصص لرأس الصفحة مع شعار
+    # إنشاء Flowable مخصص لرأس الصفحة (بدون شعار)
     from reportlab.platypus.flowables import Flowable
     
     class PageHeader(Flowable):
@@ -106,21 +102,15 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             return (self.width, self.height)
             
         def drawOn(self, canv, x, y, _sW=0):
-            # لون أزرق داكن للشعار والنص
-            navy_blue = Color(0.05, 0.15, 0.45)
-            canv.setFillColor(navy_blue)
-            
-            # تم إزالة المستطيل الأزرق وفقاً لطلب المستخدم
-            
-            # إضافة شعار نُظم الجديد في منتصف الصفحة
+            # إضافة الشعار في وسط رأس الصفحة
             try:
-                logo_size = 30*mm  # حجم الشعار أكبر
-                logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
+                logo_size = 40*mm  # حجم الشعار كبير
+                logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار
                 logo_img = ImageReader(logo_path)
                 
                 # موضع الشعار في وسط الصفحة
                 logo_x = x + self.width/2  # الوسط الأفقي للصفحة
-                logo_y = y + self.height + logo_size/2 + 10*mm  # موضع الشعار في أعلى الصفحة بهامش إضافي
+                logo_y = y + self.height + 5*mm  # موضع الشعار في أعلى الصفحة بهامش صغير
                 
                 # رسم الشعار مع مراعاة مركز الشعار
                 canv.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
@@ -128,8 +118,6 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             except Exception as e:
                 print(f"خطأ في تحميل الشعار في PageHeader: {e}")
                 # في حالة الخطأ، لا نرسم شيئاً
-            
-            # لا نضيف نص تحت الشعار لأن شعار نُظم يكفي بمفرده
 
         # دوال مطلوبة للتوافق مع Flowable
         def getKeepWithNext(self):

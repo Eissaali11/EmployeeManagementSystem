@@ -99,11 +99,23 @@ def generate_vehicle_handover_pdf(handover_data):
     styles.add(ParagraphStyle(name='ArabicSubtitle', fontName='Amiri-Bold', fontSize=14, alignment=1))  # للعناوين الفرعية
     styles.add(ParagraphStyle(name='ArabicSmall', fontName='Amiri', fontSize=10, alignment=1))  # للنص الصغير
     
-    # إنشاء دالة للرسم في رأس الصفحة (بدون شعار)
+    # إنشاء دالة للرسم في رأس الصفحة مع شعار
     def add_header_footer(canvas, doc):
         canvas.saveState()
         
-        # لا نضيف أي شعار أو شريط في رأس الصفحة بناءً على طلب المستخدم
+        # إضافة الشعار في رأس الصفحة
+        logo_size = 40*mm  # حجم الشعار كبير
+        logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار
+        try:
+            # وضع الشعار في منتصف رأس الصفحة
+            logo_x = A4[0]/2  # الوسط الأفقي للصفحة
+            logo_y = 800  # أعلى الصفحة
+            
+            # رسم الشعار مع مراعاة مركز الشعار
+            canvas.drawImage(logo_path, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
+        except Exception as e:
+            print(f"خطأ في تحميل الشعار: {e}")
+            # في حالة الخطأ، لا نرسم شيئاً
         
         # إضافة معلومات في التذييل إذا لزم الأمر
         canvas.setFont('Amiri', 8)
@@ -116,7 +128,7 @@ def generate_vehicle_handover_pdf(handover_data):
     # تحضير المحتوى
     content = []
     
-    # تم حذف الشعار من التقرير بناءً على طلب المستخدم
+    # تم إضافة الشعار في رأس الصفحة في دالة add_header_footer
     
     # عنوان التقرير
     title_text = f"نموذج {handover_data['handover_type']} مركبة"
