@@ -93,9 +93,25 @@
                         <div class="col-sm-4 fw-bold">تاريخ الإضافة:</div>
                         <div class="col-sm-8">{{ vehicle.created_at.strftime('%Y-%m-%d') }}</div>
                     </div>
-                    <div class="row mb-3">
+                    <div class="row mb-2">
                         <div class="col-sm-4 fw-bold">آخر تحديث:</div>
                         <div class="col-sm-8">{{ vehicle.updated_at.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">السائق الحالي:</div>
+                        <div class="col-sm-8">
+                            {% if current_driver %}
+                                <span class="text-success fw-bold">{{ current_driver.name }}</span>
+                                <small class="text-muted d-block">منذ {{ current_driver.formatted_date }}</small>
+                                <a href="{{ url_for('vehicles.view_handover', id=current_driver.handover_id) }}" class="btn btn-sm btn-outline-primary mt-1">
+                                    <i class="fas fa-eye ms-1"></i>
+                                    مشاهدة سجل التسليم
+                                </a>
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </div>
                     </div>
                     {% if vehicle.notes %}
                     <div class="row mb-2">
@@ -864,47 +880,66 @@
                 </div>
                 <div class="card-body">
                     {% if handover_records %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>التاريخ</th>
-                                        <th>النوع</th>
-                                        <th>الشخص</th>
-                                        <th>العداد</th>
-                                        <th>مستوى الوقود</th>
-                                        <th>الإجراءات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for record in handover_records %}
-                                    <tr>
-                                        <td>{{ record.formatted_handover_date }}</td>
-                                        <td>
-                                            {% if record.handover_type == 'delivery' %}
-                                                <span class="badge bg-success">تسليم</span>
-                                            {% else %}
-                                                <span class="badge bg-info">استلام</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ record.person_name }}</td>
-                                        <td>{{ record.mileage }} كم</td>
-                                        <td>{{ record.fuel_level }}</td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ url_for('vehicles.view_handover', id=record.id) }}" class="btn btn-outline-primary">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ url_for('vehicles.handover_pdf', id=record.id) }}" class="btn btn-outline-danger" target="_blank">
-                                                    <i class="fas fa-file-pdf"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                        <form action="{{ url_for('vehicles.confirm_delete_handovers', vehicle_id=vehicle.id) }}" method="post" id="handover-delete-form">
+                            <div class="mb-3 d-flex justify-content-end">
+                                <button type="submit" class="btn btn-sm btn-danger" id="delete-selected-btn" disabled>
+                                    <i class="fas fa-trash-alt ms-1"></i>
+                                    حذف المحدد
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="40">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="select-all">
+                                                </div>
+                                            </th>
+                                            <th>التاريخ</th>
+                                            <th>النوع</th>
+                                            <th>الشخص</th>
+                                            <th>العداد</th>
+                                            <th>مستوى الوقود</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for record in handover_records %}
+                                        <tr>
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input handover-checkbox" type="checkbox" name="handover_ids[]" value="{{ record.id }}">
+                                                </div>
+                                            </td>
+                                            <td>{{ record.formatted_handover_date }}</td>
+                                            <td>
+                                                {% if record.handover_type == 'delivery' %}
+                                                    <span class="badge bg-success">تسليم</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">استلام</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ record.person_name }}</td>
+                                            <td>{{ record.mileage }} كم</td>
+                                            <td>{{ record.fuel_level }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('vehicles.view_handover', id=record.id) }}" class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('vehicles.handover_pdf', id=record.id) }}" class="btn btn-outline-danger" target="_blank">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
                     {% else %}
                         <div class="text-center py-4">
                             <div class="mb-3">

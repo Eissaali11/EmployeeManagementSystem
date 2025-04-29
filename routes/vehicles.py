@@ -988,6 +988,88 @@ def view_handover(id):
         handover_type_name=handover_type_name
     )
 
+@vehicles_bp.route('/<int:vehicle_id>/handovers/confirm-delete', methods=['POST'])
+@login_required
+def confirm_delete_handovers(vehicle_id):
+    """صفحة تأكيد حذف سجلات التسليم/الاستلام المحددة"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    # الحصول على معرفات السجلات المحددة
+    record_ids = request.form.getlist('handover_ids[]')
+    
+    if not record_ids:
+        flash('لم يتم تحديد أي سجل للحذف!', 'warning')
+        return redirect(url_for('vehicles.view', id=vehicle_id))
+    
+    # تحويل المعرفات إلى أرقام صحيحة
+    record_ids = [int(id) for id in record_ids]
+    
+    # الحصول على السجلات المحددة
+    records = VehicleHandover.query.filter(VehicleHandover.id.in_(record_ids)).all()
+    
+    # التحقق من أن السجلات تنتمي للسيارة المحددة
+    for record in records:
+        if record.vehicle_id != vehicle_id:
+            flash('خطأ في البيانات المرسلة! بعض السجلات لا تنتمي لهذه السيارة.', 'danger')
+            return redirect(url_for('vehicles.view', id=vehicle_id))
+    
+    # تنسيق التواريخ للعرض
+    for record in records:
+        record.formatted_handover_date = format_date_arabic(record.handover_date)
+    
+    return render_template(
+        'vehicles/confirm_delete_handovers.html',
+        vehicle=vehicle,
+        records=records,
+        record_ids=record_ids
+    )
+
+@vehicles_bp.route('/<int:vehicle_id>/handovers/delete', methods=['POST'])
+@login_required
+def delete_handovers(vehicle_id):
+    """حذف سجلات التسليم/الاستلام المحددة"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    # التحقق من إدخال تأكيد الحذف
+    confirmation = request.form.get('confirmation')
+    if confirmation != 'تأكيد':
+        flash('يجب كتابة كلمة "تأكيد" للمتابعة مع عملية الحذف!', 'danger')
+        return redirect(url_for('vehicles.view', id=vehicle_id))
+    
+    # الحصول على معرفات السجلات المحددة
+    record_ids = request.form.getlist('record_ids')
+    if not record_ids:
+        flash('لم يتم تحديد أي سجل للحذف!', 'warning')
+        return redirect(url_for('vehicles.view', id=vehicle_id))
+    
+    # تحويل المعرفات إلى أرقام صحيحة
+    record_ids = [int(id) for id in record_ids]
+    
+    # التحقق من أن السجلات تنتمي للسيارة المحددة
+    records = VehicleHandover.query.filter(VehicleHandover.id.in_(record_ids)).all()
+    for record in records:
+        if record.vehicle_id != vehicle_id:
+            flash('خطأ في البيانات المرسلة! بعض السجلات لا تنتمي لهذه السيارة.', 'danger')
+            return redirect(url_for('vehicles.view', id=vehicle_id))
+    
+    # حذف السجلات
+    for record in records:
+        # تسجيل الإجراء قبل الحذف
+        log_audit('delete', 'vehicle_handover', record.id, 
+                 f'تم حذف سجل {"تسليم" if record.handover_type == "delivery" else "استلام"} للسيارة {vehicle.plate_number}')
+        
+        db.session.delete(record)
+    
+    db.session.commit()
+    
+    # رسالة نجاح
+    if len(records) == 1:
+        flash('تم حذف السجل بنجاح!', 'success')
+    else:
+        flash(f'تم حذف {len(records)} سجلات بنجاح!', 'success')
+    
+    return redirect(url_for('vehicles.view', id=vehicle_id))
+
 @vehicles_bp.route('/handover/<int:id>/pdf')
 @login_required
 def handover_pdf(id):
