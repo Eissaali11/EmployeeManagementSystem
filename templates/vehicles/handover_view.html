@@ -227,7 +227,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <table class="table-info-box w-100">
+                                            <table class="info-table">
                                                 <tr>
                                                     <th>التاريخ:</th>
                                                     <td>{{ handover.formatted_handover_date }}</td>
@@ -247,7 +247,7 @@
                                             </table>
                                         </div>
                                         <div class="col-md-6">
-                                            <table class="table-info-box w-100">
+                                            <table class="info-table">
                                                 <tr>
                                                     <th colspan="2">التجهيزات:</th>
                                                 </tr>
@@ -397,7 +397,7 @@
                 
                 <!-- الصور التوثيقية -->
                 <div class="col-md-4">
-                    <div class="card">
+                    <div class="inner-card">
                         <div class="card-header bg-secondary text-white">
                             <h5 class="mb-0">
                                 <i class="fas fa-images ms-2"></i>
@@ -453,15 +453,15 @@
             
             <!-- أزرار الإجراءات -->
             <div class="text-center mt-4">
-                <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" class="btn btn-danger">
+                <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" class="btn btn-danger btn-action">
                     <i class="fas fa-file-pdf ms-1"></i>
                     تصدير النموذج كملف PDF
                 </a>
-                <a href="{{ url_for('vehicles.create_handover', id=vehicle.id) }}" class="btn btn-primary ms-2">
+                <a href="{{ url_for('vehicles.create_handover', id=vehicle.id) }}" class="btn btn-primary btn-action ms-2">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة نموذج جديد
                 </a>
-                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary ms-2">
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-light btn-action ms-2">
                     <i class="fas fa-arrow-right ms-1"></i>
                     العودة لتفاصيل السيارة
                 </a>
