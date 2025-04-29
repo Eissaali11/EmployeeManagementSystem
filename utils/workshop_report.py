@@ -75,19 +75,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
         canvas.setFillColor(navy_blue)
         canvas.rect(30, 800, A4[0]-60, 3*mm, fill=1, stroke=0)
         
-        # إضافة شعار نُظم الجديد
-        try:
-            logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
-            logo_img = ImageReader(logo_path)
-            logo_size = 20*mm
-            logo_x = A4[0] - 80  # يمين الصفحة
-            logo_y = 810 - logo_size/2  # فوق الشريط الأزرق
-            
-            # رسم الشعار
-            canvas.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
-            
-        except Exception as e:
-            print(f"خطأ في تحميل الشعار: {e}")
+        # لا نضيف الشعار هنا - يوجد فقط في PageHeader لمنع التكرار
             
         # إضافة اسم النظام
         canvas.setFillColor(navy_blue)
