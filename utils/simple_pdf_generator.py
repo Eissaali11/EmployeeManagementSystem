@@ -179,10 +179,13 @@ def create_vehicle_handover_pdf(handover_data):
                     # إضافة الشعار فوق الدائرة
                     c.drawImage(self.path, x - self.size/2, y - self.size/2, width=self.size, height=self.size, mask='auto')
             
-            # إنشاء الدالة التي ستضيف الشعار إلى المستند
+            # إنشاء الدالة التي ستضيف الشعار إلى رأس الصفحة
             def add_logo_to_page(canvas, doc):
-                logo = CircularLogo(logo_path, 40*mm)
-                logo.create_circular_logo(canvas, doc.width/2 + doc.leftMargin, doc.height - 25*mm)
+                # استخدام حجم أصغر للشعار في رأس الصفحة
+                logo = CircularLogo(logo_path, 30*mm)
+                # وضع الشعار في أعلى يمين الصفحة
+                right_margin = doc.pagesize[0] - 40*mm  # الهامش الأيمن
+                logo.create_circular_logo(canvas, right_margin, doc.height - 15*mm)
             
             # تعيين الدالة لاستخدامها لاحقاً
             add_logo_fn = add_logo_to_page
