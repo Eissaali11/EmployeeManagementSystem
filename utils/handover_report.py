@@ -159,13 +159,20 @@ def generate_vehicle_handover_pdf(handover_data):
     # إضافة رابط النموذج إذا وجد كرابط قابل للنقر
     if handover_data.get('form_link'):
         from reportlab.lib.colors import blue
+        # إنشاء نمط مخصص للرابط
         link_style = ParagraphStyle(
             name='LinkStyle',
             parent=styles['Arabic'],
             textColor=blue,
             underline=True
         )
-        link_text = Paragraph(f'<link href="{handover_data["form_link"]}">{arabic_text(handover_data["form_link"])}</link>', link_style)
+        # إنشاء نص بالرابط
+        link_value = handover_data['form_link']
+        # إنشاء الرابط مع تسمية وصفية أفضل
+        link_text = Paragraph(
+            f'<a href="{link_value}" color="blue" underline="1">انقر هنا لفتح النموذج</a>', 
+            link_style
+        )
         handover_info_data.append([arabic_text("رابط النموذج"), link_text])
     
     # إضافة مستوى الوقود وعداد المسافة
@@ -206,9 +213,29 @@ def generate_vehicle_handover_pdf(handover_data):
         [arabic_text("العنصر"), arabic_text("الحالة")]
     ]
     
+    # إنشاء أنماط خاصة لعلامات الفحص
+    check_style = ParagraphStyle(
+        name='CheckStyle', 
+        fontName='Helvetica',  # استخدام خط مناسب يدعم الرموز الخاصة
+        fontSize=14,
+        alignment=1,  # توسيط
+        textColor=colors.green  # لون أخضر للعلامات الموجبة
+    )
+    
+    unchecked_style = ParagraphStyle(
+        name='UncheckedStyle', 
+        fontName='Helvetica',
+        fontSize=14,
+        alignment=1,  # توسيط
+        textColor=colors.red  # لون أحمر للعلامات السالبة
+    )
+    
     for item_name, is_checked in items:
-        status = "✓" if is_checked else "✗"
-        check_data.append([arabic_text(item_name), status])
+        if is_checked:
+            check_mark = Paragraph('<b>&#10004;</b>', check_style)  # علامة صح باللون الأخضر
+        else:
+            check_mark = Paragraph('<b>&#10008;</b>', unchecked_style)  # علامة خطأ باللون الأحمر
+        check_data.append([arabic_text(item_name), check_mark])
     
     # جدول الفحص
     check_table = Table(check_data, colWidths=[200, 200])
@@ -216,8 +243,10 @@ def generate_vehicle_handover_pdf(handover_data):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
         ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
-        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Amiri'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),  # توسيط عنوان العمود الثاني فقط
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة رأسية وسطية للجميع
+        ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # تطبيق خط Amiri على العمود الأول فقط
+        ('FONTNAME', (0, 0), (1, 0), 'Amiri'),  # تطبيق خط Amiri على العناوين
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
     ]))
