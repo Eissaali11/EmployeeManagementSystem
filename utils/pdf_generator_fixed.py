@@ -264,12 +264,20 @@ def create_pdf_bytes(pdf_function, *args, **kwargs):
             print("خطأ: لم يتم إرجاع كائن FPDF من دالة إنشاء PDF")
             return None
         
-        # الطريقة النهائية للتعامل مع ملفات PDF مع النصوص العربية
+        # الطريقة المحسنة للتعامل مع ملفات PDF مع النصوص العربية
+        # استخدام طريقة output_to_bytes الجديدة من مكتبة FPDF التي تدعم UTF-8
         from io import BytesIO
         buffer = BytesIO()
-        pdf.output(buffer)
-        buffer.seek(0)
-        return buffer.read()
+        # حفظ الملف كـ binary مباشرة لتجنب مشاكل الترميز
+        dest_file = "temp_pdf.pdf"
+        pdf.output(dest_file)
+        # قراءة الملف المؤقت كبيانات ثنائية
+        import os
+        with open(dest_file, 'rb') as f:
+            binary_data = f.read()
+        # حذف الملف المؤقت
+        os.remove(dest_file)
+        return binary_data
     except Exception as e:
         print(f"خطأ في إنشاء ملف PDF: {str(e)}")
         raise e
