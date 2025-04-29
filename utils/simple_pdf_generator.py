@@ -205,13 +205,54 @@ def create_vehicle_handover_pdf(handover_data):
     
     # إضافة رابط النموذج إذا وجد
     if 'form_link' in handover_data and handover_data['form_link']:
-        # إنشاء زر للرابط
-        button_text = Paragraph(arabic_text("مشاهدة سجل التسليم"), styles['ButtonStyle'])
+        # سنقوم ببساطة بإضافة الرابط كنص عادي مع وضع التعليمات
+        link_value = handover_data['form_link']
         
-        # إضافة الزر إلى الجدول
-        handover_info_data.append(
-            [arabic_text("رابط النموذج"), button_text]
+        # إضافة الرابط كنص عادي
+        link_text = Paragraph(
+            arabic_text(f"الرابط: {link_value}"), 
+            styles['Arabic']
         )
+        
+        # إنشاء نمط للزر
+        button_style = ParagraphStyle(
+            name='ButtonStyle',
+            fontName='Amiri' if fonts_registered else 'Helvetica',
+            fontSize=12,
+            leading=16,
+            alignment=TA_CENTER,
+            textColor=colors.white,
+            backColor=colors.Color(0.10, 0.16, 0.35),
+            borderWidth=0,
+            spaceAfter=6,
+            spaceBefore=6,
+            borderRadius=3,
+            borderColor=colors.Color(0.10, 0.16, 0.35),
+        )
+        
+        # إنشاء نص الزر
+        button_text = Paragraph(
+            arabic_text("مشاهدة سجل التسليم"), 
+            button_style
+        )
+        
+        # إضافة تعليمات للمستخدم
+        instructions = Paragraph(
+            arabic_text("يمكنك نسخ الرابط أعلاه ولصقه في المتصفح للوصول إلى سجل التسليم"),
+            styles['ArabicSmall']
+        )
+        
+        # إنشاء جدول يحتوي على الرابط والزر والتعليمات
+        link_table = Table([[link_text], [button_text], [instructions]], colWidths=[300])
+        link_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (0, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (0, -1), 4),
+            ('TOPPADDING', (0, 0), (0, -1), 4),
+        ]))
+        
+        # إضافة الجدول إلى معلومات التسليم
+        handover_info_data.append([arabic_text("رابط النموذج"), link_table])
     
     # إضافة بقية معلومات التسليم/الاستلام
     handover_info_data.extend([
