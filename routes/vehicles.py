@@ -1081,8 +1081,8 @@ def handover_pdf(id):
     import io
     import os
     from datetime import datetime
-    # استخدام ملف handover_report الجديد بدلاً من pdf_generator_fixed
-    from utils.handover_report import generate_vehicle_handover_pdf
+    # استخدام مكتبة PDF المبسطة الجديدة
+    from utils.simple_pdf_generator import create_vehicle_handover_pdf
     
     try:
         # التأكد من تحويل المعرف إلى عدد صحيح
@@ -1120,9 +1120,9 @@ def handover_pdf(id):
         if hasattr(handover, 'supervisor_name') and handover.supervisor_name:
             handover_data['supervisor_name'] = str(handover.supervisor_name)
         
-        # إنشاء ملف PDF باستخدام مكتبة ReportLab
-        # تعيد الدالة كائن BytesIO مباشرة
-        pdf_buffer = generate_vehicle_handover_pdf(handover_data)
+        # إنشاء ملف PDF باستخدام الدالة المبسطة
+        # تعيد الدالة كائن BytesIO جاهز للاستخدام مع send_file
+        pdf_buffer = create_vehicle_handover_pdf(handover_data)
         
         # تحديد اسم الملف
         filename = f"handover_form_{vehicle.plate_number}.pdf"

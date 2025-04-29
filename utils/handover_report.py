@@ -200,48 +200,28 @@ def generate_vehicle_handover_pdf(handover_data):
             'static', 'images', 'icons', 'click_here.svg'
         )
         
-        # إنشاء صورة "Eye Icon" باستخدام شكل دائري
-        from reportlab.graphics.shapes import Drawing, Circle, String, Group, Rect
-        from reportlab.graphics import renderPDF
+        # بدلاً من استخدام الرسومات، سنستخدم Paragraph مع خلفية ملونة
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.enums import TA_CENTER
+        from reportlab.lib import colors
 
-        # إنشاء رسم للزر بالكامل
-        d = Drawing(185, 25)  # حجم الزر الكامل
+        # إنشاء نمط للزر
+        button_style = ParagraphStyle(
+            name='ButtonStyle',
+            parent=styles['Arabic'],
+            alignment=TA_CENTER,
+            fontSize=12,
+            textColor=colors.white,
+            backColor=colors.Color(0.10, 0.16, 0.35),
+            borderWidth=0,
+            padding=8
+        )
         
-        # إضافة مستطيل أزرق داكن كخلفية للزر
-        r = Rect(0, 0, 185, 25, fillColor=colors.Color(0.10, 0.16, 0.35), strokeColor=colors.Color(0.10, 0.16, 0.35), strokeWidth=0)
-        d.add(r)
-        
-        # مجموعة لرسم رمز العين
-        g = Group()
-        
-        # رسم دائرة للعين
-        c1 = Circle(15, 12.5, 7, fillColor=None, strokeColor=colors.white, strokeWidth=1)
-        g.add(c1)
-        
-        # رسم بؤبؤ العين
-        c2 = Circle(15, 12.5, 3, fillColor=colors.white, strokeColor=None)
-        g.add(c2)
-        
-        # إضافة مجموعة العين إلى الرسم
-        d.add(g)
-        
-        # إضافة نص مشاهدة سجل التسليم
-        # إنشاء نص أبيض ومحاذاته لليمين
-        button_text = String(160, 12.5, arabic_text("مشاهدة سجل التسليم"), fontName='Amiri', fontSize=12, fillColor=colors.white, textAnchor='end')
-        d.add(button_text)
-        
-        # تحويل الرسم إلى كائن صورة قابل للاستخدام في ReportLab
-        from io import BytesIO
-        img_data = BytesIO()
-        renderPDF.draw(d, img_data, 0, 0)
-        img_data.seek(0)
-        
-        from reportlab.lib.utils import ImageReader
-        button_img = ImageReader(img_data)
-        
-        # بناء زر بشكل صورة
-        button = Image(button_img, width=185, height=25)
-        button.hAlign = 'CENTER'  # توسيط الصورة
+        # إنشاء نص الزر
+        button = Paragraph(
+            arabic_text("مشاهدة سجل التسليم «"), 
+            button_style
+        )
         
         # استخدام الصورة كما هي بدون روابط قابلة للنقر
         # في ملفات PDF لن يكون هناك روابط قابلة للنقر
