@@ -157,19 +157,22 @@ def generate_vehicle_handover_pdf(handover_data):
             navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن للشعار
             canv.setFillColor(navy_blue)
             
-            # رسم مستطيل أزرق في الأعلى
-            canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
+            # تم إزالة المستطيل الأزرق في الأعلى
+            # canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
             
-            # إضافة الشعار في وسط الصفحة بالأعلى
+            # إزالة الشريط الأزرق وإضافة الشعار في وسط الصفحة بالأعلى
+            # إزالة المستطيل الأزرق تماماً
+            # canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
+            
             try:
-                logo_size = 30*mm  # حجم الشعار أكبر
+                logo_size = 40*mm  # حجم الشعار أكبر
                 logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
                 from reportlab.lib.utils import ImageReader
                 logo_img = ImageReader(logo_path)
                 
                 # موضع الشعار في وسط الصفحة من الأعلى
                 logo_x = x + self.width/2  # الوسط الأفقي للصفحة
-                logo_y = y + self.height + 5*mm  # موضع الشعار فوق الصفحة
+                logo_y = y + self.height + logo_size/2 + 20*mm  # موضع الشعار في أعلى الصفحة بهامش إضافي
                 
                 # رسم الشعار مع مراعاة مركز الشعار
                 canv.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
