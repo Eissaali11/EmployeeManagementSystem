@@ -626,19 +626,38 @@ def edit_workshop(id):
     vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
     
     if request.method == 'POST':
-        # استخراج البيانات من النموذج
-        entry_date = datetime.strptime(request.form.get('entry_date'), '%Y-%m-%d').date()
-        exit_date_str = request.form.get('exit_date')
-        exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
-        reason = request.form.get('reason')
-        description = request.form.get('description')
-        repair_status = request.form.get('repair_status')
-        cost = float(request.form.get('cost') or 0)
-        workshop_name = request.form.get('workshop_name')
-        technician_name = request.form.get('technician_name')
-        delivery_link = request.form.get('delivery_link')
-        reception_link = request.form.get('reception_link')
-        notes = request.form.get('notes')
+        # إضافة سجلات للتشخيص
+        current_app.logger.info(f"POST data received for workshop edit: {request.form}")
+        
+        try:
+            # استخراج البيانات من النموذج
+            entry_date_str = request.form.get('entry_date')
+            current_app.logger.info(f"Entry date from form: {entry_date_str}")
+            entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date() if entry_date_str else None
+            
+            exit_date_str = request.form.get('exit_date')
+            current_app.logger.info(f"Exit date from form: {exit_date_str}")
+            exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
+            
+            reason = request.form.get('reason')
+            description = request.form.get('description')
+            repair_status = request.form.get('repair_status')
+            
+            # معالجة التكلفة بشكل آمن
+            cost_str = request.form.get('cost')
+            cost = float(cost_str) if cost_str else 0
+            
+            workshop_name = request.form.get('workshop_name')
+            technician_name = request.form.get('technician_name')
+            delivery_link = request.form.get('delivery_link')
+            reception_link = request.form.get('reception_link')
+            notes = request.form.get('notes')
+            
+            current_app.logger.info(f"Parsed form data: entry_date={entry_date}, exit_date={exit_date}, reason={reason}, status={repair_status}")
+        except Exception as e:
+            current_app.logger.error(f"Error parsing form data: {str(e)}")
+            flash(f'خطأ في معالجة النموذج: {str(e)}', 'danger')
+            return redirect(url_for('vehicles.edit_workshop', id=id))
         
         # تحديث سجل الورشة
         workshop.entry_date = entry_date
