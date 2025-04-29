@@ -1121,14 +1121,15 @@ def handover_pdf(id):
             handover_data['supervisor_name'] = str(handover.supervisor_name)
         
         # إنشاء ملف PDF باستخدام مكتبة ReportLab
-        pdf_bytes = generate_vehicle_handover_pdf(handover_data)
+        # تعيد الدالة كائن BytesIO مباشرة
+        pdf_buffer = generate_vehicle_handover_pdf(handover_data)
         
         # تحديد اسم الملف
         filename = f"handover_form_{vehicle.plate_number}.pdf"
         
         # إرسال الملف للمستخدم
         return send_file(
-            io.BytesIO(pdf_bytes),
+            pdf_buffer,
             download_name=filename,
             as_attachment=True,
             mimetype='application/pdf'

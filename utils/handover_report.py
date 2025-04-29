@@ -366,4 +366,5 @@ def generate_vehicle_handover_pdf(handover_data):
     # إعادة ضبط مؤشر الكائن BytesIO للقراءة
     buffer.seek(0)
     
-    return buffer.getvalue()
+    # إرجاع كائن BytesIO لاستخدامه في send_file
+    return buffer
