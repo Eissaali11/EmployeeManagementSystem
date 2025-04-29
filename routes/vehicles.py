@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
 from flask_login import login_required, current_user
+from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 from sqlalchemy import extract, func, or_
 import os
