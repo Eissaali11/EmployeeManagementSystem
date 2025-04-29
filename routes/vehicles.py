@@ -257,6 +257,31 @@ def view(id):
     periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
     safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
     
+    # استخراج معلومات السائق الحالي والسائقين السابقين
+    current_driver = None
+    previous_drivers = []
+    
+    # البحث عن آخر سجل تسليم للعثور على السائق الحالي
+    for record in handover_records:
+        if record.handover_type == 'delivery':
+            if current_driver is None:
+                current_driver = {
+                    'name': record.person_name,
+                    'date': record.handover_date,
+                    'formatted_date': format_date_arabic(record.handover_date),
+                    'handover_id': record.id
+                }
+            else:
+                previous_drivers.append({
+                    'name': record.person_name,
+                    'date': record.handover_date,
+                    'formatted_date': format_date_arabic(record.handover_date),
+                    'handover_id': record.id
+                })
+    
+    # ترتيب السائقين السابقين حسب التاريخ (الأحدث أولاً)
+    previous_drivers.sort(key=lambda x: x['date'], reverse=True)
+    
     # حساب تكلفة الإصلاحات الإجمالية
     total_maintenance_cost = db.session.query(func.sum(VehicleWorkshop.cost)).filter_by(vehicle_id=id).scalar() or 0
     
@@ -318,7 +343,9 @@ def view(id):
         safety_checks=safety_checks,
         total_maintenance_cost=total_maintenance_cost,
         days_in_workshop=days_in_workshop,
-        inspection_warnings=inspection_warnings
+        inspection_warnings=inspection_warnings,
+        current_driver=current_driver,
+        previous_drivers=previous_drivers
     )
 
 @vehicles_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
