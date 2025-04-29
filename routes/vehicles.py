@@ -261,23 +261,26 @@ def view(id):
     current_driver = None
     previous_drivers = []
     
-    # البحث عن آخر سجل تسليم للعثور على السائق الحالي
-    for record in handover_records:
-        if record.handover_type == 'delivery':
-            if current_driver is None:
-                current_driver = {
-                    'name': record.person_name,
-                    'date': record.handover_date,
-                    'formatted_date': format_date_arabic(record.handover_date),
-                    'handover_id': record.id
-                }
-            else:
-                previous_drivers.append({
-                    'name': record.person_name,
-                    'date': record.handover_date,
-                    'formatted_date': format_date_arabic(record.handover_date),
-                    'handover_id': record.id
-                })
+    # البحث عن آخر سجل تسليم (من حيث التاريخ) للعثور على السائق الحالي
+    delivery_records = [rec for rec in handover_records if rec.handover_type == 'delivery']
+    delivery_records.sort(key=lambda x: x.handover_date, reverse=True)  # ترتيب حسب التاريخ (الأحدث أولاً)
+    
+    # تعيين أحدث سجل تسليم كسائق حالي والباقي كسائقين سابقين
+    for i, record in enumerate(delivery_records):
+        if i == 0:  # أول سجل بعد الترتيب (الأحدث)
+            current_driver = {
+                'name': record.person_name,
+                'date': record.handover_date,
+                'formatted_date': format_date_arabic(record.handover_date),
+                'handover_id': record.id
+            }
+        else:
+            previous_drivers.append({
+                'name': record.person_name,
+                'date': record.handover_date,
+                'formatted_date': format_date_arabic(record.handover_date),
+                'handover_id': record.id
+            })
     
     # ترتيب السائقين السابقين حسب التاريخ (الأحدث أولاً)
     previous_drivers.sort(key=lambda x: x['date'], reverse=True)

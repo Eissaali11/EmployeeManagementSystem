@@ -31,15 +31,6 @@
     .handover-header {
         position: relative;
         padding-right: 15px;
-        border-right: 4px solid;
-    }
-    
-    .delivery {
-        border-color: #28a745;
-    }
-    
-    .return {
-        border-color: #17a2b8;
     }
 
     .table-info-box td {
@@ -56,7 +47,7 @@
 {% block content %}
 <div class="container mt-4">
     <div class="card shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card-header {{ 'bg-success' if handover.handover_type == 'delivery' else 'bg-info' }} text-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0 handover-header {{ 'delivery' if handover.handover_type == 'delivery' else 'return' }}">
                 {% if handover.handover_type == 'delivery' %}
                     <i class="fas fa-share ms-2"></i>
@@ -87,7 +78,7 @@
                     <div class="row">
                         <div class="col-12 mb-4">
                             <div class="card">
-                                <div class="card-header bg-light">
+                                <div class="card-header {{ 'bg-success text-white' if handover.handover_type == 'delivery' else 'bg-info text-white' }}">
                                     <h5 class="mb-0">
                                         <i class="fas fa-info-circle ms-2"></i>
                                         معلومات {{ handover_type_name }}
@@ -203,7 +194,7 @@
                         
                         <div class="col-12">
                             <div class="card">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-primary text-white">
                                     <h5 class="mb-0">
                                         <i class="fas fa-car ms-2"></i>
                                         معلومات السيارة
@@ -267,7 +258,7 @@
                 <!-- الصور التوثيقية -->
                 <div class="col-md-4">
                     <div class="card">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-secondary text-white">
                             <h5 class="mb-0">
                                 <i class="fas fa-images ms-2"></i>
                                 الصور التوثيقية
