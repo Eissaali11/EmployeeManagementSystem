@@ -68,14 +68,12 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     
     # إضافة شعار الشركة الجديد بشكل دائري
     from reportlab.lib.utils import ImageReader
-    from reportlab.lib.colors import blue, white
+    from reportlab.lib.colors import blue, white, Color
     from reportlab.pdfgen import canvas
+    from reportlab.lib.units import mm
     
     # تحديد مسار الشعار
     logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
-    if not os.path.exists(logo_path):
-        # استخدام الشعار الثانوي كبديل
-        logo_path = os.path.join(current_app.static_folder, 'images', 'workshop_logo.png')
     
     if os.path.exists(logo_path):
         # إنشاء دائرة باستخدام Flowable مخصص
@@ -96,13 +94,23 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
                 center_y = y
                 radius = self.size / 2
                 
-                # رسم دائرة زرقاء كخلفية
-                canv.setFillColor(blue)
+                # رسم دائرة زرقاء كخلفية (نفس لون الشعار الأصلي)
+                navy_blue = Color(0.13, 0.24, 0.49) # اللون الأزرق الداكن المطابق للشعار
+                canv.setFillColor(navy_blue)
                 canv.circle(center_x, center_y, radius, fill=1)
                 
                 # وضع الصورة داخل الدائرة
-                img = ImageReader(self.path)
-                canv.drawImage(img, x+5, y-radius+5, width=self.size-10, height=self.size-10, mask='auto')
+                try:
+                    img = ImageReader(self.path)
+                    # استخدام الشعار مباشرة دون تعديل لأنه بالفعل على خلفية شفافة
+                    canv.drawImage(img, x, y-radius, width=self.size, height=self.size, mask='auto')
+                except Exception as e:
+                    print(f"خطأ في عرض الصورة: {str(e)}")
+                    # إذا فشل عرض الصورة، اكتب كلمة "نُظم" بالأبيض
+                    canv.setFillColor(white)
+                    canv.setFont('Amiri-Bold', 30)
+                    text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 30)
+                    canv.drawString(center_x - text_width/2, center_y - 10, "نُظم")
             
             # دوال مطلوبة للتوافق مع Flowable
             def getKeepWithNext(self):
@@ -120,7 +128,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
                 return [self]
                 
         # إضافة الشعار الدائري
-        circular_logo = CircularImage(logo_path, 120)
+        circular_logo = CircularImage(logo_path, 100)
         content.append(circular_logo)
         content.append(Spacer(1, 20))
     
