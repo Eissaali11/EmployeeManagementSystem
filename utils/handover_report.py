@@ -174,20 +174,36 @@ def generate_vehicle_handover_pdf(handover_data):
         # استخدام نهج مختلف للروابط
         from reportlab.platypus.flowables import HRFlowable
         
-        # إنشاء رابط نصي واضح للاستخدام
-        link_desc = Paragraph(arabic_text("انقر هنا لفتح النموذج"), link_style)
+        # إنشاء نص الرابط وإضافة أيقونة مناسبة
+        link_value = handover_data['form_link']
         
-        # إضافة الرابط الفعلي كنص عادي في سطر منفصل
-        form_link_text = Paragraph(handover_data['form_link'], styles['Arabic'])
+        # إنشاء نص توجيهي
+        link_desc = Paragraph(arabic_text("انقر هنا لفتح النموذج"), styles['Arabic'])
+        
+        # إنشاء أيقونة قابلة للنقر
+        icon_style = ParagraphStyle(
+            name='IconStyle', 
+            parent=styles['Arabic'],
+            textColor=colors.blue,
+            fontSize=16,
+            alignment=1  # توسيط
+        )
+        
+        # استخدام رمز مناسب (رمز مستند أو ملف)
+        link_icon = Paragraph(
+            f'<a href="{link_value}" color="blue"><b>&#128196;</b></a>',  # رمز مستند
+            icon_style
+        )
 
-        # إنشاء جدول داخلي للرابط
-        link_table = Table([[link_desc], [form_link_text]], colWidths=[300])
+        # إنشاء جدول داخلي للنص والأيقونة
+        link_table = Table([[link_desc], [link_icon]], colWidths=[300])
         link_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # توسيط كل محتويات الجدول
             ('VALIGN', (0, 0), (0, -1), 'MIDDLE'),
-            ('TEXTCOLOR', (0, 0), (0, 0), colors.blue),
-            ('BOTTOMPADDING', (0, 0), (0, 0), 6),
-            ('TOPPADDING', (0, 0), (0, 0), 6),
+            ('BOTTOMPADDING', (0, 0), (0, 0), 4),
+            ('TOPPADDING', (0, 0), (0, 0), 4),
+            ('BOTTOMPADDING', (0, 1), (0, 1), 4),
+            ('TOPPADDING', (0, 1), (0, 1), 4),
         ]))
         handover_info_data.append([arabic_text("رابط النموذج"), link_table])
     
