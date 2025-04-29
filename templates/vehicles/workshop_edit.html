@@ -70,6 +70,7 @@
                     </div>
                     
                     <form method="post" action="{{ url_for('vehicles.edit_workshop', id=workshop.id) }}" enctype="multipart/form-data">
+                        {{ form.csrf_token() if form }}
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="entry_date" class="form-label required">تاريخ دخول الورشة</label>
