@@ -1,274 +1,177 @@
-"""
-وحدة إنشاء تقارير Excel الشاملة للمركبات
-توفر هذه الوحدة وظائف لإنشاء تقارير Excel شاملة للمركبات
-"""
-
-import io
-import pandas as pd
 from datetime import datetime
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
+import pandas as pd
+import io
 
-
-def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_records=None, documents=None):
-    """
-    إنشاء تقرير شامل للسيارة بصيغة Excel
+def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_records=None, documents=None, handovers=None, inspections=None):
+    """إنشاء تقرير شامل للسيارة بصيغة Excel يتضمن جميع البيانات المتاحة"""
     
-    Args:
-        vehicle: كائن المركبة
-        rental: معلومات الإيجار (اختياري)
-        workshop_records: سجلات الورشة (اختياري)
-        documents: مستندات المركبة (اختياري)
+    # إنشاء كاتب اكسل
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        # معلومات السيارة الأساسية
+        vehicle_data = {
+            'رقم اللوحة': [vehicle.plate_number],
+            'الشركة المصنعة': [vehicle.make],
+            'الطراز': [vehicle.model],
+            'سنة الصنع': [vehicle.year],
+            'اللون': [vehicle.color],
+            'الحالة': [vehicle.status],
+            'تاريخ الإضافة': [vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else ''],
+            'آخر تحديث': [vehicle.updated_at.strftime('%Y-%m-%d') if vehicle.updated_at else ''],
+            'ملاحظات': [vehicle.notes or ''],
+        }
         
-    Returns:
-        bytes: محتوى ملف Excel
-    """
-    try:
-        # إنشاء كائن جديد للمصنف
-        workbook = Workbook()
+        # إنشاء ورقة معلومات السيارة
+        vehicle_df = pd.DataFrame(vehicle_data)
+        vehicle_df.to_excel(writer, sheet_name='معلومات السيارة', index=False)
         
-        # تعريف الألوان والأنماط
-        header_fill = PatternFill(start_color="1DA18E", end_color="1DA18E", fill_type="solid")
-        subheader_fill = PatternFill(start_color="E0F2F1", end_color="E0F2F1", fill_type="solid")
-        header_font = Font(name='Arial', bold=True, color="FFFFFF", size=12)
-        subheader_font = Font(name='Arial', bold=True, size=11)
-        normal_font = Font(name='Arial', size=10)
+        # تنسيق الورقة
+        worksheet = writer.sheets['معلومات السيارة']
+        worksheet.right_to_left()
         
-        # تعريف المحاذاة
-        center_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-        right_alignment = Alignment(horizontal='right', vertical='center', wrap_text=True)
-        
-        # تعريف الحدود
-        thin_border = Border(
-            left=Side(style='thin'), 
-            right=Side(style='thin'), 
-            top=Side(style='thin'), 
-            bottom=Side(style='thin')
-        )
-        
-        # الورقة الأولى - معلومات السيارة
-        vehicle_sheet = workbook.active
-        vehicle_sheet.title = "معلومات السيارة"
-        
-        # إضافة العنوان
-        vehicle_sheet.merge_cells('A1:G1')
-        title_cell = vehicle_sheet['A1']
-        title_cell.value = f"تقرير شامل للسيارة: {vehicle.plate_number}"
-        title_cell.font = Font(name='Arial', bold=True, size=14)
-        title_cell.alignment = center_alignment
-        title_cell.fill = PatternFill(start_color="1DA18E", end_color="1DA18E", fill_type="solid")
-        title_cell.font = Font(name='Arial', bold=True, color="FFFFFF", size=14)
-        
-        # إضافة التاريخ
-        vehicle_sheet.merge_cells('A2:G2')
-        date_cell = vehicle_sheet['A2']
-        date_cell.value = f"تاريخ التقرير: {datetime.now().strftime('%Y-%m-%d')}"
-        date_cell.font = normal_font
-        date_cell.alignment = center_alignment
-        
-        # ترويسة معلومات السيارة
-        vehicle_sheet.merge_cells('A4:G4')
-        vehicle_header = vehicle_sheet['A4']
-        vehicle_header.value = "معلومات السيارة الأساسية"
-        vehicle_header.font = subheader_font
-        vehicle_header.alignment = right_alignment
-        vehicle_header.fill = subheader_fill
-        
-        # تنسيق عرض الأعمدة
-        for col in range(1, 8):
-            vehicle_sheet.column_dimensions[get_column_letter(col)].width = 15
-        
-        # بيانات السيارة
-        data_rows = [
-            ["رقم اللوحة", vehicle.plate_number],
-            ["النوع", f"{vehicle.make} {vehicle.model}"],
-            ["سنة الصنع", str(vehicle.year)],
-            ["اللون", vehicle.color],
-            ["الحالة", _get_status_name(vehicle.status)],
-            ["تاريخ الإضافة", vehicle.created_at.strftime('%Y-%m-%d')]
-        ]
-        
-        # إضافة البيانات
-        for row_idx, row_data in enumerate(data_rows, 5):
-            vehicle_sheet.cell(row=row_idx, column=2).value = row_data[0]
-            vehicle_sheet.cell(row=row_idx, column=2).font = normal_font
-            vehicle_sheet.cell(row=row_idx, column=2).alignment = right_alignment
-            vehicle_sheet.cell(row=row_idx, column=2).border = thin_border
-            
-            vehicle_sheet.cell(row=row_idx, column=3).value = row_data[1]
-            vehicle_sheet.cell(row=row_idx, column=3).font = normal_font
-            vehicle_sheet.cell(row=row_idx, column=3).alignment = right_alignment
-            vehicle_sheet.cell(row=row_idx, column=3).border = thin_border
-        
-        # معلومات الإيجار
-        rental_row = 12
-        vehicle_sheet.merge_cells(f'A{rental_row}:G{rental_row}')
-        rental_header = vehicle_sheet[f'A{rental_row}']
-        rental_header.value = "معلومات الإيجار"
-        rental_header.font = subheader_font
-        rental_header.alignment = right_alignment
-        rental_header.fill = subheader_fill
-        
-        rental_row += 1
-        
+        # إذا كانت بيانات الإيجار متوفرة
         if rental:
-            rental_data = [
-                ["المؤجر", rental.lessor_name or "غير محدد"],
-                ["تاريخ البداية", rental.start_date.strftime('%Y-%m-%d')],
-                ["تاريخ النهاية", rental.end_date.strftime('%Y-%m-%d') if rental.end_date else "مستمر"],
-                ["التكلفة الشهرية", f"{rental.monthly_cost:,.2f} ريال"],
-                ["رقم العقد", rental.contract_number or "غير محدد"]
-            ]
+            rental_data = {
+                'تاريخ البداية': [rental.start_date.strftime('%Y-%m-%d') if rental.start_date else ''],
+                'تاريخ النهاية': [rental.end_date.strftime('%Y-%m-%d') if rental.end_date else 'مستمر'],
+                'قيمة الإيجار الشهري': [float(rental.monthly_cost) if rental.monthly_cost else 0],
+                'حالة الإيجار': ['نشط' if rental.is_active else 'منتهي'],
+                'المؤجر': [rental.lessor_name or ''],
+                'معلومات الاتصال': [rental.lessor_contact or ''],
+                'رقم العقد': [rental.contract_number or ''],
+                'ملاحظات': [rental.notes or '']
+            }
+            rental_df = pd.DataFrame(rental_data)
+            rental_df.to_excel(writer, sheet_name='معلومات الإيجار', index=False)
             
-            for row_data in rental_data:
-                vehicle_sheet.cell(row=rental_row, column=2).value = row_data[0]
-                vehicle_sheet.cell(row=rental_row, column=2).font = normal_font
-                vehicle_sheet.cell(row=rental_row, column=2).alignment = right_alignment
-                vehicle_sheet.cell(row=rental_row, column=2).border = thin_border
+            # تنسيق ورقة الإيجار
+            worksheet = writer.sheets['معلومات الإيجار']
+            worksheet.right_to_left()
+        
+        # إذا كانت سجلات الورشة متوفرة
+        if workshop_records:
+            workshop_data = []
+            for record in workshop_records:
+                workshop_data.append({
+                    'تاريخ الدخول': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '',
+                    'تاريخ الخروج': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else 'لا يزال في الورشة',
+                    'اسم الورشة': record.workshop_name or '',
+                    'سبب الصيانة': record.reason or '',
+                    'التكلفة': float(record.cost) if record.cost else 0,
+                    'القراءة قبل الصيانة': record.mileage_before or 0,
+                    'القراءة بعد الصيانة': record.mileage_after or 0,
+                    'الملاحظات': record.notes or ''
+                })
+            
+            if workshop_data:
+                workshop_df = pd.DataFrame(workshop_data)
+                workshop_df.to_excel(writer, sheet_name='سجلات الصيانة', index=False)
                 
-                vehicle_sheet.cell(row=rental_row, column=3).value = row_data[1]
-                vehicle_sheet.cell(row=rental_row, column=3).font = normal_font
-                vehicle_sheet.cell(row=rental_row, column=3).alignment = right_alignment
-                vehicle_sheet.cell(row=rental_row, column=3).border = thin_border
+                # تنسيق ورقة الصيانة
+                worksheet = writer.sheets['سجلات الصيانة']
+                worksheet.right_to_left()
+        
+        # الحصول على سجلات التسليم/الاستلام
+        if handovers is None:
+            from models import VehicleHandover
+            # جلب السجلات إذا لم يتم توفيرها
+            handovers = VehicleHandover.query.filter_by(vehicle_id=vehicle.id).order_by(
+                VehicleHandover.handover_date.desc()
+            ).all()
+        
+        # إضافة سجلات التسليم/الاستلام
+        if handovers:
+            handover_data = []
+            for handover in handovers:
+                handover_data.append({
+                    'التاريخ': handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else '',
+                    'نوع العملية': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
+                    'اسم الشخص': handover.person_name or '',
+                    'اسم المشرف': handover.supervisor_name if hasattr(handover, 'supervisor_name') else '',
+                    'قراءة العداد': handover.mileage or 0,
+                    'مستوى الوقود': handover.fuel_level or '',
+                    'حالة المركبة': handover.vehicle_condition or '',
+                    'إطار احتياطي': 'نعم' if handover.has_spare_tire else 'لا',
+                    'طفاية حريق': 'نعم' if handover.has_fire_extinguisher else 'لا',
+                    'حقيبة إسعافات': 'نعم' if handover.has_first_aid_kit else 'لا',
+                    'مثلث تحذير': 'نعم' if handover.has_warning_triangle else 'لا',
+                    'أدوات': 'نعم' if handover.has_tools else 'لا',
+                    'ملاحظات': handover.notes or '',
+                    'رابط النموذج': handover.form_link or ''
+                })
+            
+            if handover_data:
+                handover_df = pd.DataFrame(handover_data)
+                handover_df.to_excel(writer, sheet_name='سجلات التسليم والاستلام', index=False)
                 
-                rental_row += 1
-        else:
-            vehicle_sheet.merge_cells(f'A{rental_row}:G{rental_row}')
-            no_rental_cell = vehicle_sheet[f'A{rental_row}']
-            no_rental_cell.value = "لا يوجد إيجار نشط حاليًا"
-            no_rental_cell.font = normal_font
-            no_rental_cell.alignment = center_alignment
-            
-            rental_row += 2
+                # تنسيق ورقة التسليم والاستلام
+                worksheet = writer.sheets['سجلات التسليم والاستلام']
+                worksheet.right_to_left()
         
-        # ملخص سجلات الورشة
-        workshop_row = rental_row + 2
-        vehicle_sheet.merge_cells(f'A{workshop_row}:G{workshop_row}')
-        workshop_header = vehicle_sheet[f'A{workshop_row}']
-        workshop_header.value = "ملخص سجلات الورشة"
-        workshop_header.font = subheader_font
-        workshop_header.alignment = right_alignment
-        workshop_header.fill = subheader_fill
+        # الحصول على سجلات الفحص
+        if inspections is None:
+            from models import VehiclePeriodicInspection
+            # جلب السجلات إذا لم يتم توفيرها
+            inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle.id).order_by(
+                VehiclePeriodicInspection.inspection_date.desc()
+            ).all()
         
-        workshop_row += 1
-        
-        if workshop_records and len(workshop_records) > 0:
-            # حساب التكلفة الإجمالية
-            total_cost = sum(record.cost for record in workshop_records)
+        # إضافة سجلات الفحص
+        if inspections:
+            inspection_data = []
+            for inspection in inspections:
+                inspection_data.append({
+                    'رقم الفحص': inspection.inspection_number if hasattr(inspection, 'inspection_number') else '',
+                    'تاريخ الفحص': inspection.inspection_date.strftime('%Y-%m-%d') if inspection.inspection_date else '',
+                    'تاريخ الانتهاء': inspection.expiry_date.strftime('%Y-%m-%d') if inspection.expiry_date else '',
+                    'نوع الفحص': getattr(inspection, 'inspection_type', ''),
+                    'مركز الفحص': inspection.inspection_center if hasattr(inspection, 'inspection_center') else '',
+                    'النتيجة': inspection.result if hasattr(inspection, 'result') else '',
+                    'التكلفة': float(inspection.cost) if hasattr(inspection, 'cost') and inspection.cost else 0,
+                    'ملاحظات': inspection.notes or ''
+                })
             
-            workshop_summary = [
-                ["عدد مرات دخول الورشة", str(len(workshop_records))],
-                ["إجمالي التكاليف", f"{total_cost:,.2f} ريال"]
-            ]
-            
-            for row_data in workshop_summary:
-                vehicle_sheet.cell(row=workshop_row, column=2).value = row_data[0]
-                vehicle_sheet.cell(row=workshop_row, column=2).font = normal_font
-                vehicle_sheet.cell(row=workshop_row, column=2).alignment = right_alignment
-                vehicle_sheet.cell(row=workshop_row, column=2).border = thin_border
+            if inspection_data:
+                inspection_df = pd.DataFrame(inspection_data)
+                inspection_df.to_excel(writer, sheet_name='سجلات الفحص', index=False)
                 
-                vehicle_sheet.cell(row=workshop_row, column=3).value = row_data[1]
-                vehicle_sheet.cell(row=workshop_row, column=3).font = normal_font
-                vehicle_sheet.cell(row=workshop_row, column=3).alignment = right_alignment
-                vehicle_sheet.cell(row=workshop_row, column=3).border = thin_border
+                # تنسيق ورقة الفحص
+                worksheet = writer.sheets['سجلات الفحص']
+                worksheet.right_to_left()
+        
+        # إضافة بيانات الوثائق إذا كانت متوفرة
+        if documents:
+            documents_data = []
+            for doc in documents:
+                documents_data.append({
+                    'نوع الوثيقة': doc.document_type or '',
+                    'رقم الوثيقة': doc.document_number or '',
+                    'تاريخ الإصدار': doc.issue_date.strftime('%Y-%m-%d') if hasattr(doc, 'issue_date') and doc.issue_date else '',
+                    'تاريخ الانتهاء': doc.expiry_date.strftime('%Y-%m-%d') if hasattr(doc, 'expiry_date') and doc.expiry_date else '',
+                    'الحالة': doc.status or '',
+                    'ملاحظات': doc.notes or ''
+                })
+            
+            if documents_data:
+                documents_df = pd.DataFrame(documents_data)
+                documents_df.to_excel(writer, sheet_name='وثائق السيارة', index=False)
                 
-                workshop_row += 1
-            
-            # إنشاء ورقة سجلات الورشة
-            workshop_sheet = workbook.create_sheet(title="سجلات الورشة")
-            
-            # ترويسة الجدول
-            workshop_headers = ["تاريخ الدخول", "تاريخ الخروج", "سبب الدخول", "حالة الإصلاح", "اسم الورشة", "التكلفة", "ملاحظات"]
-            
-            for col_idx, header in enumerate(workshop_headers, 1):
-                cell = workshop_sheet.cell(row=1, column=col_idx)
-                cell.value = header
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.alignment = center_alignment
-                cell.border = thin_border
-                workshop_sheet.column_dimensions[get_column_letter(col_idx)].width = 20
-            
-            # بيانات سجلات الورشة
-            for row_idx, record in enumerate(workshop_records, 2):
-                workshop_sheet.cell(row=row_idx, column=1).value = record.entry_date.strftime('%Y-%m-%d')
-                workshop_sheet.cell(row=row_idx, column=2).value = record.exit_date.strftime('%Y-%m-%d') if record.exit_date else "ما زالت في الورشة"
-                workshop_sheet.cell(row=row_idx, column=3).value = _get_reason_name(record.reason)
-                workshop_sheet.cell(row=row_idx, column=4).value = _get_repair_status_name(record.repair_status)
-                workshop_sheet.cell(row=row_idx, column=5).value = record.workshop_name or "غير محدد"
-                workshop_sheet.cell(row=row_idx, column=6).value = f"{record.cost:,.2f}"
-                workshop_sheet.cell(row=row_idx, column=7).value = record.notes or ""
-                
-                # تنسيق الخلايا
-                for col_idx in range(1, 8):
-                    cell = workshop_sheet.cell(row=row_idx, column=col_idx)
-                    cell.font = normal_font
-                    cell.alignment = right_alignment
-                    cell.border = thin_border
-        else:
-            vehicle_sheet.merge_cells(f'A{workshop_row}:G{workshop_row}')
-            no_workshop_cell = vehicle_sheet[f'A{workshop_row}']
-            no_workshop_cell.value = "لا توجد سجلات ورشة لهذه السيارة"
-            no_workshop_cell.font = normal_font
-            no_workshop_cell.alignment = center_alignment
+                # تنسيق ورقة الوثائق
+                worksheet = writer.sheets['وثائق السيارة']
+                worksheet.right_to_left()
         
-        # إضافة الملاحظات إن وجدت
-        if vehicle.notes:
-            notes_row = workshop_row + 2
-            vehicle_sheet.merge_cells(f'A{notes_row}:G{notes_row}')
-            notes_header = vehicle_sheet[f'A{notes_row}']
-            notes_header.value = "ملاحظات"
-            notes_header.font = subheader_font
-            notes_header.alignment = right_alignment
-            notes_header.fill = subheader_fill
-            
-            notes_row += 1
-            vehicle_sheet.merge_cells(f'A{notes_row}:G{notes_row + 3}')
-            notes_cell = vehicle_sheet[f'A{notes_row}']
-            notes_cell.value = vehicle.notes
-            notes_cell.font = normal_font
-            notes_cell.alignment = Alignment(horizontal='right', vertical='top', wrap_text=True)
+        # إضافة معلومات التقرير
+        info_data = {
+            'معلومات التقرير': [''],
+            'تاريخ إنشاء التقرير': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+            'اسم النظام': ['نُظم - نظام إدارة متكامل'],
+        }
+        info_df = pd.DataFrame(info_data)
+        info_df.to_excel(writer, sheet_name='معلومات التقرير', index=False)
         
-        # إرجاع ملف Excel كـ bytes
-        excel_buffer = io.BytesIO()
-        workbook.save(excel_buffer)
-        excel_buffer.seek(0)
-        
-        return excel_buffer.getvalue()
-        
-    except Exception as e:
-        print(f"خطأ في إنشاء تقرير Excel الشامل للسيارة: {str(e)}")
-        raise e
-
-
-def _get_status_name(status):
-    """تحويل حالة السيارة إلى النص العربي المناسب"""
-    status_map = {
-        'available': 'متاحة',
-        'rented': 'مؤجرة',
-        'in_project': 'في المشروع',
-        'in_workshop': 'في الورشة',
-        'accident': 'حادث'
-    }
-    return status_map.get(status, status)
-
-
-def _get_reason_name(reason):
-    """تحويل سبب دخول الورشة إلى النص العربي المناسب"""
-    reason_map = {
-        'maintenance': 'صيانة دورية',
-        'breakdown': 'عطل',
-        'accident': 'حادث'
-    }
-    return reason_map.get(reason, reason)
-
-
-def _get_repair_status_name(status):
-    """تحويل حالة الإصلاح إلى النص العربي المناسب"""
-    status_map = {
-        'in_progress': 'قيد التنفيذ',
-        'completed': 'تم الإصلاح',
-        'pending_approval': 'بانتظار الموافقة'
-    }
-    return status_map.get(status, status)
+        # تنسيق ورقة المعلومات
+        worksheet = writer.sheets['معلومات التقرير']
+        worksheet.right_to_left()
+    
+    # إرجاع محتوى الملف
+    return output.getvalue()
