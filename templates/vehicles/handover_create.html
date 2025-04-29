@@ -70,9 +70,9 @@
                                 <label for="handover_type" class="form-label required">نوع العملية</label>
                                 <select class="form-select" id="handover_type" name="handover_type" required>
                                     {% for type in handover_types %}
-                                    <option value="{{ type }}">
+                                    <option value="{{ type }}" {% if default_handover_type == type %}selected{% endif %}>
                                         {% if type == 'delivery' %}تسليم السيارة
-                                        {% elif type == 'return' %}استلام السيارة
+                                        {% elif type == 'receive' %}استلام السيارة
                                         {% else %}{{ type }}{% endif %}
                                     </option>
                                     {% endfor %}

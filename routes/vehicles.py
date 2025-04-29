@@ -889,6 +889,15 @@ def create_handover(id):
     """إنشاء نموذج تسليم/استلام للسيارة"""
     vehicle = Vehicle.query.get_or_404(id)
     
+    # تحديد نوع النموذج (تسليم أو استلام) من معلمة الاستعلام
+    default_type = request.args.get('type', '')
+    if default_type == 'delivery':
+        default_handover_type = 'delivery'
+    elif default_type == 'receive':
+        default_handover_type = 'receive'
+    else:
+        default_handover_type = None
+    
     if request.method == 'POST':
         # استخراج البيانات من النموذج
         handover_type = request.form.get('handover_type')
@@ -954,7 +963,8 @@ def create_handover(id):
     return render_template(
         'vehicles/handover_create.html', 
         vehicle=vehicle,
-        handover_types=HANDOVER_TYPE_CHOICES
+        handover_types=HANDOVER_TYPE_CHOICES,
+        default_handover_type=default_handover_type
     )
 
 @vehicles_bp.route('/handover/<int:id>/view')
