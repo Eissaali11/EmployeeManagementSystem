@@ -147,14 +147,19 @@ def generate_vehicle_handover_pdf(handover_data):
     content.append(Spacer(1, 10))
     
     # تجهيز بيانات التسليم/الاستلام
+    # استخدام Paragraph لضمان التعامل السليم مع النصوص العربية
+    date_text = Paragraph(arabic_text(handover_data['handover_date']), styles['Arabic'])
+    person_text = Paragraph(arabic_text(handover_data['person_name']), styles['Arabic'])
+    
     handover_info_data = [
-        [arabic_text("التاريخ"), arabic_text(handover_data['handover_date'])],
-        [arabic_text("الشخص"), arabic_text(handover_data['person_name'])],
+        [arabic_text("التاريخ"), date_text],
+        [arabic_text("الشخص"), person_text],
     ]
     
     # إضافة معلومات المشرف إذا وجدت
     if handover_data.get('supervisor_name'):
-        handover_info_data.append([arabic_text("المشرف"), arabic_text(handover_data['supervisor_name'])])
+        supervisor_text = Paragraph(arabic_text(handover_data['supervisor_name']), styles['Arabic'])
+        handover_info_data.append([arabic_text("المشرف"), supervisor_text])
     
     # إضافة رابط النموذج إذا وجد كرابط قابل للنقر
     if handover_data.get('form_link'):
@@ -187,9 +192,14 @@ def generate_vehicle_handover_pdf(handover_data):
         handover_info_data.append([arabic_text("رابط النموذج"), link_table])
     
     # إضافة مستوى الوقود وعداد المسافة
-    handover_info_data.append([arabic_text("مستوى الوقود"), arabic_text(handover_data['fuel_level'])])
-    handover_info_data.append([arabic_text("قراءة العداد"), arabic_text(str(handover_data['mileage']))])
-    handover_info_data.append([arabic_text("حالة المركبة"), arabic_text(handover_data['vehicle_condition'])])
+    # نقوم بإنشاء Paragraph لكل نص لضمان التعامل السليم مع النصوص العربية
+    fuel_text = Paragraph(arabic_text(handover_data['fuel_level']), styles['Arabic'])
+    mileage_text = Paragraph(arabic_text(str(handover_data['mileage'])), styles['Arabic'])
+    condition_text = Paragraph(arabic_text(handover_data['vehicle_condition']), styles['Arabic'])
+    
+    handover_info_data.append([arabic_text("مستوى الوقود"), fuel_text])
+    handover_info_data.append([arabic_text("قراءة العداد"), mileage_text])
+    handover_info_data.append([arabic_text("حالة المركبة"), condition_text])
     
     # جدول معلومات التسليم/الاستلام
     handover_table = Table(handover_info_data, colWidths=[100, 300])
@@ -198,7 +208,11 @@ def generate_vehicle_handover_pdf(handover_data):
         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
         ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة رأسية وسطية
-        ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # نستثني العمود الثاني من تعيين الخط لأنه قد يحتوي على نصوص بأنماط مختلفة
+        # تطبيق خط Amiri على جميع الخلايا ما عدا التي تحتوي على جداول داخلية أو نصوص خاصة
+        # تطبيق الخط على كل صف على حدة
+        ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # عناوين الصفوف
+        ('FONTNAME', (1, 0), (1, 0), 'Amiri'),    # التاريخ
+        ('FONTNAME', (1, 1), (1, 1), 'Amiri'),    # اسم الشخص
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
     ]))
