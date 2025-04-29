@@ -156,9 +156,17 @@ def generate_vehicle_handover_pdf(handover_data):
     if handover_data.get('supervisor_name'):
         handover_info_data.append([arabic_text("المشرف"), arabic_text(handover_data['supervisor_name'])])
     
-    # إضافة رابط النموذج إذا وجد
+    # إضافة رابط النموذج إذا وجد كرابط قابل للنقر
     if handover_data.get('form_link'):
-        handover_info_data.append([arabic_text("رابط النموذج"), arabic_text(handover_data['form_link'])])
+        from reportlab.lib.colors import blue
+        link_style = ParagraphStyle(
+            name='LinkStyle',
+            parent=styles['Arabic'],
+            textColor=blue,
+            underline=True
+        )
+        link_text = Paragraph(f'<link href="{handover_data["form_link"]}">{arabic_text(handover_data["form_link"])}</link>', link_style)
+        handover_info_data.append([arabic_text("رابط النموذج"), link_text])
     
     # إضافة مستوى الوقود وعداد المسافة
     handover_info_data.append([arabic_text("مستوى الوقود"), arabic_text(handover_data['fuel_level'])])
@@ -171,7 +179,8 @@ def generate_vehicle_handover_pdf(handover_data):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
         ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Amiri'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة رأسية وسطية
+        ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # نستثني العمود الثاني من تعيين الخط لأنه قد يحتوي على نصوص بأنماط مختلفة
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
     ]))
