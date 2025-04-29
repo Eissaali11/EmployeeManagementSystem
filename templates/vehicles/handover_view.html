@@ -4,16 +4,78 @@
 
 {% block styles %}
 <style>
+    /* تأثير الخلفية المتدرجة للصفحة */
+    .custom-bg {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e6f1 100%);
+        padding: 20px 0;
+    }
+    /* تأثير 3D للبطاقات */
+    .card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: none;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.1);
+        transform: perspective(1000px) rotateX(0deg);
+        overflow: hidden;
+    }
+    
+    .card:hover {
+        transform: perspective(1000px) rotateX(2deg) translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2), 0 10px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* تحسين مظهر رؤوس البطاقات */
+    .card-header {
+        border-bottom: none;
+        font-weight: bold;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    
+    /* تغيير لون خلفية البطاقات */
+    .card-body {
+        background: linear-gradient(145deg, #e9ecef, #f3f5f7);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    /* تأثير على الجداول */
+    .table-info-box {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    
+    .table-info-box tr:nth-child(even) {
+        background-color: rgba(0,0,0,0.03);
+    }
+    
+    .table-info-box th {
+        background-color: #e9ecef;
+        padding: 12px 15px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    
+    .table-info-box td {
+        padding: 12px 15px;
+    }
+    
+    /* تأثير الصور */
     .image-preview {
         position: relative;
         margin-bottom: 15px;
+        transform: translateZ(0);
+        transition: transform 0.3s;
+    }
+    
+    .image-preview:hover {
+        transform: scale(1.02);
     }
     
     .image-preview img {
         width: 100%;
         height: auto;
         border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 10px rgba(0,0,0,0.15);
     }
     
     .image-description {
@@ -28,24 +90,42 @@
         border-bottom-right-radius: 8px;
     }
     
+    /* تحسين مظهر العنوان */
     .handover-header {
         position: relative;
         padding-right: 15px;
     }
-
-    .table-info-box td {
-        padding: 8px 15px;
+    
+    /* تأثير مميز للنصوص في المناطق الفاتحة */
+    .bg-light.text-dark {
+        background-color: #eaecf4 !important;
+        border-radius: 10px;
+        box-shadow: inset 0 0 6px rgba(0,0,0,0.05);
     }
     
-    .table-info-box th {
-        padding: 8px 15px;
-        background-color: #f8f9fa;
+    /* تحسين مظهر الأزرار */
+    .btn {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    /* تأثير 3D للمؤشرات */
+    .badge {
+        padding: 0.5em 0.8em;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="custom-bg">
+<div class="container py-4">
     <div class="card shadow-sm">
         <div class="card-header {{ 'bg-success' if handover.handover_type == 'delivery' else 'bg-info' }} text-white d-flex justify-content-between align-items-center">
             <h3 class="mb-0 handover-header {{ 'delivery' if handover.handover_type == 'delivery' else 'return' }}">
@@ -328,5 +408,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
