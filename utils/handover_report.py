@@ -135,7 +135,7 @@ def generate_vehicle_handover_pdf(handover_data):
         # إضافة معلومات في التذييل إذا لزم الأمر
         canvas.setFont('Amiri', 8)
         canvas.setFillColor(Color(0.5, 0.5, 0.5)) # رمادي
-        footer_text = f"تم إنشاء هذا التقرير بواسطة نُظم - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        footer_text = arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم في {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'Amiri', 8)/2, 30, footer_text)
         
         canvas.restoreState()
@@ -181,13 +181,7 @@ def generate_vehicle_handover_pdf(handover_data):
             text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 14)
             canv.drawString(logo_x - text_width/2, logo_y - 5, "نُظم")
             
-            # إضافة اسم النظام أسفل الشريط الأزرق
-            canv.setFillColor(navy_blue)
-            canv.setFont('Amiri-Bold', 16)
-            # طباعة اسم النظام على يسار الشعار
-            system_name = "نظام إدارة متكامل"
-            system_width = canv.stringWidth(system_name, 'Amiri-Bold', 16)
-            canv.drawString(logo_x - logo_size - system_width - 5*mm, logo_y - 5, system_name)
+            # لا نضيف نص تحت الشريط الأزرق لأن شعار نُظم يكفي بمفرده
             
     # إضافة الشعار ورأس الصفحة
     header = HeaderWithLogo(doc.width)
@@ -408,7 +402,7 @@ def generate_vehicle_handover_pdf(handover_data):
         content.append(Spacer(1, 20))
     
     # إضافة تذييل للصفحة
-    footer_text = f"تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة متكامل في {datetime.now().strftime('%Y-%m-%d')}"  
+    footer_text = f"تم إنشاء هذا التقرير بواسطة نُظم في {datetime.now().strftime('%Y-%m-%d')}"  
     footer = Paragraph(arabic_text(footer_text), styles['ArabicSmall'])
     content.append(footer)
     
