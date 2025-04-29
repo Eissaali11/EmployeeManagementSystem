@@ -99,33 +99,11 @@ def generate_vehicle_handover_pdf(handover_data):
     styles.add(ParagraphStyle(name='ArabicSubtitle', fontName='Amiri-Bold', fontSize=14, alignment=1))  # للعناوين الفرعية
     styles.add(ParagraphStyle(name='ArabicSmall', fontName='Amiri', fontSize=10, alignment=1))  # للنص الصغير
     
-    # إنشاء دالة للرسم في رأس الصفحة
+    # إنشاء دالة للرسم في رأس الصفحة (بدون شعار)
     def add_header_footer(canvas, doc):
         canvas.saveState()
         
-        # رسم شريط أزرق في الجزء العلوي من الصفحة
-        navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن
-        canvas.setFillColor(navy_blue)
-        canvas.rect(30, 800, A4[0]-60, 3*mm, fill=1, stroke=0)
-        
-        # إضافة شعار نُظم
-        logo_size = 20*mm
-        logo_radius = logo_size/2
-        logo_x = A4[0] - 60 - logo_size/2  # يمين الصفحة
-        logo_y = 810  # فوق الشريط الأزرق
-        
-        # رسم دائرة للشعار
-        canvas.setFillColor(navy_blue)
-        canvas.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
-        
-        # إضافة النص "نُظم" في الدائرة
-        canvas.setFillColor(Color(1, 1, 1))  # لون أبيض
-        canvas.setFont('Amiri-Bold', 14)
-        text = "نُظم"
-        text_width = canvas.stringWidth(text, 'Amiri-Bold', 14)
-        canvas.drawString(logo_x - text_width/2, logo_y - 5, text)
-        
-        # لا نضيف نصاً تحت الشريط الأزرق لأن شعار نُظم يكفي بمفرده
+        # لا نضيف أي شعار أو شريط في رأس الصفحة بناءً على طلب المستخدم
         
         # إضافة معلومات في التذييل إذا لزم الأمر
         canvas.setFont('Amiri', 8)
