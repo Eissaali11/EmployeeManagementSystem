@@ -180,25 +180,34 @@ def generate_vehicle_handover_pdf(handover_data):
         # إنشاء نص توجيهي
         link_desc = Paragraph(arabic_text("انقر هنا لفتح النموذج"), styles['Arabic'])
         
-        # استخدام زر نصي واضح ومنسق كأيقونة
-        # إنشاء أنماط مخصصة للزر
-        button_style = ParagraphStyle(
-            name='ButtonStyle', 
-            parent=styles['Arabic'],
-            textColor=colors.white,  # نص أبيض
-            backColor=colors.blue,   # خلفية زرقاء
-            fontSize=12,
-            alignment=1,  # توسيط
-            borderWidth=1,
-            borderColor=colors.blue,
-            borderPadding=5,
-            spaceBefore=5,
-            spaceAfter=5
+        # استخدام صورة "هنا هنا" كرابط
+        # الحصول على مسار الصورة
+        icon_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            'static', 'images', 'icons', 'click_here.svg'
         )
         
-        # إنشاء زر بنص توضيحي بدلاً من الرابط الفعلي
+        # إنشاء زر مميز للرابط بنفس شكل "هنا هنا"
+        # إنشاء أنماط للزر
+        button_style = ParagraphStyle(
+            name='ClickHereStyle', 
+            parent=styles['Arabic'],
+            textColor=colors.blue,  # لون أزرق مشابه للصورة
+            backColor=colors.lightgrey,  # خلفية رمادية فاتحة
+            borderColor=colors.black,
+            borderWidth=1,
+            borderPadding=8,
+            borderRadius=10,  # لتقريب الشكل من المستطيل للصورة
+            fontSize=14,
+            alignment=1,  # توسيط
+            leading=20,  # المسافة الرأسية بين السطور
+            spaceBefore=10,
+            spaceAfter=10
+        )
+        
+        # إنشاء الرابط بنص "هنا هنا"
         link_icon = Paragraph(
-            f'<a href="{link_value}" color="white" backcolor="blue"><strong>فتح المستند</strong></a>', 
+            f'<a href="{link_value}" color="blue"><strong>هنا هنا</strong></a>', 
             button_style
         )
 
