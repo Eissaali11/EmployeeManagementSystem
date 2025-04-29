@@ -531,7 +531,7 @@ def create_vehicle_handover_pdf(handover_data):
         
         pdf.set_font('Arial', '', 11)
         pdf.set_text_color(*pdf.secondary_color)
-        pdf.arabic_text(190, 98, f"التاريخ: {handover_data['date']}", 'R')
+        pdf.arabic_text(190, 98, f"التاريخ: {handover_data['handover_date']}", 'R')
         pdf.arabic_text(190, 106, f"الشخص: {handover_data['person_name']}", 'R')
         
         # إضافة معلومات المشرف إذا وجدت
@@ -647,7 +647,7 @@ def create_vehicle_handover_pdf(handover_data):
         pdf.set_text_color(*pdf.secondary_color)
         
         # توقيع المستلم/المسلم
-        pdf.arabic_text(160, y_position + 10, "توقيع " + ("المستلم" if handover_data['type'] == "تسليم" else "المسلم") + ":", 'R')
+        pdf.arabic_text(160, y_position + 10, "توقيع " + ("المستلم" if handover_data['handover_type'] == "تسليم" else "المسلم") + ":", 'R')
         pdf.line(80, y_position + 10, 150, y_position + 10)
         
         # توقيع المشرف (إذا وُجد)
