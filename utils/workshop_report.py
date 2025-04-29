@@ -54,14 +54,58 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     """
     register_fonts()
     
+    # إنشاء كائن BytesIO لتخزين البيانات
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+    
+    # إنشاء الوثيقة
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=60, bottomMargin=18)
     styles = getSampleStyleSheet()
     
-    # إنشاء نمط للنص العربي
+    # إعداد الصفحة والأنماط
     styles.add(ParagraphStyle(name='Arabic', fontName='Amiri', fontSize=12, alignment=1))
     styles.add(ParagraphStyle(name='ArabicTitle', fontName='Amiri-Bold', fontSize=16, alignment=1))
     styles.add(ParagraphStyle(name='ArabicHeading', fontName='Amiri-Bold', fontSize=14, alignment=1))
+    
+    # إنشاء دالة للرسم في رأس الصفحة
+    def add_header_footer(canvas, doc):
+        canvas.saveState()
+        
+        # رسم شريط أزرق في الجزء العلوي من الصفحة
+        navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن
+        canvas.setFillColor(navy_blue)
+        canvas.rect(30, 800, A4[0]-60, 3*mm, fill=1, stroke=0)
+        
+        # إضافة شعار نُظم
+        logo_size = 20*mm
+        logo_radius = logo_size/2
+        logo_x = A4[0] - 60 - logo_size/2  # يمين الصفحة
+        logo_y = 810  # فوق الشريط الأزرق
+        
+        # رسم دائرة للشعار
+        canvas.setFillColor(navy_blue)
+        canvas.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
+        
+        # إضافة النص "نُظم" في الدائرة
+        canvas.setFillColor(Color(1, 1, 1))  # لون أبيض
+        canvas.setFont('Amiri-Bold', 14)
+        text = "نُظم"
+        text_width = canvas.stringWidth(text, 'Amiri-Bold', 14)
+        canvas.drawString(logo_x - text_width/2, logo_y - 5, text)
+        
+        # إضافة اسم النظام
+        canvas.setFillColor(navy_blue)
+        canvas.setFont('Amiri-Bold', 16)
+        system_name = "نظام إدارة متكامل"
+        system_width = canvas.stringWidth(system_name, 'Amiri-Bold', 16)
+        canvas.drawString(logo_x - logo_size - system_width - 5*mm, logo_y - 5, system_name)
+        
+        # إضافة معلومات في التذييل إذا لزم الأمر
+        canvas.setFont('Amiri', 8)
+        canvas.setFillColor(Color(0.5, 0.5, 0.5)) # رمادي
+        footer_text = f"تم إنشاء هذا التقرير بواسطة نُظم - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'Amiri', 8)/2, 30, footer_text)
+        
+        canvas.restoreState()
     
     # تحضير المحتوى
     content = []
@@ -241,7 +285,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     content.append(Spacer(1, 10))
     content.append(copyright_text)
     
-    # بناء الوثيقة
-    doc.build(content)
+    # بناء الوثيقة مع استخدام دالة رأس وتذييل الصفحة
+    doc.build(content, onFirstPage=add_header_footer, onLaterPages=add_header_footer)
     buffer.seek(0)
     return buffer
