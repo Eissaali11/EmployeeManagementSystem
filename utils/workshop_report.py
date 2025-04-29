@@ -171,12 +171,14 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             entry_date = record.entry_date.strftime('%Y-%m-%d') if hasattr(record, 'entry_date') and record.entry_date else ""
             exit_date = record.exit_date.strftime('%Y-%m-%d') if hasattr(record, 'exit_date') and record.exit_date else "ما زالت في الورشة"
             
-            entry_reason = reason_map.get(record.entry_reason, record.entry_reason) if hasattr(record, 'entry_reason') else ""
+            # استخدام حقل reason بدلاً من entry_reason للتوافق مع نموذج البيانات
+            entry_reason = reason_map.get(record.reason, record.reason) if hasattr(record, 'reason') and record.reason else ""
             repair_status = status_map.get(record.repair_status, record.repair_status) if hasattr(record, 'repair_status') else ""
             
             cost = f"{record.cost:,.2f}" if hasattr(record, 'cost') and record.cost is not None else "0.00"
             workshop_name = record.workshop_name if hasattr(record, 'workshop_name') else ""
-            technician = record.technician if hasattr(record, 'technician') else ""
+            # استخدام حقل technician_name بدلاً من technician للتوافق مع نموذج البيانات
+            technician = record.technician_name if hasattr(record, 'technician_name') and record.technician_name else ""
             
             workshop_data.append([
                 arabic_text(technician),
