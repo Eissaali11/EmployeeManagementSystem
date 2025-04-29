@@ -955,3 +955,53 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تحديد العناصر
+        const selectAllCheckbox = document.getElementById('select-all');
+        const handoverCheckboxes = document.querySelectorAll('.handover-checkbox');
+        const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+        
+        if (selectAllCheckbox && handoverCheckboxes.length > 0 && deleteSelectedBtn) {
+            // تحديث زر الحذف بناءً على الخانات المحددة
+            function updateDeleteButton() {
+                const checkedCount = document.querySelectorAll('.handover-checkbox:checked').length;
+                deleteSelectedBtn.disabled = checkedCount === 0;
+                
+                // تحديث نص الزر ليعكس عدد العناصر المحددة
+                if (checkedCount > 0) {
+                    deleteSelectedBtn.innerHTML = `<i class="fas fa-trash-alt ms-1"></i> حذف المحدد (${checkedCount})`;
+                } else {
+                    deleteSelectedBtn.innerHTML = `<i class="fas fa-trash-alt ms-1"></i> حذف المحدد`;
+                }
+            }
+            
+            // تحديد/إلغاء تحديد الكل
+            selectAllCheckbox.addEventListener('change', function() {
+                handoverCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+                updateDeleteButton();
+            });
+            
+            // تحديث زر الحذف عند تغيير حالة أي خانة
+            handoverCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    // تحديث حالة خانة تحديد الكل
+                    const allChecked = document.querySelectorAll('.handover-checkbox:checked').length === handoverCheckboxes.length;
+                    selectAllCheckbox.checked = allChecked;
+                    
+                    // تحديث زر الحذف
+                    updateDeleteButton();
+                });
+            });
+            
+            // تحديث حالة زر الحذف عند تحميل الصفحة
+            updateDeleteButton();
+        }
+    });
+</script>
+{% endblock %}
