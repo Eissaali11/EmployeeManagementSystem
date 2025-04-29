@@ -138,66 +138,7 @@ def generate_vehicle_handover_pdf(handover_data):
     # تحضير المحتوى
     content = []
     
-    # إنشاء هيكل الصفحة مع شعار في الرأس
-    # إنشاء Flowable مخصص لرأس الصفحة مع شعار
-    from reportlab.lib.colors import Color
-    from reportlab.platypus.flowables import Flowable
-
-    class HeaderWithLogo(Flowable):
-        def __init__(self, width, height=25*mm):
-            Flowable.__init__(self)
-            self.width = width
-            self.height = height
-            
-        def wrap(self, width, height):
-            return (self.width, self.height)
-            
-        def drawOn(self, canv, x, y, _sW=0):
-            # رسم شريط أزرق في أعلى الصفحة
-            navy_blue = Color(0.05, 0.15, 0.45)  # لون أزرق داكن للشعار
-            canv.setFillColor(navy_blue)
-            
-            # تم إزالة المستطيل الأزرق في الأعلى
-            # canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
-            
-            # إزالة الشريط الأزرق وإضافة الشعار في وسط الصفحة بالأعلى
-            # إزالة المستطيل الأزرق تماماً
-            # canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
-            
-            try:
-                logo_size = 40*mm  # حجم الشعار أكبر
-                logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
-                from reportlab.lib.utils import ImageReader
-                logo_img = ImageReader(logo_path)
-                
-                # موضع الشعار في وسط الصفحة من الأعلى
-                logo_x = x + self.width/2  # الوسط الأفقي للصفحة
-                logo_y = y + self.height + logo_size/2 + 20*mm  # موضع الشعار في أعلى الصفحة بهامش إضافي
-                
-                # رسم الشعار مع مراعاة مركز الشعار
-                canv.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
-                
-            except Exception as e:
-                print(f"خطأ في تحميل الشعار: {e}")
-                # في حالة الخطأ، سنرسم الدائرة بالنص كما كان سابقاً
-                logo_radius = logo_size/2
-                canv.setFillColor(navy_blue)
-                canv.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
-                
-                # إضافة نص "نُظم" بالخط الأبيض
-                canv.setFillColor(Color(1, 1, 1))  # اللون الأبيض
-                canv.setFont('Amiri-Bold', 14)
-                text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 14)
-                canv.drawString(logo_x - text_width/2, logo_y - 5, "نُظم")
-            
-            # لا نضيف نص تحت الشريط الأزرق لأن شعار نُظم يكفي بمفرده
-            
-    # إضافة الشعار ورأس الصفحة
-    header = HeaderWithLogo(doc.width)
-    content.append(header)
-    
-    # إضافة مسافة بعد الرأس
-    content.append(Spacer(1, 30*mm))
+    # تم حذف الشعار من التقرير بناءً على طلب المستخدم
     
     # عنوان التقرير
     title_text = f"نموذج {handover_data['handover_type']} مركبة"
