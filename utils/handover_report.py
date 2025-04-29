@@ -125,12 +125,7 @@ def generate_vehicle_handover_pdf(handover_data):
         text_width = canvas.stringWidth(text, 'Amiri-Bold', 14)
         canvas.drawString(logo_x - text_width/2, logo_y - 5, text)
         
-        # إضافة اسم النظام
-        canvas.setFillColor(navy_blue)
-        canvas.setFont('Amiri-Bold', 16)
-        system_name = "نظام إدارة متكامل"
-        system_width = canvas.stringWidth(system_name, 'Amiri-Bold', 16)
-        canvas.drawString(logo_x - logo_size - system_width - 5*mm, logo_y - 5, system_name)
+        # لا نضيف نصاً تحت الشريط الأزرق لأن شعار نُظم يكفي بمفرده
         
         # إضافة معلومات في التذييل إذا لزم الأمر
         canvas.setFont('Amiri', 8)
@@ -165,21 +160,30 @@ def generate_vehicle_handover_pdf(handover_data):
             # رسم مستطيل أزرق في الأعلى
             canv.rect(x, y, self.width, 3*mm, fill=1, stroke=0)
             
-            # رسم دائرة الشعار في الزاوية اليمنى العليا
-            logo_size = 20*mm
-            logo_radius = logo_size/2
-            logo_x = x + self.width - logo_size - 10*mm  # موضع الشعار من اليمين مع هامش
-            logo_y = y + self.height + logo_radius  # موضع الشعار من الأعلى
-            
-            # رسم دائرة الشعار
-            canv.setFillColor(navy_blue)
-            canv.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
-            
-            # إضافة نص "نُظم" بالخط الأبيض
-            canv.setFillColor(Color(1, 1, 1))  # اللون الأبيض
-            canv.setFont('Amiri-Bold', 14)
-            text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 14)
-            canv.drawString(logo_x - text_width/2, logo_y - 5, "نُظم")
+            # إستخدام صورة الشعار الجديدة بدلاً من رسمها
+            try:
+                logo_size = 20*mm
+                logo_path = 'static/images/logo/logo_new.png'  # مسار الشعار الجديد
+                from reportlab.lib.utils import ImageReader
+                logo_img = ImageReader(logo_path)
+                logo_x = x + self.width - logo_size - 10*mm  # موضع الشعار من اليمين مع هامش
+                logo_y = y + self.height + logo_size/2  # موضع الشعار من الأعلى
+                
+                # رسم الشعار
+                canv.drawImage(logo_img, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
+                
+            except Exception as e:
+                print(f"خطأ في تحميل الشعار: {e}")
+                # في حالة الخطأ، سنرسم الدائرة بالنص كما كان سابقاً
+                logo_radius = logo_size/2
+                canv.setFillColor(navy_blue)
+                canv.circle(logo_x, logo_y, logo_radius, fill=1, stroke=0)
+                
+                # إضافة نص "نُظم" بالخط الأبيض
+                canv.setFillColor(Color(1, 1, 1))  # اللون الأبيض
+                canv.setFont('Amiri-Bold', 14)
+                text_width = canv.stringWidth("نُظم", 'Amiri-Bold', 14)
+                canv.drawString(logo_x - text_width/2, logo_y - 5, "نُظم")
             
             # لا نضيف نص تحت الشريط الأزرق لأن شعار نُظم يكفي بمفرده
             
