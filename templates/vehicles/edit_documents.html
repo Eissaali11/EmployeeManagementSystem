@@ -1,0 +1,78 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل تواريخ وثائق المركبة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card border-primary mb-4 shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">تعديل تواريخ وثائق المركبة</h3>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-right ml-1"></i> العودة
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <h4 class="alert-heading mb-2"><i class="fas fa-car ml-2"></i> {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</h4>
+                <hr>
+                <p class="mb-0">يمكنك تحديث تواريخ انتهاء الوثائق لهذه المركبة. سيتم تنبيهك عندما تقترب هذه التواريخ من الانتهاء.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}">
+                {{ form.hidden_tag() }}
+                {{ form.vehicle_id }}
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="authorization_expiry_date" class="form-label font-weight-bold">
+                                <i class="fas fa-file-contract ml-1"></i> {{ form.authorization_expiry_date.label.text }}
+                            </label>
+                            {{ form.authorization_expiry_date(class="form-control datepicker", id="authorization_expiry_date") }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="registration_expiry_date" class="form-label font-weight-bold">
+                                <i class="fas fa-address-card ml-1"></i> {{ form.registration_expiry_date.label.text }}
+                            </label>
+                            {{ form.registration_expiry_date(class="form-control datepicker", id="registration_expiry_date") }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="inspection_expiry_date" class="form-label font-weight-bold">
+                                <i class="fas fa-clipboard-check ml-1"></i> {{ form.inspection_expiry_date.label.text }}
+                            </label>
+                            {{ form.inspection_expiry_date(class="form-control datepicker", id="inspection_expiry_date") }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save ml-2"></i> {{ form.submit.label.text }}
+                    </button>
+                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary px-4">
+                        <i class="fas fa-times ml-2"></i> إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // تهيئة مختار التاريخ لجميع حقول التاريخ
+    $('.datepicker').datepicker({
+        language: 'ar-SA',
+        autoClose: true,
+        format: 'yyyy-mm-dd',
+        yearFirst: true
+    });
+});
+</script>
+{% endblock %}
