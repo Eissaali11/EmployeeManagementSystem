@@ -301,6 +301,9 @@ def view(id):
     safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
     accidents = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
     
+    # تاريخ اليوم للاستخدام في حسابات الفرق بين التواريخ
+    today = datetime.now().date()
+    
     # استخراج معلومات السائق الحالي والسائقين السابقين
     current_driver = None
     previous_drivers = []
@@ -393,7 +396,8 @@ def view(id):
         days_in_workshop=days_in_workshop,
         inspection_warnings=inspection_warnings,
         current_driver=current_driver,
-        previous_drivers=previous_drivers
+        previous_drivers=previous_drivers,
+        today=today
     )
 
 @vehicles_bp.route('/documents/view/<int:id>', methods=['GET'])
