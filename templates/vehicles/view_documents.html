@@ -38,7 +38,7 @@
                             {% for doc in documents_info %}
                                 <tr>
                                     <td><strong>{{ doc.name }}</strong></td>
-                                    <td>{{ doc.formatted_date }}</td>
+                                    <td>{{ doc.expiry_date.strftime('%Y-%m-%d') if doc.expiry_date else 'غير محدد' }}</td>
                                     <td>
                                         {% if doc.days_remaining < 0 %}
                                             <span class="text-danger">انتهت منذ {{ doc.days_remaining|abs }} يوم</span>

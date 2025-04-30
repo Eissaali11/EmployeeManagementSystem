@@ -161,7 +161,7 @@
                         <div class="card-body">
                             <p class="card-text">
                                 <i class="fas fa-calendar-alt ms-1"></i>
-                                تاريخ الانتهاء: {{ doc.expiry_date|date }}
+                                تاريخ الانتهاء: {{ doc.expiry_date.strftime('%Y-%m-%d') }}
                             </p>
                             
                             {% if doc.days_remaining < 0 %}
