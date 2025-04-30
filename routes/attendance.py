@@ -510,12 +510,22 @@ def dashboard():
     current_month = today.month
     current_year = today.year
     
-    # 3. حساب تاريخ بداية ونهاية الأسبوع الحالي (الأحد إلى السبت)
-    start_of_week = today - timedelta(days=today.weekday()+1)  # الرجوع إلى الأحد الماضي
+    # 3. حساب تاريخ بداية ونهاية الأسبوع الحالي (الخميس إلى الخميس)
+    # حساب عدد الأيام من اليوم وحتى الخميس السابق (الخميس = 3 في نظام ترقيم الأيام في Python)
+    # إذا كان اليوم خميس، نعتبره بداية الأسبوع الجديد (0 أيام)
+    # إذا كان اليوم غير خميس، نعود إلى الخميس الأخير
+    days_to_last_thursday = (today.weekday() - 3) % 7
+    
+    # احسب تاريخ الخميس الماضي (بداية الأسبوع)
+    start_of_week = today - timedelta(days=days_to_last_thursday)
+    
+    # ثم أضف 6 أيام للحصول على نهاية الأسبوع (الخميس المقبل)
+    end_of_week = start_of_week + timedelta(days=6)
+    
+    # إذا كان الخميس من الشهر السابق، وكنا نعرض إحصائيات شهرية، نبدأ من أول الشهر
     if start_of_week.month != today.month:
-        # إذا كان الأحد من الشهر السابق، نبدأ من أول الشهر
+        # نبدأ من أول الشهر فقط إذا كنا نريد عرض إحصائيات الشهر الحالي
         start_of_week = today.replace(day=1)
-    end_of_week = start_of_week + timedelta(days=6)  # 6 أيام بعد الأحد تكون السبت
     
     # 4. حساب تاريخ بداية ونهاية الشهر الحالي
     start_of_month = today.replace(day=1)
