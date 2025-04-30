@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 from sqlalchemy import extract, func, or_
-from forms.vehicle_forms import VehicleAccidentForm
+from forms.vehicle_forms import VehicleAccidentForm, VehicleDocumentsForm
 import os
 import uuid
 import io
@@ -182,6 +182,46 @@ def index():
     # الحصول على قائمة السيارات
     vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
     
+    # تحقق من تواريخ انتهاء الوثائق والتنبيه بالقريبة للانتهاء
+    expiring_documents = []
+    today = datetime.now().date()
+    thirty_days_later = today + timedelta(days=30)
+    
+    # احصائيات للوثائق المنتهية أو القريبة من الانتهاء
+    for vehicle in vehicles:
+        if vehicle.authorization_expiry_date and today <= vehicle.authorization_expiry_date <= thirty_days_later:
+            expiring_documents.append({
+                'vehicle_id': vehicle.id,
+                'plate_number': vehicle.plate_number,
+                'document_type': 'authorization',
+                'document_name': 'تفويض المركبة',
+                'expiry_date': vehicle.authorization_expiry_date,
+                'days_remaining': (vehicle.authorization_expiry_date - today).days
+            })
+            
+        if vehicle.registration_expiry_date and today <= vehicle.registration_expiry_date <= thirty_days_later:
+            expiring_documents.append({
+                'vehicle_id': vehicle.id,
+                'plate_number': vehicle.plate_number,
+                'document_type': 'registration',
+                'document_name': 'استمارة السيارة',
+                'expiry_date': vehicle.registration_expiry_date,
+                'days_remaining': (vehicle.registration_expiry_date - today).days
+            })
+            
+        if vehicle.inspection_expiry_date and today <= vehicle.inspection_expiry_date <= thirty_days_later:
+            expiring_documents.append({
+                'vehicle_id': vehicle.id,
+                'plate_number': vehicle.plate_number,
+                'document_type': 'inspection',
+                'document_name': 'الفحص الدوري',
+                'expiry_date': vehicle.inspection_expiry_date, 
+                'days_remaining': (vehicle.inspection_expiry_date - today).days
+            })
+    
+    # ترتيب الوثائق المنتهية حسب عدد الأيام المتبقية (الأقرب للانتهاء أولاً)
+    expiring_documents.sort(key=lambda x: x['days_remaining'])
+    
     # إحصائيات سريعة
     stats = {
         'total': Vehicle.query.count(),
@@ -199,7 +239,8 @@ def index():
         status_filter=status_filter,
         make_filter=make_filter,
         makes=makes,
-        statuses=VEHICLE_STATUS_CHOICES
+        statuses=VEHICLE_STATUS_CHOICES,
+        expiring_documents=expiring_documents
     )
 
 @vehicles_bp.route('/create', methods=['GET', 'POST'])
@@ -354,6 +395,111 @@ def view(id):
         current_driver=current_driver,
         previous_drivers=previous_drivers
     )
+
+@vehicles_bp.route('/documents/view/<int:id>', methods=['GET'])
+@login_required
+def view_documents(id):
+    """عرض تفاصيل وثائق المركبة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # حساب الأيام المتبقية للوثائق
+    today = datetime.now().date()
+    documents_info = []
+    
+    if vehicle.authorization_expiry_date:
+        days_remaining = (vehicle.authorization_expiry_date - today).days
+        status = 'صالح'
+        status_class = 'success'
+        
+        if days_remaining < 0:
+            status = 'منتهي'
+            status_class = 'danger'
+        elif days_remaining <= 30:
+            status = 'على وشك الانتهاء'
+            status_class = 'warning'
+            
+        documents_info.append({
+            'name': 'تفويض المركبة',
+            'expiry_date': vehicle.authorization_expiry_date,
+            'formatted_date': format_date_arabic(vehicle.authorization_expiry_date),
+            'days_remaining': days_remaining,
+            'status': status,
+            'status_class': status_class
+        })
+    
+    if vehicle.registration_expiry_date:
+        days_remaining = (vehicle.registration_expiry_date - today).days
+        status = 'صالح'
+        status_class = 'success'
+        
+        if days_remaining < 0:
+            status = 'منتهي'
+            status_class = 'danger'
+        elif days_remaining <= 30:
+            status = 'على وشك الانتهاء'
+            status_class = 'warning'
+            
+        documents_info.append({
+            'name': 'استمارة السيارة',
+            'expiry_date': vehicle.registration_expiry_date,
+            'formatted_date': format_date_arabic(vehicle.registration_expiry_date),
+            'days_remaining': days_remaining,
+            'status': status,
+            'status_class': status_class
+        })
+    
+    if vehicle.inspection_expiry_date:
+        days_remaining = (vehicle.inspection_expiry_date - today).days
+        status = 'صالح'
+        status_class = 'success'
+        
+        if days_remaining < 0:
+            status = 'منتهي'
+            status_class = 'danger'
+        elif days_remaining <= 30:
+            status = 'على وشك الانتهاء'
+            status_class = 'warning'
+            
+        documents_info.append({
+            'name': 'الفحص الدوري',
+            'expiry_date': vehicle.inspection_expiry_date,
+            'formatted_date': format_date_arabic(vehicle.inspection_expiry_date),
+            'days_remaining': days_remaining,
+            'status': status,
+            'status_class': status_class
+        })
+    
+    return render_template('vehicles/view_documents.html', vehicle=vehicle, documents_info=documents_info)
+
+@vehicles_bp.route('/documents/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_documents(id):
+    """تعديل تواريخ وثائق المركبة (التفويض، الاستمارة، الفحص الدوري)"""
+    vehicle = Vehicle.query.get_or_404(id)
+    form = VehicleDocumentsForm()
+    
+    if request.method == 'GET':
+        # ملء النموذج بالبيانات الحالية
+        form.authorization_expiry_date.data = vehicle.authorization_expiry_date
+        form.registration_expiry_date.data = vehicle.registration_expiry_date
+        form.inspection_expiry_date.data = vehicle.inspection_expiry_date
+    
+    if form.validate_on_submit():
+        # تحديث البيانات
+        vehicle.authorization_expiry_date = form.authorization_expiry_date.data
+        vehicle.registration_expiry_date = form.registration_expiry_date.data
+        vehicle.inspection_expiry_date = form.inspection_expiry_date.data
+        vehicle.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('update', 'vehicle_documents', vehicle.id, f'تم تحديث تواريخ وثائق المركبة: {vehicle.plate_number}')
+        
+        flash('تم تحديث تواريخ الوثائق بنجاح!', 'success')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    return render_template('vehicles/edit_documents.html', form=form, vehicle=vehicle)
 
 @vehicles_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required

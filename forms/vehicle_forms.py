@@ -8,6 +8,15 @@ from wtforms.validators import DataRequired, Optional, NumberRange, URL, Length
 from datetime import date
 
 
+class VehicleDocumentsForm(FlaskForm):
+    """نموذج تحديث تواريخ انتهاء وثائق السيارة الهامة"""
+    vehicle_id = HiddenField('معرف السيارة')
+    authorization_expiry_date = DateField('تاريخ انتهاء التفويض', validators=[Optional()])
+    registration_expiry_date = DateField('تاريخ انتهاء استمارة السيارة', validators=[Optional()])
+    inspection_expiry_date = DateField('تاريخ انتهاء الفحص الدوري', validators=[Optional()])
+    submit = SubmitField('حفظ')
+
+
 class VehicleAccidentForm(FlaskForm):
     """نموذج إضافة وتعديل سجل حادث مروري"""
     vehicle_id = HiddenField('معرف السيارة')
