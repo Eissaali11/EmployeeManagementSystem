@@ -826,16 +826,30 @@ def dashboard():
                 'hijri': format_date_hijri(end_of_month)
             }
             
-            # 13. إعداد البيانات للعرض على الصفحة
+            # 13. إعداد اسم الشهر الحالي
+            month_names = [
+                'يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو',
+                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+            ]
+            current_month_name = month_names[current_month - 1]
+            
+            # 14. إضافة المتغيرات الأصلية للاحتياط مع المتغيرات المنسقة
+            
+            # 15. إعداد البيانات للعرض على الصفحة
             return render_template('attendance/dashboard.html',
                                 today=today,
                                 current_month=current_month,
                                 current_year=current_year,
+                                current_month_name=current_month_name,
                                 formatted_today=formatted_today,
                                 formatted_start_of_week=formatted_start_of_week,
                                 formatted_end_of_week=formatted_end_of_week,
                                 formatted_start_of_month=formatted_start_of_month,
                                 formatted_end_of_month=formatted_end_of_month,
+                                start_of_week=start_of_week,
+                                end_of_week=end_of_week,
+                                start_of_month=start_of_month,
+                                end_of_month=end_of_month,
                                 daily_stats=daily_stats_dict,
                                 weekly_stats=weekly_stats_dict,
                                 monthly_stats=monthly_stats_dict,
