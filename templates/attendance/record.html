@@ -1,5 +1,49 @@
 {% extends 'layout.html' %}
 
+{% block styles %}
+<style>
+    /* تنسيقات مربع البحث */
+    .employee-search-container {
+        position: relative;
+        margin-bottom: 10px;
+    }
+    
+    .search-input-group {
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    #employee_search {
+        height: 44px;
+        font-size: 16px;
+        border-width: 2px;
+    }
+    
+    #employee_search:focus {
+        border-color: #4a6fdc;
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 220, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: #4a6fdc;
+        color: white;
+        border: none;
+    }
+    
+    /* تحسين شكل قائمة الموظفين */
+    #employee_id {
+        height: auto;
+        max-height: 300px;
+    }
+    
+    /* تأثير عند تحديد عنصر من القائمة */
+    #employee_id option:hover {
+        background-color: #f0f4ff;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -20,8 +64,11 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="employee_id" class="form-label required-field">الموظف</label>
-                                <div class="mb-2">
-                                    <input type="text" class="form-control" id="employee_search" placeholder="ابحث عن موظف..." autocomplete="off">
+                                <div class="mb-2 employee-search-container">
+                                    <div class="input-group search-input-group">
+                                        <input type="text" class="form-control" id="employee_search" placeholder="ابحث عن موظف..." autocomplete="off">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
                                 </div>
                                 <select class="form-select" id="employee_id" name="employee_id" required>
                                     <option value="">اختر الموظف</option>
@@ -136,37 +183,63 @@
         const employeeSelect = document.getElementById('employee_id');
         const employeeOptions = Array.from(employeeSelect.options);
         
-        employeeSearch.addEventListener('input', function() {
-            const searchText = employeeSearch.value.trim().toLowerCase();
+        // التأكد من أن مربع البحث ظاهر وفعال
+        console.log('مربع البحث:', employeeSearch);
+        console.log('قائمة الموظفين:', employeeSelect);
+        console.log('عدد الموظفين:', employeeOptions.length);
+        
+        // تهيئة البحث بمجرد تحميل الصفحة
+        if (employeeSearch) {
+            // إضافة تلميح للمستخدم
+            employeeSearch.placeholder = "ابحث عن موظف بالاسم أو الرقم الوظيفي...";
             
-            // إذا كان البحث فارغاً، عرض جميع الخيارات
-            if (searchText === '') {
-                employeeSelect.innerHTML = '';
-                employeeOptions.forEach(option => {
-                    employeeSelect.appendChild(option);
-                });
-                return;
-            }
-            
-            // فلترة الخيارات حسب نص البحث
-            const filteredOptions = employeeOptions.filter(option => {
-                if (option.value === '') return true; // دائماً نعرض خيار "اختر الموظف"
+            // تفعيل البحث عند الكتابة
+            employeeSearch.addEventListener('input', function() {
+                const searchText = employeeSearch.value.trim().toLowerCase();
+                console.log('البحث عن:', searchText);
                 
-                const optionText = option.getAttribute('data-search-text') || option.textContent;
-                return optionText.toLowerCase().includes(searchText);
+                // إذا كان البحث فارغاً، عرض جميع الخيارات
+                if (searchText === '') {
+                    employeeSelect.innerHTML = '';
+                    employeeOptions.forEach(option => {
+                        employeeSelect.appendChild(option.cloneNode(true));
+                    });
+                    return;
+                }
+                
+                // فلترة الخيارات حسب نص البحث
+                const filteredOptions = employeeOptions.filter(option => {
+                    if (option.value === '') return true; // دائماً نعرض خيار "اختر الموظف"
+                    
+                    const optionText = option.getAttribute('data-search-text') || option.textContent;
+                    return optionText.toLowerCase().includes(searchText);
+                });
+                
+                console.log('النتائج المطابقة:', filteredOptions.length - 1); // ناقص 1 لخيار "اختر الموظف"
+                
+                // عرض الخيارات المفلترة فقط
+                employeeSelect.innerHTML = '';
+                filteredOptions.forEach(option => {
+                    employeeSelect.appendChild(option.cloneNode(true));
+                });
+                
+                // إذا كان هناك نتيجة واحدة فقط (غير خيار "اختر الموظف")، حددها تلقائياً
+                if (filteredOptions.length === 2 && filteredOptions[0].value === '') {
+                    employeeSelect.value = filteredOptions[1].value;
+                    console.log('تم اختيار الموظف تلقائياً:', filteredOptions[1].textContent);
+                }
             });
             
-            // عرض الخيارات المفلترة فقط
-            employeeSelect.innerHTML = '';
-            filteredOptions.forEach(option => {
-                employeeSelect.appendChild(option.cloneNode(true));
+            // تحديث القائمة عند النقر على مربع البحث
+            employeeSearch.addEventListener('focus', function() {
+                if (employeeSearch.value.trim() !== '') {
+                    // تنفيذ البحث الحالي مرة أخرى لضمان تطابق القائمة
+                    employeeSearch.dispatchEvent(new Event('input'));
+                }
             });
-            
-            // إذا كان هناك نتيجة واحدة فقط (غير خيار "اختر الموظف")، حددها تلقائياً
-            if (filteredOptions.length === 2 && filteredOptions[0].value === '') {
-                employeeSelect.value = filteredOptions[1].value;
-            }
-        });
+        } else {
+            console.error('لم يتم العثور على مربع البحث!');
+        }
     });
 </script>
 {% endblock %}

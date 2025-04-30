@@ -1,5 +1,93 @@
 {% extends 'layout.html' %}
 
+{% block styles %}
+<style>
+    /* تنسيقات العناصر */
+    .department-select {
+        height: 44px;
+        font-size: 16px;
+        border-width: 2px;
+    }
+    
+    .department-select:focus {
+        border-color: #4a6fdc;
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 220, 0.25);
+    }
+    
+    /* تنسيقات أزرار الحضور */
+    .attendance-status-btn {
+        transition: all 0.3s ease;
+        min-width: 120px;
+        margin: 5px !important;
+    }
+    
+    .attendance-status-btn.active {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    /* تنسيقات جدول الموظفين */
+    #department-employees-container {
+        transition: all 0.3s ease;
+    }
+    
+    .highlight-new {
+        animation: highlight 2s ease-in-out;
+    }
+    
+    @keyframes highlight {
+        0% { background-color: rgba(74, 111, 220, 0.2); }
+        100% { background-color: transparent; }
+    }
+    
+    /* تنسيقات حالات الحضور */
+    .status-present {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .status-absent {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .status-leave {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    .status-sick {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+    
+    /* تنسيقات البحث عن الموظفين */
+    .employee-search-container {
+        position: relative;
+        margin: 10px 0 15px;
+    }
+    
+    .search-input-group {
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    #employee_search {
+        height: 44px;
+        font-size: 16px;
+        border-width: 2px;
+    }
+    
+    #employee_search:focus {
+        border-color: #4a6fdc;
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 220, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: #4a6fdc;
+        color: white;
+        border: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -70,6 +158,15 @@
                                         قائمة موظفي القسم
                                         <span id="employee-count" class="filter-result-count badge bg-light text-dark ms-2"></span>
                                     </h5>
+                                </div>
+                                <!-- إضافة مربع بحث للموظفين -->
+                                <div class="card-body py-2 bg-light">
+                                    <div class="employee-search-container">
+                                        <div class="input-group search-input-group">
+                                            <input type="text" class="form-control" id="employee_search" placeholder="ابحث عن موظف بالاسم أو الرقم الوظيفي..." autocomplete="off">
+                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="table-horizontal-scroll">
@@ -251,5 +348,56 @@
     
     // تعيين الحالة الافتراضية (حاضر) كنشطة عند تحميل الصفحة
     document.querySelector('.attendance-status-btn[data-status="present"]').classList.add('active');
+    
+    // إضافة وظيفة البحث في قائمة الموظفين
+    document.addEventListener('DOMContentLoaded', function() {
+        const employeeSearch = document.getElementById('employee_search');
+        if (employeeSearch) {
+            employeeSearch.addEventListener('input', function() {
+                const searchText = this.value.trim().toLowerCase();
+                console.log('البحث عن:', searchText);
+                
+                const tableRows = document.querySelectorAll('#department-employees-list tr');
+                let matchCount = 0;
+                
+                tableRows.forEach(row => {
+                    // نتخطى صفوف الرسائل/التحميل
+                    if (row.cells.length < 2) return;
+                    
+                    const employeeName = row.cells[0].textContent.toLowerCase();
+                    const employeeId = row.cells[1].textContent.toLowerCase();
+                    const jobTitle = row.cells[2].textContent.toLowerCase();
+                    
+                    // البحث في كل الحقول
+                    if (employeeName.includes(searchText) || 
+                        employeeId.includes(searchText) || 
+                        jobTitle.includes(searchText)) {
+                        row.style.display = '';
+                        matchCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // عرض عدد النتائج المطابقة
+                const employeeCount = document.getElementById('employee-count');
+                if (employeeCount) {
+                    if (searchText) {
+                        employeeCount.textContent = matchCount + ' موظف مطابق';
+                    } else {
+                        // إعادة العدد الأصلي إذا كان حقل البحث فارغاً
+                        employeeCount.textContent = tableRows.length + ' موظف';
+                    }
+                }
+            });
+            
+            // تنظيف البحث عند إعادة تحميل الموظفين
+            document.getElementById('department_id').addEventListener('change', function() {
+                if (employeeSearch) {
+                    employeeSearch.value = '';
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}
