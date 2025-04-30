@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 from sqlalchemy import extract, func, or_
+from forms.vehicle_forms import VehicleAccidentForm
 import os
 import uuid
 import io
@@ -254,9 +255,10 @@ def view(id):
     project_assignments = VehicleProject.query.filter_by(vehicle_id=id).order_by(VehicleProject.start_date.desc()).all()
     handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
     
-    # الحصول على سجلات الفحص الدوري وفحص السلامة
+    # الحصول على سجلات الفحص الدوري وفحص السلامة والحوادث
     periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
     safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
+    accidents = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
     
     # استخراج معلومات السائق الحالي والسائقين السابقين
     current_driver = None
@@ -345,6 +347,7 @@ def view(id):
         handover_records=handover_records,
         periodic_inspections=periodic_inspections,
         safety_checks=safety_checks,
+        accidents=accidents,
         total_maintenance_cost=total_maintenance_cost,
         days_in_workshop=days_in_workshop,
         inspection_warnings=inspection_warnings,
@@ -422,6 +425,116 @@ def delete(id):
     
     flash('تم حذف السيارة ومعلوماتها بنجاح!', 'success')
     return redirect(url_for('vehicles.index'))
+
+# مسارات إدارة الحوادث المرورية
+@vehicles_bp.route('/<int:id>/accident/create', methods=['GET', 'POST'])
+@login_required
+def create_accident(id):
+    """إضافة سجل حادث مروري جديد"""
+    vehicle = Vehicle.query.get_or_404(id)
+    form = VehicleAccidentForm()
+    form.vehicle_id.data = id
+    
+    if form.validate_on_submit():
+        accident = VehicleAccident(
+            vehicle_id=id,
+            accident_date=form.accident_date.data,
+            driver_name=form.driver_name.data,
+            accident_status=form.accident_status.data,
+            vehicle_condition=form.vehicle_condition.data,
+            deduction_amount=form.deduction_amount.data,
+            deduction_status=form.deduction_status.data,
+            accident_file_link=form.accident_file_link.data,
+            location=form.location.data,
+            police_report=form.police_report.data,
+            insurance_claim=form.insurance_claim.data,
+            description=form.description.data,
+            notes=form.notes.data
+        )
+        
+        db.session.add(accident)
+        
+        # تحديث حالة السيارة إذا كان الحادث شديد
+        if form.vehicle_condition.data and 'شديد' in form.vehicle_condition.data:
+            vehicle.status = 'accident'
+            vehicle.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('create', 'vehicle_accident', accident.id, 
+                 f'تم إضافة سجل حادث مروري للسيارة: {vehicle.plate_number}')
+        
+        flash('تم إضافة سجل الحادث المروري بنجاح!', 'success')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    return render_template('vehicles/create_accident.html', form=form, vehicle=vehicle)
+
+@vehicles_bp.route('/accident/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_accident(id):
+    """تعديل سجل حادث مروري"""
+    accident = VehicleAccident.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(accident.vehicle_id)
+    form = VehicleAccidentForm(obj=accident)
+    
+    if form.validate_on_submit():
+        form.populate_obj(accident)
+        accident.updated_at = datetime.utcnow()
+        
+        # تحديث حالة السيارة إذا كان الحادث شديد
+        if form.vehicle_condition.data and 'شديد' in form.vehicle_condition.data:
+            vehicle.status = 'accident'
+        elif accident.accident_status == 'مغلق':
+            # إعادة حالة السيارة إلى متاحة إذا تم إغلاق الحادث
+            vehicle.status = 'available'
+        
+        vehicle.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('update', 'vehicle_accident', accident.id, 
+                 f'تم تعديل سجل حادث مروري للسيارة: {vehicle.plate_number}')
+        
+        flash('تم تعديل سجل الحادث المروري بنجاح!', 'success')
+        return redirect(url_for('vehicles.view', id=vehicle.id))
+    
+    return render_template('vehicles/edit_accident.html', form=form, accident=accident)
+
+@vehicles_bp.route('/accident/<int:id>/confirm-delete')
+@login_required
+def confirm_delete_accident(id):
+    """عرض صفحة تأكيد حذف سجل حادث مروري"""
+    accident = VehicleAccident.query.get_or_404(id)
+    return render_template('vehicles/delete_accident.html', accident=accident)
+
+@vehicles_bp.route('/accident/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_accident(id):
+    """حذف سجل حادث مروري"""
+    accident = VehicleAccident.query.get_or_404(id)
+    vehicle_id = accident.vehicle_id
+    vehicle = Vehicle.query.get(vehicle_id)
+    
+    # تسجيل الإجراء قبل الحذف
+    log_audit('delete', 'vehicle_accident', id, 
+             f'تم حذف سجل حادث مروري للسيارة: {vehicle.plate_number}')
+    
+    db.session.delete(accident)
+    
+    # تحقق مما إذا كانت حالة السيارة 'accident' وقم بتحديثها إلى 'available'
+    # فقط إذا لم يكن لديها سجلات حوادث أخرى
+    if vehicle.status == 'accident':
+        other_accidents = VehicleAccident.query.filter_by(vehicle_id=vehicle_id).filter(VehicleAccident.id != id).all()
+        if not other_accidents:
+            vehicle.status = 'available'
+            vehicle.updated_at = datetime.utcnow()
+    
+    db.session.commit()
+    
+    flash('تم حذف سجل الحادث المروري بنجاح!', 'success')
+    return redirect(url_for('vehicles.view', id=vehicle_id))
 
 # مسارات إدارة الإيجار
 @vehicles_bp.route('/<int:id>/rental/create', methods=['GET', 'POST'])
