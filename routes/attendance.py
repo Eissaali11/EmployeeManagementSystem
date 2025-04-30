@@ -723,6 +723,7 @@ def dashboard():
     }
     
     # 11. حساب معدل الحضور
+    # إجمالي سجلات الحضور اليومية
     total_days = (
         daily_stats_dict['present'] + 
         daily_stats_dict['absent'] + 
@@ -730,10 +731,26 @@ def dashboard():
         daily_stats_dict['sick']
     )
     
+    # إجمالي سجلات الحضور المتوقعة لليوم (جميع الموظفين النشطين)
+    # حساب إجمالي الموظفين النشطين يتم في سطور لاحقة من الكود
+    
     daily_attendance_rate = 0
     if total_days > 0:
         daily_attendance_rate = round((daily_stats_dict['present'] / total_days) * 100)
     
+    # حساب إجمالي الموظفين النشطين
+    if employee_ids:
+        active_employees_count = len(employee_ids)
+    else:
+        active_employees_count = db.session.query(func.count(Employee.id)).filter(
+            Employee.status == 'active'
+        ).scalar()
+    
+    # حساب كامل الأسبوع (7 أيام) × عدد الموظفين النشطين
+    # حساب عدد الأيام في الأسبوع (من بداية الأسبوع إلى نهايته)
+    days_in_week = (end_of_week - start_of_week).days + 1
+    
+    # إجمالي سجلات الحضور والغياب في الأسبوع
     total_days_week = (
         weekly_stats_dict['present'] + 
         weekly_stats_dict['absent'] + 
@@ -741,10 +758,25 @@ def dashboard():
         weekly_stats_dict['sick']
     )
     
-    weekly_attendance_rate = 0
-    if total_days_week > 0:
-        weekly_attendance_rate = round((weekly_stats_dict['present'] / total_days_week) * 100)
+    # حساب إجمالي سجلات الحضور المفترضة للأسبوع
+    total_expected_records_week = active_employees_count * days_in_week
     
+    weekly_attendance_rate = 0
+    if total_days_week > 0 and total_expected_records_week > 0:
+        # إذا كانت هناك سجلات متوقعة أكثر من المسجلة، نستخدم الإجمالي المتوقع
+        if total_expected_records_week > total_days_week:
+            weekly_attendance_rate = round((weekly_stats_dict['present'] / total_expected_records_week) * 100)
+        else:
+            weekly_attendance_rate = round((weekly_stats_dict['present'] / total_days_week) * 100)
+    
+    # حساب كامل الشهر × عدد الموظفين النشطين
+    days_in_month = (end_of_month - start_of_month).days + 1
+    
+    # عدد الأيام المتوقعة في الشهر (حتى اليوم الحالي فقط، لا نحسب الأيام المستقبلية)
+    # إذا كان نهاية الشهر بعد اليوم، نستخدم اليوم الحالي كنهاية
+    days_until_today = (min(end_of_month, today) - start_of_month).days + 1
+    
+    # إجمالي سجلات الحضور في الشهر
     total_days_month = (
         monthly_stats_dict['present'] + 
         monthly_stats_dict['absent'] + 
@@ -752,9 +784,16 @@ def dashboard():
         monthly_stats_dict['sick']
     )
     
+    # إجمالي سجلات الحضور المتوقعة للشهر (حتى اليوم الحالي)
+    total_expected_records_month = active_employees_count * days_until_today
+    
     monthly_attendance_rate = 0
-    if total_days_month > 0:
-        monthly_attendance_rate = round((monthly_stats_dict['present'] / total_days_month) * 100)
+    if total_days_month > 0 and total_expected_records_month > 0:
+        # إذا كانت هناك سجلات متوقعة أكثر من المسجلة، نستخدم الإجمالي المتوقع
+        if total_expected_records_month > total_days_month:
+            monthly_attendance_rate = round((monthly_stats_dict['present'] / total_expected_records_month) * 100)
+        else:
+            monthly_attendance_rate = round((monthly_stats_dict['present'] / total_days_month) * 100)
     
     return render_template(
         'attendance/dashboard.html',
