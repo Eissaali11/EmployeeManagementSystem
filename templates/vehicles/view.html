@@ -447,7 +447,7 @@
                                         <p class="mb-1">تاريخ الانتهاء:</p>
                                         <h4 class="mb-2">{{ vehicle.authorization_expiry_date.strftime('%Y-%m-%d') }}</h4>
                                         
-                                        {% set days_remaining = (vehicle.authorization_expiry_date - now().date()).days %}
+                                        {% set days_remaining = (vehicle.authorization_expiry_date - today).days %}
                                         
                                         {% if days_remaining < 0 %}
                                             <div class="badge bg-danger p-2 mb-2 w-100">منتهي منذ {{ days_remaining|abs }} يوم</div>
@@ -478,9 +478,9 @@
                         <!-- استمارة السيارة -->
                         <div class="col-md-4 mb-3">
                             <div class="card h-100 {% if vehicle.registration_expiry_date %}
-                                {% if (vehicle.registration_expiry_date - now().date()).days < 0 %}
+                                {% if (vehicle.registration_expiry_date - today).days < 0 %}
                                     border-danger
-                                {% elif (vehicle.registration_expiry_date - now().date()).days <= 30 %}
+                                {% elif (vehicle.registration_expiry_date - today).days <= 30 %}
                                     border-warning
                                 {% else %}
                                     border-success
@@ -497,7 +497,7 @@
                                         <p class="mb-1">تاريخ الانتهاء:</p>
                                         <h4 class="mb-2">{{ vehicle.registration_expiry_date.strftime('%Y-%m-%d') }}</h4>
                                         
-                                        {% set days_remaining = (vehicle.registration_expiry_date - now().date()).days %}
+                                        {% set days_remaining = (vehicle.registration_expiry_date - today).days %}
                                         
                                         {% if days_remaining < 0 %}
                                             <div class="badge bg-danger p-2 mb-2 w-100">منتهي منذ {{ days_remaining|abs }} يوم</div>
@@ -528,9 +528,9 @@
                         <!-- الفحص الدوري -->
                         <div class="col-md-4 mb-3">
                             <div class="card h-100 {% if vehicle.inspection_expiry_date %}
-                                {% if (vehicle.inspection_expiry_date - now().date()).days < 0 %}
+                                {% if (vehicle.inspection_expiry_date - today).days < 0 %}
                                     border-danger
-                                {% elif (vehicle.inspection_expiry_date - now().date()).days <= 30 %}
+                                {% elif (vehicle.inspection_expiry_date - today).days <= 30 %}
                                     border-warning
                                 {% else %}
                                     border-success
@@ -547,7 +547,7 @@
                                         <p class="mb-1">تاريخ الانتهاء:</p>
                                         <h4 class="mb-2">{{ vehicle.inspection_expiry_date.strftime('%Y-%m-%d') }}</h4>
                                         
-                                        {% set days_remaining = (vehicle.inspection_expiry_date - now().date()).days %}
+                                        {% set days_remaining = (vehicle.inspection_expiry_date - today).days %}
                                         
                                         {% if days_remaining < 0 %}
                                             <div class="badge bg-danger p-2 mb-2 w-100">منتهي منذ {{ days_remaining|abs }} يوم</div>
