@@ -48,8 +48,23 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "pool_timeout": 30,  # زمن انتظار الاتصال بقاعدة البيانات (بالثواني)
+    "pool_size": 10,  # عدد الاتصالات المتزامنة في المجمع
+    "max_overflow": 5,  # عدد الاتصالات الإضافية المسموح بها
+    "pool_reset_on_return": "rollback",  # إعادة ضبط الاتصال عند إعادته إلى المجمع
+    "connect_args": {
+        # إعدادات SSl - قد تحتاج للتعديل حسب إعدادات قاعدة البيانات
+        "connect_timeout": 10,  # زمن انتظار الاتصال الأولي (بالثواني)
+        "keepalives": 1,  # تفعيل إشارات keepalive
+        "keepalives_idle": 30,  # زمن الخمول قبل إرسال إشارة keepalive
+        "keepalives_interval": 10,  # الفاصل الزمني بين إشارات keepalive
+        "keepalives_count": 5,  # عدد محاولات keepalive قبل اعتبار الاتصال مقطوعاً
+    }
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"]["execution_options"] = {
+    "isolation_level": "READ COMMITTED"  # مستوى عزل المعاملات
+}
 
 # Provide default values for uploads and other configurations
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB

@@ -1,0 +1,39 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ error_title or 'خطأ' }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center p-5">
+                    <h1 class="display-4 text-danger mb-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </h1>
+                    <h2 class="card-title mb-4">{{ error_title or 'حدث خطأ' }}</h2>
+                    <p class="card-text fs-5 mb-4">{{ error_message or 'حدث خطأ أثناء معالجة طلبك. الرجاء المحاولة مرة أخرى.' }}</p>
+                    
+                    {% if error_details %}
+                    <div class="alert alert-secondary mt-4">
+                        <p class="small text-muted mb-1">تفاصيل الخطأ:</p>
+                        <code class="d-block p-3 bg-light rounded">{{ error_details }}</code>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-5">
+                        <a href="{{ url_for('root') }}" class="btn btn-primary me-2">
+                            <i class="fas fa-home"></i>
+                            العودة للصفحة الرئيسية
+                        </a>
+                        <button onclick="window.history.back()" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-right"></i>
+                            الرجوع للخلف
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
