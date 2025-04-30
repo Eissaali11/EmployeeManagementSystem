@@ -40,7 +40,7 @@
                         </table>
                     </div>
                     
-                    <form method="post">
+                    <form method="post" action="{{ url_for('vehicles.delete_accident', id=accident.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="d-flex justify-content-between">
                             <a href="{{ url_for('vehicles.view', id=accident.vehicle_id) }}" class="btn btn-secondary">
