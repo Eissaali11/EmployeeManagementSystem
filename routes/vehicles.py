@@ -14,7 +14,7 @@ from app import db
 from models import (
     Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
     VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
-    VehiclePeriodicInspection, VehicleSafetyCheck, Employee
+    VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee
 )
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.vehicle_report import generate_complete_vehicle_report
