@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
-from sqlalchemy import func
-from datetime import datetime, time, timedelta
+from sqlalchemy import func, extract
+from datetime import datetime, time, timedelta, date
 from app import db
-from models import Attendance, Employee, Department, SystemAudit
+from models import Attendance, Employee, Department, SystemAudit, VehicleProject
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
 from utils.excel import export_attendance_by_department
+import calendar
 
 attendance_bp = Blueprint('attendance', __name__)
 
@@ -498,6 +499,274 @@ def get_department_employees(department_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
         
+@attendance_bp.route('/dashboard')
+def dashboard():
+    """لوحة معلومات الحضور مع إحصائيات يومية وأسبوعية وشهرية"""
+    # 1. الحصول على المشروع المحدد (إذا وجد)
+    project_name = request.args.get('project', None)
+    
+    # 2. الحصول على التاريخ الحالي
+    today = datetime.now().date()
+    current_month = today.month
+    current_year = today.year
+    
+    # 3. حساب تاريخ بداية ونهاية الأسبوع الحالي (الأحد إلى السبت)
+    start_of_week = today - timedelta(days=today.weekday()+1)  # الرجوع إلى الأحد الماضي
+    if start_of_week.month != today.month:
+        # إذا كان الأحد من الشهر السابق، نبدأ من أول الشهر
+        start_of_week = today.replace(day=1)
+    end_of_week = start_of_week + timedelta(days=6)  # 6 أيام بعد الأحد تكون السبت
+    
+    # 4. حساب تاريخ بداية ونهاية الشهر الحالي
+    start_of_month = today.replace(day=1)
+    last_day = calendar.monthrange(current_year, current_month)[1]
+    end_of_month = today.replace(day=last_day)
+    
+    # 5. إنشاء قاعدة الاستعلام
+    query_base = db.session.query(
+        Attendance.status,
+        func.count(Attendance.id).label('count')
+    )
+    
+    # 6. إحصائيات الحضور حسب المشروع أو عامة
+    if project_name:
+        # استعلام للموظفين في مشروع محدد
+        # نحتاج للحصول على قائمة الموظفين المرتبطين بالمشروع
+        project_employees = db.session.query(Employee.id).join(
+            VehicleProject, Employee.department_id == VehicleProject.department_id
+        ).filter(
+            VehicleProject.project_name == project_name,
+            VehicleProject.is_active == True
+        ).all()
+        
+        employee_ids = [emp[0] for emp in project_employees]
+        
+        if not employee_ids:
+            # لا يوجد موظفين في هذا المشروع
+            daily_stats = {}
+            weekly_stats = {}
+            monthly_stats = {}
+        else:
+            # إحصائيات اليوم
+            daily_stats = query_base.filter(
+                Attendance.date == today,
+                Attendance.employee_id.in_(employee_ids)
+            ).group_by(Attendance.status).all()
+            
+            # إحصائيات الأسبوع
+            weekly_stats = query_base.filter(
+                Attendance.date >= start_of_week,
+                Attendance.date <= end_of_week,
+                Attendance.employee_id.in_(employee_ids)
+            ).group_by(Attendance.status).all()
+            
+            # إحصائيات الشهر
+            monthly_stats = query_base.filter(
+                Attendance.date >= start_of_month,
+                Attendance.date <= end_of_month,
+                Attendance.employee_id.in_(employee_ids)
+            ).group_by(Attendance.status).all()
+    else:
+        # إحصائيات عامة لجميع الموظفين
+        # إحصائيات اليوم
+        daily_stats = query_base.filter(
+            Attendance.date == today
+        ).group_by(Attendance.status).all()
+        
+        # إحصائيات الأسبوع
+        weekly_stats = query_base.filter(
+            Attendance.date >= start_of_week,
+            Attendance.date <= end_of_week
+        ).group_by(Attendance.status).all()
+        
+        # إحصائيات الشهر
+        monthly_stats = query_base.filter(
+            Attendance.date >= start_of_month,
+            Attendance.date <= end_of_month
+        ).group_by(Attendance.status).all()
+    
+    # 7. إحصائيات الحضور اليومي خلال الشهر الحالي لعرضها في المخطط البياني
+    daily_attendance_data = []
+    
+    for day in range(1, last_day + 1):
+        current_date = date(current_year, current_month, day)
+        
+        # تخطي التواريخ المستقبلية
+        if current_date > today:
+            break
+            
+        if project_name and employee_ids:
+            present_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.date == current_date,
+                Attendance.status == 'present',
+                Attendance.employee_id.in_(employee_ids)
+            ).scalar() or 0
+            
+            absent_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.date == current_date,
+                Attendance.status == 'absent',
+                Attendance.employee_id.in_(employee_ids)
+            ).scalar() or 0
+        else:
+            present_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.date == current_date,
+                Attendance.status == 'present'
+            ).scalar() or 0
+            
+            absent_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.date == current_date,
+                Attendance.status == 'absent'
+            ).scalar() or 0
+            
+        daily_attendance_data.append({
+            'date': current_date.strftime('%Y-%m-%d'),
+            'day': str(day),
+            'present': present_count,
+            'absent': absent_count
+        })
+        
+    # 8. الحصول على قائمة المشاريع النشطة للفلتر
+    active_projects = db.session.query(VehicleProject.project_name).filter(
+        VehicleProject.is_active == True
+    ).distinct().all()
+    
+    active_projects = [project[0] for project in active_projects]
+    
+    # 9. تحويل البيانات إلى قاموس
+    def stats_to_dict(stats_data):
+        result = {'present': 0, 'absent': 0, 'leave': 0, 'sick': 0}
+        for item in stats_data:
+            result[item[0]] = item[1]
+        return result
+    
+    daily_stats_dict = stats_to_dict(daily_stats)
+    weekly_stats_dict = stats_to_dict(weekly_stats)
+    monthly_stats_dict = stats_to_dict(monthly_stats)
+    
+    # 10. إعداد البيانات للمخططات البيانية
+    # 10.أ. مخطط توزيع الحضور اليومي
+    daily_chart_data = {
+        'labels': ['حاضر', 'غائب', 'إجازة', 'مرضي'],
+        'datasets': [{
+            'data': [
+                daily_stats_dict['present'],
+                daily_stats_dict['absent'],
+                daily_stats_dict['leave'],
+                daily_stats_dict['sick']
+            ],
+            'backgroundColor': ['#28a745', '#dc3545', '#ffc107', '#17a2b8']
+        }]
+    }
+    
+    # 10.ب. مخطط توزيع الحضور الأسبوعي
+    weekly_chart_data = {
+        'labels': ['حاضر', 'غائب', 'إجازة', 'مرضي'],
+        'datasets': [{
+            'data': [
+                weekly_stats_dict['present'],
+                weekly_stats_dict['absent'],
+                weekly_stats_dict['leave'],
+                weekly_stats_dict['sick']
+            ],
+            'backgroundColor': ['#28a745', '#dc3545', '#ffc107', '#17a2b8']
+        }]
+    }
+    
+    # 10.ج. مخطط توزيع الحضور الشهري
+    monthly_chart_data = {
+        'labels': ['حاضر', 'غائب', 'إجازة', 'مرضي'],
+        'datasets': [{
+            'data': [
+                monthly_stats_dict['present'],
+                monthly_stats_dict['absent'],
+                monthly_stats_dict['leave'],
+                monthly_stats_dict['sick']
+            ],
+            'backgroundColor': ['#28a745', '#dc3545', '#ffc107', '#17a2b8']
+        }]
+    }
+    
+    # 10.د. مخطط الحضور اليومي خلال الشهر
+    daily_trend_chart_data = {
+        'labels': [item['day'] for item in daily_attendance_data],
+        'datasets': [
+            {
+                'label': 'الحضور',
+                'data': [item['present'] for item in daily_attendance_data],
+                'backgroundColor': 'rgba(40, 167, 69, 0.2)',
+                'borderColor': 'rgba(40, 167, 69, 1)',
+                'borderWidth': 1,
+                'tension': 0.4
+            },
+            {
+                'label': 'الغياب',
+                'data': [item['absent'] for item in daily_attendance_data],
+                'backgroundColor': 'rgba(220, 53, 69, 0.2)',
+                'borderColor': 'rgba(220, 53, 69, 1)',
+                'borderWidth': 1,
+                'tension': 0.4
+            }
+        ]
+    }
+    
+    # 11. حساب معدل الحضور
+    total_days = (
+        daily_stats_dict['present'] + 
+        daily_stats_dict['absent'] + 
+        daily_stats_dict['leave'] + 
+        daily_stats_dict['sick']
+    )
+    
+    daily_attendance_rate = 0
+    if total_days > 0:
+        daily_attendance_rate = round((daily_stats_dict['present'] / total_days) * 100)
+    
+    total_days_week = (
+        weekly_stats_dict['present'] + 
+        weekly_stats_dict['absent'] + 
+        weekly_stats_dict['leave'] + 
+        weekly_stats_dict['sick']
+    )
+    
+    weekly_attendance_rate = 0
+    if total_days_week > 0:
+        weekly_attendance_rate = round((weekly_stats_dict['present'] / total_days_week) * 100)
+    
+    total_days_month = (
+        monthly_stats_dict['present'] + 
+        monthly_stats_dict['absent'] + 
+        monthly_stats_dict['leave'] + 
+        monthly_stats_dict['sick']
+    )
+    
+    monthly_attendance_rate = 0
+    if total_days_month > 0:
+        monthly_attendance_rate = round((monthly_stats_dict['present'] / total_days_month) * 100)
+    
+    return render_template(
+        'attendance/dashboard.html',
+        daily_stats=daily_stats_dict,
+        weekly_stats=weekly_stats_dict,
+        monthly_stats=monthly_stats_dict,
+        daily_chart_data=daily_chart_data,
+        weekly_chart_data=weekly_chart_data,
+        monthly_chart_data=monthly_chart_data,
+        daily_trend_chart_data=daily_trend_chart_data,
+        daily_attendance_rate=daily_attendance_rate,
+        weekly_attendance_rate=weekly_attendance_rate,
+        monthly_attendance_rate=monthly_attendance_rate,
+        start_of_week=start_of_week,
+        end_of_week=end_of_week,
+        today=today,
+        current_month_name={
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 5: 'مايو', 6: 'يونيو',
+            7: 'يوليو', 8: 'أغسطس', 9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+        }[current_month],
+        current_year=current_year,
+        active_projects=active_projects,
+        selected_project=project_name
+    )
+
 @attendance_bp.route('/employee/<int:employee_id>')
 def employee_attendance(employee_id):
     """عرض سجلات الحضور التفصيلية للموظف مرتبة حسب الشهر والسنة"""
