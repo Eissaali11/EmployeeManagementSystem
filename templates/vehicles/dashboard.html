@@ -349,6 +349,129 @@
                 </div>
             </div>
             
+            <!-- السيارات ذات الوثائق المنتهية -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-circle ms-2 text-danger"></i>
+                        السيارات ذات الوثائق المنتهية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs mb-3" id="expiredDocsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration-tab-pane" type="button" role="tab" aria-controls="registration-tab-pane" aria-selected="true">
+                                الاستمارة
+                                <span class="badge bg-danger ms-1">{{ expired_registration_vehicles|length }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="inspection-tab" data-bs-toggle="tab" data-bs-target="#inspection-tab-pane" type="button" role="tab" aria-controls="inspection-tab-pane" aria-selected="false">
+                                الفحص الدوري
+                                <span class="badge bg-danger ms-1">{{ expired_inspection_vehicles|length }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="authorization-tab" data-bs-toggle="tab" data-bs-target="#authorization-tab-pane" type="button" role="tab" aria-controls="authorization-tab-pane" aria-selected="false">
+                                التفويض
+                                <span class="badge bg-danger ms-1">{{ expired_authorization_vehicles|length }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="expiredDocsTabContent">
+                        <!-- الاستمارة -->
+                        <div class="tab-pane fade show active" id="registration-tab-pane" role="tabpanel" aria-labelledby="registration-tab" tabindex="0">
+                            {% if expired_registration_vehicles %}
+                                <div class="list-group">
+                                    {% for vehicle in expired_registration_vehicles %}
+                                        {% set days_expired = (today - vehicle.registration_expiry_date).days %}
+                                        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold">{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</div>
+                                                    <div class="small text-danger">
+                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                        منتهية منذ {{ days_expired }} يوم
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-secondary">{{ vehicle.year }}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    لا توجد استمارات منتهية حالياً
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- الفحص الدوري -->
+                        <div class="tab-pane fade" id="inspection-tab-pane" role="tabpanel" aria-labelledby="inspection-tab" tabindex="0">
+                            {% if expired_inspection_vehicles %}
+                                <div class="list-group">
+                                    {% for vehicle in expired_inspection_vehicles %}
+                                        {% set days_expired = (today - vehicle.inspection_expiry_date).days %}
+                                        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold">{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</div>
+                                                    <div class="small text-danger">
+                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                        منتهي منذ {{ days_expired }} يوم
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-secondary">{{ vehicle.year }}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    لا توجد فحوصات دورية منتهية حالياً
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- التفويض -->
+                        <div class="tab-pane fade" id="authorization-tab-pane" role="tabpanel" aria-labelledby="authorization-tab" tabindex="0">
+                            {% if expired_authorization_vehicles %}
+                                <div class="list-group">
+                                    {% for vehicle in expired_authorization_vehicles %}
+                                        {% set days_expired = (today - vehicle.authorization_expiry_date).days %}
+                                        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold">{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</div>
+                                                    <div class="small text-danger">
+                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                        منتهي منذ {{ days_expired }} يوم
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-secondary">{{ vehicle.year }}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    لا توجد تفويضات منتهية حالياً
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- إحصائيات سريعة -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white">

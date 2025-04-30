@@ -1529,6 +1529,27 @@ def dashboard():
             'model': vehicle.model
         })
     
+    # استرجاع السيارات ذات الوثائق المنتهية
+    today = datetime.now().date()
+    
+    # السيارات ذات استمارة منتهية
+    expired_registration_vehicles = Vehicle.query.filter(
+        Vehicle.registration_expiry_date.isnot(None),
+        Vehicle.registration_expiry_date < today
+    ).order_by(Vehicle.registration_expiry_date).all()
+    
+    # السيارات ذات فحص دوري منتهي
+    expired_inspection_vehicles = Vehicle.query.filter(
+        Vehicle.inspection_expiry_date.isnot(None),
+        Vehicle.inspection_expiry_date < today
+    ).order_by(Vehicle.inspection_expiry_date).all()
+    
+    # السيارات ذات تفويض منتهي
+    expired_authorization_vehicles = Vehicle.query.filter(
+        Vehicle.authorization_expiry_date.isnot(None),
+        Vehicle.authorization_expiry_date < today
+    ).order_by(Vehicle.authorization_expiry_date).all()
+    
     # إعداد بيانات حالة السيارات بالتنسيق المطلوب في القالب
     status_counts = {
         'available': status_dict.get('available', 0),
@@ -1610,7 +1631,11 @@ def dashboard():
         monthly_costs=monthly_costs,
         alerts=alerts,
         rental_cost_data=rental_cost_data,
-        maintenance_cost_data=maintenance_cost_data
+        maintenance_cost_data=maintenance_cost_data,
+        expired_registration_vehicles=expired_registration_vehicles,
+        expired_inspection_vehicles=expired_inspection_vehicles,
+        expired_authorization_vehicles=expired_authorization_vehicles,
+        today=today
     )
 
 @vehicles_bp.route('/reports')
