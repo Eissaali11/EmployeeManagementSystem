@@ -444,6 +444,7 @@ def create_accident(id):
             vehicle_condition=form.vehicle_condition.data,
             deduction_amount=form.deduction_amount.data,
             deduction_status=form.deduction_status.data,
+            liability_percentage=form.liability_percentage.data,
             accident_file_link=form.accident_file_link.data,
             location=form.location.data,
             police_report=form.police_report.data,

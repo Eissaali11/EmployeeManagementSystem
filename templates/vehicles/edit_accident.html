@@ -79,6 +79,19 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    {{ form.liability_percentage.label(class="form-label") }}
+                                    {{ form.liability_percentage(class="form-select") }}
+                                    {% if form.liability_percentage.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.liability_percentage.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     {{ form.deduction_amount.label(class="form-label") }}
                                     {{ form.deduction_amount(class="form-control") }}
                                     {% if form.deduction_amount.errors %}
@@ -90,8 +103,11 @@
                                     {% endif %}
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="row mb-3">
                             <div class="col-md-6">
-                                <div class="form-group mt-4">
+                                <div class="form-group mt-2">
                                     <div class="form-check">
                                         {{ form.deduction_status(class="form-check-input") }}
                                         {{ form.deduction_status.label(class="form-check-label") }}
