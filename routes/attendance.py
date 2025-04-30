@@ -529,24 +529,34 @@ def dashboard():
     )
     
     # 6. إحصائيات الحضور حسب المشروع أو عامة
+    # تعريف قائمة معرفات الموظفين (سيكون None للكل)
+    employee_ids = None
+    
     if project_name:
         # استعلام للموظفين في مشروع محدد
         # نحتاج للحصول على قائمة الموظفين المرتبطين بالمشروع
-        project_employees = db.session.query(Employee.id).join(
-            VehicleProject, Employee.department_id == VehicleProject.department_id
-        ).filter(
-            VehicleProject.project_name == project_name,
-            VehicleProject.is_active == True
+        project_employees = db.session.query(Employee.id).filter(
+            Employee.project == project_name,
+            Employee.status == 'active'
         ).all()
         
+        # تحويل النتائج إلى قائمة بسيطة من المعرفات
         employee_ids = [emp[0] for emp in project_employees]
-        
-        if not employee_ids:
-            # لا يوجد موظفين في هذا المشروع
-            daily_stats = {}
-            weekly_stats = {}
-            monthly_stats = {}
-        else:
+    
+    # تعريف ونهيئة متغيرات إحصائية
+    daily_stats = []
+    weekly_stats = []
+    monthly_stats = []
+    
+    # إذا كان هناك مشروع محدد ولا يوجد موظفين فيه، نترك الإحصائيات فارغة
+    if project_name and not employee_ids:
+        # لا يوجد موظفين في هذا المشروع، نترك الإحصائيات فارغة
+        pass
+    else:
+        # بناء استعلامات الإحصائيات إما لجميع الموظفين أو لموظفي مشروع محدد
+        if employee_ids:
+            # إحصائيات الموظفين في المشروع المحدد
+            
             # إحصائيات اليوم
             daily_stats = query_base.filter(
                 Attendance.date == today,
@@ -566,24 +576,25 @@ def dashboard():
                 Attendance.date <= end_of_month,
                 Attendance.employee_id.in_(employee_ids)
             ).group_by(Attendance.status).all()
-    else:
-        # إحصائيات عامة لجميع الموظفين
-        # إحصائيات اليوم
-        daily_stats = query_base.filter(
-            Attendance.date == today
-        ).group_by(Attendance.status).all()
-        
-        # إحصائيات الأسبوع
-        weekly_stats = query_base.filter(
-            Attendance.date >= start_of_week,
-            Attendance.date <= end_of_week
-        ).group_by(Attendance.status).all()
-        
-        # إحصائيات الشهر
-        monthly_stats = query_base.filter(
-            Attendance.date >= start_of_month,
-            Attendance.date <= end_of_month
-        ).group_by(Attendance.status).all()
+        else:
+            # إحصائيات عامة لجميع الموظفين
+            
+            # إحصائيات اليوم
+            daily_stats = query_base.filter(
+                Attendance.date == today
+            ).group_by(Attendance.status).all()
+            
+            # إحصائيات الأسبوع
+            weekly_stats = query_base.filter(
+                Attendance.date >= start_of_week,
+                Attendance.date <= end_of_week
+            ).group_by(Attendance.status).all()
+            
+            # إحصائيات الشهر
+            monthly_stats = query_base.filter(
+                Attendance.date >= start_of_month,
+                Attendance.date <= end_of_month
+            ).group_by(Attendance.status).all()
     
     # 7. إحصائيات الحضور اليومي خلال الشهر الحالي لعرضها في المخطط البياني
     daily_attendance_data = []
@@ -595,7 +606,8 @@ def dashboard():
         if current_date > today:
             break
             
-        if project_name and employee_ids:
+        # استخدام employee_ids مباشرة بعد التأكد من أنه تم تعريفه في خطوة سابقة
+        if employee_ids:
             present_count = db.session.query(func.count(Attendance.id)).filter(
                 Attendance.date == current_date,
                 Attendance.status == 'present',
@@ -626,11 +638,12 @@ def dashboard():
         })
         
     # 8. الحصول على قائمة المشاريع النشطة للفلتر
-    active_projects = db.session.query(VehicleProject.project_name).filter(
-        VehicleProject.is_active == True
+    active_projects = db.session.query(Employee.project).filter(
+        Employee.status == 'active',
+        Employee.project.isnot(None)
     ).distinct().all()
     
-    active_projects = [project[0] for project in active_projects]
+    active_projects = [project[0] for project in active_projects if project[0]]
     
     # 9. تحويل البيانات إلى قاموس
     def stats_to_dict(stats_data):
