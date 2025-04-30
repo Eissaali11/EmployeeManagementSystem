@@ -22,6 +22,13 @@ class VehicleAccidentForm(FlaskForm):
     vehicle_condition = StringField('حالة السيارة', validators=[Optional(), Length(max=100)])
     deduction_amount = DecimalField('مبلغ الخصم على السائق', validators=[Optional(), NumberRange(min=0)], default=0.0)
     deduction_status = BooleanField('تم الخصم')
+    liability_percentage = SelectField('نسبة تحمل السائق', choices=[
+        ('0', 'لا يوجد تحمل (0%)'),
+        ('25', 'تحمل جزئي (25%)'),
+        ('50', 'تحمل متوسط (50%)'),
+        ('75', 'تحمل كبير (75%)'),
+        ('100', 'تحمل كامل (100%)')
+    ], default='0', coerce=int)
     accident_file_link = StringField('رابط ملف الحادث', validators=[Optional(), URL()])
     location = StringField('موقع الحادث', validators=[Optional(), Length(max=255)])
     police_report = BooleanField('تم عمل محضر شرطة')

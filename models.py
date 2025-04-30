@@ -685,6 +685,7 @@ class VehicleAccident(db.Model):
     vehicle_condition = db.Column(db.String(100))  # حالة السيارة بعد الحادث
     deduction_amount = db.Column(db.Float, default=0.0)  # مبلغ الخصم على السائق
     deduction_status = db.Column(db.Boolean, default=False)  # هل تم الخصم
+    liability_percentage = db.Column(db.Integer, default=0)  # نسبة تحمل السائق للحادث (25%، 50%، 75%، 100%)
     accident_file_link = db.Column(db.String(255))  # رابط ملف الحادث
     location = db.Column(db.String(255))  # موقع الحادث
     description = db.Column(db.Text)  # وصف الحادث

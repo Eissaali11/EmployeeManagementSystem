@@ -983,6 +983,7 @@
                                         <th>اسم السائق</th>
                                         <th>حالة الحادث</th>
                                         <th>حالة السيارة</th>
+                                        <th>نسبة التحمل</th>
                                         <th>مبلغ الخصم</th>
                                         <th>حالة الخصم</th>
                                         <th>المستندات</th>
@@ -1008,6 +1009,23 @@
                                             {% endif %}
                                         </td>
                                         <td>{{ accident.vehicle_condition or 'غير محدد' }}</td>
+                                        <td>
+                                            {% if accident.liability_percentage > 0 %}
+                                                {% if accident.liability_percentage == 25 %}
+                                                    <span class="badge bg-info">تحمل جزئي (25%)</span>
+                                                {% elif accident.liability_percentage == 50 %}
+                                                    <span class="badge bg-warning text-dark">تحمل متوسط (50%)</span>
+                                                {% elif accident.liability_percentage == 75 %}
+                                                    <span class="badge bg-danger">تحمل كبير (75%)</span>
+                                                {% elif accident.liability_percentage == 100 %}
+                                                    <span class="badge bg-dark">تحمل كامل (100%)</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ accident.liability_percentage }}%</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-light text-dark">لا يوجد تحمل (0%)</span>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             {% if accident.deduction_amount > 0 %}
                                                 {{ "{:,.2f}".format(accident.deduction_amount) }} ريال
