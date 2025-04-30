@@ -341,6 +341,7 @@ class Vehicle(db.Model):
     handover_records = db.relationship('VehicleHandover', back_populates='vehicle', cascade='all, delete-orphan')
     periodic_inspections = db.relationship('VehiclePeriodicInspection', back_populates='vehicle', cascade='all, delete-orphan')
     safety_checks = db.relationship('VehicleSafetyCheck', back_populates='vehicle', cascade='all, delete-orphan')
+    accidents = db.relationship('VehicleAccident', back_populates='vehicle', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Vehicle {self.plate_number} {self.make} {self.model}>'
@@ -672,5 +673,31 @@ class VehicleSafetyCheck(db.Model):
     
     def __repr__(self):
         return f'<VehicleSafetyCheck {self.id} {self.check_type} check for vehicle {self.vehicle_id}>'
+
+
+class VehicleAccident(db.Model):
+    """نموذج الحوادث المرورية للمركبات"""
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    accident_date = db.Column(db.Date, nullable=False)  # تاريخ الحادث
+    driver_name = db.Column(db.String(100), nullable=False)  # اسم السائق
+    accident_status = db.Column(db.String(50), default='قيد المعالجة')  # حالة الحادث: قيد المعالجة، مغلق، معلق، إلخ
+    vehicle_condition = db.Column(db.String(100))  # حالة السيارة بعد الحادث
+    deduction_amount = db.Column(db.Float, default=0.0)  # مبلغ الخصم على السائق
+    deduction_status = db.Column(db.Boolean, default=False)  # هل تم الخصم
+    accident_file_link = db.Column(db.String(255))  # رابط ملف الحادث
+    location = db.Column(db.String(255))  # موقع الحادث
+    description = db.Column(db.Text)  # وصف الحادث
+    police_report = db.Column(db.Boolean, default=False)  # هل تم عمل محضر شرطة
+    insurance_claim = db.Column(db.Boolean, default=False)  # هل تم رفع مطالبة للتأمين
+    notes = db.Column(db.Text)  # ملاحظات إضافية
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', back_populates='accidents')
+    
+    def __repr__(self):
+        return f'<VehicleAccident {self.id} for vehicle {self.vehicle_id} on {self.accident_date}>'
 
 
