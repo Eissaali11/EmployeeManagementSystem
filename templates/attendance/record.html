@@ -20,10 +20,13 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="employee_id" class="form-label required-field">الموظف</label>
+                                <div class="mb-2">
+                                    <input type="text" class="form-control" id="employee_search" placeholder="ابحث عن موظف..." autocomplete="off">
+                                </div>
                                 <select class="form-select" id="employee_id" name="employee_id" required>
                                     <option value="">اختر الموظف</option>
                                     {% for employee in employees %}
-                                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>
+                                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %} data-search-text="{{ employee.name }} {{ employee.employee_id }}">
                                         {{ employee.name }} ({{ employee.employee_id }})
                                     </option>
                                     {% endfor %}
@@ -126,6 +129,43 @@
         // عند تغيير الحالة
         statusRadios.forEach(function(radio) {
             radio.addEventListener('change', toggleTimeFields);
+        });
+        
+        // وظيفة البحث في قائمة الموظفين
+        const employeeSearch = document.getElementById('employee_search');
+        const employeeSelect = document.getElementById('employee_id');
+        const employeeOptions = Array.from(employeeSelect.options);
+        
+        employeeSearch.addEventListener('input', function() {
+            const searchText = employeeSearch.value.trim().toLowerCase();
+            
+            // إذا كان البحث فارغاً، عرض جميع الخيارات
+            if (searchText === '') {
+                employeeSelect.innerHTML = '';
+                employeeOptions.forEach(option => {
+                    employeeSelect.appendChild(option);
+                });
+                return;
+            }
+            
+            // فلترة الخيارات حسب نص البحث
+            const filteredOptions = employeeOptions.filter(option => {
+                if (option.value === '') return true; // دائماً نعرض خيار "اختر الموظف"
+                
+                const optionText = option.getAttribute('data-search-text') || option.textContent;
+                return optionText.toLowerCase().includes(searchText);
+            });
+            
+            // عرض الخيارات المفلترة فقط
+            employeeSelect.innerHTML = '';
+            filteredOptions.forEach(option => {
+                employeeSelect.appendChild(option.cloneNode(true));
+            });
+            
+            // إذا كان هناك نتيجة واحدة فقط (غير خيار "اختر الموظف")، حددها تلقائياً
+            if (filteredOptions.length === 2 && filteredOptions[0].value === '') {
+                employeeSelect.value = filteredOptions[1].value;
+            }
         });
     });
 </script>
