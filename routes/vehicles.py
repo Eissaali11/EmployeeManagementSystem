@@ -737,16 +737,25 @@ def create_workshop(id):
 @login_required
 def edit_workshop(id):
     """تعديل سجل ورشة"""
+    current_app.logger.info(f"تم استدعاء edit_workshop مع معرف: {id}, طريقة: {request.method}")
+    
     # الحصول على سجل الورشة والسيارة
     workshop = VehicleWorkshop.query.get_or_404(id)
     vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
+    current_app.logger.info(f"تم العثور على سجل الورشة: {workshop.id} للسيارة: {vehicle.plate_number}")
     
     # الحصول على الصور الحالية
     before_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='before').all()
     after_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='after').all()
+    current_app.logger.info(f"تم العثور على {len(before_images)} صور قبل و {len(after_images)} صور بعد")
     
     if request.method == 'POST':
         try:
+            # تسجيل معلومات النموذج للتصحيح
+            current_app.logger.info(f"تم استقبال طلب POST لتعديل سجل الورشة {id}")
+            current_app.logger.info(f"بيانات النموذج: {request.form}")
+            current_app.logger.info(f"الملفات: {request.files}")
+            
             # الحصول على البيانات من الطلب
             entry_date_str = request.form.get('entry_date')
             exit_date_str = request.form.get('exit_date')

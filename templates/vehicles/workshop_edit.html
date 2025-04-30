@@ -70,9 +70,7 @@
                     </div>
                     
                     <form method="post" action="{{ url_for('vehicles.edit_workshop', id=workshop.id) }}" enctype="multipart/form-data" id="workshop-edit-form">
-                        {% if form %}
-                        {{ form.csrf_token() }}
-                        {% endif %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="entry_date" class="form-label required">تاريخ دخول الورشة</label>
@@ -263,18 +261,12 @@
         const submitButton = document.querySelector('button[type="submit"]');
         
         editForm.addEventListener('submit', function(event) {
-            // منع السلوك الافتراضي للنموذج
-            event.preventDefault();
-            
-            // تعطيل الزر لمنع النقر المتعدد
+            // فقط تعطيل الزر لمنع النقر المتعدد وتغيير نصه
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
             
-            // تأخير قصير لعرض حالة التحميل
-            setTimeout(function() {
-                // إرسال النموذج
-                editForm.submit();
-            }, 100);
+            // نسمح للنموذج بالإرسال بشكل طبيعي
+            return true;
         });
     });
 </script>
