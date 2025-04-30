@@ -15,6 +15,10 @@
                 <i class="fas fa-edit ms-1"></i>
                 تعديل السيارة
             </a>
+            <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-primary me-2">
+                <i class="fas fa-id-card ms-1"></i>
+                وثائق المركبة
+            </a>
             <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-danger me-2">
                 <i class="fas fa-trash ms-1"></i>
                 حذف السيارة
@@ -399,6 +403,178 @@
                             </a>
                         </div>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- وثائق المركبة -->
+    <div class="row mb-4">
+        <!-- بطاقة معلومات وثائق المركبة -->
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card ms-2"></i>
+                        وثائق المركبة
+                    </h5>
+                    <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit ms-1"></i>
+                        تعديل تواريخ الوثائق
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- تفويض المركبة -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 {% if vehicle.authorization_expiry_date %}
+                                {% if (vehicle.authorization_expiry_date - now().date()).days < 0 %}
+                                    border-danger
+                                {% elif (vehicle.authorization_expiry_date - now().date()).days <= 30 %}
+                                    border-warning
+                                {% else %}
+                                    border-success
+                                {% endif %}
+                            {% else %}
+                                border-light
+                            {% endif %}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title mb-3">
+                                        <i class="fas fa-file-contract me-1"></i>
+                                        تفويض المركبة
+                                    </h5>
+                                    {% if vehicle.authorization_expiry_date %}
+                                        <p class="mb-1">تاريخ الانتهاء:</p>
+                                        <h4 class="mb-2">{{ vehicle.authorization_expiry_date.strftime('%Y-%m-%d') }}</h4>
+                                        
+                                        {% set days_remaining = (vehicle.authorization_expiry_date - now().date()).days %}
+                                        
+                                        {% if days_remaining < 0 %}
+                                            <div class="badge bg-danger p-2 mb-2 w-100">منتهي منذ {{ days_remaining|abs }} يوم</div>
+                                        {% elif days_remaining <= 30 %}
+                                            <div class="badge bg-warning text-dark p-2 mb-2 w-100">يتبقى {{ days_remaining }} يوم</div>
+                                        {% else %}
+                                            <div class="badge bg-success p-2 mb-2 w-100">يتبقى {{ days_remaining }} يوم</div>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary w-100">
+                                            <i class="fas fa-eye ms-1"></i>
+                                            التفاصيل
+                                        </a>
+                                    {% else %}
+                                        <div class="text-muted mb-3">
+                                            <i class="fas fa-exclamation-circle fa-2x"></i>
+                                            <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                                        </div>
+                                        <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" class="btn btn-sm btn-primary w-100">
+                                            <i class="fas fa-plus ms-1"></i>
+                                            إضافة التاريخ
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- استمارة السيارة -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 {% if vehicle.registration_expiry_date %}
+                                {% if (vehicle.registration_expiry_date - now().date()).days < 0 %}
+                                    border-danger
+                                {% elif (vehicle.registration_expiry_date - now().date()).days <= 30 %}
+                                    border-warning
+                                {% else %}
+                                    border-success
+                                {% endif %}
+                            {% else %}
+                                border-light
+                            {% endif %}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title mb-3">
+                                        <i class="fas fa-clipboard-list me-1"></i>
+                                        استمارة السيارة
+                                    </h5>
+                                    {% if vehicle.registration_expiry_date %}
+                                        <p class="mb-1">تاريخ الانتهاء:</p>
+                                        <h4 class="mb-2">{{ vehicle.registration_expiry_date.strftime('%Y-%m-%d') }}</h4>
+                                        
+                                        {% set days_remaining = (vehicle.registration_expiry_date - now().date()).days %}
+                                        
+                                        {% if days_remaining < 0 %}
+                                            <div class="badge bg-danger p-2 mb-2 w-100">منتهي منذ {{ days_remaining|abs }} يوم</div>
+                                        {% elif days_remaining <= 30 %}
+                                            <div class="badge bg-warning text-dark p-2 mb-2 w-100">يتبقى {{ days_remaining }} يوم</div>
+                                        {% else %}
+                                            <div class="badge bg-success p-2 mb-2 w-100">يتبقى {{ days_remaining }} يوم</div>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary w-100">
+                                            <i class="fas fa-eye ms-1"></i>
+                                            التفاصيل
+                                        </a>
+                                    {% else %}
+                                        <div class="text-muted mb-3">
+                                            <i class="fas fa-exclamation-circle fa-2x"></i>
+                                            <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                                        </div>
+                                        <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" class="btn btn-sm btn-primary w-100">
+                                            <i class="fas fa-plus ms-1"></i>
+                                            إضافة التاريخ
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- الفحص الدوري -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 {% if vehicle.inspection_expiry_date %}
+                                {% if (vehicle.inspection_expiry_date - now().date()).days < 0 %}
+                                    border-danger
+                                {% elif (vehicle.inspection_expiry_date - now().date()).days <= 30 %}
+                                    border-warning
+                                {% else %}
+                                    border-success
+                                {% endif %}
+                            {% else %}
+                                border-light
+                            {% endif %}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title mb-3">
+                                        <i class="fas fa-clipboard-check me-1"></i>
+                                        الفحص الدوري
+                                    </h5>
+                                    {% if vehicle.inspection_expiry_date %}
+                                        <p class="mb-1">تاريخ الانتهاء:</p>
+                                        <h4 class="mb-2">{{ vehicle.inspection_expiry_date.strftime('%Y-%m-%d') }}</h4>
+                                        
+                                        {% set days_remaining = (vehicle.inspection_expiry_date - now().date()).days %}
+                                        
+                                        {% if days_remaining < 0 %}
+                                            <div class="badge bg-danger p-2 mb-2 w-100">منتهي منذ {{ days_remaining|abs }} يوم</div>
+                                        {% elif days_remaining <= 30 %}
+                                            <div class="badge bg-warning text-dark p-2 mb-2 w-100">يتبقى {{ days_remaining }} يوم</div>
+                                        {% else %}
+                                            <div class="badge bg-success p-2 mb-2 w-100">يتبقى {{ days_remaining }} يوم</div>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-sm btn-outline-primary w-100">
+                                            <i class="fas fa-eye ms-1"></i>
+                                            التفاصيل
+                                        </a>
+                                    {% else %}
+                                        <div class="text-muted mb-3">
+                                            <i class="fas fa-exclamation-circle fa-2x"></i>
+                                            <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                                        </div>
+                                        <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" class="btn btn-sm btn-primary w-100">
+                                            <i class="fas fa-plus ms-1"></i>
+                                            إضافة التاريخ
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
