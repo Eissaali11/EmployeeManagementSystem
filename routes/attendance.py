@@ -470,7 +470,7 @@ def export_page():
                           hijri_start=hijri_start,
                           gregorian_start=gregorian_start)
 
-@attendance_bp.route('/api/department/<int:department_id>/employees')
+@attendance_bp.route('/api/departments/<int:department_id>/employees')
 def get_department_employees(department_id):
     """API endpoint to get all employees in a department"""
     try:
