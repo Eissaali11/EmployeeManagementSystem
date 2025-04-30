@@ -153,10 +153,9 @@ def create_vehicle_handover_pdf(handover_data):
     # قائمة لتخزين محتويات المستند
     content = []
     
-    # إضافة الشعار إذا كان موجوداً
-    # البحث عن مسار الشعار
+    # إضافة دالة رأس الصفحة (مع الشعار مركزًا في الأعلى)
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    logo_path = os.path.join(base_path, 'static', 'images', 'logo_new.png')
+    logo_path = os.path.join(base_path, 'static', 'images', 'logo', 'logo_new.png')
     
     # فحص وجود الشعار
     has_logo = os.path.exists(logo_path)
@@ -164,28 +163,19 @@ def create_vehicle_handover_pdf(handover_data):
     
     if has_logo:
         try:
-            # تعريف الشعار الدائري
-            class CircularLogo:
-                def __init__(self, path, size=50):
-                    self.path = path
-                    self.size = size
-                
-                def create_circular_logo(self, c, x, y):
-                    # رسم دائرة زرقاء
-                    navy_blue = colors.Color(0.13, 0.24, 0.49)  # لون أزرق داكن مطابق للشعار
-                    c.setFillColor(navy_blue)
-                    c.circle(x, y, self.size/2, stroke=0, fill=1)
-                    
-                    # إضافة الشعار فوق الدائرة
-                    c.drawImage(self.path, x - self.size/2, y - self.size/2, width=self.size, height=self.size, mask='auto')
-            
-            # إنشاء الدالة التي ستضيف الشعار إلى رأس الصفحة
+            # إنشاء الدالة التي ستضيف الشعار إلى رأس الصفحة (مركزًا)
             def add_logo_to_page(canvas, doc):
-                # استخدام حجم أصغر للشعار في رأس الصفحة
-                logo = CircularLogo(logo_path, 30*mm)
-                # وضع الشعار في أعلى يمين الصفحة
-                right_margin = doc.pagesize[0] - 40*mm  # الهامش الأيمن
-                logo.create_circular_logo(canvas, right_margin, doc.height - 15*mm)
+                try:
+                    # استخدام حجم كبير للشعار في رأس الصفحة
+                    logo_size = 40*mm  
+                    # وضع الشعار في وسط رأس الصفحة
+                    logo_x = doc.pagesize[0]/2  # الوسط الأفقي للصفحة
+                    logo_y = doc.height + 30*mm  # أعلى الصفحة
+                    
+                    # رسم الشعار مع مراعاة مركز الشعار
+                    canvas.drawImage(logo_path, logo_x - logo_size/2, logo_y - logo_size/2, width=logo_size, height=logo_size, mask='auto')
+                except Exception as e:
+                    print(f"خطأ في رسم الشعار في رأس الصفحة: {str(e)}")
             
             # تعيين الدالة لاستخدامها لاحقاً
             add_logo_fn = add_logo_to_page
