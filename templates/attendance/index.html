@@ -2,97 +2,240 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>سجلات الحضور</h1>
-        <div>
-            <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-primary me-2">
-                <i class="fas fa-chart-line me-1"></i> لوحة معلومات الحضور
-            </a>
-            <a href="{{ url_for('attendance_dashboard.index') }}" class="btn btn-info text-white me-2">
-                <i class="fas fa-chart-bar me-1"></i> لوحة معلومات محسنة
-            </a>
-            <a href="{{ url_for('attendance.record') }}" class="btn btn-success">
-                <i class="fas fa-user-check me-1"></i> تسجيل حضور لموظف
-            </a>
-            <div class="btn-group me-2">
-                <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary">
-                    <i class="fas fa-users me-1"></i> تسجيل حضور لقسم
-                </a>
-                <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn btn-secondary">
-                    <i class="fas fa-calendar-week me-1"></i> تسجيل لعدة أيام
-                </a>
-                <a href="{{ url_for('attendance.all_departments_attendance_simple') }}" class="btn btn-warning text-dark">
-                    <i class="fas fa-building me-1"></i> تسجيل لجميع الأقسام
-                </a>
-                <a href="{{ url_for('mass.departments') }}" class="btn btn-danger text-white">
-                    <i class="fas fa-bolt me-1"></i> تسجيل جماعي مُحسّن
-                </a>
+    <div class="mb-5">
+        <!-- عنوان الصفحة والشعار -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-0 text-primary">سجل الحضور</h1>
+                <p class="text-muted">نظام إدارة سجلات حضور الموظفين</p>
             </div>
-            <a href="{{ url_for('attendance.export_page') }}" class="btn btn-info text-white">
-                <i class="fas fa-file-excel me-1"></i> تصدير لملف إكسل
-            </a>
+            <div class="text-end">
+                <i class="fas fa-clipboard-check fa-2x text-primary"></i>
+            </div>
+        </div>
+        
+        <!-- أزرار الإجراءات الرئيسية -->
+        <div class="row attendance-actions mb-4">
+            <!-- صف أزرار لوحات المعلومات والتقارير -->
+            <div class="col-12 mb-3">
+                <div class="card bg-light shadow-sm">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <h6 class="mb-0 text-primary"><i class="fas fa-chart-bar me-1"></i> لوحات المعلومات</h6>
+                            <div>
+                                <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-primary btn-sm mx-1">
+                                    <i class="fas fa-chart-line me-1"></i> لوحة معلومات الحضور
+                                </a>
+                                <a href="{{ url_for('attendance_dashboard.index') }}" class="btn btn-outline-info btn-sm mx-1">
+                                    <i class="fas fa-chart-bar me-1"></i> لوحة معلومات محسنة
+                                </a>
+                                <a href="{{ url_for('attendance.export_page') }}" class="btn btn-outline-success btn-sm mx-1">
+                                    <i class="fas fa-file-excel me-1"></i> تصدير لملف إكسل
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- صف خيارات تسجيل الحضور -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <!-- تسجيل حضور لموظف -->
+                            <div class="col-lg-3 p-3 border-end">
+                                <a href="{{ url_for('attendance.record') }}" class="btn btn-success w-100 d-flex align-items-center justify-content-center py-2">
+                                    <i class="fas fa-user-check me-2"></i> تسجيل حضور لموظف
+                                </a>
+                            </div>
+                            
+                            <!-- تسجيل حضور لقسم -->
+                            <div class="col-lg-3 p-3 border-end">
+                                <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-2">
+                                    <i class="fas fa-users me-2"></i> تسجيل حضور لقسم
+                                </a>
+                            </div>
+                            
+                            <!-- تسجيل لعدة أيام -->
+                            <div class="col-lg-3 p-3 border-end">
+                                <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center py-2">
+                                    <i class="fas fa-calendar-week me-2"></i> تسجيل لعدة أيام
+                                </a>
+                            </div>
+                            
+                            <!-- تسجيل لجميع الأقسام -->
+                            <div class="col-lg-3 p-3">
+                                <div class="dropdown w-100">
+                                    <button class="btn btn-warning w-100 dropdown-toggle d-flex align-items-center justify-content-center py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-building me-2"></i> تسجيل لجميع الأقسام
+                                    </button>
+                                    <ul class="dropdown-menu w-100">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('attendance.all_departments_attendance_simple') }}">
+                                                <i class="fas fa-building me-2"></i> تسجيل لجميع الأقسام
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('mass.departments') }}">
+                                                <i class="fas fa-bolt me-2"></i> تسجيل جماعي مُحسّن
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- فلاتر البحث -->
     <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">خيارات البحث</h5>
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0"><i class="fas fa-filter me-2"></i> خيارات التصفية</h5>
+            <a href="#advancedSearch" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" role="button" aria-expanded="true">
+                <i class="fas fa-chevron-down me-1"></i> توسيع/طي
+            </a>
         </div>
-        <div class="card-body">
-            <form method="get" action="{{ url_for('attendance.index') }}" class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="date" class="form-label">التاريخ</label>
-                    <input type="date" class="form-control date-picker" id="date" name="date" value="{{ date.strftime('%Y-%m-%d') if date else '' }}">
-                    <div class="mt-1">
-                        <span class="gregorian-date">{{ gregorian_date }}</span>
-                        <span class="hijri-date" style="display: none;">{{ hijri_date }}</span>
+        <div class="collapse show" id="advancedSearch">
+            <div class="card-body">
+                <form method="get" action="{{ url_for('attendance.index') }}" class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="date" class="form-control" id="date" name="date" value="{{ date.strftime('%Y-%m-%d') if date else '' }}">
+                            <label for="date">التاريخ</label>
+                        </div>
+                        <div class="mt-1 text-muted small">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            <span class="gregorian-date">{{ gregorian_date }}</span>
+                            <span class="hijri-date" style="display: none;">{{ hijri_date }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-select" id="department_id" name="department_id">
+                                <option value="">جميع الأقسام</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}" {% if selected_department == department.id|string %}selected{% endif %}>
+                                    {{ department.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label for="department_id">القسم</label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-select" id="status" name="status">
+                                <option value="">جميع الحالات</option>
+                                <option value="present" {% if selected_status == 'present' %}selected{% endif %}>حاضر</option>
+                                <option value="absent" {% if selected_status == 'absent' %}selected{% endif %}>غائب</option>
+                                <option value="leave" {% if selected_status == 'leave' %}selected{% endif %}>إجازة</option>
+                                <option value="sick" {% if selected_status == 'sick' %}selected{% endif %}>مرضي</option>
+                            </select>
+                            <label for="status">الحالة</label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 d-flex justify-content-center mt-4">
+                        <button type="submit" class="btn btn-primary px-4 me-2">
+                            <i class="fas fa-search me-2"></i> تطبيق الفلتر
+                        </button>
+                        <a href="{{ url_for('attendance.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-2"></i> إعادة تعيين
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات موجزة -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-start border-4 border-success h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">حاضر</h6>
+                            <h3 class="mb-0 text-success">{{ present_count|default('0') }}</h3>
+                        </div>
+                        <div class="icon-box bg-success bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-user-check text-success fa-2x"></i>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="col-md-4 mb-3">
-                    <label for="department_id" class="form-label">القسم</label>
-                    <select class="form-select" id="department_id" name="department_id">
-                        <option value="">جميع الأقسام</option>
-                        {% for department in departments %}
-                        <option value="{{ department.id }}" {% if selected_department == department.id|string %}selected{% endif %}>
-                            {{ department.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-start border-4 border-danger h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">غائب</h6>
+                            <h3 class="mb-0 text-danger">{{ absent_count|default('0') }}</h3>
+                        </div>
+                        <div class="icon-box bg-danger bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-user-times text-danger fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="col-md-4 mb-3">
-                    <label for="status" class="form-label">الحالة</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="">جميع الحالات</option>
-                        <option value="present" {% if selected_status == 'present' %}selected{% endif %}>حاضر</option>
-                        <option value="absent" {% if selected_status == 'absent' %}selected{% endif %}>غائب</option>
-                        <option value="leave" {% if selected_status == 'leave' %}selected{% endif %}>إجازة</option>
-                        <option value="sick" {% if selected_status == 'sick' %}selected{% endif %}>مرضي</option>
-                    </select>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-start border-4 border-warning h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">إجازة</h6>
+                            <h3 class="mb-0 text-warning">{{ leave_count|default('0') }}</h3>
+                        </div>
+                        <div class="icon-box bg-warning bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-calendar-minus text-warning fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="col-12 text-center">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search me-1"></i> بحث
-                    </button>
-                    <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-undo me-1"></i> إعادة تعيين
-                    </a>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-start border-4 border-info h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">مرضي</h6>
+                            <h3 class="mb-0 text-info">{{ sick_count|default('0') }}</h3>
+                        </div>
+                        <div class="icon-box bg-info bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-procedures text-info fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- جدول سجلات الحضور -->
     <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
-                سجلات الحضور ليوم 
-                <span class="gregorian-date">{{ gregorian_date }}</span>
-                <span class="hijri-date" style="display: none;">{{ hijri_date }}</span>
-            </h5>
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>
+                    سجلات الحضور ليوم 
+                    <span class="badge bg-primary">
+                        <span class="gregorian-date">{{ gregorian_date }}</span>
+                        <span class="hijri-date" style="display: none;">{{ hijri_date }}</span>
+                    </span>
+                </h5>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> طباعة
+                </button>
+            </div>
         </div>
         <div class="card-body">
             {% if attendances %}
@@ -113,9 +256,22 @@
                     <tbody>
                         {% for attendance in attendances %}
                         <tr class="status-{{ attendance.status }}">
-                            <td>{{ attendance.employee.name }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="avatar-placeholder bg-primary text-white rounded-circle me-2">
+                                        {{ attendance.employee.name[0] }}
+                                    </span>
+                                    <span>{{ attendance.employee.name }}</span>
+                                </div>
+                            </td>
                             <td>{{ attendance.employee.employee_id }}</td>
-                            <td>{{ attendance.employee.department.name if attendance.employee.department else '-' }}</td>
+                            <td>
+                                {% if attendance.employee.department %}
+                                <span class="badge bg-light text-dark border">{{ attendance.employee.department.name }}</span>
+                                {% else %}
+                                <span>-</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if attendance.status == 'present' %}
                                 <span class="badge bg-success">حاضر</span>
@@ -129,15 +285,33 @@
                                 <span class="badge bg-secondary">{{ attendance.status }}</span>
                                 {% endif %}
                             </td>
-                            <td>{{ attendance.check_in.strftime('%H:%M') if attendance.check_in else '-' }}</td>
-                            <td>{{ attendance.check_out.strftime('%H:%M') if attendance.check_out else '-' }}</td>
+                            <td>
+                                {% if attendance.check_in %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ attendance.check_in.strftime('%H:%M') }}
+                                </span>
+                                {% else %}
+                                <span>-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if attendance.check_out %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ attendance.check_out.strftime('%H:%M') }}
+                                </span>
+                                {% else %}
+                                <span>-</span>
+                                {% endif %}
+                            </td>
                             <td>{{ attendance.notes or '-' }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{{ url_for('attendance.record') }}?employee_id={{ attendance.employee_id }}&date={{ date.strftime('%Y-%m-%d') if date else '' }}" class="btn btn-sm btn-primary" title="تعديل">
+                                    <a href="{{ url_for('attendance.record') }}?employee_id={{ attendance.employee_id }}&date={{ date.strftime('%Y-%m-%d') if date else '' }}" class="btn btn-sm btn-outline-primary" title="تعديل">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-danger" title="حذف" 
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="حذف" 
                                             data-bs-toggle="modal" data-bs-target="#deleteModal{{ attendance.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -230,6 +404,108 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* تصميم ألوان خلفية الحالات المختلفة */
+    .status-present {
+        background-color: rgba(40, 167, 69, 0.05);
+    }
+    .status-absent {
+        background-color: rgba(220, 53, 69, 0.05);
+    }
+    .status-leave {
+        background-color: rgba(255, 193, 7, 0.05);
+    }
+    .status-sick {
+        background-color: rgba(23, 162, 184, 0.05);
+    }
+    
+    /* تصميم الأيقونة الدائرية */
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
+    /* تصميم الأفاتار */
+    .avatar-placeholder {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    /* تأثيرات التحويم على بطاقات الإجراءات */
+    .attendance-actions .card {
+        transition: all 0.3s ease;
+    }
+    
+    .attendance-actions .btn {
+        transition: all 0.2s ease;
+        border-radius: 6px;
+    }
+    
+    .attendance-actions .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* تصميم القائمة المنسدلة */
+    .dropdown-menu {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border: none;
+        padding: 8px;
+    }
+    
+    .dropdown-item {
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-bottom: 4px;
+    }
+    
+    .dropdown-item:hover {
+        background-color: rgba(0,123,255,0.1);
+    }
+    
+    /* جعل الجدول أكثر أناقة */
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        padding: 12px;
+    }
+    
+    .table td {
+        padding: 12px;
+        vertical-align: middle;
+    }
+    
+    /* تحسين شكل البطاقات */
+    .card {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding: 15px 20px;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
