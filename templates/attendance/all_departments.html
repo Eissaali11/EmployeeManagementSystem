@@ -107,6 +107,17 @@
         margin-bottom: 20px;
         border: 1px solid #dee2e6;
     }
+    
+    /* تأثير تنبض للعدادات */
+    .badge-pulse {
+        animation: pulse 0.5s ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
 </style>
 {% endblock %}
 
@@ -290,6 +301,10 @@
         // إضافة تأثير انتقالي على العدادات
         animateCounter('selected-employees-count', 0);
         animateCounter('selected-departments-count', 0);
+        
+        // تحديث عدادات الحالات 
+        const currentStatus = document.getElementById('status').value;
+        updateSelectedStatusBadges(currentStatus);
     });
     
     // دالة لإضافة تأثير انتقالي على العدادات
@@ -375,6 +390,10 @@
         
         // تحديث عداد الموظفين المحددين
         document.getElementById('selected-employees-count').textContent = totalEmployees;
+        
+        // تحديث عدادات الحالات
+        const currentStatus = document.getElementById('status').value;
+        updateSelectedStatusBadges(currentStatus);
         
         // التحقق من تحديد قسم واحد على الأقل
         if (departmentCheckboxes.length === 0) {
