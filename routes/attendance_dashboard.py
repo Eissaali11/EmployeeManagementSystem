@@ -563,7 +563,6 @@ def export_excel():
             cats = Reference(chart_sheet, min_col=1, min_row=2, max_row=rows_count)
             chart.add_data(data, titles_from_data=True)
             chart.set_categories(cats)
-            chart.shape = 4
             
             # إضافة المخطط إلى الورقة
             chart_sheet.add_chart(chart, "A10")
