@@ -31,10 +31,12 @@ def index():
     
     # Build query
     query = Attendance.query.filter(Attendance.date == date)
+    base_query = query  # Save the base query for statistics
     
-    # Apply filters
+    # Apply filters for the main query
     if department_id and department_id != '':
         query = query.join(Employee).filter(Employee.department_id == department_id)
+        base_query = base_query.join(Employee).filter(Employee.department_id == department_id)
     
     if status and status != '':
         query = query.filter(Attendance.status == status)
@@ -44,6 +46,12 @@ def index():
     
     # Get departments for filter dropdown
     departments = Department.query.all()
+    
+    # Calculate attendance statistics for the current date and department filter
+    present_count = base_query.filter(Attendance.status == 'present').count()
+    absent_count = base_query.filter(Attendance.status == 'absent').count()
+    leave_count = base_query.filter(Attendance.status == 'leave').count()
+    sick_count = base_query.filter(Attendance.status == 'sick').count()
     
     # Format date for display in both calendars
     hijri_date = format_date_hijri(date)
@@ -56,7 +64,11 @@ def index():
                           hijri_date=hijri_date,
                           gregorian_date=gregorian_date,
                           selected_department=department_id,
-                          selected_status=status)
+                          selected_status=status,
+                          present_count=present_count,
+                          absent_count=absent_count,
+                          leave_count=leave_count,
+                          sick_count=sick_count)
 
 @attendance_bp.route('/record', methods=['GET', 'POST'])
 def record():
