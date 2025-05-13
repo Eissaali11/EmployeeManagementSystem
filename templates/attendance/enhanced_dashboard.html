@@ -23,6 +23,68 @@
             </a>
         </div>
     </div>
+    
+    {% set total_present = 0 %}
+    {% set total_absent = 0 %}
+    {% set total_leave = 0 %}
+    {% set total_sick = 0 %}
+    {% set total_missing = 0 %}
+    
+    {% for dept in department_stats %}
+        {% set total_present = total_present + dept.present_count %}
+        {% set total_absent = total_absent + dept.absent_count %}
+        {% set total_leave = total_leave + dept.leave_count %}
+        {% set total_sick = total_sick + dept.sick_count %}
+        {% set total_missing = total_missing + dept.missing_count %}
+    {% endfor %}
+    
+    <!-- شريط الإحصائيات العامة في الأعلى -->
+    <div class="card border-0 mb-4">
+        <div class="card-body p-0">
+            <div class="row text-center g-0">
+                <!-- إجمالي الموظفين -->
+                <div class="col-md-2 py-3" style="background-color: #6c7ae0;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_employees }}</h4>
+                    <div class="small text-white">إجمالي الموظفين</div>
+                </div>
+                
+                <!-- الموظفين الحاضرين -->
+                <div class="col-md-2 py-3" style="background-color: #29cc97;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_present }}</h4>
+                    <div class="small text-white">الحاضرون</div>
+                    <div class="small text-white">{{ ((total_present/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- الموظفين الغائبين -->
+                <div class="col-md-2 py-3" style="background-color: #fe5461;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_absent }}</h4>
+                    <div class="small text-white">الغائبون</div>
+                    <div class="small text-white">{{ ((total_absent/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- الموظفين في إجازة -->
+                <div class="col-md-2 py-3" style="background-color: #fec400;">
+                    <h4 class="mb-0 fw-bold text-dark">{{ total_leave }}</h4>
+                    <div class="small text-dark">في إجازة</div>
+                    <div class="small text-dark">{{ ((total_leave/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- الموظفين المرضى -->
+                <div class="col-md-2 py-3" style="background-color: #50b5ff;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_sick }}</h4>
+                    <div class="small text-white">مرضي</div>
+                    <div class="small text-white">{{ ((total_sick/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- غير مسجلين -->
+                <div class="col-md-2 py-3" style="background-color: #4c84ff;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_missing }}</h4>
+                    <div class="small text-white">غير مسجل</div>
+                    <div class="small text-white">{{ ((total_missing/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- فلترة البيانات -->
     <div class="card shadow-sm mb-4">
@@ -88,20 +150,7 @@
                                 <div class="small text-muted">إجمالي الموظفين</div>
                             </div>
                         </div>
-                        
-                        {% set total_present = 0 %}
-                        {% set total_absent = 0 %}
-                        {% set total_leave = 0 %}
-                        {% set total_sick = 0 %}
-                        {% set total_missing = 0 %}
-                        
-                        {% for dept in department_stats %}
-                            {% set total_present = total_present + dept.present_count %}
-                            {% set total_absent = total_absent + dept.absent_count %}
-                            {% set total_leave = total_leave + dept.leave_count %}
-                            {% set total_sick = total_sick + dept.sick_count %}
-                            {% set total_missing = total_missing + dept.missing_count %}
-                        {% endfor %}
+
                         
                         <div class="col-md-2 border-end">
                             <div class="p-4 text-center">

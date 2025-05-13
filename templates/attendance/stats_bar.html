@@ -1,0 +1,47 @@
+<!-- شريط الإحصائيات العامة في الأعلى -->
+<div class="card bg-info text-white mb-4">
+    <div class="card-body p-0">
+        <div class="row text-center g-0">
+            <!-- إجمالي الموظفين -->
+            <div class="col-md-2 py-3" style="background-color: #7865e8;">
+                <h4 class="mb-0 fw-bold">{{ total_employees }}</h4>
+                <div class="small">إجمالي الموظفين</div>
+            </div>
+            
+            <!-- الموظفين الحاضرين -->
+            <div class="col-md-2 py-3" style="background-color: #29cc97;">
+                <h4 class="mb-0 fw-bold">{{ total_present }}</h4>
+                <div class="small">الحاضرون</div>
+                <div class="small">{{ ((total_present/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+            </div>
+            
+            <!-- الموظفين الغائبين -->
+            <div class="col-md-2 py-3" style="background-color: #fec400;">
+                <h4 class="mb-0 fw-bold">{{ total_absent }}</h4>
+                <div class="small">الغائبون</div>
+                <div class="small">{{ ((total_absent/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+            </div>
+            
+            <!-- الموظفين في إجازة -->
+            <div class="col-md-2 py-3" style="background-color: #fe5461;">
+                <h4 class="mb-0 fw-bold">{{ total_leave }}</h4>
+                <div class="small">في إجازة</div>
+                <div class="small">{{ ((total_leave/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+            </div>
+            
+            <!-- الموظفين المرضى -->
+            <div class="col-md-2 py-3" style="background-color: #50b5ff;">
+                <h4 class="mb-0 fw-bold">{{ total_sick }}</h4>
+                <div class="small">مرضي</div>
+                <div class="small">{{ ((total_sick/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+            </div>
+            
+            <!-- غير مسجلين -->
+            <div class="col-md-2 py-3" style="background-color: #4c84ff;">
+                <h4 class="mb-0 fw-bold">{{ total_missing }}</h4>
+                <div class="small">غير مسجل</div>
+                <div class="small">{{ ((total_missing/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+            </div>
+        </div>
+    </div>
+</div>
