@@ -126,15 +126,14 @@ def record():
                 
                 # Log the action
                 employee = Employee.query.get(employee_id)
-                audit = SystemAudit(
+                SystemAudit.create_audit_record(
+                    user_id=None,  # يمكن تعديلها لاستخدام current_user.id
                     action='create',
                     entity_type='attendance',
                     entity_id=new_attendance.id,
                     entity_name=employee.name,
                     details=f'تم تسجيل حضور للموظف: {employee.name} بتاريخ {date}'
                 )
-                db.session.add(audit)
-                db.session.commit()
                 
                 flash('تم تسجيل الحضور بنجاح', 'success')
             
@@ -203,15 +202,15 @@ def department_attendance():
             
             # Log the action
             department = Department.query.get(department_id)
-            audit = SystemAudit(
-                action='mass_update',
-                entity_type='attendance',
-                entity_id=0,
-                entity_name=department.name,
-                details=f'تم تسجيل حضور لقسم {department.name} بتاريخ {date} لعدد {count} موظف'
-            )
-            db.session.add(audit)
-            db.session.commit()
+            if department:
+                SystemAudit.create_audit_record(
+                    user_id=None,  # يمكن تعديلها لاستخدام current_user.id
+                    action='mass_update',
+                    entity_type='attendance',
+                    entity_id=department.id,
+                    entity_name=department.name,
+                    details=f'تم تسجيل حضور لقسم {department.name} بتاريخ {date} لعدد {count} موظف'
+                )
             
             flash(f'تم تسجيل الحضور لـ {count} موظف بنجاح', 'success')
             return redirect(url_for('attendance.index', date=date_str))
@@ -430,15 +429,15 @@ def multi_day_department_attendance():
             
             # تسجيل العملية
             department = Department.query.get(department_id)
-            audit = SystemAudit(
-                action='mass_update',
-                entity_type='attendance',
-                entity_id=0,
-                entity_name=department.name,
-                details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {len(employees)} موظف و {days_count} يوم ({total_count} سجل)'
-            )
-            db.session.add(audit)
-            db.session.commit()
+            if department:
+                SystemAudit.create_audit_record(
+                    user_id=None,  # يمكن تعديلها لاستخدام current_user.id
+                    action='mass_update',
+                    entity_type='attendance',
+                    entity_id=department.id,
+                    entity_name=department.name,
+                    details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {len(employees)} موظف و {days_count} يوم ({total_count} سجل)'
+                )
             
             flash(f'تم تسجيل الحضور لـ {len(employees)} موظف عن {days_count} يوم بنجاح (إجمالي {total_count} سجل)', 'success')
             return redirect(url_for('attendance.index', date=start_date_str))
@@ -474,14 +473,15 @@ def delete(id):
         db.session.delete(attendance)
         
         # Log the action
-        audit = SystemAudit(
+        entity_name = employee.name if employee else f'ID: {id}'
+        SystemAudit.create_audit_record(
+            user_id=None,  # يمكن تعديلها لاستخدام current_user.id
             action='delete',
             entity_type='attendance',
             entity_id=id,
-            entity_name=employee.name if employee else f'ID: {id}',
+            entity_name=entity_name,
             details=f'تم حذف سجل حضور للموظف: {employee.name if employee else "غير معروف"} بتاريخ {attendance.date}'
         )
-        db.session.add(audit)
         db.session.commit()
         
         flash('تم حذف سجل الحضور بنجاح', 'success')
