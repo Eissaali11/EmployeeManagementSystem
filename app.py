@@ -243,6 +243,7 @@ with app.app_context():
     from routes.mobile import mobile_bp
     from routes.users import users_bp
     from routes.mass_attendance import mass_attendance_bp
+    from routes.attendance_dashboard import attendance_dashboard_bp
     
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
@@ -262,6 +263,7 @@ with app.app_context():
     app.register_blueprint(mobile_bp, url_prefix='/mobile')
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(mass_attendance_bp, url_prefix='/mass')
+    app.register_blueprint(attendance_dashboard_bp, url_prefix='/attendance-dashboard')
     
     # إضافة دوال مساعدة لقوالب Jinja
     from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions, check_module_access
