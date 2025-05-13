@@ -1,5 +1,20 @@
 {% extends 'layout.html' %}
 
+{% block styles %}
+<style>
+    /* تأثير نبض للشارات */
+    .badge-pulse {
+        animation: pulse 0.5s ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -64,32 +79,45 @@
                     <div class="d-flex flex-wrap">
                         <div class="form-check form-check-inline me-4">
                             <input class="form-check-input" type="radio" name="status" 
-                                   id="status_present" value="present" checked>
+                                   id="status_present" value="present" checked onchange="updateSelectedStatusBadges('present')">
                             <label class="form-check-label" for="status_present">
-                                <span class="badge bg-success py-2 px-3">حاضر</span>
+                                <span class="badge bg-success py-2 px-3">حاضر
+                                    <span id="badge-present" class="badge bg-white text-success ms-1">0</span>
+                                </span>
                             </label>
                         </div>
                         <div class="form-check form-check-inline me-4">
                             <input class="form-check-input" type="radio" name="status" 
-                                   id="status_absent" value="absent">
+                                   id="status_absent" value="absent" onchange="updateSelectedStatusBadges('absent')">
                             <label class="form-check-label" for="status_absent">
-                                <span class="badge bg-danger py-2 px-3">غائب</span>
+                                <span class="badge bg-danger py-2 px-3">غائب
+                                    <span id="badge-absent" class="badge bg-white text-danger ms-1">0</span>
+                                </span>
                             </label>
                         </div>
                         <div class="form-check form-check-inline me-4">
                             <input class="form-check-input" type="radio" name="status" 
-                                   id="status_leave" value="leave">
+                                   id="status_leave" value="leave" onchange="updateSelectedStatusBadges('leave')">
                             <label class="form-check-label" for="status_leave">
-                                <span class="badge bg-warning py-2 px-3">إجازة</span>
+                                <span class="badge bg-warning py-2 px-3">إجازة
+                                    <span id="badge-leave" class="badge bg-white text-warning ms-1">0</span>
+                                </span>
                             </label>
                         </div>
                         <div class="form-check form-check-inline me-4">
                             <input class="form-check-input" type="radio" name="status" 
-                                   id="status_sick" value="sick">
+                                   id="status_sick" value="sick" onchange="updateSelectedStatusBadges('sick')">
                             <label class="form-check-label" for="status_sick">
-                                <span class="badge bg-info py-2 px-3">مرضي</span>
+                                <span class="badge bg-info py-2 px-3">مرضي
+                                    <span id="badge-sick" class="badge bg-white text-info ms-1">0</span>
+                                </span>
                             </label>
                         </div>
+                    </div>
+                    <!-- توضيح حول عدد الموظفين المتأثرين -->
+                    <div class="mt-2 text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        الأرقام تمثل عدد الموظفين الذين سيتم تسجيلهم بالحالة المحددة
                     </div>
                 </div>
                 
@@ -165,6 +193,9 @@
         const submitButton = document.getElementById('submit-btn');
         const massForm = document.getElementById('mass-attendance-form');
         
+        // التحديث الأولي لعدادات الحالات
+        updateSelectedStatusBadges('present');
+        
         // تحديد/إلغاء تحديد جميع الأقسام
         selectAllCheckbox.addEventListener('change', function() {
             departmentCheckboxes.forEach(checkbox => {
@@ -186,6 +217,61 @@
         function validateForm() {
             const anyDepartmentChecked = [...departmentCheckboxes].some(c => c.checked);
             submitButton.disabled = !anyDepartmentChecked;
+            
+            // تحديث عداد الموظفين
+            updateEmployeeCount();
+            
+            // تحديث العدادات في أزرار الحالات
+            updateSelectedStatusBadges(getSelectedStatus());
+        }
+        
+        // وظيفة لحساب عدد الموظفين في الأقسام المحددة
+        function updateEmployeeCount() {
+            let totalEmployees = 0;
+            const checkedDepartments = [...departmentCheckboxes].filter(c => c.checked);
+            
+            checkedDepartments.forEach(checkbox => {
+                // الحصول على عدد الموظفين من النص داخل label
+                const labelText = checkbox.nextElementSibling.textContent;
+                const match = labelText.match(/\((\d+)\)/);
+                if (match && match[1]) {
+                    totalEmployees += parseInt(match[1], 10);
+                }
+            });
+            
+            return totalEmployees;
+        }
+        
+        // الحصول على الحالة المحددة
+        function getSelectedStatus() {
+            const radioButtons = document.querySelectorAll('input[name="status"]');
+            for (const radio of radioButtons) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return 'present'; // الافتراضي
+        }
+        
+        // تحديث عدادات الحالة المحددة
+        function updateSelectedStatusBadges(activeStatus) {
+            const employeesCount = updateEmployeeCount();
+            
+            // إعادة تعيين جميع العدادات إلى صفر
+            document.getElementById('badge-present').textContent = '0';
+            document.getElementById('badge-absent').textContent = '0';
+            document.getElementById('badge-leave').textContent = '0';
+            document.getElementById('badge-sick').textContent = '0';
+            
+            // تحديث العداد للحالة النشطة
+            document.getElementById('badge-' + activeStatus).textContent = employeesCount;
+            
+            // إضافة تأثير للعداد المحدث
+            const activeBadge = document.getElementById('badge-' + activeStatus);
+            activeBadge.classList.add('badge-pulse');
+            setTimeout(() => {
+                activeBadge.classList.remove('badge-pulse');
+            }, 500);
         }
         
         // التحقق عند تحميل الصفحة
