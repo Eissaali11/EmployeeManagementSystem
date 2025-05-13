@@ -4,13 +4,17 @@
 <div class="container-fluid">
     <div class="mb-5">
         <!-- عنوان الصفحة والشعار -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="mb-0 text-primary">سجل الحضور</h1>
-                <p class="text-muted">نظام إدارة سجلات حضور الموظفين</p>
-            </div>
-            <div class="text-end">
-                <i class="fas fa-clipboard-check fa-2x text-primary"></i>
+        <div class="card mb-4 bg-gradient-primary text-white shadow">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="mb-0 display-6 fw-bold">سجل الحضور</h1>
+                        <p class="mb-0 opacity-75">نظام إدارة سجلات حضور الموظفين</p>
+                    </div>
+                    <div class="text-end">
+                        <i class="fas fa-clipboard-check fa-3x opacity-50"></i>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -23,13 +27,10 @@
                         <div class="d-flex justify-content-between align-items-center flex-wrap">
                             <h6 class="mb-0 text-primary"><i class="fas fa-chart-bar me-1"></i> لوحات المعلومات</h6>
                             <div>
-                                <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-primary btn-sm mx-1">
+                                <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-primary mx-1">
                                     <i class="fas fa-chart-line me-1"></i> لوحة معلومات الحضور
                                 </a>
-                                <a href="{{ url_for('attendance_dashboard.index') }}" class="btn btn-outline-info btn-sm mx-1">
-                                    <i class="fas fa-chart-bar me-1"></i> لوحة معلومات محسنة
-                                </a>
-                                <a href="{{ url_for('attendance.export_page') }}" class="btn btn-outline-success btn-sm mx-1">
+                                <a href="{{ url_for('attendance.export_page') }}" class="btn btn-outline-success mx-1">
                                     <i class="fas fa-file-excel me-1"></i> تصدير لملف إكسل
                                 </a>
                             </div>
@@ -44,44 +45,53 @@
                     <div class="card-body p-0">
                         <div class="row g-0">
                             <!-- تسجيل حضور لموظف -->
-                            <div class="col-lg-3 p-3 border-end">
-                                <a href="{{ url_for('attendance.record') }}" class="btn btn-success w-100 d-flex align-items-center justify-content-center py-2">
-                                    <i class="fas fa-user-check me-2"></i> تسجيل حضور لموظف
-                                </a>
+                            <div class="col-lg-4 p-3">
+                                <div class="card h-100 bg-success bg-opacity-10 border-success">
+                                    <div class="card-body text-center p-4">
+                                        <div class="mb-3">
+                                            <span class="icon-box bg-success bg-opacity-25 mx-auto mb-2">
+                                                <i class="fas fa-user-check text-success fa-2x"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="card-title mb-3">تسجيل حضور لموظف</h5>
+                                        <a href="{{ url_for('attendance.record') }}" class="btn btn-success w-100 d-flex align-items-center justify-content-center py-2">
+                                            <i class="fas fa-arrow-circle-right me-2"></i> فتح
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- تسجيل حضور لقسم -->
-                            <div class="col-lg-3 p-3 border-end">
-                                <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-2">
-                                    <i class="fas fa-users me-2"></i> تسجيل حضور لقسم
-                                </a>
+                            <div class="col-lg-4 p-3">
+                                <div class="card h-100 bg-primary bg-opacity-10 border-primary">
+                                    <div class="card-body text-center p-4">
+                                        <div class="mb-3">
+                                            <span class="icon-box bg-primary bg-opacity-25 mx-auto mb-2">
+                                                <i class="fas fa-users text-primary fa-2x"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="card-title mb-3">تسجيل حضور لقسم</h5>
+                                        <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-2">
+                                            <i class="fas fa-arrow-circle-right me-2"></i> فتح
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- تسجيل لعدة أيام -->
-                            <div class="col-lg-3 p-3 border-end">
-                                <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center py-2">
-                                    <i class="fas fa-calendar-week me-2"></i> تسجيل لعدة أيام
-                                </a>
-                            </div>
-                            
-                            <!-- تسجيل لجميع الأقسام -->
-                            <div class="col-lg-3 p-3">
-                                <div class="dropdown w-100">
-                                    <button class="btn btn-warning w-100 dropdown-toggle d-flex align-items-center justify-content-center py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-building me-2"></i> تسجيل لجميع الأقسام
-                                    </button>
-                                    <ul class="dropdown-menu w-100">
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('attendance.all_departments_attendance_simple') }}">
-                                                <i class="fas fa-building me-2"></i> تسجيل لجميع الأقسام
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('mass.departments') }}">
-                                                <i class="fas fa-bolt me-2"></i> تسجيل جماعي مُحسّن
-                                            </a>
-                                        </li>
-                                    </ul>
+                            <div class="col-lg-4 p-3">
+                                <div class="card h-100 bg-secondary bg-opacity-10 border-secondary">
+                                    <div class="card-body text-center p-4">
+                                        <div class="mb-3">
+                                            <span class="icon-box bg-secondary bg-opacity-25 mx-auto mb-2">
+                                                <i class="fas fa-calendar-week text-secondary fa-2x"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="card-title mb-3">تسجيل لعدة أيام</h5>
+                                        <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center py-2">
+                                            <i class="fas fa-arrow-circle-right me-2"></i> فتح
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -450,11 +460,17 @@
     .attendance-actions .btn {
         transition: all 0.2s ease;
         border-radius: 6px;
+        font-size: 1.1rem;
     }
     
     .attendance-actions .btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .attendance-actions .btn i {
+        font-size: 1.3rem;
+        margin-right: 10px;
     }
     
     /* تصميم القائمة المنسدلة */
@@ -504,6 +520,27 @@
         background-color: #f8f9fa;
         border-bottom: 1px solid rgba(0,0,0,0.05);
         padding: 15px 20px;
+    }
+    
+    /* تصميم العنوان الرئيسي */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4a6fdc 0%, #2b4db7 100%);
+    }
+    
+    /* تحسين حجم أيقونات الأزرار الرئيسية */
+    .btn i.fas, .btn i.far {
+        font-size: 1.2em;
+        vertical-align: middle;
+    }
+    
+    /* تحسين أشكال البطاقات الإحصائية */
+    .border-start.border-4 {
+        transition: all 0.3s ease;
+    }
+    
+    .border-start.border-4:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
 </style>
 {% endblock %}
