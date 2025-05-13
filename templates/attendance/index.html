@@ -30,6 +30,9 @@
                                 <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-primary mx-1">
                                     <i class="fas fa-chart-line me-1"></i> لوحة معلومات الحضور
                                 </a>
+                                <a href="{{ url_for('attendance_dashboard.index') }}" class="btn btn-outline-info mx-1">
+                                    <i class="fas fa-tachometer-alt me-1"></i> اللوحة المحسنة
+                                </a>
                                 <a href="{{ url_for('attendance.export_page') }}" class="btn btn-outline-success mx-1">
                                     <i class="fas fa-file-excel me-1"></i> تصدير لملف إكسل
                                 </a>
@@ -417,6 +420,8 @@
 {% endblock %}
 
 {% block styles %}
+<!-- استيراد ملف CSS المخصص للصفحة -->
+<link href="{{ url_for('static', filename='css/attendance.css') }}" rel="stylesheet">
 <style>
     /* تصميم ألوان خلفية الحالات المختلفة */
     .status-present {
