@@ -319,7 +319,7 @@ def dashboard_data():
     
     return jsonify(chart_data)
 
-@attendance_dashboard_bp.route('/export')
+@attendance_dashboard_bp.route('/export-excel')
 @login_required
 @module_access_required(Module.ATTENDANCE)
 def export_excel():
