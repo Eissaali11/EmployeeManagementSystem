@@ -7,10 +7,11 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
+from utils.employee_comprehensive_report import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
 
 employees_bp = Blueprint('employees', __name__)
 
@@ -503,4 +504,98 @@ def export_attendance_excel(id):
         print(traceback.format_exc())
         
         flash(f'حدث خطأ أثناء تصدير ملف الحضور: {str(e)}', 'danger')
+        return redirect(url_for('employees.view', id=id))
+
+
+@employees_bp.route('/<int:id>/comprehensive_report')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def comprehensive_report(id):
+    """تقرير شامل عن الموظف بصيغة PDF"""
+    try:
+        # التحقق من وجود الموظف
+        employee = Employee.query.get_or_404(id)
+        
+        # إنشاء ملف PDF
+        output = generate_employee_comprehensive_pdf(id)
+        
+        if not output:
+            flash('لم يتم العثور على بيانات كافية لإنشاء التقرير', 'warning')
+            return redirect(url_for('employees.view', id=id))
+        
+        # اسم الملف المُصدَّر
+        filename = f"تقرير_شامل_{employee.name}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        # تسجيل عملية التصدير
+        audit = SystemAudit(
+            action='export',
+            entity_type='employee_report',
+            entity_id=employee.id,
+            details=f'تم إنشاء تقرير شامل للموظف: {employee.name}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إرسال ملف PDF
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        # طباعة تتبع الخطأ في سجل الخادم للمساعدة في التشخيص
+        import traceback
+        print(f"Error generating comprehensive report: {str(e)}")
+        print(traceback.format_exc())
+        
+        flash(f'حدث خطأ أثناء إنشاء التقرير الشامل: {str(e)}', 'danger')
+        return redirect(url_for('employees.view', id=id))
+
+
+@employees_bp.route('/<int:id>/comprehensive_report_excel')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def comprehensive_report_excel(id):
+    """تقرير شامل عن الموظف بصيغة Excel"""
+    try:
+        # التحقق من وجود الموظف
+        employee = Employee.query.get_or_404(id)
+        
+        # إنشاء ملف Excel
+        output = generate_employee_comprehensive_excel(id)
+        
+        if not output:
+            flash('لم يتم العثور على بيانات كافية لإنشاء التقرير', 'warning')
+            return redirect(url_for('employees.view', id=id))
+        
+        # اسم الملف المُصدَّر
+        filename = f"تقرير_شامل_{employee.name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        
+        # تسجيل عملية التصدير
+        audit = SystemAudit(
+            action='export',
+            entity_type='employee_report_excel',
+            entity_id=employee.id,
+            details=f'تم تصدير تقرير شامل (إكسل) للموظف: {employee.name}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إرسال ملف الإكسل
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        # طباعة تتبع الخطأ في سجل الخادم للمساعدة في التشخيص
+        import traceback
+        print(f"Error generating comprehensive Excel report: {str(e)}")
+        print(traceback.format_exc())
+        
+        flash(f'حدث خطأ أثناء إنشاء التقرير الشامل (إكسل): {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))

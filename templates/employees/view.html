@@ -149,6 +149,13 @@
             <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="btn btn-warning">
                 <i class="fas fa-id-card me-1"></i> إضافة وثيقة
             </a>
+            <!-- أزرار تقرير الموظف الشامل -->
+            <a href="{{ url_for('employees.comprehensive_report', id=employee.id) }}" class="btn btn-info">
+                <i class="fas fa-file-pdf me-1"></i> تقرير شامل
+            </a>
+            <a href="{{ url_for('employees.comprehensive_report_excel', id=employee.id) }}" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i> تصدير إكسل
+            </a>
             <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
             </a>
