@@ -474,9 +474,11 @@ class VehicleHandoverImage(db.Model):
     """صور وملفات PDF توثيقية لحالة السيارة عند التسليم/الاستلام"""
     id = db.Column(db.Integer, primary_key=True)
     handover_record_id = db.Column(db.Integer, db.ForeignKey('vehicle_handover.id', ondelete='CASCADE'), nullable=False)
-    file_path = db.Column(db.String(255), nullable=False)  # مسار الملف
+    image_path = db.Column(db.String(255), nullable=False)  # مسار الصورة (الاسم القديم للحقل)
+    image_description = db.Column(db.String(100))  # وصف الصورة (الاسم القديم للحقل)
+    file_path = db.Column(db.String(255))  # مسار الملف (الجديد)
     file_type = db.Column(db.String(20), default='image')  # نوع الملف (image/pdf)
-    file_description = db.Column(db.String(200))  # وصف الملف
+    file_description = db.Column(db.String(200))  # وصف الملف (الجديد)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # العلاقات
@@ -485,14 +487,23 @@ class VehicleHandoverImage(db.Model):
     def __repr__(self):
         return f'<VehicleHandoverImage {self.handover_record_id}>'
         
-    # للحفاظ على التوافق مع الكود السابق
-    @property
-    def image_path(self):
-        return self.file_path
+    # للحفاظ على التوافق بين الأعمدة القديمة والجديدة
+    def get_path(self):
+        """الحصول على مسار الملف بغض النظر عن طريقة التخزين (قديمة أو جديدة)"""
+        return self.file_path or self.image_path
     
-    @property
-    def image_description(self):
-        return self.file_description
+    def get_description(self):
+        """الحصول على وصف الملف بغض النظر عن طريقة التخزين (قديمة أو جديدة)"""
+        return self.file_description or self.image_description
+    
+    def get_type(self):
+        """الحصول على نوع الملف، مع افتراض أنه صورة إذا لم يكن محدداً"""
+        return self.file_type or 'image'
+    
+    def is_pdf(self):
+        """التحقق مما إذا كان الملف PDF"""
+        file_path = self.get_path()
+        return self.get_type() == 'pdf' or (file_path and file_path.lower().endswith('.pdf'))
 
 
 class VehicleChecklist(db.Model):
