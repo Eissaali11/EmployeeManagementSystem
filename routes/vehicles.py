@@ -1240,8 +1240,11 @@ def create_handover(id):
                 file_path, file_type = save_file(file, 'handover')
                 if file_path:
                     file_description = request.form.get(f'description_{file.filename}', '')
+                    # للحفاظ على توافق البيانات، نستخدم نفس القيمة لحقلي image_path و file_path
                     file_record = VehicleHandoverImage(
                         handover_record_id=handover.id,
+                        image_path=file_path,  # للتوافق مع القيود على قاعدة البيانات
+                        image_description=file_description,  # للتوافق مع القيود على قاعدة البيانات
                         file_path=file_path,
                         file_type=file_type,
                         file_description=file_description
