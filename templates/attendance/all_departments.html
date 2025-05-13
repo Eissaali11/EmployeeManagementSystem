@@ -157,19 +157,29 @@
                             <div class="d-flex justify-content-between align-items-center flex-wrap">
                                 <button type="button" class="btn btn-success btn-lg attendance-status-btn m-1 active" data-status="present" onclick="setAttendanceStatus('present')">
                                     <i class="fas fa-check-circle me-1"></i> حاضر
+                                    <span id="badge-present" class="badge bg-white text-success ms-1">0</span>
                                 </button>
                                 <button type="button" class="btn btn-danger btn-lg attendance-status-btn m-1" data-status="absent" onclick="setAttendanceStatus('absent')">
                                     <i class="fas fa-times-circle me-1"></i> غائب
+                                    <span id="badge-absent" class="badge bg-white text-danger ms-1">0</span>
                                 </button>
                                 <button type="button" class="btn btn-warning btn-lg attendance-status-btn m-1" data-status="leave" onclick="setAttendanceStatus('leave')">
                                     <i class="fas fa-calendar-minus me-1"></i> إجازة
+                                    <span id="badge-leave" class="badge bg-white text-warning ms-1">0</span>
                                 </button>
                                 <button type="button" class="btn btn-info btn-lg attendance-status-btn m-1" data-status="sick" onclick="setAttendanceStatus('sick')">
                                     <i class="fas fa-procedures me-1"></i> مرضي
+                                    <span id="badge-sick" class="badge bg-white text-info ms-1">0</span>
                                 </button>
                             </div>
                             <!-- حقل مخفي لتخزين القيمة المختارة -->
                             <input type="hidden" id="status" name="status" value="present">
+                            
+                            <!-- توضيح حول عدد الموظفين المتأثرين -->
+                            <div class="mt-2 text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                الأرقام تمثل عدد الموظفين الذين سيتم تسجيلهم بالحالة المحددة
+                            </div>
                         </div>
                         
                         <!-- عرض ملخص الفترة المحددة -->
@@ -228,6 +238,21 @@
                             </div>
                         </div>
                         
+                        <!-- عداد الموظفين المحددين -->
+                        <div class="alert alert-success mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-users me-1"></i>
+                                    <strong>إجمالي الموظفين المحددين:</strong> 
+                                    <span id="selected-employees-count" class="badge bg-primary fw-bold" style="font-size: 1.1rem;">0</span>
+                                </div>
+                                <div>
+                                    <strong>الأقسام المحددة:</strong>
+                                    <span id="selected-departments-count" class="badge bg-info fw-bold" style="font-size: 1.1rem;">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-1"></i>
                             <strong>ملاحظة:</strong> 
@@ -261,7 +286,18 @@
     window.addEventListener('DOMContentLoaded', function() {
         updateDateRange();
         validateForm();
+        
+        // إضافة تأثير انتقالي على العدادات
+        animateCounter('selected-employees-count', 0);
+        animateCounter('selected-departments-count', 0);
     });
+    
+    // دالة لإضافة تأثير انتقالي على العدادات
+    function animateCounter(elementId, finalValue) {
+        const element = document.getElementById(elementId);
+        element.classList.add('badge-transition');
+        element.textContent = finalValue;
+    }
     
     // تحديث معلومات نطاق التاريخ
     function updateDateRange() {
@@ -316,12 +352,29 @@
         validateForm();
     }
     
-    // التحقق من صحة الفورم قبل الإرسال
+    // التحقق من صحة الفورم قبل الإرسال وتحديث عدد الموظفين
     function validateForm() {
         const startDateInput = document.getElementById('start_date');
         const endDateInput = document.getElementById('end_date');
         const departmentCheckboxes = document.querySelectorAll('input[name="department_ids"]:checked');
         const submitBtn = document.getElementById('submit-btn');
+        
+        // تحديث عداد الأقسام المحددة
+        document.getElementById('selected-departments-count').textContent = departmentCheckboxes.length;
+        
+        // حساب إجمالي عدد الموظفين في الأقسام المحددة
+        let totalEmployees = 0;
+        departmentCheckboxes.forEach(checkbox => {
+            const cardBody = checkbox.closest('.department-card').querySelector('.card-body');
+            const employeesCountText = cardBody.querySelector('p').textContent;
+            const countMatch = employeesCountText.match(/(\d+)/);
+            if (countMatch && countMatch[1]) {
+                totalEmployees += parseInt(countMatch[1], 10);
+            }
+        });
+        
+        // تحديث عداد الموظفين المحددين
+        document.getElementById('selected-employees-count').textContent = totalEmployees;
         
         // التحقق من تحديد قسم واحد على الأقل
         if (departmentCheckboxes.length === 0) {
@@ -379,6 +432,27 @@
                 button.classList.remove('active');
             }
         });
+        
+        // تحديث عداد الموظفين بالنسبة للحالة المختارة
+        updateSelectedStatusBadges(status);
+    }
+    
+    // تحديث أعداد الموظفين حسب الحالة المختارة
+    function updateSelectedStatusBadges(activeStatus) {
+        const employeesCount = parseInt(document.getElementById('selected-employees-count').textContent) || 0;
+        
+        // إعادة تعيين جميع العدادات إلى صفر باستثناء الحالة النشطة
+        document.getElementById('badge-present').textContent = (activeStatus === 'present') ? employeesCount : 0;
+        document.getElementById('badge-absent').textContent = (activeStatus === 'absent') ? employeesCount : 0;
+        document.getElementById('badge-leave').textContent = (activeStatus === 'leave') ? employeesCount : 0;
+        document.getElementById('badge-sick').textContent = (activeStatus === 'sick') ? employeesCount : 0;
+        
+        // إضافة تأثير للحالة النشطة
+        const activeBadge = document.getElementById('badge-' + activeStatus);
+        activeBadge.classList.add('badge-pulse');
+        setTimeout(() => {
+            activeBadge.classList.remove('badge-pulse');
+        }, 500);
     }
     
     // إعادة تعيين النموذج
