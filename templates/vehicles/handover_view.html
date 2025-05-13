@@ -395,13 +395,13 @@
                     </div>
                 </div>
                 
-                <!-- الصور التوثيقية -->
+                <!-- الملفات التوثيقية (صور و PDF) -->
                 <div class="col-md-4">
                     <div class="inner-card">
                         <div class="card-header bg-secondary text-white">
                             <h5 class="mb-0">
-                                <i class="fas fa-images ms-2"></i>
-                                الصور التوثيقية
+                                <i class="fas fa-file-alt ms-2"></i>
+                                الملفات التوثيقية
                                 <span class="badge bg-secondary">{{ images|length }}</span>
                             </h5>
                         </div>
@@ -410,40 +410,56 @@
                                 <div class="row">
                                     {% for image in images %}
                                         <div class="col-md-12 mb-3">
-                                            <div class="image-preview">
-                                                <img src="{{ url_for('static', filename=image.image_path) }}" alt="صورة توثيقية" class="img-fluid" data-bs-toggle="modal" data-bs-target="#imageModal{{ image.id }}">
-                                                {% if image.image_description %}
-                                                    <div class="image-description">{{ image.image_description }}</div>
+                                            <div class="handover-image">
+                                                {% if image.is_pdf() %}
+                                                    <!-- عرض ملف PDF -->
+                                                    <div class="pdf-preview text-center p-3 bg-dark rounded">
+                                                        <a href="{{ url_for('static', filename=image.get_path()) }}" class="btn btn-danger btn-lg w-100" target="_blank">
+                                                            <i class="fas fa-file-pdf fa-2x mb-2"></i><br>
+                                                            عرض الملف
+                                                        </a>
+                                                    </div>
+                                                    {% if image.get_description() %}
+                                                        <div class="image-caption">{{ image.get_description() }}</div>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <!-- عرض صورة -->
+                                                    <img src="{{ url_for('static', filename=image.get_path()) }}" alt="صورة توثيقية" class="img-fluid" data-bs-toggle="modal" data-bs-target="#imageModal{{ image.id }}">
+                                                    {% if image.get_description() %}
+                                                        <div class="image-caption">{{ image.get_description() }}</div>
+                                                    {% endif %}
                                                 {% endif %}
                                             </div>
                                             
-                                            <!-- Modal للصورة -->
+                                            <!-- Modal للصورة (في حالة أنه ليس PDF) -->
+                                            {% if not image.is_pdf() %}
                                             <div class="modal fade" id="imageModal{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel{{ image.id }}" aria-hidden="true">
                                                 <div class="modal-dialog modal-lg">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
                                                             <h5 class="modal-title" id="imageModalLabel{{ image.id }}">
-                                                                {% if image.image_description %}
-                                                                    {{ image.image_description }}
+                                                                {% if image.get_description() %}
+                                                                    {{ image.get_description() }}
                                                                 {% else %}
-                                                                    صورة توثيقية {{ loop.index }}
+                                                                    ملف توثيقي {{ loop.index }}
                                                                 {% endif %}
                                                             </h5>
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
                                                         </div>
                                                         <div class="modal-body text-center">
-                                                            <img src="{{ url_for('static', filename=image.image_path) }}" alt="صورة توثيقية" class="img-fluid">
+                                                            <img src="{{ url_for('static', filename=image.get_path()) }}" alt="صورة توثيقية" class="img-fluid">
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                            {% endif %}
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
                                 <div class="text-center py-5 text-dark">
-                                    <i class="fas fa-camera fa-4x text-muted mb-3"></i>
-                                    <p>لا توجد صور توثيقية لهذا النموذج</p>
+                                    <i class="fas fa-photo-video fa-4x text-muted mb-3"></i>
+                                    <p>لا توجد ملفات توثيقية لهذا النموذج</p>
                                 </div>
                             {% endif %}
                         </div>
