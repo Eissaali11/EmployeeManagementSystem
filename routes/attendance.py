@@ -234,6 +234,127 @@ def department_attendance():
                           hijri_date=hijri_date,
                           gregorian_date=gregorian_date)
 
+@attendance_bp.route('/all-departments', methods=['GET', 'POST'])
+def all_departments_attendance():
+    """تسجيل حضور لعدة أقسام لفترة زمنية محددة"""
+    if request.method == 'POST':
+        try:
+            department_ids = request.form.getlist('department_ids')
+            start_date_str = request.form.get('start_date')
+            end_date_str = request.form.get('end_date')
+            status = request.form.get('status')
+            
+            # تحليل التواريخ
+            try:
+                start_date = parse_date(start_date_str)
+                end_date = parse_date(end_date_str)
+                
+                if not start_date or not end_date:
+                    raise ValueError("تاريخ غير صالح")
+                
+                # التحقق من صحة النطاق
+                if end_date < start_date:
+                    flash('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له.', 'danger')
+                    return redirect(url_for('attendance.all_departments_attendance'))
+            except (ValueError, TypeError) as e:
+                flash(f'خطأ في تنسيق التاريخ: {str(e)}', 'danger')
+                return redirect(url_for('attendance.all_departments_attendance'))
+                
+            if not department_ids:
+                flash('يجب اختيار قسم واحد على الأقل.', 'danger')
+                return redirect(url_for('attendance.all_departments_attendance'))
+                
+            # تهيئة المتغيرات للإحصائيات
+            total_departments = len(department_ids)
+            total_employees = 0
+            total_records = 0
+            
+            # حساب عدد الأيام
+            delta = end_date - start_date
+            days_count = delta.days + 1  # لتضمين اليوم الأخير
+            
+            # العمل على كل قسم من الأقسام المحددة
+            for department_id in department_ids:
+                # الحصول على جميع الموظفين في القسم
+                employees = Employee.query.filter_by(
+                    department_id=department_id,
+                    status='active'
+                ).all()
+                
+                # عدد موظفي القسم
+                department_employee_count = len(employees)
+                total_employees += department_employee_count
+                
+                # التحضير لكل يوم في النطاق المحدد
+                current_date = start_date
+                
+                while current_date <= end_date:
+                    day_count = 0
+                    
+                    for employee in employees:
+                        # التحقق من وجود سجل حضور مسبق
+                        existing = Attendance.query.filter_by(
+                            employee_id=employee.id,
+                            date=current_date
+                        ).first()
+                        
+                        if existing:
+                            # تحديث السجل الموجود
+                            existing.status = status
+                            if status != 'present':
+                                existing.check_in = None
+                                existing.check_out = None
+                        else:
+                            # إنشاء سجل حضور جديد
+                            new_attendance = Attendance(
+                                employee_id=employee.id,
+                                date=current_date,
+                                status=status
+                            )
+                            db.session.add(new_attendance)
+                        
+                        day_count += 1
+                    
+                    # الانتقال إلى اليوم التالي
+                    current_date += timedelta(days=1)
+                    total_records += day_count
+                
+                # تسجيل العملية للقسم
+                department = Department.query.get(department_id)
+                audit = SystemAudit(
+                    action='mass_update',
+                    entity_type='attendance',
+                    entity_id=0,
+                    entity_name=department.name,
+                    details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {department_employee_count} موظف'
+                )
+                db.session.add(audit)
+            
+            # حفظ جميع التغييرات
+            db.session.commit()
+            
+            # رسالة نجاح مفصلة
+            flash(f'تم تسجيل الحضور لـ {total_departments} قسم و {total_employees} موظف عن {days_count} يوم بنجاح (إجمالي {total_records} سجل)', 'success')
+            return redirect(url_for('attendance.index', date=start_date_str))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ: {str(e)}', 'danger')
+    
+    # الحصول على جميع الأقسام
+    departments = Department.query.all()
+    
+    # التاريخ الافتراضي هو اليوم
+    today = datetime.now().date()
+    hijri_date = format_date_hijri(today)
+    gregorian_date = format_date_gregorian(today)
+    
+    return render_template('attendance/all_departments.html', 
+                          departments=departments,
+                          today=today,
+                          hijri_date=hijri_date,
+                          gregorian_date=gregorian_date)
+
 @attendance_bp.route('/multi-day-department', methods=['GET', 'POST'])
 def multi_day_department_attendance():
     """تسجيل حضور لقسم بالكامل لفترة زمنية محددة"""
