@@ -321,14 +321,16 @@ def all_departments_attendance():
                 
                 # تسجيل العملية للقسم
                 department = Department.query.get(department_id)
-                audit = SystemAudit(
-                    action='mass_update',
-                    entity_type='attendance',
-                    entity_id=0,
-                    entity_name=department.name,
-                    details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {department_employee_count} موظف'
-                )
-                db.session.add(audit)
+                if department:
+                    # استخدام دالة create_audit_record بدلاً من إنشاء الكائن مباشرة
+                    SystemAudit.create_audit_record(
+                        user_id=None,  # يمكن استخدام current_user.id إذا كانت متاحة
+                        action='mass_update',
+                        entity_type='attendance',
+                        entity_id=department.id,
+                        entity_name=department.name,
+                        details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {department_employee_count} موظف'
+                    )
             
             # حفظ جميع التغييرات
             db.session.commit()
