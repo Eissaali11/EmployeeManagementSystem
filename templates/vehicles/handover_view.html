@@ -120,24 +120,55 @@
         font-weight: 600;
     }
     
-    /* تصميم صور التسليم */
+    /* تصميم صور وملفات التسليم */
     .handover-image {
         position: relative;
         margin-bottom: 20px;
         border-radius: 10px;
         overflow: hidden;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        transition: transform 0.3s;
+        transition: all 0.3s ease-in-out;
     }
     
     .handover-image:hover {
         transform: scale(1.03);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
     
     .handover-image img {
         width: 100%;
         height: auto;
         display: block;
+    }
+    
+    /* تصميم خاص لملفات PDF */
+    .pdf-preview {
+        background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.3s ease-in-out;
+    }
+    
+    .pdf-preview:hover {
+        background: linear-gradient(135deg, #34495e 0%, #1e1e3a 100%);
+    }
+    
+    .pdf-filename {
+        font-size: 0.9em;
+        color: rgba(255,255,255,0.8);
+        max-width: 100%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    
+    /* تأثير الأزرار */
+    .pdf-preview .btn {
+        transition: all 0.3s ease;
+        transform: translateY(0);
+    }
+    
+    .pdf-preview:hover .btn {
+        transform: translateY(-3px);
     }
     
     .image-caption {
@@ -413,11 +444,28 @@
                                             <div class="handover-image">
                                                 {% if image.is_pdf() %}
                                                     <!-- عرض ملف PDF -->
-                                                    <div class="pdf-preview text-center p-3 bg-dark rounded">
-                                                        <a href="{{ url_for('static', filename=image.get_path()) }}" class="btn btn-danger btn-lg w-100" target="_blank">
-                                                            <i class="fas fa-file-pdf fa-2x mb-2"></i><br>
-                                                            عرض الملف
-                                                        </a>
+                                                    <div class="pdf-preview text-center p-3 bg-dark rounded position-relative overflow-hidden" style="min-height: 200px;">
+                                                        <!-- أيقونة PDF بالخلفية -->
+                                                        <div class="position-absolute" style="opacity: 0.2; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;">
+                                                            <i class="fas fa-file-pdf fa-6x text-danger"></i>
+                                                        </div>
+                                                        <!-- معلومات الملف -->
+                                                        <div class="position-relative z-index-2" style="z-index: 2;">
+                                                            <div class="pdf-icon mb-3">
+                                                                <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                                                <div class="mt-2 text-light pdf-filename">
+                                                                    {{ image.get_path().split('/')[-1] }}
+                                                                </div>
+                                                            </div>
+                                                            <a href="{{ url_for('static', filename=image.get_path()) }}" class="btn btn-danger btn-lg" target="_blank">
+                                                                <i class="fas fa-external-link-alt me-2"></i>
+                                                                فتح الملف
+                                                            </a>
+                                                            <a href="{{ url_for('static', filename=image.get_path()) }}" class="btn btn-outline-light btn-lg ms-2" download>
+                                                                <i class="fas fa-download me-2"></i>
+                                                                تحميل
+                                                            </a>
+                                                        </div>
                                                     </div>
                                                     {% if image.get_description() %}
                                                         <div class="image-caption">{{ image.get_description() }}</div>
