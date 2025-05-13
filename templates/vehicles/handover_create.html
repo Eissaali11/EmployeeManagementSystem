@@ -145,34 +145,79 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="images" class="form-label">صور توثيقية</label>
+                            <label for="files" class="form-label">ملفات توثيقية (صور و PDF)</label>
                             <div class="card border-primary">
                                 <div class="card-header bg-primary text-white">
-                                    <i class="fas fa-camera me-2"></i>
-                                    صور توثيقية لتسليم/استلام السيارة
+                                    <i class="fas fa-file-upload me-2"></i>
+                                    ملفات توثيقية لتسليم/استلام السيارة
                                 </div>
                                 <div class="card-body">
-                                    <p class="text-muted">يمكنك رفع صور للسيارة من الداخل والخارج وأي أضرار أو خدوش موجودة في السيارة للتوثيق</p>
-                                    <div class="mb-3">
-                                        <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
-                                        <div class="form-text">يمكنك اختيار أكثر من صورة، صيغ الملفات المدعومة: JPG, PNG, GIF</div>
-                                    </div>
+                                    <p class="text-muted">يمكنك رفع صور للسيارة من الداخل والخارج وأي أضرار أو خدوش موجودة في السيارة للتوثيق، أو ملفات PDF (مثل نموذج تسليم واستلام موقع)</p>
                                     
-                                    <div id="image-previews" class="row mt-3 d-none">
-                                        <div class="col-12">
-                                            <h6>الصور المرفوعة:</h6>
+                                    <ul class="nav nav-tabs mb-3" id="fileTypeTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="images-tab" data-bs-toggle="tab" data-bs-target="#images-content" type="button" role="tab" aria-controls="images-content" aria-selected="true">صور</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="pdfs-tab" data-bs-toggle="tab" data-bs-target="#pdfs-content" type="button" role="tab" aria-controls="pdfs-content" aria-selected="false">ملفات PDF</button>
+                                        </li>
+                                    </ul>
+                                    
+                                    <div class="tab-content" id="fileTypeTabsContent">
+                                        <div class="tab-pane fade show active" id="images-content" role="tabpanel" aria-labelledby="images-tab">
+                                            <div class="mb-3">
+                                                <div class="input-group">
+                                                    <input type="file" class="form-control" id="files" name="files" multiple accept="image/*,.pdf">
+                                                    <button class="btn btn-outline-secondary" type="button" id="filterImages">صور فقط</button>
+                                                </div>
+                                                <div class="form-text">يمكنك اختيار أكثر من صورة، صيغ الملفات المدعومة: JPG, PNG, GIF</div>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane fade" id="pdfs-content" role="tabpanel" aria-labelledby="pdfs-tab">
+                                            <div class="mb-3">
+                                                <div class="input-group">
+                                                    <input type="file" class="form-control" id="pdf-files" accept=".pdf">
+                                                    <button class="btn btn-outline-secondary" type="button" id="filterPdfs">PDF فقط</button>
+                                                </div>
+                                                <div class="form-text">يمكنك رفع ملفات PDF مثل نماذج التسليم والاستلام الموقعة، تقارير الفحص، إلخ.</div>
+                                            </div>
                                         </div>
                                     </div>
                                     
+                                    <div id="file-previews" class="row mt-3 d-none">
+                                        <div class="col-12">
+                                            <h6>الملفات المرفوعة:</h6>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- قالب معاينة الصور -->
                                     <div id="image-preview-template" class="d-none">
-                                        <div class="col-md-4 mb-3 preview-item">
+                                        <div class="col-md-4 mb-3 preview-item" data-type="image">
                                             <div class="card">
                                                 <img src="" alt="معاينة الصورة" class="card-img-top preview-image">
                                                 <div class="card-body">
                                                     <div class="mb-2">
-                                                        <input type="text" class="form-control form-control-sm image-description" placeholder="وصف الصورة (اختياري)">
+                                                        <input type="text" class="form-control form-control-sm file-description" placeholder="وصف الصورة (اختياري)">
                                                     </div>
-                                                    <button type="button" class="btn btn-danger btn-sm remove-image">حذف</button>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-file">حذف</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- قالب معاينة ملفات PDF -->
+                                    <div id="pdf-preview-template" class="d-none">
+                                        <div class="col-md-4 mb-3 preview-item" data-type="pdf">
+                                            <div class="card">
+                                                <div class="card-header bg-danger text-white text-center py-3">
+                                                    <i class="fas fa-file-pdf fa-3x"></i>
+                                                </div>
+                                                <div class="card-body">
+                                                    <h6 class="pdf-filename text-truncate mb-2"></h6>
+                                                    <div class="mb-2">
+                                                        <input type="text" class="form-control form-control-sm file-description" placeholder="وصف الملف (اختياري)">
+                                                    </div>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-file">حذف</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -233,77 +278,137 @@
         handoverTypeSelect.addEventListener('change', updateFormTitle);
         updateFormTitle(); // تحديث العنوان عند تحميل الصفحة
         
-        // ===== إدارة رفع الصور =====
-        const imageInput = document.getElementById('images');
-        const imagePreviews = document.getElementById('image-previews');
-        const previewTemplate = document.getElementById('image-preview-template');
+        // ===== إدارة رفع الملفات =====
+        const filesInput = document.getElementById('files');
+        const pdfFilesInput = document.getElementById('pdf-files');
+        const filePreviews = document.getElementById('file-previews');
+        const imagePreviewTemplate = document.getElementById('image-preview-template');
+        const pdfPreviewTemplate = document.getElementById('pdf-preview-template');
+        const filterImagesBtn = document.getElementById('filterImages');
+        const filterPdfsBtn = document.getElementById('filterPdfs');
         
-        // معالجة اختيار الصور
-        imageInput.addEventListener('change', function() {
-            // إزالة أي معاينات سابقة ما عدا العنوان
-            while (imagePreviews.children.length > 1) {
-                imagePreviews.removeChild(imagePreviews.lastChild);
+        // مصفوفة لتخزين الملفات المؤقتة
+        let filesTransferList = new DataTransfer();
+        
+        // إضافة معاينة للملف المختار
+        function addFilePreview(file) {
+            // إضافة الملف إلى قائمة النقل
+            filesTransferList.items.add(file);
+            
+            // تحديث قائمة الملفات في حقل الإدخال
+            filesInput.files = filesTransferList.files;
+            
+            // تحديد نوع الملف وإنشاء معاينة مناسبة
+            const isPdf = file.name.toLowerCase().endsWith('.pdf');
+            const previewTemplate = isPdf ? pdfPreviewTemplate : imagePreviewTemplate;
+            const previewClone = previewTemplate.querySelector('.preview-item').cloneNode(true);
+            
+            // ضبط بيانات الملف
+            if (isPdf) {
+                previewClone.querySelector('.pdf-filename').textContent = file.name;
+            } else {
+                const imageElement = previewClone.querySelector('.preview-image');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageElement.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
             
+            // ضبط حقل الوصف
+            const descriptionInput = previewClone.querySelector('.file-description');
+            descriptionInput.name = `description_${file.name}`;
+            descriptionInput.dataset.fileName = file.name;
+            
+            // الاحتفاظ بمرجع للملف في عنصر المعاينة
+            previewClone.dataset.fileName = file.name;
+            
+            // إضافة المعاينة إلى القسم
+            filePreviews.appendChild(previewClone);
+            filePreviews.classList.remove('d-none');
+        }
+        
+        // حذف معاينة ملف وإزالته من قائمة الملفات
+        function removeFilePreview(previewItem) {
+            const fileName = previewItem.dataset.fileName;
+            
+            // إنشاء قائمة نقل جديدة بدون الملف المحذوف
+            const newTransferList = new DataTransfer();
+            
+            for (let i = 0; i < filesTransferList.files.length; i++) {
+                const file = filesTransferList.files[i];
+                if (file.name !== fileName) {
+                    newTransferList.items.add(file);
+                }
+            }
+            
+            // تحديث قائمة النقل وحقل الإدخال
+            filesTransferList = newTransferList;
+            filesInput.files = filesTransferList.files;
+            
+            // إزالة عنصر المعاينة من DOM
+            filePreviews.removeChild(previewItem);
+            
+            // إخفاء قسم المعاينة إذا لم تعد هناك معاينات
+            if (filePreviews.querySelectorAll('.preview-item').length <= 1) {
+                filePreviews.classList.add('d-none');
+            }
+        }
+        
+        // معالجة اختيار الملفات الرئيسية
+        filesInput.addEventListener('change', function() {
             if (this.files.length > 0) {
-                // إظهار قسم المعاينة
-                imagePreviews.classList.remove('d-none');
-                
-                // إضافة معاينة لكل صورة تم اختيارها
-                Array.from(this.files).forEach((file, index) => {
-                    // إنشاء نسخة من قالب المعاينة
-                    const previewClone = previewTemplate.querySelector('.preview-item').cloneNode(true);
-                    const imageElement = previewClone.querySelector('.preview-image');
-                    const descriptionInput = previewClone.querySelector('.image-description');
-                    const removeButton = previewClone.querySelector('.remove-image');
-                    
-                    // ضبط معرّف الوصف وربطه بملف الصورة
-                    const inputName = `description_${file.name}`;
-                    descriptionInput.name = inputName;
-                    descriptionInput.dataset.fileName = file.name;
-                    
-                    // إنشاء معاينة الصورة
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        imageElement.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                    
-                    // إضافة المعاينة إلى القسم
-                    imagePreviews.appendChild(previewClone);
+                // إضافة معاينة لكل ملف تم اختياره
+                Array.from(this.files).forEach(file => {
+                    addFilePreview(file);
                 });
-            } else {
-                // إخفاء قسم المعاينة إذا لم يتم اختيار أي صورة
-                imagePreviews.classList.add('d-none');
+                
+                // مسح حقل الإدخال للسماح باختيار نفس الملفات مرة أخرى
+                this.value = '';
             }
         });
         
-        // إدارة حذف الصور عند النقر على زر الحذف
-        imagePreviews.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-image')) {
-                // العثور على عنصر المعاينة الذي يحتوي على الصورة
-                const previewItem = e.target.closest('.preview-item');
+        // معالجة اختيار ملفات PDF من التبويب الثاني
+        pdfFilesInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                // إضافة معاينة لكل ملف PDF تم اختياره
+                Array.from(this.files).forEach(file => {
+                    addFilePreview(file);
+                });
                 
+                // مسح حقل الإدخال للسماح باختيار نفس الملفات مرة أخرى
+                this.value = '';
+            }
+        });
+        
+        // تصفية الملفات حسب النوع (صور فقط)
+        filterImagesBtn.addEventListener('click', function() {
+            filesInput.setAttribute('accept', 'image/*');
+            filesInput.click();
+            filesInput.setAttribute('accept', 'image/*,.pdf');
+        });
+        
+        // تصفية الملفات حسب النوع (PDF فقط)
+        filterPdfsBtn.addEventListener('click', function() {
+            pdfFilesInput.click();
+        });
+        
+        // إدارة حذف الملفات عند النقر على زر الحذف
+        filePreviews.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-file')) {
+                // العثور على عنصر المعاينة الذي يحتوي على الملف
+                const previewItem = e.target.closest('.preview-item');
                 if (previewItem) {
-                    // إزالة عنصر المعاينة من DOM
-                    imagePreviews.removeChild(previewItem);
-                    
-                    // إذا لم تعد هناك معاينات، إخفاء القسم
-                    if (imagePreviews.querySelectorAll('.preview-item').length === 0) {
-                        imagePreviews.classList.add('d-none');
-                    }
+                    removeFilePreview(previewItem);
                 }
             }
         });
         
         // معالجة إرسال النموذج
         document.querySelector('form').addEventListener('submit', function(e) {
-            // الحصول على قائمة الصور المختارة
-            const selectedImages = imageInput.files;
-            
-            // إذا لم تكن هناك صور، عرض رسالة تأكيد
-            if (selectedImages.length === 0) {
-                if (!confirm('لم تقم برفع أي صور توثيقية. هل ترغب في المتابعة بدون صور؟')) {
+            // التحقق من وجود ملفات مرفقة
+            if (filesTransferList.files.length === 0) {
+                if (!confirm('لم تقم برفع أي ملفات توثيقية (صور أو PDF). هل ترغب في المتابعة بدون ملفات؟')) {
                     e.preventDefault();
                     return false;
                 }

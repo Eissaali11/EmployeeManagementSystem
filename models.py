@@ -471,11 +471,12 @@ class VehicleHandover(db.Model):
 
 
 class VehicleHandoverImage(db.Model):
-    """صور توثيقية لحالة السيارة عند التسليم/الاستلام"""
+    """صور وملفات PDF توثيقية لحالة السيارة عند التسليم/الاستلام"""
     id = db.Column(db.Integer, primary_key=True)
     handover_record_id = db.Column(db.Integer, db.ForeignKey('vehicle_handover.id', ondelete='CASCADE'), nullable=False)
-    image_path = db.Column(db.String(255), nullable=False)  # مسار الصورة
-    image_description = db.Column(db.String(100))  # وصف الصورة
+    file_path = db.Column(db.String(255), nullable=False)  # مسار الملف
+    file_type = db.Column(db.String(20), default='image')  # نوع الملف (image/pdf)
+    file_description = db.Column(db.String(200))  # وصف الملف
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # العلاقات
@@ -483,6 +484,15 @@ class VehicleHandoverImage(db.Model):
     
     def __repr__(self):
         return f'<VehicleHandoverImage {self.handover_record_id}>'
+        
+    # للحفاظ على التوافق مع الكود السابق
+    @property
+    def image_path(self):
+        return self.file_path
+    
+    @property
+    def image_description(self):
+        return self.file_description
 
 
 class VehicleChecklist(db.Model):

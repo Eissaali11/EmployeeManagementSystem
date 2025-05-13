@@ -82,10 +82,10 @@ SAFETY_CHECK_STATUS_CHOICES = [
 ]
 
 # الوظائف المساعدة
-def save_image(file, folder='vehicles'):
-    """حفظ الصورة في المجلد المحدد وإرجاع المسار"""
+def save_file(file, folder='vehicles'):
+    """حفظ الملف (صورة أو PDF) في المجلد المحدد وإرجاع المسار ونوع الملف"""
     if not file:
-        return None
+        return None, None
     
     # إنشاء اسم فريد للملف
     filename = secure_filename(file.filename)
@@ -99,8 +99,17 @@ def save_image(file, folder='vehicles'):
     file_path = os.path.join(upload_folder, unique_filename)
     file.save(file_path)
     
-    # إرجاع المسار النسبي للملف
-    return f"uploads/{folder}/{unique_filename}"
+    # تحديد نوع الملف (صورة أو PDF)
+    file_type = 'pdf' if filename.lower().endswith('.pdf') else 'image'
+    
+    # إرجاع المسار النسبي للملف ونوعه
+    return f"uploads/{folder}/{unique_filename}", file_type
+
+# للحفاظ على التوافق مع الكود القديم
+def save_image(file, folder='vehicles'):
+    """وظيفة محفوظة للتوافق مع الكود القديم"""
+    file_path, _ = save_file(file, folder)
+    return file_path
 
 def format_date_arabic(date_obj):
     """تنسيق التاريخ باللغة العربية"""
@@ -1223,20 +1232,21 @@ def create_handover(id):
         db.session.add(handover)
         db.session.commit()
         
-        # معالجة الصور المرفقة
-        images = request.files.getlist('images')
+        # معالجة الملفات المرفقة (صور و PDF)
+        files = request.files.getlist('files')
         
-        for image in images:
-            if image and image.filename:
-                image_path = save_image(image, 'handover')
-                if image_path:
-                    image_description = request.form.get(f'description_{image.filename}', '')
-                    image_record = VehicleHandoverImage(
+        for file in files:
+            if file and file.filename:
+                file_path, file_type = save_file(file, 'handover')
+                if file_path:
+                    file_description = request.form.get(f'description_{file.filename}', '')
+                    file_record = VehicleHandoverImage(
                         handover_record_id=handover.id,
-                        image_path=image_path,
-                        image_description=image_description
+                        file_path=file_path,
+                        file_type=file_type,
+                        file_description=file_description
                     )
-                    db.session.add(image_record)
+                    db.session.add(file_record)
         
         db.session.commit()
         
