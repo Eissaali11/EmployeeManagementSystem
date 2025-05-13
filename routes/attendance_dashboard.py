@@ -46,6 +46,43 @@ def index():
     # إحصائيات إجمالية
     total_employees = Employee.query.filter_by(status='active').count()
     
+    # حساب إحصائيات الحضور الإجمالية
+    total_present = db.session.query(func.count(Attendance.id)).join(
+        Employee, Employee.id == Attendance.employee_id
+    ).filter(
+        Employee.status == 'active',
+        Attendance.date == selected_date,
+        Attendance.status == 'present'
+    ).scalar() or 0
+    
+    total_absent = db.session.query(func.count(Attendance.id)).join(
+        Employee, Employee.id == Attendance.employee_id
+    ).filter(
+        Employee.status == 'active',
+        Attendance.date == selected_date,
+        Attendance.status == 'absent'
+    ).scalar() or 0
+    
+    total_leave = db.session.query(func.count(Attendance.id)).join(
+        Employee, Employee.id == Attendance.employee_id
+    ).filter(
+        Employee.status == 'active',
+        Attendance.date == selected_date,
+        Attendance.status == 'leave'
+    ).scalar() or 0
+    
+    total_sick = db.session.query(func.count(Attendance.id)).join(
+        Employee, Employee.id == Attendance.employee_id
+    ).filter(
+        Employee.status == 'active',
+        Attendance.date == selected_date,
+        Attendance.status == 'sick'
+    ).scalar() or 0
+    
+    # حساب عدد الموظفين الذين لم يتم تسجيل حضورهم
+    total_registered = total_present + total_absent + total_leave + total_sick
+    total_missing = total_employees - total_registered if total_registered <= total_employees else 0
+    
     # إحصائيات حسب القسم
     department_stats = []
     
@@ -182,6 +219,11 @@ def index():
         departments=departments,
         selected_department_id=int(department_id) if department_id else None,
         total_employees=total_employees,
+        total_present=total_present,
+        total_absent=total_absent,
+        total_leave=total_leave,
+        total_sick=total_sick,
+        total_missing=total_missing,
         department_stats=department_stats,
         absent_employees=absent_employees,
         absent_by_department=absent_by_department

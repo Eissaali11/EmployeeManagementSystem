@@ -24,19 +24,7 @@
         </div>
     </div>
     
-    {% set total_present = 0 %}
-    {% set total_absent = 0 %}
-    {% set total_leave = 0 %}
-    {% set total_sick = 0 %}
-    {% set total_missing = 0 %}
-    
-    {% for dept in department_stats %}
-        {% set total_present = total_present + dept.present_count %}
-        {% set total_absent = total_absent + dept.absent_count %}
-        {% set total_leave = total_leave + dept.leave_count %}
-        {% set total_sick = total_sick + dept.sick_count %}
-        {% set total_missing = total_missing + dept.missing_count %}
-    {% endfor %}
+
     
     <!-- شريط الإحصائيات العامة في الأعلى -->
     <div class="card border-0 mb-4">
