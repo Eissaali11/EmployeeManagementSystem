@@ -236,6 +236,11 @@ def department_attendance():
 @attendance_bp.route('/all-departments', methods=['GET', 'POST'])
 def all_departments_attendance():
     """تسجيل حضور لعدة أقسام لفترة زمنية محددة"""
+    # التاريخ الافتراضي هو اليوم
+    today = datetime.now().date()
+    hijri_date = format_date_hijri(today)
+    gregorian_date = format_date_gregorian(today)
+    
     if request.method == 'POST':
         try:
             department_ids = request.form.getlist('department_ids')
@@ -243,13 +248,25 @@ def all_departments_attendance():
             end_date_str = request.form.get('end_date')
             status = request.form.get('status')
             
+            if not department_ids:
+                flash('يجب اختيار قسم واحد على الأقل.', 'danger')
+                return redirect(url_for('attendance.all_departments_attendance'))
+                
+            if not start_date_str or not end_date_str:
+                flash('يجب تحديد تاريخ البداية والنهاية.', 'danger')
+                return redirect(url_for('attendance.all_departments_attendance'))
+                
+            if not status:
+                status = 'present'  # الحالة الافتراضية هي حاضر
+                
             # تحليل التواريخ
             try:
                 start_date = parse_date(start_date_str)
                 end_date = parse_date(end_date_str)
                 
                 if not start_date or not end_date:
-                    raise ValueError("تاريخ غير صالح")
+                    flash('تاريخ غير صالح، يرجى التحقق من التنسيق.', 'danger')
+                    return redirect(url_for('attendance.all_departments_attendance'))
                 
                 # التحقق من صحة النطاق
                 if end_date < start_date:
@@ -257,10 +274,6 @@ def all_departments_attendance():
                     return redirect(url_for('attendance.all_departments_attendance'))
             except (ValueError, TypeError) as e:
                 flash(f'خطأ في تنسيق التاريخ: {str(e)}', 'danger')
-                return redirect(url_for('attendance.all_departments_attendance'))
-                
-            if not department_ids:
-                flash('يجب اختيار قسم واحد على الأقل.', 'danger')
                 return redirect(url_for('attendance.all_departments_attendance'))
                 
             # تهيئة المتغيرات للإحصائيات
@@ -272,83 +285,111 @@ def all_departments_attendance():
             delta = end_date - start_date
             days_count = delta.days + 1  # لتضمين اليوم الأخير
             
-            # العمل على كل قسم من الأقسام المحددة
-            for department_id in department_ids:
-                # الحصول على جميع الموظفين في القسم
-                employees = Employee.query.filter_by(
-                    department_id=department_id,
-                    status='active'
-                ).all()
-                
-                # عدد موظفي القسم
-                department_employee_count = len(employees)
-                total_employees += department_employee_count
-                
-                # التحضير لكل يوم في النطاق المحدد
-                current_date = start_date
-                
-                while current_date <= end_date:
-                    day_count = 0
-                    
-                    for employee in employees:
-                        # التحقق من وجود سجل حضور مسبق
-                        existing = Attendance.query.filter_by(
-                            employee_id=employee.id,
-                            date=current_date
-                        ).first()
+            try:
+                # العمل على كل قسم من الأقسام المحددة
+                for department_id in department_ids:
+                    try:
+                        # التحويل إلى عدد صحيح
+                        dept_id = int(department_id)
                         
-                        if existing:
-                            # تحديث السجل الموجود
-                            existing.status = status
-                            if status != 'present':
-                                existing.check_in = None
-                                existing.check_out = None
-                        else:
-                            # إنشاء سجل حضور جديد
-                            new_attendance = Attendance(
-                                employee_id=employee.id,
-                                date=current_date,
-                                status=status
+                        # الحصول على القسم للتأكد من وجوده
+                        department = Department.query.get(dept_id)
+                        if not department:
+                            continue
+                            
+                        # الحصول على جميع الموظفين في القسم
+                        employees = Employee.query.filter_by(
+                            department_id=dept_id,
+                            status='active'
+                        ).all()
+                        
+                        # عدد موظفي القسم
+                        department_employee_count = len(employees)
+                        total_employees += department_employee_count
+                        
+                        # التحضير لكل يوم في النطاق المحدد
+                        current_date = start_date
+                        department_records = 0
+                        
+                        while current_date <= end_date:
+                            day_count = 0
+                            
+                            for employee in employees:
+                                try:
+                                    # التحقق من وجود سجل حضور مسبق
+                                    existing = Attendance.query.filter_by(
+                                        employee_id=employee.id,
+                                        date=current_date
+                                    ).first()
+                                    
+                                    if existing:
+                                        # تحديث السجل الموجود
+                                        existing.status = status
+                                        if status != 'present':
+                                            existing.check_in = None
+                                            existing.check_out = None
+                                    else:
+                                        # إنشاء سجل حضور جديد
+                                        new_attendance = Attendance(
+                                            employee_id=employee.id,
+                                            date=current_date,
+                                            status=status
+                                        )
+                                        db.session.add(new_attendance)
+                                    
+                                    day_count += 1
+                                except Exception as emp_error:
+                                    # تسجيل الخطأ والاستمرار مع الموظف التالي
+                                    print(f"خطأ مع الموظف {employee.id}: {str(emp_error)}")
+                                    continue
+                            
+                            # الانتقال إلى اليوم التالي
+                            current_date += timedelta(days=1)
+                            department_records += day_count
+                        
+                        total_records += department_records
+                        
+                        # تسجيل العملية للقسم
+                        try:
+                            SystemAudit.create_audit_record(
+                                user_id=None,  # يمكن استخدام current_user.id إذا كانت متاحة
+                                action='mass_update',
+                                entity_type='attendance',
+                                entity_id=department.id,
+                                entity_name=department.name,
+                                details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {department_employee_count} موظف'
                             )
-                            db.session.add(new_attendance)
-                        
-                        day_count += 1
+                        except Exception as audit_error:
+                            # تخطي خطأ التسجيل والاستمرار
+                            print(f"خطأ في تسجيل نشاط القسم {department.id}: {str(audit_error)}")
+                            pass
                     
-                    # الانتقال إلى اليوم التالي
-                    current_date += timedelta(days=1)
-                    total_records += day_count
+                    except Exception as dept_error:
+                        # تسجيل الخطأ والاستمرار مع القسم التالي
+                        print(f"خطأ مع القسم {department_id}: {str(dept_error)}")
+                        continue
                 
-                # تسجيل العملية للقسم
-                department = Department.query.get(department_id)
-                if department:
-                    # استخدام دالة create_audit_record بدلاً من إنشاء الكائن مباشرة
-                    SystemAudit.create_audit_record(
-                        user_id=None,  # يمكن استخدام current_user.id إذا كانت متاحة
-                        action='mass_update',
-                        entity_type='attendance',
-                        entity_id=department.id,
-                        entity_name=department.name,
-                        details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {department_employee_count} موظف'
-                    )
+                # حفظ جميع التغييرات
+                db.session.commit()
+                
+                # رسالة نجاح مفصلة
+                flash(f'تم تسجيل الحضور لـ {total_departments} قسم و {total_employees} موظف عن {days_count} يوم بنجاح (إجمالي {total_records} سجل)', 'success')
+                return redirect(url_for('attendance.index', date=start_date_str))
             
-            # حفظ جميع التغييرات
-            db.session.commit()
-            
-            # رسالة نجاح مفصلة
-            flash(f'تم تسجيل الحضور لـ {total_departments} قسم و {total_employees} موظف عن {days_count} يوم بنجاح (إجمالي {total_records} سجل)', 'success')
-            return redirect(url_for('attendance.index', date=start_date_str))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'حدث خطأ أثناء معالجة الأقسام: {str(e)}', 'danger')
         
         except Exception as e:
             db.session.rollback()
-            flash(f'حدث خطأ: {str(e)}', 'danger')
+            flash(f'حدث خطأ عام: {str(e)}', 'danger')
     
     # الحصول على جميع الأقسام
-    departments = Department.query.all()
-    
-    # التاريخ الافتراضي هو اليوم
-    today = datetime.now().date()
-    hijri_date = format_date_hijri(today)
-    gregorian_date = format_date_gregorian(today)
+    try:
+        departments = Department.query.all()
+    except Exception as e:
+        departments = []
+        flash(f'خطأ في تحميل الأقسام: {str(e)}', 'warning')
     
     return render_template('attendance/all_departments.html', 
                           departments=departments,
