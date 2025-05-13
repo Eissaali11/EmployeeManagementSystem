@@ -146,8 +146,39 @@
                         
                         <div class="mb-3">
                             <label for="images" class="form-label">صور توثيقية</label>
-                            <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
-                            <div class="form-text">يمكنك اختيار أكثر من صورة لتوثيق حالة السيارة</div>
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="fas fa-camera me-2"></i>
+                                    صور توثيقية لتسليم/استلام السيارة
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">يمكنك رفع صور للسيارة من الداخل والخارج وأي أضرار أو خدوش موجودة في السيارة للتوثيق</p>
+                                    <div class="mb-3">
+                                        <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                                        <div class="form-text">يمكنك اختيار أكثر من صورة، صيغ الملفات المدعومة: JPG, PNG, GIF</div>
+                                    </div>
+                                    
+                                    <div id="image-previews" class="row mt-3 d-none">
+                                        <div class="col-12">
+                                            <h6>الصور المرفوعة:</h6>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="image-preview-template" class="d-none">
+                                        <div class="col-md-4 mb-3 preview-item">
+                                            <div class="card">
+                                                <img src="" alt="معاينة الصورة" class="card-img-top preview-image">
+                                                <div class="card-body">
+                                                    <div class="mb-2">
+                                                        <input type="text" class="form-control form-control-sm image-description" placeholder="وصف الصورة (اختياري)">
+                                                    </div>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-image">حذف</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
@@ -201,6 +232,85 @@
         
         handoverTypeSelect.addEventListener('change', updateFormTitle);
         updateFormTitle(); // تحديث العنوان عند تحميل الصفحة
+        
+        // ===== إدارة رفع الصور =====
+        const imageInput = document.getElementById('images');
+        const imagePreviews = document.getElementById('image-previews');
+        const previewTemplate = document.getElementById('image-preview-template');
+        
+        // معالجة اختيار الصور
+        imageInput.addEventListener('change', function() {
+            // إزالة أي معاينات سابقة ما عدا العنوان
+            while (imagePreviews.children.length > 1) {
+                imagePreviews.removeChild(imagePreviews.lastChild);
+            }
+            
+            if (this.files.length > 0) {
+                // إظهار قسم المعاينة
+                imagePreviews.classList.remove('d-none');
+                
+                // إضافة معاينة لكل صورة تم اختيارها
+                Array.from(this.files).forEach((file, index) => {
+                    // إنشاء نسخة من قالب المعاينة
+                    const previewClone = previewTemplate.querySelector('.preview-item').cloneNode(true);
+                    const imageElement = previewClone.querySelector('.preview-image');
+                    const descriptionInput = previewClone.querySelector('.image-description');
+                    const removeButton = previewClone.querySelector('.remove-image');
+                    
+                    // ضبط معرّف الوصف وربطه بملف الصورة
+                    const inputName = `description_${file.name}`;
+                    descriptionInput.name = inputName;
+                    descriptionInput.dataset.fileName = file.name;
+                    
+                    // إنشاء معاينة الصورة
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageElement.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // إضافة المعاينة إلى القسم
+                    imagePreviews.appendChild(previewClone);
+                });
+            } else {
+                // إخفاء قسم المعاينة إذا لم يتم اختيار أي صورة
+                imagePreviews.classList.add('d-none');
+            }
+        });
+        
+        // إدارة حذف الصور عند النقر على زر الحذف
+        imagePreviews.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-image')) {
+                // العثور على عنصر المعاينة الذي يحتوي على الصورة
+                const previewItem = e.target.closest('.preview-item');
+                
+                if (previewItem) {
+                    // إزالة عنصر المعاينة من DOM
+                    imagePreviews.removeChild(previewItem);
+                    
+                    // إذا لم تعد هناك معاينات، إخفاء القسم
+                    if (imagePreviews.querySelectorAll('.preview-item').length === 0) {
+                        imagePreviews.classList.add('d-none');
+                    }
+                }
+            }
+        });
+        
+        // معالجة إرسال النموذج
+        document.querySelector('form').addEventListener('submit', function(e) {
+            // الحصول على قائمة الصور المختارة
+            const selectedImages = imageInput.files;
+            
+            // إذا لم تكن هناك صور، عرض رسالة تأكيد
+            if (selectedImages.length === 0) {
+                if (!confirm('لم تقم برفع أي صور توثيقية. هل ترغب في المتابعة بدون صور؟')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            return true;
+        });
     });
 </script>
 {% endblock %}
