@@ -13,15 +13,15 @@ from io import BytesIO
 from models import Employee, Attendance, Salary, Vehicle, Department
 
 # تحميل الخط العربي
-FONT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts')
+FONT_PATH = '/home/runner/workspace/static/fonts'
 
 class EmployeeComprehensivePDF(FPDF):
     """فئة لإنشاء تقرير PDF شامل للموظف"""
     
     def __init__(self, orientation='P', unit='mm', format='A4'):
         super().__init__(orientation, unit, format)
-        self.add_font('Amiri', '', os.path.join(FONT_PATH, 'amiri-regular.ttf'), uni=True)
-        self.add_font('Amiri', 'B', os.path.join(FONT_PATH, 'amiri-bold.ttf'), uni=True)
+        self.add_font('Amiri', '', os.path.join(FONT_PATH, 'Amiri-Regular.ttf'), uni=True)
+        self.add_font('Amiri', 'B', os.path.join(FONT_PATH, 'Amiri-Bold.ttf'), uni=True)
         
     def header(self):
         """ترويسة الصفحة - تظهر في كل صفحة"""
@@ -121,13 +121,13 @@ def generate_employee_comprehensive_pdf(employee_id):
     pdf.add_info_row('اسم الموظف', employee.name)
     pdf.add_info_row('الرقم الوظيفي', employee.employee_id)
     pdf.add_info_row('رقم الهوية', employee.national_id)
-    pdf.add_info_row('تاريخ الميلاد', employee.birthdate.strftime('%Y-%m-%d') if employee.birthdate else '-')
+    pdf.add_info_row('تاريخ الالتحاق', employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '-')
     pdf.add_info_row('الجنسية', employee.nationality)
     pdf.add_info_row('القسم', employee.department.name if employee.department else '-')
     pdf.add_info_row('المشروع', employee.project)
-    pdf.add_info_row('المدينة', employee.city)
+    pdf.add_info_row('الموقع', employee.location)
     pdf.add_info_row('البريد الإلكتروني', employee.email)
-    pdf.add_info_row('رقم الجوال', employee.phone)
+    pdf.add_info_row('رقم الجوال', employee.mobile)
     
     # معلومات الوثائق
     pdf.ln(5)
@@ -272,20 +272,20 @@ def generate_employee_comprehensive_excel(employee_id):
     # إنشاء ورقة معلومات الموظف
     employee_data = {
         'المعلومة': [
-            'اسم الموظف', 'الرقم الوظيفي', 'رقم الهوية', 'تاريخ الميلاد', 'الجنسية',
-            'القسم', 'المشروع', 'المدينة', 'البريد الإلكتروني', 'رقم الجوال'
+            'اسم الموظف', 'الرقم الوظيفي', 'رقم الهوية', 'تاريخ الالتحاق', 'الجنسية',
+            'القسم', 'المشروع', 'الموقع', 'البريد الإلكتروني', 'رقم الجوال'
         ],
         'القيمة': [
             employee.name,
             employee.employee_id,
             employee.national_id,
-            employee.birthdate.strftime('%Y-%m-%d') if employee.birthdate else '-',
+            employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '-',
             employee.nationality,
             employee.department.name if employee.department else '-',
             employee.project,
-            employee.city,
+            employee.location,
             employee.email,
-            employee.phone
+            employee.mobile
         ]
     }
     
