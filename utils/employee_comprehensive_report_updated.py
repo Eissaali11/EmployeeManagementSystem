@@ -238,7 +238,8 @@ def generate_employee_comprehensive_pdf(employee_id):
     
     # إنشاء مخرجات الملف
     output = BytesIO()
-    pdf.output(output)
+    pdf_output = pdf.output(dest='S').encode('latin1')
+    output.write(pdf_output)
     output.seek(0)
     
     return output
