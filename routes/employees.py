@@ -137,9 +137,15 @@ def edit(id):
             flash('تم تحديث بيانات الموظف بنجاح', 'success')
             return redirect(url_for('employees.index'))
         
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            flash('هناك خطأ في البيانات. قد يكون رقم الموظف أو رقم الهوية موجود مسبقًا', 'danger')
+            error_message = str(e)
+            if "employee_id" in error_message.lower():
+                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الموظف موجود بالفعل في النظام", "danger")
+            elif "national_id" in error_message.lower():
+                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الهوية موجود بالفعل في النظام", "danger")
+            else:
+                flash("هذه المعلومات مسجلة مسبقاً، لا يمكن تكرار بيانات الموظفين", "danger")
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
