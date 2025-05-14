@@ -513,11 +513,17 @@ def export_attendance_excel(id):
 def comprehensive_report(id):
     """تقرير شامل عن الموظف بصيغة PDF"""
     try:
+        # طباعة رسالة تشخيصية
+        print("بدء إنشاء التقرير الشامل للموظف")
+        
         # التحقق من وجود الموظف
         employee = Employee.query.get_or_404(id)
+        print(f"تم العثور على الموظف: {employee.name}")
         
         # إنشاء ملف PDF
+        print("استدعاء دالة إنشاء PDF")
         output = generate_employee_comprehensive_pdf(id)
+        print("تم استلام ناتج ملف PDF")
         
         if not output:
             flash('لم يتم العثور على بيانات كافية لإنشاء التقرير', 'warning')
@@ -525,6 +531,7 @@ def comprehensive_report(id):
         
         # اسم الملف المُصدَّر
         filename = f"تقرير_شامل_{employee.name}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        print(f"اسم الملف: {filename}")
         
         # تسجيل عملية التصدير
         audit = SystemAudit(
@@ -535,8 +542,14 @@ def comprehensive_report(id):
         )
         db.session.add(audit)
         db.session.commit()
+        print("تم تسجيل العملية في سجل النظام")
+        
+        # طباعة نوع ناتج الملف للتشخيص
+        print(f"نوع ناتج الملف: {type(output)}")
+        print(f"حجم البيانات: {output.getbuffer().nbytes} بايت")
         
         # إرسال ملف PDF
+        print("إرسال الملف للمتصفح")
         return send_file(
             output,
             as_attachment=True,
