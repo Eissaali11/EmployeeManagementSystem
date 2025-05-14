@@ -12,8 +12,8 @@ import pandas as pd
 from io import BytesIO
 from models import Employee, Attendance, Salary, Vehicle, Department
 
-# تحميل الخط العربي
-FONT_PATH = '/home/runner/workspace/static/fonts'
+# تحميل الخط العربي - استخدام مسار نسبي من الملف الحالي
+FONT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts')
 
 class EmployeeComprehensivePDF(FPDF):
     """فئة لإنشاء تقرير PDF شامل للموظف"""
@@ -236,13 +236,32 @@ def generate_employee_comprehensive_pdf(employee_id):
         pdf.set_font('Amiri', '', 12)
         pdf.cell(0, 10, pdf.arabic_text('لا توجد سجلات رواتب مسجلة'), 0, 1, 'C')
     
-    # إنشاء مخرجات الملف
-    output = BytesIO()
-    pdf_output = pdf.output(dest='S').encode('latin1')
-    output.write(pdf_output)
-    output.seek(0)
+    # طباعة بعض التفاصيل للتشخيص
+    print(f"مسار الخط: {FONT_PATH}")
+    print(f"ملفات الخطوط الموجودة: {os.listdir(FONT_PATH)}")
     
-    return output
+    # استخدام طريقة أبسط لإنشاء المخرج
+    try:
+        # إنشاء مخرجات الملف
+        output = BytesIO()
+        # حفظ الملف مباشرة إلى BytesIO
+        pdf_content = pdf.output(dest='S')
+        
+        # تحويل المحتوى إلى بيانات ثنائية
+        if isinstance(pdf_content, str):
+            pdf_content = pdf_content.encode('latin1')
+            
+        # كتابة المحتوى إلى البافر
+        output.write(pdf_content)
+        output.seek(0)
+        
+        print(f"تم إنشاء ملف PDF بحجم: {len(output.getvalue())} بايت")
+        return output
+    except Exception as e:
+        print(f"حدث خطأ أثناء إنشاء ملف PDF: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return None
 
 
 def generate_employee_comprehensive_excel(employee_id):
