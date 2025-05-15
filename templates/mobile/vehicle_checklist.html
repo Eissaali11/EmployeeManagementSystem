@@ -419,16 +419,16 @@
                     <label class="form-check-label">إضافة صور للفحص</label>
                     <div class="row gx-2 mb-3">
                         <div class="col-6">
-                            <label for="image-capture-input" class="btn btn-outline-primary w-100">
+                            <button type="button" id="camera-btn" class="btn btn-outline-primary w-100" onclick="document.getElementById('image-capture-input').click()">
                                 <i class="fas fa-camera"></i> التقاط صورة
-                            </label>
-                            <input type="file" id="image-capture-input" accept="image/*" capture="environment" style="opacity:0;position:absolute;width:1px;height:1px;" onchange="handleSelectedImages(this.files)">
+                            </button>
+                            <input type="file" id="image-capture-input" accept="image/*" capture="environment" style="display:none;">
                         </div>
                         <div class="col-6">
-                            <label for="image-file-input" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-image"></i> اختيار من الاستوديو
-                            </label>
-                            <input type="file" id="image-file-input" accept="image/*" multiple style="opacity:0;position:absolute;width:1px;height:1px;" onchange="handleSelectedImages(this.files)">
+                            <button type="button" id="gallery-btn" class="btn btn-outline-secondary w-100" onclick="document.getElementById('image-file-input').click()">
+                                <i class="fas fa-image"></i> من الاستوديو
+                            </button>
+                            <input type="file" id="image-file-input" accept="image/*" multiple style="display:none;">
                         </div>
                     </div>
                     
@@ -1273,130 +1273,123 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // متغير لتخزين الصور المختارة - معرفة عامة للصفحة
+    // نسخة جديدة ومبسطة جدًا لمعالجة الصور
+    
+    // متغير عام لتخزين الصور المختارة
     var selectedImages = [];
-
-    // دالة معالجة الصور المختارة - أبسط وأكثر متانة
-    function handleSelectedImages(files) {
-        console.log('تم استدعاء دالة معالجة الصور المختارة، عدد الملفات:', files.length);
+    
+    // تهيئة معالجات أحداث التقاط الصور
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('تهيئة معالجات أحداث التقاط الصور');
         
-        const imagePreviewContainer = document.getElementById('image-preview-container');
-        const imagesCount = document.getElementById('images-count');
+        // معالج حدث التقاط الصور من الكاميرا
+        document.getElementById('image-capture-input').addEventListener('change', function(event) {
+            console.log('تم التقاط صورة من الكاميرا');
+            handleImageSelection(event.target.files);
+        });
         
-        if (!files || !imagePreviewContainer) {
-            console.error('عناصر معالجة الصور غير موجودة');
+        // معالج حدث اختيار الصور من الاستوديو
+        document.getElementById('image-file-input').addEventListener('change', function(event) {
+            console.log('تم اختيار صور من الاستوديو');
+            handleImageSelection(event.target.files);
+        });
+    });
+    
+    // دالة معالجة الصور المختارة (مبسطة)
+    function handleImageSelection(files) {
+        if (!files || files.length === 0) {
+            console.warn('لم يتم تحديد أي ملفات');
             return;
         }
         
+        console.log('معالجة ' + files.length + ' صورة');
+        
+        const container = document.getElementById('image-preview-container');
+        const counter = document.getElementById('images-count');
+        
+        if (!container) {
+            console.error('لم يتم العثور على حاوية الصور');
+            return;
+        }
+        
+        // معالجة كل ملف
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             
-            // التحقق من أن الملف هو صورة
-            if (!file.type.match('image.*')) {
-                console.warn('تم تجاهل ملف غير صورة:', file.name, file.type);
+            // التحقق من نوع الملف
+            if (!file.type.startsWith('image/')) {
+                console.warn('تم تجاهل ملف ليس بصورة: ' + file.name);
                 continue;
             }
             
-            console.log('معالجة صورة:', file.name);
-            
             // إنشاء معرف فريد للصورة
-            const imageId = Date.now() + '-' + i;
+            const imageId = 'img_' + Date.now() + '_' + i;
             
-            // إضافة الصورة إلى قائمة الصور المختارة
+            // إضافة الصورة إلى المصفوفة
             selectedImages.push({
                 id: imageId,
-                file: file,
-                description: ''
+                file: file
             });
             
-            // إنشاء عنصر عرض مصغر للصورة
-            const imageCol = document.createElement('div');
-            imageCol.className = 'col-6 mb-2';
-            imageCol.dataset.id = imageId;
+            // قراءة الصورة وعرضها
+            const reader = new FileReader();
             
-            try {
-                const reader = new FileReader();
+            reader.onload = function(e) {
+                // إنشاء عناصر الصورة
+                const col = document.createElement('div');
+                col.className = 'col-6 mb-2';
+                col.id = imageId;
                 
-                reader.onload = function(e) {
-                    try {
-                        // إنشاء محتوى العرض المصغر
-                        const imageItem = document.createElement('div');
-                        imageItem.className = 'image-preview-item';
-                        
-                        // إضافة عنصر الصورة
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'img-fluid rounded';
-                        img.alt = 'صورة الفحص';
-                        imageItem.appendChild(img);
-                        
-                        // إضافة أزرار التحكم
-                        const actionsDiv = document.createElement('div');
-                        actionsDiv.className = 'image-preview-actions mt-1';
-                        
-                        // زر إضافة وصف
-                        const addDescBtn = document.createElement('button');
-                        addDescBtn.className = 'btn btn-sm btn-outline-primary me-1';
-                        addDescBtn.innerHTML = '<i class="fas fa-pen"></i> وصف';
-                        addDescBtn.onclick = function() { 
-                            // الوظيفة ستضاف لاحقاً 
-                            alert('سيتم إضافة هذه الوظيفة قريباً');
-                        };
-                        actionsDiv.appendChild(addDescBtn);
-                        
-                        // زر حذف الصورة
-                        const removeBtn = document.createElement('button');
-                        removeBtn.className = 'btn btn-sm btn-outline-danger';
-                        removeBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                        removeBtn.onclick = function() {
-                            // حذف الصورة المعروضة
-                            imageCol.remove();
-                            
-                            // حذف الصورة من المصفوفة
-                            const index = selectedImages.findIndex(img => img.id === imageId);
-                            if (index !== -1) {
-                                selectedImages.splice(index, 1);
-                            }
-                            
-                            // تحديث العداد
-                            if (imagesCount) {
-                                imagesCount.textContent = selectedImages.length;
-                            }
-                        };
-                        actionsDiv.appendChild(removeBtn);
-                        
-                        // إضافة الأزرار إلى عنصر الصورة
-                        imageItem.appendChild(actionsDiv);
-                        
-                        // إضافة عنصر الصورة إلى العمود
-                        imageCol.appendChild(imageItem);
-                        
-                        // إضافة العمود إلى حاوية العرض
-                        imagePreviewContainer.appendChild(imageCol);
-                        
-                        // تحديث عداد الصور
-                        if (imagesCount) {
-                            imagesCount.textContent = selectedImages.length;
-                        }
-                    } catch (renderError) {
-                        console.error('خطأ في عرض الصورة:', renderError);
-                    }
-                };
+                col.innerHTML = `
+                    <div class="card">
+                        <img src="${e.target.result}" class="card-img-top" alt="صورة الفحص">
+                        <div class="card-body p-2 text-center">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeImage('${imageId}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    </div>
+                `;
                 
-                reader.onerror = function(error) {
-                    console.error('خطأ في قراءة الصورة:', error);
-                };
+                // إضافة العنصر إلى الحاوية
+                container.appendChild(col);
                 
-                // قراءة الصورة كـ Data URL
-                reader.readAsDataURL(file);
-            } catch (fileError) {
-                console.error('خطأ في معالجة ملف الصورة:', fileError);
-            }
-            // تم إزالة الاستدعاء المكرر لإضافة العنصر
+                // تحديث العداد
+                if (counter) {
+                    counter.textContent = selectedImages.length;
+                }
+            };
+            
+            reader.onerror = function() {
+                console.error('حدث خطأ أثناء قراءة الملف: ' + file.name);
+            };
+            
+            // بدء قراءة الملف
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // دالة حذف صورة
+    function removeImage(imageId) {
+        console.log('حذف الصورة: ' + imageId);
+        
+        // حذف عنصر الصورة من العرض
+        const element = document.getElementById(imageId);
+        if (element) {
+            element.remove();
         }
         
-        // تحديث عدد الصور
-        imagesCount.textContent = selectedImages.length;
+        // حذف الصورة من المصفوفة
+        const index = selectedImages.findIndex(img => img.id === imageId);
+        if (index !== -1) {
+            selectedImages.splice(index, 1);
+            
+            // تحديث العداد
+            const counter = document.getElementById('images-count');
+            if (counter) {
+                counter.textContent = selectedImages.length;
+            }
+        }
     }
 
     // دالة إظهار حقل وصف الصورة
@@ -1459,52 +1452,42 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('images-count').textContent = selectedImages.length;
     }
     
-    // أزرار حفظ تشيك لست الفحص (العلوي والسفلي)
-    function setupSaveButtons() {
-        console.log('إعداد أزرار الحفظ');
+    // إعداد زر حفظ نموذج الفحص
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('إعداد زر الحفظ');
         const saveChecklistBtn = document.getElementById('save-checklist');
-        const saveChecklistTopBtn = document.getElementById('save-checklist-top');
         
-        // إضافة مستمع الحدث للزر العلوي
-        if (saveChecklistTopBtn) {
-            saveChecklistTopBtn.addEventListener('click', saveChecklist);
-            console.log('تم إعداد زر الحفظ العلوي');
-        } else {
-            console.error('لم يتم العثور على زر الحفظ العلوي');
-        }
-        
-        // إضافة مستمع الحدث للزر السفلي
         if (saveChecklistBtn) {
             saveChecklistBtn.addEventListener('click', saveChecklist);
-            console.log('تم إعداد زر الحفظ السفلي');
+            console.log('تم إعداد زر الحفظ بنجاح');
         } else {
-            console.error('لم يتم العثور على زر الحفظ السفلي');
+            console.error('لم يتم العثور على زر الحفظ في الصفحة!');
         }
-    }
+    });
     
-    // استدعاء دالة إعداد أزرار الحفظ
-    setupSaveButtons();
-    
-    // دالة حفظ تشيك لست الفحص
+    // دالة حفظ تشيك لست الفحص - نسخة مبسطة
     function saveChecklist() {
         console.log('تنفيذ عملية الحفظ');
-        const vehicleSelect = document.getElementById('vehicle-select');
-        const inspectionDate = document.getElementById('inspection-date');
-        const inspectorName = document.getElementById('inspector-name');
-        const inspectionType = document.getElementById('inspection-type');
-    
-        // تعطيل أزرار الحفظ أثناء العملية
-        const saveChecklistBtn = document.getElementById('save-checklist');
-        const saveChecklistTopBtn = document.getElementById('save-checklist-top');
-        if (saveChecklistBtn) saveChecklistBtn.disabled = true;
-        if (saveChecklistTopBtn) saveChecklistTopBtn.disabled = true;
         
-        // التحقق من إدخال البيانات الأساسية
-        if (!vehicleSelect.value) {
-            showNotification('الرجاء اختيار السيارة أولاً', 'error');
-            vehicleSelect.focus();
-            return;
-        }
+        try {
+            // الحصول على عناصر النموذج
+            const vehicleSelect = document.getElementById('vehicle-select');
+            const inspectionDate = document.getElementById('inspection-date');
+            const inspectorName = document.getElementById('inspector-name');
+            const inspectionType = document.getElementById('inspection-type');
+        
+            // تعطيل زر الحفظ أثناء العملية
+            const saveChecklistBtn = document.getElementById('save-checklist');
+            if (saveChecklistBtn) saveChecklistBtn.disabled = true;
+            
+            // التحقق من إدخال البيانات الأساسية
+            if (!vehicleSelect.value) {
+                showNotification('الرجاء اختيار السيارة أولاً', 'error');
+                vehicleSelect.focus();
+                // إعادة تفعيل الزر
+                if (saveChecklistBtn) saveChecklistBtn.disabled = false;
+                return;
+            }
         
         if (!inspectionDate.value) {
             showNotification('الرجاء إدخال تاريخ الفحص', 'error');
