@@ -199,7 +199,7 @@
                                     <div class="row mb-3">
                                         <div class="col-md-4">
                                             <label for="departmentSelect" class="form-label">اختر القسم أولاً:</label>
-                                            <select class="form-select" id="departmentSelect">
+                                            <select class="form-select" id="departmentSelect" onchange="filterEmployees()">
                                                 <option value="">جميع الأقسام</option>
                                                 {% for department in departments %}
                                                 <option value="{{ department.id }}">{{ department.name }}</option>
@@ -209,7 +209,7 @@
                                         <div class="col-md-8">
                                             <label for="employeeSearchInput" class="form-label">البحث عن الموظف:</label>
                                             <div class="input-group">
-                                                <input type="text" class="form-control" id="employeeSearchInput" placeholder="البحث بالاسم أو الرقم الوظيفي أو رقم الهوية">
+                                                <input type="text" class="form-control" id="employeeSearchInput" placeholder="البحث بالاسم أو الرقم الوظيفي أو رقم الهوية" onkeyup="if(event.key === 'Enter') filterEmployees();">
                                                 <button class="btn btn-primary" id="searchEmployeeBtn" type="button" onclick="filterEmployees()">
                                                     <i class="fas fa-search"></i> بحث
                                                 </button>
@@ -242,7 +242,7 @@
                                                     <td>{{ employee.department.name if employee.department else 'غير محدد' }}</td>
                                                     <td>
                                                         <button type="button" class="btn btn-sm btn-success select-employee-btn" 
-                                                                data-name="{{ employee.name }}">
+                                                                data-name="{{ employee.name }}" onclick="document.getElementById('person_name').value='{{ employee.name }}';">
                                                             <i class="fas fa-check"></i> اختيار
                                                         </button>
                                                     </td>
