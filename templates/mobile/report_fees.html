@@ -57,7 +57,7 @@
                     <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
                         <i class="fas fa-download"></i> تصدير
                     </button>
-                    <div class="dropdown-menu" id="exportMenu">
+                    <div class="dropdown-menu export-dropdown-menu" id="exportMenu">
                         <a href="{{ url_for('mobile.report_fees') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
                             <i class="fas fa-file-pdf"></i> تصدير PDF
                         </a>
@@ -313,6 +313,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (dropdownToggle && dropdownMenu) {
         console.log("زر التصدير والقائمة المنسدلة موجودان");
         
+        // ضبط موضع القائمة المنسدلة نسبة للزر
+        function positionDropdown() {
+            if (dropdownMenu.style.display === 'block') {
+                const btnRect = dropdownToggle.getBoundingClientRect();
+                dropdownMenu.style.top = (btnRect.bottom) + 'px';
+                dropdownMenu.style.left = btnRect.left + 'px';
+                dropdownMenu.style.minWidth = btnRect.width + 'px';
+            }
+        }
+        
         // إضافة حدث النقر على الزر
         dropdownToggle.addEventListener('click', function(e) {
             e.preventDefault();
@@ -326,8 +336,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("تم إخفاء القائمة المنسدلة");
             } else {
                 dropdownMenu.style.display = 'block';
+                positionDropdown();
                 console.log("تم إظهار القائمة المنسدلة");
             }
+        });
+        
+        // إضافة النقر على روابط القائمة
+        const dropdownLinks = dropdownMenu.querySelectorAll('a.dropdown-item');
+        dropdownLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                console.log("تم النقر على عنصر من القائمة: " + this.textContent.trim());
+            });
         });
         
         // إغلاق القائمة عند النقر في أي مكان آخر
@@ -339,6 +358,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("تم إغلاق القائمة عند النقر خارجها");
             }
         });
+        
+        // إعادة ضبط موضع القائمة عند التمرير أو تغيير حجم النافذة
+        window.addEventListener('scroll', positionDropdown);
+        window.addEventListener('resize', positionDropdown);
     } else {
         console.error("لم يتم العثور على زر التصدير أو القائمة المنسدلة");
     }

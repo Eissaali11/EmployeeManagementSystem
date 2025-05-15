@@ -51,7 +51,7 @@
                     <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
                         <i class="fas fa-download"></i> تصدير
                     </button>
-                    <div class="dropdown-menu" id="exportMenu">
+                    <div class="dropdown-menu export-dropdown-menu" id="exportMenu">
                         <a href="{{ url_for('mobile.report_vehicles') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
                             <i class="fas fa-file-pdf"></i> تصدير PDF
                         </a>

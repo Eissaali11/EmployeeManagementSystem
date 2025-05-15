@@ -9,6 +9,20 @@
   display: inline-block;
 }
 
+/* تحسين القائمة المنسدلة للتصدير */
+.export-dropdown-menu {
+  position: fixed !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: auto !important;
+  min-width: 160px !important;
+  background: #fff !important;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.2) !important;
+  z-index: 9999 !important;
+  border-radius: 8px !important;
+}
+
 .dropdown-toggle {
   cursor: pointer;
 }
@@ -27,6 +41,8 @@
   border-radius: 0.25rem;
   box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
   direction: rtl; /* ضبط الاتجاه للعربية */
+  left: auto !important; /* إصلاح مشكلة موضع القائمة المنسدلة */
+  transform: none !important; /* منع التحويل التلقائي */
 }
 
 .dropdown-item {
