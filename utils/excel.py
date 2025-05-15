@@ -581,7 +581,7 @@ def generate_salary_excel(salaries, filter_description=None):
         
         # إنشاء ملف Excel باستخدام openpyxl
         output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        with pd.ExcelWriter(path=output, engine='openpyxl') as writer:
             # إضافة ورقة التلخيص
             summary_data = []
             total_salaries = 0
