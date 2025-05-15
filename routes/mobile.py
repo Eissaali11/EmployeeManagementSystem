@@ -3,16 +3,21 @@
 نُظم - النسخة المحمولة
 """
 
+import os
+import json
+import uuid
 from datetime import datetime, timedelta, date
 from sqlalchemy import extract, func, cast, Date
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
+from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage
+from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker
+from app import app
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
 
@@ -1806,6 +1811,60 @@ def add_vehicle_checklist():
                 )
                 
                 db.session.add(new_item)
+            
+            # إضافة علامات التلف على صورة السيارة
+            if damage_markers_data:
+                app.logger.info(f"إضافة {len(damage_markers_data)} علامة تلف للفحص رقم {new_checklist.id}")
+                
+                for marker_data in damage_markers_data:
+                    # التحقق من وجود البيانات المطلوبة
+                    marker_type = marker_data.get('type', 'damage')
+                    x = marker_data.get('x')
+                    y = marker_data.get('y')
+                    notes = marker_data.get('notes', '')
+                    
+                    if x is None or y is None:
+                        continue
+                    
+                    # إنشاء علامة تلف جديدة
+                    damage_marker = VehicleDamageMarker(
+                        checklist_id=new_checklist.id,
+                        marker_type=marker_type,
+                        position_x=float(x),
+                        position_y=float(y),
+                        notes=notes,
+                        color='red' if marker_type == 'damage' else 'yellow'
+                    )
+                    
+                    db.session.add(damage_marker)
+            
+            # معالجة الصور المرفقة إذا وجدت
+            if request.content_type and 'multipart/form-data' in request.content_type and 'images' in locals():
+                # إنشاء مجلد لتخزين الصور إذا لم يكن موجودًا
+                vehicle_images_dir = os.path.join(app.static_folder, 'uploads', 'vehicles', 'checklists')
+                os.makedirs(vehicle_images_dir, exist_ok=True)
+                
+                for image in images:
+                    if image and image.filename:
+                        # حفظ الصورة بإسم فريد في المجلد المناسب
+                        filename = secure_filename(image.filename)
+                        unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex}_{filename}"
+                        image_path = os.path.join('uploads', 'vehicles', 'checklists', unique_filename)
+                        full_path = os.path.join(app.static_folder, image_path)
+                        
+                        # حفظ الصورة
+                        image.save(full_path)
+                        
+                        # إنشاء سجل لصورة الفحص
+                        checklist_image = VehicleChecklistImage(
+                            checklist_id=new_checklist.id,
+                            image_path=image_path,
+                            image_type='inspection',
+                            description=f"صورة فحص بتاريخ {inspection_date}"
+                        )
+                        
+                        db.session.add(checklist_image)
+                        app.logger.info(f"تم حفظ صورة فحص: {full_path}")
             
             # حفظ التغييرات في قاعدة البيانات
             db.session.commit()
