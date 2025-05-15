@@ -442,9 +442,11 @@
         const personNameInput = document.getElementById('person_name');
         const selectButtons = document.querySelectorAll('.select-employee-btn');
         
-        // وظيفة البحث في الموظفين
-        function searchEmployees() {
+        // وظيفة البحث وتصفية الموظفين
+        function filterEmployees() {
             const searchTerm = searchInput.value.trim().toLowerCase();
+            const departmentSelect = document.getElementById('departmentSelect');
+            const departmentId = departmentSelect ? departmentSelect.value : '';
             let resultsFound = false;
             
             employeeRows.forEach(row => {
@@ -452,12 +454,20 @@
                 const employeeId = row.getAttribute('data-employee-id')?.toLowerCase() || '';
                 const nationalId = row.getAttribute('data-national-id')?.toLowerCase() || '';
                 const department = row.getAttribute('data-department')?.toLowerCase() || '';
+                const rowDepartmentId = row.getAttribute('data-department-id') || '';
+                
+                // التحقق من تطابق القسم
+                const departmentMatch = !departmentId || departmentId === rowDepartmentId;
                 
                 // البحث في كافة الحقول
-                if (name.includes(searchTerm) || 
+                const searchMatch = !searchTerm || 
+                    name.includes(searchTerm) || 
                     employeeId.includes(searchTerm) || 
                     nationalId.includes(searchTerm) || 
-                    department.includes(searchTerm)) {
+                    department.includes(searchTerm);
+                
+                // إظهار الصف فقط إذا تطابق مع معايير البحث والقسم
+                if (departmentMatch && searchMatch) {
                     row.style.display = '';
                     resultsFound = true;
                 } else {
