@@ -1195,6 +1195,9 @@ def create_handover(id):
     else:
         default_handover_type = None
     
+    # جلب قائمة الموظفين للاختيار منهم
+    employees = Employee.query.order_by(Employee.name).all()
+    
     if request.method == 'POST':
         # استخراج البيانات من النموذج
         handover_type = request.form.get('handover_type')
