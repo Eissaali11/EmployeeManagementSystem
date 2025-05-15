@@ -1063,8 +1063,10 @@ def generate_employee_salary_simple_excel(db_session, month=None, year=None, dep
         # تنسيقات للخلايا المالية
         money_format = '#,##0.00 "ر.س"'
         
-        # استعلام الرواتب مع بيانات الموظفين
-        query = db_session.query(Salary).join(Employee).join(Department)
+        # استعلام الرواتب مع بيانات الموظفين بتحديد صريح للعلاقات
+        query = db_session.query(Salary).\
+            join(Employee, Salary.employee_id == Employee.id).\
+            join(Department, Employee.department_id == Department.id)
         
         # تطبيق الفلاتر
         if department_id:
