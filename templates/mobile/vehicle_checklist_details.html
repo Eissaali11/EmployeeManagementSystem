@@ -86,9 +86,69 @@
         <div class="vehicle-diagram-section">
             <h6>مخطط المركبة وعلامات التلف</h6>
             <div class="vehicle-diagram-container position-relative">
-                <img src="{{ url_for('static', filename='images/vehicles/vehicle_diagram.png') }}" class="img-fluid vehicle-diagram" id="vehicle-diagram">
-                <div id="vehicle-markers-container" class="position-absolute top-0 start-0 w-100 h-100">
-                    <!-- هنا سيتم إضافة علامات التلف ديناميكياً -->
+                <svg width="100%" height="300" viewBox="0 0 800 500" class="img-fluid vehicle-diagram" id="vehicle-diagram">
+                    <!-- رسم السيارة بشكل مباشر في SVG -->
+                    <style>
+                        .outline { fill: #ffffff; stroke: #333333; stroke-width: 3; }
+                        .windows { fill: #e6f0ff; stroke: #333333; stroke-width: 2; }
+                        .lights { fill: #ffcc00; stroke: #333333; stroke-width: 1; }
+                        .tire { fill: #333333; stroke: #000000; stroke-width: 2; }
+                        .handles { fill: none; stroke: #333333; stroke-width: 2; }
+                    </style>
+                    
+                    <!-- هيكل السيارة الأساسي -->
+                    <path class="outline" d="M 200,220 C 200,180 220,160 280,160 L 520,160 C 580,160 600,180 600,220 L 620,280 C 640,300 640,320 640,340 L 640,360 C 640,380 630,380 610,380 L 190,380 C 170,380 160,380 160,360 L 160,340 C 160,320 160,300 180,280 Z" />
+                    
+                    <!-- الزجاج الأمامي -->
+                    <path class="windows" d="M 280,180 L 520,180 C 560,180 570,190 570,210 L 530,240 L 270,240 L 230,210 C 230,190 240,180 280,180 Z" />
+                    
+                    <!-- الزجاج الخلفي -->
+                    <path class="windows" d="M 270,280 L 530,280 L 560,330 L 240,330 Z" />
+                    
+                    <!-- نافذة الجانب الأيسر -->
+                    <path class="windows" d="M 230,210 L 270,240 L 270,280 L 240,330 L 200,340 L 180,280 Z" />
+                    
+                    <!-- نافذة الجانب الأيمن -->
+                    <path class="windows" d="M 570,210 L 530,240 L 530,280 L 560,330 L 600,340 L 620,280 Z" />
+                    
+                    <!-- العجلة الأمامية اليسرى -->
+                    <ellipse class="tire" cx="250" cy="380" rx="50" ry="50" />
+                    <ellipse fill="#999999" cx="250" cy="380" rx="30" ry="30" />
+                    
+                    <!-- العجلة الأمامية اليمنى -->
+                    <ellipse class="tire" cx="550" cy="380" rx="50" ry="50" />
+                    <ellipse fill="#999999" cx="550" cy="380" rx="30" ry="30" />
+                    
+                    <!-- الأنوار الأمامية -->
+                    <path class="lights" d="M 180,280 L 200,260 L 230,260 L 240,280 Z" />
+                    <path class="lights" d="M 620,280 L 600,260 L 570,260 L 560,280 Z" />
+                    
+                    <!-- مقابض الأبواب -->
+                    <path class="handles" d="M 300,260 L 330,260" />
+                    <path class="handles" d="M 470,260 L 500,260" />
+                    
+                    <!-- خط السقف -->
+                    <line stroke="#333333" stroke-width="2" x1="270" y1="240" x2="530" y2="240" />
+                    
+                    <!-- خط المقدمة -->
+                    <line stroke="#333333" stroke-width="2" x1="270" y1="280" x2="530" y2="280" />
+                    
+                    <!-- تفاصيل الصدام -->
+                    <path fill="none" stroke="#333333" stroke-width="2" d="M 190,360 L 610,360" />
+                    <path fill="none" stroke="#333333" stroke-width="2" d="M 190,340 C 190,340 220,350 400,350 C 580,350 610,340 610,340" />
+                    
+                    <!-- علامات التلف -->
+                    {% for marker in damage_markers %}
+                    <g transform="translate({{ marker.x_position * 8}}, {{ marker.y_position * 5 }})">
+                        <circle r="15" fill="{{ 'rgba(220, 53, 69, 0.9)' if marker.marker_type == 'damage' else 'rgba(255, 193, 7, 0.9)' }}" stroke="#fff" stroke-width="2"></circle>
+                        <text fill="#fff" font-size="12" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">{{ loop.index }}</text>
+                        <title>{{ marker.description }}</title>
+                    </g>
+                    {% endfor %}
+                </svg>
+                
+                <!-- علامات التلف من النموذج القديم - تم استبدالها بالعلامات داخل SVG -->
+                <div id="vehicle-markers-container" class="position-absolute top-0 start-0 w-100 h-100" style="display: none;">
                     {% for marker in damage_markers %}
                     <div class="vehicle-marker marker-{{ marker.marker_type }}" 
                          style="position: absolute; left: {{ marker.position_x }}%; top: {{ marker.position_y }}%; transform: translate(-50%, -50%); width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 5px rgba(0,0,0,0.3); z-index: 10;
