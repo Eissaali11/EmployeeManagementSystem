@@ -71,6 +71,28 @@ def export_fees_report(export_type):
         # إعادة توجيه إلى صفحة تقارير الرسوم المحمولة
         return redirect(url_for('mobile.report_fees'))
 
+@reports_bp.route('/export/employees/<export_type>')
+@login_required
+def export_employees_report(export_type):
+    """
+    تصدير تقرير الموظفين من النسخة المحمولة
+    :param export_type: نوع التصدير ('pdf' أو 'excel')
+    """
+    # نقل معلمات البحث من الطلب الحالي
+    department_id = request.args.get('department_id', '')
+    status = request.args.get('status', '')
+    search = request.args.get('search', '')
+    
+    if export_type == 'pdf':
+        # إعادة توجيه إلى طريقة تصدير PDF الحالية
+        return redirect(url_for('reports.employees_pdf', department_id=department_id, status=status, search=search))
+    elif export_type == 'excel':
+        # إعادة توجيه إلى طريقة تصدير Excel الحالية
+        return redirect(url_for('reports.employees_excel', department_id=department_id, status=status, search=search))
+    else:
+        # إعادة توجيه إلى صفحة تقارير الموظفين المحمولة
+        return redirect(url_for('mobile.report_employees'))
+
 # دوال متعلقة بتصدير السيارات
 @reports_bp.route('/vehicles/pdf')
 @login_required
