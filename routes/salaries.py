@@ -557,47 +557,98 @@ def import_excel():
 
 @salaries_bp.route('/export')
 def export_excel():
-    """Export salary records to Excel file"""
+    """تصدير سجلات الرواتب إلى ملف Excel مع دعم التصفية حسب القسم والشهر والسنة"""
     try:
-        # Get filter parameters
+        # الحصول على معلمات التصفية
         month = request.args.get('month')
         year = request.args.get('year')
+        department_id = request.args.get('department_id')
+        employee_id = request.args.get('employee_id')
         
-        # Build query
-        query = Salary.query
+        # بناء الاستعلام
+        query = Salary.query.join(Employee)
         
-        # Apply filters
+        # تطبيق المرشحات
+        filename_parts = []
+        filter_description = []
+        
+        # تصفية حسب الشهر
         if month and month.isdigit():
             query = query.filter(Salary.month == int(month))
-            filename_part = f"month_{month}"
+            filename_parts.append(f"month_{month}")
+            
+            # قاموس لتحويل رقم الشهر إلى اسمه بالعربية
+            arabic_months = {
+                1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل", 
+                5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس",
+                9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر"
+            }
+            month_name = arabic_months.get(int(month), str(month))
+            filter_description.append(f"شهر: {month_name}")
         else:
-            filename_part = "all_months"
+            filename_parts.append("all_months")
+            filter_description.append("جميع الشهور")
         
+        # تصفية حسب السنة
         if year and year.isdigit():
             query = query.filter(Salary.year == int(year))
-            filename_part += f"_year_{year}"
+            filename_parts.append(f"year_{year}")
+            filter_description.append(f"سنة: {year}")
         else:
-            filename_part += "_all_years"
+            filename_parts.append("all_years")
+            filter_description.append("جميع السنوات")
         
-        # Execute query
+        # تصفية حسب القسم
+        department_name = "جميع الأقسام"
+        if department_id and department_id.isdigit():
+            # البحث عن اسم القسم لاستخدامه في وصف التصفية
+            department = Department.query.get(int(department_id))
+            if department:
+                department_name = department.name
+                query = query.filter(Employee.department_id == int(department_id))
+                filename_parts.append(f"dept_{department_id}")
+                filter_description.append(f"قسم: {department_name}")
+            else:
+                filename_parts.append("all_depts")
+                filter_description.append("جميع الأقسام")
+        else:
+            filename_parts.append("all_depts")
+            filter_description.append("جميع الأقسام")
+        
+        # تصفية حسب الموظف
+        if employee_id and employee_id.isdigit():
+            employee = Employee.query.get(int(employee_id))
+            if employee:
+                query = query.filter(Salary.employee_id == int(employee_id))
+                filename_parts.append(f"emp_{employee_id}")
+                filter_description.append(f"موظف: {employee.name}")
+            
+        # ترتيب النتائج حسب القسم ثم اسم الموظف
+        query = query.join(Employee.department).order_by(Department.name, Employee.name)
+        
+        # تنفيذ الاستعلام
         salaries = query.all()
         
-        # Generate Excel file
-        output = generate_salary_excel(salaries)
+        # توليد ملف Excel
+        output = generate_salary_excel(salaries, filter_description)
         
-        # Log the export
+        # تسجيل عملية التصدير
+        filters_text = " - ".join(filter_description)
         audit = SystemAudit(
             action='export',
             entity_type='salary',
             entity_id=0,
-            details=f'تم تصدير {len(salaries)} سجل راتب إلى ملف Excel'
+            details=f'تم تصدير {len(salaries)} سجل راتب إلى ملف Excel [{filters_text}]'
         )
         db.session.add(audit)
         db.session.commit()
         
+        # إنشاء اسم الملف
+        filename = f'رواتب_{"_".join(filename_parts)}.xlsx'
+        
         return send_file(
             BytesIO(output.getvalue()),
-            download_name=f'salaries_{filename_part}.xlsx',
+            download_name=filename,
             as_attachment=True,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )

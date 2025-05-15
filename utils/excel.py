@@ -539,24 +539,36 @@ def parse_salary_excel(file, month, year):
         print(traceback.format_exc())
         raise Exception(f"Error parsing salary Excel file: {str(e)}")
 
-def generate_salary_excel(salaries):
+def generate_salary_excel(salaries, filter_description=None):
     """
-    Generate Excel file from salary data
+    إنشاء ملف Excel من بيانات الرواتب مع تنظيم وتجميع حسب القسم
     
     Args:
-        salaries: List of Salary objects
+        salaries: قائمة كائنات Salary 
+        filter_description: وصف مرشحات البحث المستخدمة (اختياري)
         
     Returns:
-        BytesIO object containing the Excel file
+        كائن BytesIO يحتوي على ملف Excel
     """
     try:
-        # Create data for Excel file
-        data = []
+        from datetime import datetime
+        from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
+        from openpyxl.utils import get_column_letter
+        
+        # تجميع البيانات حسب القسم
+        departments_data = {}
         for salary in salaries:
-            row = {
+            dept_name = salary.employee.department.name
+            if dept_name not in departments_data:
+                departments_data[dept_name] = []
+            
+            # إضافة بيانات الراتب إلى القسم المناسب
+            departments_data[dept_name].append({
                 'معرف': salary.id,
                 'اسم الموظف': salary.employee.name,
                 'رقم الموظف': salary.employee.employee_id,
+                'الوظيفة': salary.employee.job_title or '',
+                'القسم': dept_name,
                 'الشهر': salary.month,
                 'السنة': salary.year,
                 'الراتب الأساسي': salary.basic_salary,
@@ -565,30 +577,158 @@ def generate_salary_excel(salaries):
                 'المكافآت': salary.bonus,
                 'صافي الراتب': salary.net_salary,
                 'ملاحظات': salary.notes or ''
-            }
-            data.append(row)
+            })
         
-        # Create DataFrame
-        df = pd.DataFrame(data)
-        
-        # Write to Excel using openpyxl engine
+        # إنشاء ملف Excel باستخدام openpyxl
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='Salaries', index=False)
+            # إضافة ورقة التلخيص
+            summary_data = []
+            total_salaries = 0
+            total_basic = 0
+            total_allowances = 0
+            total_deductions = 0
+            total_bonus = 0
+            total_net = 0
             
-            # Auto-adjust columns' width (openpyxl method)
-            worksheet = writer.sheets['Salaries']
-            for i, col in enumerate(df.columns):
-                column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                # For openpyxl, column dimensions are one-based
-                column_letter = chr(65 + i)  # A, B, C, ...
-                worksheet.column_dimensions[column_letter].width = column_width
+            # حساب المجاميع لكل قسم
+            for dept_name, dept_salaries in departments_data.items():
+                dept_count = len(dept_salaries)
+                dept_basic_sum = sum(s['الراتب الأساسي'] for s in dept_salaries)
+                dept_allowances_sum = sum(s['البدلات'] for s in dept_salaries)
+                dept_deductions_sum = sum(s['الخصومات'] for s in dept_salaries)
+                dept_bonus_sum = sum(s['المكافآت'] for s in dept_salaries)
+                dept_net_sum = sum(s['صافي الراتب'] for s in dept_salaries)
+                
+                summary_data.append({
+                    'القسم': dept_name,
+                    'عدد الموظفين': dept_count,
+                    'إجمالي الرواتب الأساسية': dept_basic_sum,
+                    'إجمالي البدلات': dept_allowances_sum,
+                    'إجمالي الخصومات': dept_deductions_sum,
+                    'إجمالي المكافآت': dept_bonus_sum,
+                    'إجمالي صافي الرواتب': dept_net_sum
+                })
+                
+                # تحديث المجاميع الكلية
+                total_salaries += dept_count
+                total_basic += dept_basic_sum
+                total_allowances += dept_allowances_sum
+                total_deductions += dept_deductions_sum
+                total_bonus += dept_bonus_sum
+                total_net += dept_net_sum
+            
+            # إضافة صف المجموع الكلي
+            summary_data.append({
+                'القسم': 'الإجمالي',
+                'عدد الموظفين': total_salaries,
+                'إجمالي الرواتب الأساسية': total_basic,
+                'إجمالي البدلات': total_allowances,
+                'إجمالي الخصومات': total_deductions,
+                'إجمالي المكافآت': total_bonus,
+                'إجمالي صافي الرواتب': total_net
+            })
+            
+            # إنشاء DataFrame للملخص
+            summary_df = pd.DataFrame(summary_data)
+            summary_df.to_excel(writer, sheet_name='ملخص الرواتب', index=False)
+            
+            # تنسيق ورقة الملخص
+            summary_sheet = writer.sheets['ملخص الرواتب']
+            for i, col in enumerate(summary_df.columns):
+                column_width = max(summary_df[col].astype(str).map(len).max(), len(col)) + 4
+                column_letter = get_column_letter(i + 1)
+                summary_sheet.column_dimensions[column_letter].width = column_width
+            
+            # إنشاء ورقة عمل لكل قسم
+            for dept_name, dept_salaries in departments_data.items():
+                dept_df = pd.DataFrame(dept_salaries)
+                
+                # ترتيب الأعمدة بشكل منطقي
+                ordered_columns = [
+                    'معرف', 'اسم الموظف', 'رقم الموظف', 'الوظيفة', 'القسم',
+                    'الشهر', 'السنة', 'الراتب الأساسي', 'البدلات', 'الخصومات',
+                    'المكافآت', 'صافي الراتب', 'ملاحظات'
+                ]
+                
+                # إعادة ترتيب الأعمدة واستبعاد الأعمدة غير الموجودة
+                actual_columns = [col for col in ordered_columns if col in dept_df.columns]
+                dept_df = dept_df[actual_columns]
+                
+                # إضافة ورقة العمل للقسم
+                sheet_name = dept_name[:31]  # تقليص اسم الورقة إلى 31 حرف (أقصى طول مسموح في Excel)
+                dept_df.to_excel(writer, sheet_name=sheet_name, index=False)
+                
+                # ضبط عرض الأعمدة في ورقة القسم
+                dept_sheet = writer.sheets[sheet_name]
+                for i, col in enumerate(actual_columns):
+                    column_width = max(dept_df[col].astype(str).map(len).max(), len(col)) + 4
+                    column_letter = get_column_letter(i + 1)
+                    dept_sheet.column_dimensions[column_letter].width = column_width
+            
+            # إنشاء ورقة لجميع الرواتب
+            all_data = []
+            for dept_salaries in departments_data.values():
+                all_data.extend(dept_salaries)
+            
+            if all_data:
+                all_df = pd.DataFrame(all_data)
+                
+                # ترتيب الأعمدة بشكل منطقي
+                all_columns = [col for col in ordered_columns if col in all_df.columns]
+                all_df = all_df[all_columns]
+                
+                # إضافة ورقة كل الرواتب
+                all_df.to_excel(writer, sheet_name='جميع الرواتب', index=False)
+                
+                # ضبط عرض الأعمدة
+                all_sheet = writer.sheets['جميع الرواتب']
+                for i, col in enumerate(all_columns):
+                    column_width = max(all_df[col].astype(str).map(len).max(), len(col)) + 4
+                    column_letter = get_column_letter(i + 1)
+                    all_sheet.column_dimensions[column_letter].width = column_width
+            
+            # إضافة ورقة المعلومات
+            info_data = []
+            
+            # إضافة معلومات التصفية
+            if filter_description:
+                info_data.append({
+                    'المعلومة': 'مرشحات البحث',
+                    'القيمة': ' - '.join(filter_description)
+                })
+            
+            # إضافة معلومات عامة
+            info_data.append({
+                'المعلومة': 'تاريخ التصدير',
+                'القيمة': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
+            
+            info_data.append({
+                'المعلومة': 'إجمالي عدد الرواتب',
+                'القيمة': len(salaries)
+            })
+            
+            info_data.append({
+                'المعلومة': 'عدد الأقسام',
+                'القيمة': len(departments_data)
+            })
+            
+            info_df = pd.DataFrame(info_data)
+            info_df.to_excel(writer, sheet_name='معلومات التقرير', index=False)
+            
+            # ضبط عرض الأعمدة في ورقة المعلومات
+            info_sheet = writer.sheets['معلومات التقرير']
+            for i, col in enumerate(info_df.columns):
+                column_width = max(info_df[col].astype(str).map(len).max(), len(col)) + 4
+                column_letter = get_column_letter(i + 1)
+                info_sheet.column_dimensions[column_letter].width = column_width
         
         output.seek(0)
         return output
     
     except Exception as e:
-        raise Exception(f"Error generating Excel file: {str(e)}")
+        raise Exception(f"خطأ في إنشاء ملف Excel: {str(e)}")
 
 def parse_document_excel(file):
     """
