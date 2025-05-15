@@ -229,6 +229,34 @@ class RenewalFee(db.Model):
     def __repr__(self):
         return f'<RenewalFee {self.fee_type} for document #{self.document_id}>'
         
+class Fee(db.Model):
+    """نموذج الرسوم العامة - للاستخدام في تقارير الرسوم والمدفوعات"""
+    id = db.Column(db.Integer, primary_key=True)
+    fee_type = db.Column(db.String(50), nullable=False)  # نوع الرسم
+    description = db.Column(db.String(255))  # وصف الرسم
+    amount = db.Column(db.Float, nullable=False)  # مبلغ الرسم
+    due_date = db.Column(db.Date)  # تاريخ استحقاق الرسم
+    is_paid = db.Column(db.Boolean, default=False)  # هل تم دفع الرسم
+    paid_date = db.Column(db.Date)  # تاريخ الدفع
+    recipient = db.Column(db.String(100))  # الجهة المستلمة
+    reference_number = db.Column(db.String(50))  # رقم المرجع
+    notes = db.Column(db.Text)  # ملاحظات
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات (اختياري - يمكن ربط الرسم بموظف أو مركبة أو مستند)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id', ondelete='SET NULL'), nullable=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='SET NULL'), nullable=True)
+    
+    # العلاقات
+    employee = db.relationship('Employee', backref=db.backref('fees', lazy='dynamic'))
+    document = db.relationship('Document', backref=db.backref('fees', lazy='dynamic'))
+    vehicle = db.relationship('Vehicle', backref=db.backref('fees', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<Fee {self.fee_type} - {self.amount} SAR>'
+
 class FeesCost(db.Model):
     """تكاليف الرسوم للوثائق والمستندات"""
     id = db.Column(db.Integer, primary_key=True)

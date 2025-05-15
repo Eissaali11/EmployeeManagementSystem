@@ -5,7 +5,7 @@ from datetime import datetime, date, timedelta
 from io import BytesIO
 from utils.pdf import create_pdf, arabic_text, create_data_table, get_styles
 from app import db
-from models import Department, Employee, Attendance, Salary, Document, SystemAudit, Vehicle
+from models import Department, Employee, Attendance, Salary, Document, SystemAudit, Vehicle, Fee
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
 from utils.vehicles_export import export_vehicle_pdf, export_vehicle_excel
@@ -146,6 +146,303 @@ def vehicles_excel():
         output,
         as_attachment=True,
         download_name=f"vehicles_report_{datetime.now().strftime('%Y%m%d')}.xlsx",
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+@reports_bp.route('/fees/pdf')
+@login_required
+def fees_pdf():
+    """تصدير تقرير الرسوم إلى PDF"""
+    # الحصول على معلمات الفلتر
+    fee_type = request.args.get('fee_type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    status = request.args.get('status', '')  # paid/unpaid
+    
+    # تحويل التواريخ إلى كائنات datetime إذا تم تحديدها
+    if date_from:
+        date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+    if date_to:
+        date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
+    
+    # إنشاء استعلام الرسوم
+    query = Fee.query
+    
+    # تطبيق الفلترة على الرسوم
+    if fee_type:
+        query = query.filter_by(fee_type=fee_type)
+    
+    if date_from:
+        query = query.filter(Fee.due_date >= date_from)
+    
+    if date_to:
+        query = query.filter(Fee.due_date <= date_to)
+    
+    if status:
+        is_paid_bool = (status.lower() == 'paid')
+        query = query.filter(Fee.is_paid == is_paid_bool)
+    
+    # الحصول على قائمة الرسوم المرتبة حسب تاريخ الاستحقاق
+    fees = query.order_by(Fee.due_date).all()
+    
+    # تحضير مخرجات التقرير
+    buffer = BytesIO()
+    
+    # إنشاء مستند PDF
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+    
+    # تحضير النمط
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Arabic', fontName='Amiri', fontSize=12, alignment=1)) # للتوسيط
+    styles.add(ParagraphStyle(name='ArabicTitle', fontName='Amiri-Bold', fontSize=16, alignment=1))
+    styles.add(ParagraphStyle(name='ArabicSubTitle', fontName='Amiri-Bold', fontSize=14, alignment=1))
+    
+    # تسجيل الخطوط
+    pdfmetrics.registerFont(TTFont('Amiri', 'static/fonts/Amiri-Regular.ttf'))
+    pdfmetrics.registerFont(TTFont('Amiri-Bold', 'static/fonts/Amiri-Bold.ttf'))
+    
+    # إعداد المحتوى
+    content = []
+    
+    # إضافة عنوان التقرير
+    title = Paragraph(arabic_text("تقرير الرسوم"), styles['ArabicTitle'])
+    content.append(title)
+    content.append(Spacer(1, 20))
+    
+    # فلاتر البحث
+    filter_text = []
+    if fee_type:
+        filter_text.append(f"نوع الرسوم: {fee_type}")
+    if date_from:
+        filter_text.append(f"من تاريخ: {date_from.strftime('%Y-%m-%d')}")
+    if date_to:
+        filter_text.append(f"إلى تاريخ: {date_to.strftime('%Y-%m-%d')}")
+    if status:
+        status_text = "مدفوعة" if status.lower() == 'paid' else "غير مدفوعة"
+        filter_text.append(f"الحالة: {status_text}")
+    
+    if filter_text:
+        filters = Paragraph(arabic_text(" - ".join(filter_text)), styles['Arabic'])
+        content.append(filters)
+        content.append(Spacer(1, 10))
+    
+    # جدول الرسوم
+    if fees:
+        # إنشاء بيانات الجدول
+        data = [
+            [
+                arabic_text("نوع الرسوم"),
+                arabic_text("الوصف"),
+                arabic_text("المبلغ (ر.س)"),
+                arabic_text("تاريخ الاستحقاق"),
+                arabic_text("حالة الدفع"),
+                arabic_text("المستلم")
+            ]
+        ]
+        
+        # إضافة بيانات الرسوم
+        for fee in fees:
+            is_paid_text = "مدفوعة" if fee.is_paid else "غير مدفوعة"
+            data.append([
+                arabic_text(fee.fee_type),
+                arabic_text(fee.description or ""),
+                arabic_text(f"{fee.amount:.2f}"),
+                arabic_text(fee.due_date.strftime("%Y-%m-%d") if fee.due_date else ""),
+                arabic_text(is_paid_text),
+                arabic_text(fee.recipient or "")
+            ])
+        
+        # إنشاء الجدول وتنسيقه
+        table = Table(data, colWidths=[doc.width/6] * 6)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Amiri'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ]))
+        content.append(table)
+        content.append(Spacer(1, 20))
+        
+        # إحصائيات الرسوم
+        total_fees = sum(fee.amount for fee in fees if fee.amount)
+        total_paid = sum(fee.amount for fee in fees if fee.amount and fee.is_paid)
+        total_unpaid = sum(fee.amount for fee in fees if fee.amount and not fee.is_paid)
+        
+        stats = [
+            Paragraph(arabic_text(f"إجمالي الرسوم: {total_fees:.2f} ر.س"), styles['Arabic']),
+            Paragraph(arabic_text(f"إجمالي المدفوع: {total_paid:.2f} ر.س"), styles['Arabic']),
+            Paragraph(arabic_text(f"إجمالي غير المدفوع: {total_unpaid:.2f} ر.س"), styles['Arabic'])
+        ]
+        
+        for stat in stats:
+            content.append(stat)
+            content.append(Spacer(1, 5))
+    else:
+        content.append(Paragraph(arabic_text("لا توجد رسوم مطابقة للمعايير المحددة"), styles['Arabic']))
+    
+    # التذييل
+    content.append(Spacer(1, 20))
+    footer_text = Paragraph(
+        arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة متكامل في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+        styles['Arabic']
+    )
+    content.append(footer_text)
+    
+    # بناء الوثيقة
+    doc.build(content)
+    buffer.seek(0)
+    
+    # إرسال الملف كمرفق للتنزيل
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"fees_report_{datetime.now().strftime('%Y%m%d')}.pdf",
+        mimetype='application/pdf'
+    )
+
+@reports_bp.route('/fees/excel')
+@login_required
+def fees_excel():
+    """تصدير تقرير الرسوم إلى Excel"""
+    # الحصول على معلمات الفلتر
+    fee_type = request.args.get('fee_type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    status = request.args.get('status', '')  # paid/unpaid
+    
+    # تحويل التواريخ إلى كائنات datetime إذا تم تحديدها
+    if date_from:
+        date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+    if date_to:
+        date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
+    
+    # إنشاء استعلام الرسوم
+    query = Fee.query
+    
+    # تطبيق الفلترة على الرسوم
+    if fee_type:
+        query = query.filter_by(fee_type=fee_type)
+    
+    if date_from:
+        query = query.filter(Fee.due_date >= date_from)
+    
+    if date_to:
+        query = query.filter(Fee.due_date <= date_to)
+    
+    if status:
+        is_paid_bool = (status.lower() == 'paid')
+        query = query.filter(Fee.is_paid == is_paid_bool)
+    
+    # الحصول على قائمة الرسوم المرتبة حسب تاريخ الاستحقاق
+    fees = query.order_by(Fee.due_date).all()
+    
+    # تحضير بيانات Excel
+    data = []
+    for fee in fees:
+        is_paid_text = "مدفوعة" if fee.is_paid else "غير مدفوعة"
+        data.append({
+            'نوع الرسوم': fee.fee_type,
+            'الوصف': fee.description or "",
+            'المبلغ (ر.س)': fee.amount,
+            'تاريخ الاستحقاق': fee.due_date.strftime("%Y-%m-%d") if fee.due_date else "",
+            'حالة الدفع': is_paid_text,
+            'المستلم': fee.recipient or ""
+        })
+    
+    # إنشاء DataFrame
+    df = pd.DataFrame(data)
+    
+    # تحضير مخرجات التقرير
+    output = BytesIO()
+    
+    # إنشاء ملف Excel
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        # كتابة DataFrame إلى ورقة العمل
+        df.to_excel(writer, sheet_name='تقرير الرسوم', index=False)
+        
+        # الحصول على ورقة العمل وكائن المصنف
+        workbook = writer.book
+        worksheet = writer.sheets['تقرير الرسوم']
+        
+        # إضافة تنسيقات
+        header_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'center',
+            'align': 'center',
+            'bg_color': '#D7E4BC',
+            'border': 1
+        })
+        
+        # تطبيق التنسيق على العناوين
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+        
+        # إضافة تنسيق للخلايا
+        cell_format = workbook.add_format({
+            'align': 'right',
+            'valign': 'vcenter',
+            'border': 1
+        })
+        
+        # تطبيق التنسيق على الخلايا
+        for row in range(1, len(df) + 1):
+            for col in range(len(df.columns)):
+                worksheet.write(row, col, df.iloc[row-1, col], cell_format)
+        
+        # تنسيق خاص لعمود المبلغ
+        money_format = workbook.add_format({
+            'align': 'right',
+            'valign': 'vcenter',
+            'border': 1,
+            'num_format': '#,##0.00 ر.س'
+        })
+        
+        # تطبيق تنسيق المبالغ
+        amount_col = df.columns.get_loc('المبلغ (ر.س)')
+        for row in range(1, len(df) + 1):
+            worksheet.write(row, amount_col, df.iloc[row-1, amount_col], money_format)
+        
+        # إضافة ورقة للإحصائيات
+        stats_df = pd.DataFrame({
+            'البيان': ['إجمالي الرسوم', 'إجمالي المدفوع', 'إجمالي غير المدفوع'],
+            'القيمة': [
+                sum(fee.amount for fee in fees if fee.amount),
+                sum(fee.amount for fee in fees if fee.amount and fee.is_paid),
+                sum(fee.amount for fee in fees if fee.amount and not fee.is_paid)
+            ]
+        })
+        
+        stats_df.to_excel(writer, sheet_name='إحصائيات', index=False)
+        stats_worksheet = writer.sheets['إحصائيات']
+        
+        # تنسيق ورقة الإحصائيات
+        for col_num, value in enumerate(stats_df.columns.values):
+            stats_worksheet.write(0, col_num, value, header_format)
+        
+        for row in range(1, len(stats_df) + 1):
+            stats_worksheet.write(row, 0, stats_df.iloc[row-1, 0], cell_format)
+            stats_worksheet.write(row, 1, stats_df.iloc[row-1, 1], money_format)
+        
+        # ضبط عرض الأعمدة
+        for i, col in enumerate(df.columns):
+            column_len = max(df[col].astype(str).map(len).max(), len(col) + 2)
+            worksheet.set_column(i, i, column_len)
+        
+        stats_worksheet.set_column(0, 0, 20)
+        stats_worksheet.set_column(1, 1, 15)
+    
+    # إرسال الملف كمرفق للتنزيل
+    output.seek(0)
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=f"fees_report_{datetime.now().strftime('%Y%m%d')}.xlsx",
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
