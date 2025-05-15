@@ -58,6 +58,15 @@
     </div>
 </div>
 
+<!-- شريط ثابت للحفظ في أعلى الصفحة بعد التمرير للأسفل -->
+<div class="mobile-card my-2 sticky-top" style="top: 60px; z-index: 99;">
+    <div class="mobile-card-content p-2">
+        <button type="button" id="save-checklist-top" class="btn btn-primary btn-sm w-100">
+            <i class="fas fa-save"></i> حفظ الفحص
+        </button>
+    </div>
+</div>
+
 <!-- شريط التقدم -->
 <div class="mobile-card">
     <div class="mobile-card-title">
@@ -592,13 +601,15 @@
 }
 
 .submit-section {
-    position: sticky;
+    position: fixed;
     bottom: 0;
+    left: 0;
+    width: 100%;
     background-color: #fff;
     padding: 15px;
     border-top: 1px solid #e9ecef;
     z-index: 100;
-    margin-top: 20px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
 
 .vehicle-damage-editor {
@@ -1334,12 +1345,45 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('images-count').textContent = selectedImages.length;
     }
     
-    // زر حفظ تشيك لست الفحص
-    document.getElementById('save-checklist').addEventListener('click', function() {
+    // أزرار حفظ تشيك لست الفحص (العلوي والسفلي)
+    function setupSaveButtons() {
+        console.log('إعداد أزرار الحفظ');
+        const saveChecklistBtn = document.getElementById('save-checklist');
+        const saveChecklistTopBtn = document.getElementById('save-checklist-top');
+        
+        // إضافة مستمع الحدث للزر العلوي
+        if (saveChecklistTopBtn) {
+            saveChecklistTopBtn.addEventListener('click', saveChecklist);
+            console.log('تم إعداد زر الحفظ العلوي');
+        } else {
+            console.error('لم يتم العثور على زر الحفظ العلوي');
+        }
+        
+        // إضافة مستمع الحدث للزر السفلي
+        if (saveChecklistBtn) {
+            saveChecklistBtn.addEventListener('click', saveChecklist);
+            console.log('تم إعداد زر الحفظ السفلي');
+        } else {
+            console.error('لم يتم العثور على زر الحفظ السفلي');
+        }
+    }
+    
+    // استدعاء دالة إعداد أزرار الحفظ
+    setupSaveButtons();
+    
+    // دالة حفظ تشيك لست الفحص
+    function saveChecklist() {
+        console.log('تنفيذ عملية الحفظ');
         const vehicleSelect = document.getElementById('vehicle-select');
         const inspectionDate = document.getElementById('inspection-date');
         const inspectorName = document.getElementById('inspector-name');
         const inspectionType = document.getElementById('inspection-type');
+    
+        // تعطيل أزرار الحفظ أثناء العملية
+        const saveChecklistBtn = document.getElementById('save-checklist');
+        const saveChecklistTopBtn = document.getElementById('save-checklist-top');
+        if (saveChecklistBtn) saveChecklistBtn.disabled = true;
+        if (saveChecklistTopBtn) saveChecklistTopBtn.disabled = true;
         
         // التحقق من إدخال البيانات الأساسية
         if (!vehicleSelect.value) {
