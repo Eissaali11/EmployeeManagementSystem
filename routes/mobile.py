@@ -2077,8 +2077,174 @@ def fee_details(fee_id):
 @login_required
 def notifications():
     """صفحة الإشعارات للنسخة المحمولة"""
-    # يمكننا استكمال هذه الواجهة لاحقًا
-    return render_template('mobile/notifications.html')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # عدد العناصر في الصفحة الواحدة
+    
+    # الحصول على قوائم الإشعارات المقروءة والمحذوفة من الجلسة
+    read_notifications = session.get('read_notifications', [])
+    deleted_notifications = session.get('deleted_notifications', [])
+    
+    # تحضير قائمة الإشعارات
+    notifications = []
+    
+    # استعلام للوثائق التي على وشك الانتهاء كإشعارات
+    current_date = datetime.now().date()
+    expiring_30_days = current_date + timedelta(days=30)
+    expiring_documents = Document.query.filter(
+        Document.expiry_date > current_date,
+        Document.expiry_date <= expiring_30_days
+    ).order_by(Document.expiry_date).all()
+    
+    # إضافة إشعارات الوثائق
+    for doc in expiring_documents:
+        notification_id = f'doc_{doc.id}'
+        
+        # تخطي الإشعارات المحذوفة
+        if notification_id in deleted_notifications:
+            continue
+            
+        remaining_days = (doc.expiry_date - current_date).days
+        notifications.append({
+            'id': notification_id,
+            'type': 'document',
+            'title': f'وثيقة على وشك الانتهاء: {doc.document_type}',
+            'message': f'متبقي {remaining_days} يوم على انتهاء {doc.document_type} للموظف {doc.employee.name}',
+            'created_at': doc.expiry_date.strftime('%Y-%m-%d'),
+            'is_read': notification_id in read_notifications
+        })
+    
+    # إضافة إشعارات الرسوم المستحقة قريباً
+    due_fees = Fee.query.join(Document).filter(
+        Document.expiry_date > current_date,
+        Document.expiry_date <= current_date + timedelta(days=30)
+    ).all()
+    
+    for fee in due_fees:
+        notification_id = f'fee_{fee.id}'
+        
+        # تخطي الإشعارات المحذوفة
+        if notification_id in deleted_notifications:
+            continue
+            
+        # استخدام تاريخ انتهاء الوثيقة المرتبطة بالرسوم
+        doc = Document.query.get(fee.document_id)
+        if not doc:
+            continue
+            
+        remaining_days = (doc.expiry_date - current_date).days
+        document_type = fee.document_type
+        total_amount = sum([
+            fee.passport_fee or 0,
+            fee.labor_office_fee or 0,
+            fee.insurance_fee or 0,
+            fee.social_insurance_fee or 0
+        ])
+        
+        notifications.append({
+            'id': notification_id,
+            'type': 'fee',
+            'title': f'رسوم مستحقة قريباً: {document_type}',
+            'message': f'رسوم مستحقة بعد {remaining_days} يوم بقيمة {total_amount:.2f}',
+            'created_at': doc.expiry_date.strftime('%Y-%m-%d'),
+            'is_read': notification_id in read_notifications
+        })
+    
+    # ترتيب الإشعارات حسب التاريخ
+    notifications.sort(key=lambda x: x['created_at'])
+    
+    # تقسيم النتائج للصفحات
+    total_notifications = len(notifications)
+    start_idx = (page - 1) * per_page
+    end_idx = min(start_idx + per_page, total_notifications)
+    current_notifications = notifications[start_idx:end_idx]
+    
+    # إنشاء كائن تقسيم صفحات
+    pagination = {
+        'page': page,
+        'per_page': per_page,
+        'total': total_notifications,
+        'pages': (total_notifications + per_page - 1) // per_page,
+        'has_prev': page > 1,
+        'has_next': page < ((total_notifications + per_page - 1) // per_page),
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page < ((total_notifications + per_page - 1) // per_page) else None,
+        'iter_pages': lambda: range(1, ((total_notifications + per_page - 1) // per_page) + 1)
+    }
+    
+    return render_template('mobile/notifications.html',
+                          notifications=current_notifications,
+                          pagination=pagination)
+
+# API endpoint لتعليم إشعار كمقروء
+@mobile_bp.route('/api/notifications/<notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_as_read(notification_id):
+    """تعليم إشعار كمقروء"""
+    # في الإصدار الحقيقي سيتم حفظ حالة قراءة الإشعارات في قاعدة البيانات
+    
+    # للإصدار الحالي البسيط نستخدم session لتخزين الإشعارات المقروءة
+    read_notifications = session.get('read_notifications', [])
+    
+    if notification_id not in read_notifications:
+        read_notifications.append(notification_id)
+        session['read_notifications'] = read_notifications
+        
+    return jsonify({'success': True})
+
+# API endpoint لتعليم جميع الإشعارات كمقروءة
+@mobile_bp.route('/api/notifications/read-all', methods=['POST'])
+@login_required
+def mark_all_notifications_as_read():
+    """تعليم جميع الإشعارات كمقروءة"""
+    # في الإصدار الحقيقي سيتم تحديث جميع إشعارات المستخدم إلى مقروءة
+    
+    # استعلام للوثائق التي على وشك الانتهاء للحصول على معرّفاتها
+    current_date = datetime.now().date()
+    expiring_30_days = current_date + timedelta(days=30)
+    expiring_documents = Document.query.filter(
+        Document.expiry_date > current_date,
+        Document.expiry_date <= expiring_30_days
+    ).all()
+    
+    # تخزين جميع معرّفات الإشعارات كمقروءة في session
+    read_notifications = []
+    for doc in expiring_documents:
+        read_notifications.append(f'doc_{doc.id}')
+    
+    # الرسوم المستحقة قريباً
+    due_fees = Fee.query.join(Document).filter(
+        Document.expiry_date > current_date,
+        Document.expiry_date <= current_date + timedelta(days=30)
+    ).all()
+    
+    for fee in due_fees:
+        read_notifications.append(f'fee_{fee.id}')
+    
+    session['read_notifications'] = read_notifications
+    
+    return jsonify({'success': True})
+
+# API endpoint لحذف إشعار
+@mobile_bp.route('/api/notifications/<notification_id>', methods=['DELETE'])
+@login_required
+def delete_notification(notification_id):
+    """حذف إشعار"""
+    # في الإصدار الحقيقي سيتم حذف الإشعار من قاعدة البيانات أو تحديث حالته
+    
+    # للإصدار الحالي البسيط نستخدم session لتخزين الإشعارات المحذوفة
+    deleted_notifications = session.get('deleted_notifications', [])
+    
+    if notification_id not in deleted_notifications:
+        deleted_notifications.append(notification_id)
+        session['deleted_notifications'] = deleted_notifications
+    
+    # إذا كان الإشعار مقروءاً، نحذفه من قائمة الإشعارات المقروءة
+    read_notifications = session.get('read_notifications', [])
+    if notification_id in read_notifications:
+        read_notifications.remove(notification_id)
+        session['read_notifications'] = read_notifications
+    
+    return jsonify({'success': True})
 
 # صفحة الإعدادات - النسخة المحمولة
 @mobile_bp.route('/settings')
