@@ -1271,7 +1271,8 @@ def create_handover(id):
         vehicle=vehicle,
         handover_types=HANDOVER_TYPE_CHOICES,
         default_handover_type=default_handover_type,
-        employees=employees
+        employees=employees,
+        departments=departments
     )
 
 @vehicles_bp.route('/handover/<int:id>/view')
