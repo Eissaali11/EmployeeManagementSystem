@@ -707,14 +707,16 @@ def report_employees():
     if export_format:
         if export_format == 'pdf':
             # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.employees_pdf', 
+            return redirect(url_for('reports.export_employees_report', 
+                                   export_type='pdf',
                                    department_id=department_id,
                                    status=status,
                                    search=search))
                                    
         elif export_format == 'excel':
             # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.employees_excel',
+            return redirect(url_for('reports.export_employees_report',
+                                   export_type='excel',
                                    department_id=department_id,
                                    status=status,
                                    search=search))
@@ -1003,14 +1005,16 @@ def report_vehicles():
     if export_format:
         if export_format == 'pdf':
             # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.vehicles_pdf',
+            return redirect(url_for('reports.export_vehicles_report',
+                                  export_type='pdf',
                                   vehicle_type=vehicle_type,
                                   status=status,
                                   search=search))
                                   
         elif export_format == 'excel':
             # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.vehicles_excel',
+            return redirect(url_for('reports.export_vehicles_report',
+                                  export_type='excel',
                                   vehicle_type=vehicle_type,
                                   status=status,
                                   search=search))
