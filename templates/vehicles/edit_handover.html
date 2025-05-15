@@ -485,16 +485,22 @@
         
         // تنفيذ البحث عند النقر على زر البحث
         if (searchBtn) {
-            searchBtn.addEventListener('click', searchEmployees);
+            searchBtn.addEventListener('click', filterEmployees);
         }
         
         // تنفيذ البحث عند الضغط على Enter في حقل البحث
         if (searchInput) {
             searchInput.addEventListener('keyup', function(event) {
                 if (event.key === 'Enter') {
-                    searchEmployees();
+                    filterEmployees();
                 }
             });
+        }
+        
+        // تنفيذ التصفية عند تغيير القسم
+        const departmentSelect = document.getElementById('departmentSelect');
+        if (departmentSelect) {
+            departmentSelect.addEventListener('change', filterEmployees);
         }
         
         // حدث عند اختيار موظف
