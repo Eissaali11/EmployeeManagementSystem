@@ -10,6 +10,21 @@
 </button>
 {% endblock %}
 
+{% block scripts %}
+<script>
+  $(document).ready(function() {
+    // تهيئة القائمة المنسدلة للبحث
+    $('.vehicle-search-select').select2({
+      placeholder: "اختر أو ابحث عن سيارة",
+      allowClear: true,
+      dir: "rtl",
+      language: "ar",
+      width: '100%'
+    });
+  });
+</script>
+{% endblock %}
+
 {% block content %}
 <!-- نموذج اختيار السيارة والتاريخ -->
 <div class="mobile-card">
@@ -21,7 +36,7 @@
         <form id="vehicle-select-form" class="mobile-form">
             <div class="mobile-form-group">
                 <label>السيارة</label>
-                <select id="vehicle-select" class="mobile-form-select" required>
+                <select id="vehicle-select" class="mobile-form-select vehicle-search-select" required>
                     <option value="">اختر السيارة</option>
                     {% for vehicle in vehicles %}
                     <option value="{{ vehicle.id }}">{{ vehicle.name }} - {{ vehicle.plate_number }}</option>
