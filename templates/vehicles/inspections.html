@@ -42,18 +42,18 @@
                                 <tbody>
                                     {% for inspection in inspections %}
                                     <tr class="{% if inspection.is_expired %}table-danger{% elif inspection.is_expiring_soon %}table-warning{% endif %}">
-                                        <td>{{ inspection.inspection_number }}</td>
+                                        <td>{{ inspection.inspection_center or inspection.inspection_number }}</td>
                                         <td>{{ inspection.formatted_inspection_date }}</td>
                                         <td>{{ inspection.formatted_expiry_date }}</td>
                                         <td>
-                                            {% if inspection.inspection_type == 'technical' %}
+                                            {% if (inspection.result or inspection.inspection_type) == 'technical' %}
                                                 فحص فني
-                                            {% elif inspection.inspection_type == 'periodic' %}
+                                            {% elif (inspection.result or inspection.inspection_type) == 'periodic' %}
                                                 فحص دوري
-                                            {% elif inspection.inspection_type == 'safety' %}
+                                            {% elif (inspection.result or inspection.inspection_type) == 'safety' %}
                                                 فحص أمان
                                             {% else %}
-                                                {{ inspection.inspection_type }}
+                                                {{ inspection.result or inspection.inspection_type }}
                                             {% endif %}
                                         </td>
                                         <td>
@@ -67,7 +67,7 @@
                                                 <span class="badge bg-secondary">{{ inspection.inspection_status }}</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ inspection.inspector_name }}</td>
+                                        <td>{{ inspection.supervisor_name or inspection.inspector_name }}</td>
                                         <td>{{ inspection.cost|int if inspection.cost == inspection.cost|int else inspection.cost }} ريال</td>
                                         <td>
                                             {% if inspection.notes %}

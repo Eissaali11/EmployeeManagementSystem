@@ -30,14 +30,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="inspection_number">رقم الفحص <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="inspection_number" name="inspection_number" value="{{ inspection.inspection_number }}" required>
+                                    <label for="inspection_center">مركز الفحص <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="inspection_center" name="inspection_center" value="{{ inspection.inspection_center or inspection.inspection_number }}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="inspector_name">اسم مركز الفحص / الفاحص <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="inspector_name" name="inspector_name" value="{{ inspection.inspector_name }}" required>
+                                    <label for="supervisor_name">اسم المشرف <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="supervisor_name" name="supervisor_name" value="{{ inspection.supervisor_name or inspection.inspector_name }}" required>
                                 </div>
                             </div>
                         </div>
@@ -45,10 +45,10 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="inspection_type">نوع الفحص <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="inspection_type" name="inspection_type" required>
+                                    <label for="result">نتيجة الفحص <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="result" name="result" required>
                                         {% for type in inspection_types %}
-                                            <option value="{{ type }}" {% if inspection.inspection_type == type %}selected{% endif %}>
+                                            <option value="{{ type }}" {% if (inspection.result == type) or (inspection.inspection_type == type) %}selected{% endif %}>
                                                 {% if type == 'technical' %}
                                                     فحص فني
                                                 {% elif type == 'periodic' %}
