@@ -15,7 +15,8 @@ from app import db
 from models import (
     Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
     VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
-    VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee
+    VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
+    Department
 )
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.vehicle_report import generate_complete_vehicle_report
@@ -1195,8 +1196,9 @@ def create_handover(id):
     else:
         default_handover_type = None
     
-    # جلب قائمة الموظفين للاختيار منهم
+    # جلب قائمة الموظفين والأقسام للاختيار منهم
     employees = Employee.query.order_by(Employee.name).all()
+    departments = Department.query.order_by(Department.name).all()
     
     if request.method == 'POST':
         # استخراج البيانات من النموذج
@@ -1365,6 +1367,7 @@ def edit_handover(id):
     
     # جلب قائمة الموظفين للاختيار منهم
     employees = Employee.query.order_by(Employee.name).all()
+    departments = Department.query.order_by(Department.name).all()
     
     return render_template(
         'vehicles/edit_handover.html',
@@ -1373,7 +1376,8 @@ def edit_handover(id):
         images=images,
         handover_date=handover_date_str,
         handover_type_name=handover_type_name,
-        employees=employees
+        employees=employees,
+        departments=departments
     )
 
 @vehicles_bp.route('/<int:vehicle_id>/handovers/confirm-delete', methods=['POST'])

@@ -144,8 +144,18 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
+                    <label for="departmentSelect" class="form-label">اختر القسم أولاً:</label>
+                    <select class="form-select" id="departmentSelect">
+                        <option value="">جميع الأقسام</option>
+                        {% for department in departments %}
+                        <option value="{{ department.id }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="employeeSearchInput" class="form-label">البحث عن الموظف:</label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="employeeSearchInput" placeholder="البحث بالاسم أو الرقم الوظيفي أو رقم الهوية أو المشروع">
+                        <input type="text" class="form-control" id="employeeSearchInput" placeholder="البحث بالاسم أو الرقم الوظيفي أو رقم الهوية">
                         <button class="btn btn-primary" id="searchEmployeeBtn" type="button">
                             <i class="fas fa-search"></i> بحث
                         </button>
