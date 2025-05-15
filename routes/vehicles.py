@@ -2335,9 +2335,10 @@ def create_inspection(id):
             vehicle_id=id,
             inspection_date=inspection_date,
             expiry_date=expiry_date,
-            inspection_number=inspection_number,
-            inspector_name=inspector_name,
-            inspection_type=inspection_type,
+            # استخدام الحقول الموجودة في النموذج بدلاً من الحقول غير الموجودة
+            inspection_center=inspection_number,  # استخدام inspection_center بدلاً من inspection_number
+            supervisor_name=inspector_name,  # استخدام supervisor_name بدلاً من inspector_name
+            result=inspection_type,  # استخدام result بدلاً من inspection_type
             inspection_status=inspection_status,
             cost=cost,
             results=results,
