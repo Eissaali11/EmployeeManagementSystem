@@ -138,7 +138,8 @@
                                                         data-employee-id="{{ employee.employee_id }}" 
                                                         data-national-id="{{ employee.national_id }}" 
                                                         data-department="{{ employee.department.name if employee.department else 'غير محدد' }}"
-                                                        data-department-id="{{ employee.department.id if employee.department else '' }}">
+                                                        data-department-id="{{ employee.department.id if employee.department else '' }}"
+                                                        data-id="{{ employee.id }}">
                                                         <td>{{ employee.name }}</td>
                                                         <td>{{ employee.employee_id or 'غير محدد' }}</td>
                                                         <td>{{ employee.national_id or 'غير محدد' }}</td>
@@ -509,10 +510,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // التأكد من أن الزر موجود وحقل اسم الشخص موجود أيضًا
             if (button && personNameInput) {
                 var employeeName = button.getAttribute('data-name');
+                var row = button.closest('tr');
+                var employeeId = row ? row.getAttribute('data-id') : '';
                 
                 if (employeeName) {
                     personNameInput.value = employeeName;
-                    console.log('تم اختيار الموظف عبر التفويض:', employeeName);
+                    
+                    // تحديث حقل معرف الموظف المخفي
+                    var employeeIdInput = document.getElementById('employee_id');
+                    if (employeeIdInput && employeeId) {
+                        employeeIdInput.value = employeeId;
+                    }
+                    
+                    console.log('تم اختيار الموظف عبر التفويض:', employeeName, 'المعرف:', employeeId);
                 }
             }
         }

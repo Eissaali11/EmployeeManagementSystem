@@ -45,7 +45,6 @@ class Employee(db.Model):
     attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
     salaries = db.relationship('Salary', back_populates='employee', cascade='all, delete-orphan')
     documents = db.relationship('Document', back_populates='employee', cascade='all, delete-orphan')
-    vehicle_handovers = db.relationship('VehicleHandover', foreign_keys='VehicleHandover.employee_id', backref='employee')
     
     def __repr__(self):
         return f'<Employee {self.name} ({self.employee_id})>'
@@ -466,7 +465,7 @@ class VehicleHandover(db.Model):
     
     # العلاقات
     vehicle = db.relationship('Vehicle', back_populates='handover_records')
-    employee = db.relationship('Employee', foreign_keys=[employee_id])
+    employee_rel = db.relationship('Employee', foreign_keys=[employee_id], backref='vehicle_handovers')
     images = db.relationship('VehicleHandoverImage', back_populates='handover_record', cascade='all, delete-orphan')
     
     def __repr__(self):
