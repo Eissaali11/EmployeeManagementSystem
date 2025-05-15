@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
@@ -204,13 +204,17 @@ def view(id):
     # Get salary records
     salaries = Salary.query.filter_by(employee_id=id).order_by(Salary.year.desc(), Salary.month.desc()).all()
     
+    # Get vehicle handover records
+    vehicle_handovers = VehicleHandover.query.filter_by(employee_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+    
     return render_template('employees/view.html', 
                           employee=employee, 
                           documents=documents,
                           documents_by_type=documents_by_type,
                           document_types_map=document_types_map,
                           attendances=attendances,
-                          salaries=salaries)
+                          salaries=salaries,
+                          vehicle_handovers=vehicle_handovers)
 
 @employees_bp.route('/<int:id>/confirm_delete')
 @login_required
