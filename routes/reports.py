@@ -5,11 +5,12 @@ from datetime import datetime, date, timedelta
 from io import BytesIO
 from utils.pdf import create_pdf, arabic_text, create_data_table, get_styles
 from app import db
-from models import Department, Employee, Attendance, Salary, Document, SystemAudit, Vehicle, Fee
+from models import Department, Employee, Attendance, Salary, Document, SystemAudit, Vehicle, Fee, VehicleChecklist, VehicleDamageMarker, VehicleChecklistImage
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
 from utils.vehicles_export import export_vehicle_pdf, export_vehicle_excel
 from utils.pdf_generator import generate_salary_report_pdf
+from utils.vehicle_checklist_pdf import create_vehicle_checklist_pdf
 # إضافة الاستيرادات المفقودة
 import arabic_reshaper
 from bidi.algorithm import get_display
@@ -47,6 +48,56 @@ def export_vehicles_report(export_type):
     else:
         # إعادة توجيه إلى صفحة تقارير المركبات المحمولة
         return redirect(url_for('mobile.report_vehicles'))
+
+
+@reports_bp.route('/vehicle_checklist/<int:checklist_id>/pdf')
+@login_required
+def vehicle_checklist_pdf(checklist_id):
+    """
+    تصدير تقرير فحص المركبة إلى PDF مع عرض علامات التلف
+    :param checklist_id: معرف سجل الفحص
+    """
+    try:
+        # الحصول على بيانات الفحص
+        checklist = VehicleChecklist.query.get_or_404(checklist_id)
+        
+        # الحصول على بيانات المركبة
+        vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
+        
+        # جمع بيانات عناصر الفحص مرتبة حسب الفئة
+        checklist_items = {}
+        for item in checklist.checklist_items:
+            if item.category not in checklist_items:
+                checklist_items[item.category] = []
+            
+            checklist_items[item.category].append(item)
+        
+        # الحصول على علامات التلف المرتبطة بهذا الفحص
+        damage_markers = VehicleDamageMarker.query.filter_by(checklist_id=checklist_id).all()
+        
+        # الحصول على صور الفحص المرفقة
+        checklist_images = VehicleChecklistImage.query.filter_by(checklist_id=checklist_id).all()
+        
+        # إنشاء ملف PDF
+        pdf_buffer = create_vehicle_checklist_pdf(
+            checklist=checklist,
+            vehicle=vehicle,
+            checklist_items=checklist_items,
+            damage_markers=damage_markers,
+            checklist_images=checklist_images
+        )
+        
+        # إنشاء استجابة تحميل للملف
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=vehicle_checklist_{checklist_id}.pdf'
+        
+        return response
+        
+    except Exception as e:
+        # تسجيل الخطأ وإعادة توجيه المستخدم
+        print(f"خطأ في إنشاء ملف PDF لفحص المركبة: {str(e)}")
+        return redirect(url_for('mobile.vehicle_checklist_details', checklist_id=checklist_id))
 
 @reports_bp.route('/export/fees/<export_type>')
 @login_required

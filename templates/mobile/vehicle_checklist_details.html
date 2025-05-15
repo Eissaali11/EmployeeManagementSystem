@@ -223,6 +223,10 @@
                 <i class="fas fa-print"></i> طباعة التقرير
             </button>
             
+            <a href="{{ url_for('reports.vehicle_checklist_pdf', checklist_id=checklist.id) }}" class="mobile-btn mobile-btn-success btn-block mt-3">
+                <i class="fas fa-file-pdf"></i> تصدير كملف PDF
+            </a>
+            
             <a href="{{ url_for('mobile.vehicle_checklist') }}" class="mobile-btn mobile-btn-secondary btn-block mt-3">
                 <i class="fas fa-plus-circle"></i> إضافة فحص جديد
             </a>
