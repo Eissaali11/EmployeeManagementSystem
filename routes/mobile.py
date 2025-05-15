@@ -1707,10 +1707,18 @@ def vehicle_checklist_details(checklist_id):
         
         checklist_items[item.category].append(item)
     
+    # الحصول على علامات التلف المرتبطة بهذا الفحص
+    damage_markers = VehicleDamageMarker.query.filter_by(checklist_id=checklist_id).all()
+    
+    # الحصول على صور الفحص المرفقة
+    checklist_images = VehicleChecklistImage.query.filter_by(checklist_id=checklist_id).all()
+    
     return render_template('mobile/vehicle_checklist_details.html',
                           checklist=checklist,
                           vehicle=vehicle,
-                          checklist_items=checklist_items)
+                          checklist_items=checklist_items,
+                          damage_markers=damage_markers,
+                          checklist_images=checklist_images)
 
 
 # إضافة فحص جديد للسيارة - النسخة المحمولة

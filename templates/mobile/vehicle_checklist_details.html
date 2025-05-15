@@ -82,6 +82,75 @@
         </div>
         
         <!-- الملاحظات العامة -->
+        <!-- مخطط المركبة وتلفياتها -->
+        <div class="vehicle-diagram-section">
+            <h6>مخطط المركبة وعلامات التلف</h6>
+            <div class="vehicle-diagram-container position-relative">
+                <img src="{{ url_for('static', filename='images/vehicles/vehicle_diagram.png') }}" class="img-fluid vehicle-diagram" id="vehicle-diagram">
+                <div id="vehicle-markers-container" class="position-absolute top-0 start-0 w-100 h-100">
+                    <!-- هنا سيتم إضافة علامات التلف ديناميكياً -->
+                    {% for marker in damage_markers %}
+                    <div class="vehicle-marker marker-{{ marker.marker_type }}" 
+                         style="position: absolute; left: {{ marker.position_x }}%; top: {{ marker.position_y }}%; transform: translate(-50%, -50%); width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 5px rgba(0,0,0,0.3); z-index: 10;
+                                background-color: {{ 'rgba(220, 53, 69, 0.7)' if marker.marker_type == 'damage' else 'rgba(255, 193, 7, 0.7)' }};"
+                         title="{{ marker.notes }}">
+                        <i class="fas {{ 'fa-times' if marker.marker_type == 'damage' else 'fa-minus' }}" style="color: white; font-size: 12px;"></i>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if damage_markers %}
+            <div class="damage-notes mt-3">
+                <h6>ملاحظات التلفيات</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>نوع العلامة</th>
+                                <th>الملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for marker in damage_markers %}
+                            {% if marker.notes %}
+                            <tr>
+                                <td>
+                                    <span class="badge {{ 'bg-danger' if marker.marker_type == 'damage' else 'bg-warning text-dark' }}">
+                                        {{ 'تلف' if marker.marker_type == 'damage' else 'خدش' }}
+                                    </span>
+                                </td>
+                                <td>{{ marker.notes }}</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- الصور المرفقة -->
+        {% if checklist_images %}
+        <div class="checklist-images-section mt-4">
+            <h6>صور الفحص المرفقة</h6>
+            <div class="row g-2">
+                {% for image in checklist_images %}
+                <div class="col-4">
+                    <div class="checklist-image-thumbnail">
+                        <img src="{{ url_for('static', filename=image.image_path) }}" 
+                             class="img-fluid img-thumbnail" 
+                             alt="صورة فحص"
+                             onclick="showFullImage('{{ url_for('static', filename=image.image_path) }}')">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- ملاحظات عامة -->
         {% if checklist.notes %}
         <div class="notes-section">
             <h6>ملاحظات عامة</h6>
@@ -300,6 +369,49 @@
     color: #666;
 }
 
+.vehicle-diagram-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.vehicle-diagram-container {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 15px;
+}
+
+.vehicle-diagram {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.vehicle-marker {
+    cursor: pointer;
+}
+
+.damage-notes {
+    margin-top: 15px;
+}
+
+.checklist-images-section {
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.checklist-image-thumbnail {
+    cursor: pointer;
+    transition: transform 0.2s;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.checklist-image-thumbnail:hover {
+    transform: scale(1.05);
+}
+
 .notes-section {
     margin-top: 20px;
     padding-top: 15px;
@@ -468,5 +580,63 @@ document.addEventListener('DOMContentLoaded', function() {
         progressCircle.style.setProperty('--progress-color', '#28a745'); // أخضر
     }
 });
+
+// دالة لعرض الصورة بالحجم الكامل
+function showFullImage(imageSrc) {
+    // إنشاء طبقة تظليل للخلفية
+    const overlay = document.createElement('div');
+    overlay.className = 'image-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+    overlay.style.zIndex = '9999';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    
+    // إنشاء الصورة بالحجم الكامل
+    const fullImage = document.createElement('img');
+    fullImage.src = imageSrc;
+    fullImage.style.maxWidth = '90%';
+    fullImage.style.maxHeight = '90%';
+    fullImage.style.objectFit = 'contain';
+    
+    // إضافة زر الإغلاق
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '&times;';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '20px';
+    closeButton.style.right = '20px';
+    closeButton.style.color = 'white';
+    closeButton.style.fontSize = '30px';
+    closeButton.style.backgroundColor = 'transparent';
+    closeButton.style.border = 'none';
+    closeButton.style.cursor = 'pointer';
+    
+    // إضافة المكونات إلى الطبقة
+    overlay.appendChild(fullImage);
+    overlay.appendChild(closeButton);
+    
+    // إضافة الطبقة إلى الصفحة
+    document.body.appendChild(overlay);
+    
+    // إضافة حدث النقر لإغلاق الصورة
+    overlay.addEventListener('click', function() {
+        document.body.removeChild(overlay);
+    });
+    
+    // منع انتشار الحدث عند النقر على الصورة نفسها
+    fullImage.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+    
+    // إضافة حدث النقر لزر الإغلاق
+    closeButton.addEventListener('click', function() {
+        document.body.removeChild(overlay);
+    });
+}
 </script>
 {% endblock %}
