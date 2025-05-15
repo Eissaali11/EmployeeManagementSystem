@@ -2422,7 +2422,7 @@ def confirm_delete_inspection(id):
     inspection.formatted_inspection_date = format_date_arabic(inspection.inspection_date)
     
     return render_template(
-        'vehicles/inspection_confirm_delete.html',
+        'vehicles/confirm_delete_inspection.html',
         inspection=inspection,
         vehicle=vehicle
     )
@@ -2616,8 +2616,8 @@ def confirm_delete_safety_check(id):
     safety_check.formatted_check_date = format_date_arabic(safety_check.check_date)
     
     return render_template(
-        'vehicles/safety_check_confirm_delete.html',
-        safety_check=safety_check,
+        'vehicles/confirm_delete_safety_check.html',
+        check=safety_check,
         vehicle=vehicle
     )
 
