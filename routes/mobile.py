@@ -776,23 +776,27 @@ def report_attendance():
     
     # معالجة طلبات التصدير
     if export_format:
-        if export_format == 'pdf':
-            # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.attendance_pdf',
-                                   department_id=department_id,
-                                   employee_id=employee_id,
-                                   status=status,
-                                   start_date=start_date,
-                                   end_date=end_date))
-                                   
-        elif export_format == 'excel':
-            # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.attendance_excel',
-                                   department_id=department_id,
-                                   employee_id=employee_id,
-                                   status=status,
-                                   start_date=start_date,
-                                   end_date=end_date))
+        try:
+            if export_format == 'pdf':
+                # استدعاء مسار التصدير PDF في النسخة الرئيسية
+                return redirect(url_for('reports.attendance_pdf',
+                                       department_id=department_id,
+                                       employee_id=employee_id,
+                                       status=status,
+                                       start_date=start_date,
+                                       end_date=end_date))
+                                       
+            elif export_format == 'excel':
+                # استدعاء مسار التصدير Excel في النسخة الرئيسية
+                return redirect(url_for('reports.attendance_excel',
+                                       department_id=department_id,
+                                       employee_id=employee_id,
+                                       status=status,
+                                       start_date=start_date,
+                                       end_date=end_date))
+        except Exception as e:
+            # تسجيل الخطأ في السجل
+            print(f"خطأ في تصدير تقرير الحضور: {str(e)}")
     
     # عرض الصفحة مع نتائج التقرير
     return render_template('mobile/report_attendance.html',
