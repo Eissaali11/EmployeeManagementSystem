@@ -449,6 +449,7 @@ class VehicleHandover(db.Model):
     handover_type = db.Column(db.String(20), nullable=False)  # النوع: تسليم، استلام
     handover_date = db.Column(db.Date, nullable=False)  # تاريخ التسليم/الاستلام
     person_name = db.Column(db.String(100), nullable=False)  # اسم الشخص المستلم/المسلم
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)  # معرف الموظف المستلم/المسلم
     supervisor_name = db.Column(db.String(100))  # اسم المشرف
     vehicle_condition = db.Column(db.Text, nullable=False)  # حالة السيارة عند التسليم/الاستلام
     fuel_level = db.Column(db.String(20), nullable=False)  # مستوى الوقود
@@ -464,6 +465,7 @@ class VehicleHandover(db.Model):
     
     # العلاقات
     vehicle = db.relationship('Vehicle', back_populates='handover_records')
+    employee = db.relationship('Employee', foreign_keys=[employee_id])
     images = db.relationship('VehicleHandoverImage', back_populates='handover_record', cascade='all, delete-orphan')
     
     def __repr__(self):
