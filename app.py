@@ -2,7 +2,7 @@ import os
 import logging
 from datetime import datetime
 
-from flask import Flask, session, redirect, url_for, render_template
+from flask import Flask, session, redirect, url_for, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -78,6 +78,15 @@ login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'الرجاء تسجيل الدخول للوصول إلى هذه الصفحة'
 login_manager.login_message_category = 'warning'
+
+# التعامل بشكل مخصص مع المسارات المحمولة عند عدم تسجيل الدخول
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    if request.path.startswith('/mobile'):
+        # إعادة توجيه المستخدم إلى صفحة تسجيل الدخول المحمولة
+        return redirect(url_for('mobile.login', next=request.path))
+    # استخدام المسار الافتراضي لتسجيل الدخول
+    return redirect(url_for('auth.login', next=request.path))
 
 # Initialize CSRF Protection
 csrf.init_app(app)
