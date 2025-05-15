@@ -81,25 +81,38 @@ class VehicleDiagramWithMarkers(Flowable):
         # مستطيل الهيكل الرئيسي
         canvas.roundRect(50, 50, self.width - 100, self.height - 100, 20, stroke=1, fill=1)
         
-        # الزجاج الأمامي
+        # الزجاج الأمامي باستخدام مسار بدلاً من المضلع
         canvas.setFillColor(colors.lightblue)
         canvas.setStrokeColor(colors.black)
-        points = [
-            100, self.height - 100,  # أعلى يسار
-            self.width - 100, self.height - 100,  # أعلى يمين
-            self.width - 120, self.height - 140,  # أسفل يمين
-            120, self.height - 140   # أسفل يسار
-        ]
-        canvas.drawPolygon(points, stroke=1, fill=1)
+        # رسم المستطيل بشكل يدوي باستخدام خطوط
+        x1, y1 = 100, self.height - 100  # أعلى يسار
+        x2, y2 = self.width - 100, self.height - 100  # أعلى يمين
+        x3, y3 = self.width - 120, self.height - 140  # أسفل يمين
+        x4, y4 = 120, self.height - 140  # أسفل يسار
         
-        # الزجاج الخلفي
-        points = [
-            120, 140,  # أعلى يسار
-            self.width - 120, 140,  # أعلى يمين
-            self.width - 100, 100,  # أسفل يمين
-            100, 100   # أسفل يسار
-        ]
-        canvas.drawPolygon(points, stroke=1, fill=1)
+        # رسم المسار
+        p = canvas.beginPath()
+        p.moveTo(x1, y1)
+        p.lineTo(x2, y2)
+        p.lineTo(x3, y3)
+        p.lineTo(x4, y4)
+        p.close()
+        canvas.drawPath(p, stroke=1, fill=1)
+        
+        # الزجاج الخلفي باستخدام مسار
+        x1, y1 = 120, 140  # أعلى يسار
+        x2, y2 = self.width - 120, 140  # أعلى يمين
+        x3, y3 = self.width - 100, 100  # أسفل يمين
+        x4, y4 = 100, 100  # أسفل يسار
+        
+        # رسم المسار
+        p = canvas.beginPath()
+        p.moveTo(x1, y1)
+        p.lineTo(x2, y2)
+        p.lineTo(x3, y3)
+        p.lineTo(x4, y4)
+        p.close()
+        canvas.drawPath(p, stroke=1, fill=1)
         
         # العجلات
         canvas.setFillColor(colors.black)
@@ -124,24 +137,25 @@ class VehicleDiagramWithMarkers(Flowable):
         # رسم علامات التلف
         for marker in self.damage_markers:
             # تحويل الإحداثيات من النسبة المئوية إلى إحداثيات فعلية
-            x = float(marker.x_position) * self.width / 100
-            y = float(marker.y_position) * self.height / 100
-            note = marker.description
+            x = float(getattr(marker, 'x_position', 0)) * self.width / 100
+            y = float(getattr(marker, 'y_position', 0)) * self.height / 100
+            note = getattr(marker, 'description', '')
             
-            # رسم دائرة حمراء عند نقطة التلف
-            canvas.setStrokeColor(colors.red)
-            canvas.setFillColor(colors.red)
-            canvas.circle(x, y, 10, fill=1)
-            
-            # إضافة رقم داخل الدائرة
-            canvas.setFillColor(colors.white)
-            canvas.setFont('Amiri-Bold', 10)
-            marker_index = self.damage_markers.index(marker) + 1
-            # تعديل موضع النص حسب عدد الأرقام
-            if marker_index < 10:
-                canvas.drawCentredString(x, y - 3, str(marker_index))
-            else:
-                canvas.drawCentredString(x, y - 3, str(marker_index))
+            # رسم دائرة حمراء عند نقطة التلف (مع التحقق من القيم غير الصالحة)
+            if x > 0 and y > 0 and x < self.width and y < self.height:
+                canvas.setStrokeColor(colors.red)
+                canvas.setFillColor(colors.red)
+                canvas.circle(x, y, 10, fill=1)
+                
+                # إضافة رقم داخل الدائرة
+                canvas.setFillColor(colors.white)
+                canvas.setFont('Amiri-Bold', 10)
+                try:
+                    marker_index = self.damage_markers.index(marker) + 1
+                    # تعديل موضع النص حسب عدد الأرقام
+                    canvas.drawCentredString(x, y - 3, str(marker_index))
+                except Exception as e:
+                    print(f"خطأ في رسم رقم علامة التلف: {str(e)}")
         
         # استعادة حالة الـ canvas
         canvas.restoreState()
@@ -250,17 +264,17 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
     # جدول معلومات المركبة
     vehicle_data = [
         [Paragraph(arabic_text("رقم اللوحة"), styles['ArabicTable']), 
-         Paragraph(arabic_text(vehicle.plate_number or ""), styles['ArabicTable'])],
+         Paragraph(arabic_text(getattr(vehicle, 'plate_number', '') or "غير محدد"), styles['ArabicTable'])],
         [Paragraph(arabic_text("نوع المركبة"), styles['ArabicTable']), 
-         Paragraph(arabic_text(getattr(vehicle, 'vehicle_type', '') or ""), styles['ArabicTable'])],
+         Paragraph(arabic_text(getattr(vehicle, 'vehicle_type', '') or "غير محدد"), styles['ArabicTable'])],
         [Paragraph(arabic_text("الماركة"), styles['ArabicTable']), 
-         Paragraph(arabic_text(vehicle.make or ""), styles['ArabicTable'])],
+         Paragraph(arabic_text(getattr(vehicle, 'make', '') or "غير محدد"), styles['ArabicTable'])],
         [Paragraph(arabic_text("الموديل"), styles['ArabicTable']), 
-         Paragraph(arabic_text(vehicle.model or ""), styles['ArabicTable'])],
+         Paragraph(arabic_text(getattr(vehicle, 'model', '') or "غير محدد"), styles['ArabicTable'])],
         [Paragraph(arabic_text("سنة الصنع"), styles['ArabicTable']), 
-         Paragraph(arabic_text(str(vehicle.year) if vehicle.year else ""), styles['ArabicTable'])],
+         Paragraph(arabic_text(str(getattr(vehicle, 'year', '')) if getattr(vehicle, 'year', None) else "غير محدد"), styles['ArabicTable'])],
         [Paragraph(arabic_text("عداد المسافة (كم)"), styles['ArabicTable']), 
-         Paragraph(arabic_text(str(getattr(checklist, 'odometer_reading', '')) if getattr(checklist, 'odometer_reading', None) else ""), styles['ArabicTable'])]
+         Paragraph(arabic_text(str(getattr(checklist, 'odometer_reading', '')) if getattr(checklist, 'odometer_reading', None) else "غير محدد"), styles['ArabicTable'])]
     ]
     
     # تنسيق جدول معلومات المركبة
@@ -297,9 +311,10 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
         # إنشاء جدول ملاحظات التلف
         damage_data = []
         for i, marker in enumerate(damage_markers):
+            description = getattr(marker, 'description', '') or ""
             damage_data.append([
                 Paragraph(arabic_text(str(i+1)), styles['ArabicTable']),
-                Paragraph(arabic_text(marker.description or ""), styles['ArabicTable'])
+                Paragraph(arabic_text(description), styles['ArabicTable'])
             ])
         
         # تنسيق جدول ملاحظات التلف

@@ -1768,8 +1768,10 @@ def mobile_vehicle_checklist_pdf(checklist_id):
         
     except Exception as e:
         # تسجيل الخطأ للمساعدة في تشخيص المشكلة
-        app.logger.error(f"خطأ في إنشاء PDF لفحص المركبة: {str(e)}")
-        flash('حدث خطأ أثناء إنشاء ملف PDF. الرجاء المحاولة مرة أخرى.', 'danger')
+        import traceback
+        error_traceback = traceback.format_exc()
+        app.logger.error(f"خطأ في إنشاء PDF لفحص المركبة: {str(e)}\n{error_traceback}")
+        flash(f'حدث خطأ أثناء إنشاء ملف PDF: {str(e)}', 'danger')
         return redirect(url_for('mobile.vehicle_checklist_details', checklist_id=checklist_id))
 
 
