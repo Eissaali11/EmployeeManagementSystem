@@ -705,21 +705,25 @@ def report_employees():
     
     # معالجة طلبات التصدير
     if export_format:
-        if export_format == 'pdf':
-            # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.export_employees_report', 
-                                   export_type='pdf',
-                                   department_id=department_id,
-                                   status=status,
-                                   search=search))
-                                   
-        elif export_format == 'excel':
-            # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.export_employees_report',
-                                   export_type='excel',
-                                   department_id=department_id,
-                                   status=status,
-                                   search=search))
+        try:
+            if export_format == 'pdf':
+                # استدعاء مسار التصدير PDF في النسخة الرئيسية
+                return redirect(url_for('reports.export_employees_report', 
+                                       export_type='pdf',
+                                       department_id=department_id,
+                                       status=status,
+                                       search=search))
+                                       
+            elif export_format == 'excel':
+                # استدعاء مسار التصدير Excel في النسخة الرئيسية
+                return redirect(url_for('reports.export_employees_report',
+                                       export_type='excel',
+                                       department_id=department_id,
+                                       status=status,
+                                       search=search))
+        except Exception as e:
+            # تسجيل الخطأ في السجل
+            print(f"خطأ في تصدير تقرير الموظفين: {str(e)}")
     
     # عرض الصفحة مع نتائج التقرير
     return render_template('mobile/report_employees.html', 
@@ -843,23 +847,27 @@ def report_salaries():
     
     # معالجة طلبات التصدير
     if export_format:
-        if export_format == 'pdf':
-            # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.salaries_pdf',
-                                  department_id=department_id,
-                                  employee_id=employee_id,
-                                  is_paid=is_paid,
-                                  year=year,
-                                  month=month))
-                                  
-        elif export_format == 'excel':
-            # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.salaries_excel',
-                                  department_id=department_id,
-                                  employee_id=employee_id,
-                                  is_paid=is_paid,
-                                  year=year,
-                                  month=month))
+        try:
+            if export_format == 'pdf':
+                # استدعاء مسار التصدير PDF في النسخة الرئيسية
+                return redirect(url_for('reports.salaries_pdf',
+                                      department_id=department_id,
+                                      employee_id=employee_id,
+                                      is_paid=is_paid,
+                                      year=year,
+                                      month=month))
+                                      
+            elif export_format == 'excel':
+                # استدعاء مسار التصدير Excel في النسخة الرئيسية
+                return redirect(url_for('reports.salaries_excel',
+                                      department_id=department_id,
+                                      employee_id=employee_id,
+                                      is_paid=is_paid,
+                                      year=year,
+                                      month=month))
+        except Exception as e:
+            # تسجيل الخطأ في السجل
+            print(f"خطأ في تصدير تقرير الرواتب: {str(e)}")
     
     # استخراج قائمة بالسنوات والأشهر المتاحة
     years_months = db.session.query(Salary.year, Salary.month)\
@@ -1072,23 +1080,27 @@ def report_fees():
     
     # معالجة طلبات التصدير
     if export_format:
-        if export_format == 'pdf':
-            # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.export_fees_report',
-                                  export_type='pdf',
-                                  fee_type=fee_type,
-                                  date_from=date_from,
-                                  date_to=date_to,
-                                  status=status))
+        try:
+            if export_format == 'pdf':
+                # استدعاء مسار التصدير PDF في النسخة الرئيسية
+                return redirect(url_for('reports.export_fees_report',
+                                      export_type='pdf',
+                                      fee_type=fee_type,
+                                      date_from=date_from,
+                                      date_to=date_to,
+                                      status=status))
                                   
-        elif export_format == 'excel':
-            # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.export_fees_report',
-                                  export_type='excel',
-                                  fee_type=fee_type,
-                                  date_from=date_from,
-                                  date_to=date_to,
-                                  status=status))
+            elif export_format == 'excel':
+                # استدعاء مسار التصدير Excel في النسخة الرئيسية
+                return redirect(url_for('reports.export_fees_report',
+                                      export_type='excel',
+                                      fee_type=fee_type,
+                                      date_from=date_from,
+                                      date_to=date_to,
+                                      status=status))
+        except Exception as e:
+            # تسجيل الخطأ في السجل
+            print(f"خطأ في تصدير تقرير الرسوم: {str(e)}")
     
     # استخراج أنواع الرسوم المتاحة
     fee_types = db.session.query(Fee.fee_type)\
