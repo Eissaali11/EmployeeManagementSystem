@@ -1,12 +1,14 @@
-from flask import Blueprint, render_template, request, jsonify, make_response, send_file
+from flask import Blueprint, render_template, request, jsonify, make_response, send_file, redirect, url_for
+from flask_login import login_required
 from sqlalchemy import func
 from datetime import datetime, date, timedelta
 from io import BytesIO
 from utils.pdf import create_pdf, arabic_text, create_data_table, get_styles
 from app import db
-from models import Department, Employee, Attendance, Salary, Document, SystemAudit
+from models import Department, Employee, Attendance, Salary, Document, SystemAudit, Vehicle
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
+from utils.vehicles_export import export_vehicle_pdf, export_vehicle_excel
 from utils.pdf_generator import generate_salary_report_pdf
 # إضافة الاستيرادات المفقودة
 import arabic_reshaper
@@ -19,8 +21,133 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import pandas as pd
+from sqlalchemy import or_
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
+
+# دوال متعلقة بتصدير السيارات
+@reports_bp.route('/vehicles/pdf')
+@login_required
+def vehicles_pdf():
+    """تصدير تقرير المركبات إلى PDF"""
+    # الحصول على معلمات الفلتر
+    vehicle_type = request.args.get('vehicle_type', '')
+    status = request.args.get('status', '')
+    search = request.args.get('search', '')
+    
+    # إنشاء استعلام المركبات
+    query = Vehicle.query
+    
+    # تطبيق الفلترة على المركبات
+    if vehicle_type:
+        query = query.filter_by(make=vehicle_type)  # نستخدم make بدلاً من vehicle_type
+    
+    if status:
+        query = query.filter_by(status=status)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Vehicle.plate_number.like(search_term),
+                Vehicle.make.like(search_term),
+                Vehicle.model.like(search_term),
+                Vehicle.color.like(search_term)
+            )
+        )
+    
+    # الحصول على المركبات المرتبة حسب الترتيب
+    vehicles = query.order_by(Vehicle.plate_number).all()
+    
+    # تحضير مخرجات التقرير
+    buffer = BytesIO()
+    
+    # إنشاء تقرير PDF للمركبات
+    data = []
+    for vehicle in vehicles:
+        data.append({
+            'plate_number': vehicle.plate_number,
+            'make': vehicle.make,
+            'model': vehicle.model,
+            'color': vehicle.color,
+            'year': vehicle.year,
+            'status': vehicle.status
+        })
+    
+    # استدعاء دالة إنشاء PDF للمركبات
+    report_title = "تقرير المركبات"
+    export_vehicle_pdf(buffer, data, report_title)
+    
+    # إرسال الملف كمرفق للتنزيل
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"vehicles_report_{datetime.now().strftime('%Y%m%d')}.pdf",
+        mimetype='application/pdf'
+    )
+
+@reports_bp.route('/vehicles/excel')
+@login_required
+def vehicles_excel():
+    """تصدير تقرير المركبات إلى Excel"""
+    # الحصول على معلمات الفلتر
+    vehicle_type = request.args.get('vehicle_type', '')
+    status = request.args.get('status', '')
+    search = request.args.get('search', '')
+    
+    # إنشاء استعلام المركبات
+    query = Vehicle.query
+    
+    # تطبيق الفلترة على المركبات
+    if vehicle_type:
+        query = query.filter_by(make=vehicle_type)  # نستخدم make بدلاً من vehicle_type
+    
+    if status:
+        query = query.filter_by(status=status)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Vehicle.plate_number.like(search_term),
+                Vehicle.make.like(search_term),
+                Vehicle.model.like(search_term),
+                Vehicle.color.like(search_term)
+            )
+        )
+    
+    # الحصول على المركبات المرتبة حسب الترتيب
+    vehicles = query.order_by(Vehicle.plate_number).all()
+    
+    # تحضير مخرجات التقرير
+    output = BytesIO()
+    
+    # إنشاء تقرير Excel للمركبات
+    data = []
+    for vehicle in vehicles:
+        data.append({
+            'رقم اللوحة': vehicle.plate_number,
+            'الشركة المصنعة': vehicle.make,
+            'الموديل': vehicle.model,
+            'اللون': vehicle.color,
+            'سنة الصنع': vehicle.year,
+            'الحالة': vehicle.status
+        })
+    
+    # استدعاء دالة إنشاء Excel للمركبات
+    df = pd.DataFrame(data)
+    export_vehicle_excel(output, df, "تقرير المركبات")
+    
+    # إرسال الملف كمرفق للتنزيل
+    output.seek(0)
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=f"vehicles_report_{datetime.now().strftime('%Y%m%d')}.xlsx",
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
 
 @reports_bp.route('/')
 def index():
