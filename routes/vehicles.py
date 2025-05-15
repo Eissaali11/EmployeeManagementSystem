@@ -1268,7 +1268,8 @@ def create_handover(id):
         'vehicles/handover_create.html', 
         vehicle=vehicle,
         handover_types=HANDOVER_TYPE_CHOICES,
-        default_handover_type=default_handover_type
+        default_handover_type=default_handover_type,
+        employees=employees
     )
 
 @vehicles_bp.route('/handover/<int:id>/view')
@@ -1362,13 +1363,17 @@ def edit_handover(id):
             current_app.logger.error(f"Error updating handover form: {str(e)}")
             flash(f'حدث خطأ أثناء تعديل نموذج التسليم/الاستلام: {str(e)}', 'danger')
     
+    # جلب قائمة الموظفين للاختيار منهم
+    employees = Employee.query.order_by(Employee.name).all()
+    
     return render_template(
         'vehicles/edit_handover.html',
         handover=handover,
         vehicle=vehicle,
         images=images,
         handover_date=handover_date_str,
-        handover_type_name=handover_type_name
+        handover_type_name=handover_type_name,
+        employees=employees
     )
 
 @vehicles_bp.route('/<int:vehicle_id>/handovers/confirm-delete', methods=['POST'])
