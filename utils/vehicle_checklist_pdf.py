@@ -161,6 +161,9 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
     Returns:
         BytesIO: كائن BytesIO يحتوي على ملف PDF
     """
+    # طباعة قيم للتصحيح
+    print(f"Vehicle: {vars(vehicle)}")
+    print(f"Checklist: {vars(checklist)}")
     # تسجيل الخطوط العربية
     register_arabic_fonts()
     

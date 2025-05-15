@@ -1720,6 +1720,58 @@ def vehicle_checklist_details(checklist_id):
                           damage_markers=damage_markers,
                           checklist_images=checklist_images)
 
+# تصدير فحص السيارة إلى PDF - النسخة المحمولة
+@mobile_bp.route('/vehicles/checklist/<int:checklist_id>/pdf')
+@login_required
+def mobile_vehicle_checklist_pdf(checklist_id):
+    """تصدير تقرير فحص المركبة إلى PDF مع عرض علامات التلف"""
+    try:
+        # الحصول على بيانات الفحص
+        checklist = VehicleChecklist.query.get_or_404(checklist_id)
+        
+        # الحصول على بيانات المركبة
+        vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
+        
+        # جمع بيانات عناصر الفحص مرتبة حسب الفئة
+        checklist_items = {}
+        for item in checklist.checklist_items:
+            if item.category not in checklist_items:
+                checklist_items[item.category] = []
+            
+            checklist_items[item.category].append(item)
+        
+        # الحصول على علامات التلف المرتبطة بهذا الفحص
+        damage_markers = VehicleDamageMarker.query.filter_by(checklist_id=checklist_id).all()
+        
+        # الحصول على صور الفحص المرفقة
+        checklist_images = VehicleChecklistImage.query.filter_by(checklist_id=checklist_id).all()
+        
+        # استيراد تابع إنشاء PDF
+        from utils.vehicle_checklist_pdf import create_vehicle_checklist_pdf
+        
+        # إنشاء ملف PDF
+        pdf_buffer = create_vehicle_checklist_pdf(
+            checklist=checklist,
+            vehicle=vehicle,
+            checklist_items=checklist_items,
+            damage_markers=damage_markers,
+            checklist_images=checklist_images
+        )
+        
+        # إنشاء استجابة تحميل للملف
+        from flask import make_response
+        response = make_response(pdf_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=vehicle_checklist_{checklist_id}.pdf'
+        
+        return response
+        
+    except Exception as e:
+        # تسجيل الخطأ للمساعدة في تشخيص المشكلة
+        app.logger.error(f"خطأ في إنشاء PDF لفحص المركبة: {str(e)}")
+        flash('حدث خطأ أثناء إنشاء ملف PDF. الرجاء المحاولة مرة أخرى.', 'danger')
+        return redirect(url_for('mobile.vehicle_checklist_details', checklist_id=checklist_id))
+
 
 # إضافة فحص جديد للسيارة - النسخة المحمولة
 @mobile_bp.route('/vehicles/checklist/add', methods=['POST'])
