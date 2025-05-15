@@ -991,9 +991,9 @@ def report_vehicles():
         search_term = f"%{search}%"
         query = query.filter(
             (Vehicle.plate_number.like(search_term)) |
-            (Vehicle.brand.like(search_term)) |
+            (Vehicle.make.like(search_term)) |
             (Vehicle.model.like(search_term)) |
-            (Vehicle.vin.like(search_term))
+            (Vehicle.color.like(search_term))
         )
     
     # الحصول على المركبات المرتبة حسب الترتيب
@@ -1016,9 +1016,10 @@ def report_vehicles():
                                   search=search))
     
     # استخراج انواع المركبات وحالات المركبات المتاحة
-    # نظرًا لأن نموذج Vehicle لا يحتوي على حقل vehicle_type، نستخدم قائمة ثابتة أو نستخرج القيم من make
-    # يمكن تعديل هذا لاحقًا لاستخدام حقل نوع المركبة
-    vehicle_types = ['سيارة', 'شاحنة', 'حافلة', 'مركبة خدمة']  # قائمة أنواع افتراضية
+    # استخراج الشركات المصنعة من قاعدة البيانات
+    vehicle_types = db.session.query(Vehicle.make)\
+                    .distinct().order_by(Vehicle.make).all()
+    vehicle_types = [vt[0] for vt in vehicle_types if vt[0]]
     
     vehicle_statuses = db.session.query(Vehicle.status)\
                       .distinct().order_by(Vehicle.status).all()

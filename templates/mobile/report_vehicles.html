@@ -14,9 +14,9 @@
     <div class="mobile-card-content">
         <form action="{{ url_for('mobile.report_vehicles') }}" method="GET" class="mobile-form">
             <div class="mobile-form-group">
-                <label>نوع المركبة</label>
+                <label>الشركة المصنعة</label>
                 <select name="vehicle_type" class="mobile-form-select">
-                    <option value="">جميع الأنواع</option>
+                    <option value="">جميع الشركات</option>
                     {% for type in vehicle_types %}
                     <option value="{{ type }}" {% if request.args.get('vehicle_type') == type %}selected{% endif %}>{{ type }}</option>
                     {% endfor %}
@@ -124,7 +124,7 @@
             
             {% for type in vehicle_types %}
             <div class="summary-item">
-                <div class="summary-value">{{ vehicles|selectattr('vehicle_type', 'equalto', type)|list|length }}</div>
+                <div class="summary-value">{{ vehicles|selectattr('make', 'equalto', type)|list|length }}</div>
                 <div class="summary-label">{{ type }}</div>
             </div>
             {% endfor %}
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // تحضير البيانات للرسم البياني
     const vehicleTypes = [{% for type in vehicle_types %}'{{ type }}',{% endfor %}];
-    const vehicleCounts = [{% for type in vehicle_types %}{{ vehicles|selectattr('vehicle_type', 'equalto', type)|list|length }},{% endfor %}];
+    const vehicleCounts = [{% for type in vehicle_types %}{{ vehicles|selectattr('make', 'equalto', type)|list|length }},{% endfor %}];
     
     // إنشاء ألوان عشوائية للرسم البياني
     const backgroundColors = [
