@@ -1028,6 +1028,7 @@ def generate_comprehensive_employee_report(db_session, department_id=None, emplo
 def generate_employee_salary_simple_excel(db_session, month=None, year=None, department_id=None):
     """
     إنشاء ملف Excel بسيط وواضح لبيانات الموظفين مع تفاصيل الرواتب
+    مع تنسيق احترافي للجداول وألوان متناوبة للصفوف وتنسيق مالي للأرقام
     
     Args:
         db_session: جلسة قاعدة البيانات

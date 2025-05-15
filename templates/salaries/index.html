@@ -13,17 +13,23 @@
             </a>
             <div class="btn-group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-file-export me-1"></i> تصدير إلى Excel
+                    <i class="fas fa-file-export me-1"></i> تصدير
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                         <a class="dropdown-item" href="{{ url_for('salaries.export_excel', month=selected_month, year=selected_year, department_id=selected_department, employee_id=selected_employee) }}">
-                            <i class="fas fa-filter me-1"></i> تصدير البيانات المصفاة
+                            <i class="fas fa-file-excel text-success me-1"></i> تصدير الرواتب (Excel)
                         </a>
                     </li>
                     <li>
+                        <a class="dropdown-item" href="{{ url_for('salaries.export_simple_employees_salary', month=selected_month, year=selected_year, department_id=selected_department) }}">
+                            <i class="fas fa-users text-primary me-1"></i> تصدير بيانات الموظفين مع الرواتب
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
                         <a class="dropdown-item" href="{{ url_for('salaries.export_excel') }}">
-                            <i class="fas fa-database me-1"></i> تصدير جميع البيانات
+                            <i class="fas fa-database text-info me-1"></i> تصدير جميع البيانات
                         </a>
                     </li>
                 </ul>
