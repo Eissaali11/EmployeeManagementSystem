@@ -101,7 +101,7 @@
                                         <div class="row mb-3">
                                             <div class="col-md-4">
                                                 <label for="departmentSelect" class="form-label">اختر القسم أولاً:</label>
-                                                <select class="form-select" id="departmentSelect" onchange="filterEmployees()">
+                                                <select class="form-select" id="departmentSelect">
                                                     <option value="">جميع الأقسام</option>
                                                     {% for department in departments %}
                                                     <option value="{{ department.id }}">{{ department.name }}</option>
@@ -111,8 +111,8 @@
                                             <div class="col-md-8">
                                                 <label for="employeeSearchInput" class="form-label">البحث عن الموظف:</label>
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control" id="employeeSearchInput" placeholder="البحث بالاسم أو الرقم الوظيفي أو رقم الهوية" onkeyup="if(event.key === 'Enter') filterEmployees();">
-                                                    <button class="btn btn-primary" id="searchEmployeeBtn" type="button" onclick="filterEmployees()">
+                                                    <input type="text" class="form-control" id="employeeSearchInput" placeholder="البحث بالاسم أو الرقم الوظيفي أو رقم الهوية">
+                                                    <button class="btn btn-primary" id="searchEmployeeBtn" type="button">
                                                         <i class="fas fa-search"></i> بحث
                                                     </button>
                                                 </div>
@@ -337,17 +337,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const noResultsAlert = document.getElementById('noResultsAlert');
     const personNameInput = document.getElementById('person_name');
     
-    // وظيفة البحث وتصفية الموظفين
+    // وظيفة البحث وتصفية الموظفين - تم تحسينها مع إضافة تسجيل للتشخيص
     function filterEmployees() {
         const searchTerm = searchInput.value.trim().toLowerCase();
         const departmentId = departmentSelect.value;
         let resultsFound = false;
         
+        console.log('بدء تصفية الموظفين: القسم ID =', departmentId, 'مصطلح البحث =', searchTerm);
+        
         employeeRows.forEach(row => {
             const name = row.getAttribute('data-name').toLowerCase();
-            const employeeId = row.getAttribute('data-employee-id')?.toLowerCase() || '';
-            const nationalId = row.getAttribute('data-national-id')?.toLowerCase() || '';
-            const department = row.getAttribute('data-department')?.toLowerCase() || '';
+            const employeeId = (row.getAttribute('data-employee-id') || '').toLowerCase();
+            const nationalId = (row.getAttribute('data-national-id') || '').toLowerCase();
+            const department = (row.getAttribute('data-department') || '').toLowerCase();
             const rowDepartmentId = row.getAttribute('data-department-id') || '';
             
             // التحقق من تطابق القسم
@@ -359,6 +361,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 employeeId.includes(searchTerm) || 
                 nationalId.includes(searchTerm) || 
                 department.includes(searchTerm);
+            
+            // تسجيل معلومات إضافية للتشخيص
+            if (name.includes('محمد')) {
+                console.log('فحص صف بالاسم:', name, 'القسم:', rowDepartmentId, 'يطابق القسم:', departmentMatch, 'يطابق البحث:', searchMatch);
+            }
             
             // إظهار الصف فقط إذا تطابق مع معايير البحث والقسم
             if (departmentMatch && searchMatch) {
@@ -372,13 +379,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // إظهار/إخفاء تنبيه عدم وجود نتائج
         if (resultsFound) {
             noResultsAlert.classList.add('d-none');
+            console.log('تم العثور على نتائج - إخفاء رسالة عدم وجود نتائج');
         } else {
             noResultsAlert.classList.remove('d-none');
+            console.log('لم يتم العثور على نتائج - إظهار رسالة عدم وجود نتائج');
         }
     }
     
     // تنفيذ البحث عند النقر على زر البحث
-    searchBtn.addEventListener('click', filterEmployees);
+    searchBtn.addEventListener('click', function() {
+        console.log('تم النقر على زر البحث');
+        filterEmployees();
+    });
     
     // تنفيذ البحث عند الضغط على Enter في حقل البحث
     searchInput.addEventListener('keyup', function(event) {
@@ -388,7 +400,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // تنفيذ التصفية عند تغيير القسم
-    departmentSelect.addEventListener('change', filterEmployees);
+    departmentSelect.addEventListener('change', function() {
+        console.log('تم تغيير القسم إلى:', this.value);
+        filterEmployees();
+    });
     
     // تنفيذ اختيار الموظف عند النقر على زر الاختيار
     document.addEventListener('click', function(event) {
