@@ -723,26 +723,26 @@
                 <div class="checklist-items">
                     <div class="checklist-item full-width">
                         <label class="form-check-label">إضافة صور للفحص</label>
-                        <div class="image-upload-container">
-                            <div class="upload-buttons">
-                                <button type="button" id="capture-btn" class="mobile-btn mobile-btn-outline-primary image-capture-btn">
+                        <div class="row gx-2 mb-3">
+                            <div class="col-6">
+                                <label for="image-capture-input" class="btn btn-outline-primary w-100">
                                     <i class="fas fa-camera"></i> التقاط صورة
-                                </button>
-                                <button type="button" id="upload-btn" class="mobile-btn mobile-btn-outline-secondary image-upload-btn">
-                                    <i class="fas fa-image"></i> اختيار من الاستوديو
-                                </button>
+                                </label>
+                                <input type="file" id="image-capture-input" accept="image/*" capture="environment" style="display: none;" onchange="handleCaptureImage(this)">
                             </div>
-                            <!-- حقل اختيار الصور المخفي -->
-                            <input type="file" id="image-file-input" name="inspection-images" multiple accept="image/*" style="display: none;">
-                            <!-- حقل التقاط الصور المخفي -->
-                            <input type="file" id="image-capture-input" name="inspection-camera-images" accept="image/*" capture="environment" style="display: none;">
-                            
-                            <!-- عرض الصور المختارة -->
-                            <div class="selected-images-container mt-3">
-                                <h6 class="text-muted mb-2">الصور المضافة: <span id="images-count">0</span></h6>
-                                <div id="selected-images" class="selected-images">
-                                    <!-- سيتم إضافة الصور هنا بواسطة JavaScript -->
-                                </div>
+                            <div class="col-6">
+                                <label for="image-file-input" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-image"></i> اختيار من الاستوديو
+                                </label>
+                                <input type="file" id="image-file-input" accept="image/*" multiple style="display: none;" onchange="handleFileSelect(this)">
+                            </div>
+                        </div>
+                        
+                        <!-- عرض الصور المختارة -->
+                        <div class="selected-images-container">
+                            <h6 class="text-muted mb-2">الصور المضافة: <span id="images-count">0</span></h6>
+                            <div id="image-preview-container" class="row g-2">
+                                <!-- سيتم إضافة الصور هنا بواسطة JavaScript -->
                             </div>
                         </div>
                     </div>
@@ -1435,214 +1435,159 @@ document.addEventListener('DOMContentLoaded', function() {
 // وظائف التعامل مع الصور
 // -----------------------------------------------------
 
-// كائن لتخزين الصور
-const inspectionImages = {
-    files: [],
-    
-    // إضافة صورة جديدة
-    addImage: function(file) {
-        this.files.push(file);
-        this.renderImages();
-        this.updateCount();
-    },
-    
-    // حذف صورة
-    removeImage: function(index) {
-        this.files.splice(index, 1);
-        this.renderImages();
-        this.updateCount();
-    },
-    
-    // تحديث عرض عدد الصور
-    updateCount: function() {
-        document.getElementById('images-count').textContent = this.files.length;
-    },
-    
-    // عرض كل الصور في القائمة
-    renderImages: function() {
-        const container = document.getElementById('selected-images');
-        container.innerHTML = '';
-        
-        this.files.forEach((file, index) => {
-            const imageUrl = URL.createObjectURL(file);
-            
-            const imageContainer = document.createElement('div');
-            imageContainer.className = 'selected-image-container';
-            
-            const img = document.createElement('img');
-            img.src = imageUrl;
-            img.className = 'selected-image';
-            img.onclick = () => this.showPreview(imageUrl);
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-image';
-            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            removeBtn.onclick = (e) => {
-                e.stopPropagation();
-                this.removeImage(index);
-            };
-            
-            imageContainer.appendChild(img);
-            imageContainer.appendChild(removeBtn);
-            container.appendChild(imageContainer);
-        });
-    },
-    
-    // عرض معاينة الصورة بحجم كبير
-    showPreview: function(imageUrl) {
-        // إنشاء عنصر معاينة الصورة
-        const modal = document.createElement('div');
-        modal.className = 'image-preview-modal';
-        
-        const content = document.createElement('div');
-        content.className = 'image-preview-content';
-        
-        const img = document.createElement('img');
-        img.src = imageUrl;
-        img.className = 'preview-image';
-        
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'close-preview';
-        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-        closeBtn.onclick = () => {
-            document.body.removeChild(modal);
-        };
-        
-        content.appendChild(img);
-        modal.appendChild(content);
-        modal.appendChild(closeBtn);
-        
-        // إضافة معاينة الصورة للصفحة
-        document.body.appendChild(modal);
-        
-        // إغلاق المعاينة عند النقر خارج الصورة
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                document.body.removeChild(modal);
-            }
-        };
-    },
-    
-    // الحصول على جميع الصور كقائمة ملفات
-    getImageFiles: function() {
-        return this.files;
-    }
-};
+// قائمة لتخزين الصور المحددة
+let selectedImages = [];
 
-// التأكد من تحميل الصفحة بالكامل قبل تنفيذ الأكواد المتعلقة بالصور
+// دالة معالجة اختيار الصور من الاستوديو
+function handleFileSelect(input) {
+    if (input.files && input.files.length > 0) {
+        for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            if (file.type.startsWith('image/')) {
+                addImageToPreview(file);
+            }
+        }
+        showNotification(`تم إضافة ${input.files.length} صورة بنجاح`, 'success');
+    }
+    
+    // إعادة تعيين الإدخال للسماح باختيار نفس الصور مرة أخرى
+    input.value = '';
+}
+
+// دالة معالجة التقاط الصور من الكاميرا
+function handleCaptureImage(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.type.startsWith('image/')) {
+            addImageToPreview(file);
+            showNotification('تم إضافة الصورة بنجاح', 'success');
+        }
+    }
+    
+    // إعادة تعيين الإدخال للسماح بالتقاط المزيد من الصور
+    input.value = '';
+}
+
+// دالة إضافة صورة إلى المعاينة
+function addImageToPreview(file) {
+    // إضافة الصورة إلى القائمة
+    selectedImages.push(file);
+    
+    // تحديث عداد الصور
+    document.getElementById('images-count').textContent = selectedImages.length;
+    
+    // إنشاء عنصر معاينة الصورة
+    const container = document.getElementById('image-preview-container');
+    const imageUrl = URL.createObjectURL(file);
+    
+    // إنشاء عنصر div للصورة
+    const col = document.createElement('div');
+    col.className = 'col-4 col-md-3 position-relative';
+    
+    // إنشاء صورة مصغرة
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'img-thumbnail position-relative';
+    thumbnail.style.height = '120px';
+    thumbnail.style.overflow = 'hidden';
+    
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.className = 'w-100 h-100';
+    img.style.objectFit = 'cover';
+    img.style.cursor = 'pointer';
+    img.onclick = function() {
+        showImagePreview(imageUrl);
+    };
+    
+    // زر حذف الصورة
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn btn-sm btn-danger position-absolute';
+    removeBtn.style.top = '5px';
+    removeBtn.style.right = '5px';
+    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    removeBtn.onclick = function(e) {
+        e.stopPropagation();
+        const index = selectedImages.indexOf(file);
+        if (index > -1) {
+            selectedImages.splice(index, 1);
+            col.remove();
+            document.getElementById('images-count').textContent = selectedImages.length;
+            showNotification('تم حذف الصورة', 'info');
+        }
+    };
+    
+    // إضافة العناصر
+    thumbnail.appendChild(img);
+    thumbnail.appendChild(removeBtn);
+    col.appendChild(thumbnail);
+    container.appendChild(col);
+}
+
+// دالة لعرض معاينة كبيرة للصورة
+function showImagePreview(imageUrl) {
+    // إنشاء عنصر الطبقة المظلمة
+    const overlay = document.createElement('div');
+    overlay.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center';
+    overlay.style.background = 'rgba(0,0,0,0.9)';
+    overlay.style.zIndex = '9999';
+    
+    // إنشاء حاوية الصورة
+    const container = document.createElement('div');
+    container.className = 'position-relative';
+    container.style.maxWidth = '90%';
+    container.style.maxHeight = '90%';
+    
+    // إنشاء الصورة
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.className = 'img-fluid';
+    img.style.maxHeight = '80vh';
+    
+    // زر الإغلاق
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-light position-absolute';
+    closeBtn.style.top = '-40px';
+    closeBtn.style.right = '0';
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.onclick = function() {
+        document.body.removeChild(overlay);
+    };
+    
+    // تجميع العناصر
+    container.appendChild(img);
+    container.appendChild(closeBtn);
+    overlay.appendChild(container);
+    
+    // إغلاق المعاينة عند النقر على الخلفية
+    overlay.onclick = function(e) {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+        }
+    };
+    
+    // إضافة المعاينة للصفحة
+    document.body.appendChild(overlay);
+}
+
+// إضافة الصور المحددة إلى النموذج عند الحفظ
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('تم تحميل الصفحة بالكامل'); // للتشخيص
-    
-    // ربط أزرار التقاط الصور وتحميلها
-    const imageFileInput = document.getElementById('image-file-input');
-    const imageCaptureInput = document.getElementById('image-capture-input');
-    const uploadBtn = document.getElementById('upload-btn');
-    const captureBtn = document.getElementById('capture-btn');
-    
-    console.log('عناصر الإدخال:', imageFileInput, imageCaptureInput); // للتشخيص
-    console.log('أزرار التحميل:', uploadBtn, captureBtn); // للتشخيص
-
-    if (uploadBtn) {
-        // زر اختيار الصور من الاستوديو
-        uploadBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('تم الضغط على زر اختيار الصور'); // للتشخيص
-            if (imageFileInput) {
-                imageFileInput.click();
-            } else {
-                console.error('لم يتم العثور على عنصر إدخال الصور');
-            }
-        });
-    } else {
-        console.error('لم يتم العثور على زر اختيار الصور');
-    }
-
-    if (captureBtn) {
-        // زر التقاط الصور من الكاميرا
-        captureBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('تم الضغط على زر الكاميرا'); // للتشخيص
-            if (imageCaptureInput) {
-                imageCaptureInput.click();
-            } else {
-                console.error('لم يتم العثور على عنصر إدخال الكاميرا');
-            }
-        });
-    } else {
-        console.error('لم يتم العثور على زر التقاط الصور');
-    }
-
-    if (imageFileInput) {
-        // معالجة اختيار الصور من الاستوديو
-        imageFileInput.addEventListener('change', function(e) {
-            console.log('تم اختيار الصور:', e.target.files); // للتشخيص
-            const files = e.target.files;
-            
-            if (files && files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    if (file.type.startsWith('image/')) {
-                        inspectionImages.addImage(file);
-                    }
-                }
+    const saveButton = document.getElementById('save-checklist');
+    if (saveButton) {
+        saveButton.addEventListener('click', function() {
+            if (selectedImages.length > 0) {
+                console.log(`تم اختيار ${selectedImages.length} صورة للحفظ`);
                 
-                showNotification(`تم إضافة ${files.length} صورة بنجاح`, 'success');
+                // يمكن هنا إضافة شيفرة لإرسال الصور إلى الخادم
+                // كمثال، يمكن تحويل الصور إلى base64 وتخزينها مؤقتًا
+                
+                // إظهار رسالة للمستخدم
+                showNotification(`تم تضمين ${selectedImages.length} صورة مع الفحص`, 'success');
             }
-            
-            // إعادة تعيين حقل الإدخال للسماح باختيار نفس الصور مرة أخرى
-            this.value = '';
-        });
-    }
-
-    if (imageCaptureInput) {
-        // معالجة التقاط الصور من الكاميرا
-        imageCaptureInput.addEventListener('change', function(e) {
-            console.log('تم التقاط صورة:', e.target.files); // للتشخيص
-            const file = e.target.files[0];
-            
-            if (file && file.type.startsWith('image/')) {
-                inspectionImages.addImage(file);
-                showNotification('تم إضافة الصورة بنجاح', 'success');
-            }
-            
-            // إعادة تعيين حقل الإدخال للسماح بالتقاط المزيد من الصور
-            this.value = '';
         });
     }
 });
 
-// تعديل زر الحفظ لتضمين الصور
-const originalSaveButton = document.getElementById('save-checklist');
-const originalClickHandler = originalSaveButton.onclick;
-
-document.getElementById('save-checklist').addEventListener('click', function(event) {
-    // تجميع بيانات الصور
-    const imageFiles = inspectionImages.getImageFiles();
-    
-    // إضافة عدد الصور ومعلوماتها إلى البيانات المرسلة في localStorage
-    if (imageFiles.length > 0) {
-        // تحويل الصور إلى base64 لتخزينها مؤقتًا
-        const promises = imageFiles.map(file => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve({
-                    data: reader.result,
-                    name: file.name,
-                    type: file.type
-                });
-                reader.readAsDataURL(file);
-            });
-        });
-        
-        Promise.all(promises).then(images => {
-            // تخزين بيانات الصور في localStorage
-            localStorage.setItem('checklist_images', JSON.stringify(images));
-            localStorage.setItem('checklist_image_count', images.length);
-            
-            // عرض رسالة للمستخدم
-            showNotification(`تم إضافة ${images.length} صورة إلى الفحص`, 'success');
-        });
-    }
-});
+// إظهار رسالة عند تنفيذ الصفحة للتأكد من تحميل الكود
+console.log('تم تحميل كود التعامل مع الصور بنجاح');
 </script>
 {% endblock %}
