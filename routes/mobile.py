@@ -982,7 +982,7 @@ def report_vehicles():
     
     # تطبيق الفلترة على المركبات
     if vehicle_type:
-        query = query.filter_by(vehicle_type=vehicle_type)
+        query = query.filter_by(make=vehicle_type)  # نستخدم make بدلاً من vehicle_type
     
     if status:
         query = query.filter_by(status=status)
@@ -1016,9 +1016,9 @@ def report_vehicles():
                                   search=search))
     
     # استخراج انواع المركبات وحالات المركبات المتاحة
-    vehicle_types = db.session.query(Vehicle.vehicle_type)\
-                    .distinct().order_by(Vehicle.vehicle_type).all()
-    vehicle_types = [vt[0] for vt in vehicle_types if vt[0]]
+    # نظرًا لأن نموذج Vehicle لا يحتوي على حقل vehicle_type، نستخدم قائمة ثابتة أو نستخرج القيم من make
+    # يمكن تعديل هذا لاحقًا لاستخدام حقل نوع المركبة
+    vehicle_types = ['سيارة', 'شاحنة', 'حافلة', 'مركبة خدمة']  # قائمة أنواع افتراضية
     
     vehicle_statuses = db.session.query(Vehicle.status)\
                       .distinct().order_by(Vehicle.status).all()

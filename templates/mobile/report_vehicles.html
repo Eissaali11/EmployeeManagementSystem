@@ -88,8 +88,8 @@
                     {% for vehicle in vehicles %}
                     <tr onclick="location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
                         <td>{{ vehicle.plate_number }}</td>
-                        <td>{{ vehicle.vehicle_type or '-' }}</td>
-                        <td>{{ vehicle.brand }} {{ vehicle.model }}</td>
+                        <td>{{ vehicle.make or '-' }}</td>
+                        <td>{{ vehicle.make }} {{ vehicle.model }}</td>
                         <td>
                             <span class="vehicle-badge vehicle-{{ vehicle.status|lower|replace(' ', '-') }}">
                                 {{ vehicle.status or '-' }}
