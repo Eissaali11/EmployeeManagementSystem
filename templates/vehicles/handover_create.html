@@ -365,7 +365,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             var searchTerm = searchInput.value.trim().toLowerCase();
-            var departmentId = departmentSelect.value;
+            var departmentId = departmentSelect.value; // يجب أن يكون String
+            
+            // تحويل رقم القسم إلى سلسلة نصية
+            if (departmentId !== null && departmentId !== undefined && departmentId !== '') {
+                departmentId = String(departmentId);
+            }
+            
+            console.log('القيمة المختارة من قائمة الأقسام:', {
+                originalValue: departmentSelect.value,
+                convertedValue: departmentId,
+                typeOf: typeof departmentId
+            });
+            
             var resultsFound = false;
             
             console.log('تصفية الموظفين:', {
@@ -383,8 +395,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 var department = (row.getAttribute('data-department') || '').toLowerCase();
                 var rowDepartmentId = row.getAttribute('data-department-id') || '';
                 
+                // تحويل رقم قسم الموظف إلى سلسلة نصية
+                if (rowDepartmentId !== null && rowDepartmentId !== undefined && rowDepartmentId !== '') {
+                    rowDepartmentId = String(rowDepartmentId);
+                }
+                
                 // تطابق القسم - إذا لم يتم اختيار قسم أو القسم المختار يطابق قسم الموظف
-                var departmentMatch = !departmentId || departmentId === '' || departmentId === rowDepartmentId;
+                var departmentMatch = !departmentId || 
+                                     departmentId === '' || 
+                                     parseInt(departmentId) === parseInt(rowDepartmentId) ||
+                                     departmentId === rowDepartmentId;
+                
+                // سجل معلومات تشخيصية حول مطابقة القسم
+                if (index < 3) {
+                    console.log('تطابق القسم:', {
+                        departmentId: departmentId,
+                        rowDepartmentId: rowDepartmentId,
+                        match: departmentMatch
+                    });
+                }
                 
                 // تطابق البحث - البحث في جميع الحقول
                 var searchMatch = !searchTerm || 
@@ -447,10 +476,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (departmentSelect) {
-        departmentSelect.addEventListener('change', function() {
-            console.log('تم تغيير القسم إلى:', this.value);
-            filterEmployees();
-        });
+        // إزالة جميع مستمعي الأحداث السابقة لمنع التكرار
+        departmentSelect.removeEventListener('change', handleDepartmentChange);
+        
+        // إضافة مستمع جديد لتغيير القسم
+        departmentSelect.addEventListener('change', handleDepartmentChange);
+        
+        function handleDepartmentChange(event) {
+            var selectedValue = event.target.value;
+            console.log('تم تغيير القسم إلى:', selectedValue, typeof selectedValue);
+            
+            // إضافة تأخير قصير للسماح للتسجيل بالظهور قبل تنفيذ الوظيفة
+            setTimeout(function() {
+                filterEmployees();
+            }, 50);
+        }
     }
     
     // استخدام تفويض الأحداث (event delegation) بدلاً من ربط مستمع منفصل لكل زر
