@@ -2316,9 +2316,9 @@ def create_inspection(id):
     if request.method == 'POST':
         inspection_date = datetime.strptime(request.form.get('inspection_date'), '%Y-%m-%d').date()
         expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d').date()
-        inspection_number = request.form.get('inspection_number')
-        inspector_name = request.form.get('inspector_name')
-        inspection_type = request.form.get('inspection_type')
+        inspection_center = request.form.get('inspection_center')
+        supervisor_name = request.form.get('supervisor_name')
+        result = request.form.get('result')
         inspection_status = 'valid'  # الحالة الافتراضية ساري
         cost = float(request.form.get('cost') or 0)
         results = request.form.get('results')
@@ -2335,10 +2335,13 @@ def create_inspection(id):
             vehicle_id=id,
             inspection_date=inspection_date,
             expiry_date=expiry_date,
-            # استخدام الحقول الموجودة في النموذج بدلاً من الحقول غير الموجودة
-            inspection_center=inspection_number,  # استخدام inspection_center بدلاً من inspection_number
-            supervisor_name=inspector_name,  # استخدام supervisor_name بدلاً من inspector_name
-            result=inspection_type,  # استخدام result بدلاً من inspection_type
+            inspection_center=inspection_center,
+            supervisor_name=supervisor_name,
+            result=result,
+            # القيم القديمة للتوافق مع قاعدة البيانات
+            inspection_number=inspection_center,
+            inspector_name=supervisor_name,
+            inspection_type=result,
             inspection_status=inspection_status,
             cost=cost,
             results=results,
@@ -2372,9 +2375,15 @@ def edit_inspection(id):
     if request.method == 'POST':
         inspection.inspection_date = datetime.strptime(request.form.get('inspection_date'), '%Y-%m-%d').date()
         inspection.expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d').date()
-        inspection.inspection_number = request.form.get('inspection_number')
-        inspection.inspector_name = request.form.get('inspector_name')
-        inspection.inspection_type = request.form.get('inspection_type')
+        inspection.inspection_center = request.form.get('inspection_center')
+        inspection.supervisor_name = request.form.get('supervisor_name')
+        inspection.result = request.form.get('result')
+        
+        # حفظ القيم القديمة أيضًا للتوافق مع قاعدة البيانات
+        inspection.inspection_number = request.form.get('inspection_center')
+        inspection.inspector_name = request.form.get('supervisor_name')
+        inspection.inspection_type = request.form.get('result')
+        
         inspection.inspection_status = request.form.get('inspection_status')
         inspection.cost = float(request.form.get('cost') or 0)
         inspection.results = request.form.get('results')
