@@ -1714,18 +1714,56 @@ def vehicle_checklist_details(checklist_id):
 def add_vehicle_checklist():
     """إضافة فحص جديد للسيارة للنسخة المحمولة"""
     if request.method == 'POST':
-        # استلام بيانات الفحص من النموذج
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({'status': 'error', 'message': 'لم يتم استلام بيانات'})
-        
-        vehicle_id = data.get('vehicle_id')
-        inspection_date = data.get('inspection_date')
-        inspector_name = data.get('inspector_name')
-        inspection_type = data.get('inspection_type')
-        general_notes = data.get('general_notes', '')
-        items_data = data.get('items', [])
+        # التحقق من محتوى الطلب
+        if request.is_json:
+            # استلام بيانات الفحص من طلب JSON
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({'status': 'error', 'message': 'لم يتم استلام بيانات'})
+                
+            vehicle_id = data.get('vehicle_id')
+            inspection_date = data.get('inspection_date')
+            inspector_name = data.get('inspector_name')
+            inspection_type = data.get('inspection_type')
+            general_notes = data.get('general_notes', '')
+            items_data = data.get('items', [])
+            damage_markers_data = data.get('damage_markers', [])
+            
+        elif request.content_type and 'multipart/form-data' in request.content_type:
+            # استلام بيانات النموذج مع الصور
+            try:
+                form_data = request.form.get('data')
+                if not form_data:
+                    return jsonify({'status': 'error', 'message': 'لم يتم استلام بيانات النموذج'})
+                
+                # تحويل بيانات النموذج من JSON string إلى dict
+                data = json.loads(form_data)
+                
+                vehicle_id = data.get('vehicle_id')
+                inspection_date = data.get('inspection_date')
+                inspector_name = data.get('inspector_name')
+                inspection_type = data.get('inspection_type')
+                general_notes = data.get('general_notes', '')
+                items_data = data.get('items', [])
+                
+                # استلام علامات التلف إذا كانت موجودة
+                damage_markers_str = request.form.get('damage_markers')
+                damage_markers_data = json.loads(damage_markers_str) if damage_markers_str else []
+                
+                # معالجة الصور المرفقة
+                images = []
+                for key in request.files:
+                    if key.startswith('image_'):
+                        images.append(request.files[key])
+                
+                print(f"تم استلام {len(images)} صورة و {len(damage_markers_data)} علامة تلف")
+                
+            except Exception as e:
+                app.logger.error(f"خطأ في معالجة بيانات النموذج: {str(e)}")
+                return jsonify({'status': 'error', 'message': f'خطأ في معالجة البيانات: {str(e)}'})
+        else:
+            return jsonify({'status': 'error', 'message': 'نوع المحتوى غير مدعوم'})
         
         # التحقق من وجود البيانات المطلوبة
         if not all([vehicle_id, inspection_date, inspector_name, inspection_type]):

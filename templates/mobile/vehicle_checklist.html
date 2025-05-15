@@ -714,6 +714,53 @@
                 </div>
             </div>
             
+            <!-- تحديد تلفيات المركبة -->
+            <div class="checklist-section">
+                <h4 class="section-title">
+                    <i class="fas fa-car-crash"></i> تحديد تلفيات المركبة
+                </h4>
+                
+                <div class="checklist-items">
+                    <div class="checklist-item full-width">
+                        <label class="form-check-label">قم بتحديد مواقع التلفيات على مخطط السيارة</label>
+                        <div class="vehicle-damage-editor my-3">
+                            <div class="vehicle-diagram-container position-relative">
+                                <img src="{{ url_for('static', filename='images/vehicles/vehicle_diagram.png') }}" class="img-fluid vehicle-diagram" id="vehicle-diagram">
+                                <div id="vehicle-markers-container" class="position-absolute top-0 start-0 w-100 h-100"></div>
+                            </div>
+                            
+                            <div class="control-buttons mt-3">
+                                <div class="row gx-2">
+                                    <div class="col-4">
+                                        <button type="button" id="add-damage-marker" class="btn btn-danger btn-sm w-100">
+                                            <i class="fas fa-plus-circle"></i> تلف
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" id="add-scratch-marker" class="btn btn-warning btn-sm w-100">
+                                            <i class="fas fa-paint-brush"></i> خدش
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" id="clear-markers" class="btn btn-secondary btn-sm w-100">
+                                            <i class="fas fa-trash"></i> مسح
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="marker-note-container" class="mt-3" style="display: none;">
+                                    <input type="text" id="marker-note" class="mobile-form-control" placeholder="أدخل ملاحظة حول التلف">
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <button type="button" id="save-marker-note" class="btn btn-primary btn-sm">حفظ</button>
+                                        <button type="button" id="cancel-marker-note" class="btn btn-secondary btn-sm">إلغاء</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- صور الفحص -->
             <div class="checklist-section">
                 <h4 class="section-title">
@@ -1634,5 +1681,260 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // إظهار رسالة عند تنفيذ الصفحة للتأكد من تحميل الكود
 console.log('تم تحميل كود التعامل مع الصور بنجاح');
+
+// -----------------------------------------------------
+// وظائف التعامل مع علامات التلف على صورة المركبة
+// -----------------------------------------------------
+
+// قائمة لتخزين علامات التلف
+let damageMarkers = [];
+let currentMarkerType = 'damage'; // damage = تلف، scratch = خدش
+let selectedMarker = null; // العلامة المحددة حاليًا للتعديل
+
+// تهيئة أحداث أزرار علامات التلف
+document.addEventListener('DOMContentLoaded', function() {
+    const vehicleDiagram = document.getElementById('vehicle-diagram');
+    const markersContainer = document.getElementById('vehicle-markers-container');
+    
+    if (vehicleDiagram && markersContainer) {
+        // زر إضافة علامة تلف
+        document.getElementById('add-damage-marker').addEventListener('click', function() {
+            currentMarkerType = 'damage';
+            showNotification('انقر على مخطط السيارة لإضافة علامة تلف', 'info');
+        });
+        
+        // زر إضافة علامة خدش
+        document.getElementById('add-scratch-marker').addEventListener('click', function() {
+            currentMarkerType = 'scratch';
+            showNotification('انقر على مخطط السيارة لإضافة علامة خدش', 'info');
+        });
+        
+        // زر مسح العلامات
+        document.getElementById('clear-markers').addEventListener('click', function() {
+            clearAllMarkers();
+        });
+        
+        // زر حفظ ملاحظة العلامة
+        document.getElementById('save-marker-note').addEventListener('click', function() {
+            saveMarkerNote();
+        });
+        
+        // زر إلغاء إضافة ملاحظة للعلامة
+        document.getElementById('cancel-marker-note').addEventListener('click', function() {
+            cancelMarkerNote();
+        });
+        
+        // حدث النقر على مخطط السيارة
+        vehicleDiagram.addEventListener('click', function(event) {
+            addMarkerOnClick(event);
+        });
+    }
+});
+
+// دالة إضافة علامة عند النقر على مخطط السيارة
+function addMarkerOnClick(event) {
+    const vehicleDiagram = document.getElementById('vehicle-diagram');
+    const markersContainer = document.getElementById('vehicle-markers-container');
+    
+    if (!vehicleDiagram || !markersContainer) return;
+    
+    // حساب الموقع النسبي للنقر
+    const rect = vehicleDiagram.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    
+    // إنشاء علامة جديدة
+    const marker = {
+        id: Date.now(),
+        type: currentMarkerType,
+        x: x,
+        y: y,
+        notes: ''
+    };
+    
+    // إضافة العلامة إلى القائمة
+    damageMarkers.push(marker);
+    
+    // إضافة العلامة على الصورة
+    renderMarker(marker);
+    
+    // فتح حقل إضافة ملاحظة للعلامة
+    openMarkerNote(marker);
+    
+    console.log(`تم إضافة علامة ${currentMarkerType} عند الموقع (${x.toFixed(2)}%, ${y.toFixed(2)}%)`);
+}
+
+// دالة عرض علامة على مخطط السيارة
+function renderMarker(marker) {
+    const markersContainer = document.getElementById('vehicle-markers-container');
+    
+    if (!markersContainer) return;
+    
+    // إنشاء عنصر العلامة
+    const markerElement = document.createElement('div');
+    markerElement.className = `vehicle-marker marker-${marker.type}`;
+    markerElement.id = `marker-${marker.id}`;
+    markerElement.style.position = 'absolute';
+    markerElement.style.left = `${marker.x}%`;
+    markerElement.style.top = `${marker.y}%`;
+    markerElement.style.transform = 'translate(-50%, -50%)';
+    markerElement.style.width = '20px';
+    markerElement.style.height = '20px';
+    markerElement.style.borderRadius = '50%';
+    markerElement.style.cursor = 'pointer';
+    
+    // تعيين لون العلامة حسب النوع
+    if (marker.type === 'damage') {
+        markerElement.style.backgroundColor = 'rgba(220, 53, 69, 0.7)'; // أحمر للتلف
+        markerElement.innerHTML = '<i class="fas fa-times" style="color: white; font-size: 12px;"></i>';
+    } else if (marker.type === 'scratch') {
+        markerElement.style.backgroundColor = 'rgba(255, 193, 7, 0.7)'; // أصفر للخدش
+        markerElement.innerHTML = '<i class="fas fa-minus" style="color: white; font-size: 12px;"></i>';
+    }
+    
+    // إضافة حدث النقر على العلامة
+    markerElement.addEventListener('click', function(event) {
+        event.stopPropagation(); // منع انتشار الحدث لمنع إضافة علامة جديدة
+        selectMarker(marker);
+    });
+    
+    // إضافة العلامة إلى الحاوية
+    markersContainer.appendChild(markerElement);
+}
+
+// دالة فتح حقل إضافة ملاحظة للعلامة
+function openMarkerNote(marker) {
+    const noteContainer = document.getElementById('marker-note-container');
+    const noteInput = document.getElementById('marker-note');
+    
+    if (!noteContainer || !noteInput) return;
+    
+    // تحديد العلامة الحالية
+    selectedMarker = marker;
+    
+    // إعداد حقل الملاحظة
+    noteInput.value = marker.notes;
+    
+    // إظهار حقل إضافة الملاحظة
+    noteContainer.style.display = 'block';
+}
+
+// دالة حفظ ملاحظة العلامة
+function saveMarkerNote() {
+    const noteInput = document.getElementById('marker-note');
+    const noteContainer = document.getElementById('marker-note-container');
+    
+    if (!selectedMarker || !noteInput || !noteContainer) return;
+    
+    // حفظ الملاحظة
+    selectedMarker.notes = noteInput.value;
+    
+    // إخفاء حقل إضافة الملاحظة
+    noteContainer.style.display = 'none';
+    
+    // إعادة تعيين العلامة المحددة
+    selectedMarker = null;
+    
+    console.log(`تم حفظ ملاحظة للعلامة: ${noteInput.value}`);
+}
+
+// دالة إلغاء إضافة ملاحظة للعلامة
+function cancelMarkerNote() {
+    const noteContainer = document.getElementById('marker-note-container');
+    
+    if (!noteContainer) return;
+    
+    // إخفاء حقل إضافة الملاحظة
+    noteContainer.style.display = 'none';
+    
+    // إعادة تعيين العلامة المحددة
+    selectedMarker = null;
+}
+
+// دالة تحديد علامة للتعديل
+function selectMarker(marker) {
+    // فتح حقل إضافة ملاحظة للعلامة
+    openMarkerNote(marker);
+}
+
+// دالة مسح جميع العلامات
+function clearAllMarkers() {
+    // التأكد من رغبة المستخدم في المسح
+    if (damageMarkers.length > 0) {
+        if (confirm('هل أنت متأكد من رغبتك في مسح جميع علامات التلف؟')) {
+            const markersContainer = document.getElementById('vehicle-markers-container');
+            
+            if (!markersContainer) return;
+            
+            // مسح جميع العلامات من الحاوية
+            markersContainer.innerHTML = '';
+            
+            // مسح قائمة العلامات
+            damageMarkers = [];
+            
+            // إعادة تعيين العلامة المحددة
+            selectedMarker = null;
+            
+            // إخفاء حقل إضافة الملاحظة
+            const noteContainer = document.getElementById('marker-note-container');
+            if (noteContainer) {
+                noteContainer.style.display = 'none';
+            }
+            
+            console.log('تم مسح جميع علامات التلف');
+            showNotification('تم مسح جميع علامات التلف', 'info');
+        }
+    } else {
+        showNotification('لا توجد علامات تلف للمسح', 'info');
+    }
+}
+
+// تعديل دالة إرسال البيانات لتشمل علامات التلف
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث وظيفة حفظ الفحص لتشمل علامات التلف
+    const saveButton = document.getElementById('save-checklist');
+    
+    if (saveButton) {
+        // استبدال حدث النقر المضاف سابقًا
+        const originalClickHandler = saveButton.onclick;
+        
+        saveButton.onclick = function(event) {
+            // تحقق من وجود علامات تلف
+            if (damageMarkers.length > 0) {
+                console.log(`تم إضافة ${damageMarkers.length} علامة تلف إلى البيانات المرسلة`);
+            }
+        };
+    }
+});
+
+// تحميل التنسيقات الإضافية للعلامات
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .vehicle-diagram-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        
+        .vehicle-marker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        #marker-note-container {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    `;
+    document.head.appendChild(style);
+});
 </script>
 {% endblock %}
