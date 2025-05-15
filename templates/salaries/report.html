@@ -5,6 +5,23 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>تقرير الرواتب - شهر {{ month }}/{{ year }}</h1>
         <div>
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export me-1"></i> تصدير إلى Excel
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('salaries.export_excel', month=month, year=year) }}">
+                            <i class="fas fa-filter me-1"></i> تصدير بيانات الشهر والسنة الحالية
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('salaries.export_excel') }}">
+                            <i class="fas fa-database me-1"></i> تصدير جميع البيانات
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <a href="{{ url_for('salaries.report_pdf', month=month, year=year) }}" class="btn btn-danger">
                 <i class="fas fa-file-pdf me-1"></i> تصدير PDF
             </a>
