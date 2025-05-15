@@ -1847,12 +1847,15 @@ def add_vehicle_checklist():
                     db.session.add(damage_marker)
             
             # معالجة الصور المرفقة إذا وجدت
-            if request.content_type and 'multipart/form-data' in request.content_type and 'images' in locals():
+            if request.files and 'images' in request.files:
                 # إنشاء مجلد لتخزين الصور إذا لم يكن موجودًا
                 vehicle_images_dir = os.path.join(app.static_folder, 'uploads', 'vehicles', 'checklists')
                 os.makedirs(vehicle_images_dir, exist_ok=True)
                 
-                for image in images:
+                # الحصول على الصور من الطلب
+                images = request.files.getlist('images')
+                
+                for i, image in enumerate(images):
                     if image and image.filename:
                         # حفظ الصورة بإسم فريد في المجلد المناسب
                         filename = secure_filename(image.filename)
@@ -1863,12 +1866,16 @@ def add_vehicle_checklist():
                         # حفظ الصورة
                         image.save(full_path)
                         
+                        # الحصول على وصف الصورة (إذا وجد)
+                        description_key = f'image_description_{i}'
+                        description = request.form.get(description_key, f"صورة فحص بتاريخ {inspection_date}")
+                        
                         # إنشاء سجل لصورة الفحص
                         checklist_image = VehicleChecklistImage(
                             checklist_id=new_checklist.id,
                             image_path=image_path,
                             image_type='inspection',
-                            description=f"صورة فحص بتاريخ {inspection_date}"
+                            description=description
                         )
                         
                         db.session.add(checklist_image)
