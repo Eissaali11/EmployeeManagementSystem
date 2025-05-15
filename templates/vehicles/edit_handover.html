@@ -210,7 +210,7 @@
                                             <label for="employeeSearchInput" class="form-label">البحث عن الموظف:</label>
                                             <div class="input-group">
                                                 <input type="text" class="form-control" id="employeeSearchInput" placeholder="البحث بالاسم أو الرقم الوظيفي أو رقم الهوية">
-                                                <button class="btn btn-primary" id="searchEmployeeBtn" type="button">
+                                                <button class="btn btn-primary" id="searchEmployeeBtn" type="button" onclick="filterEmployees()">
                                                     <i class="fas fa-search"></i> بحث
                                                 </button>
                                             </div>
@@ -363,19 +363,36 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // وظيفة البحث عن الموظفين
-        const searchInput = document.getElementById('employeeSearchInput');
-        const searchBtn = document.getElementById('searchEmployeeBtn');
-        const employeeRows = document.querySelectorAll('.employee-row');
-        const noResultsAlert = document.getElementById('noResultsAlert');
-        const personNameInput = document.getElementById('person_name');
+        console.log("الصفحة جاهزة للعمل");
+        
+        // وظيفة البحث عن الموظفين - تحديث محدد العناصر
+        const searchInput = document.querySelector('#employeeSearchInput');
+        const searchBtn = document.querySelector('#searchEmployeeBtn');
+        const employeeRows = document.querySelectorAll('#employeesTableBody .employee-row');
+        const noResultsAlert = document.querySelector('#noResultsAlert');
+        const personNameInput = document.querySelector('#person_name');
         const selectButtons = document.querySelectorAll('.select-employee-btn');
+        const departmentSelect = document.querySelector('#departmentSelect');
+        
+        console.log("عناصر البحث:", {
+            "search input": searchInput !== null,
+            "search button": searchBtn !== null,
+            "rows count": employeeRows.length,
+            "no results alert": noResultsAlert !== null,
+            "person name input": personNameInput !== null,
+            "select buttons count": selectButtons.length,
+            "department select": departmentSelect !== null
+        });
         
         // وظيفة البحث وتصفية الموظفين
         function filterEmployees() {
+            console.log("تشغيل وظيفة البحث");
             const searchTerm = searchInput.value.trim().toLowerCase();
-            const departmentSelect = document.getElementById('departmentSelect');
             const departmentId = departmentSelect ? departmentSelect.value : '';
+            
+            console.log("مصطلح البحث:", searchTerm);
+            console.log("القسم المختار:", departmentId);
+            
             let resultsFound = false;
             
             employeeRows.forEach(row => {
@@ -414,28 +431,35 @@
         
         // تنفيذ البحث عند النقر على زر البحث
         if (searchBtn) {
-            searchBtn.addEventListener('click', filterEmployees);
+            searchBtn.addEventListener('click', function() {
+                console.log("تم النقر على زر البحث");
+                filterEmployees();
+            });
         }
         
         // تنفيذ البحث عند الضغط على Enter في حقل البحث
         if (searchInput) {
             searchInput.addEventListener('keyup', function(event) {
                 if (event.key === 'Enter') {
+                    console.log("تم الضغط على Enter في حقل البحث");
                     filterEmployees();
                 }
             });
         }
         
         // تنفيذ التصفية عند تغيير القسم
-        const departmentSelect = document.getElementById('departmentSelect');
         if (departmentSelect) {
-            departmentSelect.addEventListener('change', filterEmployees);
+            departmentSelect.addEventListener('change', function() {
+                console.log("تم تغيير القسم المختار");
+                filterEmployees();
+            });
         }
         
         // حدث عند اختيار موظف
         selectButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const employeeName = this.getAttribute('data-name');
+                console.log("تم اختيار الموظف:", employeeName);
                 personNameInput.value = employeeName;
             });
         });
