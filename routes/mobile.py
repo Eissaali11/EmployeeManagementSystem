@@ -1070,7 +1070,8 @@ def report_fees():
     if export_format:
         if export_format == 'pdf':
             # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.fees_pdf',
+            return redirect(url_for('reports.export_fees_report',
+                                  export_type='pdf',
                                   fee_type=fee_type,
                                   date_from=date_from,
                                   date_to=date_to,
@@ -1078,7 +1079,8 @@ def report_fees():
                                   
         elif export_format == 'excel':
             # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.fees_excel',
+            return redirect(url_for('reports.export_fees_report',
+                                  export_type='excel',
                                   fee_type=fee_type,
                                   date_from=date_from,
                                   date_to=date_to,
