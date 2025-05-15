@@ -23,14 +23,14 @@
                 <label>السيارة</label>
                 <div class="position-relative">
                     <input type="text" id="vehicle-search" class="mobile-form-control" placeholder="ابحث عن السيارة بالاسم أو رقم اللوحة" autocomplete="off">
-                    <div id="search-results" class="position-absolute w-100 start-0 bg-white shadow rounded mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000; display: none;">
+                    <div id="search-results" class="position-absolute w-100 start-0 bg-white shadow rounded mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1010; display: none;">
                         <!-- نتائج البحث ستظهر هنا -->
                     </div>
                 </div>
                 <select id="vehicle-select" class="mobile-form-select d-none" required>
                     <option value="">اختر السيارة</option>
                     {% for vehicle in vehicles %}
-                    <option value="{{ vehicle.id }}">{{ vehicle.name }} - {{ vehicle.plate_number }}</option>
+                    <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -767,99 +767,138 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('تم تحميل صفحة تشيك لست السيارة');
     
-    // إعداد البحث في السيارات
-    const vehicleSelect = document.getElementById('vehicle-select');
-    const vehicleSearch = document.getElementById('vehicle-search');
-    const searchResults = document.getElementById('search-results');
-    
-    // إنشاء قائمة السيارات للبحث
-    const vehicles = [];
-    
-    // جمع بيانات السيارات من القائمة المنسدلة المخفية
-    Array.from(vehicleSelect.options).forEach(option => {
-      if (option.value) {
-        vehicles.push({
-          id: option.value,
-          text: option.textContent,
-          name: option.textContent.split(' - ')[0],
-          plate: option.textContent.split(' - ')[1] || ''
+    // تهيئة البحث عن السيارات - إصلاح وتحسين
+    function initializeVehicleSearch() {
+        console.log('بدء تهيئة البحث عن السيارات');
+        
+        const vehicleSelect = document.getElementById('vehicle-select');
+        const vehicleSearch = document.getElementById('vehicle-search');
+        const searchResults = document.getElementById('search-results');
+        
+        if (!vehicleSelect || !vehicleSearch || !searchResults) {
+            console.error('عناصر البحث غير موجودة:', {
+                'vehicleSelect': !!vehicleSelect,
+                'vehicleSearch': !!vehicleSearch,
+                'searchResults': !!searchResults
+            });
+            return;
+        }
+        
+        console.log('تم العثور على كافة عناصر البحث');
+        
+        // إنشاء قائمة السيارات للبحث
+        const vehicles = [];
+        
+        // جمع بيانات السيارات من القائمة المنسدلة المخفية
+        if (vehicleSelect.options && vehicleSelect.options.length > 0) {
+            console.log('جاري جمع بيانات السيارات، عدد الخيارات:', vehicleSelect.options.length);
+            
+            Array.from(vehicleSelect.options).forEach((option, index) => {
+                if (option.value) {
+                    const optionText = option.textContent || option.innerText;
+                    const nameParts = optionText.split(' - ');
+                    
+                    vehicles.push({
+                        id: option.value,
+                        text: optionText,
+                        name: nameParts[0],
+                        plate: nameParts[1] || ''
+                    });
+                }
+            });
+            
+            console.log('تم جمع بيانات السيارات، العدد:', vehicles.length);
+        } else {
+            console.warn('لا توجد خيارات في قائمة السيارات');
+        }
+        
+        // ضبط مؤشر z لنتائج البحث
+        searchResults.style.zIndex = 1000;
+        
+        // التعامل مع إدخال البحث
+        vehicleSearch.addEventListener('input', function() {
+            console.log('تم إدخال نص في حقل البحث:', this.value);
+            const searchTerm = this.value.trim().toLowerCase();
+            
+            // إذا كان البحث فارغًا، أخفِ النتائج
+            if (!searchTerm) {
+                console.log('البحث فارغ، إخفاء النتائج');
+                searchResults.style.display = 'none';
+                searchResults.innerHTML = '';
+                return;
+            }
+            
+            // تصفية السيارات المتطابقة مع البحث
+            const matchedVehicles = vehicles.filter(vehicle => {
+                const textLower = (vehicle.text || '').toLowerCase();
+                const nameLower = (vehicle.name || '').toLowerCase();
+                const plateLower = (vehicle.plate || '').toLowerCase();
+                
+                return textLower.includes(searchTerm) || 
+                       nameLower.includes(searchTerm) || 
+                       plateLower.includes(searchTerm);
+            });
+            
+            console.log('السيارات المطابقة:', matchedVehicles.length);
+            
+            // إظهار نتائج البحث
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'block'; // تأكيد الظهور
+            
+            if (matchedVehicles.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'p-2 text-center text-muted';
+                noResults.textContent = 'لا توجد نتائج مطابقة';
+                searchResults.appendChild(noResults);
+            } else {
+                matchedVehicles.forEach(vehicle => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'p-2 border-bottom result-item';
+                    resultItem.style.cursor = 'pointer';
+                    resultItem.style.backgroundColor = '#fff';
+                    
+                    // اختيار السيارة عند النقر على النتيجة
+                    resultItem.addEventListener('click', function() {
+                        console.log('تم اختيار سيارة:', vehicle.id, vehicle.text);
+                        vehicleSelect.value = vehicle.id;
+                        vehicleSearch.value = vehicle.text;
+                        searchResults.style.display = 'none';
+                    });
+                    
+                    // إضافة تمييز لعبارة البحث
+                    const highlightedText = vehicle.text.replace(
+                        new RegExp(searchTerm, 'gi'),
+                        match => `<span class="bg-warning">${match}</span>`
+                    );
+                    resultItem.innerHTML = highlightedText;
+                    
+                    searchResults.appendChild(resultItem);
+                });
+            }
         });
-      }
-    });
-    
-    // التعامل مع إدخال البحث
-    vehicleSearch.addEventListener('input', function() {
-      console.log('تم إدخال نص في حقل البحث');
-      const searchTerm = this.value.trim().toLowerCase();
-      
-      // طباعة بيانات السيارات للتشخيص
-      console.log('قائمة السيارات:', vehicles);
-      
-      // إذا كان البحث فارغًا، أخفِ النتائج
-      if (!searchTerm) {
-        searchResults.classList.add('d-none');
-        searchResults.innerHTML = '';
-        return;
-      }
-      
-      // تصفية السيارات المتطابقة مع البحث
-      const matchedVehicles = vehicles.filter(vehicle => 
-        vehicle.text.toLowerCase().includes(searchTerm) || 
-        vehicle.name.toLowerCase().includes(searchTerm) || 
-        vehicle.plate.toLowerCase().includes(searchTerm)
-      );
-      
-      console.log('السيارات المطابقة:', matchedVehicles);
-      
-      // إظهار نتائج البحث
-      searchResults.innerHTML = '';
-      searchResults.classList.remove('d-none');
-      searchResults.style.display = 'block'; // تأكيد الظهور
-      
-      if (matchedVehicles.length === 0) {
-        const noResults = document.createElement('div');
-        noResults.className = 'p-2 text-center text-muted';
-        noResults.textContent = 'لا توجد نتائج مطابقة';
-        searchResults.appendChild(noResults);
-      } else {
-        matchedVehicles.forEach(vehicle => {
-          const resultItem = document.createElement('div');
-          resultItem.className = 'p-2 border-bottom result-item';
-          resultItem.textContent = vehicle.text;
-          resultItem.style.cursor = 'pointer';
-          
-          // اختيار السيارة عند النقر على النتيجة
-          resultItem.addEventListener('click', function() {
-            vehicleSelect.value = vehicle.id;
-            vehicleSearch.value = vehicle.text;
-            searchResults.classList.add('d-none');
-          });
-          
-          // إضافة تمييز لعبارة البحث
-          const highlightedText = vehicle.text.replace(
-            new RegExp(searchTerm, 'gi'),
-            match => `<span class="bg-warning">${match}</span>`
-          );
-          resultItem.innerHTML = highlightedText;
-          
-          searchResults.appendChild(resultItem);
+        
+        // إغلاق نتائج البحث عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            if (vehicleSearch && searchResults && 
+                !vehicleSearch.contains(e.target) && 
+                !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
         });
-      }
-    });
+        
+        // إعادة فتح نتائج البحث عند النقر على مربع البحث
+        vehicleSearch.addEventListener('click', function() {
+            console.log('تم النقر على حقل البحث');
+            const searchTerm = this.value.trim();
+            
+            if (searchTerm && searchResults.innerHTML !== '') {
+                searchResults.style.display = 'block';
+            }
+        });
+    }
     
-    // إغلاق نتائج البحث عند النقر خارجها
-    document.addEventListener('click', function(e) {
-      if (!vehicleSearch.contains(e.target) && !searchResults.contains(e.target)) {
-        searchResults.classList.add('d-none');
-      }
-    });
-    
-    // إعادة فتح نتائج البحث عند النقر على مربع البحث
-    vehicleSearch.addEventListener('click', function() {
-      if (this.value.trim() && searchResults.classList.contains('d-none')) {
-        searchResults.classList.remove('d-none');
-      }
-    });
+    // استدعاء تهيئة البحث
+    initializeVehicleSearch();
     
     // تأثيرات تحريك القسم عند التمرير
     const sections = document.querySelectorAll('.checklist-section');
@@ -1192,36 +1231,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // إضافة أحداث لأزرار تحميل الصور
-    const captureImageBtn = document.getElementById('capture-image-btn');
-    const selectImageBtn = document.getElementById('select-image-btn');
-    const imageCaptureInput = document.getElementById('image-capture-input');
-    const imageFileInput = document.getElementById('image-file-input');
-    
-    if (captureImageBtn && imageCaptureInput) {
-        captureImageBtn.addEventListener('click', function() {
-            imageCaptureInput.click();
-        });
-    }
-    
-    if (selectImageBtn && imageFileInput) {
-        selectImageBtn.addEventListener('click', function() {
-            imageFileInput.click();
-        });
-    }
-    
-    // معالجة الصور بعد اختيارها
-    if (imageCaptureInput) {
-        imageCaptureInput.addEventListener('change', function() {
-            handleSelectedImages(this.files);
-        });
-    }
-    
-    if (imageFileInput) {
-        imageFileInput.addEventListener('change', function() {
-            handleSelectedImages(this.files);
-        });
-    }
+    // إضافة أحداث لأزرار تحميل الصور - تحسين التعامل مع الصور
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('تهيئة أزرار تحميل الصور...');
+        
+        const captureImageBtn = document.getElementById('capture-image-btn');
+        const selectImageBtn = document.getElementById('select-image-btn');
+        const imageCaptureInput = document.getElementById('image-capture-input');
+        const imageFileInput = document.getElementById('image-file-input');
+        
+        console.log('أزرار التقاط الصور:', captureImageBtn ? 'موجود' : 'غير موجود');
+        console.log('أزرار اختيار الصور:', selectImageBtn ? 'موجود' : 'غير موجود');
+        console.log('حقل التقاط الصور:', imageCaptureInput ? 'موجود' : 'غير موجود');
+        console.log('حقل ملف الصور:', imageFileInput ? 'موجود' : 'غير موجود');
+        
+        if (captureImageBtn && imageCaptureInput) {
+            captureImageBtn.onclick = function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر التقاط الصورة');
+                imageCaptureInput.click();
+            };
+        }
+        
+        if (selectImageBtn && imageFileInput) {
+            selectImageBtn.onclick = function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر اختيار الصور من الاستوديو');
+                imageFileInput.click();
+            };
+        }
+        
+        // معالجة الصور بعد اختيارها
+        if (imageCaptureInput) {
+            imageCaptureInput.onchange = function() {
+                console.log('تم اختيار صورة من الكاميرا', this.files);
+                handleSelectedImages(this.files);
+            };
+        }
+        
+        if (imageFileInput) {
+            imageFileInput.onchange = function() {
+                console.log('تم اختيار صور من المعرض', this.files);
+                handleSelectedImages(this.files);
+            };
+        }
+    });
     
     // متغير لتخزين الصور المختارة
     window.selectedImages = [];
