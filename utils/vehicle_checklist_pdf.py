@@ -245,7 +245,7 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
         [Paragraph(arabic_text("رقم اللوحة"), styles['ArabicTable']), 
          Paragraph(arabic_text(vehicle.plate_number or ""), styles['ArabicTable'])],
         [Paragraph(arabic_text("نوع المركبة"), styles['ArabicTable']), 
-         Paragraph(arabic_text(vehicle.vehicle_type or ""), styles['ArabicTable'])],
+         Paragraph(arabic_text(getattr(vehicle, 'vehicle_type', '') or ""), styles['ArabicTable'])],
         [Paragraph(arabic_text("الماركة"), styles['ArabicTable']), 
          Paragraph(arabic_text(vehicle.make or ""), styles['ArabicTable'])],
         [Paragraph(arabic_text("الموديل"), styles['ArabicTable']), 
