@@ -629,8 +629,8 @@
                             <tbody>
                                 {% for handover in vehicle_handovers %}
                                 <tr>
-                                    <td>{{ handover.vehicle.plate_number }}</td>
-                                    <td>{{ handover.vehicle.make }} {{ handover.vehicle.model }}</td>
+                                    <td>{{ handover.vehicle.plate_number if handover.vehicle else 'غير محدد' }}</td>
+                                    <td>{{ (handover.vehicle.make + ' ' + handover.vehicle.model) if handover.vehicle else 'غير محدد' }}</td>
                                     <td>
                                         {% if handover.handover_type == 'handover' %}
                                             <span class="badge bg-success">تسليم</span>
