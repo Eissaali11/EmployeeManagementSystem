@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}التقرير الشامل للموظفين مع تفاصيل الرواتب{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">التقرير الشامل للموظفين مع تفاصيل الرواتب</h4>
+                </div>
+                
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        قم باختيار معايير التصفية لإنشاء تقرير Excel شامل يحتوي على كافة تفاصيل الموظفين والرواتب المرتبطة بهم. 
+                        يمكن تصفية النتائج حسب القسم أو الموظف أو الشهر/السنة.
+                    </p>
+                    
+                    <!-- نموذج الفلاتر -->
+                    <form method="POST" action="{{ url_for('salaries.comprehensive_report') }}" id="report-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="department_id" class="form-label">القسم</label>
+                                    <select name="department_id" id="department_id" class="form-select">
+                                        <option value="">جميع الأقسام</option>
+                                        {% for department in departments %}
+                                        <option value="{{ department.id }}">{{ department.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="employee_id" class="form-label">الموظف</label>
+                                    <select name="employee_id" id="employee_id" class="form-select">
+                                        <option value="">جميع الموظفين</option>
+                                        <!-- ستتم تعبئة هذه القائمة بالجافاسكريبت عند اختيار قسم -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="month" class="form-label">الشهر</label>
+                                    <select name="month" id="month" class="form-select">
+                                        <option value="">جميع الشهور</option>
+                                        <option value="1" {% if current_month == 1 %}selected{% endif %}>يناير</option>
+                                        <option value="2" {% if current_month == 2 %}selected{% endif %}>فبراير</option>
+                                        <option value="3" {% if current_month == 3 %}selected{% endif %}>مارس</option>
+                                        <option value="4" {% if current_month == 4 %}selected{% endif %}>أبريل</option>
+                                        <option value="5" {% if current_month == 5 %}selected{% endif %}>مايو</option>
+                                        <option value="6" {% if current_month == 6 %}selected{% endif %}>يونيو</option>
+                                        <option value="7" {% if current_month == 7 %}selected{% endif %}>يوليو</option>
+                                        <option value="8" {% if current_month == 8 %}selected{% endif %}>أغسطس</option>
+                                        <option value="9" {% if current_month == 9 %}selected{% endif %}>سبتمبر</option>
+                                        <option value="10" {% if current_month == 10 %}selected{% endif %}>أكتوبر</option>
+                                        <option value="11" {% if current_month == 11 %}selected{% endif %}>نوفمبر</option>
+                                        <option value="12" {% if current_month == 12 %}selected{% endif %}>ديسمبر</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="year" class="form-label">السنة</label>
+                                    <select name="year" id="year" class="form-select">
+                                        <option value="">جميع السنوات</option>
+                                        {% for y in range(current_year-3, current_year+2) %}
+                                        <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary px-5">
+                                    <i class="fas fa-file-excel me-2"></i> إنشاء التقرير الشامل
+                                </button>
+                                <a href="{{ url_for('salaries.index') }}" class="btn btn-secondary ms-2">
+                                    <i class="fas fa-times me-2"></i> إلغاء
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>معلومة:</strong> التقرير الشامل يتضمن:
+                        <ul class="mt-2">
+                            <li>ملخص بيانات الموظفين مع متوسط وإجمالي الرواتب</li>
+                            <li>تفاصيل الرواتب لجميع الموظفين مقسمة حسب الشهر والسنة</li>
+                            <li>رسوم بيانية توضح توزيع الرواتب حسب الأقسام</li>
+                            <li>إحصائيات وتحليلات مالية تفصيلية</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // تحديث قائمة الموظفين عند تغيير القسم
+    $('#department_id').change(function() {
+        const departmentId = $(this).val();
+        
+        // إعادة تعيين قائمة الموظفين
+        $('#employee_id').empty().append('<option value="">جميع الموظفين</option>');
+        
+        // إذا تم اختيار قسم، جلب موظفي هذا القسم
+        if (departmentId) {
+            $.ajax({
+                url: "{{ url_for('employees.get_employees_by_department') }}",
+                type: 'GET',
+                data: { department_id: departmentId },
+                success: function(response) {
+                    // إضافة الموظفين إلى القائمة
+                    $.each(response.employees, function(index, employee) {
+                        $('#employee_id').append(
+                            $('<option></option>').val(employee.id).text(employee.name)
+                        );
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('خطأ في جلب الموظفين:', error);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -6,7 +6,7 @@ from sqlalchemy import func
 from datetime import datetime
 from app import db
 from models import Salary, Employee, Department, SystemAudit
-from utils.excel import parse_salary_excel, generate_salary_excel
+from utils.excel import parse_salary_excel, generate_salary_excel, generate_comprehensive_employee_report
 from utils.pdf_generator_fixed import generate_salary_report_pdf
 from utils.salary_notification import generate_salary_notification_pdf, generate_batch_salary_notifications
 from utils.whatsapp_notification import (
@@ -1007,6 +1007,90 @@ def salary_deduction_notification_whatsapp(id):
     except Exception as e:
         flash(f'حدث خطأ أثناء إرسال إشعار الخصم عبر WhatsApp: {str(e)}', 'danger')
         return redirect(url_for('salaries.index'))
+
+
+@salaries_bp.route('/comprehensive_report', methods=['GET', 'POST'])
+def comprehensive_report():
+    """تقرير شامل للموظفين مع كامل تفاصيل الرواتب"""
+    # الحصول على قائمة الأقسام للاختيار
+    departments = Department.query.order_by(Department.name).all()
+    
+    # الحصول على الشهر والسنة الحالية
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    if request.method == 'POST':
+        try:
+            # الحصول على معلمات التصفية
+            department_id = request.form.get('department_id')
+            if department_id == '':
+                department_id = None
+            elif department_id:
+                department_id = int(department_id)
+            
+            employee_id = request.form.get('employee_id')
+            if employee_id == '':
+                employee_id = None
+            elif employee_id:
+                employee_id = int(employee_id)
+            
+            month = request.form.get('month')
+            if month:
+                month = int(month)
+            
+            year = request.form.get('year')
+            if year:
+                year = int(year)
+            
+            # إنشاء التقرير الشامل
+            report_excel = generate_comprehensive_employee_report(
+                db.session, department_id, employee_id, month, year
+            )
+            
+            # تسجيل العملية
+            filter_description = []
+            if department_id:
+                dept = Department.query.get(department_id)
+                filter_description.append(f"القسم: {dept.name}")
+            if employee_id:
+                emp = Employee.query.get(employee_id)
+                filter_description.append(f"الموظف: {emp.name}")
+            if month:
+                filter_description.append(f"الشهر: {month}")
+            if year:
+                filter_description.append(f"السنة: {year}")
+            
+            filter_str = " | ".join(filter_description) if filter_description else "كافة البيانات"
+            
+            audit = SystemAudit(
+                action='comprehensive_report',
+                entity_type='employee',
+                entity_id=0,
+                details=f'تم إنشاء تقرير شامل للموظفين مع تفاصيل الرواتب ({filter_str})',
+                user_id=None
+            )
+            db.session.add(audit)
+            db.session.commit()
+            
+            # إرسال الملف كتنزيل
+            return send_file(
+                report_excel,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=f'تقرير_شامل_الموظفين_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+            )
+            
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            flash(f'حدث خطأ أثناء إنشاء التقرير الشامل: {str(e)}', 'danger')
+            return redirect(url_for('salaries.index'))
+    
+    # في حالة طلب GET، عرض صفحة اختيار الفلاتر
+    return render_template('salaries/comprehensive_report.html',
+                          departments=departments,
+                          current_month=current_month,
+                          current_year=current_year)
 
 
 @salaries_bp.route('/notifications/deduction/batch', methods=['GET', 'POST'])

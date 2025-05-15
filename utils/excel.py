@@ -539,6 +539,492 @@ def parse_salary_excel(file, month, year):
         print(traceback.format_exc())
         raise Exception(f"Error parsing salary Excel file: {str(e)}")
 
+def generate_comprehensive_employee_report(db_session, department_id=None, employee_id=None, month=None, year=None):
+    """
+    إنشاء تقرير شامل للموظفين مع كامل تفاصيل الرواتب والبيانات
+    
+    Args:
+        db_session: جلسة قاعدة البيانات
+        department_id: معرف القسم (اختياري للتصفية)
+        employee_id: معرف الموظف (اختياري للتصفية)
+        month: الشهر (اختياري للتصفية)
+        year: السنة (اختياري للتصفية)
+        
+    Returns:
+        كائن BytesIO يحتوي على ملف Excel
+    """
+    try:
+        from models import Employee, Department, Salary, Attendance, Document
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        from dateutil.relativedelta import relativedelta
+        from openpyxl.styles import Alignment, Font, PatternFill, Border, Side, Color
+        from openpyxl.utils import get_column_letter
+        from openpyxl.styles.differential import DifferentialStyle
+        from openpyxl.formatting.rule import Rule
+        from openpyxl.chart import BarChart, Reference, Series
+        from openpyxl.chart.marker import DataPoint
+        from openpyxl.drawing.image import Image
+        
+        # استعلام الموظفين مع التصفية المطلوبة
+        query = db_session.query(Employee).join(Department)
+        
+        if department_id:
+            query = query.filter(Employee.department_id == department_id)
+        if employee_id:
+            query = query.filter(Employee.id == employee_id)
+            
+        # الحصول على كل الموظفين المطلوبين
+        employees = query.all()
+        
+        # البحث عن الرواتب المرتبطة بهذه الفترة
+        salary_query = db_session.query(Salary).filter(Salary.employee_id.in_([e.id for e in employees]))
+        if month:
+            salary_query = salary_query.filter(Salary.month == month)
+        if year:
+            salary_query = salary_query.filter(Salary.year == year)
+            
+        salaries = salary_query.all()
+        
+        # تحديد الألوان والتنسيقات
+        header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+        subheader_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        subheader_font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
+        total_row_fill = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
+        total_row_font = Font(name="Arial", size=12, bold=True)
+        
+        normal_font = Font(name="Arial", size=11)
+        highlight_font = Font(name="Arial", size=11, bold=True)
+        
+        thin_border = Border(
+            left=Side(style='thin', color='000000'),
+            right=Side(style='thin', color='000000'),
+            top=Side(style='thin', color='000000'),
+            bottom=Side(style='thin', color='000000')
+        )
+        
+        thick_border = Border(
+            left=Side(style='medium', color='000000'),
+            right=Side(style='medium', color='000000'),
+            top=Side(style='medium', color='000000'),
+            bottom=Side(style='medium', color='000000')
+        )
+        
+        title_alignment = Alignment(horizontal='center', vertical='center')
+        header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell_alignment = Alignment(horizontal='center', vertical='center')
+        text_alignment = Alignment(horizontal='right', vertical='center', wrap_text=True)
+        
+        # تنسيقات للخلايا المالية
+        money_format = '#,##0.00 "ر.س"'
+        percentage_format = '0.00%'
+        date_format = 'yyyy-mm-dd'
+        
+        # إعداد البيانات المجمعة للموظفين
+        employees_data = []
+        salaries_by_employee = {}
+        
+        # تجميع الرواتب حسب الموظف
+        for salary in salaries:
+            if salary.employee_id not in salaries_by_employee:
+                salaries_by_employee[salary.employee_id] = []
+            salaries_by_employee[salary.employee_id].append(salary)
+        
+        # تجميع بيانات الموظفين مع الرواتب
+        for employee in employees:
+            emp_salaries = salaries_by_employee.get(employee.id, [])
+            
+            # حساب متوسط الراتب وأعلى وأدنى راتب
+            basic_salaries = [s.basic_salary for s in emp_salaries] if emp_salaries else [0]
+            net_salaries = [s.net_salary for s in emp_salaries] if emp_salaries else [0]
+            
+            avg_basic = sum(basic_salaries) / len(basic_salaries) if basic_salaries else 0
+            avg_net = sum(net_salaries) / len(net_salaries) if net_salaries else 0
+            max_net = max(net_salaries) if net_salaries else 0
+            min_net = min(net_salaries) if net_salaries else 0
+            
+            # تجميع معلومات الموظف
+            emp_data = {
+                'معرف': employee.id,
+                'رقم الموظف': employee.employee_id,
+                'الاسم': employee.name,
+                'القسم': employee.department.name,
+                'الوظيفة': employee.job_title or '',
+                'تاريخ التعيين': employee.hire_date,
+                'الجنسية': employee.nationality or '',
+                'الهاتف': employee.phone or '',
+                'البريد الإلكتروني': employee.email or '',
+                'الرقم الوطني/الإقامة': employee.national_id or '',
+                'الحالة': employee.status or '',
+                'متوسط الراتب الأساسي': avg_basic,
+                'متوسط صافي الراتب': avg_net,
+                'أعلى راتب': max_net,
+                'أدنى راتب': min_net,
+                'عدد الرواتب المسجلة': len(emp_salaries),
+                'الملاحظات': employee.notes or ''
+            }
+            
+            # إضافة تفاصيل آخر راتب
+            if emp_salaries:
+                # ترتيب الرواتب حسب السنة والشهر (تنازلياً)
+                sorted_salaries = sorted(emp_salaries, key=lambda s: (s.year, s.month), reverse=True)
+                latest_salary = sorted_salaries[0]
+                
+                emp_data.update({
+                    'آخر راتب - الشهر': latest_salary.month,
+                    'آخر راتب - السنة': latest_salary.year,
+                    'آخر راتب - الأساسي': latest_salary.basic_salary,
+                    'آخر راتب - البدلات': latest_salary.allowances,
+                    'آخر راتب - الخصومات': latest_salary.deductions,
+                    'آخر راتب - المكافآت': latest_salary.bonus,
+                    'آخر راتب - الصافي': latest_salary.net_salary
+                })
+            
+            employees_data.append(emp_data)
+        
+        # إنشاء ملف Excel باستخدام openpyxl
+        output = BytesIO()
+        with pd.ExcelWriter(path=output, engine='openpyxl') as writer:
+            # ======= ورقة ملخص الموظفين =======
+            emp_df = pd.DataFrame(employees_data)
+            
+            # ترتيب الأعمدة للتقرير الشامل
+            columns_order = [
+                'معرف', 'رقم الموظف', 'الاسم', 'القسم', 'الوظيفة', 'تاريخ التعيين', 
+                'الجنسية', 'الرقم الوطني/الإقامة', 'الهاتف', 'البريد الإلكتروني', 'الحالة',
+                'متوسط الراتب الأساسي', 'متوسط صافي الراتب', 'أعلى راتب', 'أدنى راتب', 
+                'عدد الرواتب المسجلة',
+                'آخر راتب - الشهر', 'آخر راتب - السنة', 'آخر راتب - الأساسي', 
+                'آخر راتب - البدلات', 'آخر راتب - الخصومات', 'آخر راتب - المكافآت', 
+                'آخر راتب - الصافي', 'الملاحظات'
+            ]
+            
+            # استبعاد الأعمدة غير الموجودة
+            actual_columns = [col for col in columns_order if col in emp_df.columns]
+            emp_df = emp_df[actual_columns]
+            
+            # كتابة البيانات إلى الملف
+            emp_df.to_excel(writer, sheet_name='ملخص الموظفين', index=False, startrow=2)
+            
+            # الحصول على ورقة العمل وتنسيقها
+            summary_sheet = writer.sheets['ملخص الموظفين']
+            
+            # إضافة عنوان للتقرير
+            summary_sheet.merge_cells(f'A1:{get_column_letter(len(actual_columns))}1')
+            title_cell = summary_sheet.cell(1, 1)
+            title_cell.value = "التقرير الشامل للموظفين مع تفاصيل الرواتب"
+            title_cell.font = Font(name="Arial", size=16, bold=True, color="1F4E78")
+            title_cell.alignment = title_alignment
+            
+            # تنسيق العناوين
+            for col_idx, column_name in enumerate(actual_columns, 1):
+                cell = summary_sheet.cell(3, col_idx)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = thin_border
+                
+                # ضبط عرض العمود
+                column_width = max((
+                    emp_df[column_name].astype(str).map(len).max() if len(emp_df) > 0 else 0, 
+                    len(column_name)
+                )) + 4
+                column_letter = get_column_letter(col_idx)
+                summary_sheet.column_dimensions[column_letter].width = column_width
+            
+            # تنسيق البيانات
+            for row_idx, (_, row) in enumerate(emp_df.iterrows(), 1):
+                for col_idx, column_name in enumerate(actual_columns, 1):
+                    cell = summary_sheet.cell(row_idx + 3, col_idx)
+                    value = row[column_name]
+                    cell.value = value
+                    
+                    # تنسيق خاص لأنواع البيانات المختلفة
+                    if 'راتب' in column_name:
+                        cell.number_format = money_format
+                        cell.alignment = cell_alignment
+                    elif 'تاريخ' in column_name and value:
+                        cell.number_format = date_format
+                        cell.alignment = cell_alignment
+                    else:
+                        cell.alignment = text_alignment
+                    
+                    # تنسيق صفوف بديلة
+                    if row_idx % 2 == 0:
+                        cell.fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+                    
+                    cell.font = normal_font
+                    cell.border = thin_border
+            
+            # ======= ورقة تفاصيل الرواتب لكل موظف =======
+            # تحضير بيانات الرواتب مفصلة حسب الموظف
+            all_salary_data = []
+            
+            for employee in employees:
+                emp_salaries = salaries_by_employee.get(employee.id, [])
+                
+                for salary in emp_salaries:
+                    all_salary_data.append({
+                        'معرف الموظف': employee.id,
+                        'رقم الموظف': employee.employee_id,
+                        'اسم الموظف': employee.name,
+                        'القسم': employee.department.name,
+                        'الشهر': salary.month,
+                        'السنة': salary.year,
+                        'الراتب الأساسي': salary.basic_salary,
+                        'البدلات': salary.allowances,
+                        'الخصومات': salary.deductions,
+                        'المكافآت': salary.bonus,
+                        'صافي الراتب': salary.net_salary,
+                        'ملاحظات': salary.notes or ''
+                    })
+            
+            if all_salary_data:
+                # إنشاء DataFrame للرواتب
+                salary_df = pd.DataFrame(all_salary_data)
+                
+                # ترتيب البيانات حسب القسم، الموظف، السنة، الشهر
+                salary_df = salary_df.sort_values(by=['القسم', 'اسم الموظف', 'السنة', 'الشهر'], ascending=[True, True, False, False])
+                
+                # كتابة البيانات إلى ورقة عمل جديدة
+                salary_df.to_excel(writer, sheet_name='تفاصيل الرواتب', index=False, startrow=2)
+                
+                # تنسيق ورقة تفاصيل الرواتب
+                salary_sheet = writer.sheets['تفاصيل الرواتب']
+                
+                # إضافة عنوان
+                salary_sheet.merge_cells(f'A1:{get_column_letter(len(salary_df.columns))}1')
+                title_cell = salary_sheet.cell(1, 1)
+                title_cell.value = "تفاصيل رواتب الموظفين"
+                title_cell.font = Font(name="Arial", size=16, bold=True, color="1F4E78")
+                title_cell.alignment = title_alignment
+                
+                # تنسيق العناوين
+                for col_idx, column_name in enumerate(salary_df.columns, 1):
+                    cell = salary_sheet.cell(3, col_idx)
+                    cell.value = column_name
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = header_alignment
+                    cell.border = thin_border
+                    
+                    # ضبط عرض العمود
+                    column_width = max(salary_df[column_name].astype(str).map(len).max(), len(column_name)) + 4
+                    column_letter = get_column_letter(col_idx)
+                    salary_sheet.column_dimensions[column_letter].width = column_width
+                
+                # تجميع الصفوف حسب الموظف بألوان مختلفة
+                current_employee = None
+                color_index = 0
+                colors = ["E6F2FF", "F2F2F2"]  # ألوان التناوب
+                
+                # تنسيق البيانات
+                for row_idx, (_, row) in enumerate(salary_df.iterrows(), 1):
+                    # تغيير اللون عند تغيير الموظف
+                    if current_employee != row['اسم الموظف']:
+                        current_employee = row['اسم الموظف']
+                        color_index = (color_index + 1) % 2
+                    
+                    row_fill = PatternFill(start_color=colors[color_index], end_color=colors[color_index], fill_type="solid")
+                    
+                    for col_idx, column_name in enumerate(salary_df.columns, 1):
+                        cell = salary_sheet.cell(row_idx + 3, col_idx)
+                        cell.value = row[column_name]
+                        
+                        # تنسيق خاص لأنواع البيانات المختلفة
+                        if column_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                            cell.number_format = money_format
+                            cell.alignment = cell_alignment
+                        else:
+                            cell.alignment = text_alignment
+                        
+                        cell.fill = row_fill
+                        cell.font = normal_font
+                        cell.border = thin_border
+                
+                # إضافة صف للمجاميع في نهاية الجدول
+                total_row_idx = len(salary_df) + 4
+                salary_sheet.cell(total_row_idx, 1).value = "المجموع الكلي"
+                salary_sheet.cell(total_row_idx, 1).font = total_row_font
+                salary_sheet.cell(total_row_idx, 1).alignment = text_alignment
+                salary_sheet.cell(total_row_idx, 1).fill = total_row_fill
+                salary_sheet.cell(total_row_idx, 1).border = thick_border
+                
+                # دمج خلايا المجموع
+                merge_cols = 6  # دمج الخلايا الأولى للمجموع
+                salary_sheet.merge_cells(f'A{total_row_idx}:{get_column_letter(merge_cols)}{total_row_idx}')
+                
+                # تنسيق وحساب المجاميع
+                for col_idx, column_name in enumerate(salary_df.columns, 1):
+                    cell = salary_sheet.cell(total_row_idx, col_idx)
+                    cell.font = total_row_font
+                    cell.fill = total_row_fill
+                    cell.border = thick_border
+                    
+                    if col_idx <= merge_cols:
+                        continue  # تخطي الخلايا المدمجة
+                    
+                    # حساب المجاميع للأعمدة المالية
+                    if column_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                        col_letter = get_column_letter(col_idx)
+                        cell.value = f"=SUM({col_letter}4:{col_letter}{total_row_idx-1})"
+                        cell.number_format = money_format
+                        cell.alignment = cell_alignment
+                
+                # إضافة رسم بياني للرواتب حسب القسم
+                try:
+                    chart_sheet = writer.book.create_sheet(title="الرسوم البيانية")
+                    
+                    # إعداد بيانات الرسم البياني - متوسط الراتب حسب القسم
+                    dept_avg_salary = salary_df.groupby('القسم')['صافي الراتب'].mean().reset_index()
+                    dept_avg_salary.to_excel(writer, sheet_name="الرسوم البيانية", startrow=1, startcol=1, index=False)
+                    
+                    chart_sheet.cell(1, 1).value = "متوسط الرواتب حسب القسم"
+                    chart_sheet.cell(1, 1).font = Font(name="Arial", size=14, bold=True)
+                    
+                    # إنشاء الرسم البياني
+                    chart = BarChart()
+                    chart.title = "متوسط الرواتب حسب القسم"
+                    chart.y_axis.title = "متوسط الراتب (ر.س)"
+                    chart.x_axis.title = "القسم"
+                    
+                    # تحديد نطاق البيانات
+                    data = Reference(chart_sheet, min_col=3, min_row=2, max_row=2+len(dept_avg_salary))
+                    cats = Reference(chart_sheet, min_col=2, min_row=3, max_row=2+len(dept_avg_salary))
+                    chart.add_data(data, titles_from_data=True)
+                    chart.set_categories(cats)
+                    
+                    # إضافة الرسم البياني إلى الورقة
+                    chart_sheet.add_chart(chart, "E5")
+                    
+                except Exception as chart_error:
+                    print(f"حدث خطأ أثناء إنشاء الرسم البياني: {chart_error}")
+            
+            # ======= ورقة معلومات التقرير =======
+            # إنشاء ورقة معلومات التقرير
+            info_data = []
+            
+            # إضافة معلومات عامة
+            info_data.append({
+                'المعلومة': 'تاريخ التصدير',
+                'القيمة': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
+            
+            # إضافة معلومات حول التصفية
+            if department_id:
+                dept = db_session.query(Department).get(department_id)
+                info_data.append({
+                    'المعلومة': 'تصفية حسب القسم',
+                    'القيمة': dept.name if dept else department_id
+                })
+            
+            if employee_id:
+                emp = db_session.query(Employee).get(employee_id)
+                info_data.append({
+                    'المعلومة': 'تصفية حسب الموظف',
+                    'القيمة': emp.name if emp else employee_id
+                })
+            
+            if month:
+                info_data.append({
+                    'المعلومة': 'تصفية حسب الشهر',
+                    'القيمة': month
+                })
+            
+            if year:
+                info_data.append({
+                    'المعلومة': 'تصفية حسب السنة',
+                    'القيمة': year
+                })
+            
+            # إضافة إحصائيات عامة
+            info_data.append({
+                'المعلومة': 'إجمالي عدد الموظفين',
+                'القيمة': len(employees)
+            })
+            
+            info_data.append({
+                'المعلومة': 'إجمالي عدد الرواتب المسجلة',
+                'القيمة': len(salaries)
+            })
+            
+            # حساب متوسطات الرواتب
+            if salaries:
+                avg_basic = sum(s.basic_salary for s in salaries) / len(salaries)
+                avg_net = sum(s.net_salary for s in salaries) / len(salaries)
+                
+                info_data.append({
+                    'المعلومة': 'متوسط الراتب الأساسي',
+                    'القيمة': avg_basic
+                })
+                
+                info_data.append({
+                    'المعلومة': 'متوسط صافي الراتب',
+                    'القيمة': avg_net
+                })
+                
+                info_data.append({
+                    'المعلومة': 'إجمالي مصاريف الرواتب',
+                    'القيمة': sum(s.net_salary for s in salaries)
+                })
+            
+            # إنشاء DataFrame للمعلومات
+            info_df = pd.DataFrame(info_data)
+            info_df.to_excel(writer, sheet_name='معلومات التقرير', index=False, startrow=2)
+            
+            # تنسيق ورقة المعلومات
+            info_sheet = writer.sheets['معلومات التقرير']
+            
+            # إضافة عنوان للورقة
+            info_sheet.merge_cells('A1:B1')
+            info_sheet.cell(1, 1).value = "معلومات التقرير الشامل"
+            info_sheet.cell(1, 1).font = Font(name="Arial", size=16, bold=True, color="1F4E78")
+            info_sheet.cell(1, 1).alignment = title_alignment
+            
+            # تنسيق العناوين
+            for col_idx, col_name in enumerate(info_df.columns, 1):
+                info_sheet.cell(3, col_idx).value = col_name
+                info_sheet.cell(3, col_idx).font = header_font
+                info_sheet.cell(3, col_idx).fill = header_fill
+                info_sheet.cell(3, col_idx).alignment = header_alignment
+                info_sheet.cell(3, col_idx).border = thin_border
+                
+                # ضبط عرض العمود
+                column_width = max(info_df[col_name].astype(str).map(len).max(), len(col_name)) + 4
+                column_letter = get_column_letter(col_idx)
+                info_sheet.column_dimensions[column_letter].width = column_width
+            
+            # تنسيق البيانات
+            for row_idx, (_, row) in enumerate(info_df.iterrows(), 1):
+                for col_idx, col_name in enumerate(info_df.columns, 1):
+                    cell = info_sheet.cell(row_idx + 3, col_idx)
+                    cell.value = row[col_name]
+                    
+                    # تنسيق خاص للقيم المالية
+                    if 'متوسط' in row['المعلومة'] or 'إجمالي مصاريف' in row['المعلومة']:
+                        cell.number_format = money_format
+                        cell.alignment = cell_alignment
+                    else:
+                        cell.alignment = text_alignment
+                    
+                    # تنسيق صفوف بديلة
+                    if row_idx % 2 == 0:
+                        cell.fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+                    
+                    cell.font = normal_font
+                    cell.border = thin_border
+            
+            # تعيين الصفحة الأولى كصفحة نشطة
+            writer.book.active = writer.book.worksheets[0]
+        
+        output.seek(0)
+        return output
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        raise Exception(f"خطأ في إنشاء التقرير الشامل: {str(e)}")
+
 def generate_salary_excel(salaries, filter_description=None):
     """
     إنشاء ملف Excel من بيانات الرواتب مع تنظيم وتجميع حسب القسم وتنسيق ممتاز
