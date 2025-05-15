@@ -1333,14 +1333,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // عرض رسالة تحميل
         showNotification('جاري حفظ البيانات...', 'info');
         
+        // إنشاء كائن FormData لإرسال البيانات والصور
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(checklistData));
+        
+        // إضافة الصور المحددة إلى FormData
+        if (selectedImages.length > 0) {
+            selectedImages.forEach((file, index) => {
+                formData.append(`image_${index}`, file);
+            });
+            console.log(`تم إضافة ${selectedImages.length} صورة إلى البيانات المرسلة`);
+        }
+        
         // إرسال البيانات للخادم
         fetch('{{ url_for("mobile.add_vehicle_checklist") }}', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token() }}'
+                // لا نحدد Content-Type هنا لأن FormData سيقوم بضبطه تلقائيًا
             },
-            body: JSON.stringify(checklistData)
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
