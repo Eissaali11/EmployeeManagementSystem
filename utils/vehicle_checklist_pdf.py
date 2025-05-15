@@ -17,13 +17,40 @@ from bidi.algorithm import get_display
 # تسجيل الخطوط العربية
 def register_arabic_fonts():
     """تسجيل الخطوط العربية لمكتبة ReportLab"""
-    # استخدام خط Tajawal العربي المتوفر بالفعل في النظام
-    font_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Tajawal-Regular.ttf')
-    pdfmetrics.registerFont(TTFont('Amiri', font_path))
-    
-    # استخدام خط Tajawal Bold العربي المتوفر بالفعل في النظام
-    font_path_bold = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Tajawal-Bold.ttf')
-    pdfmetrics.registerFont(TTFont('Amiri-Bold', font_path_bold))
+    try:
+        # استخدام خط Tajawal للنص العادي
+        font_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Tajawal-Regular.ttf')
+        if os.path.exists(font_path) and os.path.getsize(font_path) > 0:
+            pdfmetrics.registerFont(TTFont('Amiri', font_path))
+        else:
+            print(f"خطأ: ملف الخط {font_path} غير موجود أو فارغ!")
+            # استخدام Amiri كبديل إذا كان موجودًا
+            alt_font_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Amiri-Regular.ttf')
+            if os.path.exists(alt_font_path) and os.path.getsize(alt_font_path) > 0:
+                pdfmetrics.registerFont(TTFont('Amiri', alt_font_path))
+            else:
+                # استخدام Arial كخيار أخير
+                arial_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'arial.ttf')
+                pdfmetrics.registerFont(TTFont('Amiri', arial_path))
+        
+        # استخدام خط Tajawal للنص العريض
+        font_path_bold = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Tajawal-Bold.ttf')
+        if os.path.exists(font_path_bold) and os.path.getsize(font_path_bold) > 0:
+            pdfmetrics.registerFont(TTFont('Amiri-Bold', font_path_bold))
+        else:
+            print(f"خطأ: ملف الخط {font_path_bold} غير موجود أو فارغ!")
+            # استخدام arialbd كبديل
+            alt_bold_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'arialbd.ttf')
+            pdfmetrics.registerFont(TTFont('Amiri-Bold', alt_bold_path))
+    except Exception as e:
+        print(f"خطأ في تسجيل الخطوط: {str(e)}")
+        # استخدام خط Arial الافتراضي إذا فشلت جميع المحاولات
+        try:
+            arial_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'arial.ttf')
+            pdfmetrics.registerFont(TTFont('Amiri', arial_path))
+            pdfmetrics.registerFont(TTFont('Amiri-Bold', arial_path))
+        except Exception as e2:
+            print(f"فشل في تسجيل الخط البديل: {str(e2)}")
 
 # معالجة النص العربي ليعرض بشكل صحيح
 def arabic_text(text):
