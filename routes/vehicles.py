@@ -1296,6 +1296,9 @@ def edit_handover(id):
     handover = VehicleHandover.query.get_or_404(id)
     vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
     
+    # الحصول على صور نموذج التسليم/الاستلام للعرض
+    images = VehicleHandoverImage.query.filter_by(handover_record_id=id).all()
+    
     # تحويل التاريخ إلى النسق المناسب للنموذج
     handover_date_str = handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else None
     
@@ -1360,6 +1363,7 @@ def edit_handover(id):
         'vehicles/edit_handover.html',
         handover=handover,
         vehicle=vehicle,
+        images=images,
         handover_date=handover_date_str,
         handover_type_name=handover_type_name
     )
