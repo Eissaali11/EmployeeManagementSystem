@@ -211,36 +211,75 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
     # تحضير ملف PDF
     buffer = BytesIO()
     
+    # ألوان الهوية المرئية للتقرير - ألوان متناسقة بدرجات الأزرق
+    primary_color = colors.HexColor('#1A4D80')  # أزرق داكن للعناوين الرئيسية
+    secondary_color = colors.HexColor('#3373B0')  # أزرق متوسط للعناوين الفرعية
+    accent_color = colors.HexColor('#ECF2FA')  # أزرق فاتح للخلفيات
+    border_color = colors.HexColor('#8C9CB8')  # لون الإطارات
+    header_bg_color = colors.HexColor('#F2F7FF')  # لون خلفية الترويسة
+    
     # تعيين أنماط الخطوط
     styles = getSampleStyleSheet()
     
-    # إضافة نمط للنصوص العربية
+    # إضافة نمط للنصوص العربية - تحسين التنسيق والألوان
     styles.add(ParagraphStyle(name='Arabic',
                               fontName='Amiri',
                               fontSize=12,
-                              leading=14,
-                              alignment=1))  # وسط النص
+                              leading=16,
+                              rightIndent=5,
+                              leftIndent=5,
+                              spaceBefore=2,
+                              spaceAfter=2,
+                              alignment=2))  # محاذاة لليمين للنص العربي
     
-    # إضافة نمط للعناوين العربية
+    # إضافة نمط للعناوين العربية - زيادة حجم الخط وإضافة لون مميز
     styles.add(ParagraphStyle(name='ArabicHeading',
                               fontName='Amiri-Bold',
-                              fontSize=16,
-                              leading=20,
-                              alignment=1))  # وسط النص
+                              fontSize=18,
+                              leading=22,
+                              alignment=1,  # وسط النص
+                              spaceBefore=6,
+                              spaceAfter=10,
+                              textColor=primary_color))  # لون أزرق داكن للعناوين
     
-    # إضافة نمط للعناوين الفرعية
+    # إضافة نمط للعناوين الفرعية - لون ثانوي مميز
     styles.add(ParagraphStyle(name='ArabicSubHeading',
                               fontName='Amiri-Bold',
                               fontSize=14,
-                              leading=16,
-                              alignment=1))  # وسط النص
+                              leading=18,
+                              alignment=2,  # محاذاة لليمين للنص العربي
+                              spaceBefore=4,
+                              spaceAfter=8,
+                              textColor=secondary_color))  # لون أزرق متوسط
     
-    # إضافة نمط للجداول
+    # إضافة نمط للجداول - تحسين قراءة البيانات
     styles.add(ParagraphStyle(name='ArabicTable',
                               fontName='Amiri',
-                              fontSize=10,
+                              fontSize=11,
+                              leading=14,
+                              rightIndent=3,
+                              leftIndent=3,
+                              alignment=2,  # محاذاة لليمين للنص العربي
+                              textColor=colors.black))
+                              
+    # إضافة نمط للعناوين في الجداول
+    styles.add(ParagraphStyle(name='ArabicTableHeader',
+                              fontName='Amiri-Bold',
+                              fontSize=11,
+                              leading=14,
+                              rightIndent=3,
+                              leftIndent=3,
+                              alignment=2,  # محاذاة لليمين للنص العربي
+                              textColor=primary_color,  # لون أزرق داكن للعناوين
+                              backColor=accent_color))  # خلفية فاتحة للعناوين
+                              
+    # إضافة نمط للتذييل
+    styles.add(ParagraphStyle(name='ArabicFooter',
+                              fontName='Amiri',
+                              fontSize=9,
                               leading=12,
-                              alignment=1))  # وسط النص
+                              alignment=1,  # وسط النص
+                              textColor=colors.darkgrey))
     
     # إنشاء مستند PDF
     doc = SimpleDocTemplate(buffer,
@@ -317,12 +356,15 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
     elements.append(vehicle_table)
     elements.append(Spacer(1, 10 * mm))
     
-    # إضافة مخطط المركبة مع علامات التلف
+    # إضافة مخطط المركبة مع علامات التلف - بتصميم محسّن
     elements.append(Paragraph(arabic_text("مخطط المركبة مع علامات التلف"), styles['ArabicHeading']))
-    elements.append(Spacer(1, 10 * mm))
+    elements.append(Spacer(1, 6 * mm))
     
-    # رسم مخطط المركبة مباشرة بدلاً من تحميل صورة
-    # نستخدم القماش مباشرة
+    # إضافة نص توضيحي للمخطط
+    elements.append(Paragraph(arabic_text("التوضيح: النقاط الحمراء تشير إلى مواقع التلف في المركبة"), styles['ArabicFooter']))
+    elements.append(Spacer(1, 8 * mm))
+    
+    # نستخدم القماش مباشرة لرسم مخطط المركبة
     diagram_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'images', 'vehicles', 'vehicle_diagram.svg')
     
     # إضافة مخطط المركبة مع علامات التلف
@@ -345,8 +387,27 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
             ])
         
         # تنسيق جدول ملاحظات التلف
+        damage_table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), accent_color),  # خلفية فاتحة للعمود الأول
+            ('BACKGROUND', (0, 0), (-1, 0), header_bg_color),  # خلفية للعناوين
+            ('TEXTCOLOR', (0, 0), (0, -1), primary_color),  # لون النص للعمود الأول
+            ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # توسيط الأرقام
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),  # محاذاة الوصف لليمين
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة عمودية للوسط
+            ('GRID', (0, 0), (-1, -1), 0.5, border_color),  # حدود الجدول
+            ('FONTNAME', (0, 0), (0, -1), 'Amiri-Bold'),  # خط غامق للأرقام
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),  # تباعد أسفل الخلايا
+            ('TOPPADDING', (0, 0), (-1, -1), 5),  # تباعد أعلى الخلايا
+        ])
+        
+        # إضافة صف العناوين
+        damage_data.insert(0, [
+            Paragraph(arabic_text("الرقم"), styles['ArabicTableHeader']),
+            Paragraph(arabic_text("الوصف"), styles['ArabicTableHeader'])
+        ])
+        
         damage_table = Table(damage_data, colWidths=[2*cm, 13*cm])
-        damage_table.setStyle(table_style)
+        damage_table.setStyle(damage_table_style)
         elements.append(damage_table)
         elements.append(Spacer(1, 10 * mm))
     
