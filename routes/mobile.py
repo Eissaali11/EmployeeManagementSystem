@@ -673,8 +673,53 @@ def reports():
 @login_required
 def report_employees():
     """تقرير الموظفين للنسخة المحمولة"""
-    departments = Department.query.all()
-    employees = Employee.query.all()
+    departments = Department.query.order_by(Department.name).all()
+    
+    # استخراج معلمات الاستعلام
+    department_id = request.args.get('department_id')
+    status = request.args.get('status')
+    search = request.args.get('search')
+    export_format = request.args.get('export')
+    
+    # إنشاء الاستعلام الأساسي
+    query = Employee.query
+    
+    # تطبيق الفلترة
+    if department_id:
+        query = query.filter_by(department_id=department_id)
+    
+    if status:
+        query = query.filter_by(status=status)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Employee.name.like(search_term)) |
+            (Employee.employee_id.like(search_term)) |
+            (Employee.national_id.like(search_term)) |
+            (Employee.job_title.like(search_term))
+        )
+    
+    # الحصول على جميع الموظفين المطابقين
+    employees = query.order_by(Employee.name).all()
+    
+    # معالجة طلبات التصدير
+    if export_format:
+        if export_format == 'pdf':
+            # استدعاء مسار التصدير PDF في النسخة الرئيسية
+            return redirect(url_for('reports.employees_pdf', 
+                                   department_id=department_id,
+                                   status=status,
+                                   search=search))
+                                   
+        elif export_format == 'excel':
+            # استدعاء مسار التصدير Excel في النسخة الرئيسية
+            return redirect(url_for('reports.employees_excel',
+                                   department_id=department_id,
+                                   status=status,
+                                   search=search))
+    
+    # عرض الصفحة مع نتائج التقرير
     return render_template('mobile/report_employees.html', 
                          departments=departments,
                          employees=employees)
@@ -684,35 +729,376 @@ def report_employees():
 @login_required
 def report_attendance():
     """تقرير الحضور للنسخة المحمولة"""
-    return render_template('mobile/report_attendance.html')
+    # الحصول على قائمة الأقسام للفلترة
+    departments = Department.query.order_by(Department.name).all()
+    
+    # استخراج معلمات الاستعلام
+    department_id = request.args.get('department_id')
+    employee_id = request.args.get('employee_id')
+    status = request.args.get('status')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    export_format = request.args.get('export')
+    
+    # استخراج الموظفين المطابقين للفلترة
+    employees_query = Employee.query
+    if department_id:
+        employees_query = employees_query.filter_by(department_id=department_id)
+    employees = employees_query.order_by(Employee.name).all()
+    
+    # إنشاء استعلام سجلات الحضور
+    attendance_query = Attendance.query
+    
+    # تطبيق الفلترة على سجلات الحضور
+    if employee_id:
+        attendance_query = attendance_query.filter_by(employee_id=employee_id)
+    elif department_id:
+        # فلترة حسب القسم عن طريق الانضمام مع جدول الموظفين
+        attendance_query = attendance_query.join(Employee).filter(Employee.department_id == department_id)
+    
+    if status:
+        attendance_query = attendance_query.filter_by(status=status)
+    
+    if start_date:
+        attendance_query = attendance_query.filter(Attendance.date >= start_date)
+    
+    if end_date:
+        attendance_query = attendance_query.filter(Attendance.date <= end_date)
+    
+    # الحصول على سجلات الحضور المرتبة حسب التاريخ (تنازلياً)
+    attendance_records = attendance_query.order_by(Attendance.date.desc()).all()
+    
+    # معالجة طلبات التصدير
+    if export_format:
+        if export_format == 'pdf':
+            # استدعاء مسار التصدير PDF في النسخة الرئيسية
+            return redirect(url_for('reports.attendance_pdf',
+                                   department_id=department_id,
+                                   employee_id=employee_id,
+                                   status=status,
+                                   start_date=start_date,
+                                   end_date=end_date))
+                                   
+        elif export_format == 'excel':
+            # استدعاء مسار التصدير Excel في النسخة الرئيسية
+            return redirect(url_for('reports.attendance_excel',
+                                   department_id=department_id,
+                                   employee_id=employee_id,
+                                   status=status,
+                                   start_date=start_date,
+                                   end_date=end_date))
+    
+    # عرض الصفحة مع نتائج التقرير
+    return render_template('mobile/report_attendance.html',
+                         departments=departments,
+                         employees=employees,
+                         attendance_records=attendance_records)
 
 # تقرير الرواتب - النسخة المحمولة
 @mobile_bp.route('/reports/salaries')
 @login_required
 def report_salaries():
     """تقرير الرواتب للنسخة المحمولة"""
-    return render_template('mobile/report_salaries.html')
+    # الحصول على قائمة الأقسام والموظفين للفلترة
+    departments = Department.query.order_by(Department.name).all()
+    
+    # استخراج معلمات البحث
+    department_id = request.args.get('department_id')
+    employee_id = request.args.get('employee_id')
+    is_paid = request.args.get('is_paid')
+    year = request.args.get('year')
+    month = request.args.get('month')
+    export_format = request.args.get('export')
+    
+    # استخراج الموظفين المطابقين للفلترة
+    employees_query = Employee.query
+    if department_id:
+        employees_query = employees_query.filter_by(department_id=department_id)
+    employees = employees_query.order_by(Employee.name).all()
+    
+    # إنشاء استعلام الرواتب
+    query = Salary.query
+    
+    # تطبيق الفلترة على الرواتب
+    if employee_id:
+        query = query.filter_by(employee_id=employee_id)
+    elif department_id:
+        # فلترة حسب القسم عن طريق الانضمام مع جدول الموظفين
+        query = query.join(Employee).filter(Employee.department_id == department_id)
+    
+    if is_paid:
+        is_paid_bool = (is_paid.lower() == 'true' or is_paid == '1')
+        query = query.filter(Salary.is_paid == is_paid_bool)
+    
+    if year:
+        query = query.filter(Salary.year == year)
+    
+    if month:
+        query = query.filter(Salary.month == month)
+    
+    # الحصول على سجلات الرواتب المرتبة حسب التاريخ (تنازلياً)
+    salaries = query.order_by(Salary.year.desc(), Salary.month.desc()).all()
+    
+    # معالجة طلبات التصدير
+    if export_format:
+        if export_format == 'pdf':
+            # استدعاء مسار التصدير PDF في النسخة الرئيسية
+            return redirect(url_for('reports.salaries_pdf',
+                                  department_id=department_id,
+                                  employee_id=employee_id,
+                                  is_paid=is_paid,
+                                  year=year,
+                                  month=month))
+                                  
+        elif export_format == 'excel':
+            # استدعاء مسار التصدير Excel في النسخة الرئيسية
+            return redirect(url_for('reports.salaries_excel',
+                                  department_id=department_id,
+                                  employee_id=employee_id,
+                                  is_paid=is_paid,
+                                  year=year,
+                                  month=month))
+    
+    # استخراج قائمة بالسنوات والأشهر المتاحة
+    years_months = db.session.query(Salary.year, Salary.month)\
+                  .order_by(Salary.year.desc(), Salary.month.desc())\
+                  .distinct().all()
+    
+    # تجميع السنوات والأشهر
+    available_years = sorted(list(set([ym[0] for ym in years_months])), reverse=True)
+    available_months = sorted(list(set([ym[1] for ym in years_months])))
+    
+    return render_template('mobile/report_salaries.html',
+                         departments=departments,
+                         employees=employees,
+                         salaries=salaries,
+                         available_years=available_years,
+                         available_months=available_months)
 
 # تقرير الوثائق - النسخة المحمولة
 @mobile_bp.route('/reports/documents')
 @login_required
 def report_documents():
     """تقرير الوثائق للنسخة المحمولة"""
-    return render_template('mobile/report_documents.html')
+    # الحصول على قائمة الأقسام والموظفين للفلترة
+    departments = Department.query.order_by(Department.name).all()
+    current_date = datetime.now().date()
+    
+    # استخراج معلمات البحث
+    department_id = request.args.get('department_id')
+    employee_id = request.args.get('employee_id')
+    document_type = request.args.get('document_type')
+    status = request.args.get('status')  # valid, expiring, expired
+    export_format = request.args.get('export')
+    
+    # استخراج الموظفين المطابقين للفلترة
+    employees_query = Employee.query
+    if department_id:
+        employees_query = employees_query.filter_by(department_id=department_id)
+    employees = employees_query.order_by(Employee.name).all()
+    
+    # إنشاء استعلام الوثائق
+    query = Document.query
+    
+    # تطبيق الفلترة على الوثائق
+    if employee_id:
+        query = query.filter_by(employee_id=employee_id)
+    elif department_id:
+        # فلترة حسب القسم عن طريق الانضمام مع جدول الموظفين
+        query = query.join(Employee).filter(Employee.department_id == department_id)
+    
+    if document_type:
+        query = query.filter_by(document_type=document_type)
+    
+    # فلترة حسب حالة الوثيقة (صالحة، على وشك الانتهاء، منتهية)
+    if status:
+        if status == 'valid':
+            # وثائق سارية المفعول (تاريخ انتهاء الصلاحية بعد 60 يوم من الآن)
+            valid_date = current_date + timedelta(days=60)
+            query = query.filter(Document.expiry_date >= valid_date)
+        elif status == 'expiring':
+            # وثائق على وشك الانتهاء (تنتهي خلال 60 يوم)
+            expiring_min_date = current_date
+            expiring_max_date = current_date + timedelta(days=60)
+            query = query.filter(Document.expiry_date >= expiring_min_date, 
+                               Document.expiry_date <= expiring_max_date)
+        elif status == 'expired':
+            # وثائق منتهية الصلاحية
+            query = query.filter(Document.expiry_date < current_date)
+    
+    # الحصول على الوثائق المرتبة حسب تاريخ انتهاء الصلاحية
+    documents = query.order_by(Document.expiry_date).all()
+    
+    # معالجة طلبات التصدير
+    if export_format:
+        if export_format == 'pdf':
+            # استدعاء مسار التصدير PDF في النسخة الرئيسية
+            return redirect(url_for('reports.documents_pdf',
+                                  department_id=department_id,
+                                  employee_id=employee_id,
+                                  document_type=document_type,
+                                  status=status))
+                                  
+        elif export_format == 'excel':
+            # استدعاء مسار التصدير Excel في النسخة الرئيسية
+            return redirect(url_for('reports.documents_excel',
+                                  department_id=department_id,
+                                  employee_id=employee_id,
+                                  document_type=document_type,
+                                  status=status))
+    
+    # استخراج أنواع الوثائق المتاحة
+    document_types = db.session.query(Document.document_type)\
+                    .distinct().order_by(Document.document_type).all()
+    document_types = [d[0] for d in document_types if d[0]]
+    
+    # إضافة عدد الأيام المتبقية لكل وثيقة
+    for doc in documents:
+        if doc.expiry_date:
+            doc.days_remaining = (doc.expiry_date - current_date).days
+        else:
+            doc.days_remaining = None
+    
+    return render_template('mobile/report_documents.html',
+                         departments=departments,
+                         employees=employees,
+                         documents=documents,
+                         document_types=document_types,
+                         current_date=current_date)
 
 # تقرير السيارات - النسخة المحمولة 
 @mobile_bp.route('/reports/vehicles')
 @login_required
 def report_vehicles():
     """تقرير السيارات للنسخة المحمولة"""
-    return render_template('mobile/report_vehicles.html')
+    # استخراج معلمات البحث
+    vehicle_type = request.args.get('vehicle_type')
+    status = request.args.get('status')
+    search = request.args.get('search')
+    export_format = request.args.get('export')
+    
+    # إنشاء استعلام المركبات
+    query = Vehicle.query
+    
+    # تطبيق الفلترة على المركبات
+    if vehicle_type:
+        query = query.filter_by(vehicle_type=vehicle_type)
+    
+    if status:
+        query = query.filter_by(status=status)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Vehicle.plate_number.like(search_term)) |
+            (Vehicle.brand.like(search_term)) |
+            (Vehicle.model.like(search_term)) |
+            (Vehicle.vin.like(search_term))
+        )
+    
+    # الحصول على المركبات المرتبة حسب الترتيب
+    vehicles = query.order_by(Vehicle.plate_number).all()
+    
+    # معالجة طلبات التصدير
+    if export_format:
+        if export_format == 'pdf':
+            # استدعاء مسار التصدير PDF في النسخة الرئيسية
+            return redirect(url_for('reports.vehicles_pdf',
+                                  vehicle_type=vehicle_type,
+                                  status=status,
+                                  search=search))
+                                  
+        elif export_format == 'excel':
+            # استدعاء مسار التصدير Excel في النسخة الرئيسية
+            return redirect(url_for('reports.vehicles_excel',
+                                  vehicle_type=vehicle_type,
+                                  status=status,
+                                  search=search))
+    
+    # استخراج انواع المركبات وحالات المركبات المتاحة
+    vehicle_types = db.session.query(Vehicle.vehicle_type)\
+                    .distinct().order_by(Vehicle.vehicle_type).all()
+    vehicle_types = [vt[0] for vt in vehicle_types if vt[0]]
+    
+    vehicle_statuses = db.session.query(Vehicle.status)\
+                      .distinct().order_by(Vehicle.status).all()
+    vehicle_statuses = [vs[0] for vs in vehicle_statuses if vs[0]]
+    
+    return render_template('mobile/report_vehicles.html',
+                         vehicles=vehicles,
+                         vehicle_types=vehicle_types,
+                         vehicle_statuses=vehicle_statuses)
 
 # تقرير الرسوم - النسخة المحمولة
 @mobile_bp.route('/reports/fees')
 @login_required
 def report_fees():
     """تقرير الرسوم للنسخة المحمولة"""
-    return render_template('mobile/report_fees.html')
+    # استخراج معلمات البحث
+    fee_type = request.args.get('fee_type')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    status = request.args.get('status')  # paid/unpaid
+    export_format = request.args.get('export')
+    
+    # إنشاء استعلام الرسوم
+    query = Fee.query
+    
+    # تطبيق الفلترة على الرسوم
+    if fee_type:
+        query = query.filter_by(fee_type=fee_type)
+    
+    if date_from:
+        query = query.filter(Fee.due_date >= date_from)
+    
+    if date_to:
+        query = query.filter(Fee.due_date <= date_to)
+    
+    if status:
+        is_paid_bool = (status.lower() == 'paid')
+        query = query.filter(Fee.is_paid == is_paid_bool)
+    
+    # الحصول على قائمة الرسوم المرتبة حسب تاريخ الاستحقاق
+    fees = query.order_by(Fee.due_date).all()
+    
+    # معالجة طلبات التصدير
+    if export_format:
+        if export_format == 'pdf':
+            # استدعاء مسار التصدير PDF في النسخة الرئيسية
+            return redirect(url_for('reports.fees_pdf',
+                                  fee_type=fee_type,
+                                  date_from=date_from,
+                                  date_to=date_to,
+                                  status=status))
+                                  
+        elif export_format == 'excel':
+            # استدعاء مسار التصدير Excel في النسخة الرئيسية
+            return redirect(url_for('reports.fees_excel',
+                                  fee_type=fee_type,
+                                  date_from=date_from,
+                                  date_to=date_to,
+                                  status=status))
+    
+    # استخراج أنواع الرسوم المتاحة
+    fee_types = db.session.query(Fee.fee_type)\
+                .distinct().order_by(Fee.fee_type).all()
+    fee_types = [f[0] for f in fee_types if f[0]]
+    
+    # احتساب إجماليات الرسوم
+    total_fees = sum(fee.amount for fee in fees if fee.amount)
+    total_paid = sum(fee.amount for fee in fees if fee.amount and fee.is_paid)
+    total_unpaid = sum(fee.amount for fee in fees if fee.amount and not fee.is_paid)
+    
+    # الحصول على التاريخ الحالي
+    current_date = datetime.now().date()
+    
+    return render_template('mobile/report_fees.html',
+                         fees=fees,
+                         fee_types=fee_types,
+                         total_fees=total_fees,
+                         total_paid=total_paid,
+                         total_unpaid=total_unpaid,
+                         current_date=current_date)
 
 # صفحة السيارات - النسخة المحمولة
 @mobile_bp.route('/vehicles')
