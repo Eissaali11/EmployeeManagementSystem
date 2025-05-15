@@ -615,6 +615,25 @@ class VehicleChecklistImage(db.Model):
         return f'<VehicleChecklistImage {self.id} for checklist {self.checklist_id}>'
 
 
+class VehicleDamageMarker(db.Model):
+    """علامات تلف السيارة المسجلة على الرسم البياني للمركبة"""
+    id = db.Column(db.Integer, primary_key=True)
+    checklist_id = db.Column(db.Integer, db.ForeignKey('vehicle_checklist.id', ondelete='CASCADE'), nullable=False)
+    marker_type = db.Column(db.String(20), nullable=False, default='damage')  # نوع العلامة: تلف، خدش، كسر، إلخ
+    position_x = db.Column(db.Float, nullable=False)  # الموقع س على الصورة (نسبة مئوية)
+    position_y = db.Column(db.Float, nullable=False)  # الموقع ص على الصورة (نسبة مئوية)
+    color = db.Column(db.String(20), default='red')  # لون العلامة
+    size = db.Column(db.Float, default=10.0)  # حجم العلامة
+    notes = db.Column(db.Text)  # ملاحظات حول التلف
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    checklist = db.relationship('VehicleChecklist', backref=db.backref('damage_markers', cascade='all, delete-orphan'))
+    
+    def __repr__(self):
+        return f'<VehicleDamageMarker {self.id} for checklist {self.checklist_id} at ({self.position_x}, {self.position_y})>'
+
+
 class VehicleMaintenance(db.Model):
     """سجل صيانة المركبات"""
     id = db.Column(db.Integer, primary_key=True)
