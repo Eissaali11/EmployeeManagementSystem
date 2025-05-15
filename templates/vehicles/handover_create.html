@@ -403,14 +403,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('employeeSearchInput');
     const searchBtn = document.getElementById('searchEmployeeBtn');
+    const departmentSelect = document.getElementById('departmentSelect');
     const employeeRows = document.querySelectorAll('.employee-row');
     const noResultsAlert = document.getElementById('noResultsAlert');
     const personNameInput = document.getElementById('person_name');
-    const selectButtons = document.querySelectorAll('.select-employee-btn');
     
-    // وظيفة البحث في الموظفين
-    function searchEmployees() {
+    // وظيفة البحث وتصفية الموظفين
+    function filterEmployees() {
         const searchTerm = searchInput.value.trim().toLowerCase();
+        const departmentId = departmentSelect.value;
         let resultsFound = false;
         
         employeeRows.forEach(row => {
@@ -418,12 +419,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const employeeId = row.getAttribute('data-employee-id')?.toLowerCase() || '';
             const nationalId = row.getAttribute('data-national-id')?.toLowerCase() || '';
             const department = row.getAttribute('data-department')?.toLowerCase() || '';
+            const rowDepartmentId = row.getAttribute('data-department-id') || '';
+            
+            // التحقق من تطابق القسم
+            const departmentMatch = !departmentId || departmentId === rowDepartmentId;
             
             // البحث في كافة الحقول
-            if (name.includes(searchTerm) || 
+            const searchMatch = !searchTerm || 
+                name.includes(searchTerm) || 
                 employeeId.includes(searchTerm) || 
                 nationalId.includes(searchTerm) || 
-                department.includes(searchTerm)) {
+                department.includes(searchTerm);
+            
+            // إظهار الصف فقط إذا تطابق مع معايير البحث والقسم
+            if (departmentMatch && searchMatch) {
                 row.style.display = '';
                 resultsFound = true;
             } else {
@@ -440,41 +449,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // تنفيذ البحث عند النقر على زر البحث
-    searchBtn.addEventListener('click', searchEmployees);
+    searchBtn.addEventListener('click', filterEmployees);
     
     // تنفيذ البحث عند الضغط على Enter في حقل البحث
     searchInput.addEventListener('keyup', function(event) {
         if (event.key === 'Enter') {
-            searchEmployees();
+            filterEmployees();
         }
     });
     
-    // حدث عند اختيار موظف
-    selectButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const employeeName = this.getAttribute('data-name');
-            personNameInput.value = employeeName;
-            
-            // إغلاق النافذة
-            const modal = bootstrap.Modal.getInstance(document.getElementById('employeesModal'));
-            modal.hide();
-        });
-    });
+    // تنفيذ التصفية عند تغيير القسم
+    departmentSelect.addEventListener('change', filterEmployees);
     
-    // مسح حقل البحث عند فتح النافذة
-    document.getElementById('employeesModal').addEventListener('shown.bs.modal', function() {
-        searchInput.value = '';
-        
-        // إعادة عرض جميع الصفوف
-        employeeRows.forEach(row => {
-            row.style.display = '';
-        });
-        
-        // إخفاء رسالة عدم وجود نتائج
-        noResultsAlert.classList.add('d-none');
-        
-        // تركيز على حقل البحث
-        searchInput.focus();
+    // تنفيذ اختيار الموظف عند النقر على زر الاختيار
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('select-employee-btn') || 
+            event.target.closest('.select-employee-btn')) {
+            
+            const button = event.target.classList.contains('select-employee-btn') ? 
+                event.target : event.target.closest('.select-employee-btn');
+            
+            const employeeName = button.getAttribute('data-name');
+            personNameInput.value = employeeName;
+        }
     });
 });
     document.addEventListener('DOMContentLoaded', function() {
