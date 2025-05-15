@@ -329,45 +329,82 @@
 {% block scripts %}
 <script>
 // وظيفة البحث عن الموظفين في الجدول
+// كود مبسط للبحث عن الموظفين وتصفيتهم
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('employeeSearchInput');
-    const searchBtn = document.getElementById('searchEmployeeBtn');
-    const departmentSelect = document.getElementById('departmentSelect');
-    const employeeRows = document.querySelectorAll('.employee-row');
-    const noResultsAlert = document.getElementById('noResultsAlert');
-    const personNameInput = document.getElementById('person_name');
+    // تحديد عناصر واجهة المستخدم بطريقة آمنة
+    var searchInput = document.getElementById('employeeSearchInput');
+    var searchBtn = document.getElementById('searchEmployeeBtn');
+    var departmentSelect = document.getElementById('departmentSelect');
+    var employeeRows = document.querySelectorAll('.employee-row');
+    var noResultsAlert = document.getElementById('noResultsAlert');
+    var personNameInput = document.getElementById('person_name');
     
-    // وظيفة البحث وتصفية الموظفين - تم تحسينها مع إضافة تسجيل للتشخيص
+    console.log('تم العثور على:', {
+        searchInput: !!searchInput,
+        searchBtn: !!searchBtn,
+        departmentSelect: !!departmentSelect,
+        employeeRows: employeeRows.length,
+        noResultsAlert: !!noResultsAlert,
+        personNameInput: !!personNameInput
+    });
+    
+    // دالة مشتركة لتصفية الموظفين
     function filterEmployees() {
-        const searchTerm = searchInput.value.trim().toLowerCase();
-        const departmentId = departmentSelect.value;
-        let resultsFound = false;
+        // التحقق من العناصر قبل المتابعة
+        if (!searchInput || !departmentSelect || !employeeRows.length) {
+            console.error('عناصر واجهة البحث غير موجودة');
+            return;
+        }
         
-        console.log('بدء تصفية الموظفين: القسم ID =', departmentId, 'مصطلح البحث =', searchTerm);
+        var searchTerm = searchInput.value.trim().toLowerCase();
+        var departmentId = departmentSelect.value;
+        var resultsFound = false;
         
-        employeeRows.forEach(row => {
-            const name = row.getAttribute('data-name').toLowerCase();
-            const employeeId = (row.getAttribute('data-employee-id') || '').toLowerCase();
-            const nationalId = (row.getAttribute('data-national-id') || '').toLowerCase();
-            const department = (row.getAttribute('data-department') || '').toLowerCase();
-            const rowDepartmentId = row.getAttribute('data-department-id') || '';
+        console.log('تصفية الموظفين:', {
+            searchTerm: searchTerm,
+            departmentId: departmentId,
+            employeeCount: employeeRows.length
+        });
+        
+        // فحص كل صف موظف
+        employeeRows.forEach(function(row) {
+            // استخراج البيانات من صف الموظف
+            var name = row.getAttribute('data-name') || '';
+            name = name.toLowerCase();
             
-            // التحقق من تطابق القسم
-            const departmentMatch = !departmentId || departmentId === rowDepartmentId;
+            var employeeId = row.getAttribute('data-employee-id') || '';
+            employeeId = employeeId.toLowerCase();
             
-            // البحث في كافة الحقول
-            const searchMatch = !searchTerm || 
+            var nationalId = row.getAttribute('data-national-id') || '';
+            nationalId = nationalId.toLowerCase();
+            
+            var department = row.getAttribute('data-department') || '';
+            department = department.toLowerCase();
+            
+            var rowDepartmentId = row.getAttribute('data-department-id') || '';
+            
+            // تطابق القسم - إذا لم يتم اختيار قسم أو القسم المختار يطابق قسم الموظف
+            var departmentMatch = !departmentId || departmentId === '' || departmentId === rowDepartmentId;
+            
+            // تطابق البحث - البحث في جميع الحقول
+            var searchMatch = !searchTerm || 
                 name.includes(searchTerm) || 
                 employeeId.includes(searchTerm) || 
                 nationalId.includes(searchTerm) || 
                 department.includes(searchTerm);
             
-            // تسجيل معلومات إضافية للتشخيص
-            if (name.includes('محمد')) {
-                console.log('فحص صف بالاسم:', name, 'القسم:', rowDepartmentId, 'يطابق القسم:', departmentMatch, 'يطابق البحث:', searchMatch);
+            // عرض تشخيصي لبعض الصفوف
+            if (row.rowIndex < 3) {
+                console.log('فحص صف:', {
+                    rowIndex: row.rowIndex,
+                    name: name,
+                    departmentId: rowDepartmentId,
+                    matchesDept: departmentMatch,
+                    matchesSearch: searchMatch
+                });
             }
             
-            // إظهار الصف فقط إذا تطابق مع معايير البحث والقسم
+            // إظهار أو إخفاء الصف بناء على نتائج التطابق
             if (departmentMatch && searchMatch) {
                 row.style.display = '';
                 resultsFound = true;
@@ -376,47 +413,56 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // إظهار/إخفاء تنبيه عدم وجود نتائج
-        if (resultsFound) {
-            noResultsAlert.classList.add('d-none');
-            console.log('تم العثور على نتائج - إخفاء رسالة عدم وجود نتائج');
-        } else {
-            noResultsAlert.classList.remove('d-none');
-            console.log('لم يتم العثور على نتائج - إظهار رسالة عدم وجود نتائج');
+        // إظهار أو إخفاء رسالة "لا توجد نتائج"
+        if (noResultsAlert) {
+            if (resultsFound) {
+                noResultsAlert.classList.add('d-none');
+            } else {
+                noResultsAlert.classList.remove('d-none');
+            }
         }
     }
     
-    // تنفيذ البحث عند النقر على زر البحث
-    searchBtn.addEventListener('click', function() {
-        console.log('تم النقر على زر البحث');
-        filterEmployees();
-    });
-    
-    // تنفيذ البحث عند الضغط على Enter في حقل البحث
-    searchInput.addEventListener('keyup', function(event) {
-        if (event.key === 'Enter') {
+    // ربط أحداث واجهة المستخدم
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            console.log('تم النقر على زر البحث');
             filterEmployees();
-        }
+        });
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                console.log('تم الضغط على Enter في حقل البحث');
+                filterEmployees();
+            }
+        });
+    }
+    
+    if (departmentSelect) {
+        departmentSelect.addEventListener('change', function() {
+            console.log('تم تغيير القسم إلى:', this.value);
+            filterEmployees();
+        });
+    }
+    
+    // ربط أحداث أزرار اختيار الموظف
+    document.querySelectorAll('.select-employee-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (personNameInput) {
+                var employeeName = this.getAttribute('data-name');
+                personNameInput.value = employeeName;
+                console.log('تم اختيار الموظف:', employeeName);
+            }
+        });
     });
     
-    // تنفيذ التصفية عند تغيير القسم
-    departmentSelect.addEventListener('change', function() {
-        console.log('تم تغيير القسم إلى:', this.value);
+    // تشغيل البحث الأولي بعد تحميل الصفحة
+    setTimeout(function() {
+        console.log('تنفيذ البحث الأولي...');
         filterEmployees();
-    });
-    
-    // تنفيذ اختيار الموظف عند النقر على زر الاختيار
-    document.addEventListener('click', function(event) {
-        if (event.target.classList.contains('select-employee-btn') || 
-            event.target.closest('.select-employee-btn')) {
-            
-            const button = event.target.classList.contains('select-employee-btn') ? 
-                event.target : event.target.closest('.select-employee-btn');
-            
-            const employeeName = button.getAttribute('data-name');
-            personNameInput.value = employeeName;
-        }
-    });
+    }, 200);
 });
     document.addEventListener('DOMContentLoaded', function() {
         // ضبط تاريخ اليوم كقيمة افتراضية
