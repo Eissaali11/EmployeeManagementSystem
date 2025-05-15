@@ -360,6 +360,10 @@ def edit(id):
             salary.bonus = float(request.form.get('bonus', 0))
             salary.notes = request.form.get('notes', '')
             
+            # تحديث الشهر والسنة
+            salary.month = int(request.form.get('month', salary.month))
+            salary.year = int(request.form.get('year', salary.year))
+            
             # إعادة حساب صافي الراتب
             salary.net_salary = salary.basic_salary + salary.allowances + salary.bonus - salary.deductions
             
@@ -384,9 +388,13 @@ def edit(id):
     # الحصول على قائمة الموظفين للاختيار من القائمة المنسدلة
     employees = Employee.query.order_by(Employee.name).all()
     
+    # الحصول على السنة الحالية
+    current_year = datetime.now().year
+    
     return render_template('salaries/edit.html',
                           salary=salary,
-                          employees=employees)
+                          employees=employees,
+                          current_year=current_year)
 
 
 @salaries_bp.route('/<int:id>/delete', methods=['POST'])
