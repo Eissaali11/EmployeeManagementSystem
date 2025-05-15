@@ -45,6 +45,7 @@ class Employee(db.Model):
     attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
     salaries = db.relationship('Salary', back_populates='employee', cascade='all, delete-orphan')
     documents = db.relationship('Document', back_populates='employee', cascade='all, delete-orphan')
+    vehicle_handovers = db.relationship('VehicleHandover', foreign_keys='VehicleHandover.employee_id', backref='employee')
     
     def __repr__(self):
         return f'<Employee {self.name} ({self.employee_id})>'

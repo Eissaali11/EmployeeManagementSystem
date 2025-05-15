@@ -1205,6 +1205,7 @@ def create_handover(id):
         handover_type = request.form.get('handover_type')
         handover_date = datetime.strptime(request.form.get('handover_date'), '%Y-%m-%d').date()
         person_name = request.form.get('person_name')
+        employee_id = request.form.get('employee_id')  # معرف الموظف من النموذج
         vehicle_condition = request.form.get('vehicle_condition')
         fuel_level = request.form.get('fuel_level')
         mileage = int(request.form.get('mileage'))
@@ -1222,6 +1223,7 @@ def create_handover(id):
             handover_type=handover_type,
             handover_date=handover_date,
             person_name=person_name,
+            employee_id=int(employee_id) if employee_id else None, # تخزين معرف الموظف إذا تم اختياره
             vehicle_condition=vehicle_condition,
             fuel_level=fuel_level,
             mileage=mileage,
