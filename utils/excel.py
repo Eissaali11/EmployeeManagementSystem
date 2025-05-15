@@ -1025,6 +1025,213 @@ def generate_comprehensive_employee_report(db_session, department_id=None, emplo
         print(traceback.format_exc())
         raise Exception(f"خطأ في إنشاء التقرير الشامل: {str(e)}")
 
+def generate_employee_salary_simple_excel(db_session, month=None, year=None, department_id=None):
+    """
+    إنشاء ملف Excel بسيط وواضح لبيانات الموظفين مع تفاصيل الرواتب
+    
+    Args:
+        db_session: جلسة قاعدة البيانات
+        month: الشهر المطلوب (اختياري)
+        year: السنة المطلوبة (اختياري)
+        department_id: معرّف القسم (اختياري)
+        
+    Returns:
+        كائن BytesIO يحتوي على ملف Excel
+    """
+    try:
+        from models import Employee, Department, Salary
+        from datetime import datetime
+        from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
+        from openpyxl.utils import get_column_letter
+        
+        # تحديد الألوان والتنسيقات
+        header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+        normal_font = Font(name="Arial", size=11)
+        
+        thin_border = Border(
+            left=Side(style='thin', color='000000'),
+            right=Side(style='thin', color='000000'),
+            top=Side(style='thin', color='000000'),
+            bottom=Side(style='thin', color='000000')
+        )
+        
+        center_alignment = Alignment(horizontal='center', vertical='center')
+        right_alignment = Alignment(horizontal='right', vertical='center')
+        
+        # تنسيقات للخلايا المالية
+        money_format = '#,##0.00 "ر.س"'
+        
+        # استعلام الرواتب مع بيانات الموظفين
+        query = db_session.query(Salary).join(Employee).join(Department)
+        
+        # تطبيق الفلاتر
+        if department_id:
+            query = query.filter(Department.id == department_id)
+        if month:
+            query = query.filter(Salary.month == month)
+        if year:
+            query = query.filter(Salary.year == year)
+            
+        # ترتيب البيانات حسب القسم، اسم الموظف، السنة والشهر
+        query = query.order_by(Department.name, Employee.name, Salary.year.desc(), Salary.month.desc())
+        
+        # الحصول على النتائج
+        results = query.all()
+        
+        # جمع البيانات في قائمة
+        employee_data = []
+        
+        for salary in results:
+            employee = salary.employee
+            department = employee.department
+            
+            data = {
+                'اسم الموظف': employee.name,
+                'رقم الموظف': employee.employee_id,
+                'رقم الهوية': employee.national_id or '',
+                'القسم': department.name,
+                'الشهر': salary.month,
+                'السنة': salary.year,
+                'الراتب الأساسي': salary.basic_salary,
+                'البدلات': salary.allowances,
+                'الخصومات': salary.deductions,
+                'المكافآت': salary.bonus,
+                'صافي الراتب': salary.net_salary,
+                'ملاحظات': salary.notes or ''
+            }
+            
+            employee_data.append(data)
+        
+        # إنشاء ملف Excel
+        output = BytesIO()
+        
+        with pd.ExcelWriter(path=output, engine='openpyxl') as writer:
+            # إنشاء DataFrame
+            df = pd.DataFrame(employee_data)
+            
+            # ترتيب الأعمدة بالشكل المطلوب
+            columns_order = [
+                'اسم الموظف', 'رقم الموظف', 'رقم الهوية', 'القسم',
+                'الشهر', 'السنة', 'الراتب الأساسي', 'البدلات',
+                'الخصومات', 'المكافآت', 'صافي الراتب', 'ملاحظات'
+            ]
+            
+            # ترتيب الأعمدة حسب الترتيب المحدد
+            df = df[columns_order]
+            
+            # كتابة البيانات إلى الملف
+            df.to_excel(writer, sheet_name='بيانات الموظفين والرواتب', index=False)
+            
+            # الحصول على ورقة العمل وتنسيقها
+            sheet = writer.sheets['بيانات الموظفين والرواتب']
+            
+            # تنسيق العناوين
+            for col_idx, col_name in enumerate(df.columns, 1):
+                cell = sheet.cell(1, col_idx)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center_alignment
+                cell.border = thin_border
+                
+                # ضبط عرض العمود
+                column_letter = get_column_letter(col_idx)
+                max_length = max(df[col_name].astype(str).map(len).max(), len(col_name)) + 2
+                sheet.column_dimensions[column_letter].width = max_length
+            
+            # تنسيق البيانات
+            for row_idx, _ in enumerate(df.iterrows(), 2):  # بدء من الصف 2 (بعد العناوين)
+                for col_idx, col_name in enumerate(df.columns, 1):
+                    cell = sheet.cell(row_idx, col_idx)
+                    
+                    # تنسيق الخلايا المالية
+                    if col_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                        cell.number_format = money_format
+                        cell.alignment = center_alignment
+                    else:
+                        cell.alignment = right_alignment
+                    
+                    # تنسيق عام
+                    cell.font = normal_font
+                    cell.border = thin_border
+                    
+                    # تلوين الصفوف بالتناوب
+                    if row_idx % 2 == 0:
+                        cell.fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+            
+            # إضافة صف المجموع في النهاية
+            total_row = len(df) + 2
+            
+            # إضافة نص "المجموع" في أول خلية
+            sheet.cell(total_row, 1).value = "المجموع"
+            sheet.cell(total_row, 1).font = Font(name="Arial", size=12, bold=True)
+            sheet.cell(total_row, 1).alignment = right_alignment
+            sheet.cell(total_row, 1).border = thin_border
+            sheet.cell(total_row, 1).fill = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
+            
+            # دمج الخلايا من العمود 1 إلى العمود 6
+            for col_idx in range(2, 7):
+                cell = sheet.cell(total_row, col_idx)
+                cell.border = thin_border
+                cell.fill = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
+            
+            sheet.merge_cells(start_row=total_row, start_column=1, end_row=total_row, end_column=6)
+            
+            # حساب المجاميع للأعمدة المالية
+            for col_idx, col_name in enumerate(df.columns, 1):
+                if col_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                    col_letter = get_column_letter(col_idx)
+                    cell = sheet.cell(total_row, col_idx)
+                    cell.value = f"=SUM({col_letter}2:{col_letter}{total_row-1})"
+                    cell.font = Font(name="Arial", size=12, bold=True)
+                    cell.number_format = money_format
+                    cell.alignment = center_alignment
+                    cell.border = thin_border
+                    cell.fill = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
+                elif col_idx > 6:
+                    # تنسيق باقي الخلايا في صف المجموع
+                    cell = sheet.cell(total_row, col_idx)
+                    cell.border = thin_border
+                    cell.fill = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
+            
+            # إضافة معلومات الفلترة في أعلى الورقة
+            info_row = sheet.max_row + 2
+            
+            # إضافة عنوان المعلومات
+            sheet.cell(info_row, 1).value = "معلومات التقرير:"
+            sheet.cell(info_row, 1).font = Font(name="Arial", size=12, bold=True)
+            
+            # إضافة تفاصيل الفلترة
+            info_row += 1
+            sheet.cell(info_row, 1).value = "تاريخ التصدير:"
+            sheet.cell(info_row, 2).value = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            info_row += 1
+            filter_text = []
+            if month:
+                filter_text.append(f"الشهر: {month}")
+            if year:
+                filter_text.append(f"السنة: {year}")
+            if department_id:
+                dept = db_session.query(Department).get(department_id)
+                if dept:
+                    filter_text.append(f"القسم: {dept.name}")
+            
+            sheet.cell(info_row, 1).value = "الفلاتر المطبقة:"
+            sheet.cell(info_row, 2).value = " | ".join(filter_text) if filter_text else "كافة البيانات"
+            
+            info_row += 1
+            sheet.cell(info_row, 1).value = "عدد السجلات:"
+            sheet.cell(info_row, 2).value = len(df)
+        
+        output.seek(0)
+        return output
+    
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        raise Exception(f"خطأ في إنشاء ملف Excel: {str(e)}")
+
 def generate_salary_excel(salaries, filter_description=None):
     """
     إنشاء ملف Excel من بيانات الرواتب مع تنظيم وتجميع حسب القسم وتنسيق ممتاز

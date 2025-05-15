@@ -6,7 +6,7 @@ from sqlalchemy import func
 from datetime import datetime
 from app import db
 from models import Salary, Employee, Department, SystemAudit
-from utils.excel import parse_salary_excel, generate_salary_excel, generate_comprehensive_employee_report
+from utils.excel import parse_salary_excel, generate_salary_excel, generate_comprehensive_employee_report, generate_employee_salary_simple_excel
 from utils.pdf_generator_fixed import generate_salary_report_pdf
 from utils.salary_notification import generate_salary_notification_pdf, generate_batch_salary_notifications
 from utils.whatsapp_notification import (
@@ -1091,6 +1091,67 @@ def comprehensive_report():
                           departments=departments,
                           current_month=current_month,
                           current_year=current_year)
+
+@salaries_bp.route('/export/simple_employees_salary')
+def export_simple_employees_salary():
+    """تصدير بيانات الموظفين مع تفاصيل الرواتب بتنسيق بسيط"""
+    # الحصول على معلمات التصفية
+    month = request.args.get('month')
+    if month:
+        month = int(month)
+    
+    year = request.args.get('year')
+    if year:
+        year = int(year)
+    
+    department_id = request.args.get('department_id')
+    if department_id:
+        department_id = int(department_id)
+    
+    try:
+        # إنشاء ملف Excel بسيط ومرتب للموظفين والرواتب
+        output = generate_employee_salary_simple_excel(db.session, month, year, department_id)
+        
+        # إعداد وصف الفلاتر للسجل
+        filter_description = []
+        if month:
+            filter_description.append(f"الشهر: {month}")
+        if year:
+            filter_description.append(f"السنة: {year}")
+        if department_id:
+            department = Department.query.get(department_id)
+            if department:
+                filter_description.append(f"القسم: {department.name}")
+        
+        filter_str = " | ".join(filter_description) if filter_description else "كافة البيانات"
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='export_simple_employees_salary',
+            entity_type='employee_salary',
+            entity_id=0,
+            details=f'تم تصدير بيانات الموظفين مع تفاصيل الرواتب بتنسيق بسيط ({filter_str})',
+            user_id=None
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إعداد اسم الملف
+        today = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"الموظفين_والرواتب_{today}.xlsx"
+        
+        # إرسال الملف
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        flash(f'حدث خطأ أثناء تصدير بيانات الموظفين والرواتب: {str(e)}', 'danger')
+        return redirect(url_for('salaries.index'))
 
 
 @salaries_bp.route('/notifications/deduction/batch', methods=['GET', 'POST'])
