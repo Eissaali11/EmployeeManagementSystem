@@ -23,10 +23,18 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">سجلات فحص السلامة</h5>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-sm btn-light" id="filter-all">الكل</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" id="filter-daily">يومي</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" id="filter-weekly">أسبوعي</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" id="filter-monthly">شهري</button>
+                            <button type="button" class="btn btn-light" id="filter-all">
+                                <i class="fas fa-list ml-1"></i> الكل
+                            </button>
+                            <button type="button" class="btn btn-outline-light" id="filter-daily">
+                                <i class="fas fa-calendar-day ml-1"></i> يومي
+                            </button>
+                            <button type="button" class="btn btn-outline-light" id="filter-weekly">
+                                <i class="fas fa-calendar-week ml-1"></i> أسبوعي
+                            </button>
+                            <button type="button" class="btn btn-outline-light" id="filter-monthly">
+                                <i class="fas fa-calendar-alt ml-1"></i> شهري
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -84,8 +92,8 @@
                                         </td>
                                         <td>
                                             {% if check.check_form_link %}
-                                                <a href="{{ check.check_form_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-external-link-alt"></i>
+                                                <a href="{{ check.check_form_link }}" target="_blank" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-external-link-alt ml-1"></i> عرض النموذج
                                                 </a>
                                             {% else %}
                                                 <span class="text-muted">-</span>
@@ -93,23 +101,26 @@
                                         </td>
                                         <td>
                                             {% if check.notes %}
-                                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="{{ check.notes }}">
-                                                    <i class="fas fa-info-circle"></i>
+                                                <button type="button" class="btn btn-sm btn-info mb-1" data-bs-toggle="tooltip" title="{{ check.notes }}">
+                                                    <i class="fas fa-info-circle ml-1"></i> ملاحظات
                                                 </button>
                                             {% endif %}
                                             {% if check.issues_found and check.issues_description %}
                                                 <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="{{ check.issues_description }}">
-                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    <i class="fas fa-exclamation-triangle ml-1"></i> مشاكل
                                                 </button>
+                                            {% endif %}
+                                            {% if not check.notes and not (check.issues_found and check.issues_description) %}
+                                                <span class="text-muted">-</span>
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div class="btn-group">
-                                                <a href="{{ url_for('vehicles.edit_safety_check', id=check.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-edit"></i>
+                                            <div class="d-flex gap-1">
+                                                <a href="{{ url_for('vehicles.edit_safety_check', id=check.id) }}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-edit ml-1"></i> تعديل
                                                 </a>
-                                                <a href="{{ url_for('vehicles.confirm_delete_safety_check', id=check.id) }}" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fas fa-trash"></i>
+                                                <a href="{{ url_for('vehicles.confirm_delete_safety_check', id=check.id) }}" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash ml-1"></i> حذف
                                                 </a>
                                             </div>
                                         </td>
