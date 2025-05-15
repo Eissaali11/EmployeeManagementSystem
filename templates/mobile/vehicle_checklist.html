@@ -23,7 +23,7 @@
                 <label>السيارة</label>
                 <div class="position-relative">
                     <input type="text" id="vehicle-search" class="mobile-form-control" placeholder="ابحث عن السيارة بالاسم أو رقم اللوحة" autocomplete="off">
-                    <div id="search-results" class="position-absolute w-100 start-0 bg-white shadow rounded mt-1 d-none" style="max-height: 200px; overflow-y: auto; z-index: 1000;">
+                    <div id="search-results" class="position-absolute w-100 start-0 bg-white shadow rounded mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1000; display: none;">
                         <!-- نتائج البحث ستظهر هنا -->
                     </div>
                 </div>
@@ -789,7 +789,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // التعامل مع إدخال البحث
     vehicleSearch.addEventListener('input', function() {
+      console.log('تم إدخال نص في حقل البحث');
       const searchTerm = this.value.trim().toLowerCase();
+      
+      // طباعة بيانات السيارات للتشخيص
+      console.log('قائمة السيارات:', vehicles);
       
       // إذا كان البحث فارغًا، أخفِ النتائج
       if (!searchTerm) {
@@ -805,9 +809,12 @@ document.addEventListener('DOMContentLoaded', function() {
         vehicle.plate.toLowerCase().includes(searchTerm)
       );
       
+      console.log('السيارات المطابقة:', matchedVehicles);
+      
       // إظهار نتائج البحث
       searchResults.innerHTML = '';
       searchResults.classList.remove('d-none');
+      searchResults.style.display = 'block'; // تأكيد الظهور
       
       if (matchedVehicles.length === 0) {
         const noResults = document.createElement('div');

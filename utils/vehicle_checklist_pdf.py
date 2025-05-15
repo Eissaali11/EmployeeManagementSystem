@@ -253,7 +253,7 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
         [Paragraph(arabic_text("سنة الصنع"), styles['ArabicTable']), 
          Paragraph(arabic_text(str(vehicle.year) if vehicle.year else ""), styles['ArabicTable'])],
         [Paragraph(arabic_text("عداد المسافة (كم)"), styles['ArabicTable']), 
-         Paragraph(arabic_text(str(checklist.odometer_reading) if checklist.odometer_reading else ""), styles['ArabicTable'])]
+         Paragraph(arabic_text(str(getattr(checklist, 'odometer_reading', '')) if getattr(checklist, 'odometer_reading', None) else ""), styles['ArabicTable'])]
     ]
     
     # تنسيق جدول معلومات المركبة
