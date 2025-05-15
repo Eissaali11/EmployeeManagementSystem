@@ -1,0 +1,313 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل نموذج {{ handover_type_name }} للمركبة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block styles %}
+<style>
+    /* تأثير الخلفية الرئيسية */
+    .main-wrapper {
+        min-height: 100vh;
+        background: #1a2035;
+        padding: 20px 0;
+    }
+
+    /* تصميم البطاقات */
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 25px;
+        background-color: #202940;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    
+    .card .card-header {
+        border: none;
+        padding: 20px;
+        font-weight: bold;
+    }
+    
+    .card .card-body {
+        background-color: #202940;
+        color: #e9ecef;
+        padding: 25px;
+    }
+    
+    /* الفورم */
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 12px 15px;
+        background-color: #2a3654;
+        border: 1px solid #3f4865;
+        color: #e9ecef;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background-color: #2e3d60;
+        border-color: #4d5b84;
+        box-shadow: 0 0 0 0.25rem rgba(114, 124, 245, 0.25);
+        color: #ffffff;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #e9ecef;
+    }
+    
+    /* تصميم مربعات الاختيار */
+    .form-check {
+        padding-left: 2em;
+        margin-bottom: 15px;
+    }
+    
+    .form-check-input {
+        background-color: #2a3654;
+        border: 1px solid #3f4865;
+        width: 1.2em;
+        height: 1.2em;
+        margin-top: 0.25em;
+    }
+    
+    .form-check-input:checked {
+        background-color: #727cf5;
+        border-color: #727cf5;
+    }
+    
+    .form-check-label {
+        font-weight: 500;
+        color: #e9ecef;
+    }
+    
+    /* تصميم الأزرار */
+    .btn {
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-primary {
+        background-color: #727cf5;
+        border-color: #727cf5;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    /* تأثيرات أخرى */
+    .special-card {
+        border-right: 4px solid;
+    }
+    
+    .delivery-card {
+        border-right-color: #28a745;
+    }
+    
+    .return-card {
+        border-right-color: #17a2b8;
+    }
+    
+    /* شريط التنقل العلوي */
+    .page-navigator {
+        background-color: #202940;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* TextArea */
+    textarea.form-control {
+        min-height: 120px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-wrapper">
+<div class="container py-4">
+    <!-- شريط التنقل العلوي -->
+    <div class="page-navigator d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-white mb-0">
+            {% if handover.handover_type == 'delivery' %}
+                <i class="fas fa-share ms-2 text-success"></i>
+            {% else %}
+                <i class="fas fa-reply ms-2 text-info"></i>
+            {% endif %}
+            تعديل نموذج {{ handover_type_name }} للمركبة: {{ vehicle.plate_number }}
+        </h3>
+        <div>
+            <a href="{{ url_for('vehicles.view_handover', id=handover.id) }}" class="btn btn-info btn-sm me-2">
+                <i class="fas fa-eye ms-1"></i>
+                عرض التفاصيل
+            </a>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-primary btn-sm me-2">
+                <i class="fas fa-car ms-1"></i>
+                تفاصيل السيارة
+            </a>
+            <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-right ms-1"></i>
+                قائمة السيارات
+            </a>
+        </div>
+    </div>
+    
+    <!-- نموذج التعديل -->
+    <div class="card special-card {{ 'delivery-card' if handover.handover_type == 'delivery' else 'return-card' }}">
+        <div class="card-header {{ 'bg-success text-white' if handover.handover_type == 'delivery' else 'bg-info text-white' }}">
+            <h5 class="mb-0">
+                <i class="fas fa-edit ms-2"></i>
+                تعديل نموذج {{ handover_type_name }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {{ csrf_token() }}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="handover_date" class="form-label">تاريخ {{ handover_type_name }}:</label>
+                            <input type="date" id="handover_date" name="handover_date" 
+                                   class="form-control" value="{{ handover_date }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="person_name" class="form-label">اسم الشخص:</label>
+                            <input type="text" id="person_name" name="person_name" 
+                                   class="form-control" value="{{ handover.person_name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="mileage" class="form-label">قراءة العداد (كم):</label>
+                            <input type="text" id="mileage" name="mileage" 
+                                   class="form-control" value="{{ "{:,}".format(handover.mileage) }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="fuel_level" class="form-label">مستوى الوقود:</label>
+                            <select id="fuel_level" name="fuel_level" class="form-select" required>
+                                <option value="full" {% if handover.fuel_level == 'full' %}selected{% endif %}>ممتلئ</option>
+                                <option value="three_quarters" {% if handover.fuel_level == 'three_quarters' %}selected{% endif %}>3/4</option>
+                                <option value="half" {% if handover.fuel_level == 'half' %}selected{% endif %}>1/2</option>
+                                <option value="quarter" {% if handover.fuel_level == 'quarter' %}selected{% endif %}>1/4</option>
+                                <option value="empty" {% if handover.fuel_level == 'empty' %}selected{% endif %}>فارغ</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="form_link" class="form-label">رابط النموذج الإلكتروني:</label>
+                            <input type="url" id="form_link" name="form_link" 
+                                   class="form-control" value="{{ handover.form_link or '' }}">
+                            <small class="text-muted">اختياري - يمكن إضافة رابط لنموذج خارجي</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">التجهيزات المتوفرة:</label>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="has_spare_tire" name="has_spare_tire" 
+                                       {% if handover.has_spare_tire %}checked{% endif %}>
+                                <label class="form-check-label" for="has_spare_tire">
+                                    إطار احتياطي
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="has_fire_extinguisher" name="has_fire_extinguisher" 
+                                       {% if handover.has_fire_extinguisher %}checked{% endif %}>
+                                <label class="form-check-label" for="has_fire_extinguisher">
+                                    طفاية حريق
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="has_first_aid_kit" name="has_first_aid_kit" 
+                                       {% if handover.has_first_aid_kit %}checked{% endif %}>
+                                <label class="form-check-label" for="has_first_aid_kit">
+                                    إسعافات أولية
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="has_warning_triangle" name="has_warning_triangle" 
+                                       {% if handover.has_warning_triangle %}checked{% endif %}>
+                                <label class="form-check-label" for="has_warning_triangle">
+                                    مثلث تحذير
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="has_tools" name="has_tools" 
+                                       {% if handover.has_tools %}checked{% endif %}>
+                                <label class="form-check-label" for="has_tools">
+                                    أدوات
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="vehicle_condition" class="form-label">حالة السيارة:</label>
+                            <textarea id="vehicle_condition" name="vehicle_condition" 
+                                     class="form-control">{{ handover.vehicle_condition }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات:</label>
+                            <textarea id="notes" name="notes" 
+                                     class="form-control">{{ handover.notes or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save ms-1"></i>
+                        حفظ التعديلات
+                    </button>
+                    <a href="{{ url_for('vehicles.view_handover', id=handover.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times ms-1"></i>
+                        إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تنسيق حقل العداد لإظهار الأرقام بفواصل
+        const mileageInput = document.getElementById('mileage');
+        mileageInput.addEventListener('blur', function() {
+            // إزالة الفواصل والأحرف غير الرقمية
+            let value = this.value.replace(/[^\d]/g, '');
+            
+            // إعادة تنسيق الرقم بالفواصل
+            if (value) {
+                this.value = Number(value).toLocaleString('en-US');
+            }
+        });
+        
+        // تنظيف الأرقام قبل الإرسال
+        const form = mileageInput.form;
+        form.addEventListener('submit', function() {
+            mileageInput.value = mileageInput.value.replace(/[^\d]/g, '');
+        });
+    });
+</script>
+{% endblock %}

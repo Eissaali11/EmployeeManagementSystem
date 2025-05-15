@@ -1289,6 +1289,81 @@ def view_handover(id):
         handover_type_name=handover_type_name
     )
 
+@vehicles_bp.route('/handover/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_handover(id):
+    """تعديل بيانات نموذج تسليم/استلام"""
+    handover = VehicleHandover.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+    
+    # تحويل التاريخ إلى النسق المناسب للنموذج
+    handover_date_str = handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else None
+    
+    # تحديد اسم نوع النموذج
+    handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
+    
+    if request.method == 'POST':
+        try:
+            # استخراج البيانات من النموذج
+            handover_date_str = request.form.get('handover_date')
+            person_name = request.form.get('person_name')
+            mileage_str = request.form.get('mileage')
+            fuel_level = request.form.get('fuel_level')
+            vehicle_condition = request.form.get('vehicle_condition')
+            form_link = request.form.get('form_link')
+            notes = request.form.get('notes')
+            
+            # معالجة مربعات الاختيار
+            has_spare_tire = 'has_spare_tire' in request.form
+            has_fire_extinguisher = 'has_fire_extinguisher' in request.form
+            has_first_aid_kit = 'has_first_aid_kit' in request.form
+            has_warning_triangle = 'has_warning_triangle' in request.form
+            has_tools = 'has_tools' in request.form
+            
+            # تحويل التاريخ والعداد
+            handover_date = datetime.strptime(handover_date_str, '%Y-%m-%d').date() if handover_date_str else None
+            try:
+                mileage = int(mileage_str.replace(',', '')) if mileage_str else 0
+            except (ValueError, TypeError) as e:
+                flash(f'خطأ في تنسيق قراءة العداد: {str(e)}', 'danger')
+                return redirect(url_for('vehicles.edit_handover', id=id))
+            
+            # تحديث بيانات النموذج
+            handover.handover_date = handover_date
+            handover.person_name = person_name
+            handover.mileage = mileage
+            handover.fuel_level = fuel_level
+            handover.vehicle_condition = vehicle_condition
+            handover.form_link = form_link
+            handover.notes = notes
+            handover.has_spare_tire = has_spare_tire
+            handover.has_fire_extinguisher = has_fire_extinguisher
+            handover.has_first_aid_kit = has_first_aid_kit
+            handover.has_warning_triangle = has_warning_triangle
+            handover.has_tools = has_tools
+            handover.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            
+            # تسجيل الإجراء
+            log_audit('update', 'vehicle_handover', handover.id, f'تم تعديل نموذج {handover_type_name} للسيارة: {vehicle.plate_number}')
+            
+            flash(f'تم تعديل بيانات نموذج {handover_type_name} بنجاح!', 'success')
+            return redirect(url_for('vehicles.view_handover', id=id))
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating handover form: {str(e)}")
+            flash(f'حدث خطأ أثناء تعديل نموذج التسليم/الاستلام: {str(e)}', 'danger')
+    
+    return render_template(
+        'vehicles/edit_handover.html',
+        handover=handover,
+        vehicle=vehicle,
+        handover_date=handover_date_str,
+        handover_type_name=handover_type_name
+    )
+
 @vehicles_bp.route('/<int:vehicle_id>/handovers/confirm-delete', methods=['POST'])
 @login_required
 def confirm_delete_handovers(vehicle_id):
