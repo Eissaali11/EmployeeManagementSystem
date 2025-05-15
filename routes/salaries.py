@@ -397,6 +397,12 @@ def edit(id):
                           current_year=current_year)
 
 
+@salaries_bp.route('/<int:id>/confirm-delete')
+def confirm_delete(id):
+    """صفحة تأكيد حذف سجل راتب"""
+    salary = Salary.query.get_or_404(id)
+    return render_template('salaries/confirm_delete.html', salary=salary)
+
 @salaries_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
     """Delete a salary record"""
