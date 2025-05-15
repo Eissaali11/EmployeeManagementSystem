@@ -922,71 +922,120 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     };
 
-    // إعداد متغيرات مخطط التلف ونظام التأشير
-    const vehicleDiagram = document.querySelector('.van-diagram');
-    
-    // إعداد متغيرات العلامات
-    window.currentMarkerType = 'damage'; // نوع العلامة الافتراضي
-    window.damageMarkers = []; // قائمة العلامات
-    window.selectedMarker = null; // العلامة المحددة حالياً
-    
-    // أزرار إضافة علامات التلف
-    document.getElementById('add-damage-marker').addEventListener('click', function() {
-        window.currentMarkerType = 'damage';
-        this.classList.add('active');
-        document.getElementById('add-scratch-marker').classList.remove('active');
-    });
-    
-    document.getElementById('add-scratch-marker').addEventListener('click', function() {
-        window.currentMarkerType = 'scratch';
-        this.classList.add('active');
-        document.getElementById('add-damage-marker').classList.remove('active');
-    });
-    
-    // زر مسح العلامات
-    document.getElementById('clear-markers').addEventListener('click', function() {
-        clearAllMarkers();
-    });
-    
-    // زر حفظ ملاحظة العلامة
-    document.getElementById('save-marker-note').addEventListener('click', function() {
-        saveMarkerNote();
-    });
-    
-    // زر إلغاء إضافة ملاحظة للعلامة
-    document.getElementById('cancel-marker-note').addEventListener('click', function() {
-        cancelMarkerNote();
-    });
-    
-    // حدث النقر على مخطط السيارة
-    if (vehicleDiagram) {
-        vehicleDiagram.addEventListener('click', function(event) {
-            addMarkerOnClick(event);
-        });
+    function initializeDamageMarkers() {
+        console.log('تهيئة نظام تحديد التلفيات');
+        
+        // إعداد متغيرات مخطط التلف ونظام التأشير
+        const vehicleDiagram = document.querySelector('.van-diagram');
+        
+        // إعداد متغيرات العلامات
+        window.currentMarkerType = 'damage'; // نوع العلامة الافتراضي
+        window.damageMarkers = []; // قائمة العلامات
+        window.selectedMarker = null; // العلامة المحددة حالياً
+        
+        const addDamageBtn = document.getElementById('add-damage-marker');
+        const addScratchBtn = document.getElementById('add-scratch-marker');
+        const clearMarkersBtn = document.getElementById('clear-markers');
+        const saveMarkerNoteBtn = document.getElementById('save-marker-note');
+        const cancelMarkerNoteBtn = document.getElementById('cancel-marker-note');
+        
+        if (addDamageBtn) {
+            console.log('تم العثور على زر إضافة التلف');
+            // أزرار إضافة علامات التلف
+            addDamageBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر إضافة التلف');
+                window.currentMarkerType = 'damage';
+                this.classList.add('active');
+                if (addScratchBtn) addScratchBtn.classList.remove('active');
+            });
+        } else {
+            console.error('لم يتم العثور على زر إضافة التلف!');
+        }
+        
+        if (addScratchBtn) {
+            addScratchBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر إضافة الخدش');
+                window.currentMarkerType = 'scratch';
+                this.classList.add('active');
+                if (addDamageBtn) addDamageBtn.classList.remove('active');
+            });
+        }
+        
+        // زر مسح العلامات
+        if (clearMarkersBtn) {
+            clearMarkersBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر مسح العلامات');
+                clearAllMarkers();
+            });
+        }
+        
+        // زر حفظ ملاحظة العلامة
+        if (saveMarkerNoteBtn) {
+            saveMarkerNoteBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر حفظ الملاحظة');
+                saveMarkerNote();
+            });
+        }
+        
+        // زر إلغاء إضافة ملاحظة للعلامة
+        if (cancelMarkerNoteBtn) {
+            cancelMarkerNoteBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر إلغاء الملاحظة');
+                cancelMarkerNote();
+            });
+        }
+        
+        // حدث النقر على مخطط السيارة
+        if (vehicleDiagram) {
+            console.log('تم العثور على مخطط السيارة');
+            vehicleDiagram.addEventListener('click', function(event) {
+                console.log('تم النقر على مخطط السيارة');
+                addMarkerOnClick(event);
+            });
+        } else {
+            console.error('لم يتم العثور على مخطط السيارة!');
+        }
     }
+    
+    // استدعاء تهيئة النظام
+    initializeDamageMarkers();
 
     // دالة إضافة علامة عند النقر على مخطط السيارة
     function addMarkerOnClick(event) {
+        console.log('تنفيذ إضافة علامة على مخطط السيارة');
         const markersContainer = document.getElementById('vehicle-markers-container');
+        const vehicleDiagram = document.querySelector('.van-diagram');
         
-        if (!vehicleDiagram || !markersContainer) return;
+        if (!vehicleDiagram || !markersContainer) {
+            console.error('عناصر مخطط السيارة أو حاوية العلامات غير موجودة');
+            return;
+        }
+        
+        if (!window.currentMarkerType) {
+            console.error('نوع العلامة غير محدد');
+            window.currentMarkerType = 'damage';
+        }
         
         // حساب الموقع النسبي للنقر
         const rect = vehicleDiagram.getBoundingClientRect();
         const x = ((event.clientX - rect.left) / rect.width) * 100;
         const y = ((event.clientY - rect.top) / rect.height) * 100;
         
+        console.log('موقع العلامة:', { x, y });
+        
         // إنشاء علامة جديدة
         const marker = {
             id: Date.now(),
-            type: currentMarkerType,
+            type: window.currentMarkerType,
             x: x,
             y: y,
             notes: ''
         };
         
+        console.log('تم إنشاء علامة جديدة:', marker);
+        
         // إضافة العلامة إلى القائمة
-        damageMarkers.push(marker);
+        window.damageMarkers.push(marker);
         
         // إضافة العلامة على الصورة
         renderMarker(marker);
@@ -1018,6 +1067,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // دالة اختيار علامة
     function selectMarker(marker) {
+        console.log('اختيار العلامة:', marker);
+        
         // إزالة الاختيار من جميع العلامات
         document.querySelectorAll('.vehicle-marker').forEach(el => {
             el.classList.remove('selected');
@@ -1027,15 +1078,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const markerElement = document.querySelector(`.vehicle-marker[data-id="${marker.id}"]`);
         if (markerElement) {
             markerElement.classList.add('selected');
+            console.log('تم تحديد العلامة في الواجهة');
+        } else {
+            console.error('لم يتم العثور على عنصر العلامة في الواجهة');
         }
         
         // تعيين العلامة المحددة
-        selectedMarker = marker;
+        window.selectedMarker = marker;
         
         // إظهار حقل إدخال الملاحظة
-        document.getElementById('marker-note-container').style.display = 'block';
-        document.getElementById('marker-note').value = marker.notes;
-        document.getElementById('marker-note').focus();
+        const noteContainer = document.getElementById('marker-note-container');
+        const noteInput = document.getElementById('marker-note');
+        
+        if (noteContainer && noteInput) {
+            noteInput.value = marker.notes || '';
+            noteContainer.style.display = 'block';
+            noteInput.focus();
+            console.log('تم إظهار حقل إدخال الملاحظة');
+        } else {
+            console.error('لم يتم العثور على عناصر إدخال الملاحظة');
+        }
     }
 
     // دالة حفظ ملاحظة العلامة
