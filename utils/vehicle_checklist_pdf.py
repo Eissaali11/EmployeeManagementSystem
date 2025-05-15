@@ -53,7 +53,7 @@ class VehicleDiagramWithMarkers(Flowable):
         تهيئة مكون مخطط المركبة
         
         Args:
-            vehicle_diagram_path: مسار صورة مخطط المركبة
+            vehicle_diagram_path: مسار صورة مخطط المركبة (لم يعد يستخدم - نرسم بدلاً منها)
             damage_markers: قائمة بعلامات التلف، كل علامة تتكون من (x, y, notes)
             width: عرض المخطط
             height: ارتفاع المخطط
@@ -72,20 +72,54 @@ class VehicleDiagramWithMarkers(Flowable):
         # حفظ الحالة الحالية للـ canvas
         canvas.saveState()
         
-        # إضافة صورة السيارة
-        try:
-            vehicle_img = Image(self.vehicle_diagram_path, width=self.width, height=self.height)
-            vehicle_img.drawOn(canvas, 0, 0)
-        except Exception as e:
-            # في حالة عدم توفر الصورة، نرسم إطار فقط
-            canvas.setStrokeColor(colors.black)
-            canvas.setFillColor(colors.white)
-            canvas.rect(0, 0, self.width, self.height, fill=1)
-            
-            # إضافة نص توضيحي
-            canvas.setFont('Amiri', 14)
-            canvas.setFillColor(colors.black)
-            canvas.drawCentredString(self.width/2, self.height/2, arabic_text("مخطط المركبة غير متوفر"))
+        # رسم مخطط السيارة بدلاً من تحميل صورة
+        # رسم هيكل السيارة
+        canvas.setStrokeColor(colors.black)
+        canvas.setFillColor(colors.white)
+        canvas.setLineWidth(2)
+        
+        # مستطيل الهيكل الرئيسي
+        canvas.roundRect(50, 50, self.width - 100, self.height - 100, 20, stroke=1, fill=1)
+        
+        # الزجاج الأمامي
+        canvas.setFillColor(colors.lightblue)
+        canvas.setStrokeColor(colors.black)
+        points = [
+            100, self.height - 100,  # أعلى يسار
+            self.width - 100, self.height - 100,  # أعلى يمين
+            self.width - 120, self.height - 140,  # أسفل يمين
+            120, self.height - 140   # أسفل يسار
+        ]
+        canvas.drawPolygon(points, stroke=1, fill=1)
+        
+        # الزجاج الخلفي
+        points = [
+            120, 140,  # أعلى يسار
+            self.width - 120, 140,  # أعلى يمين
+            self.width - 100, 100,  # أسفل يمين
+            100, 100   # أسفل يسار
+        ]
+        canvas.drawPolygon(points, stroke=1, fill=1)
+        
+        # العجلات
+        canvas.setFillColor(colors.black)
+        canvas.circle(120, 80, 30, stroke=1, fill=1)
+        canvas.circle(self.width - 120, 80, 30, stroke=1, fill=1)
+        
+        # داخل العجلات (الجنوط)
+        canvas.setFillColor(colors.grey)
+        canvas.circle(120, 80, 15, stroke=1, fill=1)
+        canvas.circle(self.width - 120, 80, 15, stroke=1, fill=1)
+        
+        # المصابيح الأمامية
+        canvas.setFillColor(colors.yellow)
+        canvas.circle(80, self.height - 120, 12, stroke=1, fill=1)
+        canvas.circle(self.width - 80, self.height - 120, 12, stroke=1, fill=1)
+        
+        # المصابيح الخلفية
+        canvas.setFillColor(colors.red)
+        canvas.circle(80, 120, 12, stroke=1, fill=1)
+        canvas.circle(self.width - 80, 120, 12, stroke=1, fill=1)
         
         # رسم علامات التلف
         for marker in self.damage_markers:
@@ -239,11 +273,9 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
     elements.append(Paragraph(arabic_text("مخطط المركبة مع علامات التلف"), styles['ArabicHeading']))
     elements.append(Spacer(1, 10 * mm))
     
-    # مسار مخطط المركبة
+    # رسم مخطط المركبة مباشرة بدلاً من تحميل صورة
+    # نستخدم القماش مباشرة
     diagram_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'images', 'vehicles', 'vehicle_diagram.svg')
-    if not os.path.exists(diagram_path):
-        # استخدام صورة PNG إذا لم يتوفر SVG
-        diagram_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'images', 'vehicles', 'vehicle_diagram.png')
     
     # إضافة مخطط المركبة مع علامات التلف
     diagram = VehicleDiagramWithMarkers(diagram_path, damage_markers, width=450, height=250)
