@@ -19,6 +19,40 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
+  <!-- تنسيقات إضافية للبحث -->
+  <style>
+    .search-results-container {
+      position: relative;
+    }
+    #search-results {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-height: 200px;
+      overflow-y: auto;
+      position: absolute;
+      width: 100%;
+      z-index: 1000;
+    }
+    .result-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .result-item:hover {
+      background-color: #f5f5f5;
+    }
+    .result-item:last-child {
+      border-bottom: none;
+    }
+    .bg-warning {
+      background-color: #ffe082 !important;
+      border-radius: 2px;
+      font-weight: bold;
+    }
+  
   <!-- ملفات الأنماط الأساسية -->
   <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='mobile/css/mobile-theme.css') }}">
