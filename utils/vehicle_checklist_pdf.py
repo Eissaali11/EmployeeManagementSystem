@@ -228,7 +228,11 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
         
         # إضافة تاريخ الفحص والوقت
         canvas.setFont('Amiri', 10)
-        date_str = checklist.check_date.strftime("%Y-%m-%d") if checklist.check_date else ""
+        date_str = ""
+        if hasattr(checklist, 'check_date') and checklist.check_date:
+            date_str = checklist.check_date.strftime("%Y-%m-%d")
+        elif hasattr(checklist, 'inspection_date') and checklist.inspection_date:
+            date_str = checklist.inspection_date.strftime("%Y-%m-%d")
         canvas.drawString(A4[0] - 5*cm, A4[1] - 3.5*cm, arabic_text(f"تاريخ الفحص: {date_str}"))
         
         # إضافة رقم الصفحة في أسفل الصفحة
@@ -323,13 +327,32 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
         
         for item in items:
             # تحديد حالة العنصر (جيد/سيء)
-            status = "جيد" if item.is_passed else "سيء"
-            status_color = colors.green if item.is_passed else colors.red
+            status = ""
+            status_color = colors.black
             
+            if hasattr(item, 'status'):
+                if item.status == 'good':
+                    status = "جيد"
+                    status_color = colors.green
+                elif item.status == 'fair':
+                    status = "متوسط"
+                    status_color = colors.orange
+                elif item.status == 'poor':
+                    status = "سيء"
+                    status_color = colors.red
+                else:
+                    status = "غير محدد"
+                    status_color = colors.black
+            
+            # التعامل مع الملاحظات المفقودة
+            item_name = getattr(item, 'item_name', '') or ""
+            item_notes = getattr(item, 'notes', '') or ""
+            
+            # إضافة الصف إلى جدول البيانات
             items_data.append([
-                Paragraph(arabic_text(item.item_name or ""), styles['ArabicTable']),
+                Paragraph(arabic_text(item_name), styles['ArabicTable']),
                 Paragraph(f'<font color="{status_color}">{arabic_text(status)}</font>', styles['ArabicTable']),
-                Paragraph(arabic_text(item.notes or ""), styles['ArabicTable'])
+                Paragraph(arabic_text(item_notes), styles['ArabicTable'])
             ])
         
         # تنسيق جدول عناصر الفحص
@@ -350,48 +373,47 @@ def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_mar
         elements.append(Paragraph(arabic_text("الصور المرفقة"), styles['ArabicHeading']))
         elements.append(Spacer(1, 10 * mm))
         
+        # تعريف دالة مساعدة لمعالجة الصور
+        def process_image(image_obj):
+            # القيمة الافتراضية إذا كانت الصورة غير متوفرة
+            default_cell = [Paragraph(arabic_text("(الصورة غير متوفرة)"), styles['ArabicTable'])]
+            
+            # التحقق من وجود سمة image_path
+            image_path = getattr(image_obj, 'image_path', '')
+            if not image_path:
+                return default_cell
+                
+            img_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', image_path)
+            if not os.path.exists(img_path):
+                return default_cell
+                
+            cell_content = []
+            try:
+                img = Image(img_path, width=7*cm, height=7*cm)
+                cell_content.append(img)
+            except Exception as e:
+                print(f"خطأ في تحميل الصورة: {str(e)}")
+                return default_cell
+                
+            description = getattr(image_obj, 'description', '') or ""
+            cell_content.append(Paragraph(arabic_text(description), styles['ArabicTable']))
+            return cell_content
+        
         # عرض الصور في صفوف من صورتين
+        images_data = []
         for i in range(0, len(checklist_images), 2):
-            # إنشاء جدول لعرض صورتين في صف واحد
-            images_data = []
             row = []
             
-            # إضافة الصورة الأولى
-            image1 = checklist_images[i]
-            img1_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', image1.image_path)
-            if os.path.exists(img1_path):
-                img1_with_caption = []
-                try:
-                    img1 = Image(img1_path, width=7*cm, height=7*cm)
-                    img1_with_caption.append(img1)
-                except Exception:
-                    img1_with_caption.append(Paragraph(arabic_text("(الصورة غير متوفرة)"), styles['ArabicTable']))
-                
-                img1_with_caption.append(Paragraph(arabic_text(image1.description or ""), styles['ArabicTable']))
-                row.append(img1_with_caption)
-            else:
-                row.append([Paragraph(arabic_text("(الصورة غير متوفرة)"), styles['ArabicTable'])])
+            # الصورة الأولى
+            row.append(process_image(checklist_images[i]))
             
-            # إضافة الصورة الثانية إذا كانت موجودة
+            # الصورة الثانية (إن وجدت)
             if i + 1 < len(checklist_images):
-                image2 = checklist_images[i + 1]
-                img2_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', image2.image_path)
-                if os.path.exists(img2_path):
-                    img2_with_caption = []
-                    try:
-                        img2 = Image(img2_path, width=7*cm, height=7*cm)
-                        img2_with_caption.append(img2)
-                    except Exception:
-                        img2_with_caption.append(Paragraph(arabic_text("(الصورة غير متوفرة)"), styles['ArabicTable']))
-                    
-                    img2_with_caption.append(Paragraph(arabic_text(image2.description or ""), styles['ArabicTable']))
-                    row.append(img2_with_caption)
-                else:
-                    row.append([Paragraph(arabic_text("(الصورة غير متوفرة)"), styles['ArabicTable'])])
+                row.append(process_image(checklist_images[i + 1]))
             else:
-                # إضافة خلية فارغة إذا لم تكن هناك صورة ثانية
+                # إضافة خلية فارغة
                 row.append([])
-            
+                
             images_data.append(row)
             
             # تنسيق جدول الصور
