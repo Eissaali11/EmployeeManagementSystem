@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, make_response, send_file, redirect, url_for
 from flask_login import login_required
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from datetime import datetime, date, timedelta
 from io import BytesIO
 from utils.pdf import create_pdf, arabic_text, create_data_table, get_styles
@@ -22,9 +22,42 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import pandas as pd
-from sqlalchemy import or_
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
+
+# طرق تصدير التقارير للنسخة المحمولة
+@reports_bp.route('/export/vehicles/<export_type>')
+@login_required
+def export_vehicles_report(export_type):
+    """
+    تصدير تقرير المركبات من النسخة المحمولة
+    :param export_type: نوع التصدير ('pdf' أو 'excel')
+    """
+    # نقل معلمات البحث من الطلب الحالي
+    vehicle_type = request.args.get('vehicle_type', '')
+    status = request.args.get('status', '')
+    search = request.args.get('search', '')
+    
+    if export_type == 'pdf':
+        return vehicles_pdf()
+    elif export_type == 'excel':
+        return vehicles_excel()
+    else:
+        return redirect(url_for('mobile.report_vehicles'))
+
+@reports_bp.route('/export/fees/<export_type>')
+@login_required
+def export_fees_report(export_type):
+    """
+    تصدير تقرير الرسوم من النسخة المحمولة
+    :param export_type: نوع التصدير ('pdf' أو 'excel')
+    """
+    if export_type == 'pdf':
+        return fees_pdf()
+    elif export_type == 'excel':
+        return fees_excel()
+    else:
+        return redirect(url_for('mobile.report_fees'))
 
 # دوال متعلقة بتصدير السيارات
 @reports_bp.route('/vehicles/pdf')
