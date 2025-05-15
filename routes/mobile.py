@@ -1003,21 +1003,25 @@ def report_vehicles():
     
     # معالجة طلبات التصدير
     if export_format:
-        if export_format == 'pdf':
-            # استدعاء مسار التصدير PDF في النسخة الرئيسية
-            return redirect(url_for('reports.export_vehicles_report',
-                                  export_type='pdf',
-                                  vehicle_type=vehicle_type,
-                                  status=status,
-                                  search=search))
-                                  
-        elif export_format == 'excel':
-            # استدعاء مسار التصدير Excel في النسخة الرئيسية
-            return redirect(url_for('reports.export_vehicles_report',
-                                  export_type='excel',
-                                  vehicle_type=vehicle_type,
-                                  status=status,
-                                  search=search))
+        try:
+            if export_format == 'pdf':
+                # استدعاء مسار التصدير PDF في النسخة الرئيسية
+                return redirect(url_for('reports.export_vehicles_report',
+                                      export_type='pdf',
+                                      vehicle_type=vehicle_type,
+                                      status=status,
+                                      search=search))
+                                      
+            elif export_format == 'excel':
+                # استدعاء مسار التصدير Excel في النسخة الرئيسية
+                return redirect(url_for('reports.export_vehicles_report',
+                                      export_type='excel',
+                                      vehicle_type=vehicle_type,
+                                      status=status,
+                                      search=search))
+        except Exception as e:
+            # تسجيل الخطأ في السجل
+            print(f"خطأ في تصدير تقرير المركبات: {str(e)}")
     
     # استخراج انواع المركبات وحالات المركبات المتاحة
     # استخراج الشركات المصنعة من قاعدة البيانات
