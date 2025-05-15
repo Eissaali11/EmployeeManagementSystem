@@ -360,6 +360,90 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // وظيفة البحث عن الموظفين
+        const searchInput = document.getElementById('employeeSearchInput');
+        const searchBtn = document.getElementById('searchEmployeeBtn');
+        const employeeRows = document.querySelectorAll('.employee-row');
+        const noResultsAlert = document.getElementById('noResultsAlert');
+        const personNameInput = document.getElementById('person_name');
+        const selectButtons = document.querySelectorAll('.select-employee-btn');
+        
+        // وظيفة البحث في الموظفين
+        function searchEmployees() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            let resultsFound = false;
+            
+            employeeRows.forEach(row => {
+                const name = row.getAttribute('data-name').toLowerCase();
+                const employeeId = row.getAttribute('data-employee-id')?.toLowerCase() || '';
+                const nationalId = row.getAttribute('data-national-id')?.toLowerCase() || '';
+                const department = row.getAttribute('data-department')?.toLowerCase() || '';
+                
+                // البحث في كافة الحقول
+                if (name.includes(searchTerm) || 
+                    employeeId.includes(searchTerm) || 
+                    nationalId.includes(searchTerm) || 
+                    department.includes(searchTerm)) {
+                    row.style.display = '';
+                    resultsFound = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // إظهار/إخفاء تنبيه عدم وجود نتائج
+            if (resultsFound) {
+                noResultsAlert.classList.add('d-none');
+            } else {
+                noResultsAlert.classList.remove('d-none');
+            }
+        }
+        
+        // تنفيذ البحث عند النقر على زر البحث
+        if (searchBtn) {
+            searchBtn.addEventListener('click', searchEmployees);
+        }
+        
+        // تنفيذ البحث عند الضغط على Enter في حقل البحث
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    searchEmployees();
+                }
+            });
+        }
+        
+        // حدث عند اختيار موظف
+        selectButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const employeeName = this.getAttribute('data-name');
+                personNameInput.value = employeeName;
+                
+                // إغلاق النافذة
+                const modal = bootstrap.Modal.getInstance(document.getElementById('employeesModal'));
+                modal.hide();
+            });
+        });
+        
+        // مسح حقل البحث عند فتح النافذة
+        const employeesModal = document.getElementById('employeesModal');
+        if (employeesModal) {
+            employeesModal.addEventListener('shown.bs.modal', function() {
+                searchInput.value = '';
+                
+                // إعادة عرض جميع الصفوف
+                employeeRows.forEach(row => {
+                    row.style.display = '';
+                });
+                
+                // إخفاء رسالة عدم وجود نتائج
+                noResultsAlert.classList.add('d-none');
+                
+                // تركيز على حقل البحث
+                searchInput.focus();
+            });
+        }
+        
         // تنسيق حقل العداد لإظهار الأرقام بفواصل
         const mileageInput = document.getElementById('mileage');
         mileageInput.addEventListener('blur', function() {
