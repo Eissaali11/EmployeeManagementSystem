@@ -51,11 +51,11 @@
                     <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
                         <i class="fas fa-download"></i> تصدير
                     </button>
-                    <div class="dropdown-menu">
-                        <a href="{{ url_for('mobile.report_vehicles') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
+                    <div class="dropdown-menu" id="exportMenu">
+                        <a href="{{ url_for('reports.export_vehicles_report', export_type='pdf') }}?{{ request.query_string.decode('utf-8') }}" class="dropdown-item">
                             <i class="fas fa-file-pdf"></i> تصدير PDF
                         </a>
-                        <a href="{{ url_for('mobile.report_vehicles') }}?{{ request.query_string.decode('utf-8') }}&export=excel" class="dropdown-item">
+                        <a href="{{ url_for('reports.export_vehicles_report', export_type='excel') }}?{{ request.query_string.decode('utf-8') }}" class="dropdown-item">
                             <i class="fas fa-file-excel"></i> تصدير Excel
                         </a>
                     </div>
