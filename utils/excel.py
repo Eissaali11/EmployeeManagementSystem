@@ -541,7 +541,7 @@ def parse_salary_excel(file, month, year):
 
 def generate_salary_excel(salaries, filter_description=None):
     """
-    إنشاء ملف Excel من بيانات الرواتب مع تنظيم وتجميع حسب القسم
+    إنشاء ملف Excel من بيانات الرواتب مع تنظيم وتجميع حسب القسم وتنسيق ممتاز
     
     Args:
         salaries: قائمة كائنات Salary 
@@ -552,8 +552,43 @@ def generate_salary_excel(salaries, filter_description=None):
     """
     try:
         from datetime import datetime
-        from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
+        from openpyxl.styles import Alignment, Font, PatternFill, Border, Side, Color
         from openpyxl.utils import get_column_letter
+        from openpyxl.styles.differential import DifferentialStyle
+        from openpyxl.formatting.rule import Rule
+        from openpyxl.drawing.image import Image
+        
+        # تحديد الألوان والتنسيقات
+        header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        header_font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+        total_row_fill = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
+        total_row_font = Font(name="Arial", size=12, bold=True)
+        
+        normal_font = Font(name="Arial", size=11)
+        highlight_font = Font(name="Arial", size=11, bold=True)
+        
+        thin_border = Border(
+            left=Side(style='thin', color='000000'),
+            right=Side(style='thin', color='000000'),
+            top=Side(style='thin', color='000000'),
+            bottom=Side(style='thin', color='000000')
+        )
+        
+        thick_border = Border(
+            left=Side(style='medium', color='000000'),
+            right=Side(style='medium', color='000000'),
+            top=Side(style='medium', color='000000'),
+            bottom=Side(style='medium', color='000000')
+        )
+        
+        title_alignment = Alignment(horizontal='center', vertical='center')
+        header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell_alignment = Alignment(horizontal='center', vertical='center')
+        text_alignment = Alignment(horizontal='right', vertical='center', wrap_text=True)
+        
+        # تنسيقات للخلايا المالية
+        money_format = '#,##0.00 "ر.س"'
+        percentage_format = '0.00%'
         
         # تجميع البيانات حسب القسم
         departments_data = {}
@@ -582,7 +617,7 @@ def generate_salary_excel(salaries, filter_description=None):
         # إنشاء ملف Excel باستخدام openpyxl
         output = BytesIO()
         with pd.ExcelWriter(path=output, engine='openpyxl') as writer:
-            # إضافة ورقة التلخيص
+            # بيانات الملخص
             summary_data = []
             total_salaries = 0
             total_basic = 0
@@ -635,12 +670,69 @@ def generate_salary_excel(salaries, filter_description=None):
             
             # تنسيق ورقة الملخص
             summary_sheet = writer.sheets['ملخص الرواتب']
-            for i, col in enumerate(summary_df.columns):
-                column_width = max(summary_df[col].astype(str).map(len).max(), len(col)) + 4
-                column_letter = get_column_letter(i + 1)
+            
+            # إضافة عنوان للتقرير
+            summary_sheet.merge_cells('A1:G1')
+            summary_sheet.cell(1, 1).value = "تقرير ملخص الرواتب"
+            summary_sheet.cell(1, 1).font = Font(name="Arial", size=16, bold=True, color="1F4E78")
+            summary_sheet.cell(1, 1).alignment = title_alignment
+            
+            # إضافة معلومات الفلترة تحت العنوان
+            if filter_description:
+                summary_sheet.merge_cells('A2:G2')
+                summary_sheet.cell(2, 1).value = "مرشحات البحث: " + " - ".join(filter_description)
+                summary_sheet.cell(2, 1).font = Font(name="Arial", size=12, italic=True)
+                summary_sheet.cell(2, 1).alignment = title_alignment
+                
+                # ضبط العنوان ليبدأ من الصف الثالث
+                title_row_offset = 3
+            else:
+                # ضبط العنوان ليبدأ من الصف الثاني
+                title_row_offset = 2
+            
+            # الحصول على عدد الصفوف والأعمدة في البيانات
+            num_rows = len(summary_data) + 1  # +1 للعنوان
+            num_cols = len(summary_df.columns)
+            
+            # تنسيق الترويسات
+            for col_idx, column_name in enumerate(summary_df.columns, 1):
+                cell = summary_sheet.cell(title_row_offset, col_idx)
+                cell.value = column_name
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = thin_border
+                
+                # ضبط عرض العمود
+                column_width = max(summary_df[column_name].astype(str).map(len).max(), len(column_name)) + 4
+                column_letter = get_column_letter(col_idx)
                 summary_sheet.column_dimensions[column_letter].width = column_width
             
-            # إنشاء ورقة عمل لكل قسم
+            # تنسيق البيانات
+            for row_idx, row in enumerate(summary_data, 1):
+                is_total_row = row_idx == len(summary_data)
+                
+                for col_idx, (column_name, value) in enumerate(zip(summary_df.columns, row.values()), 1):
+                    cell = summary_sheet.cell(title_row_offset + row_idx, col_idx)
+                    cell.value = value
+                    
+                    # تنسيق خاص للصف الأخير (الإجمالي)
+                    if is_total_row:
+                        cell.font = total_row_font
+                        cell.fill = total_row_fill
+                        cell.border = thick_border
+                    else:
+                        cell.font = normal_font
+                        cell.border = thin_border
+                    
+                    # تنسيق خاص للأعمدة المالية
+                    if 'إجمالي' in column_name or column_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                        cell.number_format = money_format
+                        cell.alignment = cell_alignment
+                    else:
+                        cell.alignment = text_alignment
+            
+            # إنشاء ورقة عمل مفصلة لكل قسم
             for dept_name, dept_salaries in departments_data.items():
                 dept_df = pd.DataFrame(dept_salaries)
                 
@@ -657,14 +749,101 @@ def generate_salary_excel(salaries, filter_description=None):
                 
                 # إضافة ورقة العمل للقسم
                 sheet_name = dept_name[:31]  # تقليص اسم الورقة إلى 31 حرف (أقصى طول مسموح في Excel)
-                dept_df.to_excel(writer, sheet_name=sheet_name, index=False)
+                dept_df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=2)  # بدء من الصف الثالث لإتاحة مساحة للعنوان
                 
-                # ضبط عرض الأعمدة في ورقة القسم
+                # الحصول على sheet وتنسيق عنوان القسم
                 dept_sheet = writer.sheets[sheet_name]
-                for i, col in enumerate(actual_columns):
-                    column_width = max(dept_df[col].astype(str).map(len).max(), len(col)) + 4
-                    column_letter = get_column_letter(i + 1)
+                
+                # دمج الخلايا للعنوان
+                num_dept_cols = len(actual_columns)
+                dept_sheet.merge_cells(f'A1:{get_column_letter(num_dept_cols)}1')
+                title_cell = dept_sheet.cell(1, 1)
+                title_cell.value = f"تفاصيل رواتب قسم {dept_name}"
+                title_cell.font = Font(name="Arial", size=16, bold=True, color="1F4E78")
+                title_cell.alignment = title_alignment
+                
+                # تنسيق الترويسات
+                for col_idx, column_name in enumerate(actual_columns, 1):
+                    cell = dept_sheet.cell(3, col_idx)
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = header_alignment
+                    cell.border = thin_border
+                    
+                    # ضبط عرض العمود
+                    column_width = max(dept_df[column_name].astype(str).map(len).max(), len(column_name)) + 4
+                    column_letter = get_column_letter(col_idx)
                     dept_sheet.column_dimensions[column_letter].width = column_width
+                
+                # تنسيق بيانات الموظفين
+                for row_idx in range(len(dept_df)):
+                    for col_idx, column_name in enumerate(actual_columns, 1):
+                        cell = dept_sheet.cell(row_idx + 4, col_idx)  # +4 للترويسة والعنوان
+                        
+                        # تنسيق خاص للخلايا المالية
+                        if column_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                            cell.number_format = money_format
+                            cell.alignment = cell_alignment
+                        else:
+                            cell.alignment = text_alignment
+                        
+                        cell.font = normal_font
+                        cell.border = thin_border
+                
+                # إضافة صف للمجاميع في نهاية جدول القسم
+                total_row_idx = len(dept_df) + 4
+                dept_sheet.cell(total_row_idx, 1).value = "المجموع"
+                dept_sheet.cell(total_row_idx, 1).font = total_row_font
+                dept_sheet.cell(total_row_idx, 1).alignment = text_alignment
+                
+                # تنسيق صف المجموع وحساب المجاميع للأعمدة المالية
+                for col_idx, column_name in enumerate(actual_columns, 1):
+                    cell = dept_sheet.cell(total_row_idx, col_idx)
+                    cell.font = total_row_font
+                    cell.fill = total_row_fill
+                    cell.border = thick_border
+                    
+                    # حساب المجاميع للأعمدة المالية
+                    if column_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                        col_letter = get_column_letter(col_idx)
+                        cell.value = f"=SUM({col_letter}4:{col_letter}{total_row_idx-1})"
+                        cell.number_format = money_format
+                        cell.alignment = cell_alignment
+                
+                # إضافة قواعد تنسيق شرطية للخلايا
+                # تلوين الخلايا ذات القيم السالبة باللون الأحمر
+                red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+                red_font = Font(color="9C0006")
+                
+                # تلوين الخلايا ذات القيم الموجبة باللون الأخضر
+                green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+                green_font = Font(color="006100")
+                
+                # تطبيق التنسيق الشرطي على أعمدة المال
+                for col_idx, column_name in enumerate(actual_columns, 1):
+                    if column_name in ['الراتب الأساسي', 'البدلات', 'المكافآت', 'صافي الراتب']:
+                        col_letter = get_column_letter(col_idx)
+                        
+                        # قاعدة للقيم العالية (أعلى من المتوسط)
+                        high_rule = Rule(
+                            type="cellIs",
+                            operator="greaterThan",
+                            formula=[f"AVERAGE({col_letter}4:{col_letter}{total_row_idx-1})"],
+                            dxf=DifferentialStyle(fill=green_fill, font=green_font)
+                        )
+                        dept_sheet.conditional_formatting.add(f"{col_letter}4:{col_letter}{total_row_idx-1}", high_rule)
+                    
+                    elif column_name == 'الخصومات':
+                        col_letter = get_column_letter(col_idx)
+                        
+                        # قاعدة للخصومات العالية
+                        high_deduction_rule = Rule(
+                            type="cellIs",
+                            operator="greaterThan",
+                            formula=[f"AVERAGE({col_letter}4:{col_letter}{total_row_idx-1})"],
+                            dxf=DifferentialStyle(fill=red_fill, font=red_font)
+                        )
+                        dept_sheet.conditional_formatting.add(f"{col_letter}4:{col_letter}{total_row_idx-1}", high_deduction_rule)
             
             # إنشاء ورقة لجميع الرواتب
             all_data = []
@@ -679,16 +858,72 @@ def generate_salary_excel(salaries, filter_description=None):
                 all_df = all_df[all_columns]
                 
                 # إضافة ورقة كل الرواتب
-                all_df.to_excel(writer, sheet_name='جميع الرواتب', index=False)
+                all_df.to_excel(writer, sheet_name='جميع الرواتب', index=False, startrow=2)
                 
-                # ضبط عرض الأعمدة
+                # تنسيق ورقة كل الرواتب
                 all_sheet = writer.sheets['جميع الرواتب']
-                for i, col in enumerate(all_columns):
-                    column_width = max(all_df[col].astype(str).map(len).max(), len(col)) + 4
-                    column_letter = get_column_letter(i + 1)
+                
+                # دمج الخلايا للعنوان
+                num_all_cols = len(all_columns)
+                all_sheet.merge_cells(f'A1:{get_column_letter(num_all_cols)}1')
+                title_cell = all_sheet.cell(1, 1)
+                title_cell.value = "قائمة كاملة بالرواتب"
+                title_cell.font = Font(name="Arial", size=16, bold=True, color="1F4E78")
+                title_cell.alignment = title_alignment
+                
+                # تنسيق الترويسات
+                for col_idx, column_name in enumerate(all_columns, 1):
+                    cell = all_sheet.cell(3, col_idx)
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = header_alignment
+                    cell.border = thin_border
+                    
+                    # ضبط عرض العمود
+                    column_width = max(all_df[column_name].astype(str).map(len).max(), len(column_name)) + 4
+                    column_letter = get_column_letter(col_idx)
                     all_sheet.column_dimensions[column_letter].width = column_width
+                
+                # تنسيق كافة البيانات
+                for row_idx in range(len(all_df)):
+                    for col_idx, column_name in enumerate(all_columns, 1):
+                        cell = all_sheet.cell(row_idx + 4, col_idx)  # +4 للترويسة والعنوان
+                        
+                        # تنسيق خاص للخلايا المالية
+                        if column_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                            cell.number_format = money_format
+                            cell.alignment = cell_alignment
+                        else:
+                            cell.alignment = text_alignment
+                        
+                        # تمييز الصفوف بألوان متناوبة
+                        if row_idx % 2 == 0:
+                            cell.fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+                        
+                        cell.font = normal_font
+                        cell.border = thin_border
+                
+                # إضافة صف للمجاميع في نهاية الجدول
+                total_row_idx = len(all_df) + 4
+                all_sheet.cell(total_row_idx, 1).value = "المجموع الكلي"
+                all_sheet.cell(total_row_idx, 1).font = total_row_font
+                all_sheet.cell(total_row_idx, 1).alignment = text_alignment
+                
+                # تنسيق صف المجموع وحساب المجاميع للأعمدة المالية
+                for col_idx, column_name in enumerate(all_columns, 1):
+                    cell = all_sheet.cell(total_row_idx, col_idx)
+                    cell.font = total_row_font
+                    cell.fill = total_row_fill
+                    cell.border = thick_border
+                    
+                    # حساب المجاميع للأعمدة المالية
+                    if column_name in ['الراتب الأساسي', 'البدلات', 'الخصومات', 'المكافآت', 'صافي الراتب']:
+                        col_letter = get_column_letter(col_idx)
+                        cell.value = f"=SUM({col_letter}4:{col_letter}{total_row_idx-1})"
+                        cell.number_format = money_format
+                        cell.alignment = cell_alignment
             
-            # إضافة ورقة المعلومات
+            # إنشاء ورقة معلومات التقرير بتنسيق مميز
             info_data = []
             
             # إضافة معلومات التصفية
@@ -714,15 +949,62 @@ def generate_salary_excel(salaries, filter_description=None):
                 'القيمة': len(departments_data)
             })
             
-            info_df = pd.DataFrame(info_data)
-            info_df.to_excel(writer, sheet_name='معلومات التقرير', index=False)
+            # إضافة إحصائيات عامة
+            info_data.append({
+                'المعلومة': 'متوسط صافي الراتب',
+                'القيمة': total_net / total_salaries if total_salaries > 0 else 0
+            })
             
-            # ضبط عرض الأعمدة في ورقة المعلومات
+            info_data.append({
+                'المعلومة': 'إجمالي مصاريف الرواتب',
+                'القيمة': total_net
+            })
+            
+            info_df = pd.DataFrame(info_data)
+            info_df.to_excel(writer, sheet_name='معلومات التقرير', index=False, startrow=2)
+            
+            # تنسيق ورقة المعلومات
             info_sheet = writer.sheets['معلومات التقرير']
-            for i, col in enumerate(info_df.columns):
-                column_width = max(info_df[col].astype(str).map(len).max(), len(col)) + 4
-                column_letter = get_column_letter(i + 1)
+            
+            # دمج الخلايا للعنوان
+            info_sheet.merge_cells('A1:B1')
+            title_cell = info_sheet.cell(1, 1)
+            title_cell.value = "معلومات التقرير"
+            title_cell.font = Font(name="Arial", size=16, bold=True, color="1F4E78")
+            title_cell.alignment = title_alignment
+            
+            # تنسيق الترويسات
+            for col_idx, column_name in enumerate(info_df.columns, 1):
+                cell = info_sheet.cell(3, col_idx)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = thin_border
+                
+                # ضبط عرض العمود
+                column_width = max(info_df[column_name].astype(str).map(len).max(), len(column_name)) + 4
+                column_letter = get_column_letter(col_idx)
                 info_sheet.column_dimensions[column_letter].width = column_width
+            
+            # تنسيق بيانات المعلومات
+            for row_idx in range(len(info_data)):
+                for col_idx, column_name in enumerate(info_df.columns, 1):
+                    cell = info_sheet.cell(row_idx + 4, col_idx)  # +4 للترويسة والعنوان
+                    
+                    # تنسيق خاص للقيم المالية
+                    if row_idx >= 4:  # الصفين الأخيرين (متوسط الراتب وإجمالي المصاريف)
+                        cell.number_format = money_format
+                    
+                    cell.alignment = text_alignment
+                    cell.font = normal_font
+                    cell.border = thin_border
+                    
+                    # تمييز الصفوف بألوان متناوبة
+                    if row_idx % 2 == 0:
+                        cell.fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+            
+            # تعيين الصفحة الأولى كصفحة نشطة
+            writer.book.active = writer.book.worksheets[0]
         
         output.seek(0)
         return output
