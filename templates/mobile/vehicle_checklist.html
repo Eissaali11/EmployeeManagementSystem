@@ -21,13 +21,8 @@
         <form id="vehicle-select-form" class="mobile-form">
             <div class="mobile-form-group">
                 <label>السيارة</label>
-                <div class="position-relative">
-                    <input type="text" id="vehicle-search" class="mobile-form-control" placeholder="ابحث عن السيارة بالاسم أو رقم اللوحة" autocomplete="off">
-                    <div id="search-results" class="position-absolute w-100 start-0 bg-white shadow rounded mt-1" style="max-height: 200px; overflow-y: auto; z-index: 1010; display: none;">
-                        <!-- نتائج البحث ستظهر هنا -->
-                    </div>
-                </div>
-                <select id="vehicle-select" class="mobile-form-select d-none" required>
+                <!-- استخدام قائمة منسدلة مباشرة بدلاً من آلية البحث المخصصة -->
+                <select id="vehicle-select" class="mobile-form-select" required>
                     <option value="">اختر السيارة</option>
                     {% for vehicle in vehicles %}
                     <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</option>
@@ -424,16 +419,16 @@
                     <label class="form-check-label">إضافة صور للفحص</label>
                     <div class="row gx-2 mb-3">
                         <div class="col-6">
-                            <button type="button" id="capture-image-btn" class="btn btn-outline-primary w-100">
+                            <label for="image-capture-input" class="btn btn-outline-primary w-100">
                                 <i class="fas fa-camera"></i> التقاط صورة
-                            </button>
-                            <input type="file" id="image-capture-input" accept="image/*" capture="environment" style="display: none;">
+                            </label>
+                            <input type="file" id="image-capture-input" accept="image/*" capture="environment" style="opacity:0;position:absolute;width:1px;height:1px;" onchange="handleSelectedImages(this.files)">
                         </div>
                         <div class="col-6">
-                            <button type="button" id="select-image-btn" class="btn btn-outline-secondary w-100">
+                            <label for="image-file-input" class="btn btn-outline-secondary w-100">
                                 <i class="fas fa-image"></i> اختيار من الاستوديو
-                            </button>
-                            <input type="file" id="image-file-input" accept="image/*" multiple style="display: none;">
+                            </label>
+                            <input type="file" id="image-file-input" accept="image/*" multiple style="opacity:0;position:absolute;width:1px;height:1px;" onchange="handleSelectedImages(this.files)">
                         </div>
                     </div>
                     
@@ -1277,21 +1272,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // متغير لتخزين الصور المختارة
-    window.selectedImages = [];
+    // متغير لتخزين الصور المختارة - معرفة عامة للصفحة
+    var selectedImages = [];
 
-    // دالة معالجة الصور المختارة
+    // دالة معالجة الصور المختارة - أبسط وأكثر متانة
     function handleSelectedImages(files) {
+        console.log('تم استدعاء دالة معالجة الصور المختارة، عدد الملفات:', files.length);
+        
         const imagePreviewContainer = document.getElementById('image-preview-container');
         const imagesCount = document.getElementById('images-count');
         
-        if (!files || !imagePreviewContainer) return;
+        if (!files || !imagePreviewContainer) {
+            console.error('عناصر معالجة الصور غير موجودة');
+            return;
+        }
         
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             
             // التحقق من أن الملف هو صورة
-            if (!file.type.match('image.*')) continue;
+            if (!file.type.match('image.*')) {
+                console.warn('تم تجاهل ملف غير صورة:', file.name, file.type);
+                continue;
+            }
+            
+            console.log('معالجة صورة:', file.name);
             
             // إنشاء معرف فريد للصورة
             const imageId = Date.now() + '-' + i;
@@ -1308,52 +1313,85 @@ document.addEventListener('DOMContentLoaded', function() {
             imageCol.className = 'col-6 mb-2';
             imageCol.dataset.id = imageId;
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imageCol.innerHTML = `
-                    <div class="image-preview-item">
-                        <img src="${e.target.result}" class="img-fluid rounded" alt="صورة الفحص">
-                        <div class="image-preview-actions mt-1">
-                            <button type="button" class="btn btn-sm btn-outline-primary add-image-description" data-id="${imageId}">
-                                <i class="fas fa-pen"></i> إضافة وصف
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-image" data-id="${imageId}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                        <div class="image-description-container mt-1" style="display: none;">
-                            <input type="text" class="mobile-form-control image-description" placeholder="أدخل وصف الصورة">
-                            <div class="d-flex justify-content-between mt-1">
-                                <button type="button" class="btn btn-sm btn-primary save-image-description" data-id="${imageId}">حفظ</button>
-                                <button type="button" class="btn btn-sm btn-secondary cancel-image-description" data-id="${imageId}">إلغاء</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
+            try {
+                const reader = new FileReader();
                 
-                // إضافة أحداث للأزرار
-                imageCol.querySelector('.add-image-description').addEventListener('click', function() {
-                    showImageDescriptionField(imageId);
-                });
+                reader.onload = function(e) {
+                    try {
+                        // إنشاء محتوى العرض المصغر
+                        const imageItem = document.createElement('div');
+                        imageItem.className = 'image-preview-item';
+                        
+                        // إضافة عنصر الصورة
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded';
+                        img.alt = 'صورة الفحص';
+                        imageItem.appendChild(img);
+                        
+                        // إضافة أزرار التحكم
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'image-preview-actions mt-1';
+                        
+                        // زر إضافة وصف
+                        const addDescBtn = document.createElement('button');
+                        addDescBtn.className = 'btn btn-sm btn-outline-primary me-1';
+                        addDescBtn.innerHTML = '<i class="fas fa-pen"></i> وصف';
+                        addDescBtn.onclick = function() { 
+                            // الوظيفة ستضاف لاحقاً 
+                            alert('سيتم إضافة هذه الوظيفة قريباً');
+                        };
+                        actionsDiv.appendChild(addDescBtn);
+                        
+                        // زر حذف الصورة
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'btn btn-sm btn-outline-danger';
+                        removeBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                        removeBtn.onclick = function() {
+                            // حذف الصورة المعروضة
+                            imageCol.remove();
+                            
+                            // حذف الصورة من المصفوفة
+                            const index = selectedImages.findIndex(img => img.id === imageId);
+                            if (index !== -1) {
+                                selectedImages.splice(index, 1);
+                            }
+                            
+                            // تحديث العداد
+                            if (imagesCount) {
+                                imagesCount.textContent = selectedImages.length;
+                            }
+                        };
+                        actionsDiv.appendChild(removeBtn);
+                        
+                        // إضافة الأزرار إلى عنصر الصورة
+                        imageItem.appendChild(actionsDiv);
+                        
+                        // إضافة عنصر الصورة إلى العمود
+                        imageCol.appendChild(imageItem);
+                        
+                        // إضافة العمود إلى حاوية العرض
+                        imagePreviewContainer.appendChild(imageCol);
+                        
+                        // تحديث عداد الصور
+                        if (imagesCount) {
+                            imagesCount.textContent = selectedImages.length;
+                        }
+                    } catch (renderError) {
+                        console.error('خطأ في عرض الصورة:', renderError);
+                    }
+                };
                 
-                imageCol.querySelector('.remove-image').addEventListener('click', function() {
-                    removeImage(imageId);
-                });
+                reader.onerror = function(error) {
+                    console.error('خطأ في قراءة الصورة:', error);
+                };
                 
-                imageCol.querySelector('.save-image-description').addEventListener('click', function() {
-                    saveImageDescription(imageId);
-                });
-                
-                imageCol.querySelector('.cancel-image-description').addEventListener('click', function() {
-                    hideImageDescriptionField(imageId);
-                });
-            };
-            
-            // قراءة الصورة كـ Data URL
-            reader.readAsDataURL(file);
-            
-            // إضافة العنصر المصغر إلى الحاوية
-            imagePreviewContainer.appendChild(imageCol);
+                // قراءة الصورة كـ Data URL
+                reader.readAsDataURL(file);
+            } catch (fileError) {
+                console.error('خطأ في معالجة ملف الصورة:', fileError);
+            }
+            // تم إزالة الاستدعاء المكرر لإضافة العنصر
         }
         
         // تحديث عدد الصور
