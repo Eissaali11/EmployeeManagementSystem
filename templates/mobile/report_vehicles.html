@@ -299,17 +299,41 @@
 document.addEventListener('DOMContentLoaded', function() {
     // تفعيل قائمة التصدير المنسدلة
     const dropdownToggle = document.getElementById('exportDropdown');
-    const dropdownMenu = dropdownToggle.nextElementSibling;
+    const dropdownMenu = document.getElementById('exportMenu');
     
-    dropdownToggle.addEventListener('click', function() {
-        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
-            dropdownMenu.style.display = 'none';
-        }
-    });
+    // التأكد من وجود الزر والقائمة
+    if (dropdownToggle && dropdownMenu) {
+        console.log("زر التصدير والقائمة المنسدلة موجودان");
+        
+        // إضافة حدث النقر على الزر
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log("تم النقر على زر التصدير");
+            
+            // تبديل حالة عرض القائمة
+            if (dropdownMenu.style.display === 'block') {
+                dropdownMenu.style.display = 'none';
+                console.log("تم إخفاء القائمة المنسدلة");
+            } else {
+                dropdownMenu.style.display = 'block';
+                console.log("تم إظهار القائمة المنسدلة");
+            }
+        });
+        
+        // إغلاق القائمة عند النقر في أي مكان آخر
+        document.addEventListener('click', function(e) {
+            if (dropdownMenu.style.display === 'block' && 
+                !dropdownToggle.contains(e.target) && 
+                !dropdownMenu.contains(e.target)) {
+                dropdownMenu.style.display = 'none';
+                console.log("تم إغلاق القائمة عند النقر خارجها");
+            }
+        });
+    } else {
+        console.error("لم يتم العثور على زر التصدير أو القائمة المنسدلة");
+    }
     
     {% if vehicles %}
     // إنشاء رسم بياني للمركبات

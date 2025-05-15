@@ -39,10 +39,13 @@ def export_vehicles_report(export_type):
     search = request.args.get('search', '')
     
     if export_type == 'pdf':
-        return vehicles_pdf()
+        # إعادة توجيه إلى طريقة تصدير PDF الحالية
+        return redirect(url_for('reports.vehicles_pdf', vehicle_type=vehicle_type, status=status, search=search))
     elif export_type == 'excel':
-        return vehicles_excel()
+        # إعادة توجيه إلى طريقة تصدير Excel الحالية
+        return redirect(url_for('reports.vehicles_excel', vehicle_type=vehicle_type, status=status, search=search))
     else:
+        # إعادة توجيه إلى صفحة تقارير المركبات المحمولة
         return redirect(url_for('mobile.report_vehicles'))
 
 @reports_bp.route('/export/fees/<export_type>')
@@ -52,11 +55,20 @@ def export_fees_report(export_type):
     تصدير تقرير الرسوم من النسخة المحمولة
     :param export_type: نوع التصدير ('pdf' أو 'excel')
     """
+    # نقل معلمات البحث من الطلب الحالي
+    fee_type = request.args.get('fee_type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    status = request.args.get('status', '')
+    
     if export_type == 'pdf':
-        return fees_pdf()
+        # إعادة توجيه إلى طريقة تصدير PDF الحالية
+        return redirect(url_for('reports.fees_pdf', fee_type=fee_type, date_from=date_from, date_to=date_to, status=status))
     elif export_type == 'excel':
-        return fees_excel()
+        # إعادة توجيه إلى طريقة تصدير Excel الحالية
+        return redirect(url_for('reports.fees_excel', fee_type=fee_type, date_from=date_from, date_to=date_to, status=status))
     else:
+        # إعادة توجيه إلى صفحة تقارير الرسوم المحمولة
         return redirect(url_for('mobile.report_fees'))
 
 # دوال متعلقة بتصدير السيارات
