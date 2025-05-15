@@ -552,6 +552,7 @@ class VehicleChecklist(db.Model):
     # العلاقات
     vehicle = db.relationship('Vehicle', backref=db.backref('checklists', cascade='all, delete-orphan'))
     checklist_items = db.relationship('VehicleChecklistItem', back_populates='checklist', cascade='all, delete-orphan')
+    images = db.relationship('VehicleChecklistImage', back_populates='checklist', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<VehicleChecklist {self.id} for vehicle {self.vehicle_id} on {self.inspection_date}>'
@@ -596,6 +597,22 @@ class VehicleChecklistItem(db.Model):
     
     def __repr__(self):
         return f'<VehicleChecklistItem {self.id} {self.item_name} status: {self.status}>'
+
+
+class VehicleChecklistImage(db.Model):
+    """صور فحص السيارة (تشيك لست)"""
+    id = db.Column(db.Integer, primary_key=True)
+    checklist_id = db.Column(db.Integer, db.ForeignKey('vehicle_checklist.id', ondelete='CASCADE'), nullable=False)
+    image_path = db.Column(db.String(255), nullable=False)  # مسار الصورة
+    image_type = db.Column(db.String(50), default='inspection')  # نوع الصورة: فحص عام، ضرر، إلخ
+    description = db.Column(db.Text)  # وصف الصورة
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    checklist = db.relationship('VehicleChecklist', back_populates='images')
+    
+    def __repr__(self):
+        return f'<VehicleChecklistImage {self.id} for checklist {self.checklist_id}>'
 
 
 class VehicleMaintenance(db.Model):
