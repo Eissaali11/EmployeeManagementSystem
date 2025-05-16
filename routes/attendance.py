@@ -381,8 +381,14 @@ def all_departments_attendance_simple():
             flash(f'حدث خطأ أثناء معالجة البيانات: {str(e)}', 'danger')
             print(f"خطأ: {str(e)}")
     
-    # الحصول على الأقسام
-    departments = Department.query.all()
+    # الحصول على الأقسام مع عدد الموظفين النشطين لكل قسم
+    departments = []
+    all_departments = Department.query.all()
+    for dept in all_departments:
+        active_count = Employee.query.filter_by(department_id=dept.id, status='active').count()
+        if active_count > 0:  # فقط أضف الأقسام التي لديها موظفين نشطين
+            dept.active_employees_count = active_count
+            departments.append(dept)
     
     return render_template('attendance/all_departments_simple.html',
                           departments=departments,

@@ -66,9 +66,9 @@
                     </thead>
                     <tbody>
                         {% for employee in employees %}
-                        <tr>
+                        <tr class="{% if employee.status == 'inactive' %}table-secondary text-muted{% elif employee.status == 'on_leave' %}table-warning{% elif employee.status == 'terminated' %}text-muted{% endif %}">
                             <td>{{ employee.employee_id }}</td>
-                            <td>{{ employee.name }}</td>
+                            <td>{% if employee.status == 'terminated' %}<del>{{ employee.name }}</del>{% else %}{{ employee.name }}{% endif %}</td>
                             <td>{{ employee.national_id }}</td>
                             <td>{{ employee.mobile }}</td>
                             <td>{{ employee.job_title }}</td>
