@@ -171,7 +171,9 @@ def employee_stats():
             'active': Employee.query.filter_by(department_id=dept.id, status='active').count(),
             'inactive': Employee.query.filter_by(department_id=dept.id, status='inactive').count(),
             'on_leave': Employee.query.filter_by(department_id=dept.id, status='on_leave').count(),
+            'terminated': Employee.query.filter_by(department_id=dept.id, status='terminated').count(),
             'total': Employee.query.filter_by(department_id=dept.id).count(),
+            'total_active': Employee.query.filter_by(department_id=dept.id, status='active').count(),
         }
         detailed_stats.append(dept_stats)
     
@@ -188,13 +190,13 @@ def employee_stats():
 @module_access_required(Module.DASHBOARD)
 def department_employee_stats_api():
     """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
-    # إحصائيات الموظفين حسب القسم
+    # إحصائيات الموظفين حسب القسم (فقط الموظفون النشطون)
     department_stats = db.session.query(
         Department.id,
         Department.name,
         func.count(Employee.id).label('employee_count')
     ).outerjoin(
-        Employee, Department.id == Employee.department_id
+        Employee, (Department.id == Employee.department_id) & (Employee.status == 'active')
     ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
     
     # قائمة بالألوان الجميلة المتناسقة للمخطط

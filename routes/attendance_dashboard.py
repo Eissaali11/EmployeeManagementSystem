@@ -43,7 +43,7 @@ def index():
     # الحصول على جميع الأقسام
     departments = Department.query.order_by(Department.name).all()
     
-    # إحصائيات إجمالية
+    # إحصائيات إجمالية - عدد الموظفين النشطين فقط
     total_employees = Employee.query.filter_by(status='active').count()
     
     # حساب إحصائيات الحضور الإجمالية

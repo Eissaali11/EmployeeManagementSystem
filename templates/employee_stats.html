@@ -183,8 +183,9 @@
                                     <th>نشط</th>
                                     <th>غير نشط</th>
                                     <th>في إجازة</th>
+                                    <th>متوقف عن العمل</th>
                                     <th>المجموع</th>
-                                    <th>النسبة</th>
+                                    <th>النسبة النشطة</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -198,8 +199,9 @@
                                     <td class="text-success">{{ dept.active }}</td>
                                     <td class="text-danger">{{ dept.inactive }}</td>
                                     <td class="text-warning">{{ dept.on_leave }}</td>
+                                    <td class="text-secondary">{{ dept.terminated }}</td>
                                     <td class="fw-bold">{{ dept.total }}</td>
-                                    <td>{{ "%.1f"|format(dept.total / detailed_stats|sum(attribute='total') * 100) }}%</td>
+                                    <td>{{ "%.1f"|format(dept.active / detailed_stats|sum(attribute='active') * 100) }}%</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -209,6 +211,7 @@
                                     <th>{{ detailed_stats|sum(attribute='active') }}</th>
                                     <th>{{ detailed_stats|sum(attribute='inactive') }}</th>
                                     <th>{{ detailed_stats|sum(attribute='on_leave') }}</th>
+                                    <th>{{ detailed_stats|sum(attribute='terminated') }}</th>
                                     <th>{{ detailed_stats|sum(attribute='total') }}</th>
                                     <th>100%</th>
                                 </tr>
