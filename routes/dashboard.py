@@ -13,8 +13,9 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @module_access_required(Module.DASHBOARD)
 def index():
     """Main dashboard with overview of system statistics"""
-    # Get basic statistics
-    total_employees = Employee.query.filter_by(status='active').count()
+    # Get basic statistics - count only active employees
+    total_active_employees = Employee.query.filter_by(status='active').count()
+    total_all_employees = Employee.query.count()
     total_departments = Department.query.count()
     
     # Get current date and time for calculations
@@ -56,12 +57,12 @@ def index():
         'no_expiry': no_expiry_documents
     }
     
-    # Get department statistics
+    # Get department statistics - only count active employees
     departments = db.session.query(
         Department.name,
         func.count(Employee.id).label('employee_count')
     ).outerjoin(
-        Employee, Department.id == Employee.department_id
+        Employee, (Department.id == Employee.department_id) & (Employee.status == 'active')
     ).group_by(Department.id).all()
     
     # Get recent activity
@@ -93,9 +94,29 @@ def index():
         salary_labels = ["لا يوجد بيانات"]
         salary_data = [0]
     
+    # إحصائيات الموظفين حسب الحالة
+    status_stats = db.session.query(
+        Employee.status,
+        func.count(Employee.id).label('count')
+    ).group_by(Employee.status).all()
+    
+    # ترجمة حالات الموظفين
+    status_map = {
+        'active': 'نشط',
+        'inactive': 'غير نشط',
+        'on_leave': 'في إجازة',
+        'terminated': 'متوقف عن العمل'
+    }
+    
+    status_data = [
+        {'status': status_map.get(stat.status, stat.status), 'count': stat.count}
+        for stat in status_stats
+    ]
+    
     return render_template('dashboard.html',
                           now=now,
-                          total_employees=total_employees,
+                          total_employees=total_active_employees,
+                          total_all_employees=total_all_employees,
                           total_departments=total_departments,
                           today_attendance=today_attendance,
                           document_stats=document_stats,
@@ -104,7 +125,8 @@ def index():
                           dept_labels=dept_labels,
                           dept_data=dept_data,
                           salary_labels=salary_labels,
-                          salary_data=salary_data)
+                          salary_data=salary_data,
+                          status_data=status_data)
 
 @dashboard_bp.route('/employee-stats')
 @login_required
@@ -130,7 +152,8 @@ def employee_stats():
     status_map = {
         'active': 'نشط',
         'inactive': 'غير نشط',
-        'on_leave': 'في إجازة'
+        'on_leave': 'في إجازة',
+        'terminated': 'متوقف عن العمل'
     }
     
     status_data = [
