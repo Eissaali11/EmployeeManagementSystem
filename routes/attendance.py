@@ -155,8 +155,8 @@ def record():
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
     
-    # Get all active employees for dropdown
-    employees = Employee.query.filter_by(status='active').all()
+    # الحصول على الموظفين النشطين فقط للقائمة المنسدلة
+    employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
     
     # Default to today's date
     today = datetime.now().date()
@@ -540,9 +540,15 @@ def all_departments_attendance():
             db.session.rollback()
             flash(f'حدث خطأ عام: {str(e)}', 'danger')
     
-    # الحصول على جميع الأقسام
+    # الحصول على جميع الأقسام مع عدد الموظفين النشطين لكل قسم
     try:
-        departments = Department.query.all()
+        departments = []
+        all_departments = Department.query.all()
+        for dept in all_departments:
+            active_count = Employee.query.filter_by(department_id=dept.id, status='active').count()
+            if active_count > 0:  # فقط أضف الأقسام التي لديها موظفين نشطين
+                dept.active_employees_count = active_count
+                departments.append(dept)
     except Exception as e:
         departments = []
         flash(f'خطأ في تحميل الأقسام: {str(e)}', 'warning')
