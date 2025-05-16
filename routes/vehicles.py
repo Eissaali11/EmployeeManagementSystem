@@ -210,6 +210,326 @@ def expired_documents():
         expired_all=expired_all,
         today=today
     )
+@vehicles_bp.route('/expired-documents/export/excel')
+@login_required
+def export_expired_documents_excel():
+    """تصدير بيانات الوثائق المنتهية للمركبات إلى ملف Excel منسق"""
+    # التاريخ الحالي
+    today = datetime.now().date()
+    
+    # السيارات ذات استمارة منتهية
+    expired_registration = Vehicle.query.filter(
+        Vehicle.registration_expiry_date.isnot(None),
+        Vehicle.registration_expiry_date < today
+    ).order_by(Vehicle.registration_expiry_date).all()
+    
+    # السيارات ذات فحص دوري منتهي
+    expired_inspection = Vehicle.query.filter(
+        Vehicle.inspection_expiry_date.isnot(None),
+        Vehicle.inspection_expiry_date < today
+    ).order_by(Vehicle.inspection_expiry_date).all()
+    
+    # السيارات ذات تفويض منتهي
+    expired_authorization = Vehicle.query.filter(
+        Vehicle.authorization_expiry_date.isnot(None),
+        Vehicle.authorization_expiry_date < today
+    ).order_by(Vehicle.authorization_expiry_date).all()
+    
+    # إنشاء قوائم البيانات
+    registration_data = []
+    for vehicle in expired_registration:
+        days_expired = (today - vehicle.registration_expiry_date).days
+        registration_data.append({
+            'رقم اللوحة': vehicle.plate_number,
+            'الشركة المصنعة': vehicle.make,
+            'الموديل': vehicle.model,
+            'السنة': vehicle.year,
+            'تاريخ انتهاء الاستمارة': vehicle.registration_expiry_date.strftime('%Y-%m-%d'),
+            'عدد أيام الانتهاء': days_expired,
+            'نوع الوثيقة': 'استمارة السيارة'
+        })
+    
+    inspection_data = []
+    for vehicle in expired_inspection:
+        days_expired = (today - vehicle.inspection_expiry_date).days
+        inspection_data.append({
+            'رقم اللوحة': vehicle.plate_number,
+            'الشركة المصنعة': vehicle.make,
+            'الموديل': vehicle.model,
+            'السنة': vehicle.year,
+            'تاريخ انتهاء الفحص': vehicle.inspection_expiry_date.strftime('%Y-%m-%d'),
+            'عدد أيام الانتهاء': days_expired,
+            'نوع الوثيقة': 'الفحص الدوري'
+        })
+    
+    authorization_data = []
+    for vehicle in expired_authorization:
+        days_expired = (today - vehicle.authorization_expiry_date).days
+        authorization_data.append({
+            'رقم اللوحة': vehicle.plate_number,
+            'الشركة المصنعة': vehicle.make,
+            'الموديل': vehicle.model,
+            'السنة': vehicle.year,
+            'تاريخ انتهاء التفويض': vehicle.authorization_expiry_date.strftime('%Y-%m-%d'),
+            'عدد أيام الانتهاء': days_expired,
+            'نوع الوثيقة': 'التفويض'
+        })
+    
+    # إنشاء مخرج Excel في الذاكرة
+    output = io.BytesIO()
+    
+    # استخدام ExcelWriter مع خيارات التنسيق
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        # إنشاء أوراق العمل لكل نوع من الوثائق
+        if registration_data:
+            reg_df = pd.DataFrame(registration_data)
+            reg_df.to_excel(writer, sheet_name='استمارات منتهية', index=False)
+            
+            # تنسيق ورقة الاستمارات
+            workbook = writer.book
+            worksheet = writer.sheets['استمارات منتهية']
+            
+            # تنسيق العناوين
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#FFD7D7',  # خلفية حمراء فاتحة
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # تنسيق عناوين الأعمدة
+            for col_num, value in enumerate(reg_df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # ضبط عرض العمود
+                worksheet.set_column(col_num, col_num, 18)
+            
+            # تنسيق صفوف البيانات
+            data_format = workbook.add_format({
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # تطبيق التنسيق على كل الخلايا
+            for row in range(1, len(reg_df) + 1):
+                for col in range(len(reg_df.columns)):
+                    worksheet.write(row, col, reg_df.iloc[row-1, col], data_format)
+            
+            # تنسيق عمود أيام الانتهاء
+            days_col = reg_df.columns.get_loc('عدد أيام الانتهاء')
+            days_format = workbook.add_format({
+                'border': 1,
+                'align': 'center',
+                'fg_color': '#FFCCCC'  # خلفية حمراء فاتحة للإبراز
+            })
+            
+            for row in range(1, len(reg_df) + 1):
+                worksheet.write(row, days_col, reg_df.iloc[row-1, days_col], days_format)
+        
+        # تنسيق ورقة الفحص الدوري
+        if inspection_data:
+            insp_df = pd.DataFrame(inspection_data)
+            insp_df.to_excel(writer, sheet_name='فحص دوري منتهي', index=False)
+            
+            # تنسيق ورقة الفحص الدوري
+            workbook = writer.book
+            worksheet = writer.sheets['فحص دوري منتهي']
+            
+            # تنسيق العناوين
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#D7E4BC',  # خلفية خضراء فاتحة
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # تنسيق عناوين الأعمدة
+            for col_num, value in enumerate(insp_df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # ضبط عرض العمود
+                worksheet.set_column(col_num, col_num, 18)
+            
+            # تنسيق صفوف البيانات
+            data_format = workbook.add_format({
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # تطبيق التنسيق على كل الخلايا
+            for row in range(1, len(insp_df) + 1):
+                for col in range(len(insp_df.columns)):
+                    worksheet.write(row, col, insp_df.iloc[row-1, col], data_format)
+            
+            # تنسيق عمود أيام الانتهاء
+            days_col = insp_df.columns.get_loc('عدد أيام الانتهاء')
+            days_format = workbook.add_format({
+                'border': 1,
+                'align': 'center',
+                'fg_color': '#E2EFDA'  # خلفية خضراء فاتحة للإبراز
+            })
+            
+            for row in range(1, len(insp_df) + 1):
+                worksheet.write(row, days_col, insp_df.iloc[row-1, days_col], days_format)
+        
+        # تنسيق ورقة التفويض
+        if authorization_data:
+            auth_df = pd.DataFrame(authorization_data)
+            auth_df.to_excel(writer, sheet_name='تفويض منتهي', index=False)
+            
+            # تنسيق ورقة التفويض
+            workbook = writer.book
+            worksheet = writer.sheets['تفويض منتهي']
+            
+            # تنسيق العناوين
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#B4C6E7',  # خلفية زرقاء فاتحة
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # تنسيق عناوين الأعمدة
+            for col_num, value in enumerate(auth_df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # ضبط عرض العمود
+                worksheet.set_column(col_num, col_num, 18)
+            
+            # تنسيق صفوف البيانات
+            data_format = workbook.add_format({
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # تطبيق التنسيق على كل الخلايا
+            for row in range(1, len(auth_df) + 1):
+                for col in range(len(auth_df.columns)):
+                    worksheet.write(row, col, auth_df.iloc[row-1, col], data_format)
+            
+            # تنسيق عمود أيام الانتهاء
+            days_col = auth_df.columns.get_loc('عدد أيام الانتهاء')
+            days_format = workbook.add_format({
+                'border': 1,
+                'align': 'center',
+                'fg_color': '#DDEBF7'  # خلفية زرقاء فاتحة للإبراز
+            })
+            
+            for row in range(1, len(auth_df) + 1):
+                worksheet.write(row, days_col, auth_df.iloc[row-1, days_col], days_format)
+        
+        # إنشاء ورقة ملخص
+        summary_data = {
+            'نوع الوثيقة': ['الاستمارة', 'الفحص الدوري', 'التفويض', 'الإجمالي'],
+            'عدد الوثائق المنتهية': [
+                len(expired_registration),
+                len(expired_inspection),
+                len(expired_authorization),
+                len(expired_registration) + len(expired_inspection) + len(expired_authorization)
+            ]
+        }
+        
+        summary_df = pd.DataFrame(summary_data)
+        summary_df.to_excel(writer, sheet_name='ملخص', index=False)
+        
+        # تنسيق ورقة الملخص
+        workbook = writer.book
+        worksheet = writer.sheets['ملخص']
+        
+        # تنسيق العناوين
+        header_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'top',
+            'fg_color': '#BDD7EE',  # خلفية زرقاء فاتحة
+            'border': 1,
+            'align': 'center',
+            'font_size': 12
+        })
+        
+        # تنسيق عناوين الأعمدة
+        for col_num, value in enumerate(summary_df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+            # ضبط عرض العمود
+            worksheet.set_column(col_num, col_num, 25)
+        
+        # تنسيقات مختلفة للأنواع المختلفة
+        reg_format = workbook.add_format({
+            'border': 1, 'align': 'center', 'fg_color': '#FFD7D7'
+        })
+        
+        insp_format = workbook.add_format({
+            'border': 1, 'align': 'center', 'fg_color': '#D7E4BC'
+        })
+        
+        auth_format = workbook.add_format({
+            'border': 1, 'align': 'center', 'fg_color': '#B4C6E7'
+        })
+        
+        total_format = workbook.add_format({
+            'border': 1, 'align': 'center', 'bold': True, 'fg_color': '#FFC000', 'font_size': 12
+        })
+        
+        # تطبيق التنسيقات
+        worksheet.write(1, 0, summary_df.iloc[0, 0], reg_format)
+        worksheet.write(1, 1, summary_df.iloc[0, 1], reg_format)
+        
+        worksheet.write(2, 0, summary_df.iloc[1, 0], insp_format)
+        worksheet.write(2, 1, summary_df.iloc[1, 1], insp_format)
+        
+        worksheet.write(3, 0, summary_df.iloc[2, 0], auth_format)
+        worksheet.write(3, 1, summary_df.iloc[2, 1], auth_format)
+        
+        worksheet.write(4, 0, summary_df.iloc[3, 0], total_format)
+        worksheet.write(4, 1, summary_df.iloc[3, 1], total_format)
+        
+        # إضافة مخطط دائري
+        chart = workbook.add_chart({'type': 'pie'})
+        chart.add_series({
+            'name': 'توزيع الوثائق المنتهية',
+            'categories': ['ملخص', 1, 0, 3, 0],
+            'values': ['ملخص', 1, 1, 3, 1],
+            'points': [
+                {'fill': {'color': '#FFD7D7'}},  # الاستمارة
+                {'fill': {'color': '#D7E4BC'}},  # الفحص الدوري
+                {'fill': {'color': '#B4C6E7'}}   # التفويض
+            ],
+            'data_labels': {'value': True, 'category': True, 'percentage': True}
+        })
+        
+        chart.set_title({'name': 'توزيع الوثائق المنتهية'})
+        chart.set_style(10)
+        chart.set_size({'width': 500, 'height': 300})
+        worksheet.insert_chart('D2', chart)
+    
+    # التحضير لإرسال الملف
+    output.seek(0)
+    
+    # اسم الملف بالتاريخ الحالي
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    filename = f"الوثائق_المنتهية_{today_str}.xlsx"
+    
+    # تسجيل الإجراء
+    log_audit('export', 'vehicle_documents', None, f'تم تصدير تقرير الوثائق المنتهية للمركبات إلى Excel')
+    
+    return send_file(
+        output,
+        download_name=filename,
+        as_attachment=True,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    
+    return render_template(
+        'vehicles/expired_documents.html',
+        expired_registration=expired_registration,
+        expired_inspection=expired_inspection,
+        expired_authorization=expired_authorization,
+        expired_all=expired_all,
+        today=today
+    )
 
 @vehicles_bp.route('/')
 @login_required
