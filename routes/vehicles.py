@@ -513,7 +513,7 @@ def export_expired_documents_excel():
     filename = f"الوثائق_المنتهية_{today_str}.xlsx"
     
     # تسجيل الإجراء
-    log_audit('export', 'vehicle_documents', None, f'تم تصدير تقرير الوثائق المنتهية للمركبات إلى Excel')
+    log_audit('export', 'vehicle_documents', 0, f'تم تصدير تقرير الوثائق المنتهية للمركبات إلى Excel')
     
     return send_file(
         output,
