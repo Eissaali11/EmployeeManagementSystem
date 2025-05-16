@@ -167,6 +167,49 @@ def calculate_rental_adjustment(vehicle_id, year, month):
     return adjustment
 
 # المسارات الأساسية
+@vehicles_bp.route('/expired-documents')
+@login_required
+def expired_documents():
+    """عرض قائمة المستندات المنتهية للمركبات بشكل تفصيلي"""
+    # التاريخ الحالي
+    today = datetime.now().date()
+    
+    # السيارات ذات استمارة منتهية
+    expired_registration = Vehicle.query.filter(
+        Vehicle.registration_expiry_date.isnot(None),
+        Vehicle.registration_expiry_date < today
+    ).order_by(Vehicle.registration_expiry_date).all()
+    
+    # السيارات ذات فحص دوري منتهي
+    expired_inspection = Vehicle.query.filter(
+        Vehicle.inspection_expiry_date.isnot(None),
+        Vehicle.inspection_expiry_date < today
+    ).order_by(Vehicle.inspection_expiry_date).all()
+    
+    # السيارات ذات تفويض منتهي
+    expired_authorization = Vehicle.query.filter(
+        Vehicle.authorization_expiry_date.isnot(None),
+        Vehicle.authorization_expiry_date < today
+    ).order_by(Vehicle.authorization_expiry_date).all()
+    
+    # جميع السيارات التي تحتوي على وثيقة منتهية واحدة على الأقل
+    expired_all = Vehicle.query.filter(
+        or_(
+            Vehicle.registration_expiry_date.isnot(None) & (Vehicle.registration_expiry_date < today),
+            Vehicle.inspection_expiry_date.isnot(None) & (Vehicle.inspection_expiry_date < today),
+            Vehicle.authorization_expiry_date.isnot(None) & (Vehicle.authorization_expiry_date < today)
+        )
+    ).order_by(Vehicle.plate_number).all()
+    
+    return render_template(
+        'vehicles/expired_documents.html',
+        expired_registration=expired_registration,
+        expired_inspection=expired_inspection,
+        expired_authorization=expired_authorization,
+        expired_all=expired_all,
+        today=today
+    )
+
 @vehicles_bp.route('/')
 @login_required
 def index():
