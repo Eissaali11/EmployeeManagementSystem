@@ -7,6 +7,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">الوثائق المنتهية للمركبات</h1>
         <div>
+            <a href="{{ url_for('vehicles.export_expired_documents_excel') }}" class="btn btn-success ms-2">
+                <i class="fas fa-file-excel me-1"></i> تصدير Excel
+            </a>
             <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-right me-1"></i> العودة لقائمة المركبات
             </a>

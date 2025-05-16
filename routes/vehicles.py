@@ -9,6 +9,7 @@ import os
 import uuid
 import io
 import urllib.parse
+import pandas as pd
 from fpdf import FPDF
 
 from app import db
