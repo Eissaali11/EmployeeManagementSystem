@@ -146,6 +146,10 @@
                 <i class="fas fa-exclamation-triangle ms-2"></i>
                 تنبيهات الوثائق
             </h5>
+            <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-danger btn-sm">
+                <i class="fas fa-exclamation-circle ms-1"></i>
+                عرض جميع الوثائق المنتهية
+            </a>
         </div>
         <div class="card-body">
             <p class="mb-3">يوجد {{ expiring_documents|length }} وثيقة قريبة من انتهاء الصلاحية أو منتهية الصلاحية. يرجى مراجعتها وتحديثها.</p>
