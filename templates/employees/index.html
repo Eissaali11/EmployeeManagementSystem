@@ -80,6 +80,8 @@
                                 <span class="badge bg-danger">غير نشط</span>
                                 {% elif employee.status == 'on_leave' %}
                                 <span class="badge bg-warning">في إجازة</span>
+                                {% elif employee.status == 'terminated' %}
+                                <span class="badge bg-dark">متوقف عن العمل</span>
                                 {% else %}
                                 <span class="badge bg-secondary">{{ employee.status }}</span>
                                 {% endif %}
