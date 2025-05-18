@@ -98,10 +98,10 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=60, bottomMargin=18)
     styles = getSampleStyleSheet()
     
-    # إعداد الصفحة والأنماط
-    styles.add(ParagraphStyle(name='Arabic', fontName='Amiri', fontSize=12, alignment=1))
-    styles.add(ParagraphStyle(name='ArabicTitle', fontName='Amiri-Bold', fontSize=16, alignment=1))
-    styles.add(ParagraphStyle(name='ArabicHeading', fontName='Amiri-Bold', fontSize=14, alignment=1))
+    # إعداد الصفحة والأنماط - استخدام الخطوط الافتراضية فقط
+    styles.add(ParagraphStyle(name='Arabic', fontName='Helvetica', fontSize=12, alignment=1))
+    styles.add(ParagraphStyle(name='ArabicTitle', fontName='Helvetica-Bold', fontSize=16, alignment=1))
+    styles.add(ParagraphStyle(name='ArabicHeading', fontName='Helvetica-Bold', fontSize=14, alignment=1))
     
     # إنشاء دالة للرسم في رأس الصفحة
     def add_header_footer(canvas, doc):
@@ -109,11 +109,11 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
         
         # تم حذف كل شيء من رأس الصفحة بناءً على طلب المستخدم
         
-        # إضافة معلومات في التذييل فقط
-        canvas.setFont('Amiri', 8)
+        # إضافة معلومات في التذييل فقط - استخدام خط Helvetica بدل Amiri
+        canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.gray) # رمادي
-        footer_text = arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'Amiri', 8)/2, 30, footer_text)
+        footer_text = f"تم إنشاء هذا التقرير بواسطة نُظم - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'Helvetica', 8)/2, 30, footer_text)
         
         canvas.restoreState()
     
@@ -237,7 +237,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
             ('ALIGN', (2, 1), (2, -1), 'LEFT'),  # محاذاة أرقام التكلفة إلى اليسار
-            ('FONTNAME', (0, 0), (-1, -1), 'Amiri'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),  # استخدام الخط الافتراضي
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
