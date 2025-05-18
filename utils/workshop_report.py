@@ -75,8 +75,19 @@ def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
     if text is None:
         return ""
-    # استخدام النص كما هو بدون معالجة خاصة للتجربة
-    return str(text)
+    # تحويل النص العربي من اليمين إلى اليسار باستخدام bidi & reshape
+    # هذا سيساعد في عرض النص العربي بالترتيب الصحيح 
+    try:
+        result = str(text)
+        # معالجة إضافية لضمان أن الأرقام ورموز الترقيم لا تتأثر
+        # تخطي عملية reshape للنصوص غير العربية مثل التواريخ والأرقام
+        if any('\u0600' <= c <= '\u06FF' for c in result):
+            result = reshape(result)
+            result = get_display(result)
+        return result
+    except Exception as e:
+        print(f"خطأ في معالجة النص العربي: {e}")
+        return str(text)
 
 def generate_workshop_report_pdf(vehicle, workshop_records):
     """
