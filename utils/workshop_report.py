@@ -177,20 +177,20 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     content.append(Spacer(1, 30*mm))
     
     # عنوان التقرير
-    title = Paragraph(arabic_text(f"تقرير سجلات الورشة للسيارة: {vehicle.plate_number}"), styles['ArabicTitle'])
+    title = Paragraph(arabic_text(f"تقرير سجلات الورشة للسيارة: {vehicle.plate_number}"), title_style)
     content.append(title)
     content.append(Spacer(1, 10))
     
     # معلومات السيارة الأساسية
     vehicle_info = Paragraph(
         arabic_text(f"السيارة: {vehicle.make} {vehicle.model} {vehicle.year}"),
-        styles['Arabic']
+        normal_style
     )
     content.append(vehicle_info)
     content.append(Spacer(1, 20))
     
     # سجلات الورشة
-    content.append(Paragraph(arabic_text("سجلات الورشة"), styles['ArabicHeading']))
+    content.append(Paragraph(arabic_text("سجلات الورشة"), heading_style))
     content.append(Spacer(1, 10))
     
     if workshop_records and len(workshop_records) > 0:
