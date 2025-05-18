@@ -101,30 +101,32 @@ def arabic_text(text):
         return ""
     
     try:
+        # تحويل إلى نص
         text_str = str(text)
         
-        # اذا كان النص يحتوي على أرقام فقط، أعده كما هو
-        if text_str.replace('.', '', 1).replace(',', '', 1).isdigit():
+        # التعامل مع الأرقام والتواريخ بشكل مباشر
+        if text_str.replace('.', '', 1).replace(',', '', 1).isdigit() or '-' in text_str or '/' in text_str:
+            # اذا كان النص رقم أو تاريخ، نعيده كما هو
+            return text_str
+        
+        # هل النص يحتوي على حروف عربية؟
+        has_arabic = any('\u0600' <= char <= '\u06FF' for char in text_str)
+        
+        # اذا كان النص لا يحتوي على حروف عربية، أعده كما هو
+        if not has_arabic:
             return text_str
             
-        # رقم جدول يحتوي على خط مائل او شرطة
-        if '-' in text_str or '/' in text_str:
-            # تحقق اذا كان النص يتكون من أرقام وشرطات فقط (مثل تاريخ)
-            chars = set(text_str)
-            if chars.issubset(set('0123456789-/:')) or text_str.count('-') > 0:
-                return text_str
-        
-        # معالجة النص العربي باستخدام إعادة التشكيل واتجاه الكتابة RTL        
-        # اعادة تشكيل الحروف العربية لتتصل مع بعضها
+        # معالجة النص العربي باستخدام reshape للحروف المتصلة وbidi للعرض من اليمين لليسار
         reshaped_text = reshape(text_str)
-        
-        # تطبيق BIDI لعكس اتجاه النص من اليمين الى اليسار بشكل صحيح
         bidi_text = get_display(reshaped_text)
+        
+        print(f"النص الأصلي: {text_str}")
+        print(f"النص بعد المعالجة: {bidi_text}")
         
         return bidi_text
     except Exception as e:
         print(f"خطأ في معالجة النص العربي: {str(e)}")
-        # إذا فشلت المعالجة، أعد النص الأصلي
+        # إذا فشلت المعالجة، نعيد النص الأصلي
         return str(text)
 
 def generate_workshop_report_pdf(vehicle, workshop_records):
