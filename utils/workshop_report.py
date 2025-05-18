@@ -249,7 +249,7 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
         
         # إجمالي تكاليف الصيانة
         total_cost = sum(record.cost or 0 for record in workshop_records)
-        cost_text = Paragraph(arabic_text(f"إجمالي تكاليف الصيانة: {total_cost:,.2f} ريال"), styles['Arabic'])
+        cost_text = Paragraph(f"إجمالي تكاليف الصيانة: {total_cost:,.2f} ريال", normal_style)
         content.append(cost_text)
         
         # إجمالي عدد أيام الورشة
@@ -258,21 +258,21 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             (datetime.now().date() - record.entry_date).days + 1 if hasattr(record, 'entry_date') else 0
             for record in workshop_records
         )
-        days_text = Paragraph(arabic_text(f"إجمالي عدد أيام الورشة: {days_in_workshop} يوم"), styles['Arabic'])
+        days_text = Paragraph(f"إجمالي عدد أيام الورشة: {days_in_workshop} يوم", normal_style)
         content.append(days_text)
     else:
-        content.append(Paragraph(arabic_text("لا توجد سجلات ورشة لهذه السيارة"), styles['Arabic']))
+        content.append(Paragraph("لا توجد سجلات ورشة لهذه السيارة", normal_style))
     
     content.append(Spacer(1, 20))
     
     # بيانات التوقيع والطباعة
     footer_text = Paragraph(
-        arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم في {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
-        styles['Arabic']
+        f"تم إنشاء هذا التقرير بواسطة نُظم في {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        normal_style
     )
     copyright_text = Paragraph(
-        arabic_text("نُظم - جميع الحقوق محفوظة © " + str(datetime.now().year)),
-        styles['Arabic']
+        "نُظم - جميع الحقوق محفوظة © " + str(datetime.now().year),
+        normal_style
     )
     content.append(footer_text)
     content.append(Spacer(1, 10))
