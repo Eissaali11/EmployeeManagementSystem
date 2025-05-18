@@ -25,6 +25,14 @@ from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 from utils.workshop_report import generate_workshop_report_pdf
 from utils.html_to_pdf import generate_pdf_from_template
 from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+import arabic_reshaper
+from bidi.algorithm import get_display
 
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
