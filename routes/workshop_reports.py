@@ -38,19 +38,15 @@ def vehicle_workshop_pdf(id):
         # اسم الملف
         filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d')}.pdf"
         
-        # تسجيل نشاط النظام
-        audit = SystemAudit(
+        # تسجيل نشاط النظام باستخدام الطريقة الآمنة
+        SystemAudit.create_audit_record(
             user_id=current_user.id if current_user.is_authenticated else None,
-            username=current_user.username if current_user.is_authenticated else 'guest',
-            action_type='export',
-            resource_type='vehicle_workshop',
-            resource_id=id,
-            description=f'تم تصدير تقرير الورشة للمركبة {vehicle.plate_number}',
-            ip_address=request.remote_addr,
-            timestamp=datetime.now()
+            action='export',
+            entity_type='vehicle_workshop',
+            entity_id=id,
+            entity_name=f'تقرير ورشة: {vehicle.plate_number}',
+            details=f'تم تصدير تقرير الورشة للمركبة {vehicle.plate_number}'
         )
-        db.session.add(audit)
-        db.session.commit()
         
         # إرسال الملف
         return send_file(
