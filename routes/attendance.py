@@ -735,50 +735,61 @@ def stats():
     
     return jsonify(result)
 
-@attendance_bp.route('/export/excel', methods=['POST'])
+@attendance_bp.route('/export/excel', methods=['POST', 'GET'])
 def export_excel():
     """تصدير بيانات الحضور إلى ملف Excel"""
-    if request.method == 'POST':
-        try:
+    try:
+        # الحصول على البيانات من النموذج حسب طريقة الطلب
+        if request.method == 'POST':
             start_date_str = request.form.get('start_date')
             end_date_str = request.form.get('end_date')
             department_id = request.form.get('department_id')
-            
-            # التحقق من المدخلات
-            if not start_date_str or not end_date_str or not department_id:
-                flash('جميع الحقول مطلوبة', 'danger')
-                return redirect(url_for('attendance.export_page'))
-            
-            # تحليل التواريخ
-            try:
-                start_date = parse_date(start_date_str)
-                end_date = parse_date(end_date_str)
-            except (ValueError, TypeError):
-                flash('تاريخ غير صالح', 'danger')
-                return redirect(url_for('attendance.export_page'))
-            
-            # الحصول على القسم
-            department = Department.query.get(department_id)
-            if not department:
-                flash('القسم غير موجود', 'danger')
-                return redirect(url_for('attendance.export_page'))
-            
-            # إنشاء ملف Excel وتحميله
-            excel_file = export_attendance_by_department(department.id, start_date, end_date)
-            
-            # تحديد اسم الملف بناءً على القسم والفترة الزمنية
-            filename = f'سجل الحضور - {department.name} - {start_date_str} إلى {end_date_str}.xlsx'
-            
-            return send_file(
-                excel_file,
-                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                as_attachment=True,
-                download_name=filename
-            )
-            
-        except Exception as e:
-            flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
+        else:  # GET
+            start_date_str = request.args.get('start_date')
+            end_date_str = request.args.get('end_date')
+            department_id = request.args.get('department_id')
+        
+        # التحقق من المدخلات
+        if not start_date_str or not department_id:
+            flash('تاريخ البداية والقسم مطلوبان', 'danger')
             return redirect(url_for('attendance.export_page'))
+        
+        # تحليل التواريخ
+        try:
+            start_date = parse_date(start_date_str)
+            if end_date_str:
+                end_date = parse_date(end_date_str)
+            else:
+                end_date = datetime.now().date()
+        except (ValueError, TypeError):
+            flash('تاريخ غير صالح', 'danger')
+            return redirect(url_for('attendance.export_page'))
+        
+        # الحصول على القسم
+        department = Department.query.get(department_id)
+        if not department:
+            flash('القسم غير موجود', 'danger')
+            return redirect(url_for('attendance.export_page'))
+        
+        # إنشاء ملف Excel وتحميله
+        excel_file = export_attendance_by_department(department.id, start_date, end_date)
+        
+        # تحديد اسم الملف بناءً على القسم والفترة الزمنية
+        if end_date_str:
+            filename = f'سجل الحضور - {department.name} - {start_date_str} إلى {end_date_str}.xlsx'
+        else:
+            filename = f'سجل الحضور - {department.name} - {start_date_str}.xlsx'
+        
+        return send_file(
+            excel_file,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
+        return redirect(url_for('attendance.export_page'))
 
 @attendance_bp.route('/export')
 def export_page():
