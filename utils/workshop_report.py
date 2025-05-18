@@ -116,14 +116,19 @@ def arabic_text(text):
         if not has_arabic:
             return text_str
             
-        # معالجة النص العربي باستخدام reshape للحروف المتصلة وbidi للعرض من اليمين لليسار
+        # لنجرب بدون get_display فقط إعادة تشكيل الحروف العربية
+        # المشكلة تظهر أن get_display يعكس النص تمامًا
         reshaped_text = reshape(text_str)
-        bidi_text = get_display(reshaped_text)
+        
+        # التعليق على استخدام get_display للتجربة
+        # بعد فحص المخرجات، نلاحظ أن get_display يعكس النص بالكامل
+        # بينما في PDF نحتاج فقط إلى توصيل الحروف دون عكس النص
+        # لأن ReportLab سيتعامل مع اتجاه RTL
         
         print(f"النص الأصلي: {text_str}")
-        print(f"النص بعد المعالجة: {bidi_text}")
+        print(f"النص بعد إعادة التشكيل فقط: {reshaped_text}")
         
-        return bidi_text
+        return reshaped_text
     except Exception as e:
         print(f"خطأ في معالجة النص العربي: {str(e)}")
         # إذا فشلت المعالجة، نعيد النص الأصلي
