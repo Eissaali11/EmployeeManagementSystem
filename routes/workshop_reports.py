@@ -9,7 +9,7 @@ import os
 
 from app import db
 from models import Vehicle, VehicleWorkshop, SystemAudit
-from utils.arabic_pdf_generator import generate_workshop_report_pdf, get_arabic_text, calculate_days
+from utils.simple_workshop_pdf import generate_workshop_pdf
 
 # إنشاء blueprint
 workshop_reports_bp = Blueprint('workshop_reports', __name__, url_prefix='/workshop-reports')
