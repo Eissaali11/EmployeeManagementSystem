@@ -18,6 +18,12 @@ class ArabicPDF(FPDF):
         # تسجيل الخطوط العربية
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         font_path = os.path.join(script_dir, 'static', 'fonts')
+        
+        # إضافة خط Tajawal (خط عصري للعناوين)
+        self.add_font('Tajawal', '', os.path.join(font_path, 'Tajawal-Regular.ttf'), uni=True)
+        self.add_font('Tajawal', 'B', os.path.join(font_path, 'Tajawal-Bold.ttf'), uni=True)
+        
+        # إضافة خط Amiri (خط تقليدي للنصوص)
         self.add_font('Amiri', '', os.path.join(font_path, 'Amiri-Regular.ttf'), uni=True)
         self.add_font('Amiri', 'B', os.path.join(font_path, 'Amiri-Bold.ttf'), uni=True)
     
@@ -131,24 +137,24 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         pdf.set_xy(10, 20)
         pdf.cell(30, 10, 'نُظم', 0, 0, 'C')
     
-    # إعداد الخط الافتراضي
-    pdf.set_font('Amiri', 'B', 18)
+    # إعداد الخط الافتراضي - استخدام Tajawal للعناوين
+    pdf.set_font('Tajawal', 'B', 18)
     
     # عنوان التقرير (مع تعديل الموضع إذا كان هناك شعار)
     pdf.set_y(20)
     pdf.cell(0, 10, 'تقرير سجلات الورشة', 0, 1, 'C')
     
     # معلومات السيارة
-    pdf.set_font('Amiri', 'B', 14)
+    pdf.set_font('Tajawal', 'B', 14)
     pdf.cell(0, 10, f'{vehicle.make} {vehicle.model} - {vehicle.plate_number}', 0, 1, 'C')
     
     # تاريخ التقرير
-    pdf.set_font('Amiri', '', 10)
+    pdf.set_font('Amiri', '', 10)  # استخدام Amiri للنصوص العادية
     pdf.cell(0, 5, f'تاريخ التقرير: {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 1, 'C')
     pdf.ln(5)
     
     # معلومات المركبة
-    pdf.set_font('Amiri', 'B', 14)
+    pdf.set_font('Tajawal', 'B', 14)  # استخدام Tajawal للعناوين الفرعية
     pdf.cell(0, 10, 'معلومات المركبة', 0, 1, 'R')
     
     pdf.set_font('Amiri', '', 12)
@@ -157,10 +163,15 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         ['رقم اللوحة:', vehicle.plate_number],
         ['الماركة:', vehicle.make],
         ['الموديل:', vehicle.model],
-        ['سنة الصنع:', str(vehicle.year) if vehicle.year else ''],
-        ['رقم الهيكل:', vehicle.vin if vehicle.vin else ''],
-        ['قراءة العداد:', f'{vehicle.odometer} كم' if vehicle.odometer else '']
+        ['سنة الصنع:', str(vehicle.year) if hasattr(vehicle, 'year') and vehicle.year else '']
     ]
+    
+    # إضافة معلومات إضافية إذا كانت متوفرة
+    if hasattr(vehicle, 'vin') and vehicle.vin:
+        vehicle_info.append(['رقم الهيكل:', vehicle.vin])
+    
+    if hasattr(vehicle, 'odometer') and vehicle.odometer:
+        vehicle_info.append(['قراءة العداد:', f'{vehicle.odometer} كم'])
     
     # رسم جدول معلومات المركبة
     for info in vehicle_info:
@@ -181,8 +192,13 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         pdf.set_font('Amiri', '', 12)
         pdf.cell(0, 10, 'لا توجد سجلات ورشة لهذه المركبة', 0, 1, 'C')
     else:
-        # إنشاء جدول سجلات الورشة
-        pdf.set_font('Amiri', 'B', 10)
+        # عنوان جدول سجلات الورشة
+        pdf.set_font('Tajawal', 'B', 14)
+        pdf.cell(0, 10, 'سجلات الورشة', 0, 1, 'R')
+        pdf.ln(2)
+        
+        # إنشاء جدول سجلات الورشة - استخدام Tajawal للعناوين
+        pdf.set_font('Tajawal', 'B', 10)
         
         # تحديد عرض الأعمدة (إضافة عمود لعدد الأيام)
         col_width = [30, 20, 20, 15, 20, 20, 25, 20]
