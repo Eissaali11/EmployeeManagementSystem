@@ -24,6 +24,7 @@ from utils.vehicle_report import generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 from utils.workshop_report import generate_workshop_report_pdf
 from utils.html_to_pdf import generate_pdf_from_template
+from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
 
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
