@@ -75,8 +75,17 @@ def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
     if text is None:
         return ""
-    # استخدام النص كما هو بدون معالجة خاصة للتجربة
-    return str(text)
+    try:
+        text_str = str(text)
+        # إعادة تشكيل النص باستخدام arabic_reshaper
+        reshaped_text = reshape(text_str)
+        # تطبيق خوارزمية BIDI لدعم اتجاه الكتابة من اليمين إلى اليسار
+        bidi_text = get_display(reshaped_text)
+        return bidi_text
+    except Exception as e:
+        print(f"خطأ في معالجة النص العربي: {str(e)}")
+        # إذا فشلت المعالجة، أعد النص الأصلي
+        return str(text)
 
 def generate_workshop_report_pdf(vehicle, workshop_records):
     """
