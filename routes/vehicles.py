@@ -521,15 +521,6 @@ def export_expired_documents_excel():
         as_attachment=True,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    
-    return render_template(
-        'vehicles/expired_documents.html',
-        expired_registration=expired_registration,
-        expired_inspection=expired_inspection,
-        expired_authorization=expired_authorization,
-        expired_all=expired_all,
-        today=today
-    )
 
 @vehicles_bp.route('/')
 @login_required
