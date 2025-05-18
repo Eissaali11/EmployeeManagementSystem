@@ -41,21 +41,46 @@ class ArabicPDF(FPDF):
     
     def cell(self, w=0, h=0, txt='', border=0, ln=0, align='', fill=False, link=''):
         """تجاوز دالة الخلية لدعم النص العربي"""
-        # تحويل البيانات لتتناسب مع الواجهة الجديدة
-        border_val = border
-        if isinstance(border, int):
-            border_val = str(border) if border > 0 else 0
-        super().cell(w=w, h=h, text=self.arabic_text(txt), border=border_val, 
-                     ln=ln, align=align, fill=fill, link=link)
+        # نحول النص العربي ونستخدم الواجهة القديمة للمكتبة
+        arabic_txt = self.arabic_text(txt)
+        super().cell(w, h, arabic_txt, border, ln, align, fill, link)
     
     def multi_cell(self, w=0, h=0, txt='', border=0, align='', fill=False):
         """تجاوز دالة الخلايا المتعددة لدعم النص العربي"""
-        # تحويل البيانات لتتناسب مع الواجهة الجديدة
-        border_val = border
-        if isinstance(border, int):
-            border_val = str(border) if border > 0 else 0
-        super().multi_cell(w=w, h=h, text=self.arabic_text(txt), border=border_val, 
-                          align=align, fill=fill)
+        # نحول النص العربي ونستخدم الواجهة القديمة للمكتبة
+        arabic_txt = self.arabic_text(txt)
+        super().multi_cell(w, h, arabic_txt, border, align, fill)
+
+
+def calculate_days_in_workshop(entry_date, exit_date=None):
+    """
+    حساب عدد الأيام التي قضتها السيارة في الورشة
+    
+    Args:
+        entry_date: تاريخ دخول الورشة
+        exit_date: تاريخ خروج الورشة (إذا كان None، يعني أنها لا تزال في الورشة)
+    
+    Returns:
+        int: عدد الأيام في الورشة
+    """
+    if not entry_date:
+        return 0
+    
+    # إذا لم يكن هناك تاريخ خروج، نستخدم تاريخ اليوم
+    end_date = exit_date if exit_date else datetime.now().date()
+    
+    # حساب الفرق بين التواريخ
+    if isinstance(entry_date, datetime):
+        entry_date = entry_date.date()
+    if isinstance(end_date, datetime):
+        end_date = end_date.date()
+    
+    # محاولة حساب الفرق
+    try:
+        days = (end_date - entry_date).days
+        return max(0, days)  # لا يمكن أن يكون عدد الأيام سالبًا
+    except:
+        return 0
 
 
 def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
@@ -77,10 +102,40 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
     # إضافة صفحة جديدة
     pdf.add_page()
     
+    # إضافة الشعار في رأس الصفحة (البحث في عدة مواقع محتملة)
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    possible_logo_paths = [
+        os.path.join(script_dir, 'static', 'images', 'logo', 'logo_new.png'),
+        os.path.join(script_dir, 'static', 'images', 'logo_new.png'),
+        os.path.join(script_dir, 'static', 'images', 'logo.png')
+    ]
+    
+    # البحث عن أول ملف شعار موجود
+    logo_path = None
+    for path in possible_logo_paths:
+        if os.path.exists(path):
+            logo_path = path
+            break
+    
+    # إذا وجدنا شعارًا، قم بإضافته
+    if logo_path:
+        # إضافة الشعار في أعلى الصفحة
+        pdf.image(logo_path, x=10, y=10, w=30)
+    else:
+        # إذا لم نجد شعارًا، نرسم شعار نصي بديل
+        pdf.set_fill_color(30, 60, 114)  # لون أزرق غامق
+        pdf.set_xy(10, 10)
+        pdf.cell(30, 30, '', 0, 0, 'C', True)  # رسم دائرة زرقاء
+        pdf.set_text_color(255, 255, 255)  # لون أبيض للنص
+        pdf.set_font('Amiri', 'B', 16)
+        pdf.set_xy(10, 20)
+        pdf.cell(30, 10, 'نُظم', 0, 0, 'C')
+    
     # إعداد الخط الافتراضي
     pdf.set_font('Amiri', 'B', 18)
     
-    # عنوان التقرير
+    # عنوان التقرير (مع تعديل الموضع إذا كان هناك شعار)
+    pdf.set_y(20)
     pdf.cell(0, 10, 'تقرير سجلات الورشة', 0, 1, 'C')
     
     # معلومات السيارة
