@@ -32,8 +32,8 @@ def vehicle_workshop_pdf(id):
             flash('لا توجد سجلات ورشة لهذه المركبة!', 'warning')
             return redirect(url_for('vehicles.view', id=id))
         
-        # إنشاء تقرير PDF
-        pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
+        # إنشاء تقرير PDF باستخدام النموذج البسيط
+        pdf_buffer = generate_workshop_pdf(vehicle, workshop_records)
         
         # اسم الملف
         filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d')}.pdf"
