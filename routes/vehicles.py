@@ -2480,50 +2480,43 @@ def export_vehicle_to_pdf(id):
 @vehicles_bp.route('/<int:id>/export/workshop/pdf')
 @login_required
 def export_workshop_to_pdf(id):
-    """تصدير سجلات الورشة للسيارة إلى ملف PDF مع دعم كامل للغة العربية"""
-    vehicle = Vehicle.query.get_or_404(id)
-    workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
-    
-    # تحويل حالات سجلات الورشة إلى نصوص مقروءة
-    reason_map = {'maintenance': 'صيانة دورية', 'breakdown': 'عطل', 'accident': 'حادث'}
-    status_map = {'in_progress': 'قيد التنفيذ', 'completed': 'تم الإصلاح', 'pending_approval': 'بانتظار الموافقة'}
-    
-    for record in workshop_records:
-        if hasattr(record, 'reason'):
-            record.reason_text = reason_map.get(record.reason, record.reason) if record.reason else "غير محدد"
-        if hasattr(record, 'repair_status'):
-            record.status_text = status_map.get(record.repair_status, record.repair_status) if record.repair_status else "غير محدد"
-    
+    """تصدير سجلات الورشة للسيارة إلى ملف PDF مع دعم كامل للغة العربية (النسخة المحسنة)"""
     try:
-        # استخدام الطريقة الجديدة: FPDF2 مع دعم كامل للغة العربية
-        pdf_buffer = generate_workshop_report_pdf_fpdf(vehicle, workshop_records)
-        current_app.logger.info("تم إنشاء PDF باستخدام FPDF2 بنجاح")
+        # جلب بيانات المركبة
+        vehicle = Vehicle.query.get_or_404(id)
+        
+        # جلب سجلات دخول الورشة
+        workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(
+            VehicleWorkshop.entry_date.desc()
+        ).all()
+        
+        # التحقق من وجود سجلات
+        if not workshop_records:
+            flash('لا توجد سجلات ورشة لهذه المركبة!', 'warning')
+            return redirect(url_for('vehicles.view', id=id))
+        
+        # إنشاء تقرير PDF باستخدام المولد المحسن
+        from utils.simple_workshop_pdf import generate_workshop_pdf
+        pdf_buffer = generate_workshop_pdf(vehicle, workshop_records)
+        
+        # اسم الملف
+        filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        # تسجيل الإجراء
+        log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF بدعم كامل للغة العربية')
+        
+        # إرسال الملف
+        return send_file(
+            pdf_buffer,
+            download_name=filename,
+            as_attachment=True,
+            mimetype='application/pdf'
+        )
     except Exception as e:
-        # في حالة الفشل، نجرب الطرق البديلة
-        current_app.logger.error(f"فشل إنشاء PDF باستخدام FPDF2: {str(e)}")
-        try:
-            # نحاول WeasyPrint كاحتياطي
-            pdf_buffer = generate_pdf_from_template(
-                'reports/vehicle_workshop',
-                vehicle=vehicle,
-                workshop_records=workshop_records,
-                now=datetime.now()
-            )
-            current_app.logger.info("تم إنشاء PDF باستخدام WeasyPrint بنجاح")
-        except Exception as ex:
-            # إذا فشل WeasyPrint أيضًا، نعود إلى ReportLab
-            current_app.logger.error(f"فشل إنشاء PDF باستخدام WeasyPrint: {str(ex)}")
-            pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
-    
-    # تسجيل الإجراء
-    log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF بدعم كامل للغة العربية')
-    
-    return send_file(
-        pdf_buffer,
-        download_name=f'workshop_report_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.pdf',
-        as_attachment=True,
-        mimetype='application/pdf'
-    )
+        import logging
+        logging.error(f"خطأ في إنشاء تقرير الورشة: {str(e)}")
+        flash(f'حدث خطأ أثناء إنشاء التقرير: {str(e)}', 'danger')
+        return redirect(url_for('vehicles.view', id=id))
 
 
 @vehicles_bp.route('/<int:id>/export/excel')
