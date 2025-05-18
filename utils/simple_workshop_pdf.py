@@ -42,195 +42,232 @@ def generate_workshop_pdf(vehicle, workshop_records):
     Returns:
         BytesIO: كائن ذاكرة يحتوي على ملف PDF
     """
+    import logging
+    import os
+    from datetime import datetime
+    
+    logging.info(f"بدء إنشاء تقرير PDF للمركبة {vehicle.plate_number}")
+    
     # تجهيز المخرجات
     buffer = io.BytesIO()
     
-    # تسجيل الخطوط العربية
-    import os
-    fonts_dir = os.path.join(current_app.root_path, 'static', 'fonts')
-    
-    # تسجيل خط أميري للنصوص العربية
-    pdfmetrics.registerFont(TTFont('Amiri', os.path.join(fonts_dir, 'Amiri-Regular.ttf')))
-    pdfmetrics.registerFont(TTFont('Amiri-Bold', os.path.join(fonts_dir, 'Amiri-Bold.ttf')))
-    
-    # إنشاء المستند
-    doc = SimpleDocTemplate(
-        buffer, 
-        pagesize=A4,
-        rightMargin=30,
-        leftMargin=30,
-        topMargin=30,
-        bottomMargin=30,
-        title=arabic_text("تقرير سجلات الورشة")
-    )
-    
-    # تحضير أنماط النصوص
-    styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(
-        name='Arabic',
-        fontName='Amiri',
-        fontSize=12,
-        alignment=1,  # وسط
-        leading=16
-    ))
-    
-    styles.add(ParagraphStyle(
-        name='ArabicTitle',
-        fontName='Amiri-Bold',
-        fontSize=16,
-        alignment=1,  # وسط
-        leading=22,
-        spaceAfter=10
-    ))
-    
-    styles.add(ParagraphStyle(
-        name='ArabicHeading',
-        fontName='Amiri-Bold',
-        fontSize=14,
-        alignment=1,  # وسط
-        leading=20,
-        spaceAfter=8
-    ))
-    
-    # تجهيز المحتوى
-    content = []
-    
-    # عنوان التقرير
-    title = Paragraph(arabic_text(f"تقرير سجلات الورشة للسيارة: {vehicle.plate_number}"), styles['ArabicTitle'])
-    content.append(title)
-    content.append(Spacer(1, 10))
-    
-    # معلومات السيارة الأساسية
-    vehicle_info = Paragraph(
-        arabic_text(f"السيارة: {vehicle.make} {vehicle.model} {vehicle.year} - {vehicle.color}"),
-        styles['Arabic']
-    )
-    content.append(vehicle_info)
-    content.append(Spacer(1, 20))
-    
-    # سجلات الورشة
-    content.append(Paragraph(arabic_text("سجلات الورشة"), styles['ArabicHeading']))
-    content.append(Spacer(1, 10))
-    
-    if workshop_records and len(workshop_records) > 0:
-        # تحضير بيانات سجلات الورشة
-        workshop_data = [
-            [
-                arabic_text("سبب الدخول"),
-                arabic_text("تاريخ الدخول"),
-                arabic_text("تاريخ الخروج"),
-                arabic_text("حالة الإصلاح"),
-                arabic_text("التكلفة (ريال)"),
-                arabic_text("اسم الورشة"),
-                arabic_text("الفني المسؤول")
-            ]
-        ]
+    try:
+        # تسجيل الخطوط العربية
+        fonts_dir = os.path.join(current_app.root_path, 'static', 'fonts')
+        logging.info(f"مسار الخطوط: {fonts_dir}")
         
-        # حساب الإحصائيات
-        total_cost = 0
-        total_days = 0
+        # تسجيل خط أميري للنصوص العربية
+        amiri_path = os.path.join(fonts_dir, 'Amiri-Regular.ttf')
+        amiri_bold_path = os.path.join(fonts_dir, 'Amiri-Bold.ttf')
         
-        # ترجمة القيم المختصرة إلى نصوص مفهومة
-        reason_map = {'maintenance': 'صيانة دورية', 'breakdown': 'عطل', 'accident': 'حادث'}
-        status_map = {'in_progress': 'قيد التنفيذ', 'completed': 'تم الإصلاح', 'pending_approval': 'بانتظار الموافقة'}
+        logging.info(f"مسار خط أميري: {amiri_path}")
+        logging.info(f"مسار خط أميري بولد: {amiri_bold_path}")
         
-        for record in workshop_records:
-            # حساب عدد أيام الإصلاح
-            days = 0
-            if record.entry_date:
-                if record.exit_date:
-                    days = (record.exit_date - record.entry_date).days
-                else:
-                    days = (datetime.now().date() - record.entry_date).days
-                total_days += max(0, days)
+        # التحقق من وجود ملفات الخطوط
+        if not os.path.exists(amiri_path) or not os.path.exists(amiri_bold_path):
+            if not os.path.exists(amiri_path):
+                logging.error(f"لم يتم العثور على ملف الخط: {amiri_path}")
+            if not os.path.exists(amiri_bold_path):
+                logging.error(f"لم يتم العثور على ملف الخط: {amiri_bold_path}")
             
-            # إجمالي التكلفة
-            if record.cost:
-                total_cost += record.cost
-            
-            # تجهيز بيانات الصف
-            workshop_data.append([
-                arabic_text(reason_map.get(record.reason, record.reason) if record.reason else "غير محدد"),
-                arabic_text(record.entry_date.strftime("%Y-%m-%d") if record.entry_date else ""),
-                arabic_text(record.exit_date.strftime("%Y-%m-%d") if record.exit_date else "ما زالت في الورشة"),
-                arabic_text(status_map.get(record.repair_status, record.repair_status) if record.repair_status else ""),
-                arabic_text(f"{record.cost:,.2f}" if record.cost else "0.00"),
-                arabic_text(record.workshop_name or "غير محدد"),
-                arabic_text(record.technician_name or "غير محدد")
-            ])
+            logging.error("لا يمكن استخدام الخطوط، سيتم إيقاف إنشاء PDF")
+            return buffer
         
-        # إنشاء جدول سجلات الورشة
-        col_widths = [65, 55, 55, 65, 55, 60, 60]
-        table = Table(workshop_data, colWidths=col_widths)
+        # تسجيل الخطوط العربية
+        pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
+        pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
+        logging.info("تم تسجيل الخطوط بنجاح")
         
-        # تنسيق الجدول
-        table_style = TableStyle([
-            # تنسيق الرأس
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONT', (0, 0), (-1, 0), 'Amiri-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('TOPPADDING', (0, 0), (-1, 0), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-            
-            # تنسيق الخلايا
-            ('FONT', (0, 1), (-1, -1), 'Amiri'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            
-            # الحدود
-            ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
-            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.gray),
-            
-            # تلوين الصفوف بالتناوب
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.white])
-        ])
+        # إنشاء المستند
+        doc = SimpleDocTemplate(
+            buffer, 
+            pagesize=A4,
+            rightMargin=30,
+            leftMargin=30,
+            topMargin=30,
+            bottomMargin=30,
+            title=arabic_text("تقرير سجلات الورشة")
+        )
         
-        # دمج تنسيق الجدول
-        table.setStyle(table_style)
-        content.append(table)
+        # تحضير أنماط النصوص
+        styles = getSampleStyleSheet()
+        styles.add(ParagraphStyle(
+            name='Arabic',
+            fontName='Amiri',
+            fontSize=12,
+            alignment=1,  # وسط
+            leading=16
+        ))
         
-        # إضافة ملخص الإحصائيات
-        content.append(Spacer(1, 20))
-        content.append(Paragraph(arabic_text("ملخص الإحصائيات"), styles['ArabicHeading']))
+        styles.add(ParagraphStyle(
+            name='ArabicTitle',
+            fontName='Amiri-Bold',
+            fontSize=16,
+            alignment=1,  # وسط
+            leading=22,
+            spaceAfter=10
+        ))
+        
+        styles.add(ParagraphStyle(
+            name='ArabicHeading',
+            fontName='Amiri-Bold',
+            fontSize=14,
+            alignment=1,  # وسط
+            leading=20,
+            spaceAfter=8
+        ))
+        
+        # تجهيز المحتوى
+        content = []
+        
+        # عنوان التقرير
+        title = Paragraph(arabic_text(f"تقرير سجلات الورشة للسيارة: {vehicle.plate_number}"), styles['ArabicTitle'])
+        content.append(title)
         content.append(Spacer(1, 10))
         
-        stats_data = [
-            [arabic_text("عدد السجلات"), arabic_text(str(len(workshop_records)))],
-            [arabic_text("إجمالي التكلفة"), arabic_text(f"{total_cost:,.2f} ريال")],
-            [arabic_text("إجمالي أيام الإصلاح"), arabic_text(f"{total_days} يوم")],
-            [arabic_text("متوسط التكلفة لكل سجل"), 
-             arabic_text(f"{total_cost/len(workshop_records):,.2f} ريال" if len(workshop_records) > 0 else "0 ريال")],
-            [arabic_text("متوسط مدة الإصلاح"), 
-             arabic_text(f"{total_days/len(workshop_records):.1f} يوم" if len(workshop_records) > 0 else "0 يوم")]
-        ]
+        # معلومات السيارة الأساسية
+        vehicle_info = Paragraph(
+            arabic_text(f"السيارة: {vehicle.make} {vehicle.model} {vehicle.year} - {vehicle.color}"),
+            styles['Arabic']
+        )
+        content.append(vehicle_info)
+        content.append(Spacer(1, 20))
         
-        stats_table = Table(stats_data, colWidths=[100, 150])
-        stats_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (0, -1), 'Amiri-Bold'),
-            ('FONT', (1, 0), (1, -1), 'Amiri'),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
-            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-            ('BOX', (0, 0), (1, -1), 0.5, colors.black),
-            ('INNERGRID', (0, 0), (1, -1), 0.25, colors.grey),
-        ]))
-        content.append(stats_table)
-    else:
-        # عرض رسالة في حالة عدم وجود سجلات
-        no_records = Paragraph(arabic_text("لا توجد سجلات ورشة متاحة لهذه المركبة"), styles['Arabic'])
-        content.append(no_records)
+        # سجلات الورشة
+        content.append(Paragraph(arabic_text("سجلات الورشة"), styles['ArabicHeading']))
+        content.append(Spacer(1, 10))
+        
+        if workshop_records and len(workshop_records) > 0:
+            # تحضير بيانات سجلات الورشة
+            workshop_data = [
+                [
+                    arabic_text("سبب الدخول"),
+                    arabic_text("تاريخ الدخول"),
+                    arabic_text("تاريخ الخروج"),
+                    arabic_text("حالة الإصلاح"),
+                    arabic_text("التكلفة (ريال)"),
+                    arabic_text("اسم الورشة"),
+                    arabic_text("الفني المسؤول")
+                ]
+            ]
+            
+            # حساب الإحصائيات
+            total_cost = 0
+            total_days = 0
+            
+            # ترجمة القيم المختصرة إلى نصوص مفهومة
+            reason_map = {'maintenance': 'صيانة دورية', 'breakdown': 'عطل', 'accident': 'حادث'}
+            status_map = {'in_progress': 'قيد التنفيذ', 'completed': 'تم الإصلاح', 'pending_approval': 'بانتظار الموافقة'}
+            
+            for record in workshop_records:
+                # حساب عدد أيام الإصلاح
+                days = 0
+                if record.entry_date:
+                    if record.exit_date:
+                        days = (record.exit_date - record.entry_date).days
+                    else:
+                        days = (datetime.now().date() - record.entry_date).days
+                    total_days += max(0, days)
+                
+                # إجمالي التكلفة
+                if record.cost:
+                    total_cost += record.cost
+                
+                # تجهيز بيانات الصف
+                workshop_data.append([
+                    arabic_text(reason_map.get(record.reason, record.reason) if record.reason else "غير محدد"),
+                    arabic_text(record.entry_date.strftime("%Y-%m-%d") if record.entry_date else ""),
+                    arabic_text(record.exit_date.strftime("%Y-%m-%d") if record.exit_date else "ما زالت في الورشة"),
+                    arabic_text(status_map.get(record.repair_status, record.repair_status) if record.repair_status else ""),
+                    arabic_text(f"{record.cost:,.2f}" if record.cost else "0.00"),
+                    arabic_text(record.workshop_name or "غير محدد"),
+                    arabic_text(record.technician_name or "غير محدد")
+                ])
+            
+            # إنشاء جدول سجلات الورشة
+            col_widths = [65, 55, 55, 65, 55, 60, 60]
+            table = Table(workshop_data, colWidths=col_widths)
+            
+            # تنسيق الجدول
+            table_style = TableStyle([
+                # تنسيق الرأس
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONT', (0, 0), (-1, 0), 'Amiri-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('TOPPADDING', (0, 0), (-1, 0), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                
+                # تنسيق الخلايا
+                ('FONT', (0, 1), (-1, -1), 'Amiri'),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                
+                # الحدود
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
+                ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.gray),
+                
+                # تلوين الصفوف بالتناوب
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.white])
+            ])
+            
+            # دمج تنسيق الجدول
+            table.setStyle(table_style)
+            content.append(table)
+            
+            # إضافة ملخص الإحصائيات
+            content.append(Spacer(1, 20))
+            content.append(Paragraph(arabic_text("ملخص الإحصائيات"), styles['ArabicHeading']))
+            content.append(Spacer(1, 10))
+            
+            stats_data = [
+                [arabic_text("عدد السجلات"), arabic_text(str(len(workshop_records)))],
+                [arabic_text("إجمالي التكلفة"), arabic_text(f"{total_cost:,.2f} ريال")],
+                [arabic_text("إجمالي أيام الإصلاح"), arabic_text(f"{total_days} يوم")]
+            ]
+            
+            # Avoid division by zero
+            if len(workshop_records) > 0:
+                stats_data.append([
+                    arabic_text("متوسط التكلفة لكل سجل"), 
+                    arabic_text(f"{total_cost/len(workshop_records):,.2f} ريال")
+                ])
+                stats_data.append([
+                    arabic_text("متوسط مدة الإصلاح"), 
+                    arabic_text(f"{total_days/len(workshop_records):.1f} يوم")
+                ])
+            
+            stats_table = Table(stats_data, colWidths=[100, 150])
+            stats_table.setStyle(TableStyle([
+                ('FONT', (0, 0), (0, -1), 'Amiri-Bold'),
+                ('FONT', (1, 0), (1, -1), 'Amiri'),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                ('BOX', (0, 0), (1, -1), 0.5, colors.black),
+                ('INNERGRID', (0, 0), (1, -1), 0.25, colors.grey),
+            ]))
+            content.append(stats_table)
+        else:
+            # عرض رسالة في حالة عدم وجود سجلات
+            no_records = Paragraph(arabic_text("لا توجد سجلات ورشة متاحة لهذه المركبة"), styles['Arabic'])
+            content.append(no_records)
+        
+        # بيانات التذييل
+        content.append(Spacer(1, 30))
+        footer = Paragraph(
+            arabic_text(f"تم إنشاء هذا التقرير بواسطة نظام نُظم لإدارة المركبات - {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
+            styles['Arabic']
+        )
+        content.append(footer)
+        
+        # إنشاء المستند
+        doc.build(content)
+        buffer.seek(0)
+        logging.info("تم إنشاء ملف PDF بنجاح")
+        
+    except Exception as e:
+        logging.error(f"حدث خطأ أثناء إنشاء ملف PDF: {str(e)}")
     
-    # بيانات التذييل
-    content.append(Spacer(1, 30))
-    footer = Paragraph(
-        arabic_text(f"تم إنشاء هذا التقرير بواسطة نظام نُظم لإدارة المركبات - {datetime.now().strftime('%Y-%m-%d %H:%M')}"),
-        styles['Arabic']
-    )
-    content.append(footer)
-    
-    # إنشاء المستند
-    doc.build(content)
-    buffer.seek(0)
     return buffer
