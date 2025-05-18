@@ -41,11 +41,21 @@ class ArabicPDF(FPDF):
     
     def cell(self, w=0, h=0, txt='', border=0, ln=0, align='', fill=False, link=''):
         """تجاوز دالة الخلية لدعم النص العربي"""
-        super().cell(w, h, self.arabic_text(txt), border, ln, align, fill, link)
+        # تحويل البيانات لتتناسب مع الواجهة الجديدة
+        border_val = border
+        if isinstance(border, int):
+            border_val = str(border) if border > 0 else 0
+        super().cell(w=w, h=h, text=self.arabic_text(txt), border=border_val, 
+                     ln=ln, align=align, fill=fill, link=link)
     
     def multi_cell(self, w=0, h=0, txt='', border=0, align='', fill=False):
         """تجاوز دالة الخلايا المتعددة لدعم النص العربي"""
-        super().multi_cell(w, h, self.arabic_text(txt), border, align, fill)
+        # تحويل البيانات لتتناسب مع الواجهة الجديدة
+        border_val = border
+        if isinstance(border, int):
+            border_val = str(border) if border > 0 else 0
+        super().multi_cell(w=w, h=h, text=self.arabic_text(txt), border=border_val, 
+                          align=align, fill=fill)
 
 
 def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
@@ -169,7 +179,8 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
     
     # حفظ PDF في ذاكرة مؤقتة
     pdf_buffer = io.BytesIO()
-    pdf.output(pdf_buffer)
+    # استخدام الطريقة المناسبة للإصدار الجديد من FPDF2
+    pdf_buffer.write(pdf.output().encode('latin-1'))
     pdf_buffer.seek(0)
     
     return pdf_buffer

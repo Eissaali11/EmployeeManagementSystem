@@ -2487,18 +2487,25 @@ def export_workshop_to_pdf(id):
             record.status_text = status_map.get(record.repair_status, record.repair_status) if record.repair_status else "غير محدد"
     
     try:
-        # استخدام الطريقة الجديدة: HTML و WeasyPrint
-        pdf_buffer = generate_pdf_from_template(
-            'reports/vehicle_workshop',
-            vehicle=vehicle,
-            workshop_records=workshop_records,
-            now=datetime.now()
-        )
-        current_app.logger.info("تم إنشاء PDF باستخدام WeasyPrint بنجاح")
+        # استخدام الطريقة الجديدة: FPDF2 مع دعم كامل للغة العربية
+        pdf_buffer = generate_workshop_report_pdf_fpdf(vehicle, workshop_records)
+        current_app.logger.info("تم إنشاء PDF باستخدام FPDF2 بنجاح")
     except Exception as e:
-        # في حالة الفشل، استخدم ReportLab كاحتياطي
-        current_app.logger.error(f"فشل إنشاء PDF باستخدام WeasyPrint: {str(e)}")
-        pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
+        # في حالة الفشل، نجرب الطرق البديلة
+        current_app.logger.error(f"فشل إنشاء PDF باستخدام FPDF2: {str(e)}")
+        try:
+            # نحاول WeasyPrint كاحتياطي
+            pdf_buffer = generate_pdf_from_template(
+                'reports/vehicle_workshop',
+                vehicle=vehicle,
+                workshop_records=workshop_records,
+                now=datetime.now()
+            )
+            current_app.logger.info("تم إنشاء PDF باستخدام WeasyPrint بنجاح")
+        except Exception as ex:
+            # إذا فشل WeasyPrint أيضًا، نعود إلى ReportLab
+            current_app.logger.error(f"فشل إنشاء PDF باستخدام WeasyPrint: {str(ex)}")
+            pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
     
     # تسجيل الإجراء
     log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF بدعم كامل للغة العربية')
