@@ -26,14 +26,19 @@ def register_fonts():
     if not os.path.exists(font_path):
         os.makedirs(font_path)
     
-    if os.path.exists(amiri_path) and os.path.exists(amiri_bold_path):
-        pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
-        pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
-        print("تم تسجيل خط Amiri للنصوص العربية بنجاح")
-    else:
-        # استخدام خط افتراضي إذا لم تكن الخطوط العربية متوفرة
-        pdfmetrics.registerFont(TTFont('Amiri', 'Helvetica'))
-        pdfmetrics.registerFont(TTFont('Amiri-Bold', 'Helvetica-Bold'))
+    # استخدام الخطوط الافتراضية بدلاً من الخطوط العربية لتجنب مشاكل التوافق
+    try:
+        # تسجيل الخطوط الافتراضية المدمجة في reportlab
+        pdfmetrics.registerFont(TTFont('Helvetica', 'Helvetica'))
+        pdfmetrics.registerFont(TTFont('Helvetica-Bold', 'Helvetica-Bold'))
+        
+        # إعداد عائلة الخطوط
+        pdfmetrics.registerFontFamily('Helvetica', normal='Helvetica', bold='Helvetica-Bold')
+        
+        print("تم تسجيل الخطوط البديلة بنجاح")
+    except Exception as e:
+        print(f"خطأ في تسجيل الخطوط: {str(e)}")
+        pass
 
 def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
