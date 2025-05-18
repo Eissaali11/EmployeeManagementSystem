@@ -46,6 +46,7 @@ def generate_workshop_pdf(vehicle, workshop_records):
     buffer = io.BytesIO()
     
     # تسجيل الخطوط العربية
+    import os
     fonts_dir = os.path.join(current_app.root_path, 'static', 'fonts')
     
     # تسجيل خط أميري للنصوص العربية
