@@ -18,17 +18,31 @@ from bidi.algorithm import get_display
 def register_fonts():
     """تسجيل الخطوط للتقارير"""
     try:
-        # استخدام الخطوط الافتراضية فقط بدون محاولة تسجيل خطوط عربية
-        # هذا سيمنع مشكلة عرض المربعات السوداء
+        # تسجيل الخط العربي Amiri
+        amiri_path = os.path.join('static', 'fonts', 'Amiri-Regular.ttf')
+        amiri_bold_path = os.path.join('static', 'fonts', 'Amiri-Bold.ttf')
+        
+        # تسجيل خط Amiri العربي وإضافته إلى مجموعة الخطوط المتاحة
+        try:
+            # تسجيل الخط العربي فقط إذا لم يكن مسجلاً بالفعل
+            if 'Amiri' not in pdfmetrics.getRegisteredFontNames():
+                pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
+                print("تم تسجيل خط Amiri بنجاح")
+                
+            if 'Amiri-Bold' not in pdfmetrics.getRegisteredFontNames():
+                pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
+                print("تم تسجيل خط Amiri-Bold بنجاح")
+        except Exception as e:
+            print(f"خطأ في تسجيل الخط العربي: {e}")
         
         styles = getSampleStyleSheet()
         
         # تعريف أنماط الفقرات للتقرير
         global basic_style, title_style, heading_style, normal_style
         
-        # استخدام الخطوط الافتراضية فقط
-        font_name = 'Helvetica'
-        font_name_bold = 'Helvetica-Bold'
+        # استخدام خط Amiri إذا كان متاحًا، وإلا استخدام الخط الافتراضي
+        font_name = 'Amiri' if 'Amiri' in pdfmetrics.getRegisteredFontNames() else 'Helvetica'
+        font_name_bold = 'Amiri-Bold' if 'Amiri-Bold' in pdfmetrics.getRegisteredFontNames() else 'Helvetica-Bold'
         
         print(f"الخطوط المتاحة: {pdfmetrics.getRegisteredFontNames()}")
         
@@ -84,21 +98,9 @@ def arabic_text(text):
     if text is None:
         return ""
     
-    # تقنية بسيطة جدًا للتعامل مع العربية - استبدال الحروف العربية بنص لاتيني
-    # هذا حل مؤقت حتى نتمكن من تكوين دعم كامل للغة العربية
-    arabic_to_latin = {
-        'ا': 'A', 'أ': 'A', 'إ': 'I', 'آ': 'A',
-        'ب': 'B', 'ت': 'T', 'ث': 'Th',
-        'ج': 'J', 'ح': 'H', 'خ': 'Kh',
-        'د': 'D', 'ذ': 'Th',
-        'ر': 'R', 'ز': 'Z',
-        'س': 'S', 'ش': 'Sh', 'ص': 'S', 'ض': 'D',
-        'ط': 'T', 'ظ': 'Z',
-        'ع': 'A', 'غ': 'Gh',
-        'ف': 'F', 'ق': 'Q', 'ك': 'K', 'ل': 'L',
-        'م': 'M', 'ن': 'N', 'ه': 'H', 'و': 'W',
-        'ي': 'Y', 'ى': 'Y', 'ئ': 'Y', 'ة': 'H',
-        # القيم المشتركة
+    # استراتيجية العرض المباشرة باستخدام الخط الافتراضي
+    # نعود إلى استراتيجية الترجمة البسيطة لحل المشكلة مؤقتًا
+    common_terms = {
         'صيانة دورية': 'Maintenance', 'عطل': 'Breakdown', 'حادث': 'Accident',
         'قيد التنفيذ': 'In Progress', 'تم الإصلاح': 'Completed', 'بانتظار الموافقة': 'Pending Approval',
         'ما زالت في الورشة': 'Still in Workshop', 'ريال': 'SAR',
@@ -117,16 +119,22 @@ def arabic_text(text):
     
     try:
         result = str(text)
-        # تحويل النص العربي إلى لاتيني للعرض في PDF
-        for arabic, latin in arabic_to_latin.items():
-            result = result.replace(arabic, latin)
         
-        # إزالة علامات التشكيل
-        result = ''.join(c for c in result if not (0x064B <= ord(c) <= 0x0652))
+        # مرحلة 1: معالجة المصطلحات المعروفة
+        # البحث عن المصطلحات المعروفة واستبدالها
+        for arabic, latin in common_terms.items():
+            if arabic in result:
+                result = result.replace(arabic, latin)
+                return result
         
-        # إذا كان النص رقمًا أو تاريخًا، نعيده كما هو
+        # مرحلة 2: إذا لم يكن النص مصطلح معروف، نعيده كما هو للأرقام والتواريخ
         if result.replace('.', '', 1).replace(',', '', 1).isdigit() or '-' in result:
             return str(text)
+        
+        # مرحلة 3: ترجمة المصطلحات غير المعروفة
+        # إذا كان النص يحتوي على أحرف عربية ولم يتم معالجته في الخطوات السابقة
+        if any('\u0600' <= c <= '\u06FF' for c in result):
+            return "Arabic text"  # عرض إشارة بسيطة للنصوص العربية غير المترجمة
             
         return result
     except Exception as e:
