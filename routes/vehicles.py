@@ -23,6 +23,7 @@ from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pd
 from utils.vehicle_report import generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 from utils.workshop_report import generate_workshop_report_pdf
+from utils.html_to_pdf import generate_pdf_from_template
 
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
@@ -2470,15 +2471,36 @@ def export_vehicle_to_pdf(id):
 @vehicles_bp.route('/<int:id>/export/workshop/pdf')
 @login_required
 def export_workshop_to_pdf(id):
-    """تصدير سجلات الورشة للسيارة إلى ملف PDF مع الشعار الدائري الجديد"""
+    """تصدير سجلات الورشة للسيارة إلى ملف PDF مع دعم كامل للغة العربية"""
     vehicle = Vehicle.query.get_or_404(id)
     workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
     
-    # إنشاء ملف PDF باستخدام الدالة الجديدة مع الشعار الدائري
-    pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
+    # تحويل حالات سجلات الورشة إلى نصوص مقروءة
+    reason_map = {'maintenance': 'صيانة دورية', 'breakdown': 'عطل', 'accident': 'حادث'}
+    status_map = {'in_progress': 'قيد التنفيذ', 'completed': 'تم الإصلاح', 'pending_approval': 'بانتظار الموافقة'}
+    
+    for record in workshop_records:
+        if hasattr(record, 'reason'):
+            record.reason_text = reason_map.get(record.reason, record.reason) if record.reason else "غير محدد"
+        if hasattr(record, 'repair_status'):
+            record.status_text = status_map.get(record.repair_status, record.repair_status) if record.repair_status else "غير محدد"
+    
+    try:
+        # استخدام الطريقة الجديدة: HTML و WeasyPrint
+        pdf_buffer = generate_pdf_from_template(
+            'reports/vehicle_workshop',
+            vehicle=vehicle,
+            workshop_records=workshop_records,
+            now=datetime.now()
+        )
+        current_app.logger.info("تم إنشاء PDF باستخدام WeasyPrint بنجاح")
+    except Exception as e:
+        # في حالة الفشل، استخدم ReportLab كاحتياطي
+        current_app.logger.error(f"فشل إنشاء PDF باستخدام WeasyPrint: {str(e)}")
+        pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
     
     # تسجيل الإجراء
-    log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF بالتصميم الجديد')
+    log_audit('export', 'vehicle_workshop', id, f'تم تصدير سجلات ورشة السيارة {vehicle.plate_number} إلى PDF بدعم كامل للغة العربية')
     
     return send_file(
         pdf_buffer,

@@ -165,12 +165,12 @@
             <tbody>
                 {% for record in workshop_records %}
                 <tr>
-                    <td>{{ record.reason }}</td>
-                    <td>{{ record.entry_date|date_format }}</td>
-                    <td>{{ record.exit_date|date_format if record.exit_date else "قيد الإصلاح" }}</td>
-                    <td>{{ record.status }}</td>
-                    <td>{{ record.workshop_name }}</td>
-                    <td>{{ record.technician }}</td>
+                    <td>{{ record.reason_text if hasattr(record, 'reason_text') else record.reason }}</td>
+                    <td>{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else "غير محدد" }}</td>
+                    <td>{{ record.exit_date.strftime('%Y-%m-%d') if record.exit_date else "قيد الإصلاح" }}</td>
+                    <td>{{ record.status_text if hasattr(record, 'status_text') else record.repair_status }}</td>
+                    <td>{{ record.workshop_name if record.workshop_name else "غير محدد" }}</td>
+                    <td>{{ record.technician_name if hasattr(record, 'technician_name') else record.technician if hasattr(record, 'technician') else "غير محدد" }}</td>
                     <td>{{ "{:,.2f}".format(record.cost) if record.cost else "غير محدد" }}</td>
                 </tr>
                 {% endfor %}
