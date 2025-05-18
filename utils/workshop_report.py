@@ -17,8 +17,32 @@ from bidi.algorithm import get_display
 
 def register_fonts():
     """تسجيل الخطوط للتقارير"""
-    # استخدام الخطوط الافتراضية المدمجة في reportlab
     try:
+        # تسجيل الخط العربي Amiri
+        font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts')
+        amiri_path = os.path.join(font_path, 'Amiri-Regular.ttf')
+        amiri_bold_path = os.path.join(font_path, 'Amiri-Bold.ttf')
+        
+        # التحقق من وجود الخط وتسجيله
+        if os.path.exists(amiri_path):
+            # تسجيل الخط العربي فقط إذا لم يكن مسجلاً بالفعل
+            if 'Amiri' not in pdfmetrics.getRegisteredFontNames():
+                pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
+                print("تم تسجيل خط Amiri للنصوص العربية بنجاح")
+                
+            if 'Amiri-Bold' not in pdfmetrics.getRegisteredFontNames() and os.path.exists(amiri_bold_path):
+                pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
+                print("تم تسجيل خط Amiri-Bold للنصوص العربية بنجاح")
+                
+            # استخدام خط Amiri إذا كان متاحًا
+            font_name = 'Amiri'
+            font_name_bold = 'Amiri-Bold' if 'Amiri-Bold' in pdfmetrics.getRegisteredFontNames() else 'Amiri'
+        else:
+            # استخدام الخطوط الافتراضية إذا لم يكن Amiri متاحًا
+            print("خط Amiri غير متاح، استخدام الخطوط الافتراضية")
+            font_name = 'Helvetica'
+            font_name_bold = 'Helvetica-Bold'
+        
         styles = getSampleStyleSheet()
         
         # تعريف أنماط الفقرات للتقرير
@@ -27,7 +51,7 @@ def register_fonts():
         # نمط العنوان الرئيسي
         title_style = ParagraphStyle(
             name='ReportTitle',
-            fontName='Helvetica-Bold',  # استخدام الخط الافتراضي
+            fontName=font_name_bold,
             fontSize=16,
             leading=20,
             alignment=1,  # وسط
@@ -37,7 +61,7 @@ def register_fonts():
         # نمط العناوين الفرعية
         heading_style = ParagraphStyle(
             name='Heading',
-            fontName='Helvetica-Bold',  # استخدام الخط الافتراضي
+            fontName=font_name_bold,
             fontSize=14,
             leading=18,
             alignment=1,  # وسط
@@ -47,7 +71,7 @@ def register_fonts():
         # نمط النص العادي
         normal_style = ParagraphStyle(
             name='Normal',
-            fontName='Helvetica',  # استخدام الخط الافتراضي
+            fontName=font_name,
             fontSize=12,
             leading=14,
             alignment=2,  # يمين (للعربية)
@@ -57,7 +81,7 @@ def register_fonts():
         # نمط أساسي للجداول
         basic_style = ParagraphStyle(
             name='BasicStyle',
-            fontName='Helvetica',
+            fontName=font_name,
             fontSize=12
         )
         
