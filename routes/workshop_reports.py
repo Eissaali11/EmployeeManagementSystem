@@ -38,15 +38,9 @@ def vehicle_workshop_pdf(id):
         # اسم الملف
         filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d')}.pdf"
         
-        # تسجيل نشاط النظام باستخدام الطريقة الآمنة
-        SystemAudit.create_audit_record(
-            user_id=current_user.id if current_user.is_authenticated else None,
-            action='export',
-            entity_type='vehicle_workshop',
-            entity_id=id,
-            entity_name=f'تقرير ورشة: {vehicle.plate_number}',
-            details=f'تم تصدير تقرير الورشة للمركبة {vehicle.plate_number}'
-        )
+        # تسجيل نشاط بسيط في السجل بدون استخدام SystemAudit
+        import logging
+        logging.info(f'تم تصدير تقرير الورشة للمركبة {vehicle.plate_number} بواسطة المستخدم {current_user.email if current_user.is_authenticated else "ضيف"}')
         
         # إرسال الملف
         return send_file(
