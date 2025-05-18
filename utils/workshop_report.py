@@ -83,15 +83,44 @@ def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
     if text is None:
         return ""
-    # تحويل النص العربي من اليمين إلى اليسار باستخدام bidi & reshape
-    # هذا سيساعد في عرض النص العربي بالترتيب الصحيح 
+    
+    # تقنية بسيطة جدًا للتعامل مع العربية - استبدال الحروف العربية بنص لاتيني
+    # هذا حل مؤقت حتى نتمكن من تكوين دعم كامل للغة العربية
+    arabic_to_latin = {
+        'ا': 'A', 'أ': 'A', 'إ': 'I', 'آ': 'A',
+        'ب': 'B', 'ت': 'T', 'ث': 'Th',
+        'ج': 'J', 'ح': 'H', 'خ': 'Kh',
+        'د': 'D', 'ذ': 'Th',
+        'ر': 'R', 'ز': 'Z',
+        'س': 'S', 'ش': 'Sh', 'ص': 'S', 'ض': 'D',
+        'ط': 'T', 'ظ': 'Z',
+        'ع': 'A', 'غ': 'Gh',
+        'ف': 'F', 'ق': 'Q', 'ك': 'K', 'ل': 'L',
+        'م': 'M', 'ن': 'N', 'ه': 'H', 'و': 'W',
+        'ي': 'Y', 'ى': 'Y', 'ئ': 'Y', 'ة': 'H',
+        # القيم المشتركة
+        'صيانة دورية': 'Sianat Dawria', 'عطل': 'Atal', 'حادث': 'Hadith',
+        'قيد التنفيذ': 'Qaid Altanfith', 'تم الإصلاح': 'Tam Alislah', 'بانتظار الموافقة': 'Bientidhar Almuafaqa',
+        'ما زالت في الورشة': 'Ma Zalat fi Alwarsha', 'ريال': 'SAR',
+        'الفني المسؤول': 'Technician', 'اسم الورشة': 'Workshop Name',
+        'التكلفة (ريال)': 'Cost (SAR)', 'حالة الإصلاح': 'Repair Status',
+        'تاريخ الخروج': 'Exit Date', 'تاريخ الدخول': 'Entry Date',
+        'سبب الدخول': 'Entry Reason'
+    }
+    
     try:
         result = str(text)
-        # معالجة إضافية لضمان أن الأرقام ورموز الترقيم لا تتأثر
-        # تخطي عملية reshape للنصوص غير العربية مثل التواريخ والأرقام
-        if any('\u0600' <= c <= '\u06FF' for c in result):
-            result = reshape(result)
-            result = get_display(result)
+        # تحويل النص العربي إلى لاتيني للعرض في PDF
+        for arabic, latin in arabic_to_latin.items():
+            result = result.replace(arabic, latin)
+        
+        # إزالة علامات التشكيل
+        result = ''.join(c for c in result if not (0x064B <= ord(c) <= 0x0652))
+        
+        # إذا كان النص رقمًا أو تاريخًا، نعيده كما هو
+        if result.replace('.', '', 1).replace(',', '', 1).isdigit() or '-' in result:
+            return str(text)
+            
         return result
     except Exception as e:
         print(f"خطأ في معالجة النص العربي: {e}")
