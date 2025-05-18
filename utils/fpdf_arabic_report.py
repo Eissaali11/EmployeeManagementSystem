@@ -317,10 +317,42 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
     pdf.set_font('Amiri', '', 8)
     pdf.cell(0, 5, f'تاريخ الإنشاء: {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 0, 'C')
     
-    # حفظ PDF في ذاكرة مؤقتة
-    pdf_buffer = io.BytesIO()
-    # استخدام الطريقة المناسبة للإصدار الجديد من FPDF2
-    pdf_buffer.write(pdf.output().encode('latin-1'))
-    pdf_buffer.seek(0)
+    # حفظ الملف في نظام الملفات مؤقتًا وقراءته
+    try:
+        import tempfile
+        import os
+        
+        # إنشاء ملف مؤقت
+        fd, temp_path = tempfile.mkstemp(suffix='.pdf')
+        os.close(fd)
+        
+        # حفظ PDF إلى الملف المؤقت
+        pdf.output(temp_path)
+        
+        # قراءة الملف المؤقت كبايتات
+        with open(temp_path, 'rb') as f:
+            pdf_content = f.read()
+        
+        # حذف الملف المؤقت
+        os.unlink(temp_path)
+        
+        # إنشاء بفر للبايتات
+        pdf_buffer = io.BytesIO(pdf_content)
+        pdf_buffer.seek(0)
+        
+        import logging
+        logging.info(f"تم إنشاء PDF بنجاح بحجم: {len(pdf_content)} بايت")
+        
+        return pdf_buffer
     
-    return pdf_buffer
+    except Exception as e:
+        import logging, traceback
+        logging.error(f"خطأ عند إنشاء PDF: {str(e)}")
+        logging.error(traceback.format_exc())
+        
+        # محاولة بديلة بسيطة
+        pdf_buffer = io.BytesIO()
+        pdf_buffer.write(pdf.output(dest='S').encode('latin-1'))
+        pdf_buffer.seek(0)
+        
+        return pdf_buffer
