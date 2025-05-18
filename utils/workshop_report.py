@@ -99,12 +99,28 @@ def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
     if text is None:
         return ""
+    
     try:
         text_str = str(text)
-        # إعادة تشكيل النص باستخدام arabic_reshaper
+        
+        # اذا كان النص يحتوي على أرقام فقط، أعده كما هو
+        if text_str.replace('.', '', 1).replace(',', '', 1).isdigit():
+            return text_str
+            
+        # رقم جدول يحتوي على خط مائل او شرطة
+        if '-' in text_str or '/' in text_str:
+            # تحقق اذا كان النص يتكون من أرقام وشرطات فقط (مثل تاريخ)
+            chars = set(text_str)
+            if chars.issubset(set('0123456789-/:')) or text_str.count('-') > 0:
+                return text_str
+        
+        # معالجة النص العربي باستخدام إعادة التشكيل واتجاه الكتابة RTL        
+        # اعادة تشكيل الحروف العربية لتتصل مع بعضها
         reshaped_text = reshape(text_str)
-        # تطبيق خوارزمية BIDI لدعم اتجاه الكتابة من اليمين إلى اليسار
+        
+        # تطبيق BIDI لعكس اتجاه النص من اليمين الى اليسار بشكل صحيح
         bidi_text = get_display(reshaped_text)
+        
         return bidi_text
     except Exception as e:
         print(f"خطأ في معالجة النص العربي: {str(e)}")
