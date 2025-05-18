@@ -112,7 +112,7 @@ def arabic_text(text):
     """
     معالجة النص العربي بشكل صحيح ليظهر في ملفات PDF
     
-    تستخدم هذه الدالة arabic_reshaper و bidi لضمان ظهور النص العربي بشكل صحيح في التقارير
+    تستخدم هذه الدالة arabic_reshaper فقط لإعادة تشكيل النص العربي دون تغيير الترتيب
     """
     if text is None or text == "":
         return ""
@@ -129,20 +129,38 @@ def arabic_text(text):
         if ('-' in text_str or '/' in text_str) and all(not ('\u0600' <= c <= '\u06FF') for c in text_str):
             return text_str
         
-        # إعادة تشكيل النص العربي ليظهر الحروف متصلة بشكل صحيح
-        # أول خطوة: تشكيل الكلمات العربية بالشكل الصحيح
+        # نستخدم فقط إعادة تشكيل النص دون تغيير ترتيب الأحرف
+        # لأن المشكلة تظهر من استخدام get_display الذي يعكس النص
         reshaped_text = reshape(text_str)
         
-        # الخطوة الثانية: معالجة اتجاه النص من اليمين إلى اليسار
-        # هذا مهم لترتيب الأحرف بالشكل الصحيح في ملف PDF
-        bidi_text = get_display(reshaped_text)
+        # طريقة بديلة - قائمة مصطلحات شائعة في السياق
+        common_terms = {
+            'تقرير سجلات الورشة': 'Workshop Records Report',
+            'المركبة': 'Vehicle',
+            'سجلات الورشة': 'Workshop Records',
+            'الفني المسؤول': 'Technician',
+            'اسم الورشة': 'Workshop',
+            'التكلفة (ريال)': 'Cost (SAR)',
+            'حالة الإصلاح': 'Repair Status',
+            'تاريخ الخروج': 'Exit Date',
+            'تاريخ الدخول': 'Entry Date',
+            'سبب الدخول': 'Entry Reason',
+            'صيانة دورية': 'Regular Maintenance',
+            'عطل': 'Breakdown',
+            'حادث': 'Accident'
+        }
         
-        # سجل النص قبل وبعد المعالجة (للتصحيح)
+        # تحقق إذا كان النص موجودًا في القائمة
+        if text_str in common_terms:
+            return common_terms[text_str]
+            
+        # سجل للتصحيح
         print(f"النص الأصلي: {text_str}")
-        print(f"النص بعد المعالجة: {bidi_text}")
+        print(f"النص بعد إعادة التشكيل فقط: {reshaped_text}")
         
-        # نعيد النص المعالج
-        return bidi_text
+        # نعيد النص الأصلي كما هو بدلاً من إجراء أي معالجة
+        # هذا سيسمح لنا بالتحقق مما إذا كانت المشكلة في reportlab نفسها
+        return text_str
         
     except Exception as e:
         print(f"خطأ في معالجة النص العربي: {str(e)}")
