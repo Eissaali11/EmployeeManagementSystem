@@ -771,8 +771,17 @@ def export_excel():
             flash('القسم غير موجود', 'danger')
             return redirect(url_for('attendance.export_page'))
         
+        # الحصول على موظفي القسم
+        employees = Employee.query.filter_by(department_id=department.id).all()
+        
+        # الحصول على سجلات الحضور خلال الفترة المحددة
+        attendances = Attendance.query.filter(
+            Attendance.date.between(start_date, end_date),
+            Attendance.employee_id.in_([emp.id for emp in employees])
+        ).all()
+        
         # إنشاء ملف Excel وتحميله
-        excel_file = export_attendance_by_department(department.id, start_date, end_date)
+        excel_file = export_attendance_by_department(employees, attendances, start_date, end_date)
         
         # تحديد اسم الملف بناءً على القسم والفترة الزمنية
         if end_date_str:
