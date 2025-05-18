@@ -16,29 +16,61 @@ from arabic_reshaper import reshape
 from bidi.algorithm import get_display
 
 def register_fonts():
-    """تسجيل الخطوط العربية"""
-    font_path = os.path.join(current_app.static_folder, 'fonts')
-    
-    # التحقق من وجود الخطوط وتسجيلها
-    amiri_path = os.path.join(font_path, 'Amiri-Regular.ttf')
-    amiri_bold_path = os.path.join(font_path, 'Amiri-Bold.ttf')
-    
-    if not os.path.exists(font_path):
-        os.makedirs(font_path)
-    
-    # استخدام الخطوط الافتراضية بدلاً من الخطوط العربية لتجنب مشاكل التوافق
+    """تسجيل الخطوط للتقارير"""
+    # استخدام الخطوط الافتراضية المدمجة في reportlab بدلاً من الخطوط العربية المخصصة
     try:
-        # تسجيل الخطوط الافتراضية المدمجة في reportlab
-        pdfmetrics.registerFont(TTFont('Helvetica', 'Helvetica'))
-        pdfmetrics.registerFont(TTFont('Helvetica-Bold', 'Helvetica-Bold'))
+        # نستخدم الخطوط الافتراضية المضمنة في reportlab
+        styles = getSampleStyleSheet()
         
-        # إعداد عائلة الخطوط
-        pdfmetrics.registerFontFamily('Helvetica', normal='Helvetica', bold='Helvetica-Bold')
+        # تعريف أنماط الفقرات للتقرير
+        global basic_style, title_style, heading_style, normal_style
         
-        print("تم تسجيل الخطوط البديلة بنجاح")
+        # نمط العنوان الرئيسي
+        title_style = ParagraphStyle(
+            name='ReportTitle',
+            fontName='Helvetica-Bold',
+            fontSize=16,
+            leading=20,
+            alignment=1,  # وسط
+            spaceAfter=12
+        )
+        
+        # نمط العناوين الفرعية
+        heading_style = ParagraphStyle(
+            name='Heading',
+            fontName='Helvetica-Bold',
+            fontSize=14,
+            leading=18,
+            alignment=1,  # وسط
+            spaceAfter=10
+        )
+        
+        # نمط النص العادي
+        normal_style = ParagraphStyle(
+            name='Normal',
+            fontName='Helvetica',
+            fontSize=12,
+            leading=14,
+            alignment=2,  # يمين (للعربية)
+            firstLineIndent=0
+        )
+        
+        # نمط أساسي للجداول
+        basic_style = ParagraphStyle(
+            name='BasicStyle',
+            fontName='Helvetica',
+            fontSize=12
+        )
+        
+        print("تم تجهيز أنماط التقرير بنجاح")
     except Exception as e:
-        print(f"خطأ في تسجيل الخطوط: {str(e)}")
-        pass
+        print(f"خطأ في تجهيز أنماط التقرير: {str(e)}")
+        # استخدام أنماط احتياطية في حالة الفشل
+        styles = getSampleStyleSheet()
+        title_style = styles['Title']
+        heading_style = styles['Heading1']
+        normal_style = styles['Normal']
+        basic_style = styles['Normal']
 
 def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
