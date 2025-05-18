@@ -17,9 +17,8 @@ from bidi.algorithm import get_display
 
 def register_fonts():
     """تسجيل الخطوط للتقارير"""
-    # استخدام الخطوط الافتراضية المدمجة في reportlab بدلاً من الخطوط العربية المخصصة
+    # استخدام الخطوط الافتراضية المدمجة في reportlab
     try:
-        # نستخدم الخطوط الافتراضية المضمنة في reportlab
         styles = getSampleStyleSheet()
         
         # تعريف أنماط الفقرات للتقرير
@@ -28,7 +27,7 @@ def register_fonts():
         # نمط العنوان الرئيسي
         title_style = ParagraphStyle(
             name='ReportTitle',
-            fontName='Helvetica-Bold',
+            fontName='Helvetica-Bold',  # استخدام الخط الافتراضي
             fontSize=16,
             leading=20,
             alignment=1,  # وسط
@@ -38,7 +37,7 @@ def register_fonts():
         # نمط العناوين الفرعية
         heading_style = ParagraphStyle(
             name='Heading',
-            fontName='Helvetica-Bold',
+            fontName='Helvetica-Bold',  # استخدام الخط الافتراضي
             fontSize=14,
             leading=18,
             alignment=1,  # وسط
@@ -48,7 +47,7 @@ def register_fonts():
         # نمط النص العادي
         normal_style = ParagraphStyle(
             name='Normal',
-            fontName='Helvetica',
+            fontName='Helvetica',  # استخدام الخط الافتراضي
             fontSize=12,
             leading=14,
             alignment=2,  # يمين (للعربية)
@@ -76,7 +75,8 @@ def arabic_text(text):
     """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
     if text is None:
         return ""
-    return get_display(reshape(str(text)))
+    # استخدام النص كما هو بدون معالجة خاصة للتجربة
+    return str(text)
 
 def generate_workshop_report_pdf(vehicle, workshop_records):
     """
@@ -176,21 +176,18 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     content.append(header)
     content.append(Spacer(1, 30*mm))
     
-    # عنوان التقرير
-    title = Paragraph(arabic_text(f"تقرير سجلات الورشة للسيارة: {vehicle.plate_number}"), title_style)
-    content.append(title)
+    # عنوان التقرير - استخدم نص بسيط
+    title = "تقرير سجلات الورشة للسيارة: " + vehicle.plate_number
+    content.append(Paragraph(title, title_style))
     content.append(Spacer(1, 10))
     
-    # معلومات السيارة الأساسية
-    vehicle_info = Paragraph(
-        arabic_text(f"السيارة: {vehicle.make} {vehicle.model} {vehicle.year}"),
-        normal_style
-    )
-    content.append(vehicle_info)
+    # معلومات السيارة الأساسية - استخدم نص بسيط
+    vehicle_info = "السيارة: " + vehicle.make + " " + vehicle.model + " " + str(vehicle.year)
+    content.append(Paragraph(vehicle_info, normal_style))
     content.append(Spacer(1, 20))
     
-    # سجلات الورشة
-    content.append(Paragraph(arabic_text("سجلات الورشة"), heading_style))
+    # سجلات الورشة - استخدم نص بسيط
+    content.append(Paragraph("سجلات الورشة", heading_style))
     content.append(Spacer(1, 10))
     
     if workshop_records and len(workshop_records) > 0:
