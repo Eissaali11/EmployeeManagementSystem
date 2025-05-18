@@ -184,11 +184,11 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         # إنشاء جدول سجلات الورشة
         pdf.set_font('Amiri', 'B', 10)
         
-        # تحديد عرض الأعمدة
-        col_width = [30, 20, 20, 25, 25, 30, 20]
+        # تحديد عرض الأعمدة (إضافة عمود لعدد الأيام)
+        col_width = [30, 20, 20, 15, 20, 20, 25, 20]
         
-        # عناوين الأعمدة
-        headers = ['سبب الدخول', 'تاريخ الدخول', 'تاريخ الخروج', 'حالة الإصلاح', 'اسم الورشة', 'الفني المسؤول', 'التكلفة (ريال)']
+        # عناوين الأعمدة (إضافة عمود لعدد الأيام)
+        headers = ['سبب الدخول', 'تاريخ الدخول', 'تاريخ الخروج', 'عدد الأيام', 'حالة الإصلاح', 'اسم الورشة', 'الفني المسؤول', 'التكلفة (ريال)']
         
         # الصف الأول (الرأس)
         for i, header in enumerate(headers):
@@ -206,19 +206,30 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
             reason = reason_map.get(record.reason, record.reason) if hasattr(record, 'reason') and record.reason else ''
             entry_date = record.entry_date.strftime('%Y-%m-%d') if hasattr(record, 'entry_date') and record.entry_date else ''
             exit_date = record.exit_date.strftime('%Y-%m-%d') if hasattr(record, 'exit_date') and record.exit_date else 'قيد الإصلاح'
+            
+            # حساب عدد الأيام في الورشة
+            days_count = "—"
+            if hasattr(record, 'entry_date') and record.entry_date:
+                days = calculate_days_in_workshop(
+                    record.entry_date, 
+                    record.exit_date if hasattr(record, 'exit_date') and record.exit_date else None
+                )
+                days_count = str(days) + " يوم" if days > 0 else "—"
+            
             status = status_map.get(record.repair_status, record.repair_status) if hasattr(record, 'repair_status') and record.repair_status else ''
             workshop_name = record.workshop_name if hasattr(record, 'workshop_name') and record.workshop_name else ''
             technician = record.technician_name if hasattr(record, 'technician_name') and record.technician_name else ''
             cost = f"{record.cost:,.2f}" if hasattr(record, 'cost') and record.cost else ''
             
-            # رسم الخلايا
+            # رسم الخلايا (إضافة خلية لعدد الأيام)
             pdf.cell(col_width[0], 8, reason, 1, 0, 'C')
             pdf.cell(col_width[1], 8, entry_date, 1, 0, 'C')
             pdf.cell(col_width[2], 8, exit_date, 1, 0, 'C')
-            pdf.cell(col_width[3], 8, status, 1, 0, 'C')
-            pdf.cell(col_width[4], 8, workshop_name, 1, 0, 'C')
-            pdf.cell(col_width[5], 8, technician, 1, 0, 'C')
-            pdf.cell(col_width[6], 8, cost, 1, 0, 'C')
+            pdf.cell(col_width[3], 8, days_count, 1, 0, 'C')
+            pdf.cell(col_width[4], 8, status, 1, 0, 'C')
+            pdf.cell(col_width[5], 8, workshop_name, 1, 0, 'C')
+            pdf.cell(col_width[6], 8, technician, 1, 0, 'C')
+            pdf.cell(col_width[7], 8, cost, 1, 0, 'C')
             pdf.ln()
         
         # إحصائيات
