@@ -249,15 +249,49 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
             pdf.ln()
         
         # إحصائيات
-        pdf.ln(5)
+        pdf.ln(10)
+        
+        # استخدام خط Tajawal للعناوين
+        pdf.set_font('Tajawal', 'B', 14)
+        pdf.cell(0, 10, 'ملخص التكاليف والمدة', 0, 1, 'R')
+        
+        # حساب الإحصائيات
         total_cost = sum(record.cost or 0 for record in workshop_records)
-        pdf.set_font('Amiri', 'B', 12)
-        pdf.cell(0, 8, f'إجمالي تكاليف الصيانة: {total_cost:,.2f} ريال', 0, 1, 'R')
+        # حساب إجمالي الأيام في الورشة لجميع السجلات
+        total_days = sum(calculate_days_in_workshop(
+            record.entry_date, 
+            record.exit_date if hasattr(record, 'exit_date') and record.exit_date else None
+        ) for record in workshop_records if hasattr(record, 'entry_date') and record.entry_date)
+        
+        # عرض الإحصائيات في جدول
+        pdf.set_font('Amiri', '', 12)
+        stats_info = [
+            ['عدد مرات دخول الورشة:', f'{len(workshop_records)}'],
+            ['إجمالي الأيام في الورشة:', f'{total_days} يوم'],
+            ['متوسط المدة لكل زيارة:', f'{total_days/len(workshop_records):.1f} يوم' if len(workshop_records) > 0 else '0 يوم'],
+            ['التكلفة الإجمالية:', f'{total_cost:,.2f} ريال'],
+            ['متوسط التكلفة لكل زيارة:', f'{total_cost/len(workshop_records):,.2f} ريال' if len(workshop_records) > 0 else '0 ريال']
+        ]
+        
+        # رسم جدول الإحصائيات
+        for info in stats_info:
+            pdf.set_font('Tajawal', 'B', 12)
+            pdf.cell(40, 8, info[0], 0, 0, 'R')
+            pdf.set_font('Amiri', '', 12)
+            pdf.cell(0, 8, info[1], 0, 1, 'R')
     
-    # تذييل الصفحة
+    # تذييل الصفحة مع تصميم محسن
+    pdf.set_y(-25)
+    pdf.set_draw_color(30, 60, 114)  # لون أزرق غامق
+    pdf.set_line_width(0.5)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    
+    pdf.set_font('Tajawal', 'B', 8)
     pdf.set_y(-20)
+    pdf.cell(0, 10, f'تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة المركبات والموظفين', 0, 1, 'C')
+    
     pdf.set_font('Amiri', '', 8)
-    pdf.cell(0, 10, f'تم إنشاء هذا التقرير بواسطة نُظم - نظام إدارة المركبات | {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 0, 'C')
+    pdf.cell(0, 5, f'تاريخ الإنشاء: {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 0, 'C')
     
     # حفظ PDF في ذاكرة مؤقتة
     pdf_buffer = io.BytesIO()
