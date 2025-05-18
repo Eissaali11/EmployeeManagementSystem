@@ -17,17 +17,25 @@ from bidi.algorithm import get_display
 
 def register_fonts():
     """تسجيل الخطوط للتقارير"""
-    # استخدام الخطوط الافتراضية المدمجة في reportlab
     try:
+        # استخدام الخطوط الافتراضية فقط بدون محاولة تسجيل خطوط عربية
+        # هذا سيمنع مشكلة عرض المربعات السوداء
+        
         styles = getSampleStyleSheet()
         
         # تعريف أنماط الفقرات للتقرير
         global basic_style, title_style, heading_style, normal_style
         
+        # استخدام الخطوط الافتراضية فقط
+        font_name = 'Helvetica'
+        font_name_bold = 'Helvetica-Bold'
+        
+        print(f"الخطوط المتاحة: {pdfmetrics.getRegisteredFontNames()}")
+        
         # نمط العنوان الرئيسي
         title_style = ParagraphStyle(
             name='ReportTitle',
-            fontName='Helvetica-Bold',  # استخدام الخط الافتراضي
+            fontName=font_name_bold,
             fontSize=16,
             leading=20,
             alignment=1,  # وسط
@@ -37,7 +45,7 @@ def register_fonts():
         # نمط العناوين الفرعية
         heading_style = ParagraphStyle(
             name='Heading',
-            fontName='Helvetica-Bold',  # استخدام الخط الافتراضي
+            fontName=font_name_bold,
             fontSize=14,
             leading=18,
             alignment=1,  # وسط
@@ -47,7 +55,7 @@ def register_fonts():
         # نمط النص العادي
         normal_style = ParagraphStyle(
             name='Normal',
-            fontName='Helvetica',  # استخدام الخط الافتراضي
+            fontName=font_name,
             fontSize=12,
             leading=14,
             alignment=2,  # يمين (للعربية)
@@ -243,12 +251,16 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
             ])
         
         t = Table(workshop_data, colWidths=[doc.width/7] * 7)
+        
+        # استخدام خط Helvetica الافتراضي للجدول
+        font_name = 'Helvetica'
+        
         t.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
             ('ALIGN', (2, 1), (2, -1), 'LEFT'),  # محاذاة أرقام التكلفة إلى اليسار
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),  # استخدام الخط الافتراضي
+            ('FONTNAME', (0, 0), (-1, -1), font_name),  # استخدام الخط العربي المسجل
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
