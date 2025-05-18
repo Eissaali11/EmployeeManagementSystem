@@ -206,10 +206,17 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         # عناوين الأعمدة (إضافة عمود لعدد الأيام)
         headers = ['سبب الدخول', 'تاريخ الدخول', 'تاريخ الخروج', 'عدد الأيام', 'حالة الإصلاح', 'اسم الورشة', 'الفني المسؤول', 'التكلفة (ريال)']
         
+        # تنسيق رأس الجدول بألوان جذابة
+        pdf.set_fill_color(30, 60, 114)  # لون أزرق غامق للخلفية
+        pdf.set_text_color(255, 255, 255)  # نص أبيض
+        
         # الصف الأول (الرأس)
         for i, header in enumerate(headers):
-            pdf.cell(col_width[i], 10, header, 1, 0, 'C')
+            pdf.cell(col_width[i], 10, header, 1, 0, 'C', True)
         pdf.ln()
+        
+        # إعادة لون النص إلى الأسود للبيانات
+        pdf.set_text_color(0, 0, 0)
         
         # ترجمة القيم
         reason_map = {'maintenance': 'صيانة دورية', 'breakdown': 'عطل', 'accident': 'حادث'}
@@ -217,7 +224,15 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         
         # بيانات الجدول
         pdf.set_font('Amiri', '', 10)
-        for record in workshop_records:
+        
+        # تحديد ألوان الصفوف المتناوبة للجدول
+        row_colors = [(240, 240, 240), (255, 255, 255)]  # رمادي فاتح وأبيض
+        
+        for i, record in enumerate(workshop_records):
+            # تطبيق لون خلفية متناوب للصفوف
+            row_color = row_colors[i % 2]
+            pdf.set_fill_color(row_color[0], row_color[1], row_color[2])
+            
             # تحويل البيانات إلى سلاسل نصية وتطبيق الخريطة عند الحاجة
             reason = reason_map.get(record.reason, record.reason) if hasattr(record, 'reason') and record.reason else ''
             entry_date = record.entry_date.strftime('%Y-%m-%d') if hasattr(record, 'entry_date') and record.entry_date else ''
@@ -237,16 +252,25 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
             technician = record.technician_name if hasattr(record, 'technician_name') and record.technician_name else ''
             cost = f"{record.cost:,.2f}" if hasattr(record, 'cost') and record.cost else ''
             
+            # تمييز حالة السجلات المفتوحة (قيد الإصلاح) بلون مختلف للنص
+            if hasattr(record, 'repair_status') and record.repair_status == 'in_progress':
+                pdf.set_text_color(180, 40, 40)  # لون أحمر داكن للسجلات المفتوحة
+            else:
+                pdf.set_text_color(0, 0, 0)  # إعادة لون النص إلى الأسود للبيانات الأخرى
+            
             # رسم الخلايا (إضافة خلية لعدد الأيام)
-            pdf.cell(col_width[0], 8, reason, 1, 0, 'C')
-            pdf.cell(col_width[1], 8, entry_date, 1, 0, 'C')
-            pdf.cell(col_width[2], 8, exit_date, 1, 0, 'C')
-            pdf.cell(col_width[3], 8, days_count, 1, 0, 'C')
-            pdf.cell(col_width[4], 8, status, 1, 0, 'C')
-            pdf.cell(col_width[5], 8, workshop_name, 1, 0, 'C')
-            pdf.cell(col_width[6], 8, technician, 1, 0, 'C')
-            pdf.cell(col_width[7], 8, cost, 1, 0, 'C')
+            pdf.cell(col_width[0], 8, reason, 1, 0, 'C', True)
+            pdf.cell(col_width[1], 8, entry_date, 1, 0, 'C', True)
+            pdf.cell(col_width[2], 8, exit_date, 1, 0, 'C', True)
+            pdf.cell(col_width[3], 8, days_count, 1, 0, 'C', True)
+            pdf.cell(col_width[4], 8, status, 1, 0, 'C', True)
+            pdf.cell(col_width[5], 8, workshop_name, 1, 0, 'C', True)
+            pdf.cell(col_width[6], 8, technician, 1, 0, 'C', True)
+            pdf.cell(col_width[7], 8, cost, 1, 0, 'C', True)
             pdf.ln()
+            
+        # إعادة لون النص إلى الأسود بعد الانتهاء من الجدول
+        pdf.set_text_color(0, 0, 0)
         
         # إحصائيات
         pdf.ln(10)
