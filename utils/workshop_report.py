@@ -1,5 +1,6 @@
 """
 وحدة لإنشاء تقارير الورشة بالتصميم الجديد
+مع دعم كامل للنصوص العربية
 """
 
 import os
@@ -12,29 +13,32 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_RIGHT, TA_CENTER
+from reportlab.lib.units import mm
 from arabic_reshaper import reshape
 from bidi.algorithm import get_display
 
 def register_fonts():
-    """تسجيل الخطوط للتقارير"""
+    """تسجيل الخطوط العربية للتقارير بطريقة صحيحة"""
     try:
-        # تسجيل الخط العربي Amiri
+        # تحديد مسار ملفات الخطوط
         font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts')
+        
+        # تحديد مسارات خط Amiri (العادي والغامق)
         amiri_path = os.path.join(font_path, 'Amiri-Regular.ttf')
         amiri_bold_path = os.path.join(font_path, 'Amiri-Bold.ttf')
         
-        # التحقق من وجود الخط وتسجيله
-        if os.path.exists(amiri_path):
-            # تسجيل الخط العربي فقط إذا لم يكن مسجلاً بالفعل
-            if 'Amiri' not in pdfmetrics.getRegisteredFontNames():
-                pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
-                print("تم تسجيل خط Amiri للنصوص العربية بنجاح")
-                
-            if 'Amiri-Bold' not in pdfmetrics.getRegisteredFontNames() and os.path.exists(amiri_bold_path):
-                pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
-                print("تم تسجيل خط Amiri-Bold للنصوص العربية بنجاح")
-                
-            # استخدام خط Amiri إذا كان متاحًا
+        # تسجيل الخطوط العربية إذا لم تكن مسجلة بالفعل
+        if os.path.exists(amiri_path) and 'Amiri' not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
+            print("تم تسجيل خط Amiri للنصوص العربية بنجاح")
+        
+        if os.path.exists(amiri_bold_path) and 'Amiri-Bold' not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
+            print("تم تسجيل خط Amiri-Bold للنصوص العربية بنجاح")
+        
+        # تحديد الخطوط التي سيتم استخدامها 
+        if 'Amiri' in pdfmetrics.getRegisteredFontNames():
             font_name = 'Amiri'
             font_name_bold = 'Amiri-Bold' if 'Amiri-Bold' in pdfmetrics.getRegisteredFontNames() else 'Amiri'
         else:
@@ -43,38 +47,46 @@ def register_fonts():
             font_name = 'Helvetica'
             font_name_bold = 'Helvetica-Bold'
         
-        styles = getSampleStyleSheet()
-        
         # تعريف أنماط الفقرات للتقرير
-        global basic_style, title_style, heading_style, normal_style
+        global basic_style, title_style, heading_style, normal_style, arabic_style
         
-        # نمط العنوان الرئيسي
+        # نمط العنوان الرئيسي (وسط)
         title_style = ParagraphStyle(
             name='ReportTitle',
             fontName=font_name_bold,
             fontSize=16,
             leading=20,
-            alignment=1,  # وسط
+            alignment=TA_CENTER,  # وسط
             spaceAfter=12
         )
         
-        # نمط العناوين الفرعية
+        # نمط العناوين الفرعية (وسط)
         heading_style = ParagraphStyle(
             name='Heading',
             fontName=font_name_bold,
             fontSize=14,
             leading=18,
-            alignment=1,  # وسط
+            alignment=TA_CENTER,  # وسط
             spaceAfter=10
         )
         
-        # نمط النص العادي
+        # نمط النص العادي (يمين للعربية)
         normal_style = ParagraphStyle(
             name='Normal',
             fontName=font_name,
             fontSize=12,
             leading=14,
-            alignment=2,  # يمين (للعربية)
+            alignment=TA_RIGHT,  # يمين (للعربية)
+            firstLineIndent=0
+        )
+        
+        # نمط نص عربي محدد (للجداول والنصوص قصيرة)
+        arabic_style = ParagraphStyle(
+            name='Arabic',
+            fontName=font_name,
+            fontSize=10,
+            leading=12,
+            alignment=TA_RIGHT,  # يمين (للعربية)
             firstLineIndent=0
         )
         
@@ -94,41 +106,44 @@ def register_fonts():
         heading_style = styles['Heading1']
         normal_style = styles['Normal']
         basic_style = styles['Normal']
+        arabic_style = styles['Normal']
 
 def arabic_text(text):
-    """معالجة النص العربي للعرض الصحيح في ملفات PDF"""
-    if text is None:
+    """
+    معالجة النص العربي بشكل صحيح ليظهر في ملفات PDF
+    
+    تستخدم هذه الدالة arabic_reshaper و bidi لضمان ظهور النص العربي بشكل صحيح في التقارير
+    """
+    if text is None or text == "":
         return ""
     
     try:
         # تحويل إلى نص
         text_str = str(text)
         
-        # التعامل مع الأرقام والتواريخ بشكل مباشر
-        if text_str.replace('.', '', 1).replace(',', '', 1).isdigit() or '-' in text_str or '/' in text_str:
-            # اذا كان النص رقم أو تاريخ، نعيده كما هو
-            return text_str
-        
-        # هل النص يحتوي على حروف عربية؟
-        has_arabic = any('\u0600' <= char <= '\u06FF' for char in text_str)
-        
-        # اذا كان النص لا يحتوي على حروف عربية، أعده كما هو
-        if not has_arabic:
+        # حالات خاصة - الأرقام والتواريخ
+        if text_str.replace('.', '', 1).replace(',', '', 1).isdigit():
             return text_str
             
-        # لنجرب بدون get_display فقط إعادة تشكيل الحروف العربية
-        # المشكلة تظهر أن get_display يعكس النص تمامًا
+        # حالة التواريخ وأي نص يحتوي على أرقام وحروف خاصة فقط
+        if ('-' in text_str or '/' in text_str) and all(not ('\u0600' <= c <= '\u06FF') for c in text_str):
+            return text_str
+        
+        # إعادة تشكيل النص العربي ليظهر الحروف متصلة بشكل صحيح
+        # أول خطوة: تشكيل الكلمات العربية بالشكل الصحيح
         reshaped_text = reshape(text_str)
         
-        # التعليق على استخدام get_display للتجربة
-        # بعد فحص المخرجات، نلاحظ أن get_display يعكس النص بالكامل
-        # بينما في PDF نحتاج فقط إلى توصيل الحروف دون عكس النص
-        # لأن ReportLab سيتعامل مع اتجاه RTL
+        # الخطوة الثانية: معالجة اتجاه النص من اليمين إلى اليسار
+        # هذا مهم لترتيب الأحرف بالشكل الصحيح في ملف PDF
+        bidi_text = get_display(reshaped_text)
         
+        # سجل النص قبل وبعد المعالجة (للتصحيح)
         print(f"النص الأصلي: {text_str}")
-        print(f"النص بعد إعادة التشكيل فقط: {reshaped_text}")
+        print(f"النص بعد المعالجة: {bidi_text}")
         
-        return reshaped_text
+        # نعيد النص المعالج
+        return bidi_text
+        
     except Exception as e:
         print(f"خطأ في معالجة النص العربي: {str(e)}")
         # إذا فشلت المعالجة، نعيد النص الأصلي
