@@ -162,6 +162,111 @@
         </div>
     </div>
 
+    <!-- قسم الصور الشخصية والوثائق -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-images me-2"></i>الصور والوثائق
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- الصورة الشخصية -->
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h6 class="text-muted">الصورة الشخصية</h6>
+                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
+                            {% if employee.profile_image %}
+                                <img src="{{ url_for('static', filename=employee.profile_image) }}" 
+                                     alt="الصورة الشخصية" 
+                                     class="img-fluid rounded" 
+                                     style="max-height: 180px; width: auto;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-user fa-3x mb-2"></i>
+                                        <p>لا توجد صورة شخصية</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <form action="{{ url_for('employees.upload_image', id=employee.id) }}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="image_type" value="profile">
+                            <div class="mb-2">
+                                <input type="file" name="image" class="form-control form-control-sm" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-upload me-1"></i>رفع الصورة الشخصية
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- صورة الهوية الوطنية -->
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h6 class="text-muted">صورة الهوية الوطنية</h6>
+                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
+                            {% if employee.national_id_image %}
+                                <img src="{{ url_for('static', filename=employee.national_id_image) }}" 
+                                     alt="صورة الهوية الوطنية" 
+                                     class="img-fluid rounded" 
+                                     style="max-height: 180px; width: auto;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-id-card fa-3x mb-2"></i>
+                                        <p>لا توجد صورة الهوية</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <form action="{{ url_for('employees.upload_image', id=employee.id) }}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="image_type" value="national_id">
+                            <div class="mb-2">
+                                <input type="file" name="image" class="form-control form-control-sm" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-info btn-sm w-100">
+                                <i class="fas fa-upload me-1"></i>رفع صورة الهوية
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- صورة رخصة القيادة -->
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h6 class="text-muted">صورة رخصة القيادة</h6>
+                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
+                            {% if employee.license_image %}
+                                <img src="{{ url_for('static', filename=employee.license_image) }}" 
+                                     alt="صورة رخصة القيادة" 
+                                     class="img-fluid rounded" 
+                                     style="max-height: 180px; width: auto;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-car fa-3x mb-2"></i>
+                                        <p>لا توجد صورة الرخصة</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <form action="{{ url_for('employees.upload_image', id=employee.id) }}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="image_type" value="license">
+                            <div class="mb-2">
+                                <input type="file" name="image" class="form-control form-control-sm" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-upload me-1"></i>رفع صورة الرخصة
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- لوحة معلومات أداء الموظف (داشبورد) -->
     <div class="card mb-4">
         <div class="card-header bg-dark text-white">

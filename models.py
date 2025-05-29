@@ -37,6 +37,9 @@ class Employee(db.Model):
     contract_type = db.Column(db.String(20), default='foreign')  # سعودي / وافد - saudi / foreign
     basic_salary = db.Column(db.Float, default=0.0)  # الراتب الأساسي
     has_national_balance = db.Column(db.Boolean, default=False)  # هل يتوفر توازن وطني
+    profile_image = db.Column(db.String(255))  # الصورة الشخصية
+    national_id_image = db.Column(db.String(255))  # صورة الهوية الوطنية
+    license_image = db.Column(db.String(255))  # صورة رخصة القيادة
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

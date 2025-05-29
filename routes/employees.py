@@ -15,6 +15,32 @@ from utils.employee_comprehensive_report_updated import generate_employee_compre
 
 employees_bp = Blueprint('employees', __name__)
 
+# المجلد المخصص لحفظ صور الموظفين
+UPLOAD_FOLDER = 'static/uploads/employees'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    """التحقق من أن الملف من الأنواع المسموحة"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_employee_image(file, employee_id, image_type):
+    """حفظ صورة الموظف وإرجاع المسار"""
+    if file and allowed_file(file.filename):
+        # التأكد من وجود المجلد
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        # إنشاء اسم ملف فريد
+        filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{employee_id}_{image_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+        
+        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+        file.save(filepath)
+        
+        # إرجاع المسار النسبي للحفظ في قاعدة البيانات
+        return f"uploads/employees/{unique_filename}"
+    return None
+
 @employees_bp.route('/')
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
@@ -521,6 +547,67 @@ def export_attendance_excel(id):
         
         flash(f'حدث خطأ أثناء تصدير ملف الحضور: {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))
+
+@employees_bp.route('/<int:id>/upload_image', methods=['POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.EDIT)
+def upload_image(id):
+    """رفع صورة للموظف (الصورة الشخصية، صورة الهوية، أو صورة الرخصة)"""
+    employee = Employee.query.get_or_404(id)
+    
+    image_type = request.form.get('image_type')
+    if not image_type or image_type not in ['profile', 'national_id', 'license']:
+        flash('نوع الصورة غير صحيح', 'danger')
+        return redirect(url_for('employees.view', id=id))
+    
+    if 'image' not in request.files:
+        flash('لم يتم اختيار ملف', 'danger')
+        return redirect(url_for('employees.view', id=id))
+    
+    file = request.files['image']
+    if file.filename == '':
+        flash('لم يتم اختيار ملف', 'danger')
+        return redirect(url_for('employees.view', id=id))
+    
+    # حفظ الصورة
+    image_path = save_employee_image(file, employee.employee_id, image_type)
+    if image_path:
+        try:
+            # حذف الصورة القديمة إذا كانت موجودة
+            old_path = None
+            if image_type == 'profile':
+                old_path = employee.profile_image
+                employee.profile_image = image_path
+            elif image_type == 'national_id':
+                old_path = employee.national_id_image
+                employee.national_id_image = image_path
+            elif image_type == 'license':
+                old_path = employee.license_image
+                employee.license_image = image_path
+            
+            # حذف الصورة القديمة من الملفات
+            if old_path:
+                old_file_path = os.path.join('static', old_path)
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
+            
+            db.session.commit()
+            
+            # رسائل النجاح حسب نوع الصورة
+            success_messages = {
+                'profile': 'تم رفع الصورة الشخصية بنجاح',
+                'national_id': 'تم رفع صورة الهوية بنجاح',
+                'license': 'تم رفع صورة الرخصة بنجاح'
+            }
+            flash(success_messages[image_type], 'success')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في حفظ الصورة: {str(e)}', 'danger')
+    else:
+        flash('فشل في رفع الصورة. تأكد من أن الملف من النوع المسموح (PNG, JPG, JPEG, GIF)', 'danger')
+    
+    return redirect(url_for('employees.view', id=id))
 
 
 @employees_bp.route('/<int:id>/comprehensive_report')
