@@ -3,12 +3,15 @@
 يحتوي على: المعلومات الأساسية، معلومات العمل، سجلات المركبات، والصور والوثائق
 """
 import os
+import math
+import tempfile
 from io import BytesIO
 from datetime import datetime
 from fpdf import FPDF
 from arabic_reshaper import reshape
 from bidi.algorithm import get_display
 from models import Employee, VehicleHandover, Vehicle
+from PIL import Image, ImageDraw
 
 class EmployeeBasicReportPDF(FPDF):
     def __init__(self):
@@ -107,10 +110,6 @@ class EmployeeBasicReportPDF(FPDF):
                     
                     if is_profile:
                         # للصورة الشخصية - تطبيق قناع دائري
-                        # إنشاء صورة دائرية باستخدام قناع
-                        from PIL import Image, ImageDraw
-                        import tempfile
-                        
                         # فتح الصورة الأصلية
                         img = Image.open(full_path)
                         
@@ -143,7 +142,6 @@ class EmployeeBasicReportPDF(FPDF):
                         radius = max_width/2 + 2
                         
                         # رسم الدائرة
-                        import math
                         segments = 60
                         for i in range(segments):
                             angle1 = 2 * math.pi * i / segments
@@ -158,7 +156,6 @@ class EmployeeBasicReportPDF(FPDF):
                         self.image(temp_path, x=x, y=y, w=max_width, h=max_height)
                         
                         # حذف الملف المؤقت
-                        import os
                         os.unlink(temp_path)
                         
                     else:
