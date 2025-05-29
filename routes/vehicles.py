@@ -36,6 +36,46 @@ from bidi.algorithm import get_display
 
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
+def update_vehicle_driver(vehicle_id):
+    """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم"""
+    try:
+        # الحصول على آخر سجل تسليم للسيارة
+        latest_handover = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.id.desc()).first()
+        
+        if latest_handover:
+            # تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
+            driver_name = None
+            if latest_handover.employee_id:
+                employee = Employee.query.get(latest_handover.employee_id)
+                if employee:
+                    driver_name = employee.name
+            
+            # إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
+            if not driver_name and latest_handover.person_name:
+                driver_name = latest_handover.person_name
+            
+            # تحديث اسم السائق في جدول السيارات
+            vehicle = Vehicle.query.get(vehicle_id)
+            if vehicle:
+                vehicle.driver_name = driver_name
+                db.session.commit()
+                
+    except Exception as e:
+        print(f"خطأ في تحديث اسم السائق: {e}")
+        # لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
+        pass
+
+def update_all_vehicle_drivers():
+    """تحديث أسماء جميع السائقين في جدول السيارات"""
+    vehicles = Vehicle.query.all()
+    updated_count = 0
+    
+    for vehicle in vehicles:
+        update_vehicle_driver(vehicle.id)
+        updated_count += 1
+    
+    return updated_count
+
 # قائمة بأهم حالات السيارة للاختيار منها في النماذج
 VEHICLE_STATUS_CHOICES = [
     'available',  # متاحة
@@ -3095,3 +3135,15 @@ def generate_vehicle_report(id):
     except Exception as e:
         flash(f'حدث خطأ أثناء إنشاء تقرير Excel: {str(e)}', 'danger')
         return redirect(url_for('vehicles.view', id=id))
+
+@vehicles_bp.route('/update-drivers', methods=['POST'])
+@login_required
+def update_drivers():
+    """تحديث جميع أسماء السائقين من سجلات التسليم"""
+    try:
+        updated_count = update_all_vehicle_drivers()
+        flash(f'تم تحديث أسماء السائقين لـ {updated_count} سيارة بنجاح!', 'success')
+    except Exception as e:
+        flash(f'حدث خطأ أثناء التحديث: {str(e)}', 'danger')
+    
+    return redirect(url_for('vehicles.detailed'))
