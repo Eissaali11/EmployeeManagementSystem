@@ -1608,6 +1608,9 @@ def create_handover(id):
         db.session.add(handover)
         db.session.commit()
         
+        # تحديث اسم السائق في جدول السيارات
+        update_vehicle_driver(id)
+        
         # معالجة الملفات المرفقة (صور و PDF)
         files = request.files.getlist('files')
         
