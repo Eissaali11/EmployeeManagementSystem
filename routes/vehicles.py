@@ -3170,3 +3170,18 @@ def update_drivers():
         flash(f'حدث خطأ أثناء التحديث: {str(e)}', 'danger')
     
     return redirect(url_for('vehicles.detailed'))
+
+@vehicles_bp.route('/<int:vehicle_id>/current_employee')
+@login_required
+def get_current_employee(vehicle_id):
+    """الحصول على معرف الموظف الحالي للسيارة"""
+    try:
+        employee_id = get_vehicle_current_employee_id(vehicle_id)
+        return jsonify({
+            'employee_id': employee_id
+        })
+    except Exception as e:
+        return jsonify({
+            'employee_id': None,
+            'error': str(e)
+        }), 500

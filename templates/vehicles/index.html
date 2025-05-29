@@ -295,7 +295,37 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // يمكن إضافة أي سكربتات خاصة بالصفحة هنا
+        // تحويل أسماء السائقين إلى روابط للموظفين المرتبطين
+        const driverCells = document.querySelectorAll('.driver-name-cell');
+        
+        driverCells.forEach(function(cell) {
+            const vehicleId = cell.getAttribute('data-vehicle-id');
+            const driverNameSpan = cell.querySelector('.driver-name');
+            
+            if (driverNameSpan && vehicleId) {
+                // طلب معرف الموظف للسيارة
+                fetch('/vehicles/' + vehicleId + '/current_employee')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.employee_id) {
+                            // تحويل النص إلى رابط
+                            const driverName = driverNameSpan.textContent;
+                            const link = document.createElement('a');
+                            link.href = '/employees/' + data.employee_id;
+                            link.className = 'text-success fw-bold text-decoration-none';
+                            link.textContent = driverName;
+                            link.title = 'انقر لعرض بيانات الموظف';
+                            
+                            // استبدال النص بالرابط
+                            driverNameSpan.parentNode.replaceChild(link, driverNameSpan);
+                        }
+                    })
+                    .catch(error => {
+                        // في حالة الفشل، اترك النص كما هو
+                        console.log('لا يمكن الحصول على معرف الموظف للسيارة ' + vehicleId);
+                    });
+            }
+        });
     });
 </script>
 {% endblock %}
