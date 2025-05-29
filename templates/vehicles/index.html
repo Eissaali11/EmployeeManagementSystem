@@ -237,9 +237,9 @@
                                         {{ vehicle.color }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="driver-name-cell" data-vehicle-id="{{ vehicle.id }}">
                                     {% if vehicle.driver_name %}
-                                        <span class="text-success fw-bold">{{ vehicle.driver_name }}</span>
+                                        <span class="text-success fw-bold driver-name" data-driver-name="{{ vehicle.driver_name }}">{{ vehicle.driver_name }}</span>
                                     {% else %}
                                         <span class="text-muted">غير محدد</span>
                                     {% endif %}

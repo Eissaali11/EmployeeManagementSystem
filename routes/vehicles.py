@@ -88,6 +88,17 @@ def update_all_vehicle_drivers():
     
     return updated_count
 
+def get_vehicle_current_employee_id(vehicle_id):
+    """الحصول على معرف الموظف الحالي للسيارة"""
+    latest_delivery = VehicleHandover.query.filter_by(
+        vehicle_id=vehicle_id, 
+        handover_type='delivery'
+    ).order_by(VehicleHandover.handover_date.desc()).first()
+    
+    if latest_delivery and latest_delivery.employee_id:
+        return latest_delivery.employee_id
+    return None
+
 # قائمة بأهم حالات السيارة للاختيار منها في النماذج
 VEHICLE_STATUS_CHOICES = [
     'available',  # متاحة
