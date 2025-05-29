@@ -218,6 +218,7 @@
                             <th class="py-3">الموديل</th>
                             <th class="py-3">السنة</th>
                             <th class="py-3">اللون</th>
+                            <th class="py-3">اسم السائق</th>
                             <th class="py-3">الحالة</th>
                             <th class="py-3">الإجراءات</th>
                         </tr>
@@ -235,6 +236,13 @@
                                     <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
                                         {{ vehicle.color }}
                                     </span>
+                                </td>
+                                <td>
+                                    {% if vehicle.driver_name %}
+                                        <span class="text-success fw-bold">{{ vehicle.driver_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if vehicle.status == 'available' %}
