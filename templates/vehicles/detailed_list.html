@@ -211,6 +211,7 @@
                         <th>نوع السيارة</th>
                         <th>سنة الصنع</th>
                         <th>اللون</th>
+                        <th>اسم السائق</th>
                         <th>الحالة</th>
                         <th>حالة الإيجار</th>
                         <th>تكلفة الإيجار</th>
@@ -235,6 +236,16 @@
                                     <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
                                         {{ vehicle.color }}
                                     </span>
+                                </td>
+                                <td>
+                                    {% if vehicle.driver_name %}
+                                        <span class="fw-bold text-primary">
+                                            <i class="fas fa-user ms-1"></i>
+                                            {{ vehicle.driver_name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span class="vehicle-status status-{{ vehicle.status }}"></span>
@@ -327,7 +338,7 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="13" class="text-center py-5">
+                            <td colspan="14" class="text-center py-5">
                                 <div class="py-4">
                                     <i class="fas fa-car fa-3x text-muted mb-3"></i>
                                     <h5>لا توجد سيارات لعرضها</h5>

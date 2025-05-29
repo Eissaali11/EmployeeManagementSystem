@@ -638,6 +638,7 @@ def create():
             return redirect(url_for('vehicles.create'))
         
         # إنشاء سيارة جديدة
+        driver_name = request.form.get('driver_name')
         vehicle = Vehicle(
             plate_number=plate_number,
             make=make,
@@ -645,6 +646,7 @@ def create():
             year=int(year),
             color=color,
             status=status,
+            driver_name=driver_name,
             notes=notes
         )
         
@@ -903,12 +905,14 @@ def edit(id):
             return redirect(url_for('vehicles.edit', id=id))
         
         # تحديث بيانات السيارة
+        driver_name = request.form.get('driver_name')
         vehicle.plate_number = plate_number
         vehicle.make = make
         vehicle.model = model
         vehicle.year = int(year)
         vehicle.color = color
         vehicle.status = status
+        vehicle.driver_name = driver_name
         vehicle.notes = notes
         vehicle.updated_at = datetime.utcnow()
         

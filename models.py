@@ -359,6 +359,7 @@ class Vehicle(db.Model):
     year = db.Column(db.Integer, nullable=False)  # سنة الصنع
     color = db.Column(db.String(30), nullable=False)  # لون السيارة
     status = db.Column(db.String(30), nullable=False, default='available')  # الحالة: متاحة، مؤجرة، في المشروع، في الورشة، حادث
+    driver_name = db.Column(db.String(100), nullable=True)  # اسم السائق
     
     # تواريخ انتهاء الوثائق الهامة
     authorization_expiry_date = db.Column(db.Date)  # تاريخ انتهاء التفويض

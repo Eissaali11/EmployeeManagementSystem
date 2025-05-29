@@ -55,6 +55,14 @@
                         <div class="form-text">مثال: أبيض، أسود، فضي</div>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label for="driver_name" class="form-label">اسم السائق</label>
+                        <input type="text" class="form-control" id="driver_name" name="driver_name" value="{{ vehicle.driver_name or '' }}">
+                        <div class="form-text">اختياري - اسم السائق المعين لهذه السيارة</div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label for="status" class="form-label required">الحالة</label>
                         <select class="form-select" id="status" name="status" required>
                             {% for status in statuses %}
