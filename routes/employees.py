@@ -12,6 +12,7 @@ from utils.excel import parse_employee_excel, generate_employee_excel, export_em
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 from utils.employee_comprehensive_report_updated import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
+from utils.employee_basic_report import generate_employee_basic_pdf
 
 employees_bp = Blueprint('employees', __name__)
 
@@ -608,6 +609,42 @@ def upload_image(id):
         flash('فشل في رفع الصورة. تأكد من أن الملف من النوع المسموح (PNG, JPG, JPEG, GIF)', 'danger')
     
     return redirect(url_for('employees.view', id=id))
+
+
+@employees_bp.route('/<int:id>/basic_report')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def basic_report(id):
+    """تقرير المعلومات الأساسية للموظف"""
+    try:
+        pdf_buffer = generate_employee_basic_pdf(id)
+        if pdf_buffer:
+            employee = Employee.query.get_or_404(id)
+            current_date = datetime.now().strftime('%Y%m%d')
+            filename = f'تقرير_أساسي_{employee.name}_{current_date}.pdf'
+            
+            # تسجيل الإجراء
+            audit = SystemAudit(
+                action='export',
+                entity_type='employee_basic_report',
+                entity_id=employee.id,
+                details=f'تم تصدير التقرير الأساسي للموظف: {employee.name}'
+            )
+            db.session.add(audit)
+            db.session.commit()
+            
+            return send_file(
+                pdf_buffer,
+                as_attachment=True,
+                download_name=filename,
+                mimetype='application/pdf'
+            )
+        else:
+            flash('خطأ في إنشاء ملف PDF', 'danger')
+            return redirect(url_for('employees.view', id=id))
+    except Exception as e:
+        flash(f'خطأ في تصدير PDF: {str(e)}', 'danger')
+        return redirect(url_for('employees.view', id=id))
 
 
 @employees_bp.route('/<int:id>/comprehensive_report')

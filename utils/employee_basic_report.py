@@ -1,0 +1,188 @@
+"""
+تقرير المعلومات الأساسية للموظف
+يحتوي على: المعلومات الأساسية، معلومات العمل، سجلات المركبات، والصور والوثائق
+"""
+import os
+from io import BytesIO
+from datetime import datetime
+from fpdf import FPDF
+from arabic_reshaper import reshape
+from bidi.algorithm import get_display
+from models import Employee, VehicleHandover, Vehicle
+
+class EmployeeBasicReportPDF(FPDF):
+    def __init__(self):
+        super().__init__()
+        self.font_path = '/home/runner/workspace/static/fonts'
+        
+    def header(self):
+        """رأس الصفحة"""
+        # إضافة الخط العربي
+        self.add_font('Arabic', '', os.path.join(self.font_path, 'Amiri-Regular.ttf'), uni=True)
+        self.add_font('Arabic', 'B', os.path.join(self.font_path, 'Amiri-Bold.ttf'), uni=True)
+        
+        self.set_font('Arabic', 'B', 20)
+        # العنوان الرئيسي
+        title = get_display(reshape('تقرير المعلومات الأساسية للموظف'))
+        self.cell(0, 15, title, 0, 1, 'C')
+        self.ln(10)
+        
+    def footer(self):
+        """تذييل الصفحة"""
+        self.set_y(-15)
+        self.set_font('Arabic', '', 10)
+        page_text = get_display(reshape(f'صفحة {self.page_no()}'))
+        self.cell(0, 10, page_text, 0, 0, 'C')
+        
+        # تاريخ الطباعة
+        current_date = datetime.now().strftime('%Y/%m/%d')
+        date_text = get_display(reshape(f'تاريخ الطباعة: {current_date}'))
+        self.cell(0, 10, date_text, 0, 0, 'L')
+        
+    def add_section_title(self, title):
+        """إضافة عنوان قسم"""
+        self.ln(5)
+        self.set_font('Arabic', 'B', 16)
+        self.set_fill_color(70, 130, 180)  # لون أزرق فاتح
+        self.set_text_color(255, 255, 255)  # نص أبيض
+        
+        title_text = get_display(reshape(title))
+        self.cell(0, 12, title_text, 1, 1, 'C', True)
+        self.set_text_color(0, 0, 0)  # إعادة النص للأسود
+        self.ln(5)
+        
+    def add_info_row(self, label, value, is_bold=False):
+        """إضافة صف معلومات"""
+        font_style = 'B' if is_bold else ''
+        self.set_font('Arabic', font_style, 12)
+        
+        # التسمية
+        label_text = get_display(reshape(f'{label}:'))
+        self.cell(60, 8, label_text, 1, 0, 'R')
+        
+        # القيمة
+        value_text = get_display(reshape(str(value) if value else 'غير محدد'))
+        self.cell(120, 8, value_text, 1, 1, 'R')
+        
+    def add_vehicle_record(self, record):
+        """إضافة سجل مركبة"""
+        self.set_font('Arabic', '', 10)
+        
+        # رقم اللوحة
+        plate_text = get_display(reshape(record.vehicle.plate_number if record.vehicle else 'غير محدد'))
+        self.cell(40, 8, plate_text, 1, 0, 'C')
+        
+        # نوع العملية
+        operation_map = {'delivery': 'تسليم', 'return': 'استلام'}
+        operation_text = get_display(reshape(operation_map.get(record.handover_type, record.handover_type)))
+        self.cell(30, 8, operation_text, 1, 0, 'C')
+        
+        # التاريخ
+        date_text = record.handover_date.strftime('%Y/%m/%d') if record.handover_date else 'غير محدد'
+        self.cell(40, 8, date_text, 1, 0, 'C')
+        
+        # الملاحظات
+        notes_text = get_display(reshape(record.notes[:50] + '...' if record.notes and len(record.notes) > 50 else record.notes or 'لا توجد'))
+        self.cell(70, 8, notes_text, 1, 1, 'R')
+
+
+def generate_employee_basic_pdf(employee_id):
+    """إنشاء تقرير المعلومات الأساسية للموظف"""
+    try:
+        print(f"بدء إنشاء التقرير الأساسي للموظف {employee_id}")
+        
+        # جلب بيانات الموظف
+        employee = Employee.query.get(employee_id)
+        if not employee:
+            print(f"لم يتم العثور على الموظف {employee_id}")
+            return None
+            
+        print(f"تم العثور على الموظف: {employee.name}")
+        
+        # إنشاء PDF
+        pdf = EmployeeBasicReportPDF()
+        pdf.add_page()
+        
+        # المعلومات الأساسية
+        pdf.add_section_title('المعلومات الأساسية')
+        pdf.add_info_row('اسم الموظف', employee.name, True)
+        pdf.add_info_row('رقم الهوية الوطنية', employee.national_id)
+        pdf.add_info_row('رقم الموظف', employee.employee_id)
+        pdf.add_info_row('رقم الجوال', employee.mobile)
+        pdf.add_info_row('البريد الإلكتروني', employee.email)
+        pdf.add_info_row('الجنسية', employee.nationality)
+        
+        # معلومات العمل
+        pdf.add_section_title('معلومات العمل')
+        pdf.add_info_row('المسمى الوظيفي', employee.job_title)
+        pdf.add_info_row('القسم', employee.department.name if employee.department else 'غير محدد')
+        pdf.add_info_row('الحالة الوظيفية', employee.status)
+        pdf.add_info_row('نوع العقد', employee.contract_type)
+        pdf.add_info_row('تاريخ الالتحاق', employee.join_date.strftime('%Y/%m/%d') if employee.join_date else 'غير محدد')
+        pdf.add_info_row('الراتب الأساسي', f'{employee.basic_salary:.2f} ريال' if employee.basic_salary else 'غير محدد')
+        pdf.add_info_row('الموقع', employee.location)
+        pdf.add_info_row('المشروع', employee.project)
+        
+        # سجلات تسليم/استلام المركبات
+        vehicle_records = VehicleHandover.query.filter_by(employee_id=employee.id).order_by(VehicleHandover.handover_date.desc()).limit(10).all()
+        
+        if vehicle_records:
+            pdf.add_section_title('سجلات تسليم/استلام المركبات (آخر 10 سجلات)')
+            
+            # رؤوس الجدول
+            pdf.set_font('Arabic', 'B', 10)
+            pdf.cell(40, 10, get_display(reshape('رقم اللوحة')), 1, 0, 'C')
+            pdf.cell(30, 10, get_display(reshape('نوع العملية')), 1, 0, 'C')
+            pdf.cell(40, 10, get_display(reshape('التاريخ')), 1, 0, 'C')
+            pdf.cell(70, 10, get_display(reshape('الملاحظات')), 1, 1, 'C')
+            
+            # البيانات
+            for record in vehicle_records:
+                pdf.add_vehicle_record(record)
+        else:
+            pdf.add_section_title('سجلات تسليم/استلام المركبات')
+            pdf.set_font('Arabic', '', 12)
+            no_records_text = get_display(reshape('لا توجد سجلات لتسليم أو استلام المركبات'))
+            pdf.cell(0, 10, no_records_text, 0, 1, 'C')
+        
+        # معلومات الصور والوثائق
+        pdf.add_section_title('الصور والوثائق')
+        
+        # حالة الصور
+        images_status = []
+        if employee.profile_image:
+            images_status.append('الصورة الشخصية: متوفرة')
+        else:
+            images_status.append('الصورة الشخصية: غير متوفرة')
+            
+        if employee.national_id_image:
+            images_status.append('صورة الهوية: متوفرة')
+        else:
+            images_status.append('صورة الهوية: غير متوفرة')
+            
+        if employee.license_image:
+            images_status.append('صورة الرخصة: متوفرة')
+        else:
+            images_status.append('صورة الرخصة: غير متوفرة')
+            
+        for status in images_status:
+            pdf.add_info_row('', status)
+        
+        # إحصائيات الوثائق
+        documents_count = len(employee.documents) if employee.documents else 0
+        pdf.add_info_row('عدد الوثائق المرفقة', documents_count)
+        
+        # حفظ PDF في الذاكرة
+        output = BytesIO()
+        pdf_content = pdf.output(dest='S').encode('latin-1')
+        output.write(pdf_content)
+        output.seek(0)
+        
+        print(f"تم إنشاء ملف PDF بحجم: {len(pdf_content)} بايت")
+        return output
+        
+    except Exception as e:
+        print(f"خطأ في إنشاء التقرير الأساسي: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
