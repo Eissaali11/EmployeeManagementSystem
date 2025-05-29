@@ -620,6 +620,10 @@ def index():
     # الحصول على قائمة السيارات
     vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
     
+    # إضافة معرف الموظف الحالي لكل سيارة
+    for vehicle in vehicles:
+        vehicle.current_employee_id = get_vehicle_current_employee_id(vehicle.id)
+    
     # تحقق من تواريخ انتهاء الوثائق والتنبيه بالقريبة للانتهاء
     expiring_documents = []
     today = datetime.now().date()
