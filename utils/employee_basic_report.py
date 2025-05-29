@@ -25,7 +25,7 @@ class EmployeeBasicReportPDF(FPDF):
         # العنوان الرئيسي
         title = get_display(reshape('تقرير المعلومات الأساسية للموظف'))
         self.cell(0, 15, title, 0, 1, 'C')
-        self.ln(10)
+        self.ln(5)
         
     def footer(self):
         """تذييل الصفحة"""
@@ -84,6 +84,41 @@ class EmployeeBasicReportPDF(FPDF):
         # الملاحظات
         notes_text = get_display(reshape(record.notes[:50] + '...' if record.notes and len(record.notes) > 50 else record.notes or 'لا توجد'))
         self.cell(70, 8, notes_text, 1, 1, 'R')
+        
+    def add_employee_image(self, image_path, title, max_width=60, max_height=60):
+        """إضافة صورة الموظف إلى التقرير"""
+        if image_path:
+            try:
+                # التحقق من وجود الملف
+                full_path = os.path.join('/home/runner/workspace/static', image_path)
+                if os.path.exists(full_path):
+                    # إضافة عنوان الصورة
+                    self.set_font('Arabic', 'B', 12)
+                    title_text = get_display(reshape(title))
+                    self.cell(0, 8, title_text, 0, 1, 'C')
+                    self.ln(3)
+                    
+                    # حساب موضع الصورة في المنتصف
+                    x = (self.w - max_width) / 2
+                    y = self.get_y()
+                    
+                    # إضافة الصورة
+                    self.image(full_path, x=x, y=y, w=max_width, h=max_height)
+                    self.ln(max_height + 10)
+                    return True
+                else:
+                    print(f"ملف الصورة غير موجود: {full_path}")
+                    return False
+            except Exception as e:
+                print(f"خطأ في إضافة الصورة {image_path}: {str(e)}")
+                return False
+        else:
+            # عرض رسالة عدم وجود صورة
+            self.set_font('Arabic', '', 12)
+            title_text = get_display(reshape(f"{title}: غير متوفرة"))
+            self.cell(0, 8, title_text, 0, 1, 'C')
+            self.ln(5)
+            return False
 
 
 def generate_employee_basic_pdf(employee_id):
@@ -102,6 +137,16 @@ def generate_employee_basic_pdf(employee_id):
         # إنشاء PDF
         pdf = EmployeeBasicReportPDF()
         pdf.add_page()
+        
+        # عرض الصور في البداية
+        # الصورة الشخصية في الرأس
+        pdf.add_employee_image(employee.profile_image, 'الصورة الشخصية', 80, 80)
+        
+        # صورة الهوية الوطنية
+        pdf.add_employee_image(employee.national_id_image, 'صورة الهوية الوطنية', 70, 50)
+        
+        # صورة رخصة القيادة
+        pdf.add_employee_image(employee.license_image, 'صورة رخصة القيادة', 70, 50)
         
         # المعلومات الأساسية
         pdf.add_section_title('المعلومات الأساسية')
@@ -145,30 +190,8 @@ def generate_employee_basic_pdf(employee_id):
             no_records_text = get_display(reshape('لا توجد سجلات لتسليم أو استلام المركبات'))
             pdf.cell(0, 10, no_records_text, 0, 1, 'C')
         
-        # معلومات الصور والوثائق
-        pdf.add_section_title('الصور والوثائق')
-        
-        # حالة الصور
-        images_status = []
-        if employee.profile_image:
-            images_status.append('الصورة الشخصية: متوفرة')
-        else:
-            images_status.append('الصورة الشخصية: غير متوفرة')
-            
-        if employee.national_id_image:
-            images_status.append('صورة الهوية: متوفرة')
-        else:
-            images_status.append('صورة الهوية: غير متوفرة')
-            
-        if employee.license_image:
-            images_status.append('صورة الرخصة: متوفرة')
-        else:
-            images_status.append('صورة الرخصة: غير متوفرة')
-            
-        for status in images_status:
-            pdf.add_info_row('', status)
-        
-        # إحصائيات الوثائق
+        # إحصائيات الوثائق المرفقة
+        pdf.add_section_title('الوثائق المرفقة')
         documents_count = len(employee.documents) if employee.documents else 0
         pdf.add_info_row('عدد الوثائق المرفقة', documents_count)
         
