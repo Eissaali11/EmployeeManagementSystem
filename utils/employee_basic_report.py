@@ -105,49 +105,103 @@ class EmployeeBasicReportPDF(FPDF):
                     x = (self.w - max_width) / 2
                     y = self.get_y()
                     
-                    # إضافة إطار مزخرف للصورة
                     if is_profile:
-                        # إطار دائري للصورة الشخصية
-                        self.set_line_width(2)
+                        # للصورة الشخصية - تطبيق قناع دائري
+                        # إنشاء صورة دائرية باستخدام قناع
+                        from PIL import Image, ImageDraw
+                        import tempfile
+                        
+                        # فتح الصورة الأصلية
+                        img = Image.open(full_path)
+                        
+                        # تحويل إلى RGB إذا لزم الأمر
+                        if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                        
+                        # تغيير حجم الصورة لتكون مربعة
+                        size = min(img.size)
+                        img = img.resize((size, size), Image.Resampling.LANCZOS)
+                        
+                        # إنشاء قناع دائري
+                        mask = Image.new('L', (size, size), 0)
+                        draw = ImageDraw.Draw(mask)
+                        draw.ellipse((0, 0, size, size), fill=255)
+                        
+                        # تطبيق القناع
+                        img.putalpha(mask)
+                        
+                        # حفظ الصورة المدورة مؤقتاً
+                        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as temp_file:
+                            img.save(temp_file.name, 'PNG')
+                            temp_path = temp_file.name
+                        
+                        # رسم إطار دائري أزرق
+                        self.set_line_width(3)
                         self.set_draw_color(70, 130, 180)  # لون أزرق
-                        # رسم دائرة حول الصورة
                         center_x = x + max_width/2
                         center_y = y + max_height/2
-                        radius = max(max_width, max_height)/2 + 3
+                        radius = max_width/2 + 2
                         
-                        # رسم دائرة باستخدام خطوط منحنية
+                        # رسم الدائرة
                         import math
-                        segments = 36
-                        for i in range(segments + 1):
-                            angle = 2 * math.pi * i / segments
-                            px = center_x + radius * math.cos(angle)
-                            py = center_y + radius * math.sin(angle)
-                            if i == 0:
-                                self.set_xy(px, py)
-                            else:
-                                prev_angle = 2 * math.pi * (i-1) / segments
-                                prev_px = center_x + radius * math.cos(prev_angle)
-                                prev_py = center_y + radius * math.sin(prev_angle)
-                                self.line(prev_px, prev_py, px, py)
+                        segments = 60
+                        for i in range(segments):
+                            angle1 = 2 * math.pi * i / segments
+                            angle2 = 2 * math.pi * (i + 1) / segments
+                            x1 = center_x + radius * math.cos(angle1)
+                            y1 = center_y + radius * math.sin(angle1)
+                            x2 = center_x + radius * math.cos(angle2)
+                            y2 = center_y + radius * math.sin(angle2)
+                            self.line(x1, y1, x2, y2)
+                        
+                        # إضافة الصورة الدائرية
+                        self.image(temp_path, x=x, y=y, w=max_width, h=max_height)
+                        
+                        # حذف الملف المؤقت
+                        import os
+                        os.unlink(temp_path)
+                        
                     else:
-                        # إطار مستطيل مزخرف للوثائق
-                        self.set_line_width(1.5)
+                        # للوثائق - إطار مستطيل مزخرف
+                        self.set_line_width(2)
                         self.set_draw_color(34, 139, 34)  # لون أخضر
-                        # إطار خارجي
-                        self.rect(x-3, y-3, max_width+6, max_height+6)
-                        # إطار داخلي
+                        
+                        # إطار خارجي مزدوج
+                        self.rect(x-4, y-4, max_width+8, max_height+8)
+                        self.set_line_width(1)
                         self.set_draw_color(220, 220, 220)  # رمادي فاتح
-                        self.rect(x-1, y-1, max_width+2, max_height+2)
-                    
-                    # إضافة الصورة
-                    self.image(full_path, x=x, y=y, w=max_width, h=max_height)
+                        self.rect(x-2, y-2, max_width+4, max_height+4)
+                        
+                        # إضافة زخرفة في الزوايا
+                        corner_size = 8
+                        self.set_draw_color(34, 139, 34)
+                        self.set_line_width(1.5)
+                        
+                        # الزاوية العلوية اليسرى
+                        self.line(x-4, y-4+corner_size, x-4, y-4)
+                        self.line(x-4, y-4, x-4+corner_size, y-4)
+                        
+                        # الزاوية العلوية اليمنى
+                        self.line(x+max_width+4-corner_size, y-4, x+max_width+4, y-4)
+                        self.line(x+max_width+4, y-4, x+max_width+4, y-4+corner_size)
+                        
+                        # الزاوية السفلية اليسرى
+                        self.line(x-4, y+max_height+4-corner_size, x-4, y+max_height+4)
+                        self.line(x-4, y+max_height+4, x-4+corner_size, y+max_height+4)
+                        
+                        # الزاوية السفلية اليمنى
+                        self.line(x+max_width+4-corner_size, y+max_height+4, x+max_width+4, y+max_height+4)
+                        self.line(x+max_width+4, y+max_height+4, x+max_width+4, y+max_height+4-corner_size)
+                        
+                        # إضافة الصورة
+                        self.image(full_path, x=x, y=y, w=max_width, h=max_height)
                     
                     # إضافة ظل خفيف أسفل الصورة
                     self.set_fill_color(200, 200, 200)  # رمادي فاتح للظل
-                    shadow_offset = 2
-                    self.rect(x + shadow_offset, y + max_height + shadow_offset, max_width, 1, 'F')
+                    shadow_offset = 3
+                    self.rect(x + shadow_offset, y + max_height + shadow_offset, max_width, 2, 'F')
                     
-                    self.ln(max_height + 15)
+                    self.ln(max_height + 20)
                     
                     # إعادة تعيين إعدادات الرسم
                     self.set_line_width(0.2)
