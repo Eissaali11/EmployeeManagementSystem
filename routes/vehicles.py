@@ -37,27 +37,39 @@ from bidi.algorithm import get_display
 vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
 def update_vehicle_driver(vehicle_id):
-    """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم"""
+    """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
     try:
-        # الحصول على آخر سجل تسليم للسيارة
-        latest_handover = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.id.desc()).first()
+        # الحصول على جميع سجلات التسليم (delivery) للسيارة مرتبة حسب التاريخ
+        delivery_records = VehicleHandover.query.filter_by(
+            vehicle_id=vehicle_id, 
+            handover_type='delivery'
+        ).order_by(VehicleHandover.handover_date.desc()).all()
         
-        if latest_handover:
+        if delivery_records:
+            # أخذ أحدث سجل تسليم (delivery)
+            latest_delivery = delivery_records[0]
+            
             # تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
             driver_name = None
-            if latest_handover.employee_id:
-                employee = Employee.query.get(latest_handover.employee_id)
+            if latest_delivery.employee_id:
+                employee = Employee.query.get(latest_delivery.employee_id)
                 if employee:
                     driver_name = employee.name
             
             # إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
-            if not driver_name and latest_handover.person_name:
-                driver_name = latest_handover.person_name
+            if not driver_name and latest_delivery.person_name:
+                driver_name = latest_delivery.person_name
             
             # تحديث اسم السائق في جدول السيارات
             vehicle = Vehicle.query.get(vehicle_id)
             if vehicle:
                 vehicle.driver_name = driver_name
+                db.session.commit()
+        else:
+            # إذا لم يكن هناك سجلات تسليم، امسح اسم السائق
+            vehicle = Vehicle.query.get(vehicle_id)
+            if vehicle:
+                vehicle.driver_name = None
                 db.session.commit()
                 
     except Exception as e:
