@@ -197,16 +197,8 @@ def format_date_arabic(date_obj):
     return f"{date_obj.day} {months[date_obj.month]} {date_obj.year}"
 
 def log_audit(action, entity_type, entity_id, details=None):
-    """تسجيل الإجراء في سجل النظام"""
-    audit = SystemAudit(
-        action=action,
-        entity_type=entity_type,
-        entity_id=entity_id,
-        details=details,
-        user_id=current_user.id if current_user.is_authenticated else None
-    )
-    db.session.add(audit)
-    db.session.commit()
+    """تسجيل الإجراء في سجل النظام - تم الانتقال للنظام الجديد"""
+    log_activity(action, entity_type, entity_id, details)
 
 def calculate_rental_adjustment(vehicle_id, year, month):
     """حساب الخصم على إيجار السيارة بناءً على أيام وجودها في الورشة"""

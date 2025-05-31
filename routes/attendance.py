@@ -554,6 +554,11 @@ def all_departments_attendance_simple():
             # حفظ التغييرات في قاعدة البيانات
             db.session.commit()
             
+            # تسجيل العملية
+            departments_names = [Department.query.get(dept_id).name for dept_id in department_ids if Department.query.get(dept_id)]
+            log_activity('create', 'BulkAttendance', None, 
+                        f"تم تسجيل حضور جماعي لـ {total_departments} قسم ({', '.join(departments_names[:3])}{'...' if len(departments_names) > 3 else ''}) - {total_employees} موظف عن {days_count} يوم")
+            
             # عرض رسالة نجاح
             flash(f'تم تسجيل الحضور بنجاح لـ {total_departments} قسم و {total_employees} موظف عن {days_count} يوم (إجمالي {total_records} سجل)', 'success')
             return redirect(url_for('attendance.index'))
@@ -694,19 +699,8 @@ def all_departments_attendance():
                         total_records += department_records
                         
                         # تسجيل العملية للقسم
-                        try:
-                            SystemAudit.create_audit_record(
-                                user_id=None,  # يمكن استخدام current_user.id إذا كانت متاحة
-                                action='mass_update',
-                                entity_type='attendance',
-                                entity_id=department.id,
-                                entity_name=department.name,
-                                details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {department_employee_count} موظف'
-                            )
-                        except Exception as audit_error:
-                            # تخطي خطأ التسجيل والاستمرار
-                            print(f"خطأ في تسجيل نشاط القسم {department.id}: {str(audit_error)}")
-                            pass
+                        log_activity('create', 'DepartmentAttendance', department.id, 
+                                   f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {department_employee_count} موظف')
                     
                     except Exception as dept_error:
                         # تسجيل الخطأ والاستمرار مع القسم التالي
