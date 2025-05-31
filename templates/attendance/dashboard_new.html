@@ -480,6 +480,7 @@ function loadDepartmentStats() {
             return response.json();
         })
         .then(data => {
+            console.log('البيانات المستلمة:', data);
             hideLoading();
             allDepartmentsData = data.departments;
             populateDepartmentFilter(data.departments);
@@ -577,8 +578,8 @@ function displayDepartmentStats(data) {
             bestDepartment = dept.name;
         }
         
-        const attendanceRate = dept.total_employees > 0 
-            ? Math.round((dept.present / dept.total_employees) * 100) 
+        const attendanceRate = dept.total_records > 0 
+            ? Math.round((dept.present / dept.total_records) * 100) 
             : 0;
         
         // تحديد لون شريط التقدم

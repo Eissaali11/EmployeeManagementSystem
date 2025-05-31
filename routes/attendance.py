@@ -1321,7 +1321,8 @@ def department_stats():
         employees = employees_query.all()
         total_employees = len(employees)
         
-        if total_employees == 0:
+        # تخطي الأقسام الفارغة إذا كان هناك فلتر مشروع وليس فيها موظفون
+        if total_employees == 0 and project_name:
             continue
         
         # حساب الإحصائيات
