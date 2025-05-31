@@ -191,8 +191,8 @@ def record():
     from flask_login import current_user
     
     if current_user.is_authenticated:
-        if current_user.role.value == 'ADMIN':
-            # المديرون العامون يمكنهم رؤية جميع الموظفين
+        if current_user.role.value == 'ADMIN' or current_user.role.value == 'MANAGER':
+            # المديرون العامون والمديرون يمكنهم رؤية جميع الموظفين
             employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
         elif current_user.assigned_department_id:
             # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
