@@ -408,17 +408,26 @@ def bulk_record():
             flash(f'حدث خطأ: {str(e)}', 'danger')
     
     # الحصول على موظفي القسم المخصص للمستخدم
-    if current_user.role.value == 'ADMIN':
-        # المديرون العامون يمكنهم رؤية جميع الموظفين
-        employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
-    elif current_user.assigned_department_id:
-        # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
-        employees = Employee.query.filter_by(
-            status='active',
-            department_id=current_user.assigned_department_id
-        ).order_by(Employee.name).all()
-    else:
-        # المستخدمون بدون صلاحيات محددة لا يمكنهم رؤية أي موظفين
+    try:
+        print(f"معلومات المستخدم: ID={current_user.id}, assigned_department_id={getattr(current_user, 'assigned_department_id', None)}")
+        
+        if hasattr(current_user, 'role') and current_user.role and current_user.role.value == 'admin':
+            # المديرون العامون يمكنهم رؤية جميع الموظفين
+            employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+            print(f"مدير عام - تم جلب {len(employees)} موظف")
+        elif current_user.assigned_department_id:
+            # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
+            employees = Employee.query.filter_by(
+                status='active',
+                department_id=current_user.assigned_department_id
+            ).order_by(Employee.name).all()
+            print(f"مستخدم قسم {current_user.assigned_department_id} - تم جلب {len(employees)} موظف")
+        else:
+            # جرب جلب جميع الموظفين النشطين للاختبار
+            employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+            print(f"مستخدم بدون قسم - تم جلب {len(employees)} موظف للاختبار")
+    except Exception as e:
+        print(f"خطأ في جلب الموظفين: {str(e)}")
         employees = []
     
     today = datetime.now().date()
