@@ -1,284 +1,182 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
 
-{% block title %}إدارة صلاحيات المستخدم - {{ user.name }}{% endblock %}
-
-{% block styles %}
-{{ super() }}
-<style>
-    body, .permissions-container, .header-card, .permissions-body, .info-alert {
-        background-color: white !important;
-    }
-    
-    .module-title, .permission-check-label, .info-alert-title, .info-alert li, 
-    .user-title, .user-subtitle, label, .btn-light-custom, .btn-cancel, h1, h2, h3, h4, h5, h6, 
-    .form-check-label, span:not(.user-role-badge), p {
-        color: black !important;
-    }
-    
-    .module-header {
-        background: white !important;
-    }
-    
-    /* تنسيق خاص لأزرار الصفحة */
-    .btn-save {
-        background-color: #1e88e5 !important;
-        color: white !important;
-        border-color: #1e88e5 !important;
-    }
-    
-    .btn-save:hover {
-        background-color: #1565c0 !important;
-        border-color: #1565c0 !important;
-    }
-    
-    /* زر الإلغاء */
-    .actions-bar .btn-secondary {
-        background-color: #6c757d !important;
-        color: white !important;
-        border-color: #6c757d !important;
-    }
-    
-    .actions-bar .btn-secondary:hover {
-        background-color: #5a6268 !important;
-        border-color: #5a6268 !important;
-    }
-</style>
-{% endblock %}
+{% block title %}إدارة صلاحيات المستخدم{% endblock %}
 
 {% block content %}
-<div class="permissions-container">
-    <div class="container">
-        <div class="header-card">
-            <div class="header-content d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="user-title">إدارة صلاحيات المستخدم</h1>
-                    <div class="user-subtitle mt-3">
-                        <span class="user-role-badge role-{{ user.role.value if user.role and user.role.value else 'user' }}">
-                            <i class="fas fa-user-shield"></i>
-                            {{ get_role_display_name(user.role) }}
-                        </span>
-                        <span>{{ user.name }} <span class="opacity-75">({{ user.email }})</span></span>
-                    </div>
-                </div>
-                <div class="header-actions d-flex">
-                    <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-custom btn-light-custom me-2">
-                        <i class="fas fa-arrow-right"></i>
-                        العودة للمستخدم
-                    </a>
-                    
-                    <button type="button" class="btn btn-custom btn-warning-custom" id="resetPermissionsBtn">
-                        <i class="fas fa-sync-alt"></i>
-                        إعادة ضبط
-                    </button>
-                </div>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-key me-2"></i>
+                    إدارة صلاحيات المستخدم: {{ user.name or user.email }}
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('attendance.dashboard') }}">الرئيسية</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('users.index') }}">إدارة المستخدمين</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">صلاحيات المستخدم</li>
+                    </ol>
+                </nav>
             </div>
-        </div>
-        
-        <form method="POST" action="{{ url_for('users.permissions', id=user.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            
-            <div class="row">
-                <div class="col-lg-10 offset-lg-1">
-                    <div class="info-alert">
-                        <h5 class="info-alert-title">
-                            <i class="fas fa-info-circle"></i>
-                            كيف تعمل الصلاحيات
-                        </h5>
-                        <ul>
-                            <li>يمكنك تحديد الصلاحيات لكل وحدة بشكل منفصل.</li>
-                            <li>بتحديد خيار "إدارة"، سيتم منح المستخدم جميع الصلاحيات للوحدة المعنية.</li>
-                            <li>يمكنك إعادة ضبط الصلاحيات إلى القيم الافتراضية استناداً إلى دور المستخدم بالضغط على "إعادة ضبط".</li>
-                        </ul>
-                    </div>
+
+            <!-- معلومات المستخدم -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        معلومات المستخدم
+                    </h5>
                 </div>
-            </div>
-            
-            <div class="row">
-                {% for module in modules %}
-                {% if module != Module.USERS or user.role in [UserRole.ADMIN, UserRole.MANAGER] %}
-                <div class="col-md-6 col-xl-4">
-                    <div class="module-wrapper">
-                        <div class="module-card">
-                            <div class="module-header">
-                                <div class="module-title-wrapper">
-                                    <div class="module-icon">
-                                        {% if module == Module.EMPLOYEES %}
-                                            <i class="fas fa-users"></i>
-                                        {% elif module == Module.DEPARTMENTS %}
-                                            <i class="fas fa-sitemap"></i>
-                                        {% elif module == Module.ATTENDANCE %}
-                                            <i class="fas fa-calendar-check"></i>
-                                        {% elif module == Module.SALARIES %}
-                                            <i class="fas fa-money-bill-wave"></i>
-                                        {% elif module == Module.DOCUMENTS %}
-                                            <i class="fas fa-file-alt"></i>
-                                        {% elif module == Module.VEHICLES %}
-                                            <i class="fas fa-car"></i>
-                                        {% elif module == Module.USERS %}
-                                            <i class="fas fa-user-cog"></i>
-                                        {% elif module == Module.REPORTS %}
-                                            <i class="fas fa-chart-bar"></i>
-                                        {% elif module == Module.FEES %}
-                                            <i class="fas fa-receipt"></i>
-                                        {% else %}
-                                            <i class="fas fa-cube"></i>
-                                        {% endif %}
-                                    </div>
-                                    <h3 class="module-title">{{ get_module_display_name(module) }}</h3>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="avatar-lg rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
+                                    {{ user.name[0] if user.name else user.email[0] }}
                                 </div>
-                                <div class="module-toggle">
-                                    <input class="form-check-input" type="checkbox" id="module_{{ module.value }}" name="module_{{ module.value }}" {% if module.value in current_permissions %}checked{% endif %}>
-                                    <label class="form-check-label" for="module_{{ module.value }}">تفعيل</label>
+                                <div>
+                                    <h6 class="mb-1">{{ user.name or 'غير محدد' }}</h6>
+                                    <p class="text-muted mb-0">{{ user.email }}</p>
                                 </div>
                             </div>
-                            <div class="permissions-body">
-                                <div class="permissions-list">
-                                    {% for permission in permissions %}
-                                    <div class="permission-item">
-                                        <div class="permission-check">
-                                            <input class="permission-check-input" type="checkbox" 
-                                                   id="{{ module.value }}_{{ permission }}" 
-                                                   name="{{ module.value }}_{{ permission }}" 
-                                                   {% if module.value in current_permissions and (current_permissions[module.value] | bitwise_and(permission)) %}checked{% endif %}
-                                                   {% if permission == Permission.MANAGE %}data-is-manage="true"{% endif %}
-                                                   data-module="{{ module.value }}">
-                                            <label class="permission-check-label" for="{{ module.value }}_{{ permission }}">
-                                                {% if permission == Permission.VIEW %}
-                                                <i class="fas fa-eye text-primary"></i>
-                                                عرض
-                                                {% elif permission == Permission.CREATE %}
-                                                <i class="fas fa-plus text-success"></i>
-                                                إنشاء
-                                                {% elif permission == Permission.EDIT %}
-                                                <i class="fas fa-edit text-warning"></i>
-                                                تعديل
-                                                {% elif permission == Permission.DELETE %}
-                                                <i class="fas fa-trash text-danger"></i>
-                                                حذف
-                                                {% elif permission == Permission.MANAGE %}
-                                                <i class="fas fa-cogs text-info"></i>
-                                                إدارة
-                                                {% endif %}
-                                            </label>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <strong>الدور:</strong> 
+                                <span class="badge bg-primary">{{ user.role.value }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>القسم المخصص:</strong> 
+                                {% if user.assigned_department %}
+                                    <span class="badge bg-info">{{ user.assigned_department.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
+                            </div>
+                            <div class="mb-2">
+                                <strong>الحالة:</strong> 
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير نشط</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                {% endif %}
-                {% endfor %}
             </div>
-            
-            <div class="actions-bar">
-                <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary btn-custom" style="background-color: #6c757d !important; color: white !important; border-color: #6c757d !important;">
-                    <i class="fas fa-times"></i>
-                    إلغاء
+
+            <!-- أزرار التحكم -->
+            <div class="d-flex gap-2 mb-4">
+                <a href="{{ url_for('users.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة لقائمة المستخدمين
                 </a>
-                
-                <button type="submit" class="btn btn-primary btn-custom btn-save" style="background-color: #ffffff !important; border-color: #1e88e5 !important;">
-                    <i class="fas fa-save" style="color: #ff5722 !important;"></i>
-                    <span style="color: #ff5722 !important; font-weight: bold !important;">حفظ الصلاحيات</span>
-                </button>
             </div>
-        </form>
+
+            <!-- الصلاحيات التفصيلية -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        الصلاحيات التفصيلية حسب الوحدات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user.role.value == 'admin' %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-crown me-2"></i>
+                            <strong>مدير النظام:</strong> هذا المستخدم لديه صلاحيات كاملة على جميع وحدات النظام.
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الوحدة</th>
+                                        <th>عرض</th>
+                                        <th>إنشاء</th>
+                                        <th>تعديل</th>
+                                        <th>حذف</th>
+                                        <th>إدارة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for module in modules %}
+                                    <tr>
+                                        <td class="fw-medium">{{ module.value }}</td>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" disabled
+                                                   {% if user.has_permission(module, 1) %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" disabled
+                                                   {% if user.has_permission(module, 2) %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" disabled
+                                                   {% if user.has_permission(module, 4) %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" disabled
+                                                   {% if user.has_permission(module, 8) %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" disabled
+                                                   {% if user.has_permission(module, 16) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>ملاحظة:</strong> إدارة الصلاحيات التفصيلية ستكون متاحة في تحديث قادم. حالياً يمكن تحديد الدور والقسم المخصص فقط.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- معلومات إضافية -->
+            <div class="alert alert-info mt-4" role="alert">
+                <h6 class="alert-heading">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    فهم نظام الصلاحيات
+                </h6>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>المديرون:</strong> لديهم وصول كامل لجميع الوحدات والأقسام</li>
+                    <li><strong>القسم المخصص:</strong> يحدد أي موظفين يمكن للمستخدم إدارة حضورهم</li>
+                    <li><strong>الأدوار:</strong> تحدد الصلاحيات العامة للمستخدم في النظام</li>
+                    <li><strong>الصلاحيات التفصيلية:</strong> تتيح تحكم دقيق في كل وحدة</li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-{{ super() }}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // تغيير لون النص إلى الأسود
-        const elementsToChange = document.querySelectorAll('.module-title, .permission-check-label, .info-alert-title, .info-alert li, .user-title, .user-subtitle, .form-check-label');
-        elementsToChange.forEach(function(element) {
-            element.style.color = "#000000";
-        });
-        
-        // تعديل لون خلفية زر الحفظ فقط
-        document.querySelector('.btn-save').style.backgroundColor = "#ffffff";
-        
-        document.querySelector('.actions-bar .btn-secondary').style.backgroundColor = "#6c757d";
-        document.querySelector('.actions-bar .btn-secondary').style.color = "white";
-        document.querySelector('.actions-bar .btn-secondary').style.borderColor = "#6c757d";
-        
-        // التحقق من تحديد/إلغاء الوحدة
-        document.querySelectorAll('input[id^="module_"]').forEach(function(checkbox) {
-            checkbox.addEventListener('change', function() {
-                var moduleValue = this.id.replace('module_', '');
-                var moduleChecked = this.checked;
-                
-                // تحديد أو إلغاء تحديد جميع صلاحيات الوحدة
-                document.querySelectorAll('input[id^="' + moduleValue + '_"]').forEach(function(permCheckbox) {
-                    permCheckbox.checked = moduleChecked;
-                });
-            });
-        });
-        
-        // التحقق من تحديد صلاحية "إدارة"
-        document.querySelectorAll('input[data-is-manage="true"]').forEach(function(manageCheckbox) {
-            manageCheckbox.addEventListener('change', function() {
-                var moduleValue = this.dataset.module;
-                
-                if (this.checked) {
-                    // تحديد جميع الصلاحيات الأخرى
-                    document.querySelectorAll('input[id^="' + moduleValue + '_"]').forEach(function(permCheckbox) {
-                        permCheckbox.checked = true;
-                    });
-                    
-                    // تحديد الوحدة نفسها
-                    document.getElementById('module_' + moduleValue).checked = true;
-                }
-            });
-        });
-        
-        // التحقق من تحديد أي صلاحية
-        document.querySelectorAll('input[id^="module_"]').forEach(function(moduleCheckbox) {
-            var moduleValue = moduleCheckbox.id.replace('module_', '');
-            
-            document.querySelectorAll('input[id^="' + moduleValue + '_"]').forEach(function(permCheckbox) {
-                permCheckbox.addEventListener('change', function() {
-                    // إذا تم تحديد أي صلاحية، يتم تحديد الوحدة
-                    var anyChecked = false;
-                    document.querySelectorAll('input[id^="' + moduleValue + '_"]').forEach(function(perm) {
-                        if (perm.checked) {
-                            anyChecked = true;
-                        }
-                    });
-                    
-                    document.getElementById('module_' + moduleValue).checked = anyChecked;
-                });
-            });
-        });
-        
-        // إعادة ضبط الصلاحيات
-        document.getElementById('resetPermissionsBtn').addEventListener('click', function() {
-            if (confirm('هل أنت متأكد من رغبتك في إعادة ضبط جميع الصلاحيات إلى القيم الافتراضية؟')) {
-                fetch('{{ url_for("users.reset_permissions", id=user.id) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token() }}'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        window.location.reload();
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('حدث خطأ أثناء محاولة إعادة ضبط الصلاحيات');
-                });
-            }
-        });
-    });
-</script>
+<style>
+.avatar-lg {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.form-check-input:disabled {
+    opacity: 0.5;
+}
+
+.alert-heading {
+    margin-bottom: 0.5rem;
+}
+</style>
 {% endblock %}
