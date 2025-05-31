@@ -1188,7 +1188,7 @@ def dashboard():
             # 14. إضافة المتغيرات الأصلية للاحتياط مع المتغيرات المنسقة
             
             # 15. إعداد البيانات للعرض على الصفحة
-            return render_template('attendance/dashboard.html',
+            return render_template('attendance/dashboard_new.html',
                                 today=today,
                                 current_month=current_month,
                                 current_year=current_year,
@@ -1302,8 +1302,8 @@ def department_stats():
         next_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1)
         end_date = next_month - timedelta(days=1)
     
-    # جلب جميع الأقسام النشطة
-    departments = Department.query.filter_by(active=True).all()
+    # جلب جميع الأقسام
+    departments = Department.query.all()
     
     department_stats = []
     
@@ -1340,10 +1340,18 @@ def department_stats():
         leave_count = sum(1 for record in attendance_records if record.status == 'leave')
         sick_count = sum(1 for record in attendance_records if record.status == 'sick')
         
-        # حساب المتوسط اليومي للحضور
+        # حساب معدل الحضور بناء على الأيام المتاحة فقط
         working_days = (end_date - start_date).days + 1
-        expected_attendance = total_employees * working_days
-        attendance_rate = (present_count / expected_attendance * 100) if expected_attendance > 0 else 0
+        total_records = len(attendance_records)
+        
+        # حساب معدل الحضور من إجمالي السجلات المتاحة
+        if total_records > 0:
+            attendance_rate = (present_count / total_records) * 100
+        elif total_employees > 0:
+            # إذا لم توجد سجلات، احسب على أساس الموظفين النشطين
+            attendance_rate = 0
+        else:
+            attendance_rate = 0
         
         department_stats.append({
             'id': dept.id,
@@ -1380,7 +1388,7 @@ def department_details():
         return redirect(url_for('attendance.dashboard'))
     
     # جلب القسم
-    department = Department.query.filter_by(name=department_name, active=True).first()
+    department = Department.query.filter_by(name=department_name).first()
     if not department:
         flash('القسم غير موجود', 'error')
         return redirect(url_for('attendance.dashboard'))

@@ -1,0 +1,534 @@
+{% extends 'layout.html' %}
+
+{% block title %}لوحة معلومات الحضور{% endblock %}
+
+{% block styles %}
+<style>
+    .stats-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+    
+    .department-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .department-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    }
+    
+    .progress-custom {
+        height: 8px;
+        border-radius: 10px;
+        background-color: #f1f3f4;
+    }
+    
+    .progress-bar-custom {
+        border-radius: 10px;
+        transition: width 0.6s ease;
+    }
+    
+    .status-badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+    }
+    
+    .gradient-bg-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .gradient-bg-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .gradient-bg-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .gradient-bg-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .gradient-bg-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .gradient-bg-6 { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+    
+    .period-selector {
+        background: white;
+        border-radius: 25px;
+        padding: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .period-btn {
+        border-radius: 20px;
+        padding: 8px 20px;
+        border: none;
+        background: transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .period-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        z-index: 10;
+    }
+    
+    .error-state {
+        padding: 40px;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .department-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 12px 12px 0 0;
+        border: none;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 8px;
+        background: #f8f9fa;
+        transition: background 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        background: #e9ecef;
+    }
+    
+    .animate-number {
+        transition: all 0.6s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <!-- رأس الصفحة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        لوحة معلومات الحضور
+                    </h2>
+                    <p class="text-muted mb-0">نظرة شاملة على إحصائيات الحضور والغياب</p>
+                </div>
+                <div class="period-selector">
+                    <button class="period-btn active" data-period="weekly">
+                        <i class="fas fa-calendar-week me-1"></i>أسبوعي
+                    </button>
+                    <button class="period-btn" data-period="monthly">
+                        <i class="fas fa-calendar-alt me-1"></i>شهري
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإحصائيات العامة -->
+    <div class="row mb-4" id="mainStats">
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stats-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stats-icon gradient-bg-1 me-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">إجمالي الموظفين</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="totalEmployees">{{ total_employees }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stats-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stats-icon gradient-bg-2 me-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">الحضور اليومي</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="dailyPresent">{{ daily_present }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stats-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stats-icon gradient-bg-3 me-3">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">الغياب اليومي</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="dailyAbsent">{{ daily_absent }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="stats-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stats-icon gradient-bg-4 me-3">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">معدل الحضور</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="attendanceRate">{{ daily_attendance_rate }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات الفترة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info border-0" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle text-info me-2"></i>
+                    <span id="periodInfo">جاري تحميل معلومات الفترة...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات الأقسام -->
+    <div class="row">
+        <div class="col-12">
+            <div class="department-card">
+                <div class="department-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        إحصائيات الحضور حسب الأقسام
+                    </h5>
+                </div>
+                
+                <div class="card-body position-relative" id="departmentsContainer">
+                    <!-- حالة التحميل -->
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                            <h6 class="text-muted">جاري تحميل إحصائيات الأقسام</h6>
+                        </div>
+                    </div>
+                    
+                    <!-- محتوى الأقسام -->
+                    <div id="departmentsContent" class="d-none">
+                        <div class="row" id="departmentsList">
+                            <!-- سيتم إدراج بيانات الأقسام هنا -->
+                        </div>
+                        
+                        <!-- ملخص سريع -->
+                        <div class="row mt-4 pt-4 border-top">
+                            <div class="col-md-3 text-center">
+                                <div class="stat-item">
+                                    <i class="fas fa-building text-primary me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">إجمالي الأقسام</small>
+                                        <strong id="statsTotal">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="stat-item">
+                                    <i class="fas fa-trophy text-warning me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">أفضل قسم</small>
+                                        <strong id="statsBest">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="stat-item">
+                                    <i class="fas fa-chart-line text-success me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">متوسط الحضور</small>
+                                        <strong id="statsAverage">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="stat-item">
+                                    <i class="fas fa-users text-info me-2"></i>
+                                    <div>
+                                        <small class="text-muted d-block">إجمالي الموظفين</small>
+                                        <strong id="statsEmployees">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- حالة الخطأ -->
+                    <div id="errorState" class="error-state d-none">
+                        <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
+                        <h5>حدث خطأ في تحميل البيانات</h5>
+                        <p class="text-muted">يرجى التحقق من الاتصال والمحاولة مرة أخرى</p>
+                        <button class="btn btn-primary" onclick="loadDepartmentStats()">
+                            <i class="fas fa-redo me-1"></i>إعادة المحاولة
+                        </button>
+                    </div>
+                    
+                    <!-- حالة عدم وجود بيانات -->
+                    <div id="emptyState" class="empty-state d-none">
+                        <i class="fas fa-inbox text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5>لا توجد بيانات متاحة</h5>
+                        <p class="text-muted">لا توجد أقسام أو بيانات حضور للفترة المحددة</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPeriod = 'weekly';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // إعداد أزرار الفترة
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentPeriod = this.dataset.period;
+            loadDepartmentStats();
+        });
+    });
+    
+    // تحميل البيانات عند بدء الصفحة
+    loadDepartmentStats();
+});
+
+function loadDepartmentStats() {
+    showLoading();
+    
+    const projectParam = '{{ selected_project }}' ? '&project={{ selected_project }}' : '';
+    const url = `/attendance/department-stats?period=${currentPeriod}${projectParam}`;
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            hideLoading();
+            displayDepartmentStats(data);
+            updatePeriodInfo(data);
+        })
+        .catch(error => {
+            console.error('خطأ في تحميل إحصائيات الأقسام:', error);
+            hideLoading();
+            showErrorState();
+        });
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').classList.remove('d-none');
+    document.getElementById('departmentsContent').classList.add('d-none');
+    document.getElementById('errorState').classList.add('d-none');
+    document.getElementById('emptyState').classList.add('d-none');
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('d-none');
+}
+
+function showErrorState() {
+    document.getElementById('errorState').classList.remove('d-none');
+}
+
+function showEmptyState() {
+    document.getElementById('emptyState').classList.remove('d-none');
+}
+
+function displayDepartmentStats(data) {
+    if (!data.departments || data.departments.length === 0) {
+        showEmptyState();
+        return;
+    }
+    
+    const container = document.getElementById('departmentsList');
+    container.innerHTML = '';
+    
+    let totalEmployees = 0;
+    let totalPresent = 0;
+    let bestDepartment = '';
+    let bestRate = 0;
+    
+    data.departments.forEach((dept, index) => {
+        totalEmployees += dept.total_employees;
+        totalPresent += dept.present;
+        
+        if (dept.attendance_rate > bestRate) {
+            bestRate = dept.attendance_rate;
+            bestDepartment = dept.name;
+        }
+        
+        const attendanceRate = dept.total_employees > 0 
+            ? Math.round((dept.present / dept.total_employees) * 100) 
+            : 0;
+        
+        // تحديد لون شريط التقدم
+        let progressClass = 'bg-success';
+        let cardClass = 'gradient-bg-4';
+        if (attendanceRate < 70) {
+            progressClass = 'bg-danger';
+            cardClass = 'gradient-bg-2';
+        } else if (attendanceRate < 85) {
+            progressClass = 'bg-warning';
+            cardClass = 'gradient-bg-5';
+        }
+        
+        const deptCard = document.createElement('div');
+        deptCard.className = 'col-lg-6 col-xl-4 mb-3';
+        deptCard.innerHTML = `
+            <div class="department-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="fw-bold mb-1">${dept.name}</h6>
+                            <small class="text-muted">${dept.total_employees} موظف</small>
+                        </div>
+                        <div class="stats-icon ${cardClass}" style="width: 40px; height: 40px; font-size: 16px;">
+                            <i class="fas fa-building"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="status-badge bg-success text-white">${dept.present}</div>
+                                <small class="text-muted d-block">حاضر</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="status-badge bg-danger text-white">${dept.absent}</div>
+                                <small class="text-muted d-block">غائب</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="status-badge bg-warning text-dark">${dept.leave}</div>
+                                <small class="text-muted d-block">إجازة</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <div class="status-badge bg-info text-white">${dept.sick}</div>
+                                <small class="text-muted d-block">مرضي</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">معدل الحضور</small>
+                            <small class="fw-bold">${attendanceRate}%</small>
+                        </div>
+                        <div class="progress-custom">
+                            <div class="progress-bar-custom ${progressClass}" style="width: ${attendanceRate}%"></div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary btn-sm w-100" 
+                            onclick="showDepartmentDetails('${dept.name}', '${currentPeriod}')">
+                        <i class="fas fa-eye me-1"></i>عرض التفاصيل
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(deptCard);
+    });
+    
+    // تحديث الملخص السريع
+    const averageRate = totalEmployees > 0 ? Math.round((totalPresent / totalEmployees) * 100) : 0;
+    document.getElementById('statsTotal').textContent = data.departments.length;
+    document.getElementById('statsBest').textContent = bestDepartment || 'غير محدد';
+    document.getElementById('statsAverage').textContent = averageRate + '%';
+    document.getElementById('statsEmployees').textContent = totalEmployees;
+    
+    document.getElementById('departmentsContent').classList.remove('d-none');
+}
+
+function updatePeriodInfo(data) {
+    const periodText = currentPeriod === 'weekly' ? 'الأسبوع الحالي' : 'الشهر الحالي';
+    const dateRange = `${data.start_date} إلى ${data.end_date}`;
+    document.getElementById('periodInfo').innerHTML = 
+        `<strong>${periodText}:</strong> ${dateRange}`;
+}
+
+function showDepartmentDetails(departmentName, period) {
+    const projectParam = '{{ selected_project }}' ? '&project={{ selected_project }}' : '';
+    const url = `/attendance/department-details?department=${encodeURIComponent(departmentName)}&period=${period}${projectParam}`;
+    window.open(url, '_blank', 'width=1200,height=700,scrollbars=yes');
+}
+
+// تحديث الأرقام بتأثير الحركة
+function animateNumbers() {
+    document.querySelectorAll('.animate-number').forEach(element => {
+        element.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            element.style.transform = 'scale(1)';
+        }, 200);
+    });
+}
+</script>
+{% endblock %}
