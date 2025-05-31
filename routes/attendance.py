@@ -1321,9 +1321,9 @@ def department_stats():
         employees = employees_query.all()
         total_employees = len(employees)
         
-        # تخطي الأقسام الفارغة إذا كان هناك فلتر مشروع وليس فيها موظفون
-        if total_employees == 0 and project_name:
-            continue
+        # عرض جميع الأقسام حتى لو كانت فارغة لضمان الشمولية
+        # if total_employees == 0:
+        #     continue
         
         # حساب الإحصائيات
         employee_ids = [emp.id for emp in employees]
@@ -1347,6 +1347,17 @@ def department_stats():
         # حساب الأيام والسجلات المتوقعة
         working_days = (end_date - start_date).days + 1
         expected_total_records = total_employees * working_days
+        
+        # للفترة الشهرية، نحسب أيام العمل الفعلية (عدا الجمع والسبوت)
+        if period == 'monthly':
+            working_days_actual = 0
+            current = start_date
+            while current <= end_date:
+                # حساب أيام العمل (الأحد-الخميس في النظام السعودي)
+                if current.weekday() < 5:  # 0-4 (الاثنين-الجمعة) نحسبها أيام عمل
+                    working_days_actual += 1
+                current += timedelta(days=1)
+            working_days = working_days_actual
         
         # حساب معدل الحضور بناء على السجلات الفعلية الموجودة
         if total_records > 0:
