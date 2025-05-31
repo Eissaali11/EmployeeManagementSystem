@@ -190,21 +190,33 @@ def record():
     # الحصول على الموظفين النشطين حسب صلاحيات المستخدم
     from flask_login import current_user
     
+    employees = []
     if current_user.is_authenticated:
-        if current_user.role.value == 'ADMIN' or current_user.role.value == 'MANAGER':
-            # المديرون العامون والمديرون يمكنهم رؤية جميع الموظفين
+        try:
+            user_role = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+            print(f"المستخدم الحالي: {current_user.name}, الدور: {user_role}, القسم المخصص: {current_user.assigned_department_id}")
+            
+            if user_role in ['ADMIN', 'MANAGER', 'SUPERVISOR']:
+                # المديرون والمشرفون يمكنهم رؤية جميع الموظفين
+                employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+                print(f"تم العثور على {len(employees)} موظف نشط للمدير/المشرف")
+            elif current_user.assigned_department_id:
+                # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
+                employees = Employee.query.filter_by(
+                    status='active',
+                    department_id=current_user.assigned_department_id
+                ).order_by(Employee.name).all()
+                print(f"تم العثور على {len(employees)} موظف نشط للقسم {current_user.assigned_department_id}")
+            else:
+                # كحل بديل، عرض جميع الموظفين للمستخدمين المسجلين
+                employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+                print(f"عرض جميع الموظفين كحل بديل: {len(employees)} موظف")
+        except Exception as e:
+            print(f"خطأ في تحديد صلاحيات المستخدم: {e}")
+            # كحل بديل في حالة الخطأ، عرض جميع الموظفين
             employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
-        elif current_user.assigned_department_id:
-            # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
-            employees = Employee.query.filter_by(
-                status='active',
-                department_id=current_user.assigned_department_id
-            ).order_by(Employee.name).all()
-        else:
-            # المستخدمون بدون صلاحيات محددة لا يمكنهم رؤية أي موظفين
-            employees = []
     else:
-        employees = []
+        print("المستخدم غير مسجل دخول")
     
     # Default to today's date
     today = datetime.now().date()
