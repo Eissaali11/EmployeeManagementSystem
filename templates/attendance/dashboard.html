@@ -275,6 +275,48 @@
         </div>
     </div>
 
+    <!-- إحصائيات الأقسام -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building ms-2"></i>
+                        إحصائيات الحضور حسب الأقسام
+                    </h5>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="periodType" id="periodWeekly" value="weekly" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="periodWeekly">أسبوعي</label>
+                        
+                        <input type="radio" class="btn-check" name="periodType" id="periodMonthly" value="monthly">
+                        <label class="btn btn-outline-primary btn-sm" for="periodMonthly">شهري</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>القسم</th>
+                                    <th class="text-center">إجمالي الموظفين</th>
+                                    <th class="text-center">حاضر</th>
+                                    <th class="text-center">غائب</th>
+                                    <th class="text-center">إجازة</th>
+                                    <th class="text-center">مرضي</th>
+                                    <th class="text-center">معدل الحضور</th>
+                                    <th class="text-center">التفاصيل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="departmentStatsBody">
+                                <!-- سيتم ملؤها بـ JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- مخططات بيانية -->
     <div class="row mb-4">
         <div class="col-lg-8">
@@ -480,6 +522,110 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // تحميل إحصائيات الأقسام
+    loadDepartmentStats('weekly');
+    
+    // مستمع للتبديل بين الأسبوعي والشهري
+    document.querySelectorAll('input[name="periodType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            loadDepartmentStats(this.value);
+        });
+    });
+    
+    // دالة تحميل إحصائيات الأقسام
+    function loadDepartmentStats(period) {
+        const projectParam = '{{ selected_project }}' ? '&project={{ selected_project }}' : '';
+        fetch(`/attendance/department-stats?period=${period}${projectParam}`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('departmentStatsBody');
+                tbody.innerHTML = '';
+                
+                if (data.departments && data.departments.length > 0) {
+                    data.departments.forEach(dept => {
+                        const row = document.createElement('tr');
+                        const attendanceRate = dept.total_employees > 0 
+                            ? Math.round((dept.present / dept.total_employees) * 100) 
+                            : 0;
+                        
+                        // تحديد لون شريط التقدم
+                        let progressClass = 'bg-success';
+                        if (attendanceRate < 70) progressClass = 'bg-danger';
+                        else if (attendanceRate < 85) progressClass = 'bg-warning';
+                        
+                        row.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building text-muted me-2"></i>
+                                    <strong>${dept.name}</strong>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">${dept.total_employees}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">${dept.present}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">${dept.absent}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning">${dept.leave}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">${dept.sick}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress me-2" style="width: 60px; height: 8px;">
+                                        <div class="progress-bar ${progressClass}" 
+                                             style="width: ${attendanceRate}%"></div>
+                                    </div>
+                                    <small class="fw-bold">${attendanceRate}%</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="showDepartmentDetails('${dept.name}', '${period}')">
+                                    <i class="fas fa-eye me-1"></i>تفاصيل
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                لا توجد بيانات متاحة للفترة المحددة
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('خطأ في تحميل إحصائيات الأقسام:', error);
+                document.getElementById('departmentStatsBody').innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            خطأ في تحميل البيانات
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+    
+    // دالة عرض تفاصيل القسم
+    function showDepartmentDetails(departmentName, period) {
+        const projectParam = '{{ selected_project }}' ? '&project={{ selected_project }}' : '';
+        const url = `/attendance/department-details?department=${encodeURIComponent(departmentName)}&period=${period}${projectParam}`;
+        
+        // فتح نافذة جديدة لعرض التفاصيل
+        window.open(url, '_blank', 'width=1000,height=600,scrollbars=yes');
+    }
 });
 </script>
 {% endblock %}

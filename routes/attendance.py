@@ -1282,3 +1282,164 @@ def employee_attendance(employee_id):
                           today=today,
                           hijri_today=hijri_today,
                           gregorian_today=gregorian_today)
+
+@attendance_bp.route('/department-stats')
+def department_stats():
+    """API لجلب إحصائيات الحضور حسب الأقسام"""
+    period = request.args.get('period', 'weekly')  # weekly أو monthly
+    project_name = request.args.get('project', None)
+    
+    today = datetime.now().date()
+    
+    # تحديد الفترة الزمنية
+    if period == 'weekly':
+        # الأسبوع الحالي (من يوم السبت إلى يوم الجمعة)
+        days_since_saturday = (today.weekday() + 2) % 7
+        start_date = today - timedelta(days=days_since_saturday)
+        end_date = start_date + timedelta(days=6)
+    else:  # monthly
+        start_date = today.replace(day=1)
+        next_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1)
+        end_date = next_month - timedelta(days=1)
+    
+    # جلب جميع الأقسام النشطة
+    departments = Department.query.filter_by(active=True).all()
+    
+    department_stats = []
+    
+    for dept in departments:
+        # جلب الموظفين النشطين في القسم
+        employees_query = Employee.query.filter_by(
+            department_id=dept.id,
+            status='active'
+        )
+        
+        # فلترة حسب المشروع إذا تم تحديده
+        if project_name:
+            employees_query = employees_query.filter_by(project=project_name)
+        
+        employees = employees_query.all()
+        total_employees = len(employees)
+        
+        if total_employees == 0:
+            continue
+        
+        # حساب الإحصائيات
+        employee_ids = [emp.id for emp in employees]
+        
+        # جلب سجلات الحضور للفترة المحددة
+        attendance_records = db.session.query(Attendance).filter(
+            Attendance.employee_id.in_(employee_ids),
+            Attendance.date >= start_date,
+            Attendance.date <= end_date
+        ).all()
+        
+        # حساب الإحصائيات
+        present_count = sum(1 for record in attendance_records if record.status == 'present')
+        absent_count = sum(1 for record in attendance_records if record.status == 'absent')
+        leave_count = sum(1 for record in attendance_records if record.status == 'leave')
+        sick_count = sum(1 for record in attendance_records if record.status == 'sick')
+        
+        # حساب المتوسط اليومي للحضور
+        working_days = (end_date - start_date).days + 1
+        expected_attendance = total_employees * working_days
+        attendance_rate = (present_count / expected_attendance * 100) if expected_attendance > 0 else 0
+        
+        department_stats.append({
+            'id': dept.id,
+            'name': dept.name,
+            'total_employees': total_employees,
+            'present': present_count,
+            'absent': absent_count,
+            'leave': leave_count,
+            'sick': sick_count,
+            'attendance_rate': round(attendance_rate, 1),
+            'working_days': working_days
+        })
+    
+    # ترتيب الأقسام حسب معدل الحضور (تنازلي)
+    department_stats.sort(key=lambda x: x['attendance_rate'], reverse=True)
+    
+    return jsonify({
+        'departments': department_stats,
+        'period': period,
+        'start_date': start_date.strftime('%Y-%m-%d'),
+        'end_date': end_date.strftime('%Y-%m-%d'),
+        'project': project_name
+    })
+
+@attendance_bp.route('/department-details')
+def department_details():
+    """صفحة تفاصيل الحضور لقسم معين"""
+    department_name = request.args.get('department')
+    period = request.args.get('period', 'weekly')
+    project_name = request.args.get('project', None)
+    
+    if not department_name:
+        flash('يجب تحديد القسم', 'error')
+        return redirect(url_for('attendance.dashboard'))
+    
+    # جلب القسم
+    department = Department.query.filter_by(name=department_name, active=True).first()
+    if not department:
+        flash('القسم غير موجود', 'error')
+        return redirect(url_for('attendance.dashboard'))
+    
+    today = datetime.now().date()
+    
+    # تحديد الفترة الزمنية
+    if period == 'weekly':
+        days_since_saturday = (today.weekday() + 2) % 7
+        start_date = today - timedelta(days=days_since_saturday)
+        end_date = start_date + timedelta(days=6)
+    else:  # monthly
+        start_date = today.replace(day=1)
+        next_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1)
+        end_date = next_month - timedelta(days=1)
+    
+    # جلب الموظفين النشطين في القسم
+    employees_query = Employee.query.filter_by(
+        department_id=department.id,
+        status='active'
+    )
+    
+    if project_name:
+        employees_query = employees_query.filter_by(project=project_name)
+    
+    employees = employees_query.all()
+    
+    # جلب سجلات الحضور للموظفين في الفترة المحددة
+    employee_attendance = {}
+    for employee in employees:
+        attendance_records = Attendance.query.filter(
+            Attendance.employee_id == employee.id,
+            Attendance.date >= start_date,
+            Attendance.date <= end_date
+        ).order_by(Attendance.date).all()
+        
+        employee_attendance[employee.id] = {
+            'employee': employee,
+            'records': attendance_records,
+            'stats': {
+                'present': sum(1 for r in attendance_records if r.status == 'present'),
+                'absent': sum(1 for r in attendance_records if r.status == 'absent'),
+                'leave': sum(1 for r in attendance_records if r.status == 'leave'),
+                'sick': sum(1 for r in attendance_records if r.status == 'sick')
+            }
+        }
+    
+    # إنشاء جدول التواريخ للعرض
+    date_range = []
+    current_date = start_date
+    while current_date <= end_date:
+        date_range.append(current_date)
+        current_date += timedelta(days=1)
+    
+    return render_template('attendance/department_details.html',
+                          department=department,
+                          employee_attendance=employee_attendance,
+                          date_range=date_range,
+                          period=period,
+                          start_date=start_date,
+                          end_date=end_date,
+                          project_name=project_name)
