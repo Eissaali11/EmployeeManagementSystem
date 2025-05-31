@@ -22,7 +22,10 @@ def log_activity(action, entity_type, entity_id=None, details=None, previous_dat
     :param new_data: البيانات الجديدة (للإنشاء والتحديث)
     """
     try:
-        if current_user.is_authenticated:
+        # التحقق من وجود current_user والتأكد من أنه مسجل دخول
+        if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
+            print(f"تسجيل عملية: {action} - {entity_type} - {details}")  # للتشخيص
+            
             # تحويل البيانات إلى JSON إذا كانت قاموس
             if isinstance(previous_data, dict):
                 previous_data = json.dumps(previous_data, ensure_ascii=False)
@@ -35,19 +38,35 @@ def log_activity(action, entity_type, entity_id=None, details=None, previous_dat
             audit_log.entity_type = entity_type
             audit_log.entity_id = entity_id
             audit_log.details = details
-            audit_log.ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR'))
-            audit_log.user_agent = request.environ.get('HTTP_USER_AGENT')
+            
+            # التعامل الآمن مع request
+            try:
+                audit_log.ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'Unknown'))
+                audit_log.user_agent = request.environ.get('HTTP_USER_AGENT', 'Unknown')
+            except:
+                audit_log.ip_address = 'Unknown'
+                audit_log.user_agent = 'Unknown'
+            
             audit_log.previous_data = previous_data
             audit_log.new_data = new_data
             audit_log.timestamp = datetime.utcnow()
             
             db.session.add(audit_log)
             db.session.commit()
+            print(f"تم تسجيل العملية بنجاح: {audit_log.id}")  # للتشخيص
+            
+        else:
+            print(f"لا يوجد مستخدم مسجل دخول - لم يتم تسجيل العملية: {action}")  # للتشخيص
             
     except Exception as e:
         print(f"خطأ في تسجيل النشاط: {e}")
+        import traceback
+        traceback.print_exc()  # طباعة التفاصيل الكاملة للخطأ
         # لا نريد أن يؤثر خطأ في التسجيل على العملية الأساسية
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except:
+            pass
 
 
 def log_attendance_activity(action, attendance_data, employee_name=None):
