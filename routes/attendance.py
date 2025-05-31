@@ -1577,15 +1577,16 @@ def department_details():
     
     today = datetime.now().date()
     
-    # تحديد الفترة الزمنية
-    if period == 'weekly':
-        days_since_saturday = (today.weekday() + 2) % 7
-        start_date = today - timedelta(days=days_since_saturday)
-        end_date = start_date + timedelta(days=6)
-    else:  # monthly
-        start_date = today.replace(day=1)
-        next_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1)
-        end_date = next_month - timedelta(days=1)
+    # تحديد الفترة الزمنية - دائماً عرض الشهر الكامل للتفاصيل
+    start_date = today.replace(day=1)  # بداية الشهر الحالي
+    end_date = today  # حتى اليوم الحالي
+    
+    # إنشاء قائمة بجميع أيام الشهر حتى اليوم
+    date_range = []
+    current = start_date
+    while current <= end_date:
+        date_range.append(current)
+        current += timedelta(days=1)
     
     # جلب الموظفين النشطين في القسم
     employees_query = Employee.query.filter_by(
@@ -1618,18 +1619,84 @@ def department_details():
             }
         }
     
-    # إنشاء جدول التواريخ للعرض
-    date_range = []
-    current_date = start_date
-    while current_date <= end_date:
-        date_range.append(current_date)
-        current_date += timedelta(days=1)
+    # حساب الإحصائيات الإجمالية للقسم
+    total_stats = {
+        'total_employees': len(employees),
+        'present': 0,
+        'absent': 0,
+        'leave': 0,
+        'sick': 0,
+        'total_records': 0,
+        'working_days': len(date_range),
+        'attendance_rate': 0
+    }
     
-    return render_template('attendance/department_details.html',
+    for emp_data in employee_attendance.values():
+        total_stats['present'] += emp_data['stats']['present']
+        total_stats['absent'] += emp_data['stats']['absent']
+        total_stats['leave'] += emp_data['stats']['leave']
+        total_stats['sick'] += emp_data['stats']['sick']
+        total_stats['total_records'] += len(emp_data['records'])
+    
+    # حساب معدل الحضور
+    if total_stats['total_records'] > 0:
+        total_stats['attendance_rate'] = round((total_stats['present'] / total_stats['total_records']) * 100, 1)
+    
+    # حساب الإحصائيات اليومية للقسم
+    daily_stats = {}
+    for date in date_range:
+        daily_count = {
+            'present': 0,
+            'absent': 0,
+            'leave': 0,
+            'sick': 0,
+            'total': 0
+        }
+        
+        for emp_data in employee_attendance.values():
+            for record in emp_data['records']:
+                if record.date == date:
+                    daily_count[record.status] += 1
+                    daily_count['total'] += 1
+                    break
+        
+        daily_stats[date] = daily_count
+    
+    # إحصائيات أسبوعية
+    weekly_stats = []
+    week_start = start_date
+    while week_start <= end_date:
+        week_end = min(week_start + timedelta(days=6), end_date)
+        
+        week_data = {
+            'start_date': week_start,
+            'end_date': week_end,
+            'present': 0,
+            'absent': 0,
+            'leave': 0,
+            'sick': 0
+        }
+        
+        current = week_start
+        while current <= week_end:
+            if current in daily_stats:
+                week_data['present'] += daily_stats[current]['present']
+                week_data['absent'] += daily_stats[current]['absent']
+                week_data['leave'] += daily_stats[current]['leave']
+                week_data['sick'] += daily_stats[current]['sick']
+            current += timedelta(days=1)
+        
+        weekly_stats.append(week_data)
+        week_start += timedelta(days=7)
+    
+    return render_template('attendance/department_details_enhanced.html',
                           department=department,
                           employee_attendance=employee_attendance,
                           date_range=date_range,
-                          period=period,
+                          daily_stats=daily_stats,
+                          weekly_stats=weekly_stats,
+                          total_stats=total_stats,
+                          period='monthly',  # دائماً عرض شهري
                           start_date=start_date,
                           end_date=end_date,
                           project_name=project_name)
