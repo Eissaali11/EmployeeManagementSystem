@@ -1532,17 +1532,9 @@ def export_excel_dashboard():
         ws.add_chart(chart, "J3")
         
         # تعديل عرض الأعمدة
-        for column in ws.columns:
-            max_length = 0
-            column_letter = column[0].column_letter
-            for cell in column:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            adjusted_width = min(max_length + 2, 25)
-            ws.column_dimensions[column_letter].width = adjusted_width
+        column_widths = [15, 12, 10, 10, 10, 10, 15, 15]
+        for i, width in enumerate(column_widths, 1):
+            ws.column_dimensions[chr(64 + i)].width = width
         
         # حفظ الملف
         output = BytesIO()
