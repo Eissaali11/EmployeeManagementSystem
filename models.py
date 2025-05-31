@@ -159,6 +159,10 @@ class User(UserMixin, db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
     employee = db.relationship('Employee', foreign_keys=[employee_id], uselist=False)
     
+    # القسم المخصص للمستخدم (للتحكم في الوصول)
+    assigned_department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=True)
+    assigned_department = db.relationship('Department', foreign_keys=[assigned_department_id], uselist=False)
+    
     # العلاقة مع صلاحيات المستخدم
     permissions = db.relationship('UserPermission', back_populates='user', cascade='all, delete-orphan')
     
@@ -194,6 +198,34 @@ class User(UserMixin, db.Model):
             return True
             
         return any(p.module == module for p in self.permissions)
+    
+    def can_access_department(self, department_id):
+        """التحقق مما إذا كان المستخدم يمكنه الوصول إلى قسم معين"""
+        # المديرون لديهم وصول إلى جميع الأقسام
+        if self.role == UserRole.ADMIN:
+            return True
+            
+        # إذا كان لديه قسم مخصص، يمكنه الوصول إليه فقط
+        if self.assigned_department_id:
+            return self.assigned_department_id == department_id
+            
+        # إذا لم يكن لديه قسم مخصص، لا يمكنه الوصول إلى أي قسم
+        return False
+    
+    def get_accessible_departments(self):
+        """جلب الأقسام التي يمكن للمستخدم الوصول إليها"""
+        from app import db
+        
+        # المديرون لديهم وصول إلى جميع الأقسام
+        if self.role == UserRole.ADMIN:
+            return Department.query.all()
+            
+        # إذا كان لديه قسم مخصص، يعرض هذا القسم فقط
+        if self.assigned_department_id:
+            return [self.assigned_department]
+            
+        # إذا لم يكن لديه قسم مخصص، لا يعرض أي قسم
+        return []
     
     def __repr__(self):
         return f'<User {self.email}>'

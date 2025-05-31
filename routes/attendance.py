@@ -1295,8 +1295,15 @@ def department_stats():
     start_date = today.replace(day=1)  # بداية الشهر الحالي
     end_date = today  # حتى اليوم الحالي
     
-    # جلب جميع الأقسام
-    departments = Department.query.all()
+    # جلب الأقسام المسموح بالوصول إليها حسب صلاحيات المستخدم
+    from flask_login import current_user
+    
+    if current_user.is_authenticated:
+        # إذا كان المستخدم مسجل دخوله، عرض الأقسام المسموحة فقط
+        departments = current_user.get_accessible_departments()
+    else:
+        # إذا لم يكن مسجل دخوله، عرض جميع الأقسام (للعرض العام)
+        departments = Department.query.all()
     
     department_stats = []
     

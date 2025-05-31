@@ -1,202 +1,205 @@
-{% extends 'layout.html' %}
+{% extends "base.html" %}
 
 {% block title %}إدارة المستخدمين{% endblock %}
 
-{% block styles %}
-{{ super() }}
-<style>
-    .user-card {
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-        height: 100%;
-    }
-    
-    .user-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .user-card .card-header {
-        background-color: #1da18e;
-        color: white;
-        font-weight: bold;
-        border-top-right-radius: 10px;
-        border-top-left-radius: 10px;
-        padding: 10px 15px;
-    }
-    
-    .user-card .card-footer {
-        border-top: 1px solid #eee;
-        background-color: #f8f9fa;
-        padding: 10px 15px;
-    }
-    
-    .user-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        margin-bottom: 10px;
-    }
-    
-    .role-badge {
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    
-    .role-admin {
-        background-color: #dc3545;
-        color: white;
-    }
-    
-    .role-manager {
-        background-color: #fd7e14;
-        color: white;
-    }
-    
-    .role-hr {
-        background-color: #20c997;
-        color: white;
-    }
-    
-    .role-finance {
-        background-color: #0d6efd;
-        color: white;
-    }
-    
-    .role-fleet {
-        background-color: #6f42c1;
-        color: white;
-    }
-    
-    .role-user {
-        background-color: #6c757d;
-        color: white;
-    }
-    
-    .user-status {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-left: 5px;
-    }
-    
-    .status-active {
-        background-color: #28a745;
-    }
-    
-    .status-inactive {
-        background-color: #dc3545;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="fas fa-users ms-2"></i>
-            إدارة المستخدمين
-        </h2>
-        <a href="{{ url_for('users.create') }}" class="btn btn-success">
-            <i class="fas fa-plus ms-1"></i>
-            إضافة مستخدم جديد
-        </a>
-    </div>
-    
-    <div class="row mt-4">
-        {% for user in users %}
-        <div class="col-md-4 mb-4">
-            <div class="card user-card">
-                <div class="card-header d-flex justify-content-between">
-                    <span>{{ user.name }}</span>
-                    <span class="user-status {% if user.is_active %}status-active{% else %}status-inactive{% endif %}"></span>
-                </div>
-                <div class="card-body text-center">
-                    {% if user.profile_picture %}
-                    <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="user-avatar">
-                    {% else %}
-                    <div class="user-avatar bg-light d-flex justify-content-center align-items-center">
-                        <i class="fas fa-user fa-2x text-muted"></i>
-                    </div>
-                    {% endif %}
-                    
-                    <h5 class="card-title mb-1">{{ user.name }}</h5>
-                    <p class="text-muted">{{ user.email }}</p>
-                    
-                    <div class="mt-3">
-                        <span class="role-badge role-{{ user.role.value if user.role and user.role.value else 'user' }}">
-                            {{ get_role_display_name(user.role) }}
-                        </span>
-                    </div>
-                    
-                    {% if user.employee %}
-                    <div class="mt-2">
-                        <span class="badge bg-info">
-                            <i class="fas fa-id-card ms-1"></i>
-                            موظف: {{ user.employee.name }}
-                        </span>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="card-footer d-flex justify-content-between">
-                    <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-sm btn-info">
-                        <i class="fas fa-eye ms-1"></i>
-                        عرض
-                    </a>
-                    <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-sm btn-warning">
-                        <i class="fas fa-edit ms-1"></i>
-                        تعديل
-                    </a>
-                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
-                        <i class="fas fa-trash ms-1"></i>
-                        حذف
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Delete Confirmation Modal -->
-            <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">تأكيد الحذف</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            هل أنت متأكد من رغبتك في حذف المستخدم <strong>{{ user.name }}</strong>؟ 
-                            <div class="alert alert-warning mt-2">
-                                <i class="fas fa-exclamation-triangle ms-1"></i>
-                                هذا الإجراء لا يمكن التراجع عنه.
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                            <form action="{{ url_for('users.delete', id=user.id) }}" method="POST">
-                                <button type="submit" class="btn btn-danger">حذف</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% else %}
+    <div class="row">
         <div class="col-12">
-            <div class="alert alert-info text-center py-4">
-                <i class="fas fa-info-circle fa-2x mb-3"></i>
-                <p>لا يوجد مستخدمين بعد. قم بإنشاء أول مستخدم.</p>
-                <a href="{{ url_for('users.create') }}" class="btn btn-success mt-2">
-                    <i class="fas fa-plus ms-1"></i>
-                    إضافة مستخدم جديد
-                </a>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    إدارة المستخدمين
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('attendance.dashboard') }}">الرئيسية</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">إدارة المستخدمين</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-primary mb-1">{{ users|length }}</div>
+                            <div class="text-muted small">إجمالي المستخدمين</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-success mb-1">{{ users|selectattr('is_active')|list|length }}</div>
+                            <div class="text-muted small">مستخدمين نشطين</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-warning mb-1">{{ users|selectattr('assigned_department')|list|length }}</div>
+                            <div class="text-muted small">لديهم أقسام مخصصة</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-info mb-1">{{ departments|length }}</div>
+                            <div class="text-muted small">إجمالي الأقسام</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول المستخدمين -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة المستخدمين
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>الدور</th>
+                                    <th>القسم المخصص</th>
+                                    <th>الحالة</th>
+                                    <th>تاريخ التسجيل</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                                {{ user.name[0] if user.name else user.email[0] }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium">{{ user.name or 'غير محدد' }}</div>
+                                                <small class="text-muted">ID: {{ user.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('users.edit_role', user_id=user.id) }}" class="d-inline">
+                                            <select name="role" class="form-select form-select-sm" onchange="this.form.submit()" 
+                                                    style="width: auto; min-width: 120px;">
+                                                <option value="admin" {% if user.role.value == 'admin' %}selected{% endif %}>مدير</option>
+                                                <option value="manager" {% if user.role.value == 'manager' %}selected{% endif %}>مشرف</option>
+                                                <option value="hr" {% if user.role.value == 'hr' %}selected{% endif %}>موارد بشرية</option>
+                                                <option value="finance" {% if user.role.value == 'finance' %}selected{% endif %}>مالية</option>
+                                                <option value="fleet" {% if user.role.value == 'fleet' %}selected{% endif %}>أسطول</option>
+                                                <option value="user" {% if user.role.value == 'user' %}selected{% endif %}>مستخدم</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('users.assign_department', user_id=user.id) }}" class="d-inline">
+                                            <select name="department_id" class="form-select form-select-sm" onchange="this.form.submit()"
+                                                    style="width: auto; min-width: 150px;">
+                                                <option value="">-- غير محدد --</option>
+                                                {% for dept in departments %}
+                                                <option value="{{ dept.id }}" 
+                                                        {% if user.assigned_department_id == dept.id %}selected{% endif %}>
+                                                    {{ dept.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">نشط</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">غير نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ user.created_at.strftime('%Y/%m/%d') if user.created_at else 'غير محدد' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- زر تفعيل/إلغاء تفعيل -->
+                                            <form method="POST" action="{{ url_for('users.toggle_active', user_id=user.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm" 
+                                                        title="{{ 'إلغاء تفعيل' if user.is_active else 'تفعيل' }}">
+                                                    <i class="fas {{ 'fa-user-slash' if user.is_active else 'fa-user-check' }}"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            <!-- زر الصلاحيات التفصيلية -->
+                                            <a href="{{ url_for('users.user_permissions', user_id=user.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="إدارة الصلاحيات">
+                                                <i class="fas fa-key"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="fas fa-users fa-2x mb-2"></i>
+                                        <div>لا توجد مستخدمين مسجلين</div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ملاحظات مهمة -->
+            <div class="alert alert-info mt-4" role="alert">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ملاحظات مهمة حول نظام الصلاحيات
+                </h6>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>المديرون:</strong> لديهم وصول كامل لجميع الأقسام والوظائف</li>
+                    <li><strong>المستخدمون العاديون:</strong> يمكنهم فقط الوصول للقسم المخصص لهم</li>
+                    <li><strong>تحديد القسم:</strong> يحدد أي موظفين يمكن للمستخدم تسجيل حضورهم</li>
+                    <li><strong>عدم تحديد القسم:</strong> المستخدم لن يتمكن من تسجيل أي حضور</li>
+                </ul>
             </div>
         </div>
-        {% endfor %}
     </div>
 </div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.form-select-sm {
+    font-size: 0.875rem;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+}
+</style>
 {% endblock %}
