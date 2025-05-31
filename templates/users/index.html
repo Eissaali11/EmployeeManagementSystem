@@ -11,12 +11,18 @@
                     <i class="fas fa-users me-2"></i>
                     إدارة المستخدمين
                 </h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ url_for('attendance.dashboard') }}">الرئيسية</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">إدارة المستخدمين</li>
-                    </ol>
-                </nav>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ url_for('users.add') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة مستخدم جديد
+                    </a>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{{ url_for('attendance.dashboard') }}">الرئيسية</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">إدارة المستخدمين</li>
+                        </ol>
+                    </nav>
+                </div>
             </div>
 
             <!-- إحصائيات سريعة -->
@@ -133,6 +139,12 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
+                                            <!-- زر تعديل المستخدم -->
+                                            <a href="{{ url_for('users.edit', user_id=user.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="تعديل المستخدم">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
                                             <!-- زر تفعيل/إلغاء تفعيل -->
                                             <form method="POST" action="{{ url_for('users.toggle_active', user_id=user.id) }}" class="d-inline">
                                                 <button type="submit" class="btn btn-outline-secondary btn-sm" 
@@ -143,7 +155,7 @@
                                             
                                             <!-- زر الصلاحيات التفصيلية -->
                                             <a href="{{ url_for('users.user_permissions', user_id=user.id) }}" 
-                                               class="btn btn-outline-primary btn-sm" title="إدارة الصلاحيات">
+                                               class="btn btn-outline-info btn-sm" title="إدارة الصلاحيات">
                                                 <i class="fas fa-key"></i>
                                             </a>
                                         </div>

@@ -189,3 +189,103 @@ def activity_log(id):
                              'date_from': date_from,
                              'date_to': date_to
                          })
+
+@users_bp.route('/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add():
+    """إضافة مستخدم جديد"""
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            role = request.form.get('role', 'user')
+            department_id = request.form.get('department_id')
+            
+            # التحقق من البيانات المطلوبة
+            if not name or not email or not password:
+                flash('جميع الحقول مطلوبة', 'error')
+                return redirect(url_for('users.add'))
+            
+            # التحقق من عدم وجود مستخدم بنفس البريد الإلكتروني
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
+                flash('يوجد مستخدم آخر بنفس البريد الإلكتروني', 'error')
+                return redirect(url_for('users.add'))
+            
+            # إنشاء المستخدم الجديد
+            new_user = User(
+                name=name,
+                email=email,
+                role=UserRole(role),
+                is_active=True
+            )
+            new_user.set_password(password)
+            
+            # تحديد القسم إذا تم اختياره
+            if department_id and department_id != '':
+                new_user.assigned_department_id = int(department_id)
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            flash(f'تم إضافة المستخدم {name} بنجاح', 'success')
+            return redirect(url_for('users.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ: {str(e)}', 'error')
+    
+    departments = Department.query.all()
+    return render_template('users/add.html', departments=departments)
+
+@users_bp.route('/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit(user_id):
+    """تعديل مستخدم"""
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        try:
+            user.name = request.form.get('name')
+            email = request.form.get('email')
+            role = request.form.get('role')
+            department_id = request.form.get('department_id')
+            password = request.form.get('password')
+            
+            # التحقق من البيانات المطلوبة
+            if not user.name or not email:
+                flash('الاسم والبريد الإلكتروني مطلوبان', 'error')
+                return redirect(url_for('users.edit', user_id=user_id))
+            
+            # التحقق من عدم وجود مستخدم آخر بنفس البريد الإلكتروني
+            existing_user = User.query.filter_by(email=email).filter(User.id != user_id).first()
+            if existing_user:
+                flash('يوجد مستخدم آخر بنفس البريد الإلكتروني', 'error')
+                return redirect(url_for('users.edit', user_id=user_id))
+            
+            user.email = email
+            user.role = UserRole(role)
+            
+            # تحديد القسم
+            if department_id and department_id != '':
+                user.assigned_department_id = int(department_id)
+            else:
+                user.assigned_department_id = None
+            
+            # تحديث كلمة المرور إذا تم إدخالها
+            if password:
+                user.set_password(password)
+            
+            db.session.commit()
+            flash(f'تم تحديث بيانات المستخدم {user.name} بنجاح', 'success')
+            return redirect(url_for('users.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ: {str(e)}', 'error')
+    
+    departments = Department.query.all()
+    return render_template('users/edit.html', user=user, departments=departments)
