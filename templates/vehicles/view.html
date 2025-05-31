@@ -381,7 +381,7 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ url_for('vehicles.view_safety_check_details', vehicle_id=vehicle.id, check_id=check.id) }}" 
+                                                <a href="{{ url_for('vehicles.vehicle_safety_checks', id=vehicle.id) }}" 
                                                    class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
@@ -389,7 +389,7 @@
                                                    class="btn btn-sm btn-outline-warning" title="تعديل">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form method="POST" action="{{ url_for('vehicles.delete_safety_check_action', vehicle_id=vehicle.id, check_id=check.id) }}" 
+                                                <form method="POST" action="{{ url_for('vehicles.delete_safety_check', id=check.id) }}" 
                                                       style="display: inline-block;" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل؟')">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">
                                                         <i class="fas fa-trash"></i>

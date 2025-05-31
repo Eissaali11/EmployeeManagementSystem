@@ -13,6 +13,7 @@ from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 from utils.employee_comprehensive_report_updated import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
 from utils.employee_basic_report import generate_employee_basic_pdf
+from utils.audit_logger import log_activity
 
 employees_bp = Blueprint('employees', __name__)
 
@@ -93,14 +94,7 @@ def create():
             db.session.commit()
             
             # Log the action
-            audit = SystemAudit(
-                action='create',
-                entity_type='employee',
-                entity_id=employee.id,
-                details=f'تم إنشاء موظف جديد: {name}'
-            )
-            db.session.add(audit)
-            db.session.commit()
+            log_activity('create', 'Employee', employee.id, f'تم إنشاء موظف جديد: {name}')
             
             flash('تم إنشاء الموظف بنجاح', 'success')
             return redirect(url_for('employees.index'))
@@ -152,14 +146,7 @@ def edit(id):
             db.session.commit()
             
             # Log the action
-            audit = SystemAudit(
-                action='update',
-                entity_type='employee',
-                entity_id=employee.id,
-                details=f'تم تحديث بيانات الموظف: {employee.name}'
-            )
-            db.session.add(audit)
-            db.session.commit()
+            log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الموظف: {employee.name}')
             
             flash('تم تحديث بيانات الموظف بنجاح', 'success')
             return redirect(url_for('employees.index'))

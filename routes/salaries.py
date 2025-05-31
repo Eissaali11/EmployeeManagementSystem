@@ -6,6 +6,7 @@ from sqlalchemy import func
 from datetime import datetime
 from app import db
 from models import Salary, Employee, Department, SystemAudit
+from utils.audit_logger import log_activity
 from utils.excel import parse_salary_excel, generate_salary_excel, generate_comprehensive_employee_report, generate_employee_salary_simple_excel
 from utils.pdf_generator_fixed import generate_salary_report_pdf
 from utils.salary_notification import generate_salary_notification_pdf, generate_batch_salary_notifications
