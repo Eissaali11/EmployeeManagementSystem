@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
+from flask_login import login_required
 from sqlalchemy import func, extract
 from datetime import datetime, time, timedelta, date
 from app import db
@@ -288,7 +289,7 @@ def department_attendance():
 @attendance_bp.route('/bulk-record', methods=['GET', 'POST'])
 def bulk_record():
     """تسجيل الحضور الجماعي للموظفين بفترات مختلفة"""
-    from flask_login import current_user, login_required
+    from flask_login import current_user
     
     # التحقق من تسجيل الدخول
     if not current_user.is_authenticated:
