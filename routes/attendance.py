@@ -1594,7 +1594,7 @@ def department_details():
         status='active'
     )
     
-    if project_name:
+    if project_name and project_name != 'None' and project_name.strip():
         employees_query = employees_query.filter_by(project=project_name)
     
     employees = employees_query.all()
