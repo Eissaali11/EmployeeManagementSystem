@@ -29,18 +29,17 @@ def log_activity(action, entity_type, entity_id=None, details=None, previous_dat
             if isinstance(new_data, dict):
                 new_data = json.dumps(new_data, ensure_ascii=False)
             
-            audit_log = AuditLog(
-                user_id=current_user.id,
-                action=action,
-                entity_type=entity_type,
-                entity_id=entity_id,
-                details=details,
-                ip_address=request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR')),
-                user_agent=request.environ.get('HTTP_USER_AGENT'),
-                previous_data=previous_data,
-                new_data=new_data,
-                timestamp=datetime.utcnow()
-            )
+            audit_log = AuditLog()
+            audit_log.user_id = current_user.id
+            audit_log.action = action
+            audit_log.entity_type = entity_type
+            audit_log.entity_id = entity_id
+            audit_log.details = details
+            audit_log.ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR'))
+            audit_log.user_agent = request.environ.get('HTTP_USER_AGENT')
+            audit_log.previous_data = previous_data
+            audit_log.new_data = new_data
+            audit_log.timestamp = datetime.utcnow()
             
             db.session.add(audit_log)
             db.session.commit()
