@@ -347,39 +347,55 @@
                         
                         <!-- ملخص سريع -->
                         <div class="row mt-4 pt-4 border-top">
-                            <div class="col-md-3 text-center">
-                                <div class="stat-item">
-                                    <i class="fas fa-building text-primary me-2"></i>
-                                    <div>
-                                        <small class="text-muted d-block">إجمالي الأقسام</small>
-                                        <strong id="statsTotal">-</strong>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body d-flex align-items-center justify-content-center">
+                                        <div class="stats-icon gradient-bg-1 me-2" style="width: 30px; height: 30px; font-size: 14px;">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-dark d-block fw-bold">إجمالي الأقسام</small>
+                                            <strong class="text-primary" id="statsTotal">-</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3 text-center">
-                                <div class="stat-item">
-                                    <i class="fas fa-trophy text-warning me-2"></i>
-                                    <div>
-                                        <small class="text-muted d-block">أفضل قسم</small>
-                                        <strong id="statsBest">-</strong>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body d-flex align-items-center justify-content-center">
+                                        <div class="stats-icon gradient-bg-2 me-2" style="width: 30px; height: 30px; font-size: 14px;">
+                                            <i class="fas fa-trophy"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-dark d-block fw-bold">أفضل قسم</small>
+                                            <strong class="text-success" id="statsBest">-</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3 text-center">
-                                <div class="stat-item">
-                                    <i class="fas fa-chart-line text-success me-2"></i>
-                                    <div>
-                                        <small class="text-muted d-block">متوسط الحضور</small>
-                                        <strong id="statsAverage">-</strong>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body d-flex align-items-center justify-content-center">
+                                        <div class="stats-icon gradient-bg-3 me-2" style="width: 30px; height: 30px; font-size: 14px;">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-dark d-block fw-bold">متوسط الحضور</small>
+                                            <strong class="text-warning" id="statsAverage">-</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-3 text-center">
-                                <div class="stat-item">
-                                    <i class="fas fa-users text-info me-2"></i>
-                                    <div>
-                                        <small class="text-muted d-block">إجمالي الموظفين</small>
-                                        <strong id="statsEmployees">-</strong>
+                            <div class="col-md-3 text-center mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body d-flex align-items-center justify-content-center">
+                                        <div class="stats-icon gradient-bg-4 me-2" style="width: 30px; height: 30px; font-size: 14px;">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-dark d-block fw-bold">إجمالي الموظفين</small>
+                                            <strong class="text-info" id="statsEmployees">-</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -593,30 +609,48 @@ function displayDepartmentStats(data) {
                     
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <div class="text-center">
-                                <div class="status-badge bg-success text-white">${dept.present}</div>
-                                <small class="text-muted d-block">حاضر</small>
+                            <div class="text-center p-2 rounded" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                                <div class="text-white fw-bold">${dept.present}</div>
+                                <small class="text-white d-block">حاضر</small>
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="text-center">
-                                <div class="status-badge bg-danger text-white">${dept.absent}</div>
-                                <small class="text-muted d-block">غائب</small>
+                            <div class="text-center p-2 rounded" style="background: linear-gradient(135deg, #dc3545, #fd7e14);">
+                                <div class="text-white fw-bold">${dept.absent}</div>
+                                <small class="text-white d-block">غائب</small>
                             </div>
                         </div>
                     </div>
                     
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <div class="text-center">
-                                <div class="status-badge bg-warning text-dark">${dept.leave}</div>
-                                <small class="text-muted d-block">إجازة</small>
+                            <div class="text-center p-2 rounded" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                                <div class="text-dark fw-bold">${dept.leave}</div>
+                                <small class="text-dark d-block">إجازة</small>
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="text-center">
-                                <div class="status-badge bg-info text-white">${dept.sick}</div>
-                                <small class="text-muted d-block">مرضي</small>
+                            <div class="text-center p-2 rounded" style="background: linear-gradient(135deg, #17a2b8, #007bff);">
+                                <div class="text-white fw-bold">${dept.sick}</div>
+                                <small class="text-white d-block">مرضي</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- معلومات إضافية -->
+                    <div class="mb-3 p-2 bg-light rounded">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted d-block">أيام العمل</small>
+                                <strong class="text-primary">${dept.working_days || 0}</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">إجمالي السجلات</small>
+                                <strong class="text-info">${dept.total_records || 0}</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">المتوقع</small>
+                                <strong class="text-secondary">${dept.expected_records || 0}</strong>
                             </div>
                         </div>
                     </div>

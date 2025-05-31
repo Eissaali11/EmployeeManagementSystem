@@ -1349,6 +1349,14 @@ def department_stats():
         else:
             attendance_rate = 0
         
+        # تصحيح حساب معدل الحضور بناء على إجمالي الأيام للموظفين
+        working_days = (end_date - start_date).days + 1
+        expected_total_records = total_employees * working_days
+        
+        if expected_total_records > 0 and total_records < expected_total_records:
+            # إذا كانت السجلات أقل من المتوقع، نحسب على أساس الموظفين المتاحين
+            attendance_rate = (present_count / expected_total_records) * 100
+        
         department_stats.append({
             'id': dept.id,
             'name': dept.name,
@@ -1358,7 +1366,9 @@ def department_stats():
             'leave': leave_count,
             'sick': sick_count,
             'attendance_rate': round(attendance_rate, 1),
-            'total_records': total_records
+            'total_records': total_records,
+            'working_days': working_days,
+            'expected_records': expected_total_records
         })
     
     # ترتيب الأقسام حسب معدل الحضور (تنازلي)
