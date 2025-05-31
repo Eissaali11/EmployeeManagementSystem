@@ -290,6 +290,20 @@ def edit(user_id):
     departments = Department.query.all()
     return render_template('users/edit.html', user=user, departments=departments)
 
+@users_bp.route('/confirm_delete/<int:user_id>')
+@login_required
+@admin_required
+def confirm_delete(user_id):
+    """صفحة تأكيد حذف المستخدم"""
+    user = User.query.get_or_404(user_id)
+    
+    # منع المستخدم من حذف نفسه
+    if user.id == current_user.id:
+        flash('لا يمكنك حذف حسابك الخاص', 'error')
+        return redirect(url_for('users.index'))
+    
+    return render_template('users/confirm_delete.html', user=user)
+
 @users_bp.route('/delete/<int:user_id>', methods=['POST'])
 @login_required
 @admin_required
