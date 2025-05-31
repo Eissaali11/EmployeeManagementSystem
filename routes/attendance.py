@@ -1328,28 +1328,24 @@ def department_stats():
         employee_ids = [emp.id for emp in employees]
         
         # جلب سجلات الحضور للفترة المحددة
-        attendance_records = db.session.query(Attendance).filter(
-            Attendance.employee_id.in_(employee_ids),
-            Attendance.date >= start_date,
-            Attendance.date <= end_date
-        ).all()
+        attendance_records = []
+        if employee_ids:
+            attendance_records = Attendance.query.filter(
+                Attendance.employee_id.in_(employee_ids),
+                Attendance.date >= start_date,
+                Attendance.date <= end_date
+            ).all()
         
         # حساب الإحصائيات
         present_count = sum(1 for record in attendance_records if record.status == 'present')
         absent_count = sum(1 for record in attendance_records if record.status == 'absent')
         leave_count = sum(1 for record in attendance_records if record.status == 'leave')
         sick_count = sum(1 for record in attendance_records if record.status == 'sick')
-        
-        # حساب معدل الحضور بناء على الأيام المتاحة فقط
-        working_days = (end_date - start_date).days + 1
         total_records = len(attendance_records)
         
-        # حساب معدل الحضور من إجمالي السجلات المتاحة
+        # حساب معدل الحضور
         if total_records > 0:
             attendance_rate = (present_count / total_records) * 100
-        elif total_employees > 0:
-            # إذا لم توجد سجلات، احسب على أساس الموظفين النشطين
-            attendance_rate = 0
         else:
             attendance_rate = 0
         
@@ -1362,7 +1358,7 @@ def department_stats():
             'leave': leave_count,
             'sick': sick_count,
             'attendance_rate': round(attendance_rate, 1),
-            'working_days': working_days
+            'total_records': total_records
         })
     
     # ترتيب الأقسام حسب معدل الحضور (تنازلي)
