@@ -170,17 +170,20 @@ def record():
     # الحصول على الموظفين النشطين حسب صلاحيات المستخدم
     from flask_login import current_user
     
-    if current_user.is_authenticated and current_user.assigned_department_id:
-        # إذا كان لدى المستخدم قسم مخصص، عرض موظفي ذلك القسم فقط
-        employees = Employee.query.filter_by(
-            status='active',
-            department_id=current_user.assigned_department_id
-        ).order_by(Employee.name).all()
-    elif current_user.is_authenticated and current_user.role.value == 'admin':
-        # المديرون يمكنهم رؤية جميع الموظفين
-        employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+    if current_user.is_authenticated:
+        if current_user.role.value == 'ADMIN':
+            # المديرون العامون يمكنهم رؤية جميع الموظفين
+            employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+        elif current_user.assigned_department_id:
+            # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
+            employees = Employee.query.filter_by(
+                status='active',
+                department_id=current_user.assigned_department_id
+            ).order_by(Employee.name).all()
+        else:
+            # المستخدمون بدون صلاحيات محددة لا يمكنهم رؤية أي موظفين
+            employees = []
     else:
-        # المستخدمون بدون قسم مخصص لا يمكنهم رؤية أي موظفين
         employees = []
     
     # Default to today's date
@@ -371,14 +374,17 @@ def bulk_record():
             flash(f'حدث خطأ: {str(e)}', 'danger')
     
     # الحصول على موظفي القسم المخصص للمستخدم
-    if current_user.assigned_department_id:
+    if current_user.role.value == 'ADMIN':
+        # المديرون العامون يمكنهم رؤية جميع الموظفين
+        employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+    elif current_user.assigned_department_id:
+        # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
         employees = Employee.query.filter_by(
             status='active',
             department_id=current_user.assigned_department_id
         ).order_by(Employee.name).all()
-    elif current_user.role.value == 'admin':
-        employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
     else:
+        # المستخدمون بدون صلاحيات محددة لا يمكنهم رؤية أي موظفين
         employees = []
     
     today = datetime.now().date()
