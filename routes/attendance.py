@@ -7,7 +7,7 @@ from models import Attendance, Employee, Department, SystemAudit, VehicleProject
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
 from utils.excel import export_attendance_by_department
 from utils.user_helpers import check_module_access
-from utils.audit_logger import log_attendance_activity, log_system_activity
+from utils.audit_logger import log_attendance_activity, log_system_activity, log_activity
 import calendar
 import logging
 import time as time_module  # Renamed to avoid conflict with datetime.time
@@ -815,14 +815,8 @@ def multi_day_department_attendance():
             # تسجيل العملية
             department = Department.query.get(department_id)
             if department:
-                SystemAudit.create_audit_record(
-                    user_id=None,  # يمكن تعديلها لاستخدام current_user.id
-                    action='mass_update',
-                    entity_type='attendance',
-                    entity_id=department.id,
-                    entity_name=department.name,
-                    details=f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {len(employees)} موظف و {days_count} يوم ({total_count} سجل)'
-                )
+                log_activity('create', 'MultiDayDepartmentAttendance', department.id,
+                           f'تم تسجيل حضور لقسم {department.name} للفترة من {start_date} إلى {end_date} لعدد {len(employees)} موظف و {days_count} يوم ({total_count} سجل)')
             
             flash(f'تم تسجيل الحضور لـ {len(employees)} موظف عن {days_count} يوم بنجاح (إجمالي {total_count} سجل)', 'success')
             return redirect(url_for('attendance.index', date=start_date_str))
