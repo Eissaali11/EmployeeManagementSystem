@@ -164,7 +164,7 @@
                             <strong>{{ current_user.name }}</strong>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                            <li><a class="dropdown-item" href="{{ url_for('users.profile') }}"><i class="fas fa-user me-2"></i>الملف الشخصي</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-user me-2"></i>الملف الشخصي</a></li>
                             {# التحقق من صلاحيات المستخدمين #}
                             {% if current_user.role in [UserRole.ADMIN, UserRole.MANAGER] or current_user|check_module_access(Module.USERS) %}
                             <li><a class="dropdown-item" href="{{ url_for('users.index') }}"><i class="fas fa-users-cog me-2"></i>إدارة المستخدمين</a></li>
