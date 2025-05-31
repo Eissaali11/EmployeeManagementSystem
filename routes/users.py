@@ -112,6 +112,14 @@ def view(id):
     
     return render_template('users/view.html', user=user, recent_activities=recent_activities)
 
+@users_bp.route('/activity_logs')
+@login_required
+@admin_required
+def activity_logs():
+    """عرض قائمة المستخدمين لاختيار سجل النشاط"""
+    users = User.query.all()
+    return render_template('users/activity_logs.html', users=users)
+
 @users_bp.route('/activity_log/<int:id>')
 @login_required
 @admin_required
