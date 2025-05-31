@@ -593,6 +593,8 @@ function displayDepartmentStats(data) {
             cardClass = 'gradient-bg-5';
         }
         
+        console.log(`قسم ${dept.name}: ${dept.total_employees} موظف، ${dept.present} حاضر، ${dept.sick} مرضي`);
+        
         const deptCard = document.createElement('div');
         deptCard.className = 'col-lg-6 col-xl-4 mb-3';
         deptCard.innerHTML = `
