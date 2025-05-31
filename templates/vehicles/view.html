@@ -341,6 +341,7 @@
                                         <th>المشرف</th>
                                         <th>الحالة</th>
                                         <th>مشاكل</th>
+                                        <th>الإجراءات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -377,6 +378,24 @@
                                             {% else %}
                                                 <span class="badge bg-success">لا</span>
                                             {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('vehicles.view_safety_check_details', vehicle_id=vehicle.id, check_id=check.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('vehicles.edit_safety_check', id=check.id) }}" 
+                                                   class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form method="POST" action="{{ url_for('vehicles.delete_safety_check_action', vehicle_id=vehicle.id, check_id=check.id) }}" 
+                                                      style="display: inline-block;" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل؟')">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
