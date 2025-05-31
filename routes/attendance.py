@@ -44,8 +44,20 @@ def index():
     # Execute query
     attendances = query.all()
     
-    # Get departments for filter dropdown
-    departments = Department.query.all()
+    # Get departments for filter dropdown based on user permissions
+    from flask_login import current_user
+    
+    if current_user.is_authenticated:
+        departments = current_user.get_accessible_departments()
+        
+        # إذا كان لدى المستخدم قسم مخصص، فلتر البيانات تلقائياً لهذا القسم
+        if current_user.assigned_department_id and not department_id:
+            department_id = str(current_user.assigned_department_id)
+            query = query.join(Employee).filter(Employee.department_id == current_user.assigned_department_id)
+            base_query = base_query.join(Employee).filter(Employee.department_id == current_user.assigned_department_id)
+            attendances = query.all()
+    else:
+        departments = Department.query.all()
     
     # Calculate attendance statistics for the current date and department filter
     present_count = base_query.filter(Attendance.status == 'present').count()
@@ -155,8 +167,21 @@ def record():
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
     
-    # الحصول على الموظفين النشطين فقط للقائمة المنسدلة
-    employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+    # الحصول على الموظفين النشطين حسب صلاحيات المستخدم
+    from flask_login import current_user
+    
+    if current_user.is_authenticated and current_user.assigned_department_id:
+        # إذا كان لدى المستخدم قسم مخصص، عرض موظفي ذلك القسم فقط
+        employees = Employee.query.filter_by(
+            status='active',
+            department_id=current_user.assigned_department_id
+        ).order_by(Employee.name).all()
+    elif current_user.is_authenticated and current_user.role.value == 'admin':
+        # المديرون يمكنهم رؤية جميع الموظفين
+        employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+    else:
+        # المستخدمون بدون قسم مخصص لا يمكنهم رؤية أي موظفين
+        employees = []
     
     # Default to today's date
     today = datetime.now().date()
@@ -177,6 +202,13 @@ def department_attendance():
             department_id = request.form['department_id']
             date_str = request.form['date']
             status = request.form['status']
+            
+            # التحقق من صلاحيات المستخدم للوصول إلى هذا القسم
+            from flask_login import current_user
+            
+            if current_user.is_authenticated and not current_user.can_access_department(int(department_id)):
+                flash('ليس لديك صلاحية لتسجيل حضور هذا القسم', 'error')
+                return redirect(url_for('attendance.department_attendance'))
             
             # Parse date
             date = parse_date(date_str)
@@ -231,8 +263,13 @@ def department_attendance():
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
     
-    # Get all departments
-    departments = Department.query.all()
+    # Get departments based on user permissions
+    from flask_login import current_user
+    
+    if current_user.is_authenticated:
+        departments = current_user.get_accessible_departments()
+    else:
+        departments = Department.query.all()
     
     # Default to today's date
     today = datetime.now().date()
