@@ -1952,8 +1952,14 @@ def export_excel_department():
         ws_daily.column_dimensions['A'].width = 30
         ws_daily.column_dimensions['B'].width = 15
         
-        for col_num in range(3, 3 + len(date_range)):
-            ws_daily.column_dimensions[chr(64 + col_num)].width = 4
+        # تنسيق أعمدة التواريخ (تحديد عرض بسيط لتجنب مشاكل الأعمدة الكثيرة)
+        try:
+            for col_num in range(3, min(3 + len(date_range), 26)):  # حد أقصى 26 عمود
+                if col_num <= 26:  # A-Z فقط
+                    col_letter = chr(64 + col_num)
+                    ws_daily.column_dimensions[col_letter].width = 4
+        except Exception:
+            pass  # تجاهل أخطاء الأعمدة
         
         # حفظ الملف
         output = BytesIO()
