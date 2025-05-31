@@ -498,15 +498,21 @@ function populateDepartmentFilter(departments) {
     const select = document.getElementById('departmentFilter');
     const currentValue = select.value;
     
+    console.log('أقسام القائمة المنسدلة:', departments.map(d => d.name));
+    
     // مسح الخيارات الحالية ما عدا "جميع الأقسام"
     select.innerHTML = '<option value="">جميع الأقسام</option>';
     
+    // ترتيب الأقسام أبجدياً
+    const sortedDepartments = departments.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+    
     // إضافة أقسام جديدة
-    departments.forEach(dept => {
+    sortedDepartments.forEach(dept => {
         const option = document.createElement('option');
         option.value = dept.name;
         option.textContent = dept.name;
         select.appendChild(option);
+        console.log('تمت إضافة القسم:', dept.name);
     });
     
     // استعادة القيمة المحددة سابقاً
