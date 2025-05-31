@@ -21,6 +21,7 @@ from app import db
 from models import Document, Employee, Department, SystemAudit
 from utils.excel import parse_document_excel
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
+from utils.audit_logger import log_activity
 
 documents_bp = Blueprint('documents', __name__)
 
