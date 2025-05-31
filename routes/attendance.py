@@ -1286,7 +1286,7 @@ def employee_attendance(employee_id):
 @attendance_bp.route('/department-stats')
 def department_stats():
     """API لجلب إحصائيات الحضور حسب الأقسام"""
-    period = request.args.get('period', 'weekly')  # weekly أو monthly
+    period = request.args.get('period', 'monthly')  # weekly أو monthly
     project_name = request.args.get('project', None)
     
     today = datetime.now().date()
