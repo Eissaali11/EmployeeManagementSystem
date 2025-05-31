@@ -1291,16 +1291,9 @@ def department_stats():
     
     today = datetime.now().date()
     
-    # تحديد الفترة الزمنية
-    if period == 'weekly':
-        # الأسبوع الحالي (من يوم السبت إلى يوم الجمعة)
-        days_since_saturday = (today.weekday() + 2) % 7
-        start_date = today - timedelta(days=days_since_saturday)
-        end_date = start_date + timedelta(days=6)
-    else:  # monthly
-        start_date = today.replace(day=1)
-        next_month = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1)
-        end_date = next_month - timedelta(days=1)
+    # تحديد الفترة الزمنية - استخدام البيانات الشهرية الحقيقية
+    start_date = today.replace(day=1)  # بداية الشهر الحالي
+    end_date = today  # حتى اليوم الحالي
     
     # جلب جميع الأقسام
     departments = Department.query.all()
