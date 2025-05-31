@@ -1383,6 +1383,189 @@ def department_stats():
         'project': project_name
     })
 
+@attendance_bp.route('/export-excel-dashboard')
+def export_excel_dashboard():
+    """تصدير لوحة المعلومات إلى Excel مع رسم بياني"""
+    try:
+        import pandas as pd
+        from openpyxl import Workbook
+        from openpyxl.chart import BarChart, Reference
+        from openpyxl.styles import Font, PatternFill, Alignment
+        from io import BytesIO
+        from flask import send_file
+        
+        # الحصول على المعاملات
+        selected_department = request.args.get('department', None)
+        selected_project = request.args.get('project', None)
+        
+        today = datetime.now().date()
+        start_date = today.replace(day=1)  # بداية الشهر الحالي
+        end_date = today  # حتى اليوم الحالي
+        
+        # جلب البيانات حسب الفلتر
+        departments = Department.query.all()
+        department_data = []
+        
+        for dept in departments:
+            # فلترة حسب القسم المحدد
+            if selected_department and dept.name != selected_department:
+                continue
+                
+            # جلب الموظفين
+            employees_query = Employee.query.filter_by(
+                department_id=dept.id,
+                status='active'
+            )
+            employees = employees_query.all()
+            total_employees = len(employees)
+            
+            if total_employees == 0:
+                continue
+                
+            # جلب سجلات الحضور
+            employee_ids = [emp.id for emp in employees]
+            attendance_records = Attendance.query.filter(
+                Attendance.employee_id.in_(employee_ids),
+                Attendance.date >= start_date,
+                Attendance.date <= end_date
+            ).all()
+            
+            # حساب الإحصائيات
+            present_count = sum(1 for record in attendance_records if record.status == 'present')
+            absent_count = sum(1 for record in attendance_records if record.status == 'absent')
+            leave_count = sum(1 for record in attendance_records if record.status == 'leave')
+            sick_count = sum(1 for record in attendance_records if record.status == 'sick')
+            total_records = len(attendance_records)
+            
+            attendance_rate = (present_count / total_records * 100) if total_records > 0 else 0
+            
+            department_data.append({
+                'القسم': dept.name,
+                'عدد الموظفين': total_employees,
+                'حاضر': present_count,
+                'غائب': absent_count,
+                'إجازة': leave_count,
+                'مرضي': sick_count,
+                'إجمالي السجلات': total_records,
+                'معدل الحضور %': round(attendance_rate, 1)
+            })
+        
+        # إنشاء DataFrame
+        df = pd.DataFrame(department_data)
+        
+        if df.empty:
+            # إرجاع ملف فارغ مع رسالة
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "لا توجد بيانات"
+            ws['A1'] = "لا توجد بيانات للعرض"
+            
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            return send_file(
+                output,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=f'تقرير_الحضور_{today.strftime("%Y%m%d")}.xlsx'
+            )
+        
+        # إنشاء ملف Excel مع تنسيق متقدم
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "إحصائيات الحضور"
+        
+        # كتابة العنوان الرئيسي
+        title = f"تقرير إحصائيات الحضور للفترة من {start_date.strftime('%Y-%m-%d')} إلى {end_date.strftime('%Y-%m-%d')}"
+        if selected_department:
+            title += f" - القسم: {selected_department}"
+        if selected_project:
+            title += f" - المشروع: {selected_project}"
+            
+        ws['A1'] = title
+        ws['A1'].font = Font(size=16, bold=True)
+        ws['A1'].alignment = Alignment(horizontal='center')
+        ws.merge_cells('A1:H1')
+        
+        # كتابة رؤوس الأعمدة
+        headers = list(df.columns)
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=3, column=col_num, value=header)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            cell.alignment = Alignment(horizontal='center')
+        
+        # كتابة البيانات
+        for row_num, row_data in enumerate(df.values, 4):
+            for col_num, value in enumerate(row_data, 1):
+                cell = ws.cell(row=row_num, column=col_num, value=value)
+                cell.alignment = Alignment(horizontal='center')
+                
+                # تلوين الخلايا حسب القيم
+                if col_num == 3:  # عمود الحضور
+                    cell.fill = PatternFill(start_color="D4EDDA", end_color="D4EDDA", fill_type="solid")
+                elif col_num == 4:  # عمود الغياب
+                    cell.fill = PatternFill(start_color="F8D7DA", end_color="F8D7DA", fill_type="solid")
+                elif col_num == 5:  # عمود الإجازة
+                    cell.fill = PatternFill(start_color="FFF3CD", end_color="FFF3CD", fill_type="solid")
+                elif col_num == 6:  # عمود المرضي
+                    cell.fill = PatternFill(start_color="D1ECF1", end_color="D1ECF1", fill_type="solid")
+        
+        # إنشاء رسم بياني
+        chart = BarChart()
+        chart.type = "col"
+        chart.style = 10
+        chart.title = "مقارنة الحضور بين الأقسام"
+        chart.y_axis.title = 'عدد أيام الحضور'
+        chart.x_axis.title = 'الأقسام'
+        
+        # تحديد البيانات للرسم البياني
+        data = Reference(ws, min_col=3, min_row=3, max_row=3+len(df), max_col=6)
+        cats = Reference(ws, min_col=1, min_row=4, max_row=3+len(df))
+        
+        chart.add_data(data, titles_from_data=True)
+        chart.set_categories(cats)
+        chart.shape = 4
+        
+        # إضافة الرسم البياني
+        ws.add_chart(chart, "J3")
+        
+        # تعديل عرض الأعمدة
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 25)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # حفظ الملف
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # إرجاع الملف
+        filename = f'تقرير_لوحة_الحضور_{today.strftime("%Y%m%d")}.xlsx'
+        if selected_department:
+            filename = f'تقرير_{selected_department}_{today.strftime("%Y%m%d")}.xlsx'
+            
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        print(f"خطأ في تصدير Excel: {str(e)}")
+        flash('حدث خطأ أثناء تصدير الملف', 'error')
+        return redirect(url_for('attendance.dashboard'))
+
 @attendance_bp.route('/department-details')
 def department_details():
     """صفحة تفاصيل الحضور لقسم معين"""

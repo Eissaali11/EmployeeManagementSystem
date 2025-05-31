@@ -200,18 +200,15 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-filter text-primary me-1"></i>عرض
+                                <i class="fas fa-tools text-primary me-1"></i>أدوات التصدير
                             </label>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="viewType" id="viewAll" value="all" checked>
-                                <label class="btn btn-outline-primary" for="viewAll">
-                                    <i class="fas fa-list me-1"></i>الجميع
-                                </label>
-                                
-                                <input type="radio" class="btn-check" name="viewType" id="viewSummary" value="summary">
-                                <label class="btn btn-outline-primary" for="viewSummary">
-                                    <i class="fas fa-chart-pie me-1"></i>ملخص
-                                </label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success flex-fill" id="exportExcelBtn">
+                                    <i class="fas fa-file-excel me-1"></i>تصدير Excel
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="refreshData()" title="تحديث البيانات">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -753,5 +750,36 @@ function animateNumbers() {
         }, 200);
     });
 }
+
+// دالة تصدير Excel مع رسم بياني
+function exportToExcel() {
+    const selectedDepartment = document.getElementById('departmentFilter').value;
+    const selectedProject = document.getElementById('projectFilter').value;
+    
+    // إعداد المعاملات
+    let params = new URLSearchParams();
+    if (selectedDepartment) params.append('department', selectedDepartment);
+    if (selectedProject) params.append('project', selectedProject);
+    
+    // إظهار تحميل
+    const btn = document.getElementById('exportExcelBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري التصدير...';
+    btn.disabled = true;
+    
+    // طلب تصدير Excel
+    window.location.href = `/attendance/export-excel-dashboard?${params.toString()}`;
+    
+    // إعادة تعيين الزر بعد ثانيتين
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+
+// إضافة مستمع الحدث لزر التصدير
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+});
 </script>
 {% endblock %}
