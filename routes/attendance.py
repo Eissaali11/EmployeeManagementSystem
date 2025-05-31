@@ -1599,6 +1599,11 @@ def department_details():
     
     employees = employees_query.all()
     
+    # تسجيل عدد الموظفين للتشخيص
+    print(f"تفاصيل القسم - عدد الموظفين المجلوبين: {len(employees)} للقسم {department.name}")
+    for emp in employees:
+        print(f"  - {emp.name} (ID: {emp.id})")
+    
     # جلب سجلات الحضور للموظفين في الفترة المحددة
     employee_attendance = {}
     for employee in employees:
