@@ -81,17 +81,18 @@
                                 </div>
                             </div>
                             
-                            <!-- تسجيل لعدة أيام -->
+                            <!-- تسجيل حضور جماعي -->
                             <div class="col-lg-4 p-3">
-                                <div class="card h-100 bg-secondary bg-opacity-10 border-secondary">
+                                <div class="card h-100 bg-warning bg-opacity-10 border-warning">
                                     <div class="card-body text-center p-4">
                                         <div class="mb-3">
-                                            <span class="icon-box bg-secondary bg-opacity-25 mx-auto mb-2">
-                                                <i class="fas fa-calendar-week text-secondary fa-2x"></i>
+                                            <span class="icon-box bg-warning bg-opacity-25 mx-auto mb-2">
+                                                <i class="fas fa-calendar-alt text-warning fa-2x"></i>
                                             </span>
                                         </div>
-                                        <h5 class="card-title mb-3">تسجيل لعدة أيام</h5>
-                                        <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center py-2">
+                                        <h5 class="card-title mb-3">تسجيل حضور جماعي</h5>
+                                        <p class="text-muted small mb-3">يومي - أسبوعي - شهري</p>
+                                        <a href="{{ url_for('attendance.bulk_record') }}" class="btn btn-warning w-100 d-flex align-items-center justify-content-center py-2">
                                             <i class="fas fa-arrow-circle-right me-2"></i> فتح
                                         </a>
                                     </div>

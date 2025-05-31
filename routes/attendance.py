@@ -282,6 +282,111 @@ def department_attendance():
                           hijri_date=hijri_date,
                           gregorian_date=gregorian_date)
 
+@attendance_bp.route('/bulk-record', methods=['GET', 'POST'])
+def bulk_record():
+    """تسجيل الحضور الجماعي للموظفين بفترات مختلفة"""
+    from flask_login import current_user, login_required
+    
+    # التحقق من تسجيل الدخول
+    if not current_user.is_authenticated:
+        flash('يجب تسجيل الدخول أولاً', 'error')
+        return redirect(url_for('auth.login'))
+    
+    # التحقق من وجود قسم مخصص للمستخدم
+    if not current_user.assigned_department_id and current_user.role.value != 'admin':
+        flash('يجب تخصيص قسم لك لتتمكن من تسجيل الحضور', 'error')
+        return redirect(url_for('attendance.index'))
+    
+    if request.method == 'POST':
+        try:
+            period_type = request.form['period_type']
+            default_status = request.form['default_status']
+            employee_ids = request.form.getlist('employee_ids')
+            skip_weekends = 'skip_weekends' in request.form
+            overwrite_existing = 'overwrite_existing' in request.form
+            
+            if not employee_ids:
+                flash('يجب اختيار موظف واحد على الأقل', 'error')
+                return redirect(url_for('attendance.bulk_record'))
+            
+            # تحديد التواريخ حسب نوع الفترة
+            dates = []
+            
+            if period_type == 'daily':
+                single_date = parse_date(request.form['single_date'])
+                dates = [single_date]
+                
+            elif period_type == 'weekly':
+                week_start = parse_date(request.form['week_start'])
+                dates = [week_start + timedelta(days=i) for i in range(7)]
+                
+            elif period_type == 'monthly':
+                month_year = request.form['month_year']
+                year, month = map(int, month_year.split('-'))
+                import calendar
+                days_in_month = calendar.monthrange(year, month)[1]
+                dates = [date(year, month, day) for day in range(1, days_in_month + 1)]
+                
+            elif period_type == 'custom':
+                start_date = parse_date(request.form['start_date'])
+                end_date = parse_date(request.form['end_date'])
+                current_date = start_date
+                while current_date <= end_date:
+                    dates.append(current_date)
+                    current_date += timedelta(days=1)
+            
+            # تصفية عطلة نهاية الأسبوع إذا كان مطلوباً
+            if skip_weekends:
+                dates = [d for d in dates if d.weekday() not in [4, 5]]  # الجمعة والسبت
+            
+            # تسجيل الحضور
+            count = 0
+            for employee_id in employee_ids:
+                for date_obj in dates:
+                    # التحقق من وجود سجل سابق
+                    existing = Attendance.query.filter_by(
+                        employee_id=employee_id,
+                        date=date_obj
+                    ).first()
+                    
+                    if existing:
+                        if overwrite_existing:
+                            existing.status = default_status
+                            count += 1
+                    else:
+                        attendance = Attendance(
+                            employee_id=employee_id,
+                            date=date_obj,
+                            status=default_status
+                        )
+                        db.session.add(attendance)
+                        count += 1
+            
+            db.session.commit()
+            flash(f'تم تسجيل {count} سجل حضور بنجاح', 'success')
+            return redirect(url_for('attendance.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ: {str(e)}', 'danger')
+    
+    # الحصول على موظفي القسم المخصص للمستخدم
+    if current_user.assigned_department_id:
+        employees = Employee.query.filter_by(
+            status='active',
+            department_id=current_user.assigned_department_id
+        ).order_by(Employee.name).all()
+    elif current_user.role.value == 'admin':
+        employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
+    else:
+        employees = []
+    
+    today = datetime.now().date()
+    
+    return render_template('attendance/bulk_record.html', 
+                         employees=employees,
+                         today=today)
+
 @attendance_bp.route('/all-departments-simple', methods=['GET', 'POST'])
 def all_departments_attendance_simple():
     """تسجيل حضور لعدة أقسام لفترة زمنية محددة - نسخة مبسطة"""
