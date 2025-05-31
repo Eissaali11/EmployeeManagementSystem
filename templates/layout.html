@@ -156,6 +156,16 @@
                             </a>
                         </li>
                         {% endif %}
+                        
+                        {# سجل النشاط - للمديرين فقط #}
+                        {% if current_user.role == UserRole.ADMIN %}
+                        <li class="nav-item mb-1">
+                            <a href="{{ url_for('users.activity_log', id=current_user.id) }}" class="nav-link nav-link-custom {% if '/activity_log' in request.path %}active{% endif %}">
+                                <i class="fas fa-history me-2"></i>
+                                <span>سجل النشاط</span>
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                     <hr>
                     <div class="dropdown">

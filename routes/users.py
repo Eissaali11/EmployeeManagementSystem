@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import User, Department, UserRole, Module, Permission
+from models import User, Department, UserRole, Module, Permission, AuditLog
 from functools import wraps
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
@@ -99,3 +99,76 @@ def department_users(department_id):
         'department': department.name,
         'users': [{'id': u.id, 'name': u.name, 'email': u.email, 'role': u.role.value} for u in users]
     })
+
+@users_bp.route('/view/<int:id>')
+@login_required
+@admin_required
+def view(id):
+    """عرض تفاصيل مستخدم"""
+    user = User.query.get_or_404(id)
+    
+    # جلب آخر 10 أنشطة للمستخدم
+    recent_activities = AuditLog.query.filter_by(user_id=id).order_by(AuditLog.timestamp.desc()).limit(10).all()
+    
+    return render_template('users/view.html', user=user, recent_activities=recent_activities)
+
+@users_bp.route('/activity_log/<int:id>')
+@login_required
+@admin_required
+def activity_log(id):
+    """عرض سجل النشاط الكامل للمستخدم"""
+    user = User.query.get_or_404(id)
+    
+    # معاملات التصفية
+    action_filter = request.args.get('action', '')
+    entity_filter = request.args.get('entity_type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    
+    # بناء الاستعلام
+    query = AuditLog.query.filter_by(user_id=id)
+    
+    if action_filter:
+        query = query.filter(AuditLog.action == action_filter)
+    
+    if entity_filter:
+        query = query.filter(AuditLog.entity_type == entity_filter)
+    
+    if date_from:
+        try:
+            from datetime import datetime
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+            query = query.filter(AuditLog.timestamp >= date_from_obj)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            from datetime import datetime
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+            query = query.filter(AuditLog.timestamp <= date_to_obj)
+        except ValueError:
+            pass
+    
+    # ترتيب وتقسيم الصفحات
+    activities = query.order_by(AuditLog.timestamp.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    # جلب قائمة الإجراءات والكيانات الفريدة للفلتر
+    actions = db.session.query(AuditLog.action).filter_by(user_id=id).distinct().all()
+    entity_types = db.session.query(AuditLog.entity_type).filter_by(user_id=id).distinct().all()
+    
+    return render_template('users/activity_log.html', 
+                         user=user, 
+                         activities=activities,
+                         actions=[a[0] for a in actions],
+                         entity_types=[e[0] for e in entity_types],
+                         current_filters={
+                             'action': action_filter,
+                             'entity_type': entity_filter,
+                             'date_from': date_from,
+                             'date_to': date_to
+                         })

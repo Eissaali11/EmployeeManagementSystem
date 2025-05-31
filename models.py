@@ -840,3 +840,26 @@ class VehicleAccident(db.Model):
         return f'<VehicleAccident {self.id} for vehicle {self.vehicle_id} on {self.accident_date}>'
 
 
+class AuditLog(db.Model):
+    """نموذج سجل المراجعة لتتبع نشاط المستخدمين"""
+    __tablename__ = 'audit_log'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)  # create, update, delete, view
+    entity_type = db.Column(db.String(50), nullable=False)  # Employee, Department, etc.
+    entity_id = db.Column(db.Integer)  # ID of the affected entity
+    details = db.Column(db.Text)  # Description of the action
+    ip_address = db.Column(db.String(45))  # IP address of the user
+    user_agent = db.Column(db.Text)  # User agent string
+    previous_data = db.Column(db.Text)  # Previous data (for updates/deletes)
+    new_data = db.Column(db.Text)  # New data (for creates/updates)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # العلاقات
+    user = db.relationship('User', backref='audit_logs')
+    
+    def __repr__(self):
+        return f'<AuditLog {self.action} {self.entity_type} by {self.user_id}>'
+
+
