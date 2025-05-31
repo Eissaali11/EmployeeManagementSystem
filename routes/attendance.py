@@ -1344,19 +1344,15 @@ def department_stats():
         sick_count = sum(1 for record in attendance_records if record.status == 'sick')
         total_records = len(attendance_records)
         
-        # حساب معدل الحضور
+        # حساب الأيام والسجلات المتوقعة
+        working_days = (end_date - start_date).days + 1
+        expected_total_records = total_employees * working_days
+        
+        # حساب معدل الحضور بناء على السجلات الفعلية الموجودة
         if total_records > 0:
             attendance_rate = (present_count / total_records) * 100
         else:
             attendance_rate = 0
-        
-        # تصحيح حساب معدل الحضور بناء على إجمالي الأيام للموظفين
-        working_days = (end_date - start_date).days + 1
-        expected_total_records = total_employees * working_days
-        
-        if expected_total_records > 0 and total_records < expected_total_records:
-            # إذا كانت السجلات أقل من المتوقع، نحسب على أساس الموظفين المتاحين
-            attendance_rate = (present_count / expected_total_records) * 100
         
         department_stats.append({
             'id': dept.id,
