@@ -87,8 +87,8 @@
                         </li>
                         {% endif %}
                         
-                        {# التحقق من صلاحيات الحضور #}
-                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.ATTENDANCE) %}
+                        {# التحقق من صلاحيات الحضور - يسمح للمديرين وللمستخدمين الذين لديهم قسم مخصص #}
+                        {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.ATTENDANCE) or current_user.assigned_department_id %}
                         <li class="nav-item mb-1">
                             <a href="{{ url_for('attendance.index') }}" class="nav-link nav-link-custom {% if '/attendance' in request.path %}active{% endif %}">
                                 <i class="fas fa-calendar-check me-2"></i>
