@@ -237,7 +237,7 @@
                 قائمة الأنشطة
             </div>
             <div class="card-body">
-                {% if activities %}
+                {% if activities and activities.items %}
                     <div class="table-responsive">
                         <table class="activity-table">
                             <thead>
@@ -250,7 +250,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for activity in activities %}
+                                {% for activity in activities.items %}
                                 <tr>
                                     <td class="timestamp-col">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                                     <td class="action-col">
