@@ -289,3 +289,30 @@ def edit(user_id):
     
     departments = Department.query.all()
     return render_template('users/edit.html', user=user, departments=departments)
+
+@users_bp.route('/delete/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete(user_id):
+    """حذف مستخدم"""
+    user = User.query.get_or_404(user_id)
+    
+    # منع المستخدم من حذف نفسه
+    if user.id == current_user.id:
+        flash('لا يمكنك حذف حسابك الخاص', 'error')
+        return redirect(url_for('users.index'))
+    
+    try:
+        user_name = user.name
+        
+        # حذف المستخدم من قاعدة البيانات
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'تم حذف المستخدم {user_name} بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حذف المستخدم: {str(e)}', 'error')
+    
+    return redirect(url_for('users.index'))

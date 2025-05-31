@@ -158,6 +158,15 @@
                                                class="btn btn-outline-info btn-sm" title="إدارة الصلاحيات">
                                                 <i class="fas fa-key"></i>
                                             </a>
+                                            
+                                            <!-- زر حذف المستخدم -->
+                                            {% if user.id != current_user.id %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    title="حذف المستخدم" 
+                                                    onclick="confirmDelete({{ user.id }}, '{{ user.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>
@@ -214,4 +223,50 @@
     padding: 0.25rem 0.5rem;
 }
 </style>
+
+<!-- Modal تأكيد الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                    تأكيد حذف المستخدم
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">هل أنت متأكد من رغبتك في حذف المستخدم؟</p>
+                <div class="alert alert-warning">
+                    <strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع البيانات المرتبطة بهذا المستخدم.
+                </div>
+                <p><strong>المستخدم:</strong> <span id="deleteUserName"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    إلغاء
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>
+                        تأكيد الحذف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(userId, userName) {
+    // تحديث محتوى المودال
+    document.getElementById('deleteUserName').textContent = userName;
+    document.getElementById('deleteForm').action = '/users/delete/' + userId;
+    
+    // إظهار المودال
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
 {% endblock %}
