@@ -169,6 +169,11 @@ def activity_log(id):
         page=page, per_page=per_page, error_out=False
     )
     
+    # تشخيص: طباعة عدد السجلات في الصفحة الحالية
+    print(f"عدد السجلات في الصفحة الحالية: {len(activities.items)}")
+    if activities.items:
+        print(f"أول سجل: {activities.items[0].action} - {activities.items[0].details}")
+    
     # جلب قائمة الإجراءات والكيانات الفريدة للفلتر
     actions = db.session.query(AuditLog.action).filter_by(user_id=id).distinct().all()
     entity_types = db.session.query(AuditLog.entity_type).filter_by(user_id=id).distinct().all()
