@@ -7,6 +7,7 @@ from models import Attendance, Employee, Department, SystemAudit, VehicleProject
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
 from utils.excel import export_attendance_by_department
 from utils.user_helpers import check_module_access
+from utils.audit_logger import log_attendance_activity, log_system_activity
 import calendar
 import logging
 import time as time_module  # Renamed to avoid conflict with datetime.time
@@ -123,6 +124,21 @@ def record():
                     existing.check_out = None
                 
                 db.session.commit()
+                
+                # تسجيل العملية في سجل النشاط
+                employee = Employee.query.get(employee_id)
+                if employee:
+                    log_attendance_activity(
+                        action='update',
+                        attendance_data={
+                            'id': existing.id,
+                            'employee_id': employee_id,
+                            'date': date.isoformat(),
+                            'status': status
+                        },
+                        employee_name=employee.name
+                    )
+                
                 flash('تم تحديث سجل الحضور بنجاح', 'success')
             else:
                 # Create new attendance record
@@ -149,16 +165,19 @@ def record():
                 db.session.add(new_attendance)
                 db.session.commit()
                 
-                # Log the action
+                # تسجيل العملية في سجل النشاط
                 employee = Employee.query.get(employee_id)
-                SystemAudit.create_audit_record(
-                    user_id=None,  # يمكن تعديلها لاستخدام current_user.id
-                    action='create',
-                    entity_type='attendance',
-                    entity_id=new_attendance.id,
-                    entity_name=employee.name,
-                    details=f'تم تسجيل حضور للموظف: {employee.name} بتاريخ {date}'
-                )
+                if employee:
+                    log_attendance_activity(
+                        action='create',
+                        attendance_data={
+                            'id': new_attendance.id,
+                            'employee_id': employee_id,
+                            'date': date.isoformat(),
+                            'status': status
+                        },
+                        employee_name=employee.name
+                    )
                 
                 flash('تم تسجيل الحضور بنجاح', 'success')
             
@@ -248,16 +267,18 @@ def department_attendance():
                 
                 count += 1
             
-            # Log the action
+            # تسجيل العملية في سجل النشاط
             department = Department.query.get(department_id)
             if department:
-                SystemAudit.create_audit_record(
-                    user_id=None,  # يمكن تعديلها لاستخدام current_user.id
-                    action='mass_update',
-                    entity_type='attendance',
-                    entity_id=department.id,
-                    entity_name=department.name,
-                    details=f'تم تسجيل حضور لقسم {department.name} بتاريخ {date} لعدد {count} موظف'
+                log_attendance_activity(
+                    action='bulk_create',
+                    attendance_data={
+                        'department_id': department_id,
+                        'date': date.isoformat(),
+                        'status': status,
+                        'count': count
+                    },
+                    employee_name=f"جميع موظفي قسم {department.name}"
                 )
             
             flash(f'تم تسجيل الحضور لـ {count} موظف بنجاح', 'success')
