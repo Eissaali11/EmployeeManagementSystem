@@ -138,6 +138,10 @@ def activity_log(id):
     # بناء الاستعلام
     query = AuditLog.query.filter_by(user_id=id)
     
+    # تشخيص: طباعة عدد السجلات للمستخدم
+    total_logs = query.count()
+    print(f"إجمالي سجلات النشاط للمستخدم {id}: {total_logs}")
+    
     if action_filter:
         query = query.filter(AuditLog.action == action_filter)
     
