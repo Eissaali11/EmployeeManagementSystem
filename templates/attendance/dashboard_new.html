@@ -171,59 +171,136 @@
         </div>
     </div>
 
+    <!-- فلاتر البحث والتصفية -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-building text-primary me-1"></i>القسم
+                            </label>
+                            <select class="form-select" id="departmentFilter">
+                                <option value="">جميع الأقسام</option>
+                                <!-- سيتم ملء القائمة ديناميكياً -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-project-diagram text-primary me-1"></i>المشروع
+                            </label>
+                            <select class="form-select" id="projectFilter">
+                                <option value="">جميع المشاريع</option>
+                                <option value="Aramex" {{ 'selected' if selected_project == 'Aramex' else '' }}>Aramex</option>
+                                <option value="DHL" {{ 'selected' if selected_project == 'DHL' else '' }}>DHL</option>
+                                <option value="FLOW" {{ 'selected' if selected_project == 'FLOW' else '' }}>FLOW</option>
+                                <option value="Suleiman Al Habib" {{ 'selected' if selected_project == 'Suleiman Al Habib' else '' }}>Suleiman Al Habib</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-filter text-primary me-1"></i>عرض
+                            </label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="viewType" id="viewAll" value="all" checked>
+                                <label class="btn btn-outline-primary" for="viewAll">
+                                    <i class="fas fa-list me-1"></i>الجميع
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="viewType" id="viewSummary" value="summary">
+                                <label class="btn btn-outline-primary" for="viewSummary">
+                                    <i class="fas fa-chart-pie me-1"></i>ملخص
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- الإحصائيات العامة -->
     <div class="row mb-4" id="mainStats">
-        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="col-xl-2 col-lg-4 col-md-6 mb-3">
             <div class="stats-card h-100">
                 <div class="card-body d-flex align-items-center">
                     <div class="stats-icon gradient-bg-1 me-3">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">الأقسام النشطة</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="totalDepartmentsMain">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-lg-4 col-md-6 mb-3">
+            <div class="stats-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stats-icon gradient-bg-2 me-3">
                         <i class="fas fa-users"></i>
                     </div>
                     <div>
                         <div class="text-muted small">إجمالي الموظفين</div>
-                        <div class="h4 fw-bold mb-0 animate-number" id="totalEmployees">{{ total_employees }}</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="totalEmployeesMain">-</div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-            <div class="stats-card h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="stats-icon gradient-bg-2 me-3">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small">الحضور اليومي</div>
-                        <div class="h4 fw-bold mb-0 animate-number" id="dailyPresent">{{ daily_present }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="col-xl-2 col-lg-4 col-md-6 mb-3">
             <div class="stats-card h-100">
                 <div class="card-body d-flex align-items-center">
                     <div class="stats-icon gradient-bg-3 me-3">
-                        <i class="fas fa-times-circle"></i>
+                        <i class="fas fa-check-circle"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">الغياب اليومي</div>
-                        <div class="h4 fw-bold mb-0 animate-number" id="dailyAbsent">{{ daily_absent }}</div>
+                        <div class="text-muted small">إجمالي الحضور</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="totalPresentMain">-</div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="col-xl-2 col-lg-4 col-md-6 mb-3">
             <div class="stats-card h-100">
                 <div class="card-body d-flex align-items-center">
                     <div class="stats-icon gradient-bg-4 me-3">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">إجمالي الغياب</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="totalAbsentMain">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-lg-4 col-md-6 mb-3">
+            <div class="stats-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stats-icon gradient-bg-5 me-3">
+                        <i class="fas fa-user-injured"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">إجمالي المرضى</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="totalSickMain">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-2 col-lg-4 col-md-6 mb-3">
+            <div class="stats-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="stats-icon gradient-bg-6 me-3">
                         <i class="fas fa-percentage"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">معدل الحضور</div>
-                        <div class="h4 fw-bold mb-0 animate-number" id="attendanceRate">{{ daily_attendance_rate }}%</div>
+                        <div class="text-muted small">متوسط الحضور</div>
+                        <div class="h4 fw-bold mb-0 animate-number" id="averageAttendanceMain">-</div>
                     </div>
                 </div>
             </div>
@@ -335,6 +412,10 @@
 {% block scripts %}
 <script>
 let currentPeriod = 'weekly';
+let currentProject = '{{ selected_project or "" }}';
+let currentDepartment = '';
+let currentViewType = 'all';
+let allDepartmentsData = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     // إعداد أزرار الفترة
@@ -347,6 +428,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // إعداد فلاتر التصفية
+    document.getElementById('departmentFilter').addEventListener('change', function() {
+        currentDepartment = this.value;
+        filterAndDisplayData();
+    });
+    
+    document.getElementById('projectFilter').addEventListener('change', function() {
+        currentProject = this.value;
+        loadDepartmentStats();
+    });
+    
+    document.querySelectorAll('input[name="viewType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            currentViewType = this.value;
+            filterAndDisplayData();
+        });
+    });
+    
     // تحميل البيانات عند بدء الصفحة
     loadDepartmentStats();
 });
@@ -354,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadDepartmentStats() {
     showLoading();
     
-    const projectParam = '{{ selected_project }}' ? '&project={{ selected_project }}' : '';
+    const projectParam = currentProject ? `&project=${currentProject}` : '';
     const url = `/attendance/department-stats?period=${currentPeriod}${projectParam}`;
     
     fetch(url)
@@ -366,7 +465,9 @@ function loadDepartmentStats() {
         })
         .then(data => {
             hideLoading();
-            displayDepartmentStats(data);
+            allDepartmentsData = data.departments;
+            populateDepartmentFilter(data.departments);
+            filterAndDisplayData();
             updatePeriodInfo(data);
         })
         .catch(error => {
@@ -374,6 +475,42 @@ function loadDepartmentStats() {
             hideLoading();
             showErrorState();
         });
+}
+
+function populateDepartmentFilter(departments) {
+    const select = document.getElementById('departmentFilter');
+    const currentValue = select.value;
+    
+    // مسح الخيارات الحالية ما عدا "جميع الأقسام"
+    select.innerHTML = '<option value="">جميع الأقسام</option>';
+    
+    // إضافة أقسام جديدة
+    departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept.name;
+        option.textContent = dept.name;
+        select.appendChild(option);
+    });
+    
+    // استعادة القيمة المحددة سابقاً
+    select.value = currentValue;
+}
+
+function filterAndDisplayData() {
+    let filteredData = [...allDepartmentsData];
+    
+    // تطبيق فلتر القسم
+    if (currentDepartment) {
+        filteredData = filteredData.filter(dept => dept.name === currentDepartment);
+    }
+    
+    // تطبيق نوع العرض
+    if (currentViewType === 'summary' && filteredData.length > 3) {
+        // عرض أفضل 3 أقسام فقط في وضع الملخص
+        filteredData = filteredData.slice(0, 3);
+    }
+    
+    displayDepartmentStats({departments: filteredData});
 }
 
 function showLoading() {
@@ -406,12 +543,18 @@ function displayDepartmentStats(data) {
     
     let totalEmployees = 0;
     let totalPresent = 0;
+    let totalAbsent = 0;
+    let totalSick = 0;
+    let totalLeave = 0;
     let bestDepartment = '';
     let bestRate = 0;
     
     data.departments.forEach((dept, index) => {
         totalEmployees += dept.total_employees;
         totalPresent += dept.present;
+        totalAbsent += dept.absent;
+        totalSick += dept.sick;
+        totalLeave += dept.leave;
         
         if (dept.attendance_rate > bestRate) {
             bestRate = dept.attendance_rate;
@@ -498,8 +641,19 @@ function displayDepartmentStats(data) {
         container.appendChild(deptCard);
     });
     
-    // تحديث الملخص السريع
+    // تحديث الإحصائيات الرئيسية في أعلى الصفحة
     const averageRate = totalEmployees > 0 ? Math.round((totalPresent / totalEmployees) * 100) : 0;
+    
+    updateMainStats({
+        totalDepartments: data.departments.length,
+        totalEmployees: totalEmployees,
+        totalPresent: totalPresent,
+        totalAbsent: totalAbsent,
+        totalSick: totalSick,
+        averageRate: averageRate
+    });
+    
+    // تحديث الملخص السريع
     document.getElementById('statsTotal').textContent = data.departments.length;
     document.getElementById('statsBest').textContent = bestDepartment || 'غير محدد';
     document.getElementById('statsAverage').textContent = averageRate + '%';
@@ -513,6 +667,32 @@ function updatePeriodInfo(data) {
     const dateRange = `${data.start_date} إلى ${data.end_date}`;
     document.getElementById('periodInfo').innerHTML = 
         `<strong>${periodText}:</strong> ${dateRange}`;
+}
+
+function updateMainStats(stats) {
+    // تحديث الإحصائيات الرئيسية مع تأثيرات بصرية
+    const elements = [
+        { id: 'totalDepartmentsMain', value: stats.totalDepartments },
+        { id: 'totalEmployeesMain', value: stats.totalEmployees },
+        { id: 'totalPresentMain', value: stats.totalPresent },
+        { id: 'totalAbsentMain', value: stats.totalAbsent },
+        { id: 'totalSickMain', value: stats.totalSick },
+        { id: 'averageAttendanceMain', value: stats.averageRate + '%' }
+    ];
+    
+    elements.forEach(element => {
+        const el = document.getElementById(element.id);
+        if (el) {
+            // تأثير التحديث
+            el.style.transform = 'scale(1.1)';
+            el.style.transition = 'transform 0.3s ease';
+            
+            setTimeout(() => {
+                el.textContent = element.value;
+                el.style.transform = 'scale(1)';
+            }, 150);
+        }
+    });
 }
 
 function showDepartmentDetails(departmentName, period) {
