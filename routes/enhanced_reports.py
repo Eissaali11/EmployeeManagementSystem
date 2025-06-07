@@ -209,42 +209,35 @@ def vehicle_handover_pdf(handover_id):
     """
     إنشاء نموذج تسليم/استلام سيارة كملف PDF
     """
-    # هنا يتم افتراض وجود نموذج VehicleHandover في النظام
-    # في الحالة الفعلية، يجب استبدال هذا بالكود الفعلي للحصول على بيانات التسليم/الاستلام
+    from models import VehicleHandover, Vehicle
+    from utils.simple_pdf_generator import create_vehicle_handover_pdf
     
-    # نموذج بيانات للاختبار
-    handover_data = {
-        'vehicle': {
-            'plate_number': 'أ ب ج 1234',
-            'make': 'تويوتا',
-            'model': 'كامري',
-            'year': '2023',
-            'color': 'أبيض'
-        },
-        'handover_type': 'تسليم',  # أو 'استلام'
-        'handover_date': datetime.now().strftime('%Y-%m-%d'),
-        'person_name': 'محمد أحمد',
-        'vehicle_condition': 'حالة جيدة، لا توجد خدوش أو أضرار ظاهرة',
-        'fuel_level': '3/4',
-        'mileage': '15000',
-        'has_spare_tire': True,
-        'has_fire_extinguisher': True,
-        'has_first_aid_kit': True,
-        'has_warning_triangle': True,
-        'has_tools': True,
-        'notes': 'تم تسليم السيارة مع جميع المستندات المطلوبة',
-        'form_link': 'https://example.com/vehicle-form/123'
-    }
+    # الحصول على بيانات التسليم/الاستلام الحقيقية
+    handover = VehicleHandover.query.get_or_404(handover_id)
     
     try:
+        # إنشاء رابط النموذج الإلكتروني الكامل
+        from flask import url_for, request
+        form_url = url_for('vehicles.view_handover', id=handover_id, _external=True)
+        
+        # إضافة رابط النموذج الإلكتروني إلى بيانات التسليم
+        handover.form_link = form_url
+        
         # استدعاء الدالة المحسنة لإنشاء نموذج تسليم/استلام السيارة
-        pdf_data = generate_vehicle_handover_pdf(handover_data)
+        pdf_buffer = create_vehicle_handover_pdf(handover)
+        
+        if pdf_buffer is None:
+            return jsonify({"error": "فشل في إنشاء ملف PDF"}), 500
+        
+        # تحديد اسم الملف
+        vehicle_plate = handover.vehicle_rel.plate_number if handover.vehicle_rel else "unknown"
+        filename = f"vehicle_handover_{handover_id}_{vehicle_plate}.pdf"
         
         # إرجاع البيانات كملف تنزيل
         return send_file(
-            BytesIO(pdf_data),
+            pdf_buffer,
             as_attachment=True,
-            download_name=f"vehicle_handover_{handover_data['vehicle']['plate_number']}.pdf",
+            download_name=filename,
             mimetype='application/pdf'
         )
     

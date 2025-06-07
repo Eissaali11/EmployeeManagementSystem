@@ -231,6 +231,32 @@ def create_vehicle_handover_pdf(handover_data):
             notes_clean = str(handover_data.notes).encode('ascii', errors='replace').decode('ascii')
             pdf.multi_cell(0, 6, notes_clean)
         
+        # رابط النموذج الإلكتروني
+        pdf.ln(5)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'ELECTRONIC FORM ACCESS', 0, 1, 'L')
+        pdf.set_font('Arial', '', 10)
+        
+        # رابط النموذج الإلكتروني الكامل
+        if hasattr(handover_data, 'form_link') and handover_data.form_link:
+            pdf.cell(0, 8, f'Electronic Form Link: {handover_data.form_link}', 0, 1, 'L')
+        else:
+            pdf.cell(0, 8, f'Electronic Form Link: /vehicles/handover/{handover_data.id}/view', 0, 1, 'L')
+        pdf.ln(5)
+        
+        # معلومات إضافية عن السائق/المتسلم
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'ADDITIONAL INFORMATION', 0, 1, 'L')
+        pdf.set_font('Arial', '', 10)
+        
+        # حالة المركبة عند التسليم/الاستلام
+        pdf.cell(0, 8, 'Vehicle condition at time of handover:', 0, 1, 'L')
+        pdf.cell(0, 8, f'- Mileage reading: {mileage} km', 0, 1, 'L')
+        pdf.cell(0, 8, f'- Fuel level: {fuel_level}', 0, 1, 'L')
+        
+        if handover_data.notes:
+            pdf.cell(0, 8, f'- Additional notes: {notes_clean}', 0, 1, 'L')
+        
         # تذييل
         pdf.ln(10)
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
@@ -238,6 +264,7 @@ def create_vehicle_handover_pdf(handover_data):
         pdf.set_font('Arial', 'I', 9)
         pdf.cell(0, 8, 'This document was generated automatically by the Vehicle Management System', 0, 1, 'C')
         pdf.cell(0, 8, f'Print Date: {date_now}', 0, 1, 'C')
+        pdf.cell(0, 8, 'For verification, please access the electronic form using the link above', 0, 1, 'C')
         
         # إنتاج الملف
         buffer = BytesIO()
