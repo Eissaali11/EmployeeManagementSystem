@@ -8,7 +8,7 @@ from datetime import datetime
 import arabic_reshaper
 from bidi.algorithm import get_display
 from fpdf import FPDF
-from flask import current_app
+# تم إزالة current_app لتجنب مشاكل السياق
 
 # تعريف فئة PDF العربية
 class ArabicPDF(FPDF):
@@ -123,7 +123,7 @@ class ArabicPDF(FPDF):
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة مع الشعار والعنوان"""
         # إضافة الشعار
-        logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'images', 'logo_new.png')
         # إذا لم يكن الشعار الجديد موجوداً، استخدم شعار دائري بديل
         if not os.path.exists(logo_path):
             # استخدام شعار دائري بديل
@@ -214,7 +214,7 @@ def generate_salary_notification_pdf(data):
         pdf.add_page()
         
         # ------ إضافة الشعار الجديد ------
-        logo_path = os.path.join(current_app.static_folder, 'images', 'logo_new.png')
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'images', 'logo_new.png')
         if os.path.exists(logo_path):
             pdf.image(logo_path, 10, 8, 30)
         else:

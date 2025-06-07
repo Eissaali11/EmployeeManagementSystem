@@ -47,11 +47,10 @@ def register_arabic_fonts():
     تسجيل الخطوط العربية المطلوبة للاستخدام في ReportLab
     """
     try:
-        from flask import current_app
         import os
         
-        # استخدام المسار المطلق من خلال Flask
-        fonts_dir = os.path.join(current_app.root_path, 'static', 'fonts')
+        # استخدام المسار المطلق بدون Flask
+        fonts_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts')
         
         # تسجيل الخطوط
         pdfmetrics.registerFont(TTFont('Amiri', os.path.join(fonts_dir, 'Amiri-Regular.ttf')))
@@ -63,14 +62,9 @@ def register_arabic_fonts():
         logging.error(f"خطأ في تسجيل الخطوط العربية: {str(e)}")
         # طباعة مسار الخطوط للمساعدة في تصحيح الأخطاء
         import os
-        try:
-            from flask import current_app
-            logging.error(f"مسار التطبيق: {current_app.root_path}")
-            fonts_dir = os.path.join(current_app.root_path, 'static', 'fonts')
-            logging.error(f"مسار الخطوط: {fonts_dir}")
-            logging.error(f"قائمة الملفات: {os.listdir(fonts_dir) if os.path.exists(fonts_dir) else 'المسار غير موجود'}")
-        except Exception as inner_e:
-            logging.error(f"خطأ أثناء محاولة طباعة معلومات تصحيح الأخطاء: {str(inner_e)}")
+        fonts_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts')
+        logging.error(f"مسار الخطوط: {fonts_dir}")
+        logging.error(f"قائمة الملفات: {os.listdir(fonts_dir) if os.path.exists(fonts_dir) else 'المسار غير موجود'}")
         raise
 
 def create_styles():
