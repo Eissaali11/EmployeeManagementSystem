@@ -150,7 +150,9 @@ def create_vehicle_handover_pdf(handover_data):
             pdf.set_font('Arial', 'B', 12)
             pdf.cell(0, 10, 'Notes:', 0, 1, 'L')
             pdf.set_font('Arial', '', 10)
-            pdf.multi_cell(0, 8, handover_data.notes)
+            # تحويل الملاحظات إلى ASCII لتجنب مشاكل الترميز
+            notes_ascii = str(handover_data.notes).encode('ascii', errors='ignore').decode('ascii')
+            pdf.multi_cell(0, 8, notes_ascii)
         
         # إنتاج الملف
         buffer = BytesIO()
