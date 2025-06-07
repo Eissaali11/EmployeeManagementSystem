@@ -165,8 +165,23 @@ def create_vehicle_handover_pdf(handover_data):
         # تحويل النصوص بأمان
         date_str = handover_data.handover_date.strftime("%Y-%m-%d") if handover_data.handover_date else "N/A"
         time_str = handover_data.handover_date.strftime("%H:%M") if handover_data.handover_date else "N/A"
-        person_name = str(handover_data.person_name or "N/A").encode('ascii', errors='replace').decode('ascii')
-        handover_type_en = "DELIVERY" if str(handover_data.handover_type or "").find('استلام') != -1 else "RETURN"
+        
+        # تنظيف أسماء الأشخاص من النصوص العربية
+        person_name = str(handover_data.person_name or "N/A")
+        try:
+            # محاولة ترجمة أو تحويل النص العربي إلى نص مفهوم
+            person_name = person_name.encode('ascii', errors='ignore').decode('ascii') or "Arabic Name"
+        except:
+            person_name = "Arabic Name"
+        
+        # تحديد نوع العملية
+        handover_type_raw = str(handover_data.handover_type or "")
+        if handover_type_raw == "delivery":
+            handover_type_en = "DELIVERY"
+        elif handover_type_raw == "return":
+            handover_type_en = "RETURN"
+        else:
+            handover_type_en = "HANDOVER"
         
         pdf.set_font('Arial', '', 11)
         pdf.cell(50, 8, 'Date:', 0, 0, 'L')

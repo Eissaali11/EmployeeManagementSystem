@@ -210,7 +210,7 @@ def vehicle_handover_pdf(handover_id):
     إنشاء نموذج تسليم/استلام سيارة كملف PDF
     """
     from models import VehicleHandover, Vehicle
-    from utils.simple_pdf_generator import create_vehicle_handover_pdf
+    from utils.handover_pdf_improved import create_handover_pdf_improved
     
     # الحصول على بيانات التسليم/الاستلام الحقيقية
     handover = VehicleHandover.query.get_or_404(handover_id)
@@ -224,7 +224,7 @@ def vehicle_handover_pdf(handover_id):
         handover.form_link = form_url
         
         # استدعاء الدالة المحسنة لإنشاء نموذج تسليم/استلام السيارة
-        pdf_buffer = create_vehicle_handover_pdf(handover)
+        pdf_buffer = create_handover_pdf_improved(handover)
         
         if pdf_buffer is None:
             return jsonify({"error": "فشل في إنشاء ملف PDF"}), 500
