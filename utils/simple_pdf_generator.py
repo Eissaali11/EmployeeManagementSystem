@@ -98,7 +98,10 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         pdf.set_font('Arial', '', 12)
         pdf.cell(0, 10, 'Error generating salary report', 0, 1, 'C')
         pdf.cell(0, 10, f'Error: {str(e)}', 0, 1, 'C')
-        return pdf.output(dest='S')
+        output = pdf.output(dest='S')
+        if isinstance(output, str):
+            return output.encode('latin-1')
+        return output
 
 
 def generate_employee_salary_slip_pdf(employee_data, salary_data, month_name, year):
@@ -162,7 +165,10 @@ def generate_employee_salary_slip_pdf(employee_data, salary_data, month_name, ye
         pdf.cell(60, 8, 'Net Salary:', 0, 0, 'L')
         pdf.cell(0, 8, f"{salary_data.get('net_salary', 0):.2f}", 0, 1, 'L')
         
-        return pdf.output(dest='S')
+        output = pdf.output(dest='S')
+        if isinstance(output, str):
+            return output.encode('latin-1')
+        return output
         
     except Exception as e:
         print(f"خطأ في إنشاء إشعار الراتب: {str(e)}")
@@ -171,4 +177,7 @@ def generate_employee_salary_slip_pdf(employee_data, salary_data, month_name, ye
         pdf.add_page()
         pdf.set_font('Arial', '', 12)
         pdf.cell(0, 10, 'Error generating salary slip', 0, 1, 'C')
-        return pdf.output(dest='S')
+        output = pdf.output(dest='S')
+        if isinstance(output, str):
+            return output.encode('latin-1')
+        return output
