@@ -104,6 +104,62 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
         return output
 
 
+def create_vehicle_handover_pdf(handover_data):
+    """
+    إنشاء تقرير تسليم المركبة بصيغة PDF
+    """
+    try:
+        pdf = SimplePDF()
+        pdf.add_page()
+        
+        # عنوان التقرير
+        pdf.set_font('Arial', 'B', 16)
+        pdf.cell(0, 15, 'Vehicle Handover Report', 0, 1, 'C')
+        pdf.ln(10)
+        
+        # معلومات المركبة
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 10, 'Vehicle Information:', 0, 1, 'L')
+        pdf.set_font('Arial', '', 10)
+        
+        if hasattr(handover_data, 'vehicle_rel') and handover_data.vehicle_rel:
+            pdf.cell(0, 8, f'Plate Number: {handover_data.vehicle_rel.plate_number}', 0, 1, 'L')
+            pdf.cell(0, 8, f'Make: {handover_data.vehicle_rel.make}', 0, 1, 'L')
+            pdf.cell(0, 8, f'Model: {handover_data.vehicle_rel.model}', 0, 1, 'L')
+        
+        pdf.ln(5)
+        
+        # معلومات التسليم
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 10, 'Handover Information:', 0, 1, 'L')
+        pdf.set_font('Arial', '', 10)
+        
+        pdf.cell(0, 8, f'Date: {handover_data.handover_date.strftime("%Y-%m-%d") if handover_data.handover_date else "N/A"}', 0, 1, 'L')
+        pdf.cell(0, 8, f'Person: {handover_data.person_name or "N/A"}', 0, 1, 'L')
+        pdf.cell(0, 8, f'Type: {handover_data.handover_type or "N/A"}', 0, 1, 'L')
+        pdf.cell(0, 8, f'Mileage: {handover_data.mileage or "N/A"} km', 0, 1, 'L')
+        pdf.cell(0, 8, f'Fuel Level: {handover_data.fuel_level or "N/A"}', 0, 1, 'L')
+        
+        if handover_data.notes:
+            pdf.ln(5)
+            pdf.set_font('Arial', 'B', 12)
+            pdf.cell(0, 10, 'Notes:', 0, 1, 'L')
+            pdf.set_font('Arial', '', 10)
+            pdf.multi_cell(0, 8, handover_data.notes)
+        
+        # إنتاج الملف
+        buffer = BytesIO()
+        pdf_content = pdf.output(dest='S').encode('latin-1')
+        buffer.write(pdf_content)
+        buffer.seek(0)
+        
+        return buffer
+        
+    except Exception as e:
+        print(f"Error generating handover PDF: {e}")
+        return None
+
+
 def generate_employee_salary_slip_pdf(employee_data, salary_data, month_name, year):
     """
     إنشاء إشعار راتب فردي بصيغة PDF
