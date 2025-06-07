@@ -4,6 +4,7 @@
 
 from fpdf import FPDF
 from io import BytesIO
+from datetime import datetime
 import os
 
 
@@ -106,59 +107,139 @@ def generate_salary_report_pdf(salaries_data, month_name, year):
 
 def create_vehicle_handover_pdf(handover_data):
     """
-    إنشاء تقرير تسليم المركبة بصيغة PDF
+    إنشاء تقرير تسليم المركبة بصيغة PDF مع جميع البيانات
     """
     try:
         pdf = SimplePDF()
         pdf.add_page()
         
         # عنوان التقرير
-        pdf.set_font('Arial', 'B', 16)
-        pdf.cell(0, 15, 'Vehicle Handover Report', 0, 1, 'C')
+        pdf.set_font('Arial', 'B', 18)
+        pdf.cell(0, 15, 'Vehicle Handover Document', 0, 1, 'C')
+        pdf.ln(5)
+        
+        # معرف السجل والتاريخ
+        pdf.set_font('Arial', '', 10)
+        date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        pdf.cell(0, 8, f'Document ID: {handover_data.id}', 0, 0, 'L')
+        pdf.cell(0, 8, f'Generated: {date_now}', 0, 1, 'R')
+        pdf.ln(5)
+        
+        # خط فاصل
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(10)
         
         # معلومات المركبة
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(0, 10, 'Vehicle Information:', 0, 1, 'L')
-        pdf.set_font('Arial', '', 10)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'VEHICLE INFORMATION', 0, 1, 'L')
+        pdf.set_font('Arial', '', 11)
         
         if hasattr(handover_data, 'vehicle_rel') and handover_data.vehicle_rel:
-            pdf.cell(0, 8, f'Plate Number: {handover_data.vehicle_rel.plate_number}', 0, 1, 'L')
-            pdf.cell(0, 8, f'Make: {handover_data.vehicle_rel.make}', 0, 1, 'L')
-            pdf.cell(0, 8, f'Model: {handover_data.vehicle_rel.model}', 0, 1, 'L')
+            vehicle = handover_data.vehicle_rel
+            pdf.cell(50, 8, 'Plate Number:', 0, 0, 'L')
+            pdf.set_font('Arial', 'B', 11)
+            pdf.cell(0, 8, f'{vehicle.plate_number}', 0, 1, 'L')
+            
+            pdf.set_font('Arial', '', 11)
+            pdf.cell(50, 8, 'Make & Model:', 0, 0, 'L')
+            pdf.set_font('Arial', 'B', 11)
+            pdf.cell(0, 8, f'{vehicle.make} {vehicle.model}', 0, 1, 'L')
+            
+            pdf.set_font('Arial', '', 11)
+            if hasattr(vehicle, 'year') and vehicle.year:
+                pdf.cell(50, 8, 'Year:', 0, 0, 'L')
+                pdf.set_font('Arial', 'B', 11)
+                pdf.cell(0, 8, f'{vehicle.year}', 0, 1, 'L')
+            
+            pdf.set_font('Arial', '', 11)
+            if hasattr(vehicle, 'color') and vehicle.color:
+                pdf.cell(50, 8, 'Color:', 0, 0, 'L')
+                pdf.set_font('Arial', 'B', 11)
+                pdf.cell(0, 8, f'{vehicle.color}', 0, 1, 'L')
         
         pdf.ln(5)
         
-        # معلومات التسليم
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(0, 10, 'Handover Information:', 0, 1, 'L')
-        pdf.set_font('Arial', '', 10)
+        # معلومات التسليم/الاستلام
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'HANDOVER DETAILS', 0, 1, 'L')
         
-        # تحويل النصوص العربية إلى اللاتينية لتجنب مشاكل الترميز
-        date_str = handover_data.handover_date.strftime("%Y-%m-%d") if handover_data.handover_date else "N/A"
+        # تحويل النصوص العربية لتجنب مشاكل الترميز
+        date_str = handover_data.handover_date.strftime("%A, %B %d, %Y") if handover_data.handover_date else "N/A"
+        time_str = handover_data.handover_date.strftime("%H:%M") if handover_data.handover_date else "N/A"
         person_name = str(handover_data.person_name or "N/A").encode('ascii', errors='ignore').decode('ascii')
-        handover_type = str(handover_data.handover_type or "N/A").replace('استلام', 'Delivery').replace('تسليم', 'Return')
+        handover_type_en = "DELIVERY" if handover_data.handover_type == 'استلام' else "RETURN"
         
-        pdf.cell(0, 8, f'Date: {date_str}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Person: {person_name}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Type: {handover_type}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Mileage: {handover_data.mileage or "N/A"} km', 0, 1, 'L')
-        pdf.cell(0, 8, f'Fuel Level: {handover_data.fuel_level or "N/A"}', 0, 1, 'L')
+        pdf.set_font('Arial', '', 11)
+        pdf.cell(50, 8, 'Date:', 0, 0, 'L')
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 8, f'{date_str}', 0, 1, 'L')
         
+        pdf.set_font('Arial', '', 11)
+        pdf.cell(50, 8, 'Time:', 0, 0, 'L')
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 8, f'{time_str}', 0, 1, 'L')
+        
+        pdf.set_font('Arial', '', 11)
+        pdf.cell(50, 8, 'Type:', 0, 0, 'L')
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 8, f'{handover_type_en}', 0, 1, 'L')
+        
+        pdf.set_font('Arial', '', 11)
+        pdf.cell(50, 8, 'Person Name:', 0, 0, 'L')
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 8, f'{person_name}', 0, 1, 'L')
+        
+        # معلومات الاتصال
+        if hasattr(handover_data, 'mobile') and handover_data.mobile:
+            pdf.set_font('Arial', '', 11)
+            pdf.cell(50, 8, 'Mobile:', 0, 0, 'L')
+            pdf.set_font('Arial', 'B', 11)
+            pdf.cell(0, 8, f'{handover_data.mobile}', 0, 1, 'L')
+        
+        if hasattr(handover_data, 'national_id') and handover_data.national_id:
+            pdf.set_font('Arial', '', 11)
+            pdf.cell(50, 8, 'National ID:', 0, 0, 'L')
+            pdf.set_font('Arial', 'B', 11)
+            pdf.cell(0, 8, f'{handover_data.national_id}', 0, 1, 'L')
+        
+        pdf.ln(5)
+        
+        # معلومات الحالة
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'VEHICLE CONDITION', 0, 1, 'L')
+        
+        pdf.set_font('Arial', '', 11)
+        pdf.cell(50, 8, 'Mileage:', 0, 0, 'L')
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 8, f'{handover_data.mileage or "Not Specified"} km', 0, 1, 'L')
+        
+        pdf.set_font('Arial', '', 11)
+        pdf.cell(50, 8, 'Fuel Level:', 0, 0, 'L')
+        pdf.set_font('Arial', 'B', 11)
+        pdf.cell(0, 8, f'{handover_data.fuel_level or "Not Specified"}', 0, 1, 'L')
+        
+        # الملاحظات
         if handover_data.notes:
             pdf.ln(5)
-            pdf.set_font('Arial', 'B', 12)
-            pdf.cell(0, 10, 'Notes:', 0, 1, 'L')
+            pdf.set_font('Arial', 'B', 14)
+            pdf.cell(0, 10, 'NOTES', 0, 1, 'L')
             pdf.set_font('Arial', '', 10)
-            # تحويل الملاحظات إلى ASCII لتجنب مشاكل الترميز
             notes_ascii = str(handover_data.notes).encode('ascii', errors='ignore').decode('ascii')
-            pdf.multi_cell(0, 8, notes_ascii)
+            pdf.multi_cell(0, 6, notes_ascii)
+        
+        # تذييل
+        pdf.ln(10)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(5)
+        pdf.set_font('Arial', 'I', 9)
+        pdf.cell(0, 8, 'This document was generated automatically by the Vehicle Management System', 0, 1, 'C')
+        pdf.cell(0, 8, f'Print Date: {date_now}', 0, 1, 'C')
         
         # إنتاج الملف
         buffer = BytesIO()
         pdf_content = pdf.output(dest='S')
         if isinstance(pdf_content, str):
-            pdf_content = pdf_content.encode('utf-8', errors='replace')
+            pdf_content = pdf_content.encode('latin-1', errors='replace')
         buffer.write(pdf_content)
         buffer.seek(0)
         
