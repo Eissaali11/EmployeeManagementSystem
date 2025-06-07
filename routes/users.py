@@ -330,3 +330,56 @@ def delete(user_id):
         flash(f'حدث خطأ أثناء حذف المستخدم: {str(e)}', 'error')
     
     return redirect(url_for('users.index'))
+
+@users_bp.route('/update_permissions/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def update_permissions(user_id):
+    """تحديث صلاحيات المستخدم التفصيلية"""
+    user = User.query.get_or_404(user_id)
+    
+    # منع تعديل صلاحيات المديرين
+    if user.role == UserRole.ADMIN:
+        flash('لا يمكن تعديل صلاحيات المديرين', 'error')
+        return redirect(url_for('users.user_permissions', user_id=user_id))
+    
+    try:
+        # جلب الصلاحيات المحددة
+        selected_permissions = request.form.getlist('permissions')
+        
+        # حذف جميع صلاحيات المستخدم الحالية
+        Permission.query.filter_by(user_id=user_id).delete()
+        
+        # إضافة الصلاحيات الجديدة
+        for permission_str in selected_permissions:
+            module_name, permission_value = permission_str.split('_')
+            module = Module[module_name]
+            permission_value = int(permission_value)
+            
+            new_permission = Permission(
+                user_id=user_id,
+                module=module,
+                permissions=permission_value
+            )
+            db.session.add(new_permission)
+        
+        db.session.commit()
+        
+        # تسجيل العملية في سجل النشاط
+        audit_log = AuditLog(
+            user_id=current_user.id,
+            action='تحديث الصلاحيات',
+            entity_type='مستخدم',
+            entity_id=user_id,
+            details=f'تم تحديث صلاحيات المستخدم {user.name}'
+        )
+        db.session.add(audit_log)
+        db.session.commit()
+        
+        flash(f'تم تحديث صلاحيات المستخدم {user.name} بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء تحديث الصلاحيات: {str(e)}', 'error')
+    
+    return redirect(url_for('users.user_permissions', user_id=user_id))

@@ -90,52 +90,72 @@
                             <strong>مدير النظام:</strong> هذا المستخدم لديه صلاحيات كاملة على جميع وحدات النظام.
                         </div>
                     {% else %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>الوحدة</th>
-                                        <th>عرض</th>
-                                        <th>إنشاء</th>
-                                        <th>تعديل</th>
-                                        <th>حذف</th>
-                                        <th>إدارة</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for module in modules %}
-                                    <tr>
-                                        <td class="fw-medium">{{ module.value }}</td>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input" disabled
-                                                   {% if user.has_permission(module, 1) %}checked{% endif %}>
-                                        </td>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input" disabled
-                                                   {% if user.has_permission(module, 2) %}checked{% endif %}>
-                                        </td>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input" disabled
-                                                   {% if user.has_permission(module, 4) %}checked{% endif %}>
-                                        </td>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input" disabled
-                                                   {% if user.has_permission(module, 8) %}checked{% endif %}>
-                                        </td>
-                                        <td>
-                                            <input type="checkbox" class="form-check-input" disabled
-                                                   {% if user.has_permission(module, 16) %}checked{% endif %}>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="alert alert-warning mt-3" role="alert">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>ملاحظة:</strong> إدارة الصلاحيات التفصيلية ستكون متاحة في تحديث قادم. حالياً يمكن تحديد الدور والقسم المخصص فقط.
-                        </div>
+                        <form id="permissionsForm" method="POST" action="{{ url_for('users.update_permissions', user_id=user.id) }}">
+                            {{ csrf_token() }}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>الوحدة</th>
+                                            <th>عرض</th>
+                                            <th>إنشاء</th>
+                                            <th>تعديل</th>
+                                            <th>حذف</th>
+                                            <th>إدارة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for module in modules %}
+                                        <tr>
+                                            <td class="fw-medium">{{ module.value }}</td>
+                                            <td>
+                                                <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                       name="permissions" value="{{ module.name }}_1"
+                                                       {% if user.has_permission(module, 1) %}checked{% endif %}>
+                                            </td>
+                                            <td>
+                                                <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                       name="permissions" value="{{ module.name }}_2"
+                                                       {% if user.has_permission(module, 2) %}checked{% endif %}>
+                                            </td>
+                                            <td>
+                                                <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                       name="permissions" value="{{ module.name }}_4"
+                                                       {% if user.has_permission(module, 4) %}checked{% endif %}>
+                                            </td>
+                                            <td>
+                                                <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                       name="permissions" value="{{ module.name }}_8"
+                                                       {% if user.has_permission(module, 8) %}checked{% endif %}>
+                                            </td>
+                                            <td>
+                                                <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                       name="permissions" value="{{ module.name }}_16"
+                                                       {% if user.has_permission(module, 16) %}checked{% endif %}>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="selectAll">
+                                        <i class="fas fa-check-double me-1"></i>
+                                        تحديد الكل
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAll">
+                                        <i class="fas fa-times me-1"></i>
+                                        إلغاء الكل
+                                    </button>
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ الصلاحيات
+                                </button>
+                            </div>
+                        </form>
                     {% endif %}
                 </div>
             </div>
@@ -179,4 +199,46 @@
     margin-bottom: 0.5rem;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllBtn = document.getElementById('selectAll');
+    const clearAllBtn = document.getElementById('clearAll');
+    const checkboxes = document.querySelectorAll('.permission-checkbox');
+    
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+    }
+    
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        });
+    }
+    
+    // تأكيد الحفظ
+    const form = document.getElementById('permissionsForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.permission-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('يرجى تحديد صلاحية واحدة على الأقل');
+                return false;
+            }
+            
+            if (!confirm('هل أنت متأكد من حفظ هذه الصلاحيات؟')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
