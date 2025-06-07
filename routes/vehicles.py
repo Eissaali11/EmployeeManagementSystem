@@ -1963,8 +1963,8 @@ def handover_pdf(id):
             handover_data['supervisor_name'] = str(handover.supervisor_name)
         
         # إنشاء ملف PDF باستخدام الدالة المبسطة
-        # تعيد الدالة كائن BytesIO جاهز للاستخدام مع send_file
-        pdf_buffer = create_vehicle_handover_pdf(handover_data)
+        # تمرير كائن البيانات مباشرة
+        pdf_buffer = create_vehicle_handover_pdf(handover)
         
         # تحديد اسم الملف
         filename = f"handover_form_{vehicle.plate_number}.pdf"
