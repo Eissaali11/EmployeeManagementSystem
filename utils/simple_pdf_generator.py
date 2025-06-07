@@ -1,397 +1,211 @@
 """
-مولد PDF بسيط ومحسن للغة العربية مع حل مشاكل الترميز
+مولد PDF بسيط باستخدام reportlab لتجنب مشاكل الترميز
 """
 
-from fpdf import FPDF
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 from io import BytesIO
 from datetime import datetime
-import os
-
-
-class SimplePDF(FPDF):
-    """فئة بسيطة لإنشاء ملفات PDF مع دعم أساسي للغة العربية"""
-    
-    def __init__(self):
-        super().__init__()
-        self.set_auto_page_break(auto=True, margin=15)
-        # استخدام الخط الافتراضي للنظام
-        self.set_font('Arial', '', 12)
-    
-    def header(self):
-        """إضافة ترويسة الصفحة"""
-        self.set_font('Arial', 'B', 16)
-        self.cell(0, 10, 'Nuzum Management System', 0, 1, 'C')
-        self.ln(10)
-    
-    def footer(self):
-        """إضافة تذييل الصفحة"""
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-
-def generate_salary_report_pdf(salaries_data, month_name, year):
-    """
-    إنشاء تقرير رواتب بصيغة PDF مع دعم بسيط للعربية
-    """
-    try:
-        pdf = SimplePDF()
-        pdf.add_page()
-        
-        # عنوان التقرير
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, f'Salary Report - {month_name} {year}', 0, 1, 'C')
-        pdf.ln(5)
-        
-        # رأس الجدول
-        pdf.set_font('Arial', 'B', 10)
-        pdf.cell(40, 10, 'Employee Name', 1, 0, 'C')
-        pdf.cell(20, 10, 'ID', 1, 0, 'C')
-        pdf.cell(25, 10, 'Basic', 1, 0, 'C')
-        pdf.cell(25, 10, 'Allowances', 1, 0, 'C')
-        pdf.cell(25, 10, 'Deductions', 1, 0, 'C')
-        pdf.cell(20, 10, 'Bonus', 1, 0, 'C')
-        pdf.cell(25, 10, 'Net Salary', 1, 1, 'C')
-        
-        # بيانات الموظفين
-        pdf.set_font('Arial', '', 9)
-        total_net = 0
-        
-        for salary in salaries_data:
-            # تنظيف النص العربي واستبداله بنص إنجليزي آمن
-            emp_name = str(salary.get('employee_name', 'N/A'))
-            if any(ord(char) > 127 for char in emp_name):
-                emp_name = f"Employee {salary.get('employee_id', 'N/A')}"
-            
-            pdf.cell(40, 8, emp_name[:15], 1, 0, 'L')
-            pdf.cell(20, 8, str(salary.get('employee_id', '')), 1, 0, 'C')
-            pdf.cell(25, 8, f"{salary.get('basic_salary', 0):.2f}", 1, 0, 'R')
-            pdf.cell(25, 8, f"{salary.get('allowances', 0):.2f}", 1, 0, 'R')
-            pdf.cell(25, 8, f"{salary.get('deductions', 0):.2f}", 1, 0, 'R')
-            pdf.cell(20, 8, f"{salary.get('bonus', 0):.2f}", 1, 0, 'R')
-            pdf.cell(25, 8, f"{salary.get('net_salary', 0):.2f}", 1, 1, 'R')
-            
-            total_net += salary.get('net_salary', 0)
-        
-        # المجموع الإجمالي
-        pdf.ln(5)
-        pdf.set_font('Arial', 'B', 10)
-        pdf.cell(135, 8, 'Total:', 1, 0, 'R')
-        pdf.cell(25, 8, f"{total_net:.2f}", 1, 1, 'R')
-        
-        # إضافة معلومات إضافية
-        pdf.ln(10)
-        pdf.set_font('Arial', '', 10)
-        pdf.cell(0, 8, f'Generated on: {year}-{month_name}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Total Employees: {len(salaries_data)}', 0, 1, 'L')
-        
-        # تحويل إلى bytes
-        output = pdf.output(dest='S')
-        if isinstance(output, str):
-            return output.encode('latin-1')
-        return output
-        
-    except Exception as e:
-        print(f"خطأ في إنشاء PDF: {str(e)}")
-        # إنشاء PDF بسيط في حالة الخطأ
-        pdf = SimplePDF()
-        pdf.add_page()
-        pdf.set_font('Arial', '', 12)
-        pdf.cell(0, 10, 'Error generating salary report', 0, 1, 'C')
-        pdf.cell(0, 10, f'Error: {str(e)}', 0, 1, 'C')
-        output = pdf.output(dest='S')
-        if isinstance(output, str):
-            return output.encode('latin-1')
-        return output
 
 
 def create_vehicle_handover_pdf(handover_data):
     """
-    إنشاء تقرير تسليم المركبة بصيغة PDF مع جميع البيانات
+    إنشاء PDF بسيط لتسليم/استلام المركبة باستخدام reportlab
     """
     try:
-        pdf = SimplePDF()
-        pdf.add_page()
+        buffer = BytesIO()
         
-        # عنوان التقرير
-        pdf.set_font('Arial', 'B', 18)
-        pdf.cell(0, 15, 'Vehicle Handover Document', 0, 1, 'C')
-        pdf.ln(5)
+        # إنشاء PDF باستخدام reportlab
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
         
-        # معرف السجل والتاريخ
-        pdf.set_font('Arial', '', 10)
-        date_now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        pdf.cell(0, 8, f'Document ID: {handover_data.id}', 0, 0, 'L')
-        pdf.cell(0, 8, f'Generated: {date_now}', 0, 1, 'R')
-        pdf.ln(5)
+        # دالة تنظيف النصوص
+        def clean_text(text):
+            if not text:
+                return "N/A"
+            # إزالة الأحرف غير الأساسية
+            cleaned = ''.join(char for char in str(text) if ord(char) < 128)
+            return cleaned.strip() or "N/A"
+        
+        # العنوان الرئيسي
+        c.setFont("Helvetica-Bold", 16)
+        c.drawCentredText(width/2, height-50, "Vehicle Handover Document")
+        
+        # معلومات الوثيقة
+        y_position = height - 100
+        c.setFont("Helvetica", 12)
+        c.drawString(50, y_position, f"Document ID: {handover_data.id}")
+        y_position -= 20
+        c.drawString(50, y_position, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         
         # خط فاصل
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(10)
+        y_position -= 30
+        c.line(50, y_position, width-50, y_position)
+        y_position -= 30
         
         # معلومات المركبة
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'VEHICLE INFORMATION', 0, 1, 'L')
-        pdf.set_font('Arial', '', 11)
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, y_position, "VEHICLE INFORMATION")
+        y_position -= 25
         
         if hasattr(handover_data, 'vehicle_rel') and handover_data.vehicle_rel:
             vehicle = handover_data.vehicle_rel
-            # تحويل البيانات النصية
-            plate_number = str(vehicle.plate_number or "N/A")
-            make = str(vehicle.make or "N/A").encode('ascii', errors='replace').decode('ascii')
-            model = str(vehicle.model or "N/A").encode('ascii', errors='replace').decode('ascii')
+            c.setFont("Helvetica", 11)
             
-            pdf.cell(50, 8, 'Plate Number:', 0, 0, 'L')
-            pdf.set_font('Arial', 'B', 11)
-            pdf.cell(0, 8, plate_number, 0, 1, 'L')
+            c.drawString(50, y_position, f"Plate Number: {clean_text(vehicle.plate_number)}")
+            y_position -= 18
+            c.drawString(50, y_position, f"Make: {clean_text(vehicle.make)}")
+            y_position -= 18
+            c.drawString(50, y_position, f"Model: {clean_text(vehicle.model)}")
+            y_position -= 18
             
-            pdf.set_font('Arial', '', 11)
-            pdf.cell(50, 8, 'Make & Model:', 0, 0, 'L')
-            pdf.set_font('Arial', 'B', 11)
-            pdf.cell(0, 8, f'{make} {model}', 0, 1, 'L')
-            
-            pdf.set_font('Arial', '', 11)
             if hasattr(vehicle, 'year') and vehicle.year:
-                pdf.cell(50, 8, 'Year:', 0, 0, 'L')
-                pdf.set_font('Arial', 'B', 11)
-                pdf.cell(0, 8, str(vehicle.year), 0, 1, 'L')
-        
-        pdf.ln(5)
-        
-        # معلومات التسليم/الاستلام
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'HANDOVER DETAILS', 0, 1, 'L')
-        
-        # تحويل النصوص بأمان
-        date_str = handover_data.handover_date.strftime("%Y-%m-%d") if handover_data.handover_date else "N/A"
-        time_str = handover_data.handover_date.strftime("%H:%M") if handover_data.handover_date else "N/A"
-        
-        # تنظيف أسماء الأشخاص من النصوص العربية
-        person_name = str(handover_data.person_name or "N/A")
-        try:
-            # محاولة ترجمة أو تحويل النص العربي إلى نص مفهوم
-            person_name = person_name.encode('ascii', errors='ignore').decode('ascii') or "Arabic Name"
-        except:
-            person_name = "Arabic Name"
-        
-        # تحديد نوع العملية
-        handover_type_raw = str(handover_data.handover_type or "")
-        if handover_type_raw == "delivery":
-            handover_type_en = "DELIVERY"
-        elif handover_type_raw == "return":
-            handover_type_en = "RETURN"
+                c.drawString(50, y_position, f"Year: {vehicle.year}")
+                y_position -= 18
+                
+            if hasattr(vehicle, 'color') and vehicle.color:
+                c.drawString(50, y_position, f"Color: {clean_text(vehicle.color)}")
+                y_position -= 18
         else:
-            handover_type_en = "HANDOVER"
+            c.setFont("Helvetica", 11)
+            c.drawString(50, y_position, "Vehicle information not available")
+            y_position -= 18
         
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(50, 8, 'Date:', 0, 0, 'L')
-        pdf.set_font('Arial', 'B', 11)
-        pdf.cell(0, 8, date_str, 0, 1, 'L')
+        # تفاصيل التسليم
+        y_position -= 20
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, y_position, "HANDOVER DETAILS")
+        y_position -= 25
         
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(50, 8, 'Time:', 0, 0, 'L')
-        pdf.set_font('Arial', 'B', 11)
-        pdf.cell(0, 8, time_str, 0, 1, 'L')
+        c.setFont("Helvetica", 11)
         
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(50, 8, 'Type:', 0, 0, 'L')
-        pdf.set_font('Arial', 'B', 11)
-        pdf.cell(0, 8, handover_type_en, 0, 1, 'L')
+        if handover_data.handover_date:
+            c.drawString(50, y_position, f"Date: {handover_data.handover_date.strftime('%Y-%m-%d')}")
+            y_position -= 18
+            c.drawString(50, y_position, f"Time: {handover_data.handover_date.strftime('%H:%M')}")
+            y_position -= 18
         
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(50, 8, 'Person Name:', 0, 0, 'L')
-        pdf.set_font('Arial', 'B', 11)
-        pdf.cell(0, 8, person_name, 0, 1, 'L')
+        handover_type = "DELIVERY" if str(handover_data.handover_type) == "delivery" else "RETURN"
+        c.drawString(50, y_position, f"Type: {handover_type}")
+        y_position -= 18
         
-        # معلومات الاتصال
-        if hasattr(handover_data, 'mobile') and handover_data.mobile:
-            mobile = str(handover_data.mobile).encode('ascii', errors='replace').decode('ascii')
-            pdf.set_font('Arial', '', 11)
-            pdf.cell(50, 8, 'Mobile:', 0, 0, 'L')
-            pdf.set_font('Arial', 'B', 11)
-            pdf.cell(0, 8, mobile, 0, 1, 'L')
+        person_name = clean_text(handover_data.person_name) if handover_data.person_name else "Person Name"
+        c.drawString(50, y_position, f"Person: {person_name}")
+        y_position -= 18
         
-        if hasattr(handover_data, 'national_id') and handover_data.national_id:
-            national_id = str(handover_data.national_id).encode('ascii', errors='replace').decode('ascii')
-            pdf.set_font('Arial', '', 11)
-            pdf.cell(50, 8, 'National ID:', 0, 0, 'L')
-            pdf.set_font('Arial', 'B', 11)
-            pdf.cell(0, 8, national_id, 0, 1, 'L')
+        if hasattr(handover_data, 'person_mobile') and handover_data.person_mobile:
+            c.drawString(50, y_position, f"Mobile: {handover_data.person_mobile}")
+            y_position -= 18
         
-        pdf.ln(5)
+        # حالة المركبة
+        y_position -= 20
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, y_position, "VEHICLE CONDITION")
+        y_position -= 25
         
-        # معلومات الحالة
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'VEHICLE CONDITION', 0, 1, 'L')
+        c.setFont("Helvetica", 11)
+        mileage = str(handover_data.mileage) if handover_data.mileage else "0"
+        c.drawString(50, y_position, f"Mileage: {mileage} km")
+        y_position -= 18
         
-        mileage = str(handover_data.mileage or "Not Specified")
-        fuel_level = str(handover_data.fuel_level or "Not Specified").encode('ascii', errors='replace').decode('ascii')
+        fuel_level = clean_text(handover_data.fuel_level) if handover_data.fuel_level else "Unknown"
+        c.drawString(50, y_position, f"Fuel Level: {fuel_level}")
+        y_position -= 18
         
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(50, 8, 'Mileage:', 0, 0, 'L')
-        pdf.set_font('Arial', 'B', 11)
-        pdf.cell(0, 8, f'{mileage} km', 0, 1, 'L')
+        # المعدات
+        y_position -= 20
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_position, "EQUIPMENT STATUS:")
+        y_position -= 20
         
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(50, 8, 'Fuel Level:', 0, 0, 'L')
-        pdf.set_font('Arial', 'B', 11)
-        pdf.cell(0, 8, fuel_level, 0, 1, 'L')
+        c.setFont("Helvetica", 10)
+        equipment_items = [
+            ('Spare Tire', getattr(handover_data, 'has_spare_tire', False)),
+            ('Fire Extinguisher', getattr(handover_data, 'has_fire_extinguisher', False)),
+            ('First Aid Kit', getattr(handover_data, 'has_first_aid_kit', False)),
+            ('Warning Triangle', getattr(handover_data, 'has_warning_triangle', False)),
+            ('Tools', getattr(handover_data, 'has_tools', False))
+        ]
+        
+        for item_name, has_item in equipment_items:
+            status = 'Available' if has_item else 'Not Available'
+            c.drawString(50, y_position, f"- {item_name}: {status}")
+            y_position -= 15
+        
+        # رابط النموذج الإلكتروني
+        y_position -= 20
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_position, "ELECTRONIC FORM ACCESS")
+        y_position -= 20
+        
+        c.setFont("Helvetica", 10)
+        if hasattr(handover_data, 'form_link') and handover_data.form_link:
+            c.drawString(50, y_position, f"Form Link: {handover_data.form_link}")
+        else:
+            c.drawString(50, y_position, f"Form ID: {handover_data.id}")
+        y_position -= 20
         
         # الملاحظات
         if handover_data.notes:
-            pdf.ln(5)
-            pdf.set_font('Arial', 'B', 14)
-            pdf.cell(0, 10, 'NOTES', 0, 1, 'L')
-            pdf.set_font('Arial', '', 10)
-            notes_clean = str(handover_data.notes).encode('ascii', errors='replace').decode('ascii')
-            pdf.multi_cell(0, 6, notes_clean)
+            y_position -= 10
+            c.setFont("Helvetica-Bold", 10)
+            c.drawString(50, y_position, "NOTES:")
+            y_position -= 15
+            c.setFont("Helvetica", 9)
+            notes_clean = clean_text(handover_data.notes)
+            if notes_clean and notes_clean != "N/A":
+                c.drawString(50, y_position, notes_clean[:100])  # أول 100 حرف فقط
+            else:
+                c.drawString(50, y_position, "Notes in Arabic language")
+            y_position -= 20
         
-        # رابط النموذج الإلكتروني
-        pdf.ln(5)
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'ELECTRONIC FORM ACCESS', 0, 1, 'L')
-        pdf.set_font('Arial', '', 10)
+        # التوقيعات
+        y_position -= 20
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(50, y_position, "SIGNATURES:")
+        y_position -= 30
         
-        # رابط النموذج الإلكتروني الكامل
-        if hasattr(handover_data, 'form_link') and handover_data.form_link:
-            pdf.cell(0, 8, f'Electronic Form Link: {handover_data.form_link}', 0, 1, 'L')
-        else:
-            pdf.cell(0, 8, f'Electronic Form Link: /vehicles/handover/{handover_data.id}/view', 0, 1, 'L')
-        pdf.ln(5)
-        
-        # معلومات إضافية عن السائق/المتسلم
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'ADDITIONAL INFORMATION', 0, 1, 'L')
-        pdf.set_font('Arial', '', 10)
-        
-        # حالة المركبة عند التسليم/الاستلام
-        pdf.cell(0, 8, 'Vehicle condition at time of handover:', 0, 1, 'L')
-        pdf.cell(0, 8, f'- Mileage reading: {mileage} km', 0, 1, 'L')
-        pdf.cell(0, 8, f'- Fuel level: {fuel_level}', 0, 1, 'L')
-        
-        if handover_data.notes:
-            pdf.cell(0, 8, f'- Additional notes: {notes_clean}', 0, 1, 'L')
+        c.setFont("Helvetica", 9)
+        c.drawString(50, y_position, "Delivered by: ____________________")
+        c.drawString(300, y_position, "Received by: ____________________")
+        y_position -= 20
+        c.drawString(50, y_position, "Date: ____________________")
+        c.drawString(300, y_position, "Date: ____________________")
         
         # تذييل
-        pdf.ln(10)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(5)
-        pdf.set_font('Arial', 'I', 9)
-        pdf.cell(0, 8, 'This document was generated automatically by the Vehicle Management System', 0, 1, 'C')
-        pdf.cell(0, 8, f'Print Date: {date_now}', 0, 1, 'C')
-        pdf.cell(0, 8, 'For verification, please access the electronic form using the link above', 0, 1, 'C')
+        y_position -= 40
+        c.line(50, y_position, width-50, y_position)
+        y_position -= 15
+        c.setFont("Helvetica-Oblique", 8)
+        c.drawCentredText(width/2, y_position, "Generated by Vehicle Management System")
+        c.drawCentredText(width/2, y_position-12, "For verification, access the electronic form using the ID above")
         
-        # إنتاج الملف
-        buffer = BytesIO()
-        pdf_output = pdf.output(dest='S')
-        
-        # التعامل مع الترميز بأمان
-        if isinstance(pdf_output, str):
-            buffer.write(pdf_output.encode('latin-1', errors='replace'))
-        else:
-            buffer.write(pdf_output)
-        
+        # حفظ PDF
+        c.save()
         buffer.seek(0)
         return buffer
         
     except Exception as e:
-        print(f"Error generating handover PDF: {e}")
-        # إنشاء PDF بسيط في حالة الخطأ
+        print(f"Error creating PDF with reportlab: {e}")
+        
+        # نظام احتياطي بسيط جداً
         try:
-            pdf = SimplePDF()
-            pdf.add_page()
-            pdf.set_font('Arial', '', 12)
-            pdf.cell(0, 10, 'Vehicle Handover Document', 0, 1, 'C')
-            pdf.ln(10)
-            pdf.cell(0, 10, f'Document ID: {handover_data.id}', 0, 1, 'L')
-            pdf.cell(0, 10, f'Date: {handover_data.handover_date}', 0, 1, 'L')
-            
             buffer = BytesIO()
-            pdf_output = pdf.output(dest='S')
-            if isinstance(pdf_output, str):
-                buffer.write(pdf_output.encode('latin-1', errors='replace'))
-            else:
-                buffer.write(pdf_output)
+            c = canvas.Canvas(buffer, pagesize=A4)
+            width, height = A4
+            
+            c.setFont("Helvetica-Bold", 16)
+            c.drawCentredText(width/2, height-50, "Vehicle Handover Document")
+            c.setFont("Helvetica", 12)
+            c.drawString(50, height-100, f"Document ID: {handover_data.id}")
+            c.drawString(50, height-120, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+            c.drawString(50, height-140, "Full document could not be generated")
+            c.drawString(50, height-160, "Please contact system administrator")
+            
+            c.save()
             buffer.seek(0)
             return buffer
-        except:
+            
+        except Exception as backup_error:
+            print(f"Backup PDF creation failed: {backup_error}")
             return None
-
-
-def generate_employee_salary_slip_pdf(employee_data, salary_data, month_name, year):
-    """
-    إنشاء إشعار راتب فردي بصيغة PDF
-    """
-    try:
-        pdf = SimplePDF()
-        pdf.add_page()
-        
-        # عنوان الإشعار
-        pdf.set_font('Arial', 'B', 16)
-        pdf.cell(0, 10, 'Salary Slip', 0, 1, 'C')
-        pdf.ln(5)
-        
-        # معلومات الموظف
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(0, 8, f'Month: {month_name} {year}', 0, 1, 'L')
-        pdf.ln(3)
-        
-        # تنظيف اسم الموظف
-        emp_name = str(employee_data.get('name', 'N/A'))
-        if any(ord(char) > 127 for char in emp_name):
-            emp_name = f"Employee {employee_data.get('employee_id', 'N/A')}"
-        
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(50, 8, 'Employee ID:', 0, 0, 'L')
-        pdf.cell(0, 8, str(employee_data.get('employee_id', 'N/A')), 0, 1, 'L')
-        
-        pdf.cell(50, 8, 'Employee Name:', 0, 0, 'L')
-        pdf.cell(0, 8, emp_name, 0, 1, 'L')
-        
-        pdf.cell(50, 8, 'Job Title:', 0, 0, 'L')
-        job_title = str(employee_data.get('job_title', 'N/A'))
-        if any(ord(char) > 127 for char in job_title):
-            job_title = 'Staff Member'
-        pdf.cell(0, 8, job_title, 0, 1, 'L')
-        
-        pdf.ln(5)
-        
-        # تفاصيل الراتب
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(0, 8, 'Salary Details:', 0, 1, 'L')
-        pdf.ln(2)
-        
-        pdf.set_font('Arial', '', 11)
-        pdf.cell(60, 8, 'Basic Salary:', 0, 0, 'L')
-        pdf.cell(0, 8, f"{salary_data.get('basic_salary', 0):.2f}", 0, 1, 'L')
-        
-        pdf.cell(60, 8, 'Allowances:', 0, 0, 'L')
-        pdf.cell(0, 8, f"{salary_data.get('allowances', 0):.2f}", 0, 1, 'L')
-        
-        pdf.cell(60, 8, 'Bonus:', 0, 0, 'L')
-        pdf.cell(0, 8, f"{salary_data.get('bonus', 0):.2f}", 0, 1, 'L')
-        
-        pdf.cell(60, 8, 'Deductions:', 0, 0, 'L')
-        pdf.cell(0, 8, f"-{salary_data.get('deductions', 0):.2f}", 0, 1, 'L')
-        
-        pdf.ln(3)
-        pdf.set_font('Arial', 'B', 12)
-        pdf.cell(60, 8, 'Net Salary:', 0, 0, 'L')
-        pdf.cell(0, 8, f"{salary_data.get('net_salary', 0):.2f}", 0, 1, 'L')
-        
-        output = pdf.output(dest='S')
-        if isinstance(output, str):
-            return output.encode('latin-1')
-        return output
-        
-    except Exception as e:
-        print(f"خطأ في إنشاء إشعار الراتب: {str(e)}")
-        # إنشاء PDF بسيط في حالة الخطأ
-        pdf = SimplePDF()
-        pdf.add_page()
-        pdf.set_font('Arial', '', 12)
-        pdf.cell(0, 10, 'Error generating salary slip', 0, 1, 'C')
-        output = pdf.output(dest='S')
-        if isinstance(output, str):
-            return output.encode('latin-1')
-        return output

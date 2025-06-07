@@ -10,7 +10,7 @@ from models import Department, Employee, Attendance, Salary, Document, SystemAud
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
 # استخدام مولد PDF البسيط الذي يتجنب مشاكل الترميز
-from utils.simple_pdf_generator import generate_salary_report_pdf
+# from utils.simple_pdf_generator import generate_salary_report_pdf
 # استيراد الدوال المتبقية من الملف الأصلي
 from utils.pdf_generator_new import generate_salary_notification_pdf, generate_workshop_receipts_pdf as generate_vehicle_handover_pdf
 
@@ -210,7 +210,7 @@ def vehicle_handover_pdf(handover_id):
     إنشاء نموذج تسليم/استلام سيارة كملف PDF
     """
     from models import VehicleHandover, Vehicle
-    from utils.basic_pdf import create_basic_pdf
+    from utils.simple_pdf_generator import create_vehicle_handover_pdf
     
     # الحصول على بيانات التسليم/الاستلام الحقيقية
     handover = VehicleHandover.query.get_or_404(handover_id)
@@ -224,7 +224,7 @@ def vehicle_handover_pdf(handover_id):
         handover.form_link = form_url
         
         # استدعاء الدالة المحسنة لإنشاء نموذج تسليم/استلام السيارة
-        pdf_buffer = create_basic_pdf(handover)
+        pdf_buffer = create_vehicle_handover_pdf(handover)
         
         if pdf_buffer is None:
             return jsonify({"error": "فشل في إنشاء ملف PDF"}), 500
