@@ -87,6 +87,9 @@ def create_handover_pdf_improved(handover_data):
                 pdf.cell(50, 8, 'Color:', 0, 0, 'L')
                 pdf.set_font('Arial', 'B', 11)
                 pdf.cell(0, 8, pdf.safe_text(vehicle.color), 0, 1, 'L')
+        else:
+            pdf.set_font('Arial', '', 11)
+            pdf.cell(0, 8, 'Vehicle information not available', 0, 1, 'L')
         
         pdf.ln(5)
         
@@ -213,8 +216,18 @@ def create_handover_pdf_improved(handover_data):
         
         # إنتاج الملف
         buffer = BytesIO()
-        pdf_output = pdf.output(dest='S').encode('latin-1', errors='replace')
-        buffer.write(pdf_output)
+        pdf_output = pdf.output(dest='S')
+        
+        # التعامل مع الترميز بشكل آمن
+        if isinstance(pdf_output, str):
+            # محاولة ترميز آمن
+            try:
+                buffer.write(pdf_output.encode('latin-1', errors='ignore'))
+            except UnicodeEncodeError:
+                buffer.write(pdf_output.encode('ascii', errors='ignore'))
+        else:
+            buffer.write(pdf_output)
+        
         buffer.seek(0)
         return buffer
         
