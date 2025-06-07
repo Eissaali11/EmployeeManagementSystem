@@ -134,9 +134,14 @@ def create_vehicle_handover_pdf(handover_data):
         pdf.cell(0, 10, 'Handover Information:', 0, 1, 'L')
         pdf.set_font('Arial', '', 10)
         
-        pdf.cell(0, 8, f'Date: {handover_data.handover_date.strftime("%Y-%m-%d") if handover_data.handover_date else "N/A"}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Person: {handover_data.person_name or "N/A"}', 0, 1, 'L')
-        pdf.cell(0, 8, f'Type: {handover_data.handover_type or "N/A"}', 0, 1, 'L')
+        # تحويل النصوص العربية إلى اللاتينية لتجنب مشاكل الترميز
+        date_str = handover_data.handover_date.strftime("%Y-%m-%d") if handover_data.handover_date else "N/A"
+        person_name = str(handover_data.person_name or "N/A").encode('ascii', errors='ignore').decode('ascii')
+        handover_type = str(handover_data.handover_type or "N/A").replace('استلام', 'Delivery').replace('تسليم', 'Return')
+        
+        pdf.cell(0, 8, f'Date: {date_str}', 0, 1, 'L')
+        pdf.cell(0, 8, f'Person: {person_name}', 0, 1, 'L')
+        pdf.cell(0, 8, f'Type: {handover_type}', 0, 1, 'L')
         pdf.cell(0, 8, f'Mileage: {handover_data.mileage or "N/A"} km', 0, 1, 'L')
         pdf.cell(0, 8, f'Fuel Level: {handover_data.fuel_level or "N/A"}', 0, 1, 'L')
         
@@ -149,7 +154,9 @@ def create_vehicle_handover_pdf(handover_data):
         
         # إنتاج الملف
         buffer = BytesIO()
-        pdf_content = pdf.output(dest='S').encode('latin-1')
+        pdf_content = pdf.output(dest='S')
+        if isinstance(pdf_content, str):
+            pdf_content = pdf_content.encode('utf-8', errors='replace')
         buffer.write(pdf_content)
         buffer.seek(0)
         
