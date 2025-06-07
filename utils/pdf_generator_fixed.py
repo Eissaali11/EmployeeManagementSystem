@@ -69,20 +69,31 @@ class ArabicPDF(FPDF):
     
     def arabic_text(self, x, y, txt, align='L'):
         """طباعة نص عربي في الموضع المحدد مع دعم مناسب للغة العربية"""
-        # معالجة النص العربي
-        reshaped_text = arabic_reshaper.reshape(str(txt))
-        bidi_text = get_display(reshaped_text)
-        
-        # تعيين موضع الطباعة
-        self.set_xy(x, y)
-        
-        # طباعة النص مع المحاذاة المناسبة
-        if align == 'R':  # محاذاة لليمين
-            self.cell(0, 0, bidi_text, ln=0, align='L')
-        elif align == 'C':  # توسيط
-            self.cell(0, 0, bidi_text, ln=0, align='C')
-        else:  # محاذاة لليسار (الافتراضي)
-            self.cell(0, 0, bidi_text, ln=0, align='R')
+        try:
+            # معالجة النص العربي
+            reshaped_text = arabic_reshaper.reshape(str(txt))
+            bidi_text = get_display(reshaped_text)
+            
+            # تعيين موضع الطباعة
+            self.set_xy(x, y)
+            
+            # طباعة النص مع المحاذاة المناسبة
+            if align == 'R':  # محاذاة لليمين
+                self.cell(0, 0, bidi_text, ln=0, align='L')
+            elif align == 'C':  # توسيط
+                self.cell(0, 0, bidi_text, ln=0, align='C')
+            else:  # محاذاة لليسار (الافتراضي)
+                self.cell(0, 0, bidi_text, ln=0, align='R')
+        except UnicodeEncodeError:
+            # في حالة فشل التشكيل، استخدم النص الأصلي مع التعامل الآمن مع الترميز
+            safe_text = str(txt).encode('utf-8', 'ignore').decode('utf-8')
+            self.set_xy(x, y)
+            if align == 'R':
+                self.cell(0, 0, safe_text, ln=0, align='L')
+            elif align == 'C':
+                self.cell(0, 0, safe_text, ln=0, align='C')
+            else:
+                self.cell(0, 0, safe_text, ln=0, align='R')
     
     def add_page_with_header(self, title, logo_path=None):
         """إضافة صفحة جديدة مع ترويسة موحدة"""

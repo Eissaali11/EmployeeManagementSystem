@@ -9,8 +9,8 @@ from app import db
 from models import Department, Employee, Attendance, Salary, Document, SystemAudit
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian, get_month_name_ar
 from utils.excel import generate_employee_excel, generate_salary_excel
-# استخدام دالة تقرير الرواتب المحسنة من الملف الجديد
-from utils.pdf_generator_fixed import generate_salary_report_pdf
+# استخدام مولد PDF البسيط الذي يتجنب مشاكل الترميز
+from utils.simple_pdf_generator import generate_salary_report_pdf
 # استيراد الدوال المتبقية من الملف الأصلي
 from utils.pdf_generator_new import generate_salary_notification_pdf, generate_workshop_receipts_pdf as generate_vehicle_handover_pdf
 
@@ -27,11 +27,13 @@ def index():
     current_year = datetime.now().year
     current_month = datetime.now().month
     
-    # الحصول على قائمة الأقسام
+    # الحصول على قائمة الأقسام والموظفين
     departments = Department.query.all()
+    employees = Employee.query.all()
     
     return render_template('reports/enhanced.html', 
                          departments=departments,
+                         employees=employees,
                          current_year=current_year,
                          current_month=current_month,
                          get_month_name_ar=get_month_name_ar)
