@@ -36,9 +36,9 @@ def register_fonts():
     else:
         # محاولة البحث عن المسارات البديلة
         try:
-            static = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static").static
-            amiri_path = os.path.join(static, 'fonts', 'Amiri-Regular.ttf')
-            amiri_bold_path = os.path.join(static, 'fonts', 'Amiri-Bold.ttf')
+            static_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+            amiri_path = os.path.join(static_folder, 'fonts', 'Amiri-Regular.ttf')
+            amiri_bold_path = os.path.join(static_folder, 'fonts', 'Amiri-Bold.ttf')
             
             if os.path.exists(amiri_path) and os.path.exists(amiri_bold_path):
                 pdfmetrics.registerFont(TTFont('Amiri', amiri_path))

@@ -189,7 +189,7 @@ class ArabicPDF(FPDF):
     def add_company_header(self, title, subtitle=None):
         """إضافة ترويسة الشركة"""
         # استخدام شعار نُظم الدائري
-        logo_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static").static, 'images', 'logo_new.png')
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'images', 'logo_new.png')
         if os.path.exists(logo_path):
             # إضافة صورة الشعار
             try:
