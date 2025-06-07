@@ -753,8 +753,8 @@ def view(id):
     for i, record in enumerate(delivery_records):
         # الحصول على رقم هاتف الموظف إذا كان متوفراً
         phone_number = None
-        if record.employee_rel and record.employee_rel.phone:
-            phone_number = record.employee_rel.phone
+        if record.employee_rel and record.employee_rel.mobile:
+            phone_number = record.employee_rel.mobile
             
         if i == 0:  # أول سجل بعد الترتيب (الأحدث)
             current_driver = {
@@ -762,7 +762,7 @@ def view(id):
                 'date': record.handover_date,
                 'formatted_date': format_date_arabic(record.handover_date),
                 'handover_id': record.id,
-                'phone': phone_number,
+                'mobile': phone_number,
                 'employee_id': record.employee_id
             }
         else:
@@ -771,7 +771,7 @@ def view(id):
                 'date': record.handover_date,
                 'formatted_date': format_date_arabic(record.handover_date),
                 'handover_id': record.id,
-                'phone': phone_number,
+                'mobile': phone_number,
                 'employee_id': record.employee_id
             })
     
