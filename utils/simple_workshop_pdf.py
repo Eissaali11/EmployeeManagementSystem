@@ -53,7 +53,7 @@ def generate_workshop_pdf(vehicle, workshop_records):
     
     try:
         # تسجيل الخطوط العربية
-        fonts_dir = os.path.join(current_app.root_path, 'static', 'fonts')
+        fonts_dir = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static").root_path, 'static', 'fonts')
         logging.info(f"مسار الخطوط: {fonts_dir}")
         
         # تسجيل خط أميري للنصوص العربية
