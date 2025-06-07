@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y \
 # تعيين مجلد العمل
 WORKDIR /app
 
+# نسخ ملف التبعيات أولاً
+COPY pyproject.toml ./
+
 # نسخ ملفات المشروع
 COPY . .
 

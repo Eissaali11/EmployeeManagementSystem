@@ -1,116 +1,117 @@
-# النشر السريع على VPS - نُظم
+# نشر سريع - نظام نُظم
 
-## الملفات المطلوبة للنقل
+## ملخص سريع للنشر على VPS Hostinger
 
-### 1. حزمة النشر الرئيسية
-- **الملف**: `nuzum_deployment_20250607_184309.zip` (13.49 MB)
-- **المحتوى**: جميع ملفات التطبيق، القوالب، الملفات الثابتة، وأدوات النشر
+### 1. متطلبات الخادم
+- Ubuntu 20.04+ مع 4GB RAM و 50GB تخزين
+- Docker & Docker Compose
+- نطاق مؤشر إلى IP الخادم
 
-### 2. الأوامر السريعة للنشر
-
-```bash
-# 1. رفع الحزمة إلى الخادم
-scp nuzum_deployment_20250607_184309.zip root@your-server-ip:/tmp/
-
-# 2. تسجيل الدخول للخادم
-ssh root@your-server-ip
-
-# 3. فك الضغط وبدء التثبيت
-cd /var/www
-mkdir -p nuzum
-cd nuzum
-unzip /tmp/nuzum_deployment_20250607_184309.zip
-chmod +x deployment/install.sh
-./deployment/install.sh
-
-# 4. تحديث إعدادات قاعدة البيانات
-nano .env
-# غيّر DATABASE_URL إلى الإعدادات الصحيحة
-
-# 5. تحديث اسم النطاق
-nano /etc/nginx/sites-available/nuzum
-# غيّر your-domain.com إلى نطاقك
-
-# 6. إعادة تشغيل الخدمات
-systemctl restart nuzum nginx
-```
-
-## بيانات الدخول الافتراضية
-
-بعد التثبيت، قم بإنشاء المستخدم الأول:
+### 2. خطوات النشر السريع
 
 ```bash
+# 1. رفع المشروع للخادم
+scp -r ./* root@your-server-ip:/var/www/nuzum/
 cd /var/www/nuzum
-source venv/bin/activate
-python -c "
-from app import app, db
-from models import User, UserRole
-from werkzeug.security import generate_password_hash
 
-with app.app_context():
-    admin = User(
-        name='مدير النظام',
-        email='admin@company.com',
-        username='admin',
-        password_hash=generate_password_hash('admin123'),
-        role=UserRole.ADMIN,
-        is_active=True
-    )
-    db.session.add(admin)
-    db.session.commit()
-    print('تم إنشاء المستخدم الرئيسي')
-"
+# 2. تخصيص متغيرات البيئة
+cp deployment/production.env .env
+nano .env  # تعديل القيم المطلوبة
+
+# 3. تشغيل النشر التلقائي
+chmod +x deployment/deploy.sh
+./deployment/deploy.sh
+
+# 4. إعداد SSL (اختياري)
+sudo certbot --nginx -d yourdomain.com
 ```
 
-**بيانات الدخول:**
-- البريد الإلكتروني: `admin@company.com`
-- كلمة المرور: `admin123`
+### 3. المتغيرات المطلوبة في .env
 
-⚠️ **هام**: غيّر كلمة المرور فور تسجيل الدخول الأول
-
-## الملفات المهمة
-
-### إعدادات قاعدة البيانات (.env)
 ```env
-DATABASE_URL=postgresql://nuzum_user:your_password@localhost:5432/nuzum_db
-SESSION_SECRET=your-random-secret-key
-FLASK_ENV=production
+# قاعدة البيانات - يجب تغييرها
+DATABASE_URL=postgresql://user:password@localhost:5432/nuzum_db
+SESSION_SECRET=your-unique-secret-key-here
+
+# Firebase - احصل عليها من Firebase Console
+FIREBASE_API_KEY=your-api-key
+FIREBASE_PROJECT_ID=your-project-id  
+FIREBASE_APP_ID=your-app-id
+
+# Twilio للرسائل (اختياري)
+TWILIO_ACCOUNT_SID=your-sid
+TWILIO_AUTH_TOKEN=your-token
+TWILIO_PHONE_NUMBER=your-number
 ```
 
-### إعدادات Nginx
-- الملف: `/etc/nginx/sites-available/nuzum`
-- غيّر `your-domain.com` إلى نطاقك الحقيقي
+### 4. الوصول للنظام
 
-### خدمة النظام
-- الملف: `/etc/systemd/system/nuzum.service`
-- الأوامر: `systemctl start/stop/restart nuzum`
+بعد النشر:
+- **HTTP**: `http://your-server-ip`
+- **HTTPS**: `https://your-domain.com` (بعد إعداد SSL)
+- **بيانات الدخول الافتراضية**: admin / admin123
 
-## التحقق من التثبيت
+### 5. أوامر الإدارة
 
 ```bash
-# فحص حالة الخدمات
-systemctl status nuzum nginx postgresql
-
-# اختبار الوصول
-curl -I http://localhost:5000
-curl -I http://your-domain.com
-
 # مراقبة السجلات
-journalctl -u nuzum -f
+docker-compose logs -f
+
+# إعادة تشغيل
+docker-compose restart
+
+# إيقاف النظام
+docker-compose down
+
+# نسخة احتياطية
+./deployment/backup.sh
+
+# تحديث النظام
+git pull && docker-compose up --build -d
 ```
 
-## المجلدات المهمة
+### 6. استكشاف الأخطاء
 
-- **التطبيق**: `/var/www/nuzum`
-- **السجلات**: `/var/log/nuzum/`
-- **رفع الملفات**: `/var/www/nuzum/static/uploads/`
-- **النسخ الاحتياطية**: `/var/backups/nuzum/`
+**مشكلة الذاكرة:**
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
 
-## الدعم الفني
+**مشاكل الصلاحيات:**
+```bash
+sudo chown -R $USER:$USER /var/www/nuzum
+```
 
-في حالة المشاكل، راجع:
-1. `deployment/DEPLOYMENT_GUIDE.md` - دليل النشر التفصيلي
-2. `DEVELOPER_GUIDE.md` - دليل المطور
-3. السجلات: `journalctl -u nuzum -f`
+**إعادة بناء الحاويات:**
+```bash
+docker-compose down
+docker-compose up --build -d
+```
 
-النظام جاهز للعمل فور إكمال هذه الخطوات.
+### 7. الأمان الأساسي
+
+```bash
+# Firewall
+sudo ufw enable
+sudo ufw allow 22,80,443/tcp
+
+# Fail2ban
+sudo apt install fail2ban
+sudo systemctl enable fail2ban
+```
+
+---
+
+## ملفات النشر المُنشأة:
+
+✅ `docker-compose.yml` - تكوين الحاويات الرئيسي
+✅ `nginx.conf` - إعدادات Nginx مع SSL
+✅ `deployment/deploy.sh` - نص النشر التلقائي  
+✅ `deployment/production.env` - متغيرات البيئة للإنتاج
+✅ `deployment/backup.sh` - نص النسخ الاحتياطي
+✅ `deployment/README_DEPLOYMENT.md` - دليل النشر المفصل
+
+**النظام جاهز للنشر على أي VPS يدعم Docker!**
