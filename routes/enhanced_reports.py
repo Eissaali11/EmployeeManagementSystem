@@ -90,8 +90,13 @@ def salaries_pdf():
         pdf_data = generate_salary_report_pdf(salaries_data, month_name, year)
         
         # إرجاع البيانات كملف تنزيل
+        if isinstance(pdf_data, str):
+            pdf_bytes = pdf_data.encode('latin-1')
+        else:
+            pdf_bytes = pdf_data
+            
         return send_file(
-            BytesIO(pdf_data),
+            BytesIO(pdf_bytes),
             as_attachment=True,
             download_name=f"salaries_report_{year}_{month}.pdf",
             mimetype='application/pdf'
