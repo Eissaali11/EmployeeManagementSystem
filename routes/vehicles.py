@@ -21,11 +21,11 @@ from models import (
 )
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
-from utils.vehicle_report import generate_complete_vehicle_report
-from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
-from utils.workshop_report import generate_workshop_report_pdf
-from utils.html_to_pdf import generate_pdf_from_template
-from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
+from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
+# from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
+# from utils.workshop_report import generate_workshop_report_pdf
+# from utils.html_to_pdf import generate_pdf_from_template
+# from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle

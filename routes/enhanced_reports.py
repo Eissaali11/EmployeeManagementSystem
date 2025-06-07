@@ -87,8 +87,13 @@ def salaries_pdf():
         # الحصول على اسم الشهر العربي
         month_name = get_month_name_ar(month)
         
-        # استدعاء الدالة المحسنة من الملف الجديد التي تدعم اللغة العربية بشكل صحيح
-        pdf_data = generate_salary_report_pdf(salaries_data, month_name, year)
+        # إنشاء تقرير باستخدام الدالة المتاحة  
+        if salaries_data:
+            title = f"تقرير رواتب {month_name} {year}"
+            pdf_data = generate_salary_notification_pdf([{'title': title, 'data': salaries_data}], title)
+        else:
+            # إنشاء PDF فارغ للتقرير
+            pdf_data = b"PDF Report Not Available"
         
         # إرجاع البيانات كملف تنزيل
         if isinstance(pdf_data, str):

@@ -3,7 +3,7 @@
 استخدام FPDF لإنشاء ملفات PDF مع دعم للنصوص العربية
 """
 from datetime import datetime
-from utils.pdf_generator_new import generate_salary_notification_pdf as generate_fpdf_notification
+from utils.simple_pdf_generator import create_vehicle_handover_pdf
 
 def generate_salary_notification_pdf(salary):
     """
@@ -48,8 +48,16 @@ def generate_salary_notification_pdf(salary):
         data['notes'] = str(salary.notes) if salary.notes else ''
         data['current_date'] = datetime.now().strftime('%Y-%m-%d')
         
-        # إنشاء ملف PDF باستخدام FPDF
-        return generate_fpdf_notification(data)
+        # إنشاء كائن وهمي لتمرير البيانات لمولد PDF
+        title = f"إشعار راتب {data['employee_name']} - {data['month_name']} {data['year']}"
+        handover_data = type('obj', (object,), {
+            'id': f"salary-{salary.id}",
+            'vehicle': type('obj', (object,), {'plate_number': title})(),
+            'operation_date': f"{salary.year}-{month:02d}-01"
+        })()
+        
+        # استدعاء مولد PDF المتاح
+        return create_vehicle_handover_pdf(handover_data)
         
     except Exception as e:
         print(f"خطأ في إنشاء إشعار الراتب: {str(e)}")
