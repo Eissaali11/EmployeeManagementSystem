@@ -571,5 +571,16 @@
             }
         });
     }
+    
+    // تشغيل جميع الدوال عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        updateDate();
+        initializeCounters();
+        initializeDepartmentChart();
+        initializeSalaryChart();
+        initializeDocumentChart();
+        
+        console.log('تم تحميل كافة مكونات لوحة المعلومات بنجاح');
+    });
 </script>
 {% endblock %}
