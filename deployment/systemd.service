@@ -1,0 +1,22 @@
+[Unit]
+Description=نُظم - نظام إدارة الموظفين والمركبات
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/nuzum
+Environment="PATH=/var/www/nuzum/venv/bin"
+EnvironmentFile=/var/www/nuzum/.env
+ExecStart=/var/www/nuzum/venv/bin/gunicorn --config /var/www/nuzum/deployment/gunicorn.conf.py main:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
