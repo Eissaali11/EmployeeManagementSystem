@@ -27,6 +27,7 @@
                     خلال صفحة الرواتب.
                 </div>
             </div>
+
             <!-- Reports Grid -->
             <div class="row g-4">
                 <!-- تقرير الرواتب -->
@@ -43,47 +44,47 @@
                         </div>
                         <div class="card-body p-4">
                             <form method="get" action="{{ url_for('enhanced_reports.salaries_pdf') }}" class="needs-validation" novalidate>
-                                        <div class="row g-3 align-items-center mb-3">
-                                            <div class="col-md-4">
-                                                <label for="month" class="form-label">الشهر</label>
-                                                <select class="form-select" id="month" name="month">
-                                                    {% for i in range(1, 13) %}
-                                                    <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>
-                                                        {{ get_month_name_ar(i) }}
-                                                    </option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="year" class="form-label">السنة</label>
-                                                <select class="form-select" id="year" name="year">
-                                                    {% for year in range(current_year-5, current_year+1) %}
-                                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="department_id" class="form-label">القسم</label>
-                                                <select class="form-select" id="department_id" name="department_id">
-                                                    <option value="">جميع الأقسام</option>
-                                                    {% for department in departments %}
-                                                    <option value="{{ department.id }}">{{ department.name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-2">
-                                            <button type="submit" class="btn btn-primary flex-fill me-md-2 mb-2 mb-md-0">
-                                                <i class="fas fa-file-pdf me-2"></i> تصدير PDF
-                                            </button>
-                                            <button type="submit" class="btn btn-success flex-fill" formaction="{{ url_for('enhanced_reports.salaries_excel') }}">
-                                                <i class="fas fa-file-excel me-2"></i> تصدير Excel
-                                            </button>
-                                        </div>
-                                    </form>
+                                <div class="row g-3 align-items-center mb-3">
+                                    <div class="col-md-4">
+                                        <label for="month" class="form-label fw-semibold">الشهر</label>
+                                        <select class="form-select form-select-lg" id="month" name="month">
+                                            {% for i in range(1, 13) %}
+                                            <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>
+                                                {{ get_month_name_ar(i) }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="year" class="form-label fw-semibold">السنة</label>
+                                        <select class="form-select form-select-lg" id="year" name="year">
+                                            {% for year in range(current_year-5, current_year+1) %}
+                                            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="department_id" class="form-label fw-semibold">القسم</label>
+                                        <select class="form-select form-select-lg" id="department_id" name="department_id">
+                                            <option value="">جميع الأقسام</option>
+                                            {% for department in departments %}
+                                            <option value="{{ department.id }}">{{ department.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-2">
+                                    <button type="submit" class="btn btn-lg btn-gradient text-white flex-fill me-md-2 mb-2 mb-md-0" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                                        <i class="fas fa-file-pdf me-2"></i> تصدير PDF
+                                    </button>
+                                    <button type="submit" class="btn btn-lg btn-success flex-fill" formaction="{{ url_for('enhanced_reports.salaries_excel') }}">
+                                        <i class="fas fa-file-excel me-2"></i> تصدير Excel
+                                    </button>
+                                </div>
+                            </form>
                         </div>
+                    </div>
+                </div>
                         
                 <!-- إشعار راتب -->
                 <div class="col-xl-6 col-lg-12">
@@ -98,7 +99,7 @@
                             </div>
                         </div>
                         <div class="card-body p-4">
-                            <form method="get" action="{{ url_for('enhanced_reports.salary_slip') }}" class="needs-validation" novalidate>
+                            <form method="get" action="{{ url_for('enhanced_reports.salaries_pdf') }}" class="needs-validation" novalidate>
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-6">
                                         <label for="employee_id" class="form-label fw-semibold">الموظف</label>
@@ -301,35 +302,4 @@
 }
 </style>
 
-{% endblock %}
-                                <div class="card-body">
-                                    <h5 class="card-title text-primary mb-3">نموذج تسليم/استلام مركبة</h5>
-                                    <p class="card-text">إنشاء نموذج تسليم أو استلام مركبة بتصميم محسن مع دعم كامل للغة العربية.</p>
-                                    <!-- سيتم إضافة هذه الميزة قريباً -->
-                                    <div class="alert alert-info mt-4">
-                                        <i class="fas fa-info-circle me-2"></i> هذه الميزة ستكون متاحة قريباً. يمكنك الوصول إلى هذه الخدمة مباشرة من خلال صفحة المركبات.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- تقرير الوثائق -->
-                        <div class="col-md-6 mb-4">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title text-primary mb-3">تقرير الوثائق</h5>
-                                    <p class="card-text">عرض تقرير الوثائق مع إمكانية التصدير إلى PDF بدعم كامل للغة العربية.</p>
-                                    <!-- سيتم إضافة هذه الميزة قريباً -->
-                                    <div class="alert alert-info mt-4">
-                                        <i class="fas fa-info-circle me-2"></i> هذه الميزة قيد التطوير وستكون متاحة قريباً.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
