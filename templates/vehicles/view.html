@@ -1153,6 +1153,12 @@
                                                         <i class="fas fa-edit"></i>
                                                         تعديل
                                                     </a>
+                                                    {% if record.mobile %}
+                                                    <a href="https://wa.me/{{ record.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ record.person_name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ record.handover_type_ar }}: {{ record.formatted_handover_date }}%0A%0Aرابط النموذج الإلكتروني للتفويض:%0A{{ request.url_root }}vehicles/{{ vehicle.id }}/handover/{{ record.id }}%0A%0Aشكراً لك" 
+                                                       class="btn btn-outline-success" target="_blank" title="إرسال رسالة واتساب">
+                                                        <i class="fab fa-whatsapp"></i>
+                                                    </a>
+                                                    {% endif %}
                                                     <a href="{{ url_for('vehicles.handover_pdf', id=record.id) }}" class="btn btn-outline-danger" target="_blank">
                                                         <i class="fas fa-file-pdf"></i>
                                                     </a>

@@ -808,6 +808,11 @@ def view(id):
     
     for record in handover_records:
         record.formatted_handover_date = format_date_arabic(record.handover_date)
+        # إضافة معلومات رقم الهاتف للسجل
+        record.mobile = None
+        record.handover_type_ar = 'استلام' if record.handover_type == 'delivery' else 'تسليم'
+        if record.employee_rel and record.employee_rel.mobile:
+            record.mobile = record.employee_rel.mobile
     
     for record in periodic_inspections:
         record.formatted_inspection_date = format_date_arabic(record.inspection_date)
