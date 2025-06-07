@@ -751,19 +751,28 @@ def view(id):
     
     # تعيين أحدث سجل تسليم كسائق حالي والباقي كسائقين سابقين
     for i, record in enumerate(delivery_records):
+        # الحصول على رقم هاتف الموظف إذا كان متوفراً
+        phone_number = None
+        if record.employee_rel and record.employee_rel.phone:
+            phone_number = record.employee_rel.phone
+            
         if i == 0:  # أول سجل بعد الترتيب (الأحدث)
             current_driver = {
                 'name': record.person_name,
                 'date': record.handover_date,
                 'formatted_date': format_date_arabic(record.handover_date),
-                'handover_id': record.id
+                'handover_id': record.id,
+                'phone': phone_number,
+                'employee_id': record.employee_id
             }
         else:
             previous_drivers.append({
                 'name': record.person_name,
                 'date': record.handover_date,
                 'formatted_date': format_date_arabic(record.handover_date),
-                'handover_id': record.id
+                'handover_id': record.id,
+                'phone': phone_number,
+                'employee_id': record.employee_id
             })
     
     # ترتيب السائقين السابقين حسب التاريخ (الأحدث أولاً)
