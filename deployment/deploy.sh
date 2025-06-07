@@ -57,18 +57,19 @@ with app.app_context():
 echo "إنشاء مستخدم إدارة افتراضي..."
 docker-compose exec web python -c "
 from app import app, db
-from models import User
-from werkzeug.security import generate_password_hash
+from models import User, UserRole
 
 with app.app_context():
-    admin = User.query.filter_by(username='admin').first()
+    admin = User.query.filter_by(email='admin@nuzum.com').first()
     if not admin:
         admin = User(
-            username='admin',
+            name='مدير النظام',
             email='admin@nuzum.com',
-            password_hash=generate_password_hash('admin123'),
-            is_admin=True
+            role=UserRole.ADMIN,
+            is_active=True,
+            auth_type='local'
         )
+        admin.set_password('admin123')
         db.session.add(admin)
         db.session.commit()
         print('تم إنشاء مستخدم الإدارة: admin / admin123')
