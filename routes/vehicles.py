@@ -763,7 +763,9 @@ def view(id):
                 'formatted_date': format_date_arabic(record.handover_date),
                 'handover_id': record.id,
                 'mobile': phone_number,
-                'employee_id': record.employee_id
+                'employee_id': record.employee_id,
+                'handover_type': record.handover_type,
+                'handover_type_ar': 'استلام' if record.handover_type == 'delivery' else 'تسليم'
             }
         else:
             previous_drivers.append({
@@ -772,7 +774,9 @@ def view(id):
                 'formatted_date': format_date_arabic(record.handover_date),
                 'handover_id': record.id,
                 'mobile': phone_number,
-                'employee_id': record.employee_id
+                'employee_id': record.employee_id,
+                'handover_type': record.handover_type,
+                'handover_type_ar': 'استلام' if record.handover_type == 'delivery' else 'تسليم'
             })
     
     # ترتيب السائقين السابقين حسب التاريخ (الأحدث أولاً)
