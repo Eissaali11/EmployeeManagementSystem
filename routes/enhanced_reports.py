@@ -11,8 +11,9 @@ from utils.date_converter import parse_date, format_date_hijri, format_date_greg
 from utils.excel import generate_employee_excel, generate_salary_excel
 # استخدام مولد PDF البسيط الذي يتجنب مشاكل الترميز
 # from utils.simple_pdf_generator import generate_salary_report_pdf
-# استيراد الدوال المتبقية من الملف الأصلي
-from utils.pdf_generator_new import generate_salary_notification_pdf, generate_workshop_receipts_pdf as generate_vehicle_handover_pdf
+# استيراد الدوال المتبقية من الملفات المناسبة
+from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_vehicle_handover_pdf
+from utils.salary_notification import generate_salary_notification_pdf
 
 # إنشاء موجه المسارات
 enhanced_reports_bp = Blueprint('enhanced_reports', __name__)
