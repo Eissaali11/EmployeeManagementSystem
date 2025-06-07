@@ -6,7 +6,7 @@
 import os
 import io
 from datetime import datetime
-from flask import current_app
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle

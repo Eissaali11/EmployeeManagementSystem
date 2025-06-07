@@ -7,7 +7,7 @@ import os
 import io
 import tempfile
 from datetime import datetime
-from flask import current_app, url_for
+from flask import url_for
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -21,7 +21,7 @@ import pandas as pd
 # تسجيل الخطوط العربية
 def register_fonts():
     """تسجيل الخطوط العربية"""
-    font_path = os.path.join(current_app.static_folder, 'fonts')
+    font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts')
     
     # التحقق من وجود الخطوط وتسجيلها
     amiri_path = os.path.join(font_path, 'Amiri-Regular.ttf')
@@ -73,7 +73,7 @@ def export_vehicle_pdf(vehicle, workshop_records=None, rental_records=None):
     content = []
     
     # إضافة شعار الشركة إذا كان متوفراً
-    logo_path = os.path.join(current_app.static_folder, 'img/logo.png')
+    logo_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"), 'img/logo.png')
     if os.path.exists(logo_path):
         img = Image(logo_path, width=120, height=60)
         content.append(img)
@@ -255,7 +255,7 @@ def export_workshop_records_pdf(vehicle, workshop_records):
     content = []
     
     # إضافة شعار الشركة إذا كان متوفراً
-    logo_path = os.path.join(current_app.static_folder, 'img/logo.png')
+    logo_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"), 'img/logo.png')
     if os.path.exists(logo_path):
         img = Image(logo_path, width=120, height=60)
         content.append(img)

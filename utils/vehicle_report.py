@@ -6,7 +6,7 @@
 import os
 import io
 from datetime import datetime
-from flask import current_app
+# تم إزالة current_app لتجنب مشاكل السياق
 from fpdf import FPDF
 import arabic_reshaper
 from bidi.algorithm import get_display
@@ -57,7 +57,7 @@ def generate_complete_vehicle_report(vehicle, rental=None, workshop_records=None
         pdf.add_page()
         
         # إضافة الخط العربي
-        font_path = os.path.join(current_app.root_path, 'static', 'fonts', 'Amiri-Regular.ttf')
+        font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts', 'Amiri-Regular.ttf')
         if os.path.exists(font_path):
             pdf.add_font('Arabic', '', font_path, uni=True)
             pdf.set_font('Arabic', '', 14)
