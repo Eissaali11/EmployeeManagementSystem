@@ -39,39 +39,38 @@ class ProfessionalSalaryPDF(FPDF):
     def add_company_header(self, company_name="نُظم", title="إشعار راتب"):
         """إضافة رأس الشركة مع الشعار"""
         
-        # منطقة الشعار (دائرة خضراء)
+        # منطقة الشعار (مربع أخضر بدلاً من دائرة)
         self.set_fill_color(46, 204, 113)  # أخضر
-        self.circle(25, 25, 15, 'F')
+        self.rect(15, 15, 20, 20, 'F')
         
         # نص الشعار
         self.set_text_color(255, 255, 255)
-        self.set_font('Arial', 'B', 8)
-        self.set_xy(17, 22)
-        self.safe_cell(16, 6, company_name, 0, 0, 'C')
+        self.set_font('Arial', 'B', 10)
+        self.set_xy(18, 22)
+        self.safe_cell(14, 6, company_name, 0, 0, 'C')
         
         # اسم الشركة باللغة الإنجليزية
         self.set_text_color(0, 0, 0)
-        self.set_font('Arial', 'B', 10)
+        self.set_font('Arial', 'B', 12)
         self.set_xy(45, 18)
         self.safe_cell(60, 5, 'NUZUM COMPANY LTD', 0, 1, 'L')
         
         # وصف الشركة
-        self.set_font('Arial', '', 8)
+        self.set_font('Arial', '', 9)
         self.set_xy(45, 25)
         self.safe_cell(60, 5, 'Employee Management System', 0, 1, 'L')
         
         # العنوان الرئيسي
-        self.set_font('Arial', 'B', 18)
-        self.set_xy(120, 22)
-        title_ar = self.reshape_arabic(title)
-        self.safe_cell(70, 8, title_ar, 0, 1, 'R')
+        self.set_font('Arial', 'B', 16)
+        self.set_xy(110, 22)
+        title_simple = f"اشعار راتب للموظف"  # نص مبسط بدون تشكيل
+        self.safe_cell(80, 8, title_simple, 0, 1, 'R')
         
         # تاريخ التقرير
         self.set_font('Arial', '', 10)
-        self.set_xy(120, 32)
+        self.set_xy(110, 32)
         date_text = f"تاريخ التقرير: {datetime.now().strftime('%d-%m-%Y')}"
-        date_ar = self.reshape_arabic(date_text)
-        self.safe_cell(70, 5, date_ar, 0, 1, 'R')
+        self.safe_cell(80, 5, date_text, 0, 1, 'R')
         
         # خط فاصل
         self.set_draw_color(0, 0, 0)
@@ -111,7 +110,7 @@ def create_professional_salary_pdf(salary):
         # عنوان قسم المعلومات الأساسية
         pdf.set_fill_color(220, 220, 220)  # رمادي فاتح
         pdf.set_font('Arial', 'B', 12)
-        basic_info_title = pdf.reshape_arabic('المعلومات الأساسية')
+        basic_info_title = "المعلومات الاساسية"  # نص مبسط
         pdf.safe_cell(0, 8, basic_info_title, 1, 1, 'R', True)
         
         # جدول المعلومات الأساسية
