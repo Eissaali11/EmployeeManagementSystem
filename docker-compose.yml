@@ -6,15 +6,15 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://username:password@db:5432/nuzum_db
+      - DATABASE_URL=postgresql://nuzum_user:nuzum_secure_pass_2024@db:5432/nuzum_db
       - FLASK_ENV=production
-      - SESSION_SECRET=your-secret-key-here
-      - FIREBASE_API_KEY=your-firebase-api-key
-      - FIREBASE_PROJECT_ID=your-firebase-project-id
-      - FIREBASE_APP_ID=your-firebase-app-id
-      - TWILIO_ACCOUNT_SID=your-twilio-sid
-      - TWILIO_AUTH_TOKEN=your-twilio-token
-      - TWILIO_PHONE_NUMBER=your-twilio-phone
+      - SESSION_SECRET=nuzum_session_secret_key_2024_secure
+      - FIREBASE_API_KEY=${FIREBASE_API_KEY:-}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-}
+      - FIREBASE_APP_ID=${FIREBASE_APP_ID:-}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
     depends_on:
       - db
     volumes:
@@ -26,8 +26,9 @@ services:
     image: postgres:15
     environment:
       - POSTGRES_DB=nuzum_db
-      - POSTGRES_USER=username
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=nuzum_user
+      - POSTGRES_PASSWORD=nuzum_secure_pass_2024
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --lc-collate=C --lc-ctype=C
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backup:/backup

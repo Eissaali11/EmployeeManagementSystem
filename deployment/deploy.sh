@@ -72,19 +72,28 @@ with app.app_context():
         admin.set_password('admin123')
         db.session.add(admin)
         db.session.commit()
-        print('تم إنشاء مستخدم الإدارة: admin / admin123')
+        print('تم إنشاء مستخدم الإدارة: admin@nuzum.com / admin123')
     else:
         print('مستخدم الإدارة موجود مسبقاً')
 "
 
-echo "===== تم إكمال النشر بنجاح ====="
-echo "الموقع متاح على:"
-echo "HTTP: http://your-server-ip"
-echo "HTTPS: https://your-server-ip"
-echo ""
-echo "بيانات الدخول الافتراضية:"
-echo "اسم المستخدم: admin"
+# التحقق من حالة الخدمات
+echo "التحقق من حالة الخدمات..."
+docker-compose ps
+
+echo "عرض السجلات الأخيرة..."
+docker-compose logs --tail=50 web
+
+echo "====================================="
+echo "تم إكمال عملية النشر بنجاح!"
+echo "====================================="
+echo "رابط النظام: http://localhost"
+echo "بيانات تسجيل الدخول:"
+echo "البريد الإلكتروني: admin@nuzum.com"
 echo "كلمة المرور: admin123"
-echo ""
-echo "لمراقبة السجلات: docker-compose logs -f"
-echo "لإيقاف النظام: docker-compose down"
+echo "====================================="
+echo "الأوامر المفيدة:"
+echo "مراقبة السجلات: docker-compose logs -f"
+echo "إيقاف النظام: docker-compose down"
+echo "إعادة التشغيل: docker-compose restart"
+echo "====================================="
