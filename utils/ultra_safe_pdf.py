@@ -77,14 +77,20 @@ def create_ultra_safe_salary_pdf(salary):
         pdf.rect(0, 0, 210, 35, 'F')
         
         # شعار الشركة
-        pdf.set_fill_color(46, 204, 113)  # أخضر
-        pdf.rect(15, 8, 20, 20, 'F')
-        
-        # نص الشعار
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_font('Arial', 'B', 12)
-        pdf.set_xy(18, 15)
-        pdf.ultra_safe_cell(14, 6, 'NUZUM', 0, 0, 'C')
+        try:
+            # محاولة إضافة صورة الشعار
+            logo_path = 'attached_assets/ChatGPT Image Jun 8, 2025, 05_34_10 PM_1749393284624.png'
+            pdf.image(logo_path, x=15, y=8, w=20, h=20)
+        except Exception:
+            # في حالة عدم وجود الصورة، استخدام مربع أزرق مع نص
+            pdf.set_fill_color(52, 152, 219)  # أزرق
+            pdf.rect(15, 8, 20, 20, 'F')
+            
+            # نص الشعار
+            pdf.set_text_color(255, 255, 255)
+            pdf.set_font('Arial', 'B', 12)
+            pdf.set_xy(18, 15)
+            pdf.ultra_safe_cell(14, 6, 'NUZUM', 0, 0, 'C')
         
         # اسم الشركة
         pdf.set_font('Arial', 'B', 16)
