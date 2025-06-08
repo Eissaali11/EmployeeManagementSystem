@@ -1,9 +1,9 @@
 """
-وحدة إنشاء إشعار راتب كملف PDF محسنة - الإصدار البسيط
-يعمل بدون خطوط خارجية ومتوافق مع جميع البيئات
+وحدة إنشاء إشعار راتب كملف PDF محسنة - الإصدار الاحترافي
+تصميم مشابه لتقرير راس كو مع شعار الشركة وتنسيق احترافي
 """
 
-from utils.simple_salary_pdf import create_simple_salary_pdf
+from utils.professional_salary_pdf import create_professional_salary_pdf
 
 def generate_salary_notification_pdf(salary):
     """
@@ -16,8 +16,8 @@ def generate_salary_notification_pdf(salary):
         bytes: ملف PDF كـ bytes
     """
     try:
-        # استخدام المولد البسيط الذي يعمل بدون خطوط خارجية
-        return create_simple_salary_pdf(salary)
+        # استخدام المولد الاحترافي بتصميم شبيه براس كو
+        return create_professional_salary_pdf(salary)
         
     except Exception as e:
         print(f"خطأ في إنشاء إشعار الراتب: {str(e)}")
