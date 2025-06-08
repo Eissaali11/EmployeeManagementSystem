@@ -64,7 +64,7 @@ class SimpleSalaryPDF(FPDF):
 
 def create_simple_salary_pdf(salary):
     """
-    إنشاء إشعار راتب بسيط يعمل في جميع البيئات
+    إنشاء إشعار راتب احترافي يعمل في جميع البيئات
     
     Args:
         salary: كائن Salary يحتوي على بيانات الراتب
@@ -79,136 +79,190 @@ def create_simple_salary_pdf(salary):
         
         # تحضير البيانات الأساسية
         month_names = {
-            1: 'January - يناير', 2: 'February - فبراير', 3: 'March - مارس', 4: 'April - أبريل',
-            5: 'May - مايو', 6: 'June - يونيو', 7: 'July - يوليو', 8: 'August - أغسطس',
-            9: 'September - سبتمبر', 10: 'October - أكتوبر', 11: 'November - نوفمبر', 12: 'December - ديسمبر'
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
+            5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+            9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
         }
         
         month = int(salary.month) if not isinstance(salary.month, int) else salary.month
-        month_name = month_names.get(month, f'Month {month}')
+        month_name = month_names.get(month, f'الشهر {month}')
         year = str(salary.year)
         
-        # العنوان الرئيسي
-        pdf.set_font('Arial', 'B', 18)
-        title = f'Salary Notification - {month_name} {year}'
-        pdf.safe_cell(0, 15, title, 0, 1, 'C')
-        pdf.ln(10)
+        # شريط علوي ملون
+        pdf.set_fill_color(41, 128, 185)  # أزرق احترافي
+        pdf.rect(0, 0, 210, 25, 'F')
         
-        # معلومات الموظف
+        # العنوان الرئيسي مع خلفية ملونة
+        pdf.set_text_color(255, 255, 255)  # نص أبيض
+        pdf.set_font('Arial', 'B', 20)
+        pdf.ln(8)
+        title_ar = pdf.reshape_arabic(f'إشعار راتب - {month_name} {year}')
+        pdf.safe_cell(0, 10, title_ar, 0, 1, 'C')
+        
+        # استعادة لون النص الأسود
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(15)
+        
+        # صندوق معلومات الموظف
+        pdf.set_fill_color(240, 248, 255)  # خلفية زرقاء فاتحة
+        pdf.rect(15, pdf.get_y(), 180, 50, 'F')
+        
+        pdf.set_x(20)
         pdf.set_font('Arial', 'B', 14)
-        pdf.safe_cell(0, 10, 'Employee Information / بيانات الموظف', 0, 1, 'L')
+        pdf.safe_cell(0, 10, pdf.reshape_arabic('بيانات الموظف'), 0, 1, 'R')
+        pdf.ln(2)
+        
+        # معلومات الموظف في صندوق
+        pdf.set_font('Arial', '', 11)
+        
+        # الصف الأول - الاسم والرقم
+        pdf.set_x(20)
+        pdf.safe_cell(85, 8, pdf.reshape_arabic(f'الاسم: {salary.employee.name}'), 0, 0, 'R')
+        pdf.safe_cell(85, 8, pdf.reshape_arabic(f'رقم الموظف: {salary.employee.employee_id}'), 0, 1, 'R')
+        
+        # الصف الثاني - المسمى والقسم
+        pdf.set_x(20)
+        pdf.safe_cell(85, 8, pdf.reshape_arabic(f'المسمى: {salary.employee.job_title}'), 0, 0, 'R')
+        department_name = salary.employee.department.name if salary.employee.department else 'غير محدد'
+        pdf.safe_cell(85, 8, pdf.reshape_arabic(f'القسم: {department_name}'), 0, 1, 'R')
+        
+        pdf.ln(15)
+        
+        # جدول الراتب الاحترافي
+        pdf.set_font('Arial', 'B', 14)
+        pdf.safe_cell(0, 10, pdf.reshape_arabic('تفاصيل الراتب'), 0, 1, 'C')
         pdf.ln(5)
         
-        # جدول معلومات الموظف
-        pdf.set_font('Arial', '', 12)
+        # رأس الجدول
+        pdf.set_fill_color(52, 152, 219)  # أزرق
+        pdf.set_text_color(255, 255, 255)  # نص أبيض
+        pdf.set_font('Arial', 'B', 12)
         
-        # اسم الموظف
-        pdf.safe_cell(50, 8, 'Name / الاسم:', 1, 0, 'L')
-        employee_name = str(salary.employee.name) if salary.employee.name else 'N/A'
-        pdf.safe_cell(0, 8, employee_name, 1, 1, 'L')
+        pdf.safe_cell(105, 10, pdf.reshape_arabic('البيان'), 1, 0, 'C', True)
+        pdf.safe_cell(75, 10, pdf.reshape_arabic('المبلغ (ريال)'), 1, 1, 'C', True)
         
-        # رقم الموظف
-        pdf.safe_cell(50, 8, 'ID / الرقم:', 1, 0, 'L')
-        employee_id = str(salary.employee.employee_id) if salary.employee.employee_id else 'N/A'
-        pdf.safe_cell(0, 8, employee_id, 1, 1, 'L')
+        # استعادة لون النص
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font('Arial', '', 11)
         
-        # المسمى الوظيفي
-        pdf.safe_cell(50, 8, 'Position / المسمى:', 1, 0, 'L')
-        job_title = str(salary.employee.job_title) if salary.employee.job_title else 'N/A'
-        pdf.safe_cell(0, 8, job_title, 1, 1, 'L')
+        # بيانات الجدول
+        salary_items = [
+            ('الراتب الأساسي', float(salary.basic_salary)),
+            ('البدلات', float(salary.allowances)),
+            ('المكافآت', float(salary.bonus)),
+        ]
         
-        # القسم
-        pdf.safe_cell(50, 8, 'Department / القسم:', 1, 0, 'L')
-        department_name = str(salary.employee.department.name) if salary.employee.department else 'N/A'
-        pdf.safe_cell(0, 8, department_name, 1, 1, 'L')
-        
-        pdf.ln(10)
-        
-        # تفاصيل الراتب
-        pdf.set_font('Arial', 'B', 14)
-        pdf.safe_cell(0, 10, 'Salary Details / تفاصيل الراتب', 0, 1, 'L')
-        pdf.ln(5)
-        
-        # جدول الراتب
-        pdf.set_font('Arial', '', 12)
-        
-        # الراتب الأساسي
-        pdf.safe_cell(70, 8, 'Basic Salary / الراتب الأساسي:', 1, 0, 'L')
-        basic_amount = f'{float(salary.basic_salary):,.2f} SAR'
-        pdf.safe_cell(0, 8, basic_amount, 1, 1, 'R')
-        
-        # البدلات
-        pdf.safe_cell(70, 8, 'Allowances / البدلات:', 1, 0, 'L')
-        allowances_amount = f'{float(salary.allowances):,.2f} SAR'
-        pdf.safe_cell(0, 8, allowances_amount, 1, 1, 'R')
-        
-        # المكافآت
-        pdf.safe_cell(70, 8, 'Bonus / المكافآت:', 1, 0, 'L')
-        bonus_amount = f'{float(salary.bonus):,.2f} SAR'
-        pdf.safe_cell(0, 8, bonus_amount, 1, 1, 'R')
+        # صفوف عادية
+        for i, (label, amount) in enumerate(salary_items):
+            fill_color = (248, 249, 250) if i % 2 == 0 else (255, 255, 255)
+            pdf.set_fill_color(*fill_color)
+            
+            pdf.safe_cell(105, 8, pdf.reshape_arabic(label), 1, 0, 'R', True)
+            pdf.safe_cell(75, 8, f'{amount:,.2f}', 1, 1, 'C', True)
         
         # إجمالي المستحقات
         total_earnings = float(salary.basic_salary) + float(salary.allowances) + float(salary.bonus)
-        pdf.set_font('Arial', 'B', 12)
-        pdf.safe_cell(70, 8, 'Total Earnings / المستحقات:', 1, 0, 'L')
-        total_amount = f'{total_earnings:,.2f} SAR'
-        pdf.safe_cell(0, 8, total_amount, 1, 1, 'R')
+        pdf.set_fill_color(230, 247, 255)
+        pdf.set_font('Arial', 'B', 11)
+        pdf.safe_cell(105, 8, pdf.reshape_arabic('إجمالي المستحقات'), 1, 0, 'R', True)
+        pdf.safe_cell(75, 8, f'{total_earnings:,.2f}', 1, 1, 'C', True)
         
         # الخصومات
-        pdf.set_font('Arial', '', 12)
-        pdf.safe_cell(70, 8, 'Deductions / الخصومات:', 1, 0, 'L')
-        deductions_amount = f'{float(salary.deductions):,.2f} SAR'
-        pdf.safe_cell(0, 8, deductions_amount, 1, 1, 'R')
+        pdf.set_fill_color(255, 245, 245)
+        pdf.set_font('Arial', '', 11)
+        pdf.safe_cell(105, 8, pdf.reshape_arabic('الخصومات'), 1, 0, 'R', True)
+        pdf.safe_cell(75, 8, f'{float(salary.deductions):,.2f}', 1, 1, 'C', True)
         
-        # صافي الراتب
+        # صافي الراتب (مميز)
+        pdf.set_fill_color(46, 204, 113)  # أخضر
+        pdf.set_text_color(255, 255, 255)  # نص أبيض
         pdf.set_font('Arial', 'B', 14)
-        pdf.set_fill_color(230, 230, 230)
-        pdf.safe_cell(70, 10, 'Net Salary / صافي الراتب:', 1, 0, 'L', True)
-        net_amount = f'{float(salary.net_salary):,.2f} SAR'
-        pdf.safe_cell(0, 10, net_amount, 1, 1, 'R', True)
+        pdf.safe_cell(105, 12, pdf.reshape_arabic('صافي الراتب'), 1, 0, 'R', True)
+        pdf.safe_cell(75, 12, f'{float(salary.net_salary):,.2f}', 1, 1, 'C', True)
         
-        pdf.ln(10)
+        # استعادة لون النص
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(15)
         
-        # الملاحظات
+        # الملاحظات (إذا وجدت)
         if salary.notes:
+            pdf.set_fill_color(255, 252, 240)  # خلفية صفراء فاتحة
+            pdf.rect(15, pdf.get_y(), 180, 20, 'F')
+            
+            pdf.set_x(20)
             pdf.set_font('Arial', 'B', 12)
-            pdf.safe_cell(0, 8, 'Notes / ملاحظات:', 0, 1, 'L')
+            pdf.safe_cell(0, 8, pdf.reshape_arabic('ملاحظات:'), 0, 1, 'R')
+            
+            pdf.set_x(20)
             pdf.set_font('Arial', '', 10)
-            # تقسيم الملاحظات لعدة أسطر إذا لزم الأمر
-            notes_text = str(salary.notes)[:200] + ('...' if len(str(salary.notes)) > 200 else '')
-            pdf.safe_cell(0, 6, notes_text, 1, 1, 'L')
-            pdf.ln(5)
+            notes_text = str(salary.notes)[:150] + ('...' if len(str(salary.notes)) > 150 else '')
+            pdf.safe_cell(0, 8, pdf.reshape_arabic(notes_text), 0, 1, 'R')
+            pdf.ln(10)
+        
+        # التذييل
+        pdf.ln(10)
+        pdf.set_font('Arial', '', 9)
+        pdf.set_text_color(100, 100, 100)  # رمادي
         
         # معلومات إضافية
+        issue_date = f'تاريخ الإصدار: {datetime.now().strftime("%Y-%m-%d")}'
+        pdf.safe_cell(0, 6, pdf.reshape_arabic(issue_date), 0, 1, 'C')
+        
+        notification_id = f'رقم الإشعار: SAL-{salary.id}-{year}-{month:02d}'
+        pdf.safe_cell(0, 6, pdf.reshape_arabic(notification_id), 0, 1, 'C')
+        
+        # خط فاصل
+        pdf.ln(10)
+        pdf.set_draw_color(200, 200, 200)
+        pdf.line(20, pdf.get_y(), 190, pdf.get_y())
+        pdf.ln(10)
+        
+        # مساحة التوقيع
+        pdf.set_text_color(0, 0, 0)
         pdf.set_font('Arial', '', 10)
-        issue_date = f'Issue Date / تاريخ الإصدار: {datetime.now().strftime("%Y-%m-%d")}'
-        pdf.safe_cell(0, 6, issue_date, 0, 1, 'L')
         
-        notification_id = f'Notification ID / رقم الإشعار: SAL-{salary.id}-{year}-{month:02d}'
-        pdf.safe_cell(0, 6, notification_id, 0, 1, 'L')
-        
-        # توقيع
-        pdf.ln(15)
-        pdf.safe_cell(0, 6, 'Signature / التوقيع: ___________________', 0, 1, 'L')
-        pdf.safe_cell(0, 6, 'Date / التاريخ: ___________________', 0, 1, 'L')
+        # توقيع على اليسار والتاريخ على اليمين
+        y_pos = pdf.get_y()
+        pdf.safe_cell(90, 6, pdf.reshape_arabic('التوقيع: ___________________'), 0, 0, 'L')
+        pdf.safe_cell(90, 6, pdf.reshape_arabic('التاريخ: ___________________'), 0, 1, 'R')
         
         # إرجاع PDF كـ bytes
         output = BytesIO()
-        pdf_content = pdf.output(dest='S')
         
-        # معالجة نوع البيانات المُرجعة
-        if isinstance(pdf_content, str):
-            pdf_content = pdf_content.encode('latin-1')
-        elif hasattr(pdf_content, 'encode'):
-            pdf_content = str(pdf_content).encode('latin-1')
+        try:
+            # محاولة الحصول على PDF كـ bytes مباشرة
+            pdf_content = pdf.output(dest='S')
+            
+            # التعامل مع أنواع البيانات المختلفة
+            if isinstance(pdf_content, bytes):
+                output.write(pdf_content)
+            elif isinstance(pdf_content, bytearray):
+                output.write(bytes(pdf_content))
+            elif isinstance(pdf_content, str):
+                # استخدام ترميز أكثر أماناً للنصوص العربية
+                try:
+                    pdf_content = pdf_content.encode('utf-8')
+                except UnicodeEncodeError:
+                    try:
+                        pdf_content = pdf_content.encode('latin-1')
+                    except UnicodeEncodeError:
+                        # في حالة فشل جميع المحاولات، استخدام ترميز آمن
+                        pdf_content = pdf_content.encode('utf-8', errors='replace')
+                output.write(pdf_content)
+            else:
+                # تحويل إلى bytes بطريقة آمنة
+                output.write(str(pdf_content).encode('utf-8', errors='replace'))
+                
+        except Exception as e:
+            print(f"خطأ في ترميز PDF: {str(e)}")
+            # في حالة فشل الترميز، استخدام PDF طوارئ
+            return create_emergency_salary_pdf(salary)
         
-        output.write(pdf_content)
         output.seek(0)
-        
         return output.getvalue()
         
     except Exception as e:
-        print(f"خطأ في إنشاء إشعار الراتب البسيط: {str(e)}")
+        print(f"خطأ في إنشاء إشعار الراتب الاحترافي: {str(e)}")
         # إرجاع PDF بسيط جداً في حالة الفشل
         return create_emergency_salary_pdf(salary)
 
