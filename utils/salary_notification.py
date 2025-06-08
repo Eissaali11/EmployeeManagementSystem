@@ -3,7 +3,7 @@
 تصميم احترافي مع معالجة آمنة للنصوص العربية
 """
 
-from utils.simple_arabic_salary_pdf import create_simple_arabic_salary_pdf
+from utils.ultra_safe_pdf import create_ultra_safe_salary_pdf
 
 def generate_salary_notification_pdf(salary):
     """
@@ -17,7 +17,7 @@ def generate_salary_notification_pdf(salary):
     """
     try:
         # استخدام المولد الآمن الذي يعمل بدون مشاكل ترميز
-        return create_simple_arabic_salary_pdf(salary)
+        return create_ultra_safe_salary_pdf(salary)
         
     except Exception as e:
         print(f"خطأ في إنشاء إشعار الراتب: {str(e)}")
