@@ -43,28 +43,69 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for
 app.config['WTF_CSRF_ENABLED'] = True
 app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # تعطيل التحقق التلقائي من CSRF
 
-# Configure database connection using environment variables
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-    "pool_timeout": 30,  # زمن انتظار الاتصال بقاعدة البيانات (بالثواني)
-    "pool_size": 10,  # عدد الاتصالات المتزامنة في المجمع
-    "max_overflow": 5,  # عدد الاتصالات الإضافية المسموح بها
-    "pool_reset_on_return": "rollback",  # إعادة ضبط الاتصال عند إعادته إلى المجمع
-    "connect_args": {
-        # إعدادات SSl - قد تحتاج للتعديل حسب إعدادات قاعدة البيانات
-        "connect_timeout": 10,  # زمن انتظار الاتصال الأولي (بالثواني)
-        "keepalives": 1,  # تفعيل إشارات keepalive
-        "keepalives_idle": 30,  # زمن الخمول قبل إرسال إشارة keepalive
-        "keepalives_interval": 10,  # الفاصل الزمني بين إشارات keepalive
-        "keepalives_count": 5,  # عدد محاولات keepalive قبل اعتبار الاتصال مقطوعاً
+# Configure database connection with flexible support for different databases
+database_url = os.environ.get("DATABASE_URL")
+
+# If no DATABASE_URL is provided, use SQLite as fallback
+if not database_url:
+    # إنشاء مجلد database إذا لم يكن موجوداً
+    os.makedirs('database', exist_ok=True)
+    database_url = "sqlite:///database/nuzum.db"
+    logger.info("Using SQLite database: database/nuzum.db")
+else:
+    logger.info(f"Using database: {database_url.split('@')[0]}@***")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+
+# Configure engine options based on database type
+if database_url.startswith("postgresql://") or database_url.startswith("postgres://"):
+    # PostgreSQL optimized settings
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+        "pool_timeout": 30,
+        "pool_size": 10,
+        "max_overflow": 5,
+        "pool_reset_on_return": "rollback",
+        "connect_args": {
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
     }
-}
+elif database_url.startswith("mysql://"):
+    # MySQL optimized settings
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+        "pool_timeout": 30,
+        "pool_size": 5,
+        "max_overflow": 3,
+        "connect_args": {
+            "connect_timeout": 10,
+            "charset": "utf8mb4",
+        }
+    }
+else:
+    # SQLite settings (minimal connection pooling)
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_timeout": 20,
+        "pool_recycle": -1,
+        "pool_pre_ping": True,
+        "connect_args": {
+            "check_same_thread": False,
+            "timeout": 20,
+        }
+    }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ENGINE_OPTIONS"]["execution_options"] = {
-    "isolation_level": "READ COMMITTED"  # مستوى عزل المعاملات
-}
+
+# Add execution options only for PostgreSQL/MySQL
+if not database_url.startswith("sqlite"):
+    if "execution_options" not in app.config["SQLALCHEMY_ENGINE_OPTIONS"]:
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"]["execution_options"] = {}
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"]["execution_options"]["isolation_level"] = "READ COMMITTED"
 
 # Provide default values for uploads and other configurations
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
