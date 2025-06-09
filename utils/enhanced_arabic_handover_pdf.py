@@ -119,7 +119,7 @@ def create_vehicle_handover_pdf(handover_data):
         # صندوق معلومات الوثيقة الموسع
         c.setStrokeColor(primary_color)
         c.setLineWidth(2)
-        c.rect(width - 250, height - 180, 200, 140)
+        c.rect(width - 280, height - 200, 230, 160)
         
         # معلومات الوثيقة
         y_position = height - 50
@@ -143,11 +143,19 @@ def create_vehicle_handover_pdf(handover_data):
         
         # إضافة رابط النموذج الإلكتروني إذا كان موجوداً
         if form_link and form_link.strip():
-            doc_info.extend([
-                "رابط النموذج الإلكتروني:",
-                f"  {form_link[:40]}",  # أول 40 حرف
-                f"  {form_link[40:]}" if len(form_link) > 40 else ""  # باقي الرابط إذا كان طويلاً
-            ])
+            # تقسيم الرابط الطويل إلى أجزاء أصغر للعرض
+            if len(form_link) > 50:
+                doc_info.extend([
+                    "رابط النموذج الإلكتروني:",
+                    f"  {form_link[:50]}",
+                    f"  {form_link[50:100]}" if len(form_link) > 50 else "",
+                    f"  {form_link[100:]}" if len(form_link) > 100 else ""
+                ])
+            else:
+                doc_info.extend([
+                    "رابط النموذج الإلكتروني:",
+                    f"  {form_link}"
+                ])
         else:
             doc_info.append("رابط النموذج الإلكتروني: غير موجود")
         
@@ -155,10 +163,10 @@ def create_vehicle_handover_pdf(handover_data):
         for i, info in enumerate(doc_info):
             if info.startswith("رابط النموذج الإلكتروني:"):  # تنسيق غامق للعنوان
                 c.setFont("Helvetica-Bold", 8)
-                c.drawString(width - 245, height - 70 - (i * 12), info)
+                c.drawString(width - 275, height - 70 - (i * 11), info)
                 c.setFont("Helvetica", 8)
             elif info.strip():  # تجنب طباعة الأسطر الفارغة
-                c.drawString(width - 245, height - 70 - (i * 12), info)
+                c.drawString(width - 275, height - 70 - (i * 11), info)
         
         # خط فاصل
         y_position = height - 170
