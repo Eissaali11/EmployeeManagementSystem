@@ -130,7 +130,7 @@
                 <div class="profile-card">
                     <div class="employee-photo-section">
                         {% if employee.profile_image %}
-                            <img src="{{ url_for('static', filename='uploads/employees/' + employee.profile_image) }}" 
+                            <img src="{{ url_for('static', filename=employee.profile_image) }}" 
                                  alt="صورة {{ employee.name }}" class="employee-photo">
                         {% else %}
                             <div class="default-photo">
@@ -196,7 +196,7 @@
                         <div class="col-md-6 text-center">
                             <h6>صورة الهوية الوطنية</h6>
                             {% if employee.national_id_image %}
-                                <img src="{{ url_for('static', filename='uploads/employees/' + employee.national_id_image) }}" 
+                                <img src="{{ url_for('static', filename=employee.national_id_image) }}" 
                                      alt="صورة هوية {{ employee.name }}" class="id-photo">
                             {% else %}
                                 <div class="default-id-photo">

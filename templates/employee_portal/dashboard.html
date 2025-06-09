@@ -161,7 +161,7 @@
             <div class="row align-items-center">
                 <div class="col-md-3 text-center">
                     {% if employee.profile_image %}
-                        <img src="{{ url_for('static', filename='uploads/employees/' + employee.profile_image) }}" 
+                        <img src="{{ url_for('static', filename=employee.profile_image) }}" 
                              alt="صورة {{ employee.name }}" class="employee-photo">
                     {% else %}
                         <div class="default-photo">
@@ -238,7 +238,7 @@
                         <i class="fas fa-id-card ms-2"></i>صورة الهوية الوطنية
                     </h4>
                     {% if employee.national_id_image %}
-                        <img src="{{ url_for('static', filename='uploads/employees/' + employee.national_id_image) }}" 
+                        <img src="{{ url_for('static', filename=employee.national_id_image) }}" 
                              alt="صورة هوية {{ employee.name }}" class="id-photo">
                     {% else %}
                         <div class="default-id-photo">
