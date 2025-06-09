@@ -108,6 +108,24 @@
                         <p><strong>ملاحظات:</strong> {{ vehicle.notes }}</p>
                     </div>
                     {% endif %}
+                    
+                    <!-- روابط الاستلام والتسليم -->
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="/vehicles/handover/{{ vehicle.id }}/form?type=delivery" 
+                               class="btn btn-success btn-sm" 
+                               title="عرض نموذج التسليم">
+                                <i class="fas fa-file-upload"></i>
+                                التسليم
+                            </a>
+                            <a href="/vehicles/handover/{{ vehicle.id }}/form?type=return" 
+                               class="btn btn-warning btn-sm" 
+                               title="عرض نموذج الاستلام">
+                                <i class="fas fa-file-download"></i>
+                                الاستلام
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -142,6 +160,24 @@
                         <p><strong>ملاحظات الإيجار:</strong> {{ rental.notes }}</p>
                     </div>
                     {% endif %}
+                    
+                    <!-- روابط الاستلام والتسليم -->
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="/vehicles/handover/{{ vehicle.id }}/form?type=delivery" 
+                               class="btn btn-success btn-sm" 
+                               title="عرض نموذج التسليم">
+                                <i class="fas fa-file-upload"></i>
+                                التسليم
+                            </a>
+                            <a href="/vehicles/handover/{{ vehicle.id }}/form?type=return" 
+                               class="btn btn-warning btn-sm" 
+                               title="عرض نموذج الاستلام">
+                                <i class="fas fa-file-download"></i>
+                                الاستلام
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -176,6 +212,24 @@
                         <p><strong>وصف المشروع:</strong> {{ project.description }}</p>
                     </div>
                     {% endif %}
+                    
+                    <!-- روابط الاستلام والتسليم -->
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="/vehicles/handover/{{ vehicle.id }}/form?type=delivery" 
+                               class="btn btn-success btn-sm" 
+                               title="عرض نموذج التسليم">
+                                <i class="fas fa-file-upload"></i>
+                                التسليم
+                            </a>
+                            <a href="/vehicles/handover/{{ vehicle.id }}/form?type=return" 
+                               class="btn btn-warning btn-sm" 
+                               title="عرض نموذج الاستلام">
+                                <i class="fas fa-file-download"></i>
+                                الاستلام
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endfor %}
