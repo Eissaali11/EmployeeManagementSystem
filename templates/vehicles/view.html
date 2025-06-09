@@ -114,7 +114,7 @@
                                         مشاهدة سجل التسليم
                                     </a>
                                     {% if current_driver.mobile %}
-                                    <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك" 
+                                    <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك" 
                                        class="btn btn-sm btn-success ms-1" target="_blank" title="إرسال رسالة واتساب">
                                         <i class="fab fa-whatsapp ms-1"></i>
                                         واتساب
@@ -1016,7 +1016,7 @@
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                                 {% if current_driver.mobile %}
-                                <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط النموذج الإلكتروني للتفويض:%0A{{ request.url_root }}vehicles/{{ vehicle.id }}/handover/{{ current_driver.handover_id }}%0A%0Aشكراً لك" 
+                                <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك" 
                                    class="btn btn-sm btn-success ms-1" target="_blank" title="إرسال رسالة واتساب">
                                     <i class="fab fa-whatsapp"></i>
                                 </a>
@@ -1063,7 +1063,7 @@
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
                                     {% if driver.mobile %}
-                                    <a href="https://wa.me/{{ driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ driver.handover_type_ar }}: {{ driver.formatted_date }}%0A%0Aرابط النموذج الإلكتروني للتفويض:%0A{{ request.url_root }}vehicles/{{ vehicle.id }}/handover/{{ driver.handover_id }}%0A%0Aشكراً لك" 
+                                    <a href="https://wa.me/{{ driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ driver.handover_type_ar }}: {{ driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=driver.handover_id, _external=True) }}%0A%0Aشكراً لك" 
                                        class="btn btn-sm btn-success ms-1" target="_blank" title="إرسال رسالة واتساب">
                                         <i class="fab fa-whatsapp"></i>
                                     </a>
@@ -1154,7 +1154,7 @@
                                                         تعديل
                                                     </a>
                                                     {% if record.mobile %}
-                                                    <a href="https://wa.me/{{ record.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ record.person_name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ record.handover_type_ar }}: {{ record.formatted_handover_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf', id=record.id, _external=True) }}%0A%0Aشكراً لك" 
+                                                    <a href="https://wa.me/{{ record.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ record.person_name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ record.handover_type_ar }}: {{ record.formatted_handover_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=record.id, _external=True) }}%0A%0Aشكراً لك" 
                                                        class="btn btn-outline-success" target="_blank" title="إرسال رسالة واتساب">
                                                         <i class="fab fa-whatsapp"></i>
                                                     </a>
