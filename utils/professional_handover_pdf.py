@@ -334,7 +334,7 @@ def create_vehicle_handover_pdf(handover_data):
         buffer.seek(0)
         
         print("Professional handover PDF generated successfully!")
-        return buffer.getvalue()
+        return buffer
         
     except Exception as e:
         print(f"Error generating professional handover PDF: {str(e)}")
