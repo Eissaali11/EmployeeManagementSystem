@@ -1,0 +1,286 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تواصل معنا - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تواصل معنا{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title text-center">
+        <i class="fas fa-headset"></i> تواصل مع فريق الدعم
+    </div>
+    
+    <div class="mobile-card-content contact-content">
+        <div class="contact-intro">
+            <p>نحن هنا لمساعدتك! يرجى ملء النموذج أدناه وسنرد عليك في أقرب وقت ممكن.</p>
+        </div>
+        
+        <form action="{{ url_for('mobile.contact') }}" method="POST" class="mobile-form">
+            {{ form.hidden_tag() if form }}
+            
+            <div class="mobile-form-group">
+                <label>الاسم الكامل*</label>
+                <input type="text" name="name" class="mobile-form-control" required 
+                       value="{{ current_user.full_name if current_user and current_user.is_authenticated else '' }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>البريد الإلكتروني*</label>
+                <input type="email" name="email" class="mobile-form-control" required 
+                       value="{{ current_user.email if current_user and current_user.is_authenticated else '' }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>رقم الهاتف</label>
+                <input type="tel" name="phone" class="mobile-form-control" 
+                       value="{{ current_user.phone if current_user and current_user.is_authenticated else '' }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>نوع الاستفسار*</label>
+                <select name="inquiry_type" class="mobile-form-select" required>
+                    <option value="">اختر نوع الاستفسار</option>
+                    <option value="technical">مشكلة تقنية</option>
+                    <option value="account">مشكلة في الحساب</option>
+                    <option value="feature">طلب ميزة جديدة</option>
+                    <option value="question">استفسار عام</option>
+                    <option value="other">أخرى</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الموضوع*</label>
+                <input type="text" name="subject" class="mobile-form-control" required placeholder="اكتب موضوع الرسالة">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الرسالة*</label>
+                <textarea name="message" class="mobile-form-control" rows="5" required placeholder="اكتب رسالتك هنا..."></textarea>
+            </div>
+            
+            <div class="mobile-form-group">
+                <div class="form-check">
+                    <input type="checkbox" name="agree_terms" id="agree_terms" class="form-check-input" required>
+                    <label class="form-check-label" for="agree_terms">
+                        أوافق على <a href="{{ url_for('mobile.privacy') }}">سياسة الخصوصية</a> و<a href="{{ url_for('mobile.terms') }}">شروط الاستخدام</a>.
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="mobile-btn mobile-btn-primary w-100">
+                    <i class="fas fa-paper-plane"></i> إرسال الرسالة
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-map-marker-alt"></i> معلومات التواصل
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="contact-info">
+            <div class="contact-item">
+                <div class="contact-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="contact-details">
+                    <h4>البريد الإلكتروني</h4>
+                    <p><a href="mailto:support@advancedtech.com">support@advancedtech.com</a></p>
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <div class="contact-icon">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div class="contact-details">
+                    <h4>الهاتف</h4>
+                    <p><a href="tel:+966123456789">+966 123 456 789</a></p>
+                    <p>الأحد - الخميس: 9 ص - 5 م</p>
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <div class="contact-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="contact-details">
+                    <h4>العنوان</h4>
+                    <p>شركة التقنية المتطورة</p>
+                    <p>شارع الملك فهد، الرياض</p>
+                    <p>المملكة العربية السعودية</p>
+                </div>
+            </div>
+            
+            <div class="contact-socials">
+                <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    <a href="{{ url_for('mobile.settings') }}" class="mobile-btn mobile-btn-secondary">
+        <i class="fas fa-arrow-right"></i> العودة للإعدادات
+    </a>
+</div>
+
+<style>
+.contact-content {
+    padding: 15px;
+}
+
+.contact-intro {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.mobile-form-group {
+    margin-bottom: 15px;
+}
+
+.mobile-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.mobile-form-control, .mobile-form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.mobile-form-control:focus, .mobile-form-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.form-check {
+    padding-right: 1.5rem;
+    position: relative;
+}
+
+.form-check-input {
+    position: absolute;
+    right: 0;
+    margin-top: 0.3rem;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+}
+
+.form-check-label a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+.contact-info {
+    padding: 15px 0;
+}
+
+.contact-item {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.contact-icon {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+    color: var(--primary-color);
+}
+
+.contact-details h4 {
+    font-size: 1rem;
+    margin: 0 0 5px;
+}
+
+.contact-details p {
+    margin: 0 0 5px;
+    color: #757575;
+}
+
+.contact-details a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.contact-socials {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 15px;
+}
+
+.social-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #555;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.social-icon:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.action-buttons {
+    margin: 20px 15px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحقق من صحة رقم الهاتف
+    const phoneInput = document.querySelector('input[name="phone"]');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            // يسمح فقط بالأرقام والرموز + - () المسموح بها في أرقام الهواتف
+            this.value = this.value.replace(/[^\d\+\-\(\) ]/g, '');
+        });
+    }
+    
+    // تحقق من تفعيل زر الإرسال
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const agreeTerms = document.getElementById('agree_terms');
+    
+    if (submitBtn && agreeTerms) {
+        agreeTerms.addEventListener('change', function() {
+            submitBtn.disabled = !this.checked;
+        });
+        
+        // التحقق الأولي
+        submitBtn.disabled = !agreeTerms.checked;
+    }
+});
+</script>
+{% endblock %}

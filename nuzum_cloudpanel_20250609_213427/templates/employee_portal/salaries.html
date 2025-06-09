@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الرواتب - {{ employee.name }} - نُظم</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><polygon points="1000,100 1000,0 0,100"/></svg>') no-repeat bottom;
+            background-size: cover;
+        }
+        
+        .page-title {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 25px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .stats-overview {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .stats-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.08);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #bdc3c7;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .salary-card {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .salary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .salary-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .salary-month-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .salary-date {
+            color: #bdc3c7;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .salary-amount {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .salary-details {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .salary-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .salary-detail:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateX(5px);
+        }
+        
+        .salary-detail:last-child {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            font-weight: 700;
+            font-size: 1.2rem;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .salary-detail-label {
+            color: #ecf0f1;
+            font-weight: 500;
+        }
+        
+        .salary-detail-value {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .salary-detail-value.text-danger {
+            color: #e74c3c !important;
+        }
+        
+        .salary-notes {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .salary-notes strong {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .no-salary-container {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .no-salary-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 2rem;
+        }
+        
+        .no-salary-title {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .no-salary-text {
+            color: #bdc3c7;
+            font-size: 1.1rem;
+        }
+        
+        .section-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .section-icon {
+            color: #667eea;
+            margin-left: 0.5rem;
+        }
+        
+        .salary-amount-container {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .currency-label {
+            color: #bdc3c7;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Animation for cards */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-in {
+            animation: slideInUp 0.6s ease forwards;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .salary-amount {
+                font-size: 2.2rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="page-title">
+                        <i class="fas fa-money-bill-wave section-icon"></i>الرواتب
+                    </h1>
+                    <p class="page-subtitle mb-0">عرض تاريخ الرواتب للموظف {{ employee.name }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('employee_portal.dashboard') }}" class="back-btn">
+                        <i class="fas fa-arrow-right ms-2"></i>العودة للوحة المعلومات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- إحصائيات الرواتب -->
+        <div class="stats-overview animate-in">
+            <h4 class="stats-title">
+                <i class="fas fa-chart-line section-icon"></i>إحصائيات الرواتب
+            </h4>
+            <div class="row">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ salary_stats.total_count }}</div>
+                        <div class="stat-label">إجمالي الرواتب</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ "{:,.0f}".format(salary_stats.total_amount) }}</div>
+                        <div class="stat-label">إجمالي المبلغ (ريال)</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ "{:,.0f}".format(salary_stats.average_salary) }}</div>
+                        <div class="stat-label">متوسط الراتب (ريال)</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            {% if salary_stats.latest_salary %}
+                                {{ "{:,.0f}".format(salary_stats.latest_salary.net_salary) if salary_stats.latest_salary.net_salary else 0 }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">آخر راتب (ريال)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- قائمة الرواتب -->
+        {% if salaries %}
+        <div class="row">
+            <div class="col-12">
+                <h4 class="section-title">
+                    <i class="fas fa-list section-icon"></i>تاريخ الرواتب
+                </h4>
+            </div>
+            {% for salary in salaries %}
+            <div class="col-lg-6 mb-4">
+                <div class="salary-card animate-in" style="animation-delay: {{ loop.index0 * 0.1 }}s;">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="salary-month-title">راتب شهر {{ salary.formatted_salary_date }}</h5>
+                            <p class="salary-date">
+                                <i class="fas fa-calendar ms-2"></i>{{ salary.salary_date.strftime('%Y-%m-%d') if salary.salary_date else 'غير محدد' }}
+                            </p>
+                        </div>
+                        <div class="salary-amount-container">
+                            <div class="salary-amount">
+                                {{ "{:,.0f}".format(salary.net_salary) if salary.net_salary else '0' }}
+                            </div>
+                            <div class="currency-label">ريال سعودي</div>
+                        </div>
+                    </div>
+                    
+                    <div class="salary-details">
+                        {% if salary.basic_salary %}
+                        <div class="salary-detail">
+                            <span class="salary-detail-label">الراتب الأساسي:</span>
+                            <span class="salary-detail-value">{{ "{:,.0f}".format(salary.basic_salary) }} ريال</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if salary.allowances %}
+                        <div class="salary-detail">
+                            <span class="salary-detail-label">البدلات:</span>
+                            <span class="salary-detail-value">{{ "{:,.0f}".format(salary.allowances) }} ريال</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if salary.overtime_hours and salary.overtime_rate %}
+                        <div class="salary-detail">
+                            <span class="salary-detail-label">الوقت الإضافي ({{ salary.overtime_hours }} ساعة):</span>
+                            <span class="salary-detail-value">{{ "{:,.0f}".format(salary.overtime_hours * salary.overtime_rate) }} ريال</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="salary-detail">
+                            <span class="salary-detail-label">المكافآت:</span>
+                            <span class="salary-detail-value">{{ "{:,.0f}".format(salary.bonus if salary.bonus else 0) }} ريال</span>
+                        </div>
+                        
+                        {% if salary.deductions %}
+                        <div class="salary-detail">
+                            <span class="salary-detail-label">الخصومات:</span>
+                            <span class="salary-detail-value text-danger">-{{ "{:,.0f}".format(salary.deductions) }} ريال</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if salary.gosi_employee %}
+                        <div class="salary-detail">
+                            <span class="salary-detail-label">التأمينات الاجتماعية:</span>
+                            <span class="salary-detail-value text-danger">-{{ "{:,.0f}".format(salary.gosi_employee) }} ريال</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="salary-detail">
+                            <span class="salary-detail-label"><strong>صافي الراتب:</strong></span>
+                            <span class="salary-detail-value"><strong>{{ "{:,.0f}".format(salary.net_salary) if salary.net_salary else '0' }} ريال</strong></span>
+                        </div>
+                    </div>
+                    
+                    {% if salary.notes %}
+                    <div class="salary-notes">
+                        <strong>ملاحظات:</strong>
+                        <p class="mb-0">{{ salary.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="no-salary-container animate-in">
+                    <i class="fas fa-money-bill-wave no-salary-icon"></i>
+                    <h4 class="no-salary-title">لا توجد رواتب مسجلة</h4>
+                    <p class="no-salary-text">لم يتم تسجيل أي رواتب لك حتى الآن</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enhanced animations and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate statistics cards
+            const statItems = document.querySelectorAll('.stat-item');
+            statItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    item.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, (index + 1) * 150);
+            });
+            
+            // Animate salary cards
+            const salaryCards = document.querySelectorAll('.salary-card');
+            salaryCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(40px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, (index + 1) * 200 + 800);
+            });
+            
+            // Enhanced hover effects for salary details
+            const salaryDetails = document.querySelectorAll('.salary-detail');
+            salaryDetails.forEach(detail => {
+                detail.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                    this.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+                });
+                
+                detail.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('final-amount')) {
+                        this.style.backgroundColor = 'rgba(255,255,255,0.03)';
+                        this.style.borderColor = 'rgba(255,255,255,0.05)';
+                    }
+                });
+            });
+            
+            // Add parallax effect to header
+            const header = document.querySelector('.page-header');
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const parallax = scrolled * 0.5;
+                header.style.transform = `translateY(${parallax}px)`;
+            });
+            
+            // Smooth scroll to salary cards
+            const salaryCardLinks = document.querySelectorAll('.salary-card');
+            salaryCardLinks.forEach(card => {
+                card.addEventListener('click', function() {
+                    this.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                });
+            });
+            
+            // Counter animation for statistics
+            function animateCounter(element, target, duration = 2000) {
+                const start = 0;
+                const startTime = performance.now();
+                
+                function updateCounter(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Easing function
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const current = start + (target - start) * easeOut;
+                    
+                    if (target > 999) {
+                        element.textContent = Math.floor(current).toLocaleString('ar-SA');
+                    } else {
+                        element.textContent = Math.floor(current);
+                    }
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(updateCounter);
+                    }
+                }
+                
+                requestAnimationFrame(updateCounter);
+            }
+            
+            // Start counter animations after delay
+            setTimeout(() => {
+                statItems.forEach(item => {
+                    const numberElement = item.querySelector('.stat-number');
+                    const text = numberElement.textContent.replace(/[^\d]/g, '');
+                    const target = parseInt(text) || 0;
+                    
+                    if (target > 0) {
+                        animateCounter(numberElement, target);
+                    }
+                });
+            }, 1000);
+            
+            // Add loading shimmer effect
+            function addShimmerEffect() {
+                const shimmerElements = document.querySelectorAll('.salary-amount, .stat-number');
+                shimmerElements.forEach(element => {
+                    element.style.background = 'linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%)';
+                    element.style.backgroundSize = '200% 100%';
+                    element.style.animation = 'shimmer 3s infinite';
+                });
+            }
+            
+            // Add shimmer CSS
+            const shimmerCSS = `
+                @keyframes shimmer {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+            `;
+            const style = document.createElement('style');
+            style.textContent = shimmerCSS;
+            document.head.appendChild(style);
+            
+            // Apply initial shimmer
+            setTimeout(addShimmerEffect, 500);
+        });
+        
+        // Enhanced scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // Observe all animatable elements
+        document.addEventListener('DOMContentLoaded', function() {
+            const animateElements = document.querySelectorAll('.animate-in');
+            animateElements.forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

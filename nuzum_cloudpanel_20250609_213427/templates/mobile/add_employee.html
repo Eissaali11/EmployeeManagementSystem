@@ -1,0 +1,125 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إضافة موظف جديد - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}إضافة موظف جديد{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+  <div class="mobile-card-title">
+    <i class="fas fa-user-plus"></i> معلومات الموظف الجديد
+  </div>
+  
+  <div class="mobile-card-content">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('mobile.add_employee') }}">
+      {% if form %}
+      {{ form.hidden_tag() }}
+      {% endif %}
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">الاسم الكامل</label>
+        <input type="text" name="name" class="mobile-form-control" placeholder="أدخل اسم الموظف بالكامل" required>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">رقم الهوية</label>
+        <input type="text" name="national_id" class="mobile-form-control" placeholder="رقم الهوية الوطنية">
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">المسمى الوظيفي</label>
+        <input type="text" name="job_title" class="mobile-form-control" placeholder="المسمى الوظيفي" required>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">القسم</label>
+        <select name="department_id" class="mobile-form-select">
+          <option value="">-- اختر القسم --</option>
+          {% for department in departments %}
+          <option value="{{ department.id }}">{{ department.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">رقم الجوال</label>
+        <input type="tel" name="phone" class="mobile-form-control" placeholder="رقم جوال الموظف" dir="ltr">
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">البريد الإلكتروني</label>
+        <input type="email" name="email" class="mobile-form-control" placeholder="البريد الإلكتروني للموظف" dir="ltr">
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">تاريخ التوظيف</label>
+        <input type="date" name="hire_date" class="mobile-form-control" required>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">الراتب الأساسي</label>
+        <input type="number" name="basic_salary" class="mobile-form-control" placeholder="الراتب الأساسي" required>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">العنوان</label>
+        <textarea name="address" class="mobile-form-control" rows="3" placeholder="عنوان الموظف"></textarea>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">صورة الموظف</label>
+        <input type="file" name="photo" class="mobile-form-control" accept="image/*">
+        <div class="mobile-form-hint">الصورة اختيارية. يفضل استخدام صورة مربعة.</div>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">ملاحظات</label>
+        <textarea name="notes" class="mobile-form-control" rows="3" placeholder="ملاحظات إضافية"></textarea>
+      </div>
+      
+      <button type="submit" class="mobile-btn mobile-btn-primary mobile-btn-block">
+        <i class="fas fa-save"></i> حفظ الموظف
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.mobile-form-control[type="file"] {
+  padding: 8px;
+}
+
+.mobile-form-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+
+.mobile-btn-block {
+  margin-top: 20px;
+}
+
+/* تنسيق حقل التاريخ */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+  }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // تعيين تاريخ التوظيف الافتراضي ليكون اليوم
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="hire_date"]').value = today;
+});
+</script>
+{% endblock %}

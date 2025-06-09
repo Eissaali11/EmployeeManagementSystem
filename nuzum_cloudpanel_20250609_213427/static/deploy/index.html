@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الموظفين - التثبيت</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container">
+        <header class="text-center my-5">
+            <div class="logo-container mb-3">
+                <img src="../logo.png" alt="شعار النظام" class="logo">
+            </div>
+            <h1 class="main-title">نظام إدارة الموظفين</h1>
+            <p class="lead">مرحباً بك في صفحة تثبيت وإعداد نظام إدارة الموظفين</p>
+        </header>
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0"><i class="bi bi-info-circle-fill me-2"></i>معلومات النظام</h2>
+                    </div>
+                    <div class="card-body">
+                        <p>نظام إدارة الموظفين هو تطبيق شامل لإدارة بيانات الموظفين والإدارات والحضور والرواتب والوثائق والمركبات. يتميز النظام بدعم كامل للغة العربية والتقويم الهجري.</p>
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>النظام جاهز للاستخدام!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0"><i class="bi bi-gear-fill me-2"></i>حالة التثبيت</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="installation-progress">
+                            <!-- ستتم تعبئة هذا القسم بواسطة JavaScript -->
+                        </div>
+                        <div class="text-center mt-4">
+                            <button id="check-system" class="btn btn-primary">
+                                <i class="bi bi-search me-2"></i>فحص النظام
+                            </button>
+                            <button id="setup-database" class="btn btn-success ms-2">
+                                <i class="bi bi-database-fill me-2"></i>إعداد قاعدة البيانات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0"><i class="bi bi-person-fill me-2"></i>إنشاء حساب المسؤول</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="admin-form">
+                            <div class="mb-3">
+                                <label for="admin-username" class="form-label">اسم المستخدم</label>
+                                <input type="text" class="form-control" id="admin-username" value="admin" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin-email" class="form-label">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="admin-email" placeholder="أدخل البريد الإلكتروني">
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin-password" class="form-label">كلمة المرور</label>
+                                <input type="password" class="form-control" id="admin-password" placeholder="أدخل كلمة المرور">
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin-password-confirm" class="form-label">تأكيد كلمة المرور</label>
+                                <input type="password" class="form-control" id="admin-password-confirm" placeholder="أدخل كلمة المرور مرة أخرى">
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-person-plus-fill me-2"></i>إنشاء حساب
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h5 mb-0"><i class="bi bi-tools me-2"></i>الخطوات التالية</h2>
+                    </div>
+                    <div class="card-body">
+                        <ol class="next-steps">
+                            <li>تسجيل الدخول إلى النظام باستخدام بيانات المسؤول</li>
+                            <li>إضافة بيانات الشركة والإعدادات الأساسية</li>
+                            <li>إنشاء الإدارات والأقسام</li>
+                            <li>إضافة الموظفين وبياناتهم</li>
+                            <li>إعداد جداول الرواتب والحضور</li>
+                        </ol>
+                        <div class="text-center mt-4">
+                            <a href="../" class="btn btn-success">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>الذهاب إلى صفحة تسجيل الدخول
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center mt-5 mb-4">
+            <p>نظام إدارة الموظفين &copy; 2025</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

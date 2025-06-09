@@ -1,0 +1,212 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تقرير الرواتب - شهر {{ month }}/{{ year }}</h1>
+        <div>
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export me-1"></i> تصدير إلى Excel
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('salaries.export_excel', month=month, year=year) }}">
+                            <i class="fas fa-filter me-1"></i> تصدير بيانات الشهر والسنة الحالية
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('salaries.export_excel') }}">
+                            <i class="fas fa-database me-1"></i> تصدير جميع البيانات
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <a href="{{ url_for('salaries.report_pdf', month=month, year=year) }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-1"></i> تصدير PDF
+            </a>
+            <a href="{{ url_for('salaries.index', month=month, year=year) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <!-- إحصائيات ملخصة -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header text-white" style="background-color: #4B91F1;">
+                    <h5 class="card-title mb-0">إحصائيات الرواتب</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-2">
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #F0F8FF; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي الرواتب الأساسية</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #4169E1;">{{ total_basic|round(2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #E6F2FF; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي البدلات</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #1E90FF;">{{ total_allowances|round(2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #F0FFFF; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي الخصومات</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #4682B4;">{{ total_deductions|round(2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #F5FFFA; height: 120px;">
+                                <h6 class="text-primary fw-bold">إجمالي المكافآت</h6>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: #20B2AA;">{{ total_bonus|round(2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 mb-3 rounded-3 shadow" style="background-color: #104E8B; color: white; height: 120px;">
+                                <h5 class="fw-bold mb-2" style="color: #ADD8E6;">إجمالي صافي الرواتب</h5>
+                                <div class="d-flex justify-content-center align-items-center h-50">
+                                    <h3 class="m-0 fw-bold" style="color: white; font-size: 1.8rem;">{{ total_net|round(2) }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تفاصيل الرواتب -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">تفاصيل رواتب الموظفين</h5>
+        </div>
+        <div class="card-body">
+            {% if salaries %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>م</th>
+                            <th>الموظف</th>
+                            <th>الرقم الوظيفي</th>
+                            <th>القسم</th>
+                            <th>الراتب الأساسي</th>
+                            <th>البدلات</th>
+                            <th>الخصومات</th>
+                            <th>المكافآت</th>
+                            <th>صافي الراتب</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for salary in salaries %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ salary.employee.name }}</td>
+                            <td>{{ salary.employee.employee_id }}</td>
+                            <td>{{ salary.employee.department.name if salary.employee.department else '-' }}</td>
+                            <td>{{ salary.basic_salary|round(2) }}</td>
+                            <td>{{ salary.allowances|round(2) }}</td>
+                            <td>{{ salary.deductions|round(2) }}</td>
+                            <td>{{ salary.bonus|round(2) }}</td>
+                            <td class="fw-bold">{{ salary.net_salary|round(2) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-dark">
+                            <th colspan="4">المجموع</th>
+                            <th>{{ total_basic|round(2) }}</th>
+                            <th>{{ total_allowances|round(2) }}</th>
+                            <th>{{ total_deductions|round(2) }}</th>
+                            <th>{{ total_bonus|round(2) }}</th>
+                            <th>{{ total_net|round(2) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- أزرار أسفل التقرير -->
+            <div class="no-print mt-4 text-center">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> طباعة التقرير
+                </button>
+                <a href="{{ url_for('salaries.report_pdf', month=month, year=year) }}" class="btn btn-danger">
+                    <i class="fas fa-file-pdf me-1"></i> تصدير PDF
+                </a>
+                <a href="{{ url_for('salaries.index', month=month, year=year) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-money-bill-wave text-muted fs-1 mb-3"></i>
+                <p>لا توجد سجلات رواتب للشهر والسنة المحددين</p>
+                <a href="{{ url_for('salaries.create') }}" class="btn btn-success mt-2">
+                    <i class="fas fa-plus me-1"></i> إضافة رواتب
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- بيانات الشركة -->
+    <div class="print-only mt-4">
+        <div class="text-center">
+            <p>تقرير الرواتب الشهري</p>
+            <p>تم إنشاء هذا التقرير بواسطة نظام إدارة الموظفين</p>
+            <p>جميع الحقوق محفوظة &copy; {{ year }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .print-only {
+            display: block !important;
+        }
+        body {
+            font-size: 12pt;
+            color: #000;
+            background: #fff;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .card-header {
+            background: #f8f9fa !important;
+            color: #000 !important;
+        }
+        .table {
+            border-collapse: collapse !important;
+        }
+        .table td, .table th {
+            background-color: #fff !important;
+            border: 1px solid #ddd !important;
+        }
+        .container-fluid {
+            width: 100%;
+            padding: 0;
+        }
+    }
+    .print-only {
+        display: none;
+    }
+</style>
+{% endblock %}

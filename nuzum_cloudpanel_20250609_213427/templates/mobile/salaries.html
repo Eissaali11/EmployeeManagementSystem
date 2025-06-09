@@ -1,0 +1,541 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الرواتب - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الرواتب{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="إضافة" onclick="location.href='{{ url_for('mobile.add_salary') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="card mt-3">
+    <div class="card-content">
+        <div class="dashboard-grid">
+            <a href="{{ url_for('mobile.add_salary') }}" class="dashboard-item">
+                <div class="dashboard-icon">
+                    <i class="fas fa-plus text-primary"></i>
+                </div>
+                <div class="dashboard-text">إضافة راتب</div>
+            </a>
+            
+            <a href="{{ url_for('mobile.report_salaries') }}" class="dashboard-item">
+                <div class="dashboard-icon">
+                    <i class="fas fa-chart-bar text-primary"></i>
+                </div>
+                <div class="dashboard-text">تقارير الرواتب</div>
+            </a>
+            
+            <a href="{{ url_for('mobile.salaries', is_paid=1) }}" class="dashboard-item">
+                <div class="dashboard-icon">
+                    <i class="fas fa-check-circle text-primary"></i>
+                </div>
+                <div class="dashboard-text">المدفوعة</div>
+            </a>
+            
+            <a href="{{ url_for('mobile.salaries', is_paid=0) }}" class="dashboard-item">
+                <div class="dashboard-icon">
+                    <i class="fas fa-clock text-primary"></i>
+                </div>
+                <div class="dashboard-text">غير المدفوعة</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- البحث والفلترة -->
+<div class="mt-3 mb-2">
+    <form action="{{ url_for('mobile.salaries') }}" method="GET">
+        <div class="position-relative mb-2">
+            <input type="text" name="search" class="form-control" placeholder="البحث عن موظف..." value="{{ request.args.get('search', '') }}">
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        
+        <div class="row mb-2">
+            <div class="col-6">
+                <select name="month" class="form-select" onchange="this.form.submit()">
+                    <option value="">اختر الشهر</option>
+                    <option value="1" {% if request.args.get('month') == '1' %}selected{% endif %}>يناير</option>
+                    <option value="2" {% if request.args.get('month') == '2' %}selected{% endif %}>فبراير</option>
+                    <option value="3" {% if request.args.get('month') == '3' %}selected{% endif %}>مارس</option>
+                    <option value="4" {% if request.args.get('month') == '4' %}selected{% endif %}>أبريل</option>
+                    <option value="5" {% if request.args.get('month') == '5' %}selected{% endif %}>مايو</option>
+                    <option value="6" {% if request.args.get('month') == '6' %}selected{% endif %}>يونيو</option>
+                    <option value="7" {% if request.args.get('month') == '7' %}selected{% endif %}>يوليو</option>
+                    <option value="8" {% if request.args.get('month') == '8' %}selected{% endif %}>أغسطس</option>
+                    <option value="9" {% if request.args.get('month') == '9' %}selected{% endif %}>سبتمبر</option>
+                    <option value="10" {% if request.args.get('month') == '10' %}selected{% endif %}>أكتوبر</option>
+                    <option value="11" {% if request.args.get('month') == '11' %}selected{% endif %}>نوفمبر</option>
+                    <option value="12" {% if request.args.get('month') == '12' %}selected{% endif %}>ديسمبر</option>
+                </select>
+            </div>
+            <div class="col-6">
+                <select name="year" class="form-select" onchange="this.form.submit()">
+                    <option value="">اختر السنة</option>
+                    {% for year in range(current_year-5, current_year+1) %}
+                    <option value="{{ year }}" {% if request.args.get('year')|int == year or (not request.args.get('year') and year == current_year) %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <select name="employee_id" class="form-select" style="flex: 1" onchange="this.form.submit()">
+                <option value="">جميع الموظفين</option>
+                {% for employee in employees %}
+                <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>{{ employee.name }}</option>
+                {% endfor %}
+            </select>
+            
+            {% if request.args.get('search') or request.args.get('month') or request.args.get('year') or request.args.get('employee_id') %}
+            <a href="{{ url_for('mobile.salaries') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-times"></i>
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- ملخص الرواتب -->
+<div class="stats-container mt-3 mb-3">
+    <div class="stats-header">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-chart-pie me-2 text-primary"></i>
+            <span class="stats-title">إحصائيات الرواتب</span>
+        </div>
+        <div class="stats-badge">{{ selected_month_name }} {{ selected_year }}</div>
+    </div>
+    
+    <div class="stats-summary-card mb-3">
+        <div class="total-label">إجمالي صافي الرواتب</div>
+        <div class="total-value">{{ '{:,.0f}'.format(salary_stats.total_net or 0) }}</div>
+        <div class="total-icon">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-item basic">
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ '{:,.0f}'.format(salary_stats.total_basic or 0) }}</div>
+                <div class="stat-label">أساسي</div>
+            </div>
+        </div>
+        <div class="stat-item allowances">
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ '{:,.0f}'.format(salary_stats.total_allowances or 0) }}</div>
+                <div class="stat-label">بدلات</div>
+            </div>
+        </div>
+        <div class="stat-item deductions">
+            <div class="stat-icon-wrapper">
+                <i class="fas fa-minus-circle"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ '{:,.0f}'.format(salary_stats.total_deductions or 0) }}</div>
+                <div class="stat-label">خصومات</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قائمة الرواتب -->
+{% if salaries %}
+<div class="vehicle-list">
+    {% for salary in salaries %}
+    <a href="{{ url_for('mobile.salary_details', salary_id=salary.id) }}" class="vehicle-item">
+        <div class="vehicle-icon">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="vehicle-info">
+            <div class="vehicle-name">{{ salary.employee.name }}</div>
+            <div class="vehicle-plate">{{ salary.year }}/{{ '%02d'|format(salary.month) }}</div>
+            <div class="vehicle-details">
+                <span class="vehicle-model">أساسي: {{ '{:,.0f}'.format(salary.basic_salary) }}</span>
+                {% if salary.is_paid %}
+                <span class="vehicle-status active">تم الدفع</span>
+                {% else %}
+                <span class="vehicle-status inactive">لم يتم الدفع</span>
+                {% endif %}
+                <span class="salary-details">
+                    <span>بدلات: {{ '{:,.0f}'.format(salary.allowances) }}</span>
+                    <span>خصومات: {{ '{:,.0f}'.format(salary.deductions) }}</span>
+                </span>
+            </div>
+        </div>
+        <div class="vehicle-value">
+            {{ '{:,.0f}'.format(salary.net_salary) }}
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+<!-- ترقيم الصفحات -->
+{% if pagination and pagination.pages > 1 %}
+<div class="pagination-container mt-3">
+    {% if pagination.has_prev %}
+    {% set args = request.args.copy() %}
+    {% if args.get('page') %}{% set _ = args.pop('page') %}{% endif %}
+    <a href="{{ url_for('mobile.salaries', page=pagination.prev_num, **args) }}" class="pagination-item">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+    
+    {% for page in pagination.iter_pages() %}
+        {% if page %}
+            {% if page != pagination.page %}
+            {% set args = request.args.copy() %}
+            {% if args.get('page') %}{% set _ = args.pop('page') %}{% endif %}
+            <a href="{{ url_for('mobile.salaries', page=page, **args) }}" class="pagination-item">{{ page }}</a>
+            {% else %}
+            <span class="pagination-item active">{{ page }}</span>
+            {% endif %}
+        {% else %}
+            <span class="pagination-item dot">...</span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if pagination.has_next %}
+    {% set args = request.args.copy() %}
+    {% if args.get('page') %}{% set _ = args.pop('page') %}{% endif %}
+    <a href="{{ url_for('mobile.salaries', page=pagination.next_num, **args) }}" class="pagination-item">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<!-- حالة عدم وجود رواتب -->
+<div class="text-center empty-state mt-4">
+    <i class="fas fa-money-bill-wave fa-3x text-secondary mb-3"></i>
+    <h5>لا توجد رواتب</h5>
+    <p class="text-secondary">لا توجد بيانات رواتب متطابقة مع معايير البحث</p>
+    <a href="{{ url_for('mobile.add_salary') }}" class="btn btn-primary mt-2">
+        <i class="fas fa-plus"></i> إضافة راتب جديد
+    </a>
+</div>
+{% endif %}
+
+<style>
+/* تنسيقات البطاقات الرئيسية */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.dashboard-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px 10px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dashboard-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.dashboard-text {
+    font-size: 14px;
+    text-align: center;
+}
+
+/* تنسيقات البحث والفلترة */
+.search-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+}
+
+/* تنسيقات قائمة الرواتب */
+.vehicle-list {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.vehicle-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    text-decoration: none;
+    color: inherit;
+}
+
+.vehicle-item:last-child {
+    border-bottom: none;
+}
+
+.vehicle-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f3ff;
+    border-radius: 8px;
+    margin-left: 15px;
+    color: #0d6efd;
+    font-size: 18px;
+}
+
+.vehicle-info {
+    flex: 1;
+}
+
+.vehicle-name {
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.vehicle-plate {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.vehicle-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.vehicle-status {
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+.vehicle-status.active {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.vehicle-status.inactive {
+    background-color: #f5f5f5;
+    color: #757575;
+}
+
+.vehicle-model {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.vehicle-value {
+    font-weight: bold;
+    color: #28a745;
+    min-width: 80px;
+    text-align: left;
+    font-size: 1.1rem;
+}
+
+/* تنسيقات ترقيم الصفحات */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.pagination-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #495057;
+}
+
+.pagination-item.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.pagination-item.dot {
+    border: none;
+}
+
+/* تنسيقات الإحصائيات */
+.stats-container {
+    background-color: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.stats-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.stats-badge {
+    background-color: #e8f3ff;
+    color: #0d6efd;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.stats-summary-card {
+    background: linear-gradient(45deg, #4361ee, #3a7bd5);
+    color: white;
+    border-radius: 10px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+}
+
+.total-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.total-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.total-icon {
+    position: absolute;
+    left: 15px;
+    bottom: 15px;
+    font-size: 40px;
+    opacity: 0.3;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stat-item {
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+}
+
+.stat-item.basic {
+    background-color: #e3f2fd;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+}
+
+.stat-item.allowances {
+    background-color: #e6f4ea;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.15);
+}
+
+.stat-item.deductions {
+    background-color: #fee;
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.15);
+}
+
+.stat-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.stat-item.basic .stat-icon-wrapper {
+    background-color: rgba(33, 150, 243, 0.2);
+    color: #2196f3;
+}
+
+.stat-item.allowances .stat-icon-wrapper {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.stat-item.deductions .stat-icon-wrapper {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #555;
+}
+
+/* حالة عدم وجود بيانات */
+.empty-state {
+    padding: 40px 20px;
+    background-color: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+/* تنسيقات للتفاصيل المالية */
+.salary-details {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #666;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة الرواتب');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تصدير بيانات الحضور - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تصدير بيانات الحضور{% endblock %}
+
+{% block content %}
+<!-- نموذج تصدير البيانات -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-file-export"></i> تصدير بيانات الحضور إلى إكسل
+    </div>
+    
+    <div class="mobile-card-content p-3">
+        <form method="post" action="{{ url_for('mobile.export_attendance') }}" class="mobile-form">
+            <div class="mobile-form-group">
+                <label for="start_date">تاريخ البداية</label>
+                <input type="date" name="start_date" id="start_date" class="mobile-form-control" required>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label for="end_date">تاريخ النهاية</label>
+                <input type="date" name="end_date" id="end_date" class="mobile-form-control">
+                <small class="form-text text-muted mt-1">إذا تركته فارغاً، سيتم تصدير بيانات يوم البداية فقط</small>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label for="department_id">القسم</label>
+                <select name="department_id" id="department_id" class="mobile-form-select">
+                    <option value="">جميع الأقسام</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <p class="text-center mb-4 mt-3">
+                <i class="fas fa-info-circle text-info"></i>
+                سيتم تصدير البيانات حسب المعايير المحددة في ملف إكسل
+            </p>
+            
+            <div class="d-grid">
+                <button type="submit" class="mobile-btn mobile-btn-primary btn-lg">
+                    <i class="fas fa-file-export me-2"></i> تصدير البيانات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mobile-card mt-3">
+    <div class="mobile-card-title">
+        <i class="fas fa-info-circle"></i> معلومات حول تصدير البيانات
+    </div>
+    
+    <div class="mobile-card-content">
+        <ul class="mobile-list-info">
+            <li>
+                <div class="mobile-list-info-title">
+                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                    تنسيق التاريخ
+                </div>
+                <div class="mobile-list-info-content">
+                    سيتم عرض التواريخ في عناوين الأعمدة مع أسماء أيام الأسبوع
+                </div>
+            </li>
+            <li>
+                <div class="mobile-list-info-title">
+                    <i class="fas fa-table text-success me-2"></i>
+                    تنظيم البيانات
+                </div>
+                <div class="mobile-list-info-content">
+                    سيتم عرض بيانات كل قسم في صفحة منفصلة داخل ملف الإكسل
+                </div>
+            </li>
+            <li>
+                <div class="mobile-list-info-title">
+                    <i class="fas fa-palette text-info me-2"></i>
+                    ألوان الحضور
+                </div>
+                <div class="mobile-list-info-content">
+                    سيتم عرض الحضور باللون الأخضر (P) والغياب باللون الأحمر (A)
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.mobile-list-info {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-list-info li {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.mobile-list-info li:last-child {
+    border-bottom: none;
+}
+
+.mobile-list-info-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-info-content {
+    color: #666;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد التاريخ الحالي كقيمة افتراضية لتاريخ البداية
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('start_date').value = today;
+});
+</script>
+{% endblock %}

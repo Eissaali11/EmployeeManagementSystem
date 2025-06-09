@@ -1,0 +1,120 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل السيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <i class="fas fa-edit ms-2"></i>
+                تعديل السيارة: {{ vehicle.plate_number }}
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye ms-1"></i>
+                    عرض التفاصيل
+                </a>
+                <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('vehicles.edit', id=vehicle.id) }}">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="plate_number" class="form-label required">رقم اللوحة</label>
+                        <input type="text" class="form-control" id="plate_number" name="plate_number" value="{{ vehicle.plate_number }}" required>
+                        <div class="form-text">أدخل رقم لوحة السيارة بالكامل</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="make" class="form-label required">الشركة المصنعة</label>
+                        <input type="text" class="form-control" id="make" name="make" value="{{ vehicle.make }}" required>
+                        <div class="form-text">مثال: تويوتا، هيونداي، نيسان</div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="model" class="form-label required">الموديل</label>
+                        <input type="text" class="form-control" id="model" name="model" value="{{ vehicle.model }}" required>
+                        <div class="form-text">مثال: كامري، كورولا، إلنترا</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="year" class="form-label required">سنة الصنع</label>
+                        <input type="number" class="form-control" id="year" name="year" min="1990" max="{{ 2030 }}" value="{{ vehicle.year }}" required>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="color" class="form-label required">اللون</label>
+                        <input type="text" class="form-control" id="color" name="color" value="{{ vehicle.color }}" required>
+                        <div class="form-text">مثال: أبيض، أسود، فضي</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="driver_name" class="form-label">اسم السائق</label>
+                        <input type="text" class="form-control" id="driver_name" name="driver_name" value="{{ vehicle.driver_name or '' }}">
+                        <div class="form-text">اختياري - اسم السائق المعين لهذه السيارة</div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label required">الحالة</label>
+                        <select class="form-select" id="status" name="status" required>
+                            {% for status in statuses %}
+                            <option value="{{ status }}" {% if status == vehicle.status %}selected{% endif %}>
+                                {% if status == 'available' %}متاحة
+                                {% elif status == 'rented' %}مؤجرة
+                                {% elif status == 'in_project' %}في المشروع
+                                {% elif status == 'in_workshop' %}في الورشة
+                                {% elif status == 'accident' %}حادث
+                                {% else %}{{ status }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="notes" class="form-label">ملاحظات</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ vehicle.notes }}</textarea>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="fas fa-save ms-1"></i>
+                        حفظ التغييرات
+                    </button>
+                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary ms-2">
+                        <i class="fas fa-times ms-1"></i>
+                        إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- قسم خاص بإجراءات الحذف -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white">
+            <h4 class="mb-0 text-danger">
+                <i class="fas fa-exclamation-triangle ms-2"></i>
+                منطقة الخطر
+            </h4>
+        </div>
+        <div class="card-body">
+            <p class="text-danger">حذف هذه السيارة سيؤدي إلى حذف جميع البيانات المرتبطة بها بما في ذلك سجلات الإيجار والورشة والمشاريع وسجلات التسليم والاستلام. هذا الإجراء نهائي ولا يمكن التراجع عنه.</p>
+            <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-outline-danger">
+                <i class="fas fa-trash ms-1"></i>
+                حذف السيارة
+            </a>
+        </div>
+    </div>
+    
+
+</div>
+{% endblock %}

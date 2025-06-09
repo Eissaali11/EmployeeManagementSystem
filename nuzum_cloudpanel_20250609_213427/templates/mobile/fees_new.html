@@ -1,0 +1,220 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}الرسوم والتكاليف - النسخة المحمولة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3">الرسوم والتكاليف</h1>
+        {% if current_user.role == "admin" or current_user|check_module_access('fees', 'create') %}
+        <a href="{{ url_for('mobile.add_fee') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> إضافة رسم جديد
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- بطاقات الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                        <i class="fas fa-receipt text-primary fa-2x"></i>
+                    </div>
+                    <h5 class="mb-0">{{ stats.total }}</h5>
+                    <div class="text-muted small">إجمالي الرسوم</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                        <i class="fas fa-clock text-warning fa-2x"></i>
+                    </div>
+                    <h5 class="mb-0">{{ stats.due }}</h5>
+                    <div class="text-muted small">مستحقة الدفع</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                    </div>
+                    <h5 class="mb-0">{{ stats.paid }}</h5>
+                    <div class="text-muted small">تم دفعها</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div class="rounded-circle bg-danger bg-opacity-10 mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                        <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
+                    </div>
+                    <h5 class="mb-0">{{ stats.overdue }}</h5>
+                    <div class="text-muted small">متأخرة</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقة البحث والفلترة -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('mobile.fees_new') }}">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="status" class="form-label">حالة الدفع</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="all" {{ 'selected' if selected_status == 'all' else '' }}>الكل</option>
+                            <option value="pending" {{ 'selected' if selected_status == 'pending' else '' }}>مستحقة</option>
+                            <option value="paid" {{ 'selected' if selected_status == 'paid' else '' }}>مدفوعة</option>
+                            <option value="overdue" {{ 'selected' if selected_status == 'overdue' else '' }}>متأخرة</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="document_type" class="form-label">نوع الوثيقة</label>
+                        <select class="form-select" id="document_type" name="document_type">
+                            <option value="all" {{ 'selected' if selected_document_type == 'all' else '' }}>الكل</option>
+                            {% for doc_type in document_types %}
+                            <option value="{{ doc_type }}" {{ 'selected' if selected_document_type == doc_type else '' }}>{{ doc_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="search" class="form-label">البحث</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="اسم الموظف أو رقم الوثيقة..." name="search" value="{{ request.args.get('search', '') }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- قائمة الرسوم -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0">الرسوم والتكاليف ({{ pagination.total if pagination else 0 }})</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>الموظف</th>
+                            <th>نوع الوثيقة</th>
+                            <th>تاريخ الاستحقاق</th>
+                            <th>إجمالي الرسوم</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr>
+                            <td>{{ loop.index + (pagination.page - 1) * pagination.per_page }}</td>
+                            <td>
+                                <a href="{{ url_for('mobile.employee_details', employee_id=fee.document.employee.id) }}" class="text-decoration-none">
+                                    {{ fee.document.employee.name }}
+                                </a>
+                            </td>
+                            <td>{{ fee.document_type }}</td>
+                            <td>
+                                {% if fee.due_date < current_date and fee.payment_status == 'pending' %}
+                                <span class="text-danger">{{ fee.due_date.strftime('%Y-%m-%d') }}</span>
+                                {% else %}
+                                {{ fee.due_date.strftime('%Y-%m-%d') }}
+                                {% endif %}
+                            </td>
+                            <td>{{ fee.total_fees }} ريال</td>
+                            <td>
+                                {% if fee.payment_status == 'pending' %}
+                                {% if fee.due_date < current_date %}
+                                <span class="badge bg-danger">متأخرة</span>
+                                {% else %}
+                                <span class="badge bg-warning">مستحقة</span>
+                                {% endif %}
+                                {% elif fee.payment_status == 'paid' %}
+                                <span class="badge bg-success">مدفوعة</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ fee.payment_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('mobile.fee_details', fee_id=fee.id) }}">
+                                                <i class="fas fa-eye"></i> عرض
+                                            </a>
+                                        </li>
+                                        {% if current_user.role == "admin" or current_user|check_module_access('fees', 'edit') %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('mobile.edit_fee', fee_id=fee.id) }}">
+                                                <i class="fas fa-edit"></i> تعديل
+                                            </a>
+                                        </li>
+                                        {% if fee.payment_status == 'pending' %}
+                                        <li>
+                                            <a class="dropdown-item text-success" href="{{ url_for('mobile.mark_fee_as_paid', fee_id=fee.id) }}">
+                                                <i class="fas fa-check-circle"></i> تسجيل كمدفوع
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-receipt fa-3x mb-3"></i>
+                                    <p>لا توجد بيانات للعرض</p>
+                                    {% if current_user.role == "admin" or current_user|check_module_access('fees', 'create') %}
+                                    <a href="{{ url_for('mobile.add_fee') }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus-circle"></i> إضافة رسم جديد
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if pagination and pagination.pages > 1 %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item {{ 'disabled' if pagination.page == 1 else '' }}">
+                        <a class="page-link" href="{{ url_for('mobile.fees_new', page=pagination.page - 1, status=selected_status, document_type=selected_document_type, search=request.args.get('search', '')) }}">السابق</a>
+                    </li>
+                    {% for p in range(1, pagination.pages + 1) %}
+                    <li class="page-item {{ 'active' if p == pagination.page else '' }}">
+                        <a class="page-link" href="{{ url_for('mobile.fees_new', page=p, status=selected_status, document_type=selected_document_type, search=request.args.get('search', '')) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {{ 'disabled' if pagination.page == pagination.pages else '' }}">
+                        <a class="page-link" href="{{ url_for('mobile.fees_new', page=pagination.page + 1, status=selected_status, document_type=selected_document_type, search=request.args.get('search', '')) }}">التالي</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends 'layout.html' %}
+
+{% block title %}تقرير الرواتب - نظام إدارة الموظفين{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('reports.index') }}">التقارير</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">تقرير الرواتب</li>
+                </ol>
+            </nav>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        تقرير الرواتب - {{ month_name }} {{ year }}
+                    </h5>
+                    <div>
+                        <a href="{{ url_for('reports.salaries_pdf', month=month, year=year, department_id=department_id) }}" class="btn btn-light btn-sm ms-1" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            تصدير PDF
+                        </a>
+                        <a href="{{ url_for('reports.salaries_excel', month=month, year=year, department_id=department_id) }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-file-excel me-1"></i>
+                            تصدير Excel
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="month" class="form-label">الشهر</label>
+                                    <select class="form-select" id="month" name="month">
+                                        <option value="1" {% if month == 1 %}selected{% endif %}>يناير</option>
+                                        <option value="2" {% if month == 2 %}selected{% endif %}>فبراير</option>
+                                        <option value="3" {% if month == 3 %}selected{% endif %}>مارس</option>
+                                        <option value="4" {% if month == 4 %}selected{% endif %}>أبريل</option>
+                                        <option value="5" {% if month == 5 %}selected{% endif %}>مايو</option>
+                                        <option value="6" {% if month == 6 %}selected{% endif %}>يونيو</option>
+                                        <option value="7" {% if month == 7 %}selected{% endif %}>يوليو</option>
+                                        <option value="8" {% if month == 8 %}selected{% endif %}>أغسطس</option>
+                                        <option value="9" {% if month == 9 %}selected{% endif %}>سبتمبر</option>
+                                        <option value="10" {% if month == 10 %}selected{% endif %}>أكتوبر</option>
+                                        <option value="11" {% if month == 11 %}selected{% endif %}>نوفمبر</option>
+                                        <option value="12" {% if month == 12 %}selected{% endif %}>ديسمبر</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="year" class="form-label">السنة</label>
+                                    <select class="form-select" id="year" name="year">
+                                        {% for y in range(2020, 2030) %}
+                                        <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="department_id" class="form-label">القسم</label>
+                                    <select class="form-select" id="department_id" name="department_id">
+                                        <option value="">-- جميع الأقسام --</option>
+                                        {% for department in departments %}
+                                        <option value="{{ department.id }}" {% if department_id|string == department.id|string %}selected{% endif %}>
+                                            {{ department.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary mb-3 w-100">
+                                    <i class="fas fa-filter me-1"></i>
+                                    تصفية
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        يعرض هذا التقرير بيانات الرواتب للموظفين النشطين. الصفوف المظللة باللون الرمادي تشير إلى موظفين بدون سجل راتب لهذا الشهر.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>الرقم الوظيفي</th>
+                                    <th>القسم</th>
+                                    <th>المسمى الوظيفي</th>
+                                    <th>الراتب الأساسي</th>
+                                    <th>البدلات</th>
+                                    <th>الاستقطاعات</th>
+                                    <th>المكافآت</th>
+                                    <th>صافي الراتب</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if salaries %}
+                                    {% for salary in salaries %}
+                                    <tr {% if not salary.has_salary %}class="table-secondary"{% endif %}>
+                                        <td>{{ loop.index }}</td>
+                                        <td>
+                                            <a href="{{ url_for('employees.view', id=salary.employee.id) }}">
+                                                {{ salary.employee.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ salary.employee.employee_id }}</td>
+                                        <td>{{ salary.employee.department.name if salary.employee.department else "-" }}</td>
+                                        <td>{{ salary.employee.job_title }}</td>
+                                        <td>{{ '{:,.2f}'.format(salary.basic_salary) }}</td>
+                                        <td>{{ '{:,.2f}'.format(salary.allowances) }}</td>
+                                        <td>{{ '{:,.2f}'.format(salary.deductions) }}</td>
+                                        <td>{{ '{:,.2f}'.format(salary.bonus) }}</td>
+                                        <td class="fw-bold">{{ '{:,.2f}'.format(salary.net_salary) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="10" class="text-center py-3">لا توجد سجلات رواتب متطابقة مع معايير البحث</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-dark fw-bold">
+                                    <td colspan="5" class="text-center">الإجمالي</td>
+                                    <td>{{ '{:,.2f}'.format(totals.basic) }}</td>
+                                    <td>{{ '{:,.2f}'.format(totals.allowances) }}</td>
+                                    <td>{{ '{:,.2f}'.format(totals.deductions) }}</td>
+                                    <td>{{ '{:,.2f}'.format(totals.bonus) }}</td>
+                                    <td>{{ '{:,.2f}'.format(totals.net) }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <p class="text-muted">إجمالي الموظفين: {{ salaries|length }}</p>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-chart-pie me-2"></i>
+                                        إحصائيات الرواتب
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="salaryPieChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        توزيع الرواتب
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="salaryDistributionChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // تنسيق الجدول بواسطة DataTables للحصول على تجربة أفضل
+    $(document).ready(function() {
+        $('table').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+            },
+            "order": [[9, "desc"]], // ترتيب حسب صافي الراتب (تنازلي)
+            "pageLength": 25,
+            "paging": true,
+            "info": true,
+            "searching": true
+        });
+        
+        // إعداد بيانات الرسم البياني
+        const salaryData = {
+            labels: ['الراتب الأساسي', 'البدلات', 'المكافآت', 'الاستقطاعات'],
+            datasets: [{
+                data: [{{ totals.basic }}, {{ totals.allowances }}, {{ totals.bonus }}, {{ totals.deductions }}],
+                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'],
+                hoverOffset: 4
+            }]
+        };
+        
+        // إنشاء الرسم البياني الدائري
+        const pieChart = new Chart(
+            document.getElementById('salaryPieChart'),
+            {
+                type: 'pie',
+                data: salaryData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: 'توزيع مكونات الرواتب'
+                        }
+                    }
+                }
+            }
+        );
+        
+        // إعداد بيانات لرسم توزيع الرواتب (نموذج بسيط)
+        // في الإنتاج، يجب حساب التوزيع الحقيقي للرواتب
+        const salaryRanges = ['أقل من 5000', '5000-10000', '10000-15000', '15000-20000', 'أكثر من 20000'];
+        
+        // حساب توزيع الرواتب
+        const salaryDistribution = [0, 0, 0, 0, 0];
+        {% for salary in salaries %}
+            {% if salary.has_salary %}
+                const salaryAmount = {{ salary.net_salary }};
+                if (salaryAmount < 5000) salaryDistribution[0]++;
+                else if (salaryAmount < 10000) salaryDistribution[1]++;
+                else if (salaryAmount < 15000) salaryDistribution[2]++;
+                else if (salaryAmount < 20000) salaryDistribution[3]++;
+                else salaryDistribution[4]++;
+            {% endif %}
+        {% endfor %}
+        
+        // إنشاء الرسم البياني العمودي
+        const barChart = new Chart(
+            document.getElementById('salaryDistributionChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: salaryRanges,
+                    datasets: [{
+                        label: 'عدد الموظفين',
+                        data: salaryDistribution,
+                        backgroundColor: '#0d6efd',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'توزيع صافي الرواتب'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        );
+    });
+</script>
+{% endblock %}

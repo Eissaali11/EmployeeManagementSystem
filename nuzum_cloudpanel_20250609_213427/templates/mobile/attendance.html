@@ -1,0 +1,296 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الحضور والغياب - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الحضور والغياب{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="إضافة" onclick="location.href='{{ url_for('mobile.add_attendance') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+<button class="mobile-menu-button" aria-label="تصدير" onclick="location.href='{{ url_for('mobile.export_attendance') }}'">
+    <i class="fas fa-file-excel"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.attendance') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>التاريخ</label>
+                <input type="date" name="date" class="mobile-form-control" value="{{ request.args.get('date', '') }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الموظف</label>
+                <select name="employee_id" class="mobile-form-select">
+                    <option value="">جميع الموظفين</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>{{ employee.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الحالة</label>
+                <select name="status" class="mobile-form-select">
+                    <option value="">جميع الحالات</option>
+                    <option value="حاضر" {% if request.args.get('status') == 'حاضر' %}selected{% endif %}>حاضر</option>
+                    <option value="غائب" {% if request.args.get('status') == 'غائب' %}selected{% endif %}>غائب</option>
+                    <option value="إجازة" {% if request.args.get('status') == 'إجازة' %}selected{% endif %}>إجازة</option>
+                </select>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.attendance') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- بيانات اليوم الحالي -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-calendar-day"></i> حضور اليوم
+        <div class="mobile-card-subtitle">{{ current_date.strftime('%Y-%m-%d') }}</div>
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="attendance-summary">
+            <div class="attendance-stat">
+                <div class="attendance-count">{{ today_stats.present or 0 }}</div>
+                <div class="attendance-label">حاضر</div>
+            </div>
+            <div class="attendance-stat">
+                <div class="attendance-count">{{ today_stats.absent or 0 }}</div>
+                <div class="attendance-label">غائب</div>
+            </div>
+            <div class="attendance-stat">
+                <div class="attendance-count">{{ today_stats.leave or 0 }}</div>
+                <div class="attendance-label">إجازة</div>
+            </div>
+            <div class="attendance-stat">
+                <div class="attendance-count">{{ today_stats.total or 0 }}</div>
+                <div class="attendance-label">الإجمالي</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قائمة سجلات الحضور -->
+{% if attendance_records %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list-alt"></i> سجلات الحضور
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for record in attendance_records %}
+            <div class="mobile-list-item">
+                <div class="mobile-list-item-icon">
+                    {% if record.status == 'حاضر' %}
+                    <i class="fas fa-check-circle text-success"></i>
+                    {% elif record.status == 'غائب' %}
+                    <i class="fas fa-times-circle text-danger"></i>
+                    {% elif record.status == 'إجازة' %}
+                    <i class="fas fa-calendar-minus text-info"></i>
+                    {% else %}
+                    <i class="fas fa-question-circle text-secondary"></i>
+                    {% endif %}
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ record.employee.name }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        {{ record.date.strftime('%Y-%m-%d') }}
+                        {% if record.check_in %}
+                        <span class="time-badge check-in">
+                            <i class="fas fa-sign-in-alt"></i> {{ record.check_in.strftime('%H:%M') }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if record.check_out %}
+                        <span class="time-badge check-out">
+                            <i class="fas fa-sign-out-alt"></i> {{ record.check_out.strftime('%H:%M') }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="mobile-list-item-info">
+                        {% if record.notes %}
+                        <small>{{ record.notes }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mobile-list-item-action">
+                    <a href="{{ url_for('mobile.edit_attendance', record_id=record.id) }}" class="action-btn">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- ترقيم الصفحات -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mobile-pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('mobile.attendance', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+            
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                    <a href="{{ url_for('mobile.attendance', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                    {% else %}
+                    <span class="mobile-pagination-item active">{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="mobile-pagination-item">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('mobile.attendance', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-calendar-check fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد سجلات حضور</h5>
+        <p class="text-secondary">لا توجد بيانات حضور متطابقة مع معايير البحث</p>
+        <a href="{{ url_for('mobile.add_attendance') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-plus"></i> تسجيل حضور جديد
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.mobile-list-item-icon {
+    margin-left: 15px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #757575;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-action {
+    display: flex;
+    align-items: center;
+}
+
+.action-btn {
+    color: #757575;
+    padding: 5px;
+    text-decoration: none;
+}
+
+.time-badge {
+    display: inline-block;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+.check-in {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.check-out {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+}
+
+.attendance-summary {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.attendance-stat {
+    text-align: center;
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.03);
+    margin: 0 5px;
+}
+
+.attendance-count {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.attendance-label {
+    font-size: 0.85rem;
+    color: #757575;
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #757575;
+    font-weight: normal;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة الحضور والغياب');
+});
+</script>
+{% endblock %}

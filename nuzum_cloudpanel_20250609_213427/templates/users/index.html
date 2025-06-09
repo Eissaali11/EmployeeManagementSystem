@@ -1,0 +1,227 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة المستخدمين{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    إدارة المستخدمين
+                </h2>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ url_for('users.add') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة مستخدم جديد
+                    </a>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{{ url_for('attendance.dashboard') }}">الرئيسية</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">إدارة المستخدمين</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-primary mb-1">{{ users|length }}</div>
+                            <div class="text-muted small">إجمالي المستخدمين</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-success mb-1">{{ users|selectattr('is_active')|list|length }}</div>
+                            <div class="text-muted small">مستخدمين نشطين</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-warning mb-1">{{ users|selectattr('assigned_department')|list|length }}</div>
+                            <div class="text-muted small">لديهم أقسام مخصصة</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="h3 text-info mb-1">{{ departments|length }}</div>
+                            <div class="text-muted small">إجمالي الأقسام</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول المستخدمين -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة المستخدمين
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>الدور</th>
+                                    <th>القسم المخصص</th>
+                                    <th>الحالة</th>
+                                    <th>تاريخ التسجيل</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2">
+                                                {{ user.name[0] if user.name else user.email[0] }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium">{{ user.name or 'غير محدد' }}</div>
+                                                <small class="text-muted">ID: {{ user.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('users.edit_role', user_id=user.id) }}" class="d-inline">
+                                            <select name="role" class="form-select form-select-sm" onchange="this.form.submit()" 
+                                                    style="width: auto; min-width: 120px;">
+                                                <option value="admin" {% if user.role.value == 'admin' %}selected{% endif %}>مدير</option>
+                                                <option value="manager" {% if user.role.value == 'manager' %}selected{% endif %}>مشرف</option>
+                                                <option value="hr" {% if user.role.value == 'hr' %}selected{% endif %}>موارد بشرية</option>
+                                                <option value="finance" {% if user.role.value == 'finance' %}selected{% endif %}>مالية</option>
+                                                <option value="fleet" {% if user.role.value == 'fleet' %}selected{% endif %}>أسطول</option>
+                                                <option value="user" {% if user.role.value == 'user' %}selected{% endif %}>مستخدم</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('users.assign_department', user_id=user.id) }}" class="d-inline">
+                                            <select name="department_id" class="form-select form-select-sm" onchange="this.form.submit()"
+                                                    style="width: auto; min-width: 150px;">
+                                                <option value="">-- غير محدد --</option>
+                                                {% for dept in departments %}
+                                                <option value="{{ dept.id }}" 
+                                                        {% if user.assigned_department_id == dept.id %}selected{% endif %}>
+                                                    {{ dept.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">نشط</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">غير نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ user.created_at.strftime('%Y/%m/%d') if user.created_at else 'غير محدد' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- زر تعديل المستخدم -->
+                                            <a href="{{ url_for('users.edit', user_id=user.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="تعديل المستخدم">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            <!-- زر تفعيل/إلغاء تفعيل -->
+                                            <form method="POST" action="{{ url_for('users.toggle_active', user_id=user.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm" 
+                                                        title="{{ 'إلغاء تفعيل' if user.is_active else 'تفعيل' }}">
+                                                    <i class="fas {{ 'fa-user-slash' if user.is_active else 'fa-user-check' }}"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            <!-- زر الصلاحيات التفصيلية -->
+                                            <a href="{{ url_for('users.user_permissions', user_id=user.id) }}" 
+                                               class="btn btn-outline-info btn-sm" title="إدارة الصلاحيات">
+                                                <i class="fas fa-key"></i>
+                                            </a>
+                                            
+                                            <!-- زر حذف المستخدم -->
+                                            {% if user.id != current_user.id %}
+                                            <a href="{{ url_for('users.confirm_delete', user_id=user.id) }}" 
+                                               class="btn btn-outline-danger btn-sm" title="حذف المستخدم">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="fas fa-users fa-2x mb-2"></i>
+                                        <div>لا توجد مستخدمين مسجلين</div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ملاحظات مهمة -->
+            <div class="alert alert-info mt-4" role="alert">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ملاحظات مهمة حول نظام الصلاحيات
+                </h6>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>المديرون:</strong> لديهم وصول كامل لجميع الأقسام والوظائف</li>
+                    <li><strong>المستخدمون العاديون:</strong> يمكنهم فقط الوصول للقسم المخصص لهم</li>
+                    <li><strong>تحديد القسم:</strong> يحدد أي موظفين يمكن للمستخدم تسجيل حضورهم</li>
+                    <li><strong>عدم تحديد القسم:</strong> المستخدم لن يتمكن من تسجيل أي حضور</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.form-select-sm {
+    font-size: 0.875rem;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+}
+</style>
+
+
+{% endblock %}

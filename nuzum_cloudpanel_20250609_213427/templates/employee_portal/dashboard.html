@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة معلومات {{ employee.name }} - نُظم</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .employee-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .employee-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            object-fit: cover;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .default-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+        .employee-info h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .employee-info p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+        .stats-card {
+            background: var(--bs-dark);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--bs-light);
+            margin-bottom: 0.5rem;
+        }
+        .stats-label {
+            color: var(--bs-light);
+            font-size: 1.1rem;
+        }
+        .vehicle-card {
+            background: var(--bs-dark);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+        .vehicle-card h5 {
+            color: var(--bs-light);
+            margin-bottom: 1rem;
+        }
+        .quick-actions {
+            background: var(--bs-dark);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .action-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            padding: 1rem;
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        .logout-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1000;
+        }
+        .id-photo-section {
+            background: var(--bs-dark);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .id-photo {
+            width: 200px;
+            height: 120px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            object-fit: cover;
+            margin: 1rem 0;
+        }
+        .default-id-photo {
+            width: 200px;
+            height: 120px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- زر تسجيل الخروج -->
+    <a href="{{ url_for('employee_portal.employee_logout') }}" class="btn btn-danger logout-btn">
+        <i class="fas fa-sign-out-alt ms-2"></i>تسجيل الخروج
+    </a>
+
+    <!-- رأس الصفحة -->
+    <div class="employee-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    {% if employee.profile_image %}
+                        <img src="{{ url_for('static', filename=employee.profile_image) }}" 
+                             alt="صورة {{ employee.name }}" class="employee-photo">
+                    {% else %}
+                        <div class="default-photo">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-9 employee-info">
+                    <h1>{{ employee.name }}</h1>
+                    <p><i class="fas fa-id-badge ms-2"></i>رقم العمل: {{ employee.employee_id }}</p>
+                    <p><i class="fas fa-id-card ms-2"></i>رقم الهوية: {{ employee.national_id }}</p>
+                    <p><i class="fas fa-briefcase ms-2"></i>المسمى الوظيفي: {{ employee.job_title or 'غير محدد' }}</p>
+                    <p><i class="fas fa-building ms-2"></i>القسم: {{ employee.department.name if employee.department else 'غير محدد' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- الإحصائيات السريعة -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card text-center">
+                    <div class="stats-icon mx-auto" style="background: linear-gradient(45deg, #3498db, #2980b9);">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="stats-number">{{ stats.assigned_vehicles_count }}</div>
+                    <div class="stats-label">السيارات المخصصة</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card text-center">
+                    <div class="stats-icon mx-auto" style="background: linear-gradient(45deg, #27ae60, #219a52);">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stats-number">{{ stats.monthly_attendance_days }}</div>
+                    <div class="stats-label">أيام الحضور هذا الشهر</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card text-center">
+                    <div class="stats-icon mx-auto" style="background: linear-gradient(45deg, #e74c3c, #c0392b);">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <div class="stats-number">{{ stats.monthly_absence_days }}</div>
+                    <div class="stats-label">أيام الغياب هذا الشهر</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card text-center">
+                    <div class="stats-icon mx-auto" style="background: linear-gradient(45deg, #f39c12, #e67e22);">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stats-number">
+                        {% if stats.latest_salary %}
+                            {{ "{:,.0f}".format(stats.latest_salary.net_salary) if stats.latest_salary.net_salary else 0 }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </div>
+                    <div class="stats-label">آخر راتب (ريال)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- معلومات الهوية والصورة -->
+            <div class="col-lg-6 mb-4">
+                <div class="id-photo-section">
+                    <h4 class="mb-3">
+                        <i class="fas fa-id-card ms-2"></i>صورة الهوية الوطنية
+                    </h4>
+                    {% if employee.national_id_image %}
+                        <img src="{{ url_for('static', filename=employee.national_id_image) }}" 
+                             alt="صورة هوية {{ employee.name }}" class="id-photo">
+                    {% else %}
+                        <div class="default-id-photo">
+                            <div class="text-center">
+                                <i class="fas fa-id-card fa-2x mb-2"></i>
+                                <p class="mb-0">لم يتم رفع صورة الهوية</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>رقم الهوية:</strong> {{ employee.national_id }}</p>
+                        <p><strong>الجنسية:</strong> {{ employee.nationality or 'غير محددة' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صورة رخصة القيادة -->
+            <div class="col-lg-6 mb-4">
+                <div class="id-photo-section">
+                    <h4 class="mb-3">
+                        <i class="fas fa-id-badge ms-2"></i>صورة رخصة القيادة
+                    </h4>
+                    {% if employee.license_image %}
+                        <img src="{{ url_for('static', filename=employee.license_image) }}" 
+                             alt="صورة رخصة {{ employee.name }}" class="id-photo">
+                    {% else %}
+                        <div class="default-id-photo">
+                            <div class="text-center">
+                                <i class="fas fa-id-badge fa-2x mb-2"></i>
+                                <p class="mb-0">لم يتم رفع صورة الرخصة</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>المسمى الوظيفي:</strong> {{ employee.job_title or 'غير محدد' }}</p>
+                        <p><strong>تاريخ الانضمام:</strong> {{ employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- الإجراءات السريعة -->
+            <div class="col-lg-6 mb-4">
+                <div class="quick-actions">
+                    <h4 class="mb-3">
+                        <i class="fas fa-bolt ms-2"></i>الإجراءات السريعة
+                    </h4>
+                    
+                    <a href="{{ url_for('employee_portal.my_vehicles') }}" class="action-btn">
+                        <i class="fas fa-car ms-2"></i>عرض السيارات المخصصة
+                    </a>
+                    
+                    <a href="{{ url_for('employee_portal.my_salaries') }}" class="action-btn">
+                        <i class="fas fa-money-bill-wave ms-2"></i>عرض الرواتب
+                    </a>
+                    
+                    <a href="{{ url_for('employee_portal.my_attendance') }}" class="action-btn">
+                        <i class="fas fa-calendar-check ms-2"></i>عرض سجل الحضور
+                    </a>
+                    
+                    <a href="{{ url_for('employee_portal.my_profile') }}" class="action-btn">
+                        <i class="fas fa-user ms-2"></i>الملف الشخصي
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- السيارات المخصصة -->
+        {% if assigned_vehicles %}
+        <div class="row">
+            <div class="col-12">
+                <div class="stats-card">
+                    <h4 class="mb-3">
+                        <i class="fas fa-car ms-2"></i>السيارات المخصصة حالياً
+                    </h4>
+                    <div class="row">
+                        {% for vehicle in assigned_vehicles %}
+                        <div class="col-lg-6 mb-3">
+                            <div class="vehicle-card">
+                                <h5>{{ vehicle.make }} {{ vehicle.model }}</h5>
+                                <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
+                                <p><strong>سنة الصنع:</strong> {{ vehicle.year or 'غير محدد' }}</p>
+                                <p><strong>الحالة:</strong> 
+                                    {% if vehicle.status == 'available' %}
+                                        <span class="badge bg-success">متاح</span>
+                                    {% elif vehicle.status == 'rented' %}
+                                        <span class="badge bg-warning">مؤجر</span>
+                                    {% elif vehicle.status == 'in_project' %}
+                                        <span class="badge bg-info">في مشروع</span>
+                                    {% elif vehicle.status == 'in_workshop' %}
+                                        <span class="badge bg-danger">في الورشة</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

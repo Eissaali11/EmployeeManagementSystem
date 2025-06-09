@@ -1,0 +1,70 @@
+{% extends 'layout.html' %}
+
+{% block title %}إرسال إشعارات خصومات الرواتب عبر WhatsApp{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell"></i> إرسال إشعارات خصومات الرواتب عبر واتساب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('salaries.batch_deduction_notifications') }}" method="post">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> سيتم إرسال إشعارات فقط للرواتب التي تحتوي على خصومات.
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="department_id" class="form-label">القسم</label>
+                                <select name="department_id" id="department_id" class="form-select">
+                                    <option value="all">جميع الأقسام</option>
+                                    {% for department in departments %}
+                                        <option value="{{ department.id }}">{{ department.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="month" class="form-label">الشهر</label>
+                                <select name="month" id="month" class="form-select">
+                                    {% for i in range(1, 13) %}
+                                        <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>{{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="year" class="form-label">السنة</label>
+                                <select name="year" id="year" class="form-select">
+                                    {% for i in range(current_year-5, current_year+2) %}
+                                        <option value="{{ i }}" {% if i == current_year %}selected{% endif %}>{{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fab fa-whatsapp"></i> إرسال إشعارات الخصومات عبر واتساب
+                            </button>
+                            <a href="{{ url_for('salaries.index') }}" class="btn btn-secondary">إلغاء</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <div class="alert alert-warning mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> ملاحظة: يجب أن يكون لدى الموظفين أرقام هواتف صحيحة لتلقي الإشعارات.
+                        <br>
+                        <i class="fas fa-info-circle"></i> يتم إرسال الإشعارات فقط للرواتب التي تحتوي على خصومات.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

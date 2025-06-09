@@ -1,0 +1,99 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>استيراد بيانات الرواتب</h1>
+        <a href="{{ url_for('salaries.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">رفع ملف الرواتب</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('salaries.import_excel') }}" method="post" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="month" class="form-label required-field">الشهر</label>
+                                <select class="form-select" id="month" name="month" required>
+                                    <option value="">اختر الشهر</option>
+                                    {% for i in range(1, 13) %}
+                                    <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>{{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="year" class="form-label required-field">السنة</label>
+                                <select class="form-select" id="year" name="year" required>
+                                    <option value="">اختر السنة</option>
+                                    {% for i in range(current_year - 5, current_year + 2) %}
+                                    <option value="{{ i }}" {% if i == current_year %}selected{% endif %}>{{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="file" class="form-label required-field">ملف Excel</label>
+                            <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls" required onchange="validateExcelFile('file')">
+                            <div class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                يرجى رفع ملف بصيغة Excel (.xlsx, .xls)
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload me-1"></i> رفع الملف واستيراد البيانات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>إرشادات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>هيكل ملف Excel المطلوب:</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <strong>الحقول الإلزامية:</strong> employee_id, basic_salary
+                        </li>
+                        <li class="list-group-item">
+                            <strong>الحقول الاختيارية:</strong> allowances, deductions, bonus, notes
+                        </li>
+                    </ul>
+
+                    <h6>ملاحظات هامة:</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            حقل 'employee_id' يجب أن يكون معرف الموظف الموجود في النظام
+                        </li>
+                        <li class="list-group-item">
+                            يتم تحديد الشهر والسنة من الحقول في النموذج، وليس من الملف
+                        </li>
+                        <li class="list-group-item">
+                            صافي الراتب سيتم احتسابه تلقائيًا (الراتب الأساسي + البدلات + المكافآت - الخصومات)
+                        </li>
+                        <li class="list-group-item">
+                            يمكنك <a href="{{ url_for('salaries.export_excel') }}" target="_blank">تحميل نموذج</a> كمثال
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

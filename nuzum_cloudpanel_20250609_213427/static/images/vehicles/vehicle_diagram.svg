@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .outline { fill: #ffffff; stroke: #333333; stroke-width: 3; }
+    .windows { fill: #e6f0ff; stroke: #333333; stroke-width: 2; }
+    .lights { fill: #ffcc00; stroke: #333333; stroke-width: 1; }
+    .tire { fill: #333333; stroke: #000000; stroke-width: 2; }
+    .handles { fill: none; stroke: #333333; stroke-width: 2; }
+  </style>
+  
+  <!-- هيكل السيارة الأساسي -->
+  <path class="outline" d="M 200,220 C 200,180 220,160 280,160 L 520,160 C 580,160 600,180 600,220 L 620,280 C 640,300 640,320 640,340 L 640,360 C 640,380 630,380 610,380 L 190,380 C 170,380 160,380 160,360 L 160,340 C 160,320 160,300 180,280 Z" />
+  
+  <!-- الزجاج الأمامي -->
+  <path class="windows" d="M 280,180 L 520,180 C 560,180 570,190 570,210 L 530,240 L 270,240 L 230,210 C 230,190 240,180 280,180 Z" />
+  
+  <!-- الزجاج الخلفي -->
+  <path class="windows" d="M 270,280 L 530,280 L 560,330 L 240,330 Z" />
+  
+  <!-- نافذة الجانب الأيسر -->
+  <path class="windows" d="M 230,210 L 270,240 L 270,280 L 240,330 L 200,340 L 180,280 Z" />
+  
+  <!-- نافذة الجانب الأيمن -->
+  <path class="windows" d="M 570,210 L 530,240 L 530,280 L 560,330 L 600,340 L 620,280 Z" />
+  
+  <!-- العجلة الأمامية اليسرى -->
+  <ellipse class="tire" cx="250" cy="380" rx="50" ry="50" />
+  <ellipse fill="#999999" cx="250" cy="380" rx="30" ry="30" />
+  
+  <!-- العجلة الأمامية اليمنى -->
+  <ellipse class="tire" cx="550" cy="380" rx="50" ry="50" />
+  <ellipse fill="#999999" cx="550" cy="380" rx="30" ry="30" />
+  
+  <!-- الأنوار الأمامية -->
+  <path class="lights" d="M 180,280 L 200,260 L 230,260 L 240,280 Z" />
+  <path class="lights" d="M 620,280 L 600,260 L 570,260 L 560,280 Z" />
+  
+  <!-- مقابض الأبواب -->
+  <path class="handles" d="M 300,260 L 330,260" />
+  <path class="handles" d="M 470,260 L 500,260" />
+  
+  <!-- خط السقف -->
+  <line stroke="#333333" stroke-width="2" x1="270" y1="240" x2="530" y2="240" />
+  
+  <!-- خط المقدمة -->
+  <line stroke="#333333" stroke-width="2" x1="270" y1="280" x2="530" y2="280" />
+  
+  <!-- تفاصيل الصدام -->
+  <path fill="none" stroke="#333333" stroke-width="2" d="M 190,360 L 610,360" />
+  <path fill="none" stroke="#333333" stroke-width="2" d="M 190,340 C 190,340 220,350 400,350 C 580,350 610,340 610,340" />
+</svg>

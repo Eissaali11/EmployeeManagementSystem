@@ -1,0 +1,245 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    /* تنسيقات مربع البحث */
+    .employee-search-container {
+        position: relative;
+        margin-bottom: 10px;
+    }
+    
+    .search-input-group {
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    #employee_search {
+        height: 44px;
+        font-size: 16px;
+        border-width: 2px;
+    }
+    
+    #employee_search:focus {
+        border-color: #4a6fdc;
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 220, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: #4a6fdc;
+        color: white;
+        border: none;
+    }
+    
+    /* تحسين شكل قائمة الموظفين */
+    #employee_id {
+        height: auto;
+        max-height: 300px;
+    }
+    
+    /* تأثير عند تحديد عنصر من القائمة */
+    #employee_id option:hover {
+        background-color: #f0f4ff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تسجيل حضور لموظف</h1>
+        <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">تسجيل الحضور</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('attendance.record') }}" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="employee_id" class="form-label required-field">الموظف</label>
+                                <div class="mb-2 employee-search-container">
+                                    <div class="input-group search-input-group">
+                                        <input type="text" class="form-control" id="employee_search" placeholder="ابحث عن موظف..." autocomplete="off">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
+                                </div>
+                                <select class="form-select" id="employee_id" name="employee_id" required>
+                                    <option value="">اختر الموظف</option>
+                                    {% for employee in employees %}
+                                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %} data-search-text="{{ employee.name }} {{ employee.employee_id }}">
+                                        {{ employee.name }} ({{ employee.employee_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label required-field">التاريخ</label>
+                                <input type="date" class="form-control date-picker" id="date" name="date" 
+                                       value="{{ request.args.get('date') or today.strftime('%Y-%m-%d') }}" required>
+                                <div class="mt-1">
+                                    <span class="gregorian-date">{{ gregorian_date }}</span>
+                                    <span class="hijri-date" style="display: none;">{{ hijri_date }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label required-field">حالة الحضور</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_present" value="present" checked>
+                                    <label class="form-check-label" for="status_present">
+                                        <span class="badge bg-success">حاضر</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_absent" value="absent">
+                                    <label class="form-check-label" for="status_absent">
+                                        <span class="badge bg-danger">غائب</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_leave" value="leave">
+                                    <label class="form-check-label" for="status_leave">
+                                        <span class="badge bg-warning">إجازة</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="status_sick" value="sick">
+                                    <label class="form-check-label" for="status_sick">
+                                        <span class="badge bg-info">مرضي</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- وقت الحضور والانصراف (تظهر فقط عند اختيار حاضر) -->
+                        <div id="timeFields" class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="check_in" class="form-label">وقت الحضور</label>
+                                <input type="time" class="form-control" id="check_in" name="check_in">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="check_out" class="form-label">وقت الانصراف</label>
+                                <input type="time" class="form-control" id="check_out" name="check_out">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> تسجيل الحضور
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo me-1"></i> إعادة تعيين
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إظهار/إخفاء حقول الوقت بناءً على الحالة المختارة
+        const statusRadios = document.querySelectorAll('input[name="status"]');
+        const timeFields = document.getElementById('timeFields');
+        
+        function toggleTimeFields() {
+            const selectedStatus = document.querySelector('input[name="status"]:checked').value;
+            if (selectedStatus === 'present') {
+                timeFields.style.display = 'flex';
+            } else {
+                timeFields.style.display = 'none';
+            }
+        }
+        
+        // عند تحميل الصفحة
+        toggleTimeFields();
+        
+        // عند تغيير الحالة
+        statusRadios.forEach(function(radio) {
+            radio.addEventListener('change', toggleTimeFields);
+        });
+        
+        // وظيفة البحث في قائمة الموظفين
+        const employeeSearch = document.getElementById('employee_search');
+        const employeeSelect = document.getElementById('employee_id');
+        const employeeOptions = Array.from(employeeSelect.options);
+        
+        // التأكد من أن مربع البحث ظاهر وفعال
+        console.log('مربع البحث:', employeeSearch);
+        console.log('قائمة الموظفين:', employeeSelect);
+        console.log('عدد الموظفين:', employeeOptions.length);
+        
+        // تهيئة البحث بمجرد تحميل الصفحة
+        if (employeeSearch) {
+            // إضافة تلميح للمستخدم
+            employeeSearch.placeholder = "ابحث عن موظف بالاسم أو الرقم الوظيفي...";
+            
+            // تفعيل البحث عند الكتابة
+            employeeSearch.addEventListener('input', function() {
+                const searchText = employeeSearch.value.trim().toLowerCase();
+                console.log('البحث عن:', searchText);
+                
+                // إذا كان البحث فارغاً، عرض جميع الخيارات
+                if (searchText === '') {
+                    employeeSelect.innerHTML = '';
+                    employeeOptions.forEach(option => {
+                        employeeSelect.appendChild(option.cloneNode(true));
+                    });
+                    return;
+                }
+                
+                // فلترة الخيارات حسب نص البحث
+                const filteredOptions = employeeOptions.filter(option => {
+                    if (option.value === '') return true; // دائماً نعرض خيار "اختر الموظف"
+                    
+                    const optionText = option.getAttribute('data-search-text') || option.textContent;
+                    return optionText.toLowerCase().includes(searchText);
+                });
+                
+                console.log('النتائج المطابقة:', filteredOptions.length - 1); // ناقص 1 لخيار "اختر الموظف"
+                
+                // عرض الخيارات المفلترة فقط
+                employeeSelect.innerHTML = '';
+                filteredOptions.forEach(option => {
+                    employeeSelect.appendChild(option.cloneNode(true));
+                });
+                
+                // إذا كان هناك نتيجة واحدة فقط (غير خيار "اختر الموظف")، حددها تلقائياً
+                if (filteredOptions.length === 2 && filteredOptions[0].value === '') {
+                    employeeSelect.value = filteredOptions[1].value;
+                    console.log('تم اختيار الموظف تلقائياً:', filteredOptions[1].textContent);
+                }
+            });
+            
+            // تحديث القائمة عند النقر على مربع البحث
+            employeeSearch.addEventListener('focus', function() {
+                if (employeeSearch.value.trim() !== '') {
+                    // تنفيذ البحث الحالي مرة أخرى لضمان تطابق القائمة
+                    employeeSearch.dispatchEvent(new Event('input'));
+                }
+            });
+        } else {
+            console.error('لم يتم العثور على مربع البحث!');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,400 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تقرير الحضور - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تقرير الحضور{% endblock %}
+
+{% block content %}
+<!-- خيارات التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> خيارات التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.report_attendance') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>القسم</label>
+                <select name="department_id" class="mobile-form-select">
+                    <option value="">جميع الأقسام</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if request.args.get('department_id') == department.id|string %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الموظف</label>
+                <select name="employee_id" class="mobile-form-select">
+                    <option value="">جميع الموظفين</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}" {% if request.args.get('employee_id') == employee.id|string %}selected{% endif %}>{{ employee.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>حالة الحضور</label>
+                <select name="status" class="mobile-form-select">
+                    <option value="">جميع الحالات</option>
+                    <option value="حاضر" {% if request.args.get('status') == 'حاضر' %}selected{% endif %}>حاضر</option>
+                    <option value="غائب" {% if request.args.get('status') == 'غائب' %}selected{% endif %}>غائب</option>
+                    <option value="إجازة" {% if request.args.get('status') == 'إجازة' %}selected{% endif %}>إجازة</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>من تاريخ</label>
+                    <input type="date" name="start_date" class="mobile-form-control" value="{{ request.args.get('start_date', '') }}">
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>إلى تاريخ</label>
+                    <input type="date" name="end_date" class="mobile-form-control" value="{{ request.args.get('end_date', '') }}">
+                </div>
+            </div>
+            
+            <div class="mobile-form-row buttons-row">
+                <button type="submit" class="mobile-btn mobile-btn-primary">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                
+                <button type="button" class="mobile-btn mobile-btn-secondary" onclick="location.href='{{ url_for('mobile.report_attendance') }}'">
+                    <i class="fas fa-redo"></i> إعادة ضبط
+                </button>
+                
+                <div class="dropdown">
+                    <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
+                        <i class="fas fa-download"></i> تصدير
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="{{ url_for('mobile.report_attendance') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
+                            <i class="fas fa-file-pdf"></i> تصدير PDF
+                        </a>
+                        <a href="{{ url_for('mobile.report_attendance') }}?{{ request.query_string.decode('utf-8') }}&export=excel" class="dropdown-item">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- نتائج التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list"></i> نتائج التقرير
+        <div class="mobile-card-subtitle">{{ attendance_records|length }} سجل</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if attendance_records %}
+        <div class="table-responsive">
+            <table class="mobile-table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الموظف</th>
+                        <th>الحالة</th>
+                        <th>الوقت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.employee.name if record.employee else '-' }}</td>
+                        <td>
+                            <span class="attendance-badge attendance-{{ record.status }}">
+                                {{ record.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if record.status == 'حاضر' %}
+                                {% if record.check_in %}{{ record.check_in }}{% else %}-{% endif %}
+                                {% if record.check_out %} - {{ record.check_out }}{% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">لا توجد بيانات متطابقة مع معايير البحث</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ملخص التقرير -->
+{% if attendance_records %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> ملخص التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="report-summary">
+            <div class="summary-item total">
+                <div class="summary-value">{{ attendance_records|length }}</div>
+                <div class="summary-label">إجمالي السجلات</div>
+            </div>
+            
+            <div class="summary-item present">
+                <div class="summary-value">{{ attendance_records|selectattr('status', 'equalto', 'حاضر')|list|length }}</div>
+                <div class="summary-label">حاضر</div>
+            </div>
+            
+            <div class="summary-item absent">
+                <div class="summary-value">{{ attendance_records|selectattr('status', 'equalto', 'غائب')|list|length }}</div>
+                <div class="summary-label">غائب</div>
+            </div>
+            
+            <div class="summary-item leave">
+                <div class="summary-value">{{ attendance_records|selectattr('status', 'equalto', 'إجازة')|list|length }}</div>
+                <div class="summary-label">إجازة</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="attendanceChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.buttons-row {
+    flex-wrap: wrap;
+}
+
+.mobile-form-row .mobile-btn {
+    flex: 1;
+    margin-bottom: 10px;
+}
+
+.dropdown {
+    position: relative;
+    flex: 1;
+}
+
+.dropdown-toggle {
+    width: 100%;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.mobile-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mobile-table th,
+.mobile-table td {
+    padding: 10px 15px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+}
+
+.mobile-table th {
+    background-color: #f9f9f9;
+    color: #757575;
+    font-weight: 500;
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.attendance-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.attendance-حاضر {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.attendance-غائب {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.attendance-إجازة {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.report-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    flex: 1;
+    min-width: calc(50% - 10px);
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.summary-item.total {
+    flex-basis: 100%;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.summary-item.present {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.summary-item.absent {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.summary-item.leave {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+}
+
+.chart-container {
+    height: 250px;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تفعيل قائمة التصدير المنسدلة
+    const dropdownToggle = document.getElementById('exportDropdown');
+    const dropdownMenu = dropdownToggle.nextElementSibling;
+    
+    dropdownToggle.addEventListener('click', function() {
+        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            dropdownMenu.style.display = 'none';
+        }
+    });
+    
+    {% if attendance_records %}
+    // إنشاء رسم بياني للحضور
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    const attendanceChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['حاضر', 'غائب', 'إجازة'],
+            datasets: [{
+                data: [
+                    {{ attendance_records|selectattr('status', 'equalto', 'حاضر')|list|length }},
+                    {{ attendance_records|selectattr('status', 'equalto', 'غائب')|list|length }},
+                    {{ attendance_records|selectattr('status', 'equalto', 'إجازة')|list|length }}
+                ],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(220, 53, 69, 0.7)',
+                    'rgba(255, 193, 7, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'توزيع سجلات الحضور',
+                    font: {
+                        family: 'Tajawal, Arial',
+                        size: 14
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

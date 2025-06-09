@@ -1,0 +1,428 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}{{ department.name }} - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تفاصيل القسم{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="العودة" onclick="location.href='{{ url_for('mobile.departments') }}'">
+    <i class="fas fa-arrow-right"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- معلومات القسم -->
+<div class="mobile-card">
+    <div class="department-header" style="border-color: {{ department.color if department.color else '#ccc' }}">
+        <div class="department-name">{{ department.name }}</div>
+        {% if department.manager %}
+        <div class="department-manager">
+            <i class="fas fa-user-tie"></i> المدير: {{ department.manager.name }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="info-group">
+            <div class="info-label">الوصف</div>
+            <div class="info-value">{{ department.description or 'لا يوجد وصف' }}</div>
+        </div>
+        
+        {% if department.parent %}
+        <div class="info-group">
+            <div class="info-label">القسم الأعلى</div>
+            <div class="info-value">
+                <a href="{{ url_for('mobile.department_details', department_id=department.parent.id) }}">
+                    {{ department.parent.name }}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="info-group">
+            <div class="info-label">عدد الموظفين</div>
+            <div class="info-value">{{ department.employees|length if department.employees else 0 }} موظف</div>
+        </div>
+        
+        {% if department.notes %}
+        <div class="info-group">
+            <div class="info-label">ملاحظات</div>
+            <div class="info-value">{{ department.notes }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- موظفي القسم -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-users"></i> موظفي القسم
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if department.employees and department.employees|length > 0 %}
+        <div class="mobile-list">
+            {% for employee in department.employees %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.employee_details', employee_id=employee.id) }}'">
+                <div class="mobile-list-item-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ employee.name }}</div>
+                    <div class="mobile-list-item-subtitle">{{ employee.job_title }}</div>
+                    <div class="mobile-list-item-info">
+                        <span><i class="fas fa-id-card"></i> {{ employee.employee_id }}</span>
+                    </div>
+                </div>
+                <div class="mobile-list-item-action">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">لا يوجد موظفين في هذا القسم</p>
+            <a href="{{ url_for('mobile.add_employee') }}" class="mobile-btn mobile-btn-primary mt-2">
+                <i class="fas fa-plus"></i> إضافة موظف
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- الأقسام الفرعية -->
+{% if department.sub_departments and department.sub_departments|length > 0 %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-sitemap"></i> الأقسام الفرعية
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for sub_dept in department.sub_departments %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.department_details', department_id=sub_dept.id) }}'">
+                <div class="mobile-list-item-color" style="background-color: {{ sub_dept.color if sub_dept.color else '#ccc' }}"></div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ sub_dept.name }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        <i class="fas fa-users"></i> {{ sub_dept.employees|length if sub_dept.employees else 0 }} موظف
+                    </div>
+                </div>
+                <div class="mobile-list-item-action">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- إحصائيات حالة الموظفين -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-bar"></i> حالة الموظفين
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <!-- بطاقات الإحصائيات -->
+        <div class="stat-grid">
+            <!-- إجمالي الموظفين -->
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|length if department.employees else 0 }}</div>
+                    <div class="stat-label">إجمالي الموظفين</div>
+                </div>
+            </div>
+            
+            <!-- الموظفين النشطين -->
+            <div class="stat-card stat-active">
+                <div class="stat-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|selectattr('status', 'equalto', 'active')|list|length if department.employees else 0 }}</div>
+                    <div class="stat-label">نشط</div>
+                </div>
+            </div>
+            
+            <!-- الموظفين في إجازة -->
+            <div class="stat-card stat-leave">
+                <div class="stat-icon">
+                    <i class="fas fa-user-clock"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|selectattr('status', 'equalto', 'on_leave')|list|length if department.employees else 0 }}</div>
+                    <div class="stat-label">في إجازة</div>
+                </div>
+            </div>
+            
+            <!-- الموظفين غير النشطين -->
+            <div class="stat-card stat-inactive">
+                <div class="stat-icon">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div class="stat-details">
+                    <div class="stat-value">{{ department.employees|selectattr('status', 'equalto', 'inactive')|list|length if department.employees else 0 }}</div>
+                    <div class="stat-label">غير نشط</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات ورسوم بيانية -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> توزيع الموظفين
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="chart-container">
+            <canvas id="departmentChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    <a href="{{ url_for('mobile.departments') }}" class="mobile-btn mobile-btn-secondary">
+        <i class="fas fa-arrow-right"></i> العودة للأقسام
+    </a>
+</div>
+
+<style>
+.department-header {
+    padding: 20px 15px;
+    border-bottom: 1px solid #eee;
+    border-right: 5px solid #ccc;
+    border-radius: 0 5px 5px 0;
+}
+
+.department-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.department-manager {
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.info-group {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.info-group:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    flex: 1;
+    font-weight: bold;
+    color: #757575;
+}
+
+.info-value {
+    flex: 2;
+}
+
+.info-value a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+    color: #666;
+}
+
+.mobile-list-item-color {
+    width: 5px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 2px 0 0 2px;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #757575;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-action {
+    color: #ccc;
+}
+
+.chart-container {
+    height: 250px;
+    margin: 10px 0;
+}
+
+.text-muted {
+    color: #757575;
+}
+
+.action-buttons {
+    margin: 20px 1rem;
+}
+
+/* تنسيق بطاقات الإحصائيات */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-left: 15px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.stat-total {
+    background: linear-gradient(45deg, #3a7bd5, #00d2ff);
+}
+
+.stat-active {
+    background: linear-gradient(45deg, #2ecc71, #26c281);
+}
+
+.stat-leave {
+    background: linear-gradient(45deg, #f39c12, #f1c40f);
+}
+
+.stat-inactive {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // بيانات الرسم البياني للقسم
+    const ctx = document.getElementById('departmentChart').getContext('2d');
+    
+    // بيانات حالة الموظفين
+    const departmentChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['نشط', 'في إجازة', 'غير نشط'],
+            datasets: [{
+                data: [
+                    {{ department.employees|selectattr('status', 'equalto', 'active')|list|length if department.employees else 0 }},
+                    {{ department.employees|selectattr('status', 'equalto', 'on_leave')|list|length if department.employees else 0 }},
+                    {{ department.employees|selectattr('status', 'equalto', 'inactive')|list|length if department.employees else 0 }}
+                ],
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.8)', // أخضر للنشطين
+                    'rgba(243, 156, 18, 0.8)', // أصفر للإجازات
+                    'rgba(231, 76, 60, 0.8)'   // أحمر لغير النشطين
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'توزيع الموظفين حسب الحالة',
+                    font: {
+                        family: 'Tajawal, Arial',
+                        size: 14
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,482 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الرئيسية - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}لوحة المعلومات{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='mobile/css/mobile-theme.css') }}">
+<style>
+.welcome-card {
+  background: linear-gradient(135deg, #2962ff, #2979ff, #448aff);
+  color: white;
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 15px rgba(41, 98, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-card::before {
+  content: "";
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 1;
+}
+
+.welcome-card::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  z-index: 1;
+}
+
+.welcome-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.welcome-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 2;
+}
+
+.welcome-date {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  position: relative;
+  z-index: 2;
+}
+
+.welcome-date i {
+  margin-left: 5px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: var(--border-radius-md);
+  padding: 15px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-card:active {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.employees-icon {
+  background: linear-gradient(135deg, #673ab7, #9c27b0);
+  color: white;
+}
+
+.departments-icon {
+  background: linear-gradient(135deg, #00bcd4, #03a9f4);
+  color: white;
+}
+
+.documents-icon {
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  color: white;
+}
+
+.vehicles-icon {
+  background: linear-gradient(135deg, #4caf50, #8bc34a);
+  color: white;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.section-title {
+  margin: 25px 0 15px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.section-title i {
+  margin-left: 8px;
+  color: var(--primary-color);
+}
+
+.documents-list, .absences-list {
+  background-color: white;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.list-item {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item:active {
+  background-color: rgba(var(--primary-rgb), 0.05);
+}
+
+.list-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 15px;
+  flex-shrink: 0;
+}
+
+.document-icon {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+}
+
+.absence-icon {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.list-content {
+  flex: 1;
+}
+
+.list-title {
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: var(--text-primary);
+}
+
+.list-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.list-badge {
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+.badge-warning {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+}
+
+.badge-danger {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.empty-list {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-list i {
+  font-size: 2.5rem;
+  color: #e0e0e0;
+  margin-bottom: 10px;
+}
+
+.empty-text {
+  font-size: 0.9rem;
+}
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.quick-action {
+  background-color: white;
+  border-radius: var(--border-radius-md);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.quick-action:active {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.action-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, #2962ff, #448aff);
+  color: white;
+}
+
+.action-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* تأثيرات حركية */
+.slide-up {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- بطاقة الترحيب -->
+<div class="welcome-card slide-up">
+  <h1 class="welcome-title">مرحباً {{ current_user.name if current_user.is_authenticated else 'زائر' }}</h1>
+  <p class="welcome-subtitle">مرحباً بك في نظام إدارة الموظفين</p>
+  <div class="welcome-date">
+    <i class="far fa-calendar-alt"></i>
+    <span>{{ now.strftime('%A, %d %B %Y') }}</span>
+  </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="stats-grid">
+  <div class="stat-card stagger-item" onclick="location.href='{{ url_for('mobile.employees') }}'">
+    <div class="stat-icon employees-icon">
+      <i class="fas fa-users"></i>
+    </div>
+    <div class="stat-value">{{ stats.employees_count }}</div>
+    <div class="stat-label">الموظفين</div>
+  </div>
+  
+  <div class="stat-card stagger-item" onclick="location.href='{{ url_for('mobile.departments') }}'">
+    <div class="stat-icon departments-icon">
+      <i class="fas fa-building"></i>
+    </div>
+    <div class="stat-value">{{ stats.departments_count }}</div>
+    <div class="stat-label">الأقسام</div>
+  </div>
+  
+  <div class="stat-card stagger-item" onclick="location.href='{{ url_for('mobile.documents') }}'">
+    <div class="stat-icon documents-icon">
+      <i class="fas fa-file-alt"></i>
+    </div>
+    <div class="stat-value">{{ stats.documents_count }}</div>
+    <div class="stat-label">الوثائق</div>
+  </div>
+  
+  <div class="stat-card stagger-item" onclick="location.href='{{ url_for('mobile.vehicles') }}'">
+    <div class="stat-icon vehicles-icon">
+      <i class="fas fa-car"></i>
+    </div>
+    <div class="stat-value">{{ stats.vehicles_count }}</div>
+    <div class="stat-label">السيارات</div>
+  </div>
+</div>
+
+<!-- الوثائق التي ستنتهي قريباً -->
+<h2 class="section-title fade-in">
+  <i class="fas fa-exclamation-triangle"></i>
+  وثائق تنتهي قريباً
+</h2>
+
+<div class="documents-list fade-in">
+  {% if expiring_documents %}
+    {% for doc in expiring_documents %}
+    <div class="list-item">
+      <div class="list-icon document-icon">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <div class="list-content">
+        <div class="list-title">{{ doc.name }}</div>
+        <div class="list-subtitle">
+          {% if doc.employee %}
+          {{ doc.employee.name }} -
+          {% endif %}
+          تنتهي في {{ doc.expiry_date.strftime('%Y-%m-%d') }}
+        </div>
+      </div>
+      <span class="list-badge badge-{% if doc.days_remaining <= 7 %}danger{% else %}warning{% endif %}">
+        {{ doc.days_remaining }} يوم
+      </span>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-list">
+    <i class="far fa-check-circle"></i>
+    <p class="empty-text">جميع الوثائق سارية المفعول</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- الغيابات اليوم -->
+<h2 class="section-title fade-in">
+  <i class="fas fa-user-times"></i>
+  الغياب اليوم
+</h2>
+
+<div class="absences-list fade-in">
+  {% if absences %}
+    {% for absence in absences %}
+    <div class="list-item">
+      <div class="list-icon absence-icon">
+        <i class="fas fa-user-times"></i>
+      </div>
+      <div class="list-content">
+        <div class="list-title">{{ absence.employee.name }}</div>
+        <div class="list-subtitle">
+          {{ absence.employee.department.name if absence.employee.department else 'بدون قسم' }} - 
+          {{ absence.reason or 'بدون سبب' }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-list">
+    <i class="far fa-smile"></i>
+    <p class="empty-text">لا يوجد غيابات اليوم</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- إجراءات سريعة -->
+<h2 class="section-title fade-in">
+  <i class="fas fa-bolt"></i>
+  إجراءات سريعة
+</h2>
+
+<div class="dashboard-actions fade-in">
+  <a href="{{ url_for('mobile.add_employee') }}" class="quick-action">
+    <div class="action-icon">
+      <i class="fas fa-user-plus"></i>
+    </div>
+    <div class="action-label">إضافة موظف</div>
+  </a>
+  
+  <a href="{{ url_for('mobile.add_attendance') }}" class="quick-action">
+    <div class="action-icon">
+      <i class="fas fa-clipboard-check"></i>
+    </div>
+    <div class="action-label">تسجيل حضور</div>
+  </a>
+  
+  <a href="{{ url_for('mobile.reports') }}" class="quick-action">
+    <div class="action-icon">
+      <i class="fas fa-chart-bar"></i>
+    </div>
+    <div class="action-label">التقارير</div>
+  </a>
+  
+  <a href="{{ url_for('mobile.settings') }}" class="quick-action">
+    <div class="action-icon">
+      <i class="fas fa-cog"></i>
+    </div>
+    <div class="action-label">الإعدادات</div>
+  </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // إظهار التاريخ الهجري
+  document.addEventListener('DOMContentLoaded', function() {
+    // هنا يمكن إضافة رمز للتحويل إلى التاريخ الهجري إذا كان مطلوباً
+  });
+</script>
+{% endblock %}

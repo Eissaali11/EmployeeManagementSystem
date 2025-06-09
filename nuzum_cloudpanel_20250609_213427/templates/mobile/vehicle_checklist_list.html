@@ -1,0 +1,388 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}قائمة فحوصات السيارات - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}قائمة فحوصات السيارات{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="العودة" onclick="location.href='{{ url_for('mobile.vehicles') }}'">
+    <i class="fas fa-arrow-right"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.vehicle_checklist_list') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>السيارة</label>
+                <select name="vehicle_id" class="mobile-form-select">
+                    <option value="">كل السيارات</option>
+                    {% for vehicle in vehicles %}
+                    <option value="{{ vehicle.id }}" {% if selected_vehicle|string == vehicle.id|string %}selected{% endif %}>
+                        {{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.plate_number }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>نوع الفحص</label>
+                <select name="inspection_type" class="mobile-form-select">
+                    <option value="">كل الأنواع</option>
+                    <option value="daily" {% if selected_type == 'daily' %}selected{% endif %}>فحص يومي</option>
+                    <option value="weekly" {% if selected_type == 'weekly' %}selected{% endif %}>فحص أسبوعي</option>
+                    <option value="monthly" {% if selected_type == 'monthly' %}selected{% endif %}>فحص شهري</option>
+                    <option value="quarterly" {% if selected_type == 'quarterly' %}selected{% endif %}>فحص ربع سنوي</option>
+                </select>
+            </div>
+            
+            <div class="row">
+                <div class="col-6">
+                    <div class="mobile-form-group">
+                        <label>من تاريخ</label>
+                        <input type="date" name="from_date" class="mobile-form-control" value="{{ from_date }}">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="mobile-form-group">
+                        <label>إلى تاريخ</label>
+                        <input type="date" name="to_date" class="mobile-form-control" value="{{ to_date }}">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.vehicle_checklist_list') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- قائمة الفحوصات -->
+{% if checklists %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-clipboard-check"></i> قائمة الفحوصات
+        <div class="mobile-card-subtitle">{{ checklists|length }} فحص</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for checklist in checklists %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.vehicle_checklist_details', checklist_id=checklist.id) }}'">
+                <div class="mobile-list-item-icon">
+                    <div class="checklist-progress" data-percentage="{{ checklist.completion_percentage }}">{{ checklist.completion_percentage }}%</div>
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ checklist.vehicle_name }} - {{ checklist.vehicle_plate }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        <i class="fas fa-calendar-alt"></i> {{ checklist.inspection_date.strftime('%Y-%m-%d') }}
+                        <span class="ms-2">
+                            <i class="fas fa-user"></i> {{ checklist.inspector_name }}
+                        </span>
+                    </div>
+                    <div class="mobile-list-item-info">
+                        <span class="badge 
+                              {% if checklist.inspection_type == 'daily' %}bg-info
+                              {% elif checklist.inspection_type == 'weekly' %}bg-success
+                              {% elif checklist.inspection_type == 'monthly' %}bg-warning
+                              {% else %}bg-primary{% endif %}">
+                            {% if checklist.inspection_type == 'daily' %}
+                                فحص يومي
+                            {% elif checklist.inspection_type == 'weekly' %}
+                                فحص أسبوعي
+                            {% elif checklist.inspection_type == 'monthly' %}
+                                فحص شهري
+                            {% elif checklist.inspection_type == 'quarterly' %}
+                                فحص ربع سنوي
+                            {% endif %}
+                        </span>
+                        
+                        <span class="ms-2 checklist-summary">
+                            <span class="summary-item good">{{ checklist.summary.good }}</span>
+                            <span class="summary-item fair">{{ checklist.summary.fair }}</span>
+                            <span class="summary-item poor">{{ checklist.summary.poor }}</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="mobile-list-item-action">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- ترقيم الصفحات -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mobile-pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('mobile.vehicle_checklist_list', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+            
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                    <a href="{{ url_for('mobile.vehicle_checklist_list', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                    {% else %}
+                    <span class="mobile-pagination-item active">{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="mobile-pagination-item">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('mobile.vehicle_checklist_list', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-clipboard-check fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد فحوصات</h5>
+        <p class="text-secondary">لم يتم العثور على أي فحوصات في النظام</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- روابط إضافية -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-link"></i> روابط سريعة
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="quick-links">
+            <a href="{{ url_for('mobile.vehicle_checklist') }}" class="quick-link">
+                <i class="fas fa-plus-circle"></i>
+                <span>إضافة فحص جديد</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicles') }}" class="quick-link">
+                <i class="fas fa-car"></i>
+                <span>قائمة السيارات</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="quick-link">
+                <i class="fas fa-tools"></i>
+                <span>سجل الصيانة</span>
+            </a>
+            <a href="{{ url_for('mobile.vehicle_documents') }}" class="quick-link">
+                <i class="fas fa-file-alt"></i>
+                <span>وثائق السيارات</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+    color: #666;
+}
+
+.checklist-progress {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: conic-gradient(var(--primary-color) 0%, var(--primary-color) var(--percentage), #f0f0f0 var(--percentage), #f0f0f0 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #333;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.checklist-progress::before {
+    content: '';
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: white;
+}
+
+.checklist-progress::after {
+    content: attr(data-percentage);
+    position: relative;
+    z-index: 1;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #757575;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+
+.mobile-list-item-action {
+    color: #ccc;
+}
+
+.checklist-summary {
+    display: flex;
+    gap: 5px;
+}
+
+.summary-item {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: white;
+}
+
+.summary-item.good {
+    background-color: #28a745;
+}
+
+.summary-item.fair {
+    background-color: #ffc107;
+}
+
+.summary-item.poor {
+    background-color: #dc3545;
+}
+
+.mobile-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+
+.mobile-pagination-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35px;
+    height: 35px;
+    margin: 0 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #757575;
+}
+
+.mobile-pagination-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.quick-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s;
+}
+
+.quick-link:hover {
+    transform: translateY(-3px);
+}
+
+.quick-link i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+.quick-link span {
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تعيين النسبة المئوية لكل دائرة تقدم
+    const progressCircles = document.querySelectorAll('.checklist-progress');
+    progressCircles.forEach(circle => {
+        const percentage = circle.getAttribute('data-percentage');
+        circle.style.setProperty('--percentage', percentage + '%');
+        
+        // تغيير لون الدائرة بناءً على النسبة
+        if (percentage < 30) {
+            circle.style.setProperty('--primary-color', '#dc3545'); // أحمر
+        } else if (percentage < 70) {
+            circle.style.setProperty('--primary-color', '#ffc107'); // أصفر
+        } else {
+            circle.style.setProperty('--primary-color', '#28a745'); // أخضر
+        }
+    });
+});
+</script>
+{% endblock %}

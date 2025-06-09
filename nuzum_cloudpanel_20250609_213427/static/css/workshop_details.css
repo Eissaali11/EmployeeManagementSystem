@@ -1,0 +1,455 @@
+/* 
+أنماط صفحة تفاصيل الورشة
+تصميم محسن يتوافق مع بقية النظام
+*/
+
+/* التخطيط الأساسي */
+.workshop-details-container {
+    background-color: #f9f9f9;
+    min-height: 100vh;
+}
+
+/* ترويسة الصفحة */
+.page-header {
+    background: linear-gradient(135deg, #1da18e 0%, #145a50 100%);
+    color: white;
+    padding: 20px 0;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-plate {
+    margin-bottom: 0;
+}
+
+.plate {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.vehicle-model {
+    opacity: 0.85;
+    font-size: 16px;
+}
+
+.back-btn {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 15px;
+    transition: all 0.25s ease;
+}
+
+.back-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* العناوين الرئيسية */
+.section-title {
+    color: #1da18e;
+    font-size: 20px;
+    margin-bottom: 15px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 8px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 40px;
+    height: 3px;
+    background-color: #1da18e;
+}
+
+/* البطاقات الرئيسية */
+.info-card {
+    border: none;
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+}
+
+.info-card .card-header {
+    background-color: #1da18e;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+}
+
+.info-card .card-header h5 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.info-card .card-header h5 i {
+    margin-left: 8px;
+}
+
+.info-card .card-body {
+    padding: 20px;
+}
+
+/* صفوف المعلومات */
+.info-row {
+    display: flex;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.info-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e9f7f5;
+    color: #1da18e;
+    border-radius: 50%;
+    margin-left: 15px;
+    flex-shrink: 0;
+}
+
+.info-content {
+    flex: 1;
+}
+
+.info-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #555;
+    font-size: 14px;
+}
+
+/* العلامات والشارات */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.tag i {
+    margin-left: 5px;
+}
+
+.maintenance-tag {
+    background-color: #e1f5fe;
+    color: #0288d1;
+}
+
+.breakdown-tag {
+    background-color: #fff8e1;
+    color: #ff8f00;
+}
+
+.accident-tag {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.in-progress-tag {
+    background-color: #fff8e1;
+    color: #ff8f00;
+}
+
+.completed-tag {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.pending-tag {
+    background-color: #e8eaf6;
+    color: #3949ab;
+}
+
+.workshop-tag {
+    background-color: #f5f5f5;
+    color: #616161;
+}
+
+/* تكلفة الإصلاح */
+.cost-display {
+    display: flex;
+    align-items: baseline;
+}
+
+.cost-display .amount {
+    color: #1da18e;
+    font-weight: 700;
+    font-size: 18px;
+    margin-left: 5px;
+}
+
+.cost-display .currency {
+    color: #757575;
+    font-size: 14px;
+}
+
+/* روابط المستندات */
+.document-link {
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5;
+    padding: 12px 15px;
+    border-radius: 4px;
+    color: #333;
+    text-decoration: none;
+    margin-bottom: 10px;
+    transition: all 0.2s ease-in-out;
+}
+
+.document-link:hover {
+    background-color: #e0f2f1;
+    color: #00796b;
+    transform: translateX(-5px);
+}
+
+.document-link i {
+    margin-left: 8px;
+    color: #1da18e;
+}
+
+/* بطاقة رئيسية للأقسام */
+.main-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+}
+
+.main-card-header {
+    background-color: #1da18e;
+    color: white;
+    border-bottom: none;
+    padding: 15px 20px;
+}
+
+/* علامات التبويب */
+.nav-tabs {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.nav-tabs .nav-link {
+    color: #757575;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 0;
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #1da18e;
+    background-color: rgba(29, 161, 142, 0.05);
+}
+
+.nav-tabs .nav-link.active {
+    color: #1da18e;
+    border-bottom: 2px solid #1da18e;
+    background-color: transparent;
+}
+
+/* معرض الصور */
+.image-card {
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    height: 100%;
+}
+
+.gallery-link {
+    display: block;
+    overflow: hidden;
+}
+
+.gallery-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-link:hover .gallery-image {
+    transform: scale(1.08);
+}
+
+.image-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 1;
+}
+
+.before-badge {
+    background-color: #ff9800;
+    color: white;
+}
+
+.after-badge {
+    background-color: #4caf50;
+    color: white;
+}
+
+.image-notes {
+    padding: 10px;
+    font-size: 13px;
+    background-color: #f5f5f5;
+    color: #555;
+}
+
+.no-images-alert {
+    background-color: #f5f5f5;
+    color: #757575;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* أزرار الإجراءات */
+.action-buttons {
+    margin: 25px 0;
+}
+
+.action-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.action-btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.back-btn {
+    background-color: #607d8b;
+    color: white;
+}
+
+.back-btn:hover {
+    background-color: #546e7a;
+    color: white;
+}
+
+.edit-btn {
+    background-color: #ff9800;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #f57c00;
+    color: white;
+}
+
+.print-btn {
+    background-color: #00bcd4;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.print-btn:hover {
+    background-color: #00acc1;
+    color: white;
+}
+
+/* توافق الطباعة */
+@media print {
+    .action-buttons, .nav-tabs {
+        display: none !important;
+    }
+    
+    .tab-pane {
+        display: block !important;
+        opacity: 1 !important;
+    }
+    
+    .workshop-details-container {
+        background-color: white;
+    }
+    
+    .page-header {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .main-card, .info-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .card-header {
+        background-color: white !important;
+        color: black !important;
+        border-bottom: 1px solid #ddd !important;
+    }
+    
+    .tag, .image-badge {
+        border: 1px solid #ddd !important;
+        background-color: white !important;
+        color: black !important;
+    }
+}
+
+/* تعديلات للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .action-buttons-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .action-btn-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .action-btn {
+        width: 48%;
+        justify-content: center;
+    }
+    
+    .image-card {
+        margin-bottom: 15px;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}

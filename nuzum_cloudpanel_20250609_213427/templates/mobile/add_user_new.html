@@ -1,0 +1,76 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}إضافة مستخدم جديد - النسخة المحمولة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3">إضافة مستخدم جديد</h1>
+        <a href="{{ url_for('mobile.users_new') }}" class="btn btn-light">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+    </div>
+
+    <!-- بطاقة إضافة مستخدم -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('mobile.add_user_new') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3">
+                    <label for="username" class="form-label">اسم المستخدم <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="email" class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                    <div class="form-text">سيتم استخدام البريد الإلكتروني لتسجيل الدخول</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">كلمة المرور <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="form-text">يجب أن تكون كلمة المرور بطول 8 أحرف على الأقل</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="role" class="form-label">الدور <span class="text-danger">*</span></label>
+                    <select class="form-select" id="role" name="role" required>
+                        <option value="" selected disabled>اختر دور المستخدم</option>
+                        <option value="admin">مدير النظام</option>
+                        <option value="manager">مدير</option>
+                        <option value="hr">موارد بشرية</option>
+                        <option value="finance">مالية</option>
+                        <option value="fleet">إدارة المركبات</option>
+                        <option value="user">مستخدم عادي</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                        <label class="form-check-label" for="is_active">
+                            حساب نشط
+                        </label>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    ملاحظة: الصلاحيات الخاصة بكل دور ستُحدد تلقائياً حسب إعدادات النظام.
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> حفظ
+                    </button>
+                    <a href="{{ url_for('mobile.users_new') }}" class="btn btn-light">
+                        <i class="fas fa-times"></i> إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

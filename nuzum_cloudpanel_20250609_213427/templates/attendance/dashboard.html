@@ -1,0 +1,631 @@
+{% extends 'layout.html' %}
+
+{% block title %}لوحة معلومات الحضور{% endblock %}
+
+{% block styles %}
+<style>
+    .info-box {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .info-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    .info-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        border-radius: 50%;
+        color: white;
+        margin: 0 auto 15px;
+    }
+    .attendance-rate {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+    .rate-circle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+    .rate-value {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        font-weight: bold;
+    }
+    .chart-container {
+        position: relative;
+        height: 280px;
+    }
+    .period-header {
+        padding: 10px 20px;
+        border-radius: 10px;
+        color: white;
+        margin-bottom: 20px;
+    }
+    .period-daily {
+        background: linear-gradient(to right, #0072ff, #00c6ff);
+    }
+    .period-weekly {
+        background: linear-gradient(to right, #aa076b, #61045f);
+    }
+    .period-monthly {
+        background: linear-gradient(to right, #1d976c, #93f9b9);
+    }
+    .stat-card {
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- رأس الصفحة مع أزرار الفلترة -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-chart-line ms-2"></i>
+            لوحة معلومات الحضور
+        </h2>
+        <div>
+            <div class="dropdown d-inline-block me-2">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="projectDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if selected_project %}
+                        {{ selected_project }}
+                    {% else %}
+                        جميع المشاريع
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="projectDropdown">
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('attendance.dashboard') }}">
+                            جميع المشاريع
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    {% for project in active_projects %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('attendance.dashboard', project=project) }}">
+                                {{ project }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <a href="{{ url_for('attendance.index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-1"></i>
+                قائمة الحضور
+            </a>
+        </div>
+    </div>
+
+    <!-- بطاقات المعلومات الرئيسية -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card info-box h-100">
+                <div class="card-body text-center">
+                    <div class="period-header period-daily mb-3">
+                        <h4 class="mb-0">إحصائيات اليوم</h4>
+                        <div class="small">{{ today.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                    <div class="attendance-rate mb-3">
+                        <canvas id="dailyRateChart"></canvas>
+                        <div class="rate-value">
+                            <div class="h2 mb-0">{{ daily_attendance_rate }}%</div>
+                            <div class="small text-muted">معدل الحضور</div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-success bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-success h4">{{ daily_stats.present }}</div>
+                                    <div class="small">حاضر</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-danger bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-danger h4">{{ daily_stats.absent }}</div>
+                                    <div class="small">غائب</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-warning bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-warning h4">{{ daily_stats.leave }}</div>
+                                    <div class="small">إجازة</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-info bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-info h4">{{ daily_stats.sick }}</div>
+                                    <div class="small">مرضي</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card info-box h-100">
+                <div class="card-body text-center">
+                    <div class="period-header period-weekly mb-3">
+                        <h4 class="mb-0">إحصائيات الأسبوع</h4>
+                        <div class="small">{{ formatted_start_of_week.gregorian }} - {{ formatted_end_of_week.gregorian }}</div>
+                    </div>
+                    <div class="attendance-rate mb-3">
+                        <canvas id="weeklyRateChart"></canvas>
+                        <div class="rate-value">
+                            <div class="h2 mb-0">{{ weekly_attendance_rate }}%</div>
+                            <div class="small text-muted">معدل الحضور</div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-success bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-success h4">{{ weekly_stats.present }}</div>
+                                    <div class="small">حاضر</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-danger bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-danger h4">{{ weekly_stats.absent }}</div>
+                                    <div class="small">غائب</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-warning bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-warning h4">{{ weekly_stats.leave }}</div>
+                                    <div class="small">إجازة</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-info bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-info h4">{{ weekly_stats.sick }}</div>
+                                    <div class="small">مرضي</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card info-box h-100">
+                <div class="card-body text-center">
+                    <div class="period-header period-monthly mb-3">
+                        <h4 class="mb-0">إحصائيات الشهر</h4>
+                        <div class="small">{{ current_month_name }} {{ current_year }}</div>
+                    </div>
+                    <div class="attendance-rate mb-3">
+                        <canvas id="monthlyRateChart"></canvas>
+                        <div class="rate-value">
+                            <div class="h2 mb-0">{{ monthly_attendance_rate }}%</div>
+                            <div class="small text-muted">معدل الحضور</div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-success bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-success h4">{{ monthly_stats.present }}</div>
+                                    <div class="small">حاضر</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-danger bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-danger h4">{{ monthly_stats.absent }}</div>
+                                    <div class="small">غائب</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-warning bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-warning h4">{{ monthly_stats.leave }}</div>
+                                    <div class="small">إجازة</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card stat-card bg-info bg-opacity-10 h-100">
+                                <div class="card-body text-center py-3">
+                                    <div class="text-info h4">{{ monthly_stats.sick }}</div>
+                                    <div class="small">مرضي</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات الأقسام -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building ms-2"></i>
+                        إحصائيات الحضور حسب الأقسام
+                    </h5>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="periodType" id="periodWeekly" value="weekly" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="periodWeekly">أسبوعي</label>
+                        
+                        <input type="radio" class="btn-check" name="periodType" id="periodMonthly" value="monthly">
+                        <label class="btn btn-outline-primary btn-sm" for="periodMonthly">شهري</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>القسم</th>
+                                    <th class="text-center">إجمالي الموظفين</th>
+                                    <th class="text-center">حاضر</th>
+                                    <th class="text-center">غائب</th>
+                                    <th class="text-center">إجازة</th>
+                                    <th class="text-center">مرضي</th>
+                                    <th class="text-center">معدل الحضور</th>
+                                    <th class="text-center">التفاصيل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="departmentStatsBody">
+                                <!-- سيتم ملؤها بـ JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مخططات بيانية -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line ms-2"></i>
+                        تطور الحضور اليومي ({{ current_month_name }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="dailyTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-pie ms-2"></i>
+                                توزيع حالات الحضور اليومي
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 200px">
+                                <canvas id="dailyDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-pie ms-2"></i>
+                                توزيع حالات الحضور الشهري
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 200px">
+                                <canvas id="monthlyDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ضبط الموضوع المشترك للمخططات
+    Chart.defaults.font.family = 'Tajawal, sans-serif';
+    Chart.defaults.color = '#666';
+    
+    // مخطط معدل الحضور اليومي (دائري)
+    const dailyRateChart = new Chart(document.getElementById('dailyRateChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [{{ daily_attendance_rate }}, 100 - {{ daily_attendance_rate }}],
+                backgroundColor: ['#4CAF50', '#f0f0f0'],
+                borderWidth: 0,
+                cutout: '80%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            }
+        }
+    });
+    
+    // مخطط معدل الحضور الأسبوعي (دائري)
+    const weeklyRateChart = new Chart(document.getElementById('weeklyRateChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [{{ weekly_attendance_rate }}, 100 - {{ weekly_attendance_rate }}],
+                backgroundColor: ['#9C27B0', '#f0f0f0'],
+                borderWidth: 0,
+                cutout: '80%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            }
+        }
+    });
+    
+    // مخطط معدل الحضور الشهري (دائري)
+    const monthlyRateChart = new Chart(document.getElementById('monthlyRateChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [{{ monthly_attendance_rate }}, 100 - {{ monthly_attendance_rate }}],
+                backgroundColor: ['#1D976C', '#f0f0f0'],
+                borderWidth: 0,
+                cutout: '80%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            }
+        }
+    });
+    
+    // مخطط توزيع حالات الحضور اليومي
+    const dailyDistributionChart = new Chart(document.getElementById('dailyDistributionChart').getContext('2d'), {
+        type: 'pie',
+        data: {{ daily_chart_data|tojson }},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
+        }
+    });
+    
+    // مخطط توزيع حالات الحضور الشهري
+    const monthlyDistributionChart = new Chart(document.getElementById('monthlyDistributionChart').getContext('2d'), {
+        type: 'pie',
+        data: {{ monthly_chart_data|tojson }},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
+        }
+    });
+    
+    // مخطط تطور الحضور اليومي
+    const dailyTrendChart = new Chart(document.getElementById('dailyTrendChart').getContext('2d'), {
+        type: 'line',
+        data: {{ daily_trend_chart_data|tojson }},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                }
+            }
+        }
+    });
+    
+    // تحميل إحصائيات الأقسام
+    loadDepartmentStats('weekly');
+    
+    // مستمع للتبديل بين الأسبوعي والشهري
+    document.querySelectorAll('input[name="periodType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            loadDepartmentStats(this.value);
+        });
+    });
+    
+    // دالة تحميل إحصائيات الأقسام
+    function loadDepartmentStats(period) {
+        const projectParam = '{{ selected_project }}' ? '&project={{ selected_project }}' : '';
+        fetch(`/attendance/department-stats?period=${period}${projectParam}`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('departmentStatsBody');
+                tbody.innerHTML = '';
+                
+                if (data.departments && data.departments.length > 0) {
+                    data.departments.forEach(dept => {
+                        const row = document.createElement('tr');
+                        const attendanceRate = dept.total_employees > 0 
+                            ? Math.round((dept.present / dept.total_employees) * 100) 
+                            : 0;
+                        
+                        // تحديد لون شريط التقدم
+                        let progressClass = 'bg-success';
+                        if (attendanceRate < 70) progressClass = 'bg-danger';
+                        else if (attendanceRate < 85) progressClass = 'bg-warning';
+                        
+                        row.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building text-muted me-2"></i>
+                                    <strong>${dept.name}</strong>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">${dept.total_employees}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success">${dept.present}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">${dept.absent}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning">${dept.leave}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">${dept.sick}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress me-2" style="width: 60px; height: 8px;">
+                                        <div class="progress-bar ${progressClass}" 
+                                             style="width: ${attendanceRate}%"></div>
+                                    </div>
+                                    <small class="fw-bold">${attendanceRate}%</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="showDepartmentDetails('${dept.name}', '${period}')">
+                                    <i class="fas fa-eye me-1"></i>تفاصيل
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                لا توجد بيانات متاحة للفترة المحددة
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('خطأ في تحميل إحصائيات الأقسام:', error);
+                document.getElementById('departmentStatsBody').innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            خطأ في تحميل البيانات
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+    
+    // دالة عرض تفاصيل القسم
+    function showDepartmentDetails(departmentName, period) {
+        const projectParam = '{{ selected_project }}' ? '&project={{ selected_project }}' : '';
+        const url = `/attendance/department-details?department=${encodeURIComponent(departmentName)}&period=${period}${projectParam}`;
+        
+        // فتح نافذة جديدة لعرض التفاصيل
+        window.open(url, '_blank', 'width=1000,height=600,scrollbars=yes');
+    }
+});
+</script>
+{% endblock %}

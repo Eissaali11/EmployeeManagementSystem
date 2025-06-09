@@ -1,0 +1,305 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}وثائق السيارات{% endblock %}
+{% block header_title %}وثائق السيارات{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-file-alt"></i>
+      وثائق السيارات
+    </h2>
+    <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+
+  <!-- إحصائيات سريعة -->
+  <div class="mobile-summary-cards">
+    <div class="mobile-summary-card primary">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="mobile-summary-value">24</div>
+      <div class="mobile-summary-label">سارية</div>
+    </div>
+    
+    <div class="mobile-summary-card warning">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="mobile-summary-value">5</div>
+      <div class="mobile-summary-label">تنتهي قريباً</div>
+    </div>
+    
+    <div class="mobile-summary-card danger">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <div class="mobile-summary-value">2</div>
+      <div class="mobile-summary-label">منتهية</div>
+    </div>
+    
+    <div class="mobile-summary-card info">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div class="mobile-summary-value">31</div>
+      <div class="mobile-summary-label">الإجمالي</div>
+    </div>
+  </div>
+
+  <!-- قائمة الوثائق -->
+  <div class="mobile-card">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-list"></i>
+        وثائق السيارات
+      </div>
+      <div class="mobile-card-actions">
+        <button class="mobile-btn-icon" onclick="toggleFilters()">
+          <i class="fas fa-filter"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- فلاتر البحث (مخفية افتراضياً) -->
+    <div class="mobile-card-body" id="filtersSection" style="display: none;">
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">السيارة</label>
+        <select class="mobile-form-select">
+          <option value="">جميع السيارات</option>
+          <option value="1">تويوتا كامري</option>
+          <option value="2">هونداي سوناتا</option>
+          <option value="3">نيسان باترول</option>
+        </select>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">نوع الوثيقة</label>
+        <select class="mobile-form-select">
+          <option value="">جميع الأنواع</option>
+          <option value="registration">رخصة سير</option>
+          <option value="insurance">تأمين</option>
+          <option value="inspection">فحص فني</option>
+          <option value="other">أخرى</option>
+        </select>
+      </div>
+      
+      <div class="mobile-form-group">
+        <label class="mobile-form-label">حالة الوثيقة</label>
+        <select class="mobile-form-select">
+          <option value="">الكل</option>
+          <option value="valid">سارية</option>
+          <option value="expiring">تنتهي قريباً</option>
+          <option value="expired">منتهية</option>
+        </select>
+      </div>
+      
+      <div class="mobile-form-actions">
+        <button class="mobile-btn mobile-btn-primary" onclick="applyFilters()">
+          <i class="fas fa-search"></i>
+          تطبيق الفلتر
+        </button>
+      </div>
+    </div>
+    
+    <div class="mobile-documents-list">
+      <!-- وثيقة -->
+      <div class="mobile-document-item">
+        <div class="mobile-document-status valid"></div>
+        <div class="mobile-document-icon">
+          <i class="fas fa-id-card"></i>
+        </div>
+        <div class="mobile-document-details">
+          <div class="mobile-document-title">رخصة سير</div>
+          <div class="mobile-document-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
+          <div class="mobile-document-expiry">تنتهي في: ١٥ سبتمبر ٢٠٢٥ (١٥٠ يوم)</div>
+        </div>
+        <button class="mobile-btn-icon mobile-document-action">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      
+      <!-- وثيقة -->
+      <div class="mobile-document-item">
+        <div class="mobile-document-status warning"></div>
+        <div class="mobile-document-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="mobile-document-details">
+          <div class="mobile-document-title">وثيقة تأمين</div>
+          <div class="mobile-document-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
+          <div class="mobile-document-expiry">تنتهي في: ٥ مايو ٢٠٢٥ (١٨ يوم)</div>
+        </div>
+        <button class="mobile-btn-icon mobile-document-action">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      
+      <!-- وثيقة -->
+      <div class="mobile-document-item">
+        <div class="mobile-document-status expired"></div>
+        <div class="mobile-document-icon">
+          <i class="fas fa-car-crash"></i>
+        </div>
+        <div class="mobile-document-details">
+          <div class="mobile-document-title">فحص فني</div>
+          <div class="mobile-document-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
+          <div class="mobile-document-expiry">انتهت في: ١٠ أبريل ٢٠٢٥ (منذ ٨ أيام)</div>
+        </div>
+        <button class="mobile-btn-icon mobile-document-action">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      
+      <!-- وثيقة -->
+      <div class="mobile-document-item">
+        <div class="mobile-document-status valid"></div>
+        <div class="mobile-document-icon">
+          <i class="fas fa-id-card"></i>
+        </div>
+        <div class="mobile-document-details">
+          <div class="mobile-document-title">رخصة سير</div>
+          <div class="mobile-document-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
+          <div class="mobile-document-expiry">تنتهي في: ٢٠ نوفمبر ٢٠٢٥ (٢١٦ يوم)</div>
+        </div>
+        <button class="mobile-btn-icon mobile-document-action">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      
+      <!-- وثيقة -->
+      <div class="mobile-document-item">
+        <div class="mobile-document-status warning"></div>
+        <div class="mobile-document-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="mobile-document-details">
+          <div class="mobile-document-title">وثيقة تأمين</div>
+          <div class="mobile-document-subtitle">نيسان باترول - ك و ي ٩٨٧٦</div>
+          <div class="mobile-document-expiry">تنتهي في: ٣٠ أبريل ٢٠٢٥ (١٢ يوم)</div>
+        </div>
+        <button class="mobile-btn-icon mobile-document-action">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      
+      <!-- وثيقة -->
+      <div class="mobile-document-item">
+        <div class="mobile-document-status valid"></div>
+        <div class="mobile-document-icon">
+          <i class="fas fa-clipboard-check"></i>
+        </div>
+        <div class="mobile-document-details">
+          <div class="mobile-document-title">فحص فني</div>
+          <div class="mobile-document-subtitle">نيسان باترول - ك و ي ٩٨٧٦</div>
+          <div class="mobile-document-expiry">تنتهي في: ١ أغسطس ٢٠٢٥ (١٠٥ أيام)</div>
+        </div>
+        <button class="mobile-btn-icon mobile-document-action">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- زر إضافة وثيقة جديدة -->
+  <button class="mobile-fab" onclick="location.href='{{ url_for('mobile.vehicles') }}'">
+    <i class="fas fa-plus"></i>
+  </button>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mobile-documents-list {
+    padding: 0;
+  }
+  
+  .mobile-document-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+  
+  .mobile-document-status {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 4px;
+  }
+  
+  .mobile-document-status.valid {
+    background-color: var(--success-color);
+  }
+  
+  .mobile-document-status.warning {
+    background-color: var(--warning-color);
+  }
+  
+  .mobile-document-status.expired {
+    background-color: var(--danger-color);
+  }
+  
+  .mobile-document-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    font-size: 1.2rem;
+  }
+  
+  .mobile-document-details {
+    flex: 1;
+  }
+  
+  .mobile-document-title {
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 4px;
+  }
+  
+  .mobile-document-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  
+  .mobile-document-expiry {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+  }
+  
+  .mobile-document-action {
+    color: var(--text-muted);
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    if (filtersSection.style.display === 'none') {
+      filtersSection.style.display = 'block';
+    } else {
+      filtersSection.style.display = 'none';
+    }
+  }
+  
+  function applyFilters() {
+    // تنفيذ عملية الفلترة
+    alert('تم تطبيق الفلتر');
+    toggleFilters();
+  }
+</script>
+{% endblock %}

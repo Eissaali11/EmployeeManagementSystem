@@ -1,0 +1,712 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إضافة تعبئة وقود{% endblock %}
+{% block header_title %}إضافة تعبئة وقود{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-gas-pump"></i>
+      إضافة تعبئة وقود جديدة
+    </h2>
+    <a href="{{ url_for('mobile.vehicle_expenses') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+  
+  <!-- نموذج الإضافة -->
+  <div class="mobile-card">
+    <div class="mobile-card-body">
+      <form id="fuelConsumptionForm" method="POST" action="{{ url_for('mobile.add_fuel_consumption') }}">
+        <!-- اختيار السيارة -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">السيارة <span class="text-danger">*</span></label>
+          <select name="vehicle_id" class="mobile-form-select" required>
+            <option value="" disabled selected>-- اختر السيارة --</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <!-- خيارات التكرار -->
+        <div class="mobile-form-section mb-3">
+          <h3 class="mobile-form-section-title">
+            <a href="#" class="toggle-repeat-options" onclick="toggleRepeatOptions(); return false;">
+              <i class="fas fa-calendar-alt"></i>
+              تكرار التعبئة لعدة أيام
+              <small><i class="fas fa-chevron-down" id="repeat-toggle-icon"></i></small>
+            </a>
+          </h3>
+          
+          <div id="repeatOptionsSection" style="display: none;">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">نوع التكرار</label>
+              <select id="repeatType" name="repeat_type" class="mobile-form-select" onchange="updateRepeatOptions()">
+                <option value="none" selected>بدون تكرار</option>
+                <option value="weekly">أسبوعي</option>
+                <option value="monthly">شهري</option>
+              </select>
+            </div>
+            
+            <!-- أيام الأسبوع (تظهر فقط عند اختيار التكرار الأسبوعي) -->
+            <div id="weeklyOptions" class="repeat-options" style="display: none;">
+              <label class="mobile-form-label">أيام الأسبوع</label>
+              <div class="mobile-weekday-selector">
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day0" name="weekdays" value="0" class="mobile-weekday-checkbox">
+                  <label for="day0" class="mobile-weekday-label">الأحد</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day1" name="weekdays" value="1" class="mobile-weekday-checkbox">
+                  <label for="day1" class="mobile-weekday-label">الاثنين</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day2" name="weekdays" value="2" class="mobile-weekday-checkbox">
+                  <label for="day2" class="mobile-weekday-label">الثلاثاء</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day3" name="weekdays" value="3" class="mobile-weekday-checkbox">
+                  <label for="day3" class="mobile-weekday-label">الأربعاء</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day4" name="weekdays" value="4" class="mobile-weekday-checkbox">
+                  <label for="day4" class="mobile-weekday-label">الخميس</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day5" name="weekdays" value="5" class="mobile-weekday-checkbox">
+                  <label for="day5" class="mobile-weekday-label">الجمعة</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day6" name="weekdays" value="6" class="mobile-weekday-checkbox">
+                  <label for="day6" class="mobile-weekday-label">السبت</label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- أيام الشهر (تظهر فقط عند اختيار التكرار الشهري) -->
+            <div id="monthlyOptions" class="repeat-options" style="display: none;">
+              <label class="mobile-form-label">أيام الشهر</label>
+              <div class="mobile-monthday-selector">
+                <div class="mobile-monthday-grid">
+                  {% for day in range(1, 32) %}
+                  <div class="mobile-monthday-item">
+                    <input type="checkbox" id="monthDay{{ day }}" name="monthdays" value="{{ day }}" class="mobile-monthday-checkbox">
+                    <label for="monthDay{{ day }}" class="mobile-monthday-label">{{ day }}</label>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            
+            <!-- فترة التكرار -->
+            <div id="repeatDurationSection" style="display: none;">
+              <div class="mobile-form-group">
+                <label class="mobile-form-label">تاريخ البداية</label>
+                <input type="date" id="repeatStartDate" name="repeat_start_date" class="mobile-form-input" value="{{ now.strftime('%Y-%m-%d') }}">
+              </div>
+              
+              <div class="mobile-form-group">
+                <label class="mobile-form-label">تاريخ النهاية</label>
+                <input type="date" id="repeatEndDate" name="repeat_end_date" class="mobile-form-input">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- تاريخ التعبئة -->
+        <div class="mobile-form-group" id="singleDateSection">
+          <label class="mobile-form-label">تاريخ التعبئة <span class="text-danger">*</span></label>
+          <input type="date" name="date" class="mobile-form-input" required value="{{ now.strftime('%Y-%m-%d') }}">
+        </div>
+        
+        <!-- كمية اللترات -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">كمية اللترات <span class="text-danger">*</span></label>
+          <input type="number" name="liters" step="0.01" min="0.1" class="mobile-form-input" required placeholder="مثال: 40.5">
+        </div>
+        
+        <!-- التكلفة الإجمالية -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">التكلفة الإجمالية (ر.س) <span class="text-danger">*</span></label>
+          <input type="number" name="cost" step="0.01" min="1" class="mobile-form-input" required placeholder="مثال: 95.25">
+        </div>
+        
+        <!-- قراءة العداد -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">قراءة العداد (كم)</label>
+          <input type="number" name="kilometer_reading" class="mobile-form-input" placeholder="مثال: 15240">
+        </div>
+        
+        <!-- اسم السائق -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">اسم السائق</label>
+          <input type="text" name="driver_name" class="mobile-form-input" placeholder="اسم السائق">
+        </div>
+        
+        <!-- نوع الوقود -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">نوع الوقود</label>
+          <select name="fuel_type" class="mobile-form-select">
+            <option value="بنزين 91">بنزين 91</option>
+            <option value="بنزين 95">بنزين 95</option>
+            <option value="ديزل">ديزل</option>
+            <option value="غاز">غاز</option>
+            <option value="آخر">آخر</option>
+          </select>
+        </div>
+        
+        <!-- محطة الوقود -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">محطة الوقود</label>
+          <input type="text" name="filling_station" class="mobile-form-input" placeholder="اسم محطة الوقود">
+        </div>
+        
+        <!-- ملاحظات -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">ملاحظات</label>
+          <textarea name="notes" class="mobile-form-textarea" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+        </div>
+        
+        <!-- معاينة السجلات التي سيتم إضافتها -->
+        <div class="mobile-form-group" id="previewSection" style="display: none;">
+          <label class="mobile-form-label">معاينة السجلات</label>
+          <div class="mobile-preview-records" id="previewRecords">
+            <!-- سيتم ملء هذا القسم بواسطة JavaScript -->
+          </div>
+          <div class="mobile-preview-summary">
+            <p>سيتم إضافة <span id="recordsCount">0</span> سجل لتعبئة الوقود</p>
+          </div>
+        </div>
+        
+        <!-- أزرار التحكم -->
+        <div class="mobile-form-actions">
+          <button type="reset" class="mobile-btn mobile-btn-secondary">
+            <i class="fas fa-redo"></i>
+            إعادة تعيين
+          </button>
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-save"></i>
+            حفظ التعبئة
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mobile-form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .mobile-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .mobile-form-input,
+  .mobile-form-select,
+  .mobile-form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    font-size: var(--font-size-normal);
+    transition: border-color var(--transition-normal);
+  }
+  
+  .mobile-form-input:focus,
+  .mobile-form-select:focus,
+  .mobile-form-textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+  }
+  
+  .mobile-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .mobile-form-section {
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    background-color: rgba(var(--card-bg-rgb), 0.5);
+  }
+  
+  .mobile-form-section-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+    font-weight: 500;
+  }
+  
+  .mobile-form-section-title a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-color);
+  }
+  
+  .mobile-form-section-title i {
+    margin-left: 0.5rem;
+    color: var(--primary-color);
+  }
+  
+  .mobile-form-section-title small {
+    margin-right: auto;
+  }
+  
+  .mobile-weekday-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-weekday-item {
+    position: relative;
+  }
+  
+  .mobile-weekday-checkbox {
+    position: absolute;
+    opacity: 0;
+  }
+  
+  .mobile-weekday-label {
+    display: block;
+    padding: 0.5rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    text-align: center;
+    min-width: 4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-weekday-checkbox:checked + .mobile-weekday-label {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+  
+  .mobile-monthday-selector {
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-monthday-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .mobile-monthday-item {
+    position: relative;
+  }
+  
+  .mobile-monthday-checkbox {
+    position: absolute;
+    opacity: 0;
+  }
+  
+  .mobile-monthday-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 50%;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-monthday-checkbox:checked + .mobile-monthday-label {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+  
+  .mobile-preview-records {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-preview-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+  }
+  
+  .mobile-preview-item:last-child {
+    border-bottom: none;
+  }
+  
+  .mobile-preview-date {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    border-radius: 8px;
+    margin-left: 0.75rem;
+  }
+  
+  .mobile-preview-date-day {
+    font-weight: 600;
+    line-height: 1;
+  }
+  
+  .mobile-preview-date-month {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobile-preview-details {
+    flex: 1;
+  }
+  
+  .mobile-preview-title {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+  
+  .mobile-preview-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobile-preview-summary {
+    padding: 0.75rem;
+    text-align: center;
+    background-color: rgba(var(--primary-rgb), 0.05);
+    border-radius: var(--border-radius);
+  }
+  
+  .mobile-preview-summary p {
+    margin: 0;
+  }
+  
+  .mb-3 {
+    margin-bottom: 1rem;
+  }
+  
+  .text-danger {
+    color: var(--danger-color);
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('fuelConsumptionForm');
+    
+    // حساب تكلفة اللتر تلقائياً عند تغيير الكمية أو التكلفة
+    const litersInput = document.querySelector('input[name="liters"]');
+    const costInput = document.querySelector('input[name="cost"]');
+    
+    function updateCostPerLiter() {
+      const liters = parseFloat(litersInput.value) || 0;
+      const cost = parseFloat(costInput.value) || 0;
+      
+      if (liters > 0 && cost > 0) {
+        const costPerLiter = (cost / liters).toFixed(2);
+        console.log('تكلفة اللتر الواحد:', costPerLiter);
+      }
+    }
+    
+    litersInput.addEventListener('input', updateCostPerLiter);
+    costInput.addEventListener('input', updateCostPerLiter);
+    
+    // التعامل مع خيارات التكرار
+    updateRepeatOptions();
+    updatePreview();
+    
+    // تحديث المعاينة عند تغيير أي بيانات
+    form.addEventListener('change', updatePreview);
+    
+    // معالجة النموذج قبل الإرسال
+    form.addEventListener('submit', function(event) {
+      const repeatType = document.getElementById('repeatType').value;
+      
+      // إذا لم يكن هناك تكرار، نرسل النموذج كما هو
+      if (repeatType === 'none') {
+        return true;
+      }
+      
+      // إيقاف الإرسال التلقائي للنموذج
+      event.preventDefault();
+      
+      // الحصول على البيانات المطلوبة
+      const vehicleId = document.querySelector('select[name="vehicle_id"]').value;
+      const liters = document.querySelector('input[name="liters"]').value;
+      const cost = document.querySelector('input[name="cost"]').value;
+      const kilometerReading = document.querySelector('input[name="kilometer_reading"]').value;
+      const driverName = document.querySelector('input[name="driver_name"]').value;
+      const fuelType = document.querySelector('select[name="fuel_type"]').value;
+      const fillingStation = document.querySelector('input[name="filling_station"]').value;
+      const notes = document.querySelector('textarea[name="notes"]').value;
+      
+      // الحصول على تواريخ التكرار
+      const repeatStartDate = new Date(document.getElementById('repeatStartDate').value);
+      const repeatEndDate = new Date(document.getElementById('repeatEndDate').value);
+      
+      // الحصول على الأيام المحددة للتكرار
+      let selectedDays = [];
+      if (repeatType === 'weekly') {
+        document.querySelectorAll('input[name="weekdays"]:checked').forEach(checkbox => {
+          selectedDays.push(parseInt(checkbox.value));
+        });
+      } else if (repeatType === 'monthly') {
+        document.querySelectorAll('input[name="monthdays"]:checked').forEach(checkbox => {
+          selectedDays.push(parseInt(checkbox.value));
+        });
+      }
+      
+      if (selectedDays.length === 0) {
+        alert('يرجى اختيار الأيام للتكرار');
+        return false;
+      }
+      
+      // إنشاء مصفوفة التواريخ
+      const dates = getDatesForRepeat(repeatType, selectedDays, repeatStartDate, repeatEndDate);
+      
+      if (dates.length === 0) {
+        alert('لم يتم العثور على تواريخ تطابق معايير التكرار');
+        return false;
+      }
+      
+      // إرسال البيانات باستخدام AJAX لإنشاء سجلات متعددة
+      const formData = new FormData();
+      formData.append('repeat_type', repeatType);
+      formData.append('vehicle_id', vehicleId);
+      formData.append('liters', liters);
+      formData.append('cost', cost);
+      formData.append('kilometer_reading', kilometerReading);
+      formData.append('driver_name', driverName);
+      formData.append('fuel_type', fuelType);
+      formData.append('filling_station', fillingStation);
+      formData.append('notes', notes);
+      
+      // إضافة التواريخ
+      dates.forEach((date, index) => {
+        formData.append(`dates[${index}]`, date.toISOString().split('T')[0]);
+      });
+      
+      // إرسال البيانات
+      fetch(form.action, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          window.location.href = data.redirect_url || '{{ url_for('mobile.vehicle_expenses') }}';
+        } else {
+          alert(data.message || 'حدث خطأ أثناء إضافة السجلات');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء إرسال البيانات');
+      });
+    });
+  });
+  
+  // وظيفة لإظهار/إخفاء خيارات التكرار
+  function toggleRepeatOptions() {
+    const repeatOptionsSection = document.getElementById('repeatOptionsSection');
+    const repeatToggleIcon = document.getElementById('repeat-toggle-icon');
+    
+    if (repeatOptionsSection.style.display === 'none') {
+      repeatOptionsSection.style.display = 'block';
+      repeatToggleIcon.className = 'fas fa-chevron-up';
+    } else {
+      repeatOptionsSection.style.display = 'none';
+      repeatToggleIcon.className = 'fas fa-chevron-down';
+    }
+    
+    updateRepeatOptions();
+  }
+  
+  // وظيفة لتحديث خيارات التكرار حسب النوع المحدد
+  function updateRepeatOptions() {
+    const repeatType = document.getElementById('repeatType').value;
+    const weeklyOptions = document.getElementById('weeklyOptions');
+    const monthlyOptions = document.getElementById('monthlyOptions');
+    const repeatDurationSection = document.getElementById('repeatDurationSection');
+    const singleDateSection = document.getElementById('singleDateSection');
+    const previewSection = document.getElementById('previewSection');
+    
+    // إخفاء جميع الخيارات أولاً
+    weeklyOptions.style.display = 'none';
+    monthlyOptions.style.display = 'none';
+    repeatDurationSection.style.display = 'none';
+    previewSection.style.display = 'none';
+    
+    // إظهار الخيارات المناسبة حسب النوع
+    if (repeatType === 'weekly') {
+      weeklyOptions.style.display = 'block';
+      repeatDurationSection.style.display = 'block';
+      singleDateSection.style.display = 'none';
+      previewSection.style.display = 'block';
+    } else if (repeatType === 'monthly') {
+      monthlyOptions.style.display = 'block';
+      repeatDurationSection.style.display = 'block';
+      singleDateSection.style.display = 'none';
+      previewSection.style.display = 'block';
+    } else {
+      singleDateSection.style.display = 'block';
+    }
+    
+    updatePreview();
+  }
+  
+  // وظيفة لتحديث معاينة السجلات
+  function updatePreview() {
+    const repeatType = document.getElementById('repeatType').value;
+    
+    if (repeatType === 'none') {
+      return;
+    }
+    
+    // الحصول على التواريخ
+    const repeatStartDate = new Date(document.getElementById('repeatStartDate').value || new Date());
+    const repeatEndDate = new Date(document.getElementById('repeatEndDate').value || (new Date().setDate(new Date().getDate() + 30)));
+    
+    // الحصول على الأيام المحددة
+    let selectedDays = [];
+    if (repeatType === 'weekly') {
+      document.querySelectorAll('input[name="weekdays"]:checked').forEach(checkbox => {
+        selectedDays.push(parseInt(checkbox.value));
+      });
+    } else if (repeatType === 'monthly') {
+      document.querySelectorAll('input[name="monthdays"]:checked').forEach(checkbox => {
+        selectedDays.push(parseInt(checkbox.value));
+      });
+    }
+    
+    // توليد التواريخ
+    const dates = getDatesForRepeat(repeatType, selectedDays, repeatStartDate, repeatEndDate);
+    
+    // عرض المعاينة
+    const previewRecords = document.getElementById('previewRecords');
+    const recordsCount = document.getElementById('recordsCount');
+    
+    previewRecords.innerHTML = '';
+    recordsCount.textContent = dates.length;
+    
+    // الحد الأقصى للسجلات المعروضة
+    const maxPreviewItems = 10;
+    const displayDates = dates.slice(0, maxPreviewItems);
+    
+    // عرض التواريخ
+    displayDates.forEach(date => {
+      const dateItem = document.createElement('div');
+      dateItem.className = 'mobile-preview-item';
+      
+      const monthNames = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+      
+      dateItem.innerHTML = `
+        <div class="mobile-preview-date">
+          <div class="mobile-preview-date-day">${date.getDate()}</div>
+          <div class="mobile-preview-date-month">${monthNames[date.getMonth()].substring(0, 3)}</div>
+        </div>
+        <div class="mobile-preview-details">
+          <div class="mobile-preview-title">${dayNames[date.getDay()]}</div>
+          <div class="mobile-preview-subtitle">${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}</div>
+        </div>
+      `;
+      
+      previewRecords.appendChild(dateItem);
+    });
+    
+    // إذا كان هناك المزيد من التواريخ
+    if (dates.length > maxPreviewItems) {
+      const moreItem = document.createElement('div');
+      moreItem.className = 'mobile-preview-item';
+      moreItem.innerHTML = `
+        <div class="mobile-preview-details" style="text-align: center;">
+          <div class="mobile-preview-title">... و ${dates.length - maxPreviewItems} تواريخ أخرى</div>
+        </div>
+      `;
+      previewRecords.appendChild(moreItem);
+    }
+  }
+  
+  // وظيفة للحصول على التواريخ المطابقة للتكرار
+  function getDatesForRepeat(repeatType, selectedDays, startDate, endDate) {
+    const dates = [];
+    
+    // التأكد من صحة التواريخ
+    if (!startDate || isNaN(startDate.getTime())) {
+      startDate = new Date();
+    }
+    
+    if (!endDate || isNaN(endDate.getTime())) {
+      // تاريخ افتراضي بعد 30 يوم
+      endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30);
+    }
+    
+    // نسخ التواريخ لتجنب تعديل الأصلية
+    const currentDate = new Date(startDate);
+    const lastDate = new Date(endDate);
+    
+    // ضبط التاريخ الحالي لبداية اليوم
+    currentDate.setHours(0, 0, 0, 0);
+    lastDate.setHours(23, 59, 59, 999);
+    
+    // التكرار الأسبوعي
+    if (repeatType === 'weekly') {
+      while (currentDate <= lastDate) {
+        const dayOfWeek = currentDate.getDay(); // 0 للأحد، 1 للاثنين، إلخ
+        
+        if (selectedDays.includes(dayOfWeek)) {
+          dates.push(new Date(currentDate));
+        }
+        
+        // الانتقال إلى اليوم التالي
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    // التكرار الشهري
+    else if (repeatType === 'monthly') {
+      while (currentDate <= lastDate) {
+        const dayOfMonth = currentDate.getDate(); // من 1 إلى 31
+        
+        if (selectedDays.includes(dayOfMonth)) {
+          dates.push(new Date(currentDate));
+        }
+        
+        // الانتقال إلى اليوم التالي
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    
+    return dates;
+  }
+</script>
+{% endblock %}

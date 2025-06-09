@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-xl">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        تحديث تاريخ انتهاء {{ document_type_ar }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        أنت تقوم بتحديث تاريخ انتهاء {{ document_type_ar }} رقم <strong>{{ document.document_number }}</strong> للموظف <strong>{{ document.employee.name }}</strong>.
+                    </p>
+
+                    <form method="POST" action="{{ url_for('documents.update_expiry', id=document.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="expiry_date" class="form-label required-field">تاريخ الانتهاء الجديد</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control date-picker" id="expiry_date" name="expiry_date" 
+                                               required placeholder="اختر التاريخ...">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </span>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        التاريخ الهجري يظهر عند تفعيل خيار التقويم الهجري في الشريط العلوي
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('documents.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right me-1"></i>
+                                رجوع
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-calendar-check me-1"></i>
+                                تحديث تاريخ الانتهاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إعداد محدد التاريخ بالقيم الافتراضية
+        initDatePicker('.date-picker', "{{ gregorian_today }}", "{{ hijri_today }}");
+
+        // استعادة تفضيل نوع التقويم
+        const calendarToggle = document.getElementById('calendarToggle');
+        if (calendarToggle) {
+            const isHijri = localStorage.getItem('useHijriCalendar') === 'true';
+            calendarToggle.checked = isHijri;
+            updateCalendarDisplay(isHijri);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الإعدادات - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الإعدادات{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-user"></i> الحساب الشخصي
+    </div>
+    
+    <div class="mobile-card-content">
+        {% if current_user %}
+        <div class="profile-container">
+            <div class="profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+                <h4>{{ current_user.username }}</h4>
+                <p>{{ current_user.email }}</p>
+            </div>
+        </div>
+        
+        <div class="settings-actions">
+            <a href="{{ url_for('mobile.profile') }}" class="settings-item">
+                <i class="fas fa-user-edit"></i>
+                <span>تعديل الملف الشخصي</span>
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <a href="{{ url_for('mobile.change_password') }}" class="settings-item">
+                <i class="fas fa-key"></i>
+                <span>تغيير كلمة المرور</span>
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p>الرجاء تسجيل الدخول لعرض معلومات الحساب</p>
+            <a href="{{ url_for('mobile.login') }}" class="mobile-btn mobile-btn-primary">تسجيل الدخول</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-cog"></i> إعدادات التطبيق
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="settings-actions">
+            <div class="settings-item">
+                <i class="fas fa-moon"></i>
+                <span>الوضع الداكن</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-item">
+                <i class="fas fa-language"></i>
+                <span>اللغة</span>
+                <select class="settings-select" id="languageSelect">
+                    <option value="ar" selected>العربية</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            
+            <div class="settings-item">
+                <i class="fas fa-bell"></i>
+                <span>الإشعارات</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="notificationsToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-info-circle"></i> حول التطبيق
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="app-info">
+            <div class="app-logo">
+                <i class="fas fa-building"></i>
+            </div>
+            <h3>نظام إدارة الموظفين</h3>
+            <p>الإصدار 1.0.0</p>
+            <p class="app-description">تطبيق متكامل لإدارة بيانات الموظفين والحضور والرواتب والوثائق</p>
+            
+            <div class="company-info">
+                <p>شركة التقنية المتطورة</p>
+                <p>جميع الحقوق محفوظة © {{ current_year }}</p>
+            </div>
+        </div>
+        
+        <div class="settings-actions">
+            <a href="{{ url_for('mobile.terms') }}" class="settings-item">
+                <i class="fas fa-file-contract"></i>
+                <span>شروط الاستخدام</span>
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <a href="{{ url_for('mobile.privacy') }}" class="settings-item">
+                <i class="fas fa-user-shield"></i>
+                <span>سياسة الخصوصية</span>
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <a href="{{ url_for('mobile.contact') }}" class="settings-item">
+                <i class="fas fa-headset"></i>
+                <span>تواصل معنا</span>
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-content">
+        <a href="{{ url_for('mobile.logout') }}" class="mobile-btn mobile-btn-danger w-100">
+            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+        </a>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.profile-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+}
+
+.profile-avatar i {
+    font-size: 1.8rem;
+    color: #757575;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h4 {
+    margin: 0 0 5px;
+    font-size: 1.1rem;
+}
+
+.profile-info p {
+    margin: 0;
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.settings-actions {
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #f5f5f5;
+    text-decoration: none;
+    color: inherit;
+}
+
+.settings-item:last-child {
+    border-bottom: none;
+}
+
+.settings-item i:first-child {
+    margin-left: 15px;
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.settings-item span {
+    flex: 1;
+}
+
+.settings-item i:last-child {
+    color: #ccc;
+}
+
+.settings-select {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    right: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(-22px);
+}
+
+.app-info {
+    text-align: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.app-logo {
+    width: 80px;
+    height: 80px;
+    background-color: var(--primary-color);
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 15px;
+    color: white;
+    font-size: 2.5rem;
+}
+
+.app-description {
+    color: #757575;
+    margin: 15px auto;
+    max-width: 80%;
+}
+
+.company-info {
+    margin-top: 20px;
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.company-info p {
+    margin: 5px 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // حفظ إعدادات الوضع الداكن
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    
+    // تعيين حالة المفتاح بناءً على الإعدادات المحفوظة
+    darkModeToggle.checked = isDarkMode;
+    
+    // تحديث المظهر عند تغيير الإعداد
+    darkModeToggle.addEventListener('change', function() {
+        localStorage.setItem('darkMode', this.checked);
+        
+        // إرسال إشعار لخدمة العامل لتحديث الإعدادات
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'THEME_CHANGE',
+                isDarkMode: this.checked
+            });
+        }
+        
+        // تطبيق التغييرات مباشرة
+        document.documentElement.setAttribute('data-theme', this.checked ? 'dark' : 'light');
+    });
+    
+    // حفظ إعدادات اللغة
+    const languageSelect = document.getElementById('languageSelect');
+    const savedLanguage = localStorage.getItem('language') || 'ar';
+    
+    // تعيين اللغة المحفوظة
+    languageSelect.value = savedLanguage;
+    
+    // تحديث اللغة عند التغيير
+    languageSelect.addEventListener('change', function() {
+        localStorage.setItem('language', this.value);
+        
+        // يمكن هنا إعادة تحميل الصفحة أو تغيير اللغة بدون إعادة التحميل
+        // window.location.reload();
+    });
+    
+    // إعدادات الإشعارات
+    const notificationsToggle = document.getElementById('notificationsToggle');
+    const notificationsEnabled = localStorage.getItem('notifications') !== 'false';
+    
+    notificationsToggle.checked = notificationsEnabled;
+    
+    notificationsToggle.addEventListener('change', function() {
+        localStorage.setItem('notifications', this.checked);
+        
+        // طلب الإذن بالإشعارات إذا تم تفعيلها
+        if (this.checked && 'Notification' in window) {
+            Notification.requestPermission();
+        }
+    });
+});
+</script>
+{% endblock %}

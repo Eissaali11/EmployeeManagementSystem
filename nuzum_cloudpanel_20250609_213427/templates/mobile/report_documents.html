@@ -1,0 +1,410 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تقرير الوثائق - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تقرير الوثائق{% endblock %}
+
+{% block content %}
+<!-- خيارات التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> خيارات التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.report_documents') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>القسم</label>
+                <select name="department_id" class="mobile-form-select">
+                    <option value="">جميع الأقسام</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if request.args.get('department_id') == department.id|string %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الموظف</label>
+                <select name="employee_id" class="mobile-form-select">
+                    <option value="">جميع الموظفين</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}" {% if request.args.get('employee_id') == employee.id|string %}selected{% endif %}>{{ employee.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>نوع الوثيقة</label>
+                <select name="document_type" class="mobile-form-select">
+                    <option value="">جميع الأنواع</option>
+                    {% for doc_type in document_types %}
+                    <option value="{{ doc_type }}" {% if request.args.get('document_type') == doc_type %}selected{% endif %}>{{ doc_type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>حالة الوثيقة</label>
+                <select name="status" class="mobile-form-select">
+                    <option value="">جميع الحالات</option>
+                    <option value="valid" {% if request.args.get('status') == 'valid' %}selected{% endif %}>سارية المفعول</option>
+                    <option value="expiring" {% if request.args.get('status') == 'expiring' %}selected{% endif %}>على وشك الانتهاء</option>
+                    <option value="expired" {% if request.args.get('status') == 'expired' %}selected{% endif %}>منتهية الصلاحية</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row buttons-row">
+                <button type="submit" class="mobile-btn mobile-btn-primary">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                
+                <button type="button" class="mobile-btn mobile-btn-secondary" onclick="location.href='{{ url_for('mobile.report_documents') }}'">
+                    <i class="fas fa-redo"></i> إعادة ضبط
+                </button>
+                
+                <div class="dropdown">
+                    <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
+                        <i class="fas fa-download"></i> تصدير
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="{{ url_for('mobile.report_documents') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
+                            <i class="fas fa-file-pdf"></i> تصدير PDF
+                        </a>
+                        <a href="{{ url_for('mobile.report_documents') }}?{{ request.query_string.decode('utf-8') }}&export=excel" class="dropdown-item">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- نتائج التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list"></i> نتائج التقرير
+        <div class="mobile-card-subtitle">{{ documents|length }} وثيقة</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if documents %}
+        <div class="table-responsive">
+            <table class="mobile-table">
+                <thead>
+                    <tr>
+                        <th>الوثيقة</th>
+                        <th>الموظف</th>
+                        <th>تاريخ الانتهاء</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.name }}</td>
+                        <td>{{ doc.employee.name if doc.employee else '-' }}</td>
+                        <td>{{ doc.expiry_date.strftime('%Y-%m-%d') if doc.expiry_date else '-' }}</td>
+                        <td>
+                            {% if doc.days_remaining is not none %}
+                                {% if doc.days_remaining < 0 %}
+                                <span class="doc-badge doc-expired">منتهية ({{ doc.days_remaining|abs }} يوم)</span>
+                                {% elif doc.days_remaining <= 60 %}
+                                <span class="doc-badge doc-expiring">على وشك الانتهاء ({{ doc.days_remaining }} يوم)</span>
+                                {% else %}
+                                <span class="doc-badge doc-valid">سارية المفعول</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="doc-badge doc-none">غير محدد</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">لا توجد بيانات متطابقة مع معايير البحث</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ملخص التقرير -->
+{% if documents %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> ملخص التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="report-summary">
+            <div class="summary-item total">
+                <div class="summary-value">{{ documents|length }}</div>
+                <div class="summary-label">إجمالي الوثائق</div>
+            </div>
+            
+            <div class="summary-item valid">
+                <div class="summary-value">
+                    {{ documents|selectattr('days_remaining')|selectattr('days_remaining', 'gt', 60)|list|length }}
+                </div>
+                <div class="summary-label">سارية المفعول</div>
+            </div>
+            
+            <div class="summary-item expiring">
+                <div class="summary-value">
+                    {{ documents|selectattr('days_remaining')|selectattr('days_remaining', 'ge', 0)|selectattr('days_remaining', 'le', 60)|list|length }}
+                </div>
+                <div class="summary-label">على وشك الانتهاء</div>
+            </div>
+            
+            <div class="summary-item expired">
+                <div class="summary-value">
+                    {{ documents|selectattr('days_remaining')|selectattr('days_remaining', 'lt', 0)|list|length }}
+                </div>
+                <div class="summary-label">منتهية الصلاحية</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="documentsChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.buttons-row {
+    flex-wrap: wrap;
+}
+
+.mobile-form-row .mobile-btn {
+    flex: 1;
+    margin-bottom: 10px;
+}
+
+.dropdown {
+    position: relative;
+    flex: 1;
+}
+
+.dropdown-toggle {
+    width: 100%;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.mobile-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mobile-table th,
+.mobile-table td {
+    padding: 10px 15px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+}
+
+.mobile-table th {
+    background-color: #f9f9f9;
+    color: #757575;
+    font-weight: 500;
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.doc-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.doc-valid {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.doc-expiring {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.doc-expired {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.doc-none {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.report-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    flex: 1;
+    min-width: calc(50% - 10px);
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.summary-item.total {
+    flex-basis: 100%;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.summary-item.valid {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.summary-item.expiring {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.summary-item.expired {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+}
+
+.chart-container {
+    height: 250px;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تفعيل قائمة التصدير المنسدلة
+    const dropdownToggle = document.getElementById('exportDropdown');
+    const dropdownMenu = dropdownToggle.nextElementSibling;
+    
+    dropdownToggle.addEventListener('click', function() {
+        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            dropdownMenu.style.display = 'none';
+        }
+    });
+    
+    {% if documents %}
+    // إنشاء رسم بياني للوثائق
+    const ctx = document.getElementById('documentsChart').getContext('2d');
+    const documentsChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['سارية المفعول', 'على وشك الانتهاء', 'منتهية الصلاحية'],
+            datasets: [{
+                data: [
+                    {{ documents|selectattr('days_remaining')|selectattr('days_remaining', 'gt', 60)|list|length }},
+                    {{ documents|selectattr('days_remaining')|selectattr('days_remaining', 'ge', 0)|selectattr('days_remaining', 'le', 60)|list|length }},
+                    {{ documents|selectattr('days_remaining')|selectattr('days_remaining', 'lt', 0)|list|length }}
+                ],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(255, 193, 7, 0.7)',
+                    'rgba(220, 53, 69, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'توزيع حالة الوثائق',
+                    font: {
+                        family: 'Tajawal, Arial',
+                        size: 14
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

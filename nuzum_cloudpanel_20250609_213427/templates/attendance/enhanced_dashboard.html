@@ -1,0 +1,459 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- عنوان الصفحة والأزرار -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-chart-bar me-2"></i>
+            لوحة معلومات الحضور المحسنة
+        </h1>
+        <div class="btn-group">
+            <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+                <i class="fas fa-list me-1"></i>
+                قائمة الحضور
+            </a>
+            <a href="{{ url_for('attendance.all_departments_attendance', date=selected_date.strftime('%Y-%m-%d')) }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>
+                تسجيل حضور الكل
+            </a>
+            <a href="{{ url_for('attendance_dashboard.export_excel') }}?date={{ selected_date.strftime('%Y-%m-%d') }}{% if selected_department_id %}&department_id={{ selected_department_id }}{% endif %}" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i>
+                تصدير لإكسل
+            </a>
+        </div>
+    </div>
+    
+
+    
+    <!-- شريط الإحصائيات العامة في الأعلى -->
+    <div class="card border-0 mb-4">
+        <div class="card-body p-0">
+            <div class="row text-center g-0">
+                <!-- إجمالي الموظفين -->
+                <div class="col-md-2 py-3" style="background-color: #6c7ae0;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_employees }}</h4>
+                    <div class="small text-white">إجمالي الموظفين</div>
+                </div>
+                
+                <!-- الموظفين الحاضرين -->
+                <div class="col-md-2 py-3" style="background-color: #29cc97;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_present }}</h4>
+                    <div class="small text-white">الحاضرون</div>
+                    <div class="small text-white">{{ ((total_present/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- الموظفين الغائبين -->
+                <div class="col-md-2 py-3" style="background-color: #fe5461;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_absent }}</h4>
+                    <div class="small text-white">الغائبون</div>
+                    <div class="small text-white">{{ ((total_absent/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- الموظفين في إجازة -->
+                <div class="col-md-2 py-3" style="background-color: #fec400;">
+                    <h4 class="mb-0 fw-bold text-dark">{{ total_leave }}</h4>
+                    <div class="small text-dark">في إجازة</div>
+                    <div class="small text-dark">{{ ((total_leave/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- الموظفين المرضى -->
+                <div class="col-md-2 py-3" style="background-color: #50b5ff;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_sick }}</h4>
+                    <div class="small text-white">مرضي</div>
+                    <div class="small text-white">{{ ((total_sick/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+                
+                <!-- غير مسجلين -->
+                <div class="col-md-2 py-3" style="background-color: #4c84ff;">
+                    <h4 class="mb-0 fw-bold text-white">{{ total_missing }}</h4>
+                    <div class="small text-white">غير مسجل</div>
+                    <div class="small text-white">{{ ((total_missing/total_employees)*100)|round(1) if total_employees > 0 else 0 }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- فلترة البيانات -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter me-2"></i>
+                تحديد معايير العرض
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('attendance_dashboard.index') }}" id="filter-form">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="mb-3">
+                            <label for="date" class="form-label fw-bold">التاريخ</label>
+                            <input type="date" class="form-control" 
+                                   id="date" name="date" 
+                                   value="{{ selected_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="mb-3">
+                            <label for="department_id" class="form-label fw-bold">القسم</label>
+                            <select class="form-select" id="department_id" name="department_id">
+                                <option value="">جميع الأقسام</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}" 
+                                        {% if selected_department_id == department.id %}selected{% endif %}>
+                                    {{ department.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="mb-3 w-100">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i>
+                                عرض
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ملخص الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        الإحصائيات العامة ليوم {{ selected_date.strftime('%Y-%m-%d') }}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-3 border-end">
+                            <div class="p-4 text-center">
+                                <div class="h1 mb-0 fw-bold text-primary">{{ total_employees }}</div>
+                                <div class="small text-muted">إجمالي الموظفين</div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="col-md-2 border-end">
+                            <div class="p-4 text-center">
+                                <div class="h1 mb-0 fw-bold text-success">{{ total_present }}</div>
+                                <div class="small text-muted">الحاضرون</div>
+                                {% if total_employees > 0 %}
+                                <div class="small fw-bold mt-1">{{ ((total_present / total_employees) * 100) | round(1) }}%</div>
+                                {% else %}
+                                <div class="small fw-bold mt-1">0%</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2 border-end">
+                            <div class="p-4 text-center">
+                                <div class="h1 mb-0 fw-bold text-danger">{{ total_absent }}</div>
+                                <div class="small text-muted">الغائبون</div>
+                                {% if total_employees > 0 %}
+                                <div class="small fw-bold mt-1">{{ ((total_absent / total_employees) * 100) | round(1) }}%</div>
+                                {% else %}
+                                <div class="small fw-bold mt-1">0%</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2 border-end">
+                            <div class="p-4 text-center">
+                                <div class="h1 mb-0 fw-bold text-warning">{{ total_leave }}</div>
+                                <div class="small text-muted">في إجازة</div>
+                                {% if total_employees > 0 %}
+                                <div class="small fw-bold mt-1">{{ ((total_leave / total_employees) * 100) | round(1) }}%</div>
+                                {% else %}
+                                <div class="small fw-bold mt-1">0%</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2 border-end">
+                            <div class="p-4 text-center">
+                                <div class="h1 mb-0 fw-bold" style="color: #17a2b8;">{{ total_sick }}</div>
+                                <div class="small text-muted">مرضي</div>
+                                {% if total_employees > 0 %}
+                                <div class="small fw-bold mt-1">{{ ((total_sick / total_employees) * 100) | round(1) }}%</div>
+                                {% else %}
+                                <div class="small fw-bold mt-1">0%</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-1">
+                            <div class="p-4 text-center">
+                                <div class="h1 mb-0 fw-bold text-secondary">{{ total_missing }}</div>
+                                <div class="small text-muted">غير مسجل</div>
+                                {% if total_employees > 0 %}
+                                <div class="small fw-bold mt-1">{{ ((total_missing / total_employees) * 100) | round(1) }}%</div>
+                                {% else %}
+                                <div class="small fw-bold mt-1">0%</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسم البياني -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        توزيع الحضور حسب الأقسام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 400px;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول إحصائيات الأقسام -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        إحصائيات الحضور حسب الأقسام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>القسم</th>
+                                    <th>عدد الموظفين</th>
+                                    <th class="text-center">حاضر</th>
+                                    <th class="text-center">غائب</th>
+                                    <th class="text-center">إجازة</th>
+                                    <th class="text-center">مرضي</th>
+                                    <th class="text-center">غير مسجل</th>
+                                    <th class="text-center">نسبة الحضور</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in department_stats %}
+                                <tr>
+                                    <td>{{ dept.name }}</td>
+                                    <td>{{ dept.employees_count }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success px-2 py-1">{{ dept.present_count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-danger px-2 py-1">{{ dept.absent_count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning px-2 py-1">{{ dept.leave_count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info px-2 py-1">{{ dept.sick_count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary px-2 py-1">{{ dept.missing_count }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" 
+                                                role="progressbar" 
+                                                style="width: {{ dept.present_percentage }}%;" 
+                                                aria-valuenow="{{ dept.present_percentage }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">{{ dept.present_percentage }}%</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة الموظفين الغائبين -->
+    {% if absent_employees %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-times me-2"></i>
+                        الموظفون غير الحاضرين ({{ absent_employees | length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if selected_department_id %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>الرقم الوظيفي</th>
+                                        <th>القسم</th>
+                                        <th>الحالة</th>
+                                        <th>ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for employee in absent_employees %}
+                                    <tr>
+                                        <td>{{ employee.name }}</td>
+                                        <td>{{ employee.employee_id }}</td>
+                                        <td>{{ employee.department }}</td>
+                                        <td>
+                                            {% if employee.status == 'absent' %}
+                                            <span class="badge bg-danger">غائب</span>
+                                            {% elif employee.status == 'leave' %}
+                                            <span class="badge bg-warning">إجازة</span>
+                                            {% elif employee.status == 'sick' %}
+                                            <span class="badge bg-info">مرضي</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ employee.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ employee.notes or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <!-- عرض الموظفين حسب الأقسام -->
+                        <div class="accordion" id="absentEmployeesAccordion">
+                            {% for dept_id, dept_data in absent_by_department.items() %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ dept_id }}">
+                                    <button class="accordion-button collapsed fw-bold" type="button" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse{{ dept_id }}" 
+                                            aria-expanded="false" 
+                                            aria-controls="collapse{{ dept_id }}">
+                                        {{ dept_data.name }} ({{ dept_data.employees | length }})
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ dept_id }}" 
+                                     class="accordion-collapse collapse" 
+                                     aria-labelledby="heading{{ dept_id }}" 
+                                     data-bs-parent="#absentEmployeesAccordion">
+                                    <div class="accordion-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>الاسم</th>
+                                                        <th>الرقم الوظيفي</th>
+                                                        <th>الحالة</th>
+                                                        <th>ملاحظات</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for employee in dept_data.employees %}
+                                                    <tr>
+                                                        <td>{{ employee.name }}</td>
+                                                        <td>{{ employee.employee_id }}</td>
+                                                        <td>
+                                                            {% if employee.status == 'absent' %}
+                                                            <span class="badge bg-danger">غائب</span>
+                                                            {% elif employee.status == 'leave' %}
+                                                            <span class="badge bg-warning">إجازة</span>
+                                                            {% elif employee.status == 'sick' %}
+                                                            <span class="badge bg-info">مرضي</span>
+                                                            {% else %}
+                                                            <span class="badge bg-secondary">{{ employee.status }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{{ employee.notes or '-' }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تغيير التاريخ تلقائيًا
+        const dateInput = document.getElementById('date');
+        dateInput.addEventListener('change', function() {
+            document.getElementById('filter-form').submit();
+        });
+        
+        // إعداد الرسم البياني
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+        
+        // استدعاء API للحصول على البيانات
+        fetch('{{ url_for("attendance_dashboard.dashboard_data") }}?date={{ selected_date.strftime("%Y-%m-%d") }}{% if selected_department_id %}&department_id={{ selected_department_id }}{% endif %}')
+            .then(response => response.json())
+            .then(data => {
+                // إنشاء الرسم البياني
+                const chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'توزيع الحضور حسب الأقسام',
+                                font: {
+                                    size: 16
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+    });
+</script>
+{% endblock %}

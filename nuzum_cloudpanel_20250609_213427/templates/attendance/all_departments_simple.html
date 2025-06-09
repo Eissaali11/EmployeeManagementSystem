@@ -1,0 +1,142 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تسجيل حضور لجميع الأقسام</h1>
+        <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-calendar-check me-2"></i>
+                تسجيل حضور لجميع الأقسام لفترة زمنية محددة
+            </h5>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form action="{{ url_for('attendance.all_departments_attendance_simple') }}" method="post">
+                {{ form.csrf_token }}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="start_date" class="form-label">تاريخ البداية</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{{ today.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="end_date" class="form-label">تاريخ النهاية</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{{ today.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">حالة الحضور</label>
+                    <div class="d-flex flex-wrap">
+                        <div class="form-check me-4">
+                            <input class="form-check-input" type="radio" name="status" id="status-present" value="present" checked>
+                            <label class="form-check-label" for="status-present">
+                                <span class="badge bg-success">حاضر</span>
+                            </label>
+                        </div>
+                        <div class="form-check me-4">
+                            <input class="form-check-input" type="radio" name="status" id="status-absent" value="absent">
+                            <label class="form-check-label" for="status-absent">
+                                <span class="badge bg-danger">غائب</span>
+                            </label>
+                        </div>
+                        <div class="form-check me-4">
+                            <input class="form-check-input" type="radio" name="status" id="status-leave" value="leave">
+                            <label class="form-check-label" for="status-leave">
+                                <span class="badge bg-warning">إجازة</span>
+                            </label>
+                        </div>
+                        <div class="form-check me-4">
+                            <input class="form-check-input" type="radio" name="status" id="status-sick" value="sick">
+                            <label class="form-check-label" for="status-sick">
+                                <span class="badge bg-info">مرضي</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">الأقسام</label>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="select-all-departments">
+                        <label class="form-check-label" for="select-all-departments">
+                            <strong>تحديد/إلغاء تحديد جميع الأقسام</strong>
+                        </label>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        {% for department in departments %}
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ department.id }}" id="department-{{ department.id }}">
+                                <label class="form-check-label" for="department-{{ department.id }}">
+                                    {{ department.name }} 
+                                    <span class="text-muted">({{ department.employees|selectattr('status', 'equalto', 'active')|list|length }} موظف)</span>
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> تسجيل الحضور
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo me-1"></i> إعادة تعيين
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تحديد العناصر
+        const selectAllCheckbox = document.getElementById('select-all-departments');
+        const departmentCheckboxes = document.querySelectorAll('.department-checkbox');
+        
+        // إضافة مستمع للحدث عند النقر على "تحديد الكل"
+        selectAllCheckbox.addEventListener('change', function() {
+            departmentCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+        
+        // تحديث حالة "تحديد الكل" بناءً على حالة الأقسام الفردية
+        departmentCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                let allChecked = true;
+                departmentCheckboxes.forEach(cb => {
+                    if (!cb.checked) {
+                        allChecked = false;
+                    }
+                });
+                selectAllCheckbox.checked = allChecked;
+            });
+        });
+    });
+</script>
+{% endblock %}

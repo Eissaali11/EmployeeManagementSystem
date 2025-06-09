@@ -1,0 +1,546 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الإشعارات - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الإشعارات{% endblock %}
+
+{% block content %}
+<!-- إحصائيات الإشعارات -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-bell"></i> ملخص الإشعارات
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="notification-stats">
+            <div class="notification-stat new">
+                <div class="notification-value">{{ notifications|selectattr('is_read', 'equalto', false)|list|length }}</div>
+                <div class="notification-label">جديدة</div>
+            </div>
+            <div class="notification-stat read">
+                <div class="notification-value">{{ notifications|selectattr('is_read', 'equalto', true)|list|length }}</div>
+                <div class="notification-label">مقروءة</div>
+            </div>
+            <div class="notification-stat total">
+                <div class="notification-value">{{ notifications|length }}</div>
+                <div class="notification-label">إجمالي الإشعارات</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قائمة الإشعارات -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list"></i> الإشعارات
+        <div class="notification-actions">
+            <button class="mobile-btn mobile-btn-sm mobile-btn-secondary" onclick="markAllAsRead()">
+                <i class="fas fa-check-double"></i> تعليم الكل كمقروء
+            </button>
+        </div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if notifications %}
+        <div class="notification-tabs">
+            <button class="notification-tab active" data-filter="all">الكل</button>
+            <button class="notification-tab" data-filter="unread">غير مقروءة</button>
+            <button class="notification-tab" data-filter="read">مقروءة</button>
+        </div>
+        
+        <div class="notification-list">
+            {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% else %}read{% endif %}" 
+                 data-id="{{ notification.id }}" 
+                 data-type="{{ notification.type }}" 
+                 onclick="viewNotification({{ notification.id }})">
+                <div class="notification-icon 
+                     {% if notification.type == 'document' %}document
+                     {% elif notification.type == 'salary' %}salary
+                     {% elif notification.type == 'attendance' %}attendance
+                     {% elif notification.type == 'fee' %}fee
+                     {% else %}system{% endif %}">
+                    {% if notification.type == 'document' %}
+                    <i class="fas fa-file-alt"></i>
+                    {% elif notification.type == 'salary' %}
+                    <i class="fas fa-money-bill-wave"></i>
+                    {% elif notification.type == 'attendance' %}
+                    <i class="fas fa-calendar-check"></i>
+                    {% elif notification.type == 'fee' %}
+                    <i class="fas fa-dollar-sign"></i>
+                    {% else %}
+                    <i class="fas fa-bell"></i>
+                    {% endif %}
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">{{ notification.title }}</div>
+                    <div class="notification-message">{{ notification.message }}</div>
+                    <div class="notification-meta">
+                        <span class="notification-time">{{ notification.created_at }}</span>
+                        {% if notification.type %}
+                        <span class="notification-type-badge">
+                            {% if notification.type == 'document' %}وثيقة
+                            {% elif notification.type == 'salary' %}راتب
+                            {% elif notification.type == 'attendance' %}حضور
+                            {% elif notification.type == 'fee' %}رسوم
+                            {% else %}النظام{% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="notification-actions">
+                    <button class="notification-action" onclick="event.stopPropagation(); markAsRead({{ notification.id }})">
+                        <i class="fas {% if notification.is_read %}fa-envelope-open{% else %}fa-envelope{% endif %}"></i>
+                    </button>
+                    <button class="notification-action delete" onclick="event.stopPropagation(); deleteNotification({{ notification.id }})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if pagination and pagination.pages > 1 %}
+        <div class="pagination-container">
+            <div class="mobile-pagination">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('mobile.notifications', page=pagination.prev_num) }}" class="mobile-pagination-item">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+                
+                {% for page in pagination.iter_pages() %}
+                    {% if page %}
+                        {% if page != pagination.page %}
+                        <a href="{{ url_for('mobile.notifications', page=page) }}" class="mobile-pagination-item">{{ page }}</a>
+                        {% else %}
+                        <span class="mobile-pagination-item active">{{ page }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="mobile-pagination-item">...</span>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <a href="{{ url_for('mobile.notifications', page=pagination.next_num) }}" class="mobile-pagination-item">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-notifications">
+            <div class="text-center py-5">
+                <i class="fas fa-bell-slash fa-3x text-secondary mb-3"></i>
+                <h5>لا توجد إشعارات</h5>
+                <p class="text-secondary">سيتم عرض الإشعارات الجديدة هنا عند وصولها</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.notification-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.notification-stat {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.notification-stat.new {
+    color: var(--primary-color);
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.notification-stat.read {
+    color: var(--text-secondary);
+    background-color: #f0f0f0;
+}
+
+.notification-stat.total {
+    grid-column: span 2;
+    color: var(--info-color);
+    background-color: rgba(13, 202, 240, 0.1);
+}
+
+.notification-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.notification-label {
+    font-size: 0.8rem;
+}
+
+.notification-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background-color: #f9f9f9;
+}
+
+.notification-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    border: none;
+    background: none;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.notification-tab.active {
+    color: var(--primary-color);
+    box-shadow: inset 0 -2px 0 var(--primary-color);
+}
+
+.notification-list {
+    overflow: hidden;
+}
+
+.notification-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    transition: background-color var(--transition-speed);
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background-color: #f9f9f9;
+}
+
+.notification-item.unread {
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 15px;
+    color: white;
+    background-color: var(--primary-color);
+}
+
+.notification-icon.document {
+    background-color: #8e44ad;
+}
+
+.notification-icon.salary {
+    background-color: #2ecc71;
+}
+
+.notification-icon.attendance {
+    background-color: #f39c12;
+}
+
+.notification-icon.fee {
+    background-color: #e74c3c;
+}
+
+.notification-icon.system {
+    background-color: #3498db;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.notification-message {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #9e9e9e;
+}
+
+.notification-time {
+    margin-left: 10px;
+}
+
+.notification-type-badge {
+    padding: 2px 6px;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+    font-size: 0.75rem;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.notification-action {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: none;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.notification-action:hover {
+    background-color: #f0f0f0;
+    color: var(--primary-color);
+}
+
+.notification-action.delete:hover {
+    color: var(--danger-color);
+}
+
+.pagination-container {
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.mobile-pagination {
+    display: flex;
+    justify-content: center;
+}
+
+.mobile-pagination-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    margin: 0 5px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    color: var(--text-secondary);
+}
+
+.mobile-pagination-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.empty-notifications {
+    color: var(--text-secondary);
+}
+
+.mobile-btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+.mobile-card-title .notification-actions {
+    margin-right: auto;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// تعليم الإشعار كمقروء
+function markAsRead(id) {
+    fetch('/mobile/api/notifications/' + id + '/read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // تحديث واجهة المستخدم
+            const notification = document.querySelector(`.notification-item[data-id="${id}"]`);
+            notification.classList.remove('unread');
+            notification.classList.add('read');
+            
+            // تحديث زر الإشعار
+            const actionBtn = notification.querySelector('.notification-action i');
+            actionBtn.classList.remove('fa-envelope');
+            actionBtn.classList.add('fa-envelope-open');
+            
+            // تحديث الإحصائيات
+            updateStats();
+        }
+    })
+    .catch(error => {
+        console.error('خطأ:', error);
+    });
+}
+
+// تعليم جميع الإشعارات كمقروءة
+function markAllAsRead() {
+    fetch('/mobile/api/notifications/read-all', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // تحديث واجهة المستخدم
+            const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+            unreadNotifications.forEach(notification => {
+                notification.classList.remove('unread');
+                notification.classList.add('read');
+                
+                // تحديث زر الإشعار
+                const actionBtn = notification.querySelector('.notification-action i');
+                actionBtn.classList.remove('fa-envelope');
+                actionBtn.classList.add('fa-envelope-open');
+            });
+            
+            // تحديث الإحصائيات
+            updateStats();
+        }
+    })
+    .catch(error => {
+        console.error('خطأ:', error);
+    });
+}
+
+// حذف إشعار
+function deleteNotification(id) {
+    if (confirm('هل تريد حذف هذا الإشعار؟')) {
+        fetch('/mobile/api/notifications/' + id, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // حذف الإشعار من واجهة المستخدم
+                const notification = document.querySelector(`.notification-item[data-id="${id}"]`);
+                notification.style.height = notification.offsetHeight + 'px';
+                notification.style.height = '0';
+                notification.style.padding = '0';
+                notification.style.overflow = 'hidden';
+                
+                setTimeout(() => {
+                    notification.remove();
+                    
+                    // التحقق مما إذا كانت القائمة فارغة
+                    const notificationList = document.querySelector('.notification-list');
+                    if (notificationList.children.length === 0) {
+                        location.reload(); // إعادة تحميل الصفحة لإظهار رسالة "لا توجد إشعارات"
+                    } else {
+                        // تحديث الإحصائيات
+                        updateStats();
+                    }
+                }, 300);
+            }
+        })
+        .catch(error => {
+            console.error('خطأ:', error);
+        });
+    }
+}
+
+// عرض تفاصيل الإشعار
+function viewNotification(id) {
+    const notification = document.querySelector(`.notification-item[data-id="${id}"]`);
+    const type = notification.dataset.type;
+    
+    // تعليم الإشعار كمقروء إذا لم يكن مقروءاً بالفعل
+    if (notification.classList.contains('unread')) {
+        markAsRead(id);
+    }
+    
+    // توجيه المستخدم إلى الصفحة المناسبة حسب نوع الإشعار
+    switch (type) {
+        case 'document':
+            // إعادة توجيه إلى صفحة الوثيقة
+            // window.location.href = `/mobile/documents/view/${documentId}`;
+            break;
+        case 'salary':
+            // إعادة توجيه إلى صفحة الراتب
+            // window.location.href = `/mobile/salaries/view/${salaryId}`;
+            break;
+        case 'attendance':
+            // إعادة توجيه إلى صفحة الحضور
+            // window.location.href = `/mobile/attendance/view/${attendanceId}`;
+            break;
+        case 'fee':
+            // إعادة توجيه إلى صفحة الرسوم
+            // window.location.href = `/mobile/fees/view/${feeId}`;
+            break;
+        default:
+            // لا شيء
+            break;
+    }
+}
+
+// تحديث إحصائيات الإشعارات
+function updateStats() {
+    const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+    const readCount = document.querySelectorAll('.notification-item.read').length;
+    const totalCount = unreadCount + readCount;
+    
+    // تحديث العناصر في واجهة المستخدم
+    document.querySelector('.notification-stat.new .notification-value').textContent = unreadCount;
+    document.querySelector('.notification-stat.read .notification-value').textContent = readCount;
+    document.querySelector('.notification-stat.total .notification-value').textContent = totalCount;
+}
+
+// فلترة الإشعارات
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.notification-tab');
+    const notifications = document.querySelectorAll('.notification-item');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // إزالة الفئة النشطة من جميع علامات التبويب
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            // إضافة الفئة النشطة إلى علامة التبويب المحددة
+            this.classList.add('active');
+            
+            // الحصول على فلتر
+            const filter = this.dataset.filter;
+            
+            // تطبيق الفلتر
+            notifications.forEach(notification => {
+                if (filter === 'all') {
+                    notification.style.display = 'flex';
+                } else if (filter === 'unread' && notification.classList.contains('unread')) {
+                    notification.style.display = 'flex';
+                } else if (filter === 'read' && notification.classList.contains('read')) {
+                    notification.style.display = 'flex';
+                } else {
+                    notification.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

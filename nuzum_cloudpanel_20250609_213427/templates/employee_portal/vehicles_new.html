@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السيارات المخصصة - {{ employee.name }} - نُظم</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .vehicle-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            color: #212529;
+        }
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+        }
+        .vehicle-type-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .driver-badge {
+            background: linear-gradient(45deg, #27ae60, #219a52);
+            color: white;
+        }
+        .rental-badge {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+        .project-badge {
+            background: linear-gradient(45deg, #8e44ad, #7d3c98);
+            color: white;
+        }
+        .vehicle-info {
+            color: #495057;
+        }
+        .vehicle-info strong {
+            color: #212529;
+        }
+        .handover-forms {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .handover-forms h6 {
+            color: #495057;
+            margin-bottom: 0.75rem;
+        }
+        .handover-btn {
+            margin: 0.25rem;
+            font-size: 0.85rem;
+        }
+        .delivery-btn {
+            background: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        .delivery-btn:hover {
+            background: #218838;
+            border-color: #1e7e34;
+            color: white;
+        }
+        .return-btn {
+            background: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        .return-btn:hover {
+            background: #e0a800;
+            border-color: #d39e00;
+            color: #212529;
+        }
+        .no-handovers {
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-car ms-2"></i>السيارات المخصصة</h1>
+                    <p class="mb-0">عرض جميع السيارات المخصصة للموظف {{ employee.name }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('employee_portal.dashboard') }}" class="btn btn-light">
+                        <i class="fas fa-arrow-right ms-2"></i>العودة للوحة المعلومات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- السيارات كسائق حالي -->
+        {% if current_driver_vehicles %}
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-4 text-dark">
+                    <i class="fas fa-steering-wheel ms-2"></i>السيارات المخصصة كسائق
+                </h3>
+            </div>
+            {% for vehicle in current_driver_vehicles %}
+            <div class="col-lg-6 mb-4">
+                <div class="vehicle-card position-relative">
+                    <div class="vehicle-type-badge driver-badge">سائق مخصص</div>
+                    <h4 class="text-dark">{{ vehicle.make }} {{ vehicle.model }}</h4>
+                    <div class="row mt-3 vehicle-info">
+                        <div class="col-6">
+                            <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
+                            <p><strong>سنة الصنع:</strong> {{ vehicle.year or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>اللون:</strong> {{ vehicle.color or 'غير محدد' }}</p>
+                            <p><strong>الحالة:</strong> 
+                                {% if vehicle.status == 'available' %}
+                                    <span class="badge bg-success">متاح</span>
+                                {% elif vehicle.status == 'rented' %}
+                                    <span class="badge bg-warning">مؤجر</span>
+                                {% elif vehicle.status == 'in_project' %}
+                                    <span class="badge bg-info">في مشروع</span>
+                                {% elif vehicle.status == 'in_workshop' %}
+                                    <span class="badge bg-danger">في الورشة</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if vehicle.notes %}
+                    <div class="mt-3 vehicle-info">
+                        <p><strong>ملاحظات:</strong> {{ vehicle.notes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- النماذج الإلكترونية -->
+                    {% if vehicle.handovers %}
+                    <div class="handover-forms">
+                        <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for handover in vehicle.handovers %}
+                            <a href="{{ url_for('employee_portal.view_handover', handover_id=handover.id) }}" 
+                               class="btn btn-sm handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
+                               title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
+                                <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
+                                {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }}
+                                <small class="d-block">{{ handover.handover_date.strftime('%Y-%m-%d') }}</small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="handover-forms">
+                        <p class="no-handovers mb-0">لا توجد نماذج إلكترونية متاحة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- السيارات المؤجرة -->
+        {% if rented_vehicles %}
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-4 text-dark">
+                    <i class="fas fa-calendar-alt ms-2"></i>السيارات المؤجرة
+                </h3>
+            </div>
+            {% for vehicle, rental in rented_vehicles %}
+            <div class="col-lg-6 mb-4">
+                <div class="vehicle-card position-relative">
+                    <div class="vehicle-type-badge rental-badge">إيجار</div>
+                    <h4 class="text-dark">{{ vehicle.make }} {{ vehicle.model }}</h4>
+                    <div class="row mt-3 vehicle-info">
+                        <div class="col-6">
+                            <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
+                            <p><strong>تاريخ البداية:</strong> {{ rental.start_date.strftime('%Y-%m-%d') if rental.start_date else 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>تاريخ الانتهاء:</strong> {{ rental.end_date.strftime('%Y-%m-%d') if rental.end_date else 'غير محدد' }}</p>
+                            <p><strong>التكلفة الشهرية:</strong> {{ "{:,.0f}".format(rental.monthly_rate) if rental.monthly_rate else '0' }} ريال</p>
+                        </div>
+                    </div>
+                    {% if rental.notes %}
+                    <div class="mt-3 vehicle-info">
+                        <p><strong>ملاحظات الإيجار:</strong> {{ rental.notes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- النماذج الإلكترونية -->
+                    {% if vehicle.handovers %}
+                    <div class="handover-forms">
+                        <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for handover in vehicle.handovers %}
+                            <a href="{{ url_for('employee_portal.view_handover', handover_id=handover.id) }}" 
+                               class="btn btn-sm handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
+                               title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
+                                <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
+                                {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }}
+                                <small class="d-block">{{ handover.handover_date.strftime('%Y-%m-%d') }}</small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="handover-forms">
+                        <p class="no-handovers mb-0">لا توجد نماذج إلكترونية متاحة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- السيارات في المشاريع -->
+        {% if project_vehicles %}
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-4 text-dark">
+                    <i class="fas fa-project-diagram ms-2"></i>السيارات في المشاريع
+                </h3>
+            </div>
+            {% for vehicle, project in project_vehicles %}
+            <div class="col-lg-6 mb-4">
+                <div class="vehicle-card position-relative">
+                    <div class="vehicle-type-badge project-badge">مشروع</div>
+                    <h4 class="text-dark">{{ vehicle.make }} {{ vehicle.model }}</h4>
+                    <div class="row mt-3 vehicle-info">
+                        <div class="col-6">
+                            <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
+                            <p><strong>اسم المشروع:</strong> {{ project.project_name or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>تاريخ البداية:</strong> {{ project.start_date.strftime('%Y-%m-%d') if project.start_date else 'غير محدد' }}</p>
+                            <p><strong>تاريخ الانتهاء:</strong> {{ project.end_date.strftime('%Y-%m-%d') if project.end_date else 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                    {% if project.description %}
+                    <div class="mt-3 vehicle-info">
+                        <p><strong>وصف المشروع:</strong> {{ project.description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- النماذج الإلكترونية -->
+                    {% if vehicle.handovers %}
+                    <div class="handover-forms">
+                        <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for handover in vehicle.handovers %}
+                            <a href="{{ url_for('employee_portal.view_handover', handover_id=handover.id) }}" 
+                               class="btn btn-sm handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
+                               title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
+                                <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
+                                {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }}
+                                <small class="d-block">{{ handover.handover_date.strftime('%Y-%m-%d') }}</small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="handover-forms">
+                        <p class="no-handovers mb-0">لا توجد نماذج إلكترونية متاحة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- رسالة في حالة عدم وجود سيارات -->
+        {% if not current_driver_vehicles and not rented_vehicles and not project_vehicles %}
+        <div class="row">
+            <div class="col-12">
+                <div class="vehicle-card text-center">
+                    <i class="fas fa-car fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">لا توجد سيارات مخصصة</h4>
+                    <p class="text-muted">لم يتم تخصيص أي سيارات لك حالياً</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

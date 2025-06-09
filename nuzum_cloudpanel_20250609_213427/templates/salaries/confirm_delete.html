@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تأكيد حذف سجل راتب</h1>
+        <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة لصفحة التعديل
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">تأكيد الحذف</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>تنبيه!</strong> عملية الحذف هذه لا يمكن التراجع عنها.
+                    </div>
+                    
+                    <h4 class="text-center my-4">هل أنت متأكد من رغبتك في حذف سجل راتب:</h4>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="fw-bold">اسم الموظف:</h6>
+                                    <p class="fs-5">{{ salary.employee.name }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="fw-bold">رقم الموظف:</h6>
+                                    <p>{{ salary.employee.employee_id }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="fw-bold">الشهر:</h6>
+                                    <p>{{ salary.month }}</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="fw-bold">السنة:</h6>
+                                    <p>{{ salary.year }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <h6 class="fw-bold">صافي الراتب:</h6>
+                                    <p class="fs-4 fw-bold">{{ salary.net_salary }} ر.س</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <form action="{{ url_for('salaries.delete', id=salary.id) }}" method="post">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-trash me-1"></i> تأكيد الحذف
+                            </button>
+                        </form>
+                        <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times me-1"></i> إلغاء
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
