@@ -216,7 +216,7 @@ def vehicle_handover_pdf(handover_id):
     إنشاء نموذج تسليم/استلام سيارة كملف PDF
     """
     from models import VehicleHandover, Vehicle
-    from utils.simple_pdf_generator import create_vehicle_handover_pdf
+    from utils.enhanced_arabic_handover_pdf import create_vehicle_handover_pdf
     
     # الحصول على بيانات التسليم/الاستلام الحقيقية
     handover = VehicleHandover.query.get_or_404(handover_id)
