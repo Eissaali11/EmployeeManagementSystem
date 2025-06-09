@@ -166,7 +166,7 @@ def generate_handover_report_pdf(vehicle, handover_record):
             <div class="electronic-form-link">
                 <p><strong>رابط النموذج الإلكتروني:</strong></p>
                 <p class="link-description">{('تسليم' if handover_record.handover_type == 'delivery' else 'استلام')} السيارة {handover_record.vehicle.plate_number if handover_record.vehicle else 'غير محدد'} {'من' if handover_record.handover_type == 'delivery' else 'إلى'} {getattr(handover_record, 'person_name', 'غير محدد')}</p>
-                <p class="link-text">https://d72f2aef-918c-4148-9723-15870f8c7cf6-00-2c1ygyxvqoldk.riker.replit.dev/vehicles/handover/{handover_record.id}/view/public</p>
+                <p class="link-text">{getattr(handover_record, 'form_link', f'https://d72f2aef-918c-4148-9723-15870f8c7cf6-00-2c1ygyxvqoldk.riker.replit.dev/vehicles/handover/{handover_record.id}/view/public')}</p>
             </div>
         </div>
     </body>
