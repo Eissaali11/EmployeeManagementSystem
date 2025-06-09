@@ -160,8 +160,8 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-3 text-center">
-                    {% if employee.photo %}
-                        <img src="{{ url_for('static', filename='uploads/employees/' + employee.photo) }}" 
+                    {% if employee.profile_image %}
+                        <img src="{{ url_for('static', filename='uploads/employees/' + employee.profile_image) }}" 
                              alt="صورة {{ employee.name }}" class="employee-photo">
                     {% else %}
                         <div class="default-photo">
@@ -171,7 +171,7 @@
                 </div>
                 <div class="col-md-9 employee-info">
                     <h1>{{ employee.name }}</h1>
-                    <p><i class="fas fa-id-badge ms-2"></i>رقم العمل: {{ employee.employee_number }}</p>
+                    <p><i class="fas fa-id-badge ms-2"></i>رقم العمل: {{ employee.employee_id }}</p>
                     <p><i class="fas fa-id-card ms-2"></i>رقم الهوية: {{ employee.national_id }}</p>
                     <p><i class="fas fa-briefcase ms-2"></i>المسمى الوظيفي: {{ employee.job_title or 'غير محدد' }}</p>
                     <p><i class="fas fa-building ms-2"></i>القسم: {{ employee.department.name if employee.department else 'غير محدد' }}</p>
@@ -237,8 +237,8 @@
                     <h4 class="mb-3">
                         <i class="fas fa-id-card ms-2"></i>صورة الهوية الوطنية
                     </h4>
-                    {% if employee.id_photo %}
-                        <img src="{{ url_for('static', filename='uploads/employees/ids/' + employee.id_photo) }}" 
+                    {% if employee.national_id_image %}
+                        <img src="{{ url_for('static', filename='uploads/employees/' + employee.national_id_image) }}" 
                              alt="صورة هوية {{ employee.name }}" class="id-photo">
                     {% else %}
                         <div class="default-id-photo">
