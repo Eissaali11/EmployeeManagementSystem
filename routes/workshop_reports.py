@@ -2,14 +2,14 @@
 وحدة مخصصة لإنشاء تقارير الورشة بصيغة PDF
 """
 from datetime import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file, make_response
 from flask_login import login_required, current_user
 import io
 import os
 
 from app import db
 from models import Vehicle, VehicleWorkshop, SystemAudit
-from utils.perfect_arabic_pdf import generate_workshop_pdf
+from utils.simple_html_pdf import generate_workshop_pdf
 
 # إنشاء blueprint
 workshop_reports_bp = Blueprint('workshop_reports', __name__, url_prefix='/workshop-reports')
@@ -32,23 +32,17 @@ def vehicle_workshop_pdf(id):
             flash('لا توجد سجلات ورشة لهذه المركبة!', 'warning')
             return redirect(url_for('vehicles.view', id=id))
         
-        # إنشاء تقرير PDF باستخدام النموذج البسيط
-        pdf_buffer = generate_workshop_pdf(vehicle, workshop_records)
+        # إنشاء تقرير HTML قابل للطباعة
+        html_content = generate_workshop_pdf(vehicle, workshop_records)
         
-        # اسم الملف
-        filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d')}.pdf"
-        
-        # تسجيل نشاط بسيط في السجل بدون استخدام SystemAudit
+        # تسجيل نشاط بسيط في السجل
         import logging
-        logging.info(f'تم تصدير تقرير الورشة للمركبة {vehicle.plate_number} بواسطة المستخدم {current_user.email if current_user.is_authenticated else "ضيف"}')
+        logging.info(f'تم عرض تقرير الورشة للمركبة {vehicle.plate_number} بواسطة المستخدم {current_user.email if current_user.is_authenticated else "ضيف"}')
         
-        # إرسال الملف
-        return send_file(
-            pdf_buffer,
-            download_name=filename,
-            as_attachment=True,
-            mimetype='application/pdf'
-        )
+        # إرجاع صفحة HTML مع ترميز UTF-8
+        response = make_response(html_content.decode('utf-8'))
+        response.headers['Content-Type'] = 'text/html; charset=utf-8'
+        return response
     
     except Exception as e:
         import logging
