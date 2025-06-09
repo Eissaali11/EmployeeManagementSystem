@@ -79,18 +79,31 @@
                                         </td>
                                         <td class="text-center">
                                             {% if data.latest_delivery %}
-                                                <a href="{{ url_for('vehicles.view_handover_form', handover_id=data.latest_delivery.id) }}" 
-                                                   class="btn btn-outline-primary btn-sm" 
-                                                   title="عرض نموذج التسليم">
-                                                    <i class="fas fa-file-alt"></i>
-                                                </a>
-                                            {% endif %}
-                                            {% if data.latest_return %}
-                                                <a href="{{ url_for('vehicles.view_handover_form', handover_id=data.latest_return.id) }}" 
-                                                   class="btn btn-outline-success btn-sm ms-1" 
-                                                   title="عرض نموذج الاستلام">
-                                                    <i class="fas fa-file-download"></i>
-                                                </a>
+                                                <div class="d-flex flex-column gap-1">
+                                                    <a href="{{ url_for('employee_portal.view_handover', handover_id=data.latest_delivery.id) }}" 
+                                                       class="btn btn-light border btn-sm text-primary fw-bold" 
+                                                       target="_blank"
+                                                       style="border-radius: 20px; padding: 8px 16px;"
+                                                       title="فتح النموذج الإلكتروني للتسليم">
+                                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                                        فتح النموذج الإلكتروني
+                                                    </a>
+                                                    <small class="text-muted">تسليم</small>
+                                                </div>
+                                            {% elif data.latest_return %}
+                                                <div class="d-flex flex-column gap-1">
+                                                    <a href="{{ url_for('employee_portal.view_handover', handover_id=data.latest_return.id) }}" 
+                                                       class="btn btn-light border btn-sm text-success fw-bold" 
+                                                       target="_blank"
+                                                       style="border-radius: 20px; padding: 8px 16px;"
+                                                       title="فتح النموذج الإلكتروني للاستلام">
+                                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                                        فتح النموذج الإلكتروني
+                                                    </a>
+                                                    <small class="text-muted">استلام</small>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد نموذج</span>
                                             {% endif %}
                                         </td>
                                         <td>
