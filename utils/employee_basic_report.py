@@ -16,13 +16,57 @@ from PIL import Image, ImageDraw
 class EmployeeBasicReportPDF(FPDF):
     def __init__(self):
         super().__init__()
-        self.font_path = '/home/runner/workspace/static/fonts'
+        # مسار الخطوط يتكيف مع البيئة
+        possible_font_paths = [
+            'fonts',  # للبيئة المحلية والخادم
+            'static/fonts',  # مسار بديل
+            '/home/runner/workspace/static/fonts',  # للـ Replit
+            os.path.join(os.getcwd(), 'fonts'),  # مسار نسبي
+            os.path.join(os.getcwd(), 'static', 'fonts')  # مسار نسبي آخر
+        ]
+        
+        self.font_path = None
+        for path in possible_font_paths:
+            if os.path.exists(path):
+                self.font_path = path
+                break
+        
+        # إذا لم نجد الخطوط، استخدم Cairo.ttf من المجلد الجذر
+        if not self.font_path:
+            if os.path.exists('Cairo.ttf'):
+                self.font_path = '.'
+            else:
+                self.font_path = 'fonts'  # مسار افتراضي
         
     def header(self):
         """رأس الصفحة"""
         # إضافة الخط العربي
-        self.add_font('Arabic', '', os.path.join(self.font_path, 'Amiri-Regular.ttf'), uni=True)
-        self.add_font('Arabic', 'B', os.path.join(self.font_path, 'Amiri-Bold.ttf'), uni=True)
+        try:
+            if self.font_path:
+                # محاولة استخدام خطوط Amiri أولاً
+                amiri_regular = os.path.join(self.font_path, 'Amiri-Regular.ttf')
+                amiri_bold = os.path.join(self.font_path, 'Amiri-Bold.ttf')
+                
+                if os.path.exists(amiri_regular) and os.path.exists(amiri_bold):
+                    self.add_font('Arabic', '', amiri_regular, uni=True)
+                    self.add_font('Arabic', 'B', amiri_bold, uni=True)
+                else:
+                    # استخدام Cairo.ttf كبديل
+                    cairo_font = os.path.join(self.font_path, 'Cairo.ttf')
+                    if os.path.exists(cairo_font):
+                        self.add_font('Arabic', '', cairo_font, uni=True)
+                        self.add_font('Arabic', 'B', cairo_font, uni=True)
+                    elif os.path.exists('Cairo.ttf'):
+                        self.add_font('Arabic', '', 'Cairo.ttf', uni=True)
+                        self.add_font('Arabic', 'B', 'Cairo.ttf', uni=True)
+                    else:
+                        # محاولة العثور على خط عربي في النظام
+                        self.set_font('Arial', 'B', 20)
+                        return
+        except Exception as e:
+            print(f"خطأ في تحميل الخط: {e}")
+            self.set_font('Arial', 'B', 20)
+            return
         
         self.set_font('Arabic', 'B', 20)
         # العنوان الرئيسي
