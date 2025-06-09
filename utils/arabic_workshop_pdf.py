@@ -14,12 +14,8 @@ import os
 from datetime import datetime
 
 # مكتبات دعم العربية
-try:
-    import arabic_reshaper
-    from bidi.algorithm import get_display
-    ARABIC_SUPPORT = True
-except ImportError:
-    ARABIC_SUPPORT = False
+import arabic_reshaper
+from bidi.algorithm import get_display
 
 def format_arabic_text(text):
     """تنسيق النص العربي للعرض الصحيح في PDF"""
@@ -28,16 +24,15 @@ def format_arabic_text(text):
     
     text_str = str(text)
     
-    if ARABIC_SUPPORT:
-        try:
-            reshaped_text = arabic_reshaper.reshape(text_str)
-            bidi_text = get_display(reshaped_text)
-            return bidi_text
-        except Exception:
-            pass
-    
-    # العودة للنص الأصلي إذا فشل المعالج العربي
-    return text_str
+    try:
+        # إعادة تشكيل النص العربي
+        reshaped_text = arabic_reshaper.reshape(text_str)
+        # تطبيق خوارزمية الاتجاه الثنائي
+        bidi_text = get_display(reshaped_text)
+        return bidi_text
+    except Exception as e:
+        print(f"خطأ في معالجة النص العربي: {e}")
+        return text_str
 
 def generate_workshop_pdf(vehicle, workshop_records):
     """
