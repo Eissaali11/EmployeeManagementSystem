@@ -45,7 +45,7 @@ def generate_handover_report_pdf(vehicle, handover_record):
             </div>
             <div class="info-row">
                 <span class="label">نوع العملية:</span>
-                <span class="value operation-{handover_record.operation_type}">{operation_type}</span>
+                <span class="value operation-{handover_record.handover_type}">{operation_type}</span>
             </div>
         </div>
 
@@ -96,7 +96,7 @@ def generate_handover_report_pdf(vehicle, handover_record):
                 </tr>
                 <tr>
                     <td class="label">قراءة العداد:</td>
-                    <td class="value">{handover_record.odometer_reading or 'غير محدد'} كم</td>
+                    <td class="value">{handover_record.mileage or 'غير محدد'} كم</td>
                 </tr>
                 <tr>
                     <td class="label">مستوى الوقود:</td>
@@ -112,11 +112,11 @@ def generate_handover_report_pdf(vehicle, handover_record):
     
     # إضافة معدات المركبة
     equipment_items = [
-        ('spare_tire', 'الإطار الاحتياطي'),
-        ('fire_extinguisher', 'طفاية الحريق'),
-        ('first_aid_kit', 'حقيبة الإسعافات الأولية'),
-        ('warning_triangle', 'مثلث التحذير'),
-        ('tool_kit', 'عدة الأدوات')
+        ('has_spare_tire', 'الإطار الاحتياطي'),
+        ('has_fire_extinguisher', 'طفاية الحريق'),
+        ('has_first_aid_kit', 'حقيبة الإسعافات الأولية'),
+        ('has_warning_triangle', 'مثلث التحذير'),
+        ('has_tools', 'عدة الأدوات')
     ]
     
     for field, label in equipment_items:
