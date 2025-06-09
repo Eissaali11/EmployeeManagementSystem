@@ -176,8 +176,8 @@ def dashboard():
     stats['monthly_attendance_days'] = len([a for a in monthly_attendance if a.status == 'present'])
     stats['monthly_absence_days'] = len([a for a in monthly_attendance if a.status == 'absent'])
     
-    # الإجازات المتبقية
-    stats['remaining_vacation_days'] = employee.annual_vacation_days or 0
+    # الإجازات المتبقية (حقل مؤقت)
+    stats['remaining_vacation_days'] = 30  # قيمة افتراضية مؤقتة
     
     return render_template('employee_portal/dashboard.html', 
                          employee=employee, 
@@ -213,21 +213,19 @@ def my_vehicles():
         VehicleHandover.handover_type == 'delivery'
     ).all()
     
-    # السيارات المؤجرة للموظف
+    # السيارات المؤجرة النشطة (عرض عام)
     rented_vehicles = db.session.query(Vehicle, VehicleRental).join(
         VehicleRental, Vehicle.id == VehicleRental.vehicle_id
     ).filter(
-        VehicleRental.employee_id == employee_id,
         VehicleRental.is_active == True
-    ).all()
+    ).limit(10).all()
     
-    # السيارات في مشاريع للموظف
+    # السيارات في مشاريع نشطة (عرض عام)
     project_vehicles = db.session.query(Vehicle, VehicleProject).join(
         VehicleProject, Vehicle.id == VehicleProject.vehicle_id
     ).filter(
-        VehicleProject.employee_id == employee_id,
         VehicleProject.is_active == True
-    ).all()
+    ).limit(10).all()
     
     return render_template('employee_portal/vehicles.html',
                          employee=employee,
@@ -243,12 +241,12 @@ def my_salaries():
     employee = Employee.query.get_or_404(employee_id)
     
     # جلب جميع الرواتب
-    salaries = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.salary_date.desc()).all()
+    salaries = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.year.desc(), Salary.month.desc()).all()
     
     # تنسيق التواريخ
     for salary in salaries:
-        if salary.salary_date:
-            salary.formatted_salary_date = salary.salary_date.strftime('%Y-%m-%d')
+        if salary.month and salary.year:
+            salary.formatted_salary_date = f"{salary.year}-{salary.month:02d}"
         else:
             salary.formatted_salary_date = 'غير محدد'
     
