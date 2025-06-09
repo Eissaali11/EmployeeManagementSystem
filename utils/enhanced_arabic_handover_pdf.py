@@ -116,10 +116,10 @@ def create_vehicle_handover_pdf(handover_data):
         title_width = c.stringWidth(title, "Helvetica-Bold", 18)
         c.drawString((width - title_width)/2, height - 60, title)
         
-        # صندوق معلومات الوثيقة الموسع
+        # صندوق معلومات الوثيقة في المنتصف العلوي
         c.setStrokeColor(primary_color)
         c.setLineWidth(2)
-        c.rect(width - 280, height - 200, 230, 160)
+        c.rect(50, height - 200, 300, 120)
         
         # معلومات الوثيقة
         y_position = height - 50
@@ -168,23 +168,23 @@ def create_vehicle_handover_pdf(handover_data):
         c.setFont("Helvetica", 8)
         clickable_url = None
         for i, info in enumerate(doc_info):
-            y_pos = height - 70 - (i * 11)
+            y_pos = height - 90 - (i * 12)
             if info.startswith("رابط النموذج الإلكتروني:"):  # تنسيق غامق للعنوان
                 c.setFont("Helvetica-Bold", 8)
-                c.drawString(width - 275, y_pos, info)
+                c.drawString(60, y_pos, info)
                 c.setFont("Helvetica", 8)
             elif info.strip():  # تجنب طباعة الأسطر الفارغة
                 # إذا كان السطر يحتوي على رابط، اجعله قابل للنقر
                 if info.strip().startswith('https://'):
                     clickable_url = info.strip()
                     c.setFillColor(colors.blue)  # لون أزرق للرابط
-                    c.drawString(width - 275, y_pos, info)
+                    c.drawString(60, y_pos, info)
                     # إضافة منطقة قابلة للنقر
                     text_width = c.stringWidth(info, "Helvetica", 8)
-                    c.linkURL(clickable_url, (width - 275, y_pos - 2, width - 275 + text_width, y_pos + 10))
+                    c.linkURL(clickable_url, (60, y_pos - 2, 60 + text_width, y_pos + 10))
                     c.setFillColor(colors.black)  # إعادة اللون الأسود
                 else:
-                    c.drawString(width - 275, y_pos, info)
+                    c.drawString(60, y_pos, info)
         
         # خط فاصل
         y_position = height - 170
