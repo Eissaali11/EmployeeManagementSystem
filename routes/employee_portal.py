@@ -68,7 +68,7 @@ def employee_login():
         # تسجيل الدخول في الجلسة
         session['employee_id'] = employee.id
         session['employee_name'] = employee.name
-        session['employee_number'] = employee.employee_number
+        session['employee_number'] = employee.employee_id
         session['employee_login_time'] = datetime.now().isoformat()
         
         # تسجيل عملية الدخول
