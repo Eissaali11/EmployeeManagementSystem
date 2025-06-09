@@ -126,31 +126,38 @@ def create_vehicle_handover_pdf(handover_data):
         c.setFont("Helvetica", 10)
         c.setFillColor(colors.black)
         
-        # رابط النموذج الإلكتروني المحدد
-        electronic_form_url = "https://acrobat.adobe.com/id/urn:aaid:sc:AP:e172b7fe-9bbc-4082-bc93-0748a3b391a4"
+        # الحصول على رابط النموذج الإلكتروني من البيانات
+        form_link = getattr(handover_data, 'form_link', None)
         
         # الحصول على اسم الشخص ورقم المركبة
-        person_name = getattr(handover_data, 'person_name', 'محمد.عمران')
-        vehicle_number = getattr(handover_data.vehicle_rel if hasattr(handover_data, 'vehicle_rel') else handover_data, 'plate_number', '1493')
+        person_name = getattr(handover_data, 'person_name', 'غير محدد')
+        vehicle_number = getattr(handover_data.vehicle_rel if hasattr(handover_data, 'vehicle_rel') else handover_data, 'plate_number', 'غير محدد')
         
         doc_info = [
             f"Document ID: {getattr(handover_data, 'id', 85)}",
             f"Date: {datetime.now().strftime('%Y-%m-%d')}",
             f"Time: {datetime.now().strftime('%H:%M')}",
             "Operation: Return",
-            f"Vehicle: {vehicle_number} - {person_name}",
-            "رابط النموذج الإلكتروني:",
-            "  acrobat.adobe.com/id/urn:aaid:sc:",
-            "  AP:e172b7fe-9bbc-4082-bc93-0748a3b391a4"
+            f"Vehicle: {vehicle_number} - {person_name}"
         ]
+        
+        # إضافة رابط النموذج الإلكتروني إذا كان موجوداً
+        if form_link and form_link.strip():
+            doc_info.extend([
+                "رابط النموذج الإلكتروني:",
+                f"  {form_link[:40]}",  # أول 40 حرف
+                f"  {form_link[40:]}" if len(form_link) > 40 else ""  # باقي الرابط إذا كان طويلاً
+            ])
+        else:
+            doc_info.append("رابط النموذج الإلكتروني: غير موجود")
         
         c.setFont("Helvetica", 8)
         for i, info in enumerate(doc_info):
-            if i == 5:  # "رابط النموذج الإلكتروني:" label
+            if info.startswith("رابط النموذج الإلكتروني:"):  # تنسيق غامق للعنوان
                 c.setFont("Helvetica-Bold", 8)
                 c.drawString(width - 245, height - 70 - (i * 12), info)
                 c.setFont("Helvetica", 8)
-            else:
+            elif info.strip():  # تجنب طباعة الأسطر الفارغة
                 c.drawString(width - 245, height - 70 - (i * 12), info)
         
         # خط فاصل
