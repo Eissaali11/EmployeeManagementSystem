@@ -52,31 +52,8 @@ def generate_workshop_pdf(vehicle, workshop_records):
     buffer = io.BytesIO()
     
     try:
-        # تسجيل الخطوط العربية
-        fonts_dir = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static").root_path, 'static', 'fonts')
-        logging.info(f"مسار الخطوط: {fonts_dir}")
-        
-        # تسجيل خط أميري للنصوص العربية
-        amiri_path = os.path.join(fonts_dir, 'Amiri-Regular.ttf')
-        amiri_bold_path = os.path.join(fonts_dir, 'Amiri-Bold.ttf')
-        
-        logging.info(f"مسار خط أميري: {amiri_path}")
-        logging.info(f"مسار خط أميري بولد: {amiri_bold_path}")
-        
-        # التحقق من وجود ملفات الخطوط
-        if not os.path.exists(amiri_path) or not os.path.exists(amiri_bold_path):
-            if not os.path.exists(amiri_path):
-                logging.error(f"لم يتم العثور على ملف الخط: {amiri_path}")
-            if not os.path.exists(amiri_bold_path):
-                logging.error(f"لم يتم العثور على ملف الخط: {amiri_bold_path}")
-            
-            logging.error("لا يمكن استخدام الخطوط، سيتم إيقاف إنشاء PDF")
-            return buffer
-        
-        # تسجيل الخطوط العربية
-        pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
-        pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
-        logging.info("تم تسجيل الخطوط بنجاح")
+        # إنشاء PDF بدون خطوط خارجية لتجنب مشاكل النشر
+        logging.info("إنشاء PDF باستخدام الخطوط الافتراضية")
         
         # إنشاء المستند
         doc = SimpleDocTemplate(
@@ -89,11 +66,11 @@ def generate_workshop_pdf(vehicle, workshop_records):
             title=arabic_text("تقرير سجلات الورشة")
         )
         
-        # تحضير أنماط النصوص
+        # تحضير أنماط النصوص بدون خطوط خارجية
         styles = getSampleStyleSheet()
         styles.add(ParagraphStyle(
             name='Arabic',
-            fontName='Amiri',
+            fontName='Helvetica',
             fontSize=12,
             alignment=1,  # وسط
             leading=16
@@ -101,7 +78,7 @@ def generate_workshop_pdf(vehicle, workshop_records):
         
         styles.add(ParagraphStyle(
             name='ArabicTitle',
-            fontName='Amiri-Bold',
+            fontName='Helvetica-Bold',
             fontSize=16,
             alignment=1,  # وسط
             leading=22,
@@ -110,7 +87,7 @@ def generate_workshop_pdf(vehicle, workshop_records):
         
         styles.add(ParagraphStyle(
             name='ArabicHeading',
-            fontName='Amiri-Bold',
+            fontName='Helvetica-Bold',
             fontSize=14,
             alignment=1,  # وسط
             leading=20,
@@ -193,13 +170,13 @@ def generate_workshop_pdf(vehicle, workshop_records):
                 # تنسيق الرأس
                 ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('FONT', (0, 0), (-1, 0), 'Amiri-Bold'),
+                ('FONT', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
                 ('TOPPADDING', (0, 0), (-1, 0), 6),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
                 
                 # تنسيق الخلايا
-                ('FONT', (0, 1), (-1, -1), 'Amiri'),
+                ('FONT', (0, 1), (-1, -1), 'Helvetica'),
                 ('FONTSIZE', (0, 1), (-1, -1), 9),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -240,8 +217,8 @@ def generate_workshop_pdf(vehicle, workshop_records):
             
             stats_table = Table(stats_data, colWidths=[100, 150])
             stats_table.setStyle(TableStyle([
-                ('FONT', (0, 0), (0, -1), 'Amiri-Bold'),
-                ('FONT', (1, 0), (1, -1), 'Amiri'),
+                ('FONT', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONT', (1, 0), (1, -1), 'Helvetica'),
                 ('ALIGN', (0, 0), (0, -1), 'LEFT'),
                 ('ALIGN', (1, 0), (1, -1), 'CENTER'),
                 ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
