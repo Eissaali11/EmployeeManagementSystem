@@ -130,20 +130,11 @@ def arabic_text(text):
             return text_str
         
         # معالجة النص العربي بالطريقة الصحيحة
-        # استخدام إعدادات محسنة لـ arabic_reshaper
-        configuration = {
-            'delete_harakat': False,  # عدم حذف التشكيل
-            'support_zwj': True,      # دعم حرف الوصل 
-            'use_unshaped_instead_of_isolated': False,
-            'shift_harakat_position': False,
-            'delete_tatweel': False
-        }
+        # إعادة تشكيل النص أولاً
+        reshaped_text = reshape(text_str)
         
-        # إعادة تشكيل النص مع الإعدادات المحسنة
-        reshaped_text = reshape(text_str, **configuration)
-        
-        # تطبيق خوارزمية البيدي للاتجاه الصحيح
-        bidi_text = get_display(reshaped_text, base_dir='R')  # R = Right-to-Left
+        # تطبيق خوارزمية البيدي للاتجاه الصحيح من اليمين لليسار
+        bidi_text = get_display(reshaped_text, base_dir='R')
         
         return bidi_text
         

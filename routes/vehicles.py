@@ -2612,7 +2612,7 @@ def export_workshop_to_pdf(id):
             return redirect(url_for('vehicles.view', id=id))
         
         # إنشاء تقرير PDF باستخدام المولد المحسن الجديد
-        from utils.improved_workshop_pdf import generate_workshop_report_pdf
+        from utils.weasyprint_workshop_pdf import generate_workshop_report_pdf
         pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
         
         # اسم الملف
