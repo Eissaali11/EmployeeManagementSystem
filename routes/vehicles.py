@@ -1923,8 +1923,8 @@ def handover_pdf(id):
     import io
     import os
     from datetime import datetime
-    # استخدام مكتبة PDF المبسطة الجديدة
-    from utils.simple_pdf_generator import create_vehicle_handover_pdf
+    # استخدام مولد PDF المحسن مع WeasyPrint
+    from utils.weasyprint_handover_pdf import generate_handover_report_pdf
     
     try:
         # التأكد من تحويل المعرف إلى عدد صحيح
@@ -1962,11 +1962,8 @@ def handover_pdf(id):
         if hasattr(handover, 'supervisor_name') and handover.supervisor_name:
             handover_data['supervisor_name'] = str(handover.supervisor_name)
         
-        # إنشاء ملف PDF باستخدام النموذج المحسن
-        # تمرير كائن التسليم الكامل مع العلاقات
-        handover.vehicle_rel = vehicle  # إضافة العلاقة المطلوبة
-        handover.id = id  # التأكد من وجود المعرف
-        pdf_buffer = create_vehicle_handover_pdf(handover)
+        # إنشاء ملف PDF باستخدام المولد المحسن
+        pdf_buffer = generate_handover_report_pdf(vehicle, handover)
         
         # تحديد اسم الملف
         filename = f"handover_form_{vehicle.plate_number}.pdf"
@@ -1987,16 +1984,14 @@ def handover_pdf(id):
 def handover_pdf_public(id):
     """إنشاء ملف PDF لنموذج تسليم/استلام - وصول مفتوح بدون تسجيل دخول"""
     try:
-        from utils.enhanced_arabic_handover_pdf import create_vehicle_handover_pdf
+        from utils.weasyprint_handover_pdf import generate_handover_report_pdf
         
         # البحث عن نموذج التسليم/الاستلام
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
         
-        # إنشاء ملف PDF باستخدام النموذج المحسن
-        handover.vehicle_rel = vehicle  # إضافة العلاقة المطلوبة
-        handover.id = id  # التأكد من وجود المعرف
-        pdf_buffer = create_vehicle_handover_pdf(handover)
+        # إنشاء ملف PDF باستخدام المولد المحسن
+        pdf_buffer = generate_handover_report_pdf(vehicle, handover)
         
         # تحديد اسم الملف
         filename = f"handover_form_{vehicle.plate_number}.pdf"
