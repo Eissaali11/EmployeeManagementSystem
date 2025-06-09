@@ -409,3 +409,21 @@ def attendance_chart_data(year):
         })
     
     return jsonify(monthly_data)
+
+@employee_portal_bp.route('/handover/<int:handover_id>/view')
+@employee_login_required
+def view_handover(handover_id):
+    """عرض النموذج الإلكتروني للموظف"""
+    employee_id = session.get('employee_id')
+    
+    # التحقق من أن النموذج خاص بالموظف المسجل دخول
+    handover = VehicleHandover.query.filter_by(
+        id=handover_id,
+        employee_id=employee_id
+    ).first_or_404()
+    
+    vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+    
+    return render_template('vehicles/handover_form_view.html', 
+                         handover=handover, 
+                         vehicle=vehicle)
