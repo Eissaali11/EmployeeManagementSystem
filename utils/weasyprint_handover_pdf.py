@@ -163,6 +163,10 @@ def generate_handover_report_pdf(vehicle, handover_record):
         <div class="footer">
             <p>نُظم - نظام إدارة المركبات المتقدم</p>
             <p>تم إنشاء هذه الوثيقة تلقائياً في {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <div class="electronic-form-link">
+                <p><strong>رابط النموذج الإلكتروني:</strong></p>
+                <p class="link-text">https://d72f2aef-918c-4148-9723-15870f8c7cf6-00-2c1ygyxvqoldk.riker.replit.dev/vehicles/handover/{handover_record.id}/pdf/public</p>
+            </div>
         </div>
     </body>
     </html>
@@ -420,6 +424,30 @@ def generate_handover_report_pdf(vehicle, handover_record):
     
     .footer p {
         margin: 5px 0;
+    }
+    
+    .electronic-form-link {
+        background-color: #34495e;
+        border-radius: 6px;
+        padding: 15px;
+        margin-top: 15px;
+        border: 1px solid #4a5f7a;
+    }
+    
+    .electronic-form-link p {
+        margin: 8px 0;
+        font-size: 11px;
+    }
+    
+    .link-text {
+        background-color: #ecf0f1;
+        color: #2c3e50;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        word-break: break-all;
+        font-size: 10px;
+        margin-top: 8px;
     }
     
     @page {
