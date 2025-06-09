@@ -207,21 +207,26 @@ def create_vehicle_handover_pdf(handover_data):
             ["Vehicle Condition", safe_arabic_text(str(handover_data.vehicle_condition) if handover_data.vehicle_condition else "Good")]
         ]
         
-        handover_table = Table(handover_details, colWidths=[2*inch, 3*inch])
+        handover_table = Table(handover_details, colWidths=[2.2*inch, 2.8*inch])
         handover_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.lightblue),
             ('BACKGROUND', (1, 0), (1, -1), colors.lightcyan),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
         
         table_width, table_height = handover_table.wrap(width, height)
-        y_position -= table_height + 20
-        handover_table.drawOn(c, 50, y_position)
+        y_position -= 30
+        handover_table.drawOn(c, 50, y_position - table_height)
+        y_position -= table_height + 30
         
         # قائمة تحقق المعدات
         y_position -= 50
@@ -286,18 +291,23 @@ def create_vehicle_handover_pdf(handover_data):
             [safe_arabic_text("التاريخ") + ": ___________", safe_arabic_text("التاريخ") + ": ___________"]
         ]
         
-        signature_table = Table(signature_data, colWidths=[2.5*inch, 2.5*inch])
+        signature_table = Table(signature_data, colWidths=[2.4*inch, 2.4*inch], rowHeights=[25, 50, 25])
         signature_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
         
         table_width, table_height = signature_table.wrap(width, height)
+        y_position -= 30
         signature_table.drawOn(c, 50, y_position - table_height)
         
         # تذييل الصفحة
