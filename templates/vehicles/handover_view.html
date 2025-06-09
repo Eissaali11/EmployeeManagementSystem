@@ -225,7 +225,7 @@
             نموذج {{ handover_type_name }} السيارة: {{ vehicle.plate_number }}
         </h3>
         <div>
-            <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" class="btn btn-danger btn-action">
+            <a href="{{ url_for('vehicles.handover_pdf_public', id=handover.id) }}" class="btn btn-danger btn-action">
                 <i class="fas fa-file-pdf ms-1"></i>
                 تصدير PDF
             </a>
@@ -517,7 +517,7 @@
             
             <!-- أزرار الإجراءات -->
             <div class="text-center mt-4">
-                <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" class="btn btn-danger btn-action">
+                <a href="{{ url_for('vehicles.handover_pdf_public', id=handover.id) }}" class="btn btn-danger btn-action">
                     <i class="fas fa-file-pdf ms-1"></i>
                     تصدير النموذج كملف PDF
                 </a>
