@@ -308,13 +308,13 @@ def create_vehicle_handover_pdf(handover_data):
         equipment_title = safe_arabic_text("معدات المركبة")
         c.drawString(50, y_position, equipment_title)
         
-        # المعدات مع حالة الموجودة/غير موجودة
+        # جلب قائمة معدات المركبة من البيانات الفعلية
         equipment_items = [
-            (safe_arabic_text("الإطار الاحتياطي"), getattr(handover_data, 'has_spare_tire', True)),
-            (safe_arabic_text("طفاية الحريق"), getattr(handover_data, 'has_fire_extinguisher', True)),
-            (safe_arabic_text("حقيبة الإسعافات الأولية"), getattr(handover_data, 'has_first_aid_kit', True)),
-            (safe_arabic_text("مثلث التحذير"), getattr(handover_data, 'has_warning_triangle', True)),
-            (safe_arabic_text("عدة الأدوات"), getattr(handover_data, 'has_tools', True))
+            (safe_arabic_text("الإطار الاحتياطي"), getattr(handover_data, 'has_spare_tire', False)),
+            (safe_arabic_text("طفاية الحريق"), getattr(handover_data, 'has_fire_extinguisher', False)),
+            (safe_arabic_text("حقيبة الإسعافات الأولية"), getattr(handover_data, 'has_first_aid_kit', False)),
+            (safe_arabic_text("مثلث التحذير"), getattr(handover_data, 'has_warning_triangle', False)),
+            (safe_arabic_text("عدة الأدوات"), getattr(handover_data, 'has_tools', False))
         ]
         
         y_position -= 30
