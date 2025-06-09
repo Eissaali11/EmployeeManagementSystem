@@ -1962,8 +1962,10 @@ def handover_pdf(id):
         if hasattr(handover, 'supervisor_name') and handover.supervisor_name:
             handover_data['supervisor_name'] = str(handover.supervisor_name)
         
-        # إنشاء ملف PDF باستخدام الدالة المبسطة
-        # تمرير كائن البيانات مباشرة
+        # إنشاء ملف PDF باستخدام النموذج المحسن
+        # تمرير كائن التسليم الكامل مع العلاقات
+        handover.vehicle_rel = vehicle  # إضافة العلاقة المطلوبة
+        handover.id = id  # التأكد من وجود المعرف
         pdf_buffer = create_vehicle_handover_pdf(handover)
         
         # تحديد اسم الملف
