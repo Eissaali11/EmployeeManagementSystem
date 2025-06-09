@@ -2580,8 +2580,8 @@ def export_workshop_to_pdf(id):
             flash('لا توجد سجلات ورشة لهذه المركبة!', 'warning')
             return redirect(url_for('vehicles.view', id=id))
         
-        # إنشاء تقرير PDF باستخدام المولد المحسن الخالي من النصوص العربية
-        from utils.clean_english_pdf import generate_workshop_pdf
+        # إنشاء تقرير PDF باستخدام المولد الذكي الذي يحافظ على المعلومات المهمة
+        from utils.smart_workshop_pdf import generate_workshop_pdf
         pdf_data = generate_workshop_pdf(vehicle, workshop_records)
         pdf_buffer = io.BytesIO(pdf_data)
         
