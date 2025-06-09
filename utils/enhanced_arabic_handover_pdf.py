@@ -119,7 +119,7 @@ def create_vehicle_handover_pdf(handover_data):
         # صندوق معلومات الوثيقة الموسع
         c.setStrokeColor(primary_color)
         c.setLineWidth(2)
-        c.rect(width - 220, height - 150, 170, 110)
+        c.rect(width - 250, height - 180, 200, 140)
         
         # معلومات الوثيقة
         y_position = height - 50
@@ -127,19 +127,28 @@ def create_vehicle_handover_pdf(handover_data):
         c.setFillColor(colors.black)
         
         # رابط الفورم الإلكتروني
-        form_url = f"nuzum-system.replit.app/vehicles/handover/{getattr(handover_data, 'id', 'new')}"
+        form_url = "nuzum-system.replit.app"
+        full_form_url = f"{form_url}/vehicles/handover/{getattr(handover_data, 'id', 85)}"
         
         doc_info = [
             f"Document ID: {getattr(handover_data, 'id', 85)}",
-            f"Creation Date: {datetime.now().strftime('%Y-%m-%d')}",
+            f"Date: {datetime.now().strftime('%Y-%m-%d')}",
             f"Time: {datetime.now().strftime('%H:%M')}",
-            f"Operation Type: Return",
-            f"Form Link: {form_url}",
-            "QR Code: Scan for online access"
+            "Operation: Return",
+            "Form Link:",
+            f"  {form_url}",
+            f"  /vehicles/handover/{getattr(handover_data, 'id', 85)}",
+            "QR: Scan for access"
         ]
         
+        c.setFont("Helvetica", 8)
         for i, info in enumerate(doc_info):
-            c.drawString(width - 215, height - 60 - (i * 12), info)
+            if i == 4:  # "Form Link:" label
+                c.setFont("Helvetica-Bold", 8)
+                c.drawString(width - 245, height - 70 - (i * 12), info)
+                c.setFont("Helvetica", 8)
+            else:
+                c.drawString(width - 245, height - 70 - (i * 12), info)
         
         # خط فاصل
         y_position = height - 170
