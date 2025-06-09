@@ -8,8 +8,12 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, or_, and_, extract
 from models import Employee, Vehicle, VehicleRental, VehicleProject, Salary, Attendance, Department, User
 from app import db
-from functions.date_functions import format_date_arabic
-from utils.audit_log import log_audit
+# from functions.date_functions import format_date_arabic
+# from utils.audit_log import log_audit
+
+def log_audit(action, entity_type, entity_id, description):
+    """دالة مؤقتة لتسجيل الأحداث"""
+    print(f"AUDIT: {action} - {entity_type} - {entity_id} - {description}")
 
 employee_portal_bp = Blueprint('employee_portal', __name__, url_prefix='/employee')
 
@@ -202,7 +206,10 @@ def my_salaries():
     
     # تنسيق التواريخ
     for salary in salaries:
-        salary.formatted_salary_date = format_date_arabic(salary.salary_date)
+        if salary.salary_date:
+            salary.formatted_salary_date = salary.salary_date.strftime('%Y-%m-%d')
+        else:
+            salary.formatted_salary_date = 'غير محدد'
     
     # احصائيات الرواتب
     total_salaries = len(salaries)
@@ -241,7 +248,10 @@ def my_attendance():
     
     # تنسيق التواريخ
     for record in attendance_records:
-        record.formatted_date = format_date_arabic(record.date)
+        if record.date:
+            record.formatted_date = record.date.strftime('%Y-%m-%d')
+        else:
+            record.formatted_date = 'غير محدد'
     
     # احصائيات الحضور
     present_days = len([r for r in attendance_records if r.status == 'present'])
@@ -287,8 +297,8 @@ def my_profile():
     department = Department.query.get(employee.department_id) if employee.department_id else None
     
     # تنسيق التواريخ
-    employee.formatted_hire_date = format_date_arabic(employee.hire_date) if employee.hire_date else 'غير محدد'
-    employee.formatted_birth_date = format_date_arabic(employee.birth_date) if employee.birth_date else 'غير محدد'
+    employee.formatted_hire_date = employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد'
+    employee.formatted_birth_date = employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else 'غير محدد'
     
     return render_template('employee_portal/profile.html',
                          employee=employee,
