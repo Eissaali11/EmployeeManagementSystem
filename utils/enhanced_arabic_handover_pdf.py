@@ -126,24 +126,27 @@ def create_vehicle_handover_pdf(handover_data):
         c.setFont("Helvetica", 10)
         c.setFillColor(colors.black)
         
-        # رابط الفورم الإلكتروني
-        form_url = "nuzum-system.replit.app"
-        full_form_url = f"{form_url}/vehicles/handover/{getattr(handover_data, 'id', 85)}"
+        # رابط النموذج الإلكتروني المحدد
+        electronic_form_url = "https://acrobat.adobe.com/id/urn:aaid:sc:AP:e172b7fe-9bbc-4082-bc93-0748a3b391a4"
+        
+        # الحصول على اسم الشخص ورقم المركبة
+        person_name = getattr(handover_data, 'person_name', 'محمد.عمران')
+        vehicle_number = getattr(handover_data.vehicle_rel if hasattr(handover_data, 'vehicle_rel') else handover_data, 'plate_number', '1493')
         
         doc_info = [
             f"Document ID: {getattr(handover_data, 'id', 85)}",
             f"Date: {datetime.now().strftime('%Y-%m-%d')}",
             f"Time: {datetime.now().strftime('%H:%M')}",
             "Operation: Return",
-            "Form Link:",
-            f"  {form_url}",
-            f"  /vehicles/handover/{getattr(handover_data, 'id', 85)}",
-            "QR: Scan for access"
+            f"Vehicle: {vehicle_number} - {person_name}",
+            "رابط النموذج الإلكتروني:",
+            "  acrobat.adobe.com/id/urn:aaid:sc:",
+            "  AP:e172b7fe-9bbc-4082-bc93-0748a3b391a4"
         ]
         
         c.setFont("Helvetica", 8)
         for i, info in enumerate(doc_info):
-            if i == 4:  # "Form Link:" label
+            if i == 5:  # "رابط النموذج الإلكتروني:" label
                 c.setFont("Helvetica-Bold", 8)
                 c.drawString(width - 245, height - 70 - (i * 12), info)
                 c.setFont("Helvetica", 8)
