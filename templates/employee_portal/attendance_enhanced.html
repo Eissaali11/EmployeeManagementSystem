@@ -200,10 +200,19 @@
             margin-bottom: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
         }
         
         .chart-container h4 {
             color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
         }
         
         .summary-cards {
@@ -446,11 +455,13 @@
         <!-- Chart Container -->
         {% if monthly_attendance %}
         <div class="chart-container">
-            <h4 class="mb-4">
+            <h4>
                 <i class="fas fa-chart-line ms-2"></i>
                 مخطط الحضور الشهري لعام {{ current_year }}
             </h4>
-            <canvas id="attendanceChart" height="80"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="attendanceChart"></canvas>
+            </div>
         </div>
         {% endif %}
     </div>
@@ -528,6 +539,14 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 20,
+                        right: 20,
+                        bottom: 20,
+                        left: 20
+                    }
+                },
                 plugins: {
                     legend: {
                         position: 'top',
