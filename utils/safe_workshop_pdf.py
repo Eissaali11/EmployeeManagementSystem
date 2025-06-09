@@ -15,14 +15,70 @@ class SafeWorkshopPDF(FPDF):
         self.set_auto_page_break(auto=True, margin=15)
         
     def safe_text(self, text):
-        """تحويل آمن للنصوص العربية"""
+        """تحويل آمن للنصوص العربية مع ترجمة المعاني"""
         if not text:
             return ""
         
         text_str = str(text)
         
-        # قاموس تحويل الأحرف العربية
-        arabic_to_safe = {
+        # ترجمة المصطلحات العربية المشتركة
+        translations = {
+            # معلومات المركبة
+            'رقم اللوحة': 'Plate Number',
+            'لوحة': 'Plate',
+            'الصنع': 'Make',
+            'الموديل': 'Model', 
+            'السنة': 'Year',
+            'اللون': 'Color',
+            'الحالة': 'Status',
+            'متاح': 'Available',
+            'مؤجر': 'Rented',
+            'في الورشة': 'In Workshop',
+            'حادث': 'Accident',
+            
+            # سجلات الورشة
+            'سجلات الورشة': 'Workshop Records',
+            'تاريخ الدخول': 'Entry Date',
+            'تاريخ الخروج': 'Exit Date', 
+            'سبب الدخول': 'Entry Reason',
+            'حالة الإصلاح': 'Repair Status',
+            'التكلفة': 'Cost',
+            'اسم الورشة': 'Workshop Name',
+            'الفني المسؤول': 'Technician',
+            'صيانة دورية': 'Maintenance',
+            'عطل': 'Breakdown',
+            'قيد التنفيذ': 'In Progress',
+            'تم الإصلاح': 'Completed',
+            'بانتظار الموافقة': 'Pending Approval',
+            'ما زالت في الورشة': 'Still in Workshop',
+            'غير محدد': 'Not Specified',
+            
+            # إحصائيات
+            'ملخص الإحصائيات': 'Summary Statistics',
+            'عدد السجلات': 'Total Records',
+            'إجمالي التكلفة': 'Total Cost',
+            'إجمالي أيام الإصلاح': 'Total Days in Workshop',
+            'متوسط التكلفة لكل سجل': 'Average Cost per Record',
+            'متوسط مدة الإصلاح': 'Average Repair Duration',
+            'ريال': 'SAR',
+            'يوم': 'days',
+            
+            # عام
+            'تقرير': 'Report',
+            'المركبة': 'Vehicle',
+            'السيارة': 'Vehicle',
+            'معلومات': 'Information',
+            'التاريخ': 'Date',
+            'نظام نُظم': 'NUZUM System'
+        }
+        
+        # البحث عن ترجمة مباشرة
+        for arabic, english in translations.items():
+            if arabic in text_str:
+                text_str = text_str.replace(arabic, english)
+        
+        # تحويل الأحرف العربية المتبقية
+        arabic_to_latin = {
             'ا': 'a', 'أ': 'a', 'إ': 'a', 'آ': 'aa',
             'ب': 'b', 'ت': 't', 'ث': 'th', 'ج': 'j',
             'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'th',
@@ -36,17 +92,15 @@ class SafeWorkshopPDF(FPDF):
         
         result = ""
         for char in text_str:
-            if char in arabic_to_safe:
-                result += arabic_to_safe[char]
-            elif char.isalnum():
-                result += char
-            elif char in ' .-_:()[]{}/@#$%^&*+=<>?!,;':
+            if char in arabic_to_latin:
+                result += arabic_to_latin[char]
+            elif char.isalnum() or char in ' .-_:()[]{}/@#$%^&*+=<>?!,;':
                 result += char
             else:
                 result += ' '
         
         result = ' '.join(result.split())
-        return result[:100]
+        return result[:120]
         
     def safe_cell(self, w, h, txt='', border=0, ln=0, align='', fill=False):
         """خلية آمنة مع معالجة الأخطاء"""
@@ -85,15 +139,19 @@ def generate_workshop_pdf(vehicle, workshop_records):
         
         # عنوان التقرير
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font('Arial', 'B', 20)
-        pdf.set_xy(50, 12)
-        pdf.safe_cell(110, 8, 'WORKSHOP RECORDS REPORT', 0, 1, 'C')
+        pdf.set_font('Arial', 'B', 18)
+        pdf.set_xy(50, 10)
+        pdf.safe_cell(110, 6, 'WORKSHOP RECORDS REPORT', 0, 1, 'C')
         
         # معلومات المركبة
-        pdf.set_font('Arial', '', 12)
-        pdf.set_xy(50, 22)
-        vehicle_info = f'Vehicle: {vehicle.plate_number} - {vehicle.make} {vehicle.model}'
-        pdf.safe_cell(110, 6, vehicle_info, 0, 1, 'C')
+        pdf.set_font('Arial', '', 11)
+        pdf.set_xy(50, 18)
+        vehicle_info = f'Vehicle: {vehicle.plate_number} - {vehicle.make} {vehicle.model} ({vehicle.year})'
+        pdf.safe_cell(110, 5, vehicle_info, 0, 1, 'C')
+        
+        pdf.set_xy(50, 24)
+        color_info = f'Color: {vehicle.color} | Status: {vehicle.status.title()}'
+        pdf.safe_cell(110, 5, color_info, 0, 1, 'C')
         
         # التاريخ
         pdf.set_font('Arial', '', 10)
