@@ -28,26 +28,26 @@ def employee_login():
             flash('يرجى إدخال رقم الهوية ورقم العمل', 'error')
             return render_template('employee_portal/login.html')
         
-        # البحث عن الموظف (مع التعامل مع الأرقام العشرية)
+        # البحث عن الموظف بطريقة مرنة
+        from sqlalchemy import text
+        
         try:
-            # تحويل المدخلات لأرقام للمقارنة
-            national_id_float = float(national_id)
-            employee_number_float = float(employee_number)
+            # البحث باستخدام تحويل جميع القيم إلى نصوص للمقارنة
+            result = db.session.execute(text("""
+                SELECT id FROM employee 
+                WHERE national_id::text = :national_id 
+                AND employee_id::text = :employee_id
+                LIMIT 1
+            """), {
+                'national_id': national_id,
+                'employee_id': employee_number
+            }).fetchone()
             
-            # البحث بالأرقام العشرية أو النصوص
-            employee = Employee.query.filter(
-                or_(
-                    and_(Employee.national_id == national_id, Employee.employee_id == employee_number),
-                    and_(Employee.national_id == str(national_id_float), Employee.employee_id == str(employee_number_float)),
-                    and_(Employee.national_id == national_id_float, Employee.employee_id == employee_number_float)
-                )
-            ).first()
-        except ValueError:
-            # في حالة عدم إمكانية تحويل المدخلات لأرقام
-            employee = Employee.query.filter_by(
-                national_id=national_id,
-                employee_id=employee_number
-            ).first()
+            employee = Employee.query.get(result[0]) if result else None
+            
+        except Exception as e:
+            print(f"Database error: {e}")
+            employee = None
         
         if not employee:
             flash('بيانات تسجيل الدخول غير صحيحة', 'error')
