@@ -200,7 +200,7 @@ def my_vehicles():
         VehicleHandover.handover_type == 'delivery'
     ).group_by(VehicleHandover.vehicle_id).subquery()
     
-    current_driver_vehicles = db.session.query(Vehicle).join(
+    current_driver_vehicles_base = db.session.query(Vehicle).join(
         VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
     ).join(
         latest_handovers, 
@@ -213,21 +213,55 @@ def my_vehicles():
         VehicleHandover.handover_type == 'delivery'
     ).all()
     
+    # إضافة معلومات النماذج لكل سيارة
+    current_driver_vehicles = []
+    for vehicle in current_driver_vehicles_base:
+        # البحث عن جميع نماذج التسليم والاستلام لهذه السيارة والموظف
+        vehicle_handovers = VehicleHandover.query.filter_by(
+            vehicle_id=vehicle.id,
+            employee_id=employee_id
+        ).order_by(VehicleHandover.handover_date.desc()).all()
+        
+        vehicle.handovers = vehicle_handovers
+        current_driver_vehicles.append(vehicle)
+    
     # السيارات المؤجرة النشطة (عرض عام)
-    rented_vehicles = db.session.query(Vehicle, VehicleRental).join(
+    rented_vehicles_base = db.session.query(Vehicle, VehicleRental).join(
         VehicleRental, Vehicle.id == VehicleRental.vehicle_id
     ).filter(
         VehicleRental.is_active == True
     ).limit(10).all()
     
+    # إضافة معلومات النماذج للسيارات المؤجرة
+    rented_vehicles = []
+    for vehicle, rental in rented_vehicles_base:
+        # البحث عن نماذج التسليم والاستلام لهذه السيارة
+        vehicle_handovers = VehicleHandover.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehicleHandover.handover_date.desc()).all()
+        
+        vehicle.handovers = vehicle_handovers
+        rented_vehicles.append((vehicle, rental))
+    
     # السيارات في مشاريع نشطة (عرض عام)
-    project_vehicles = db.session.query(Vehicle, VehicleProject).join(
+    project_vehicles_base = db.session.query(Vehicle, VehicleProject).join(
         VehicleProject, Vehicle.id == VehicleProject.vehicle_id
     ).filter(
         VehicleProject.is_active == True
     ).limit(10).all()
     
-    return render_template('employee_portal/vehicles.html',
+    # إضافة معلومات النماذج للسيارات في المشاريع
+    project_vehicles = []
+    for vehicle, project in project_vehicles_base:
+        # البحث عن نماذج التسليم والاستلام لهذه السيارة
+        vehicle_handovers = VehicleHandover.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehicleHandover.handover_date.desc()).all()
+        
+        vehicle.handovers = vehicle_handovers
+        project_vehicles.append((vehicle, project))
+    
+    return render_template('employee_portal/vehicles_new.html',
                          employee=employee,
                          current_driver_vehicles=current_driver_vehicles,
                          rented_vehicles=rented_vehicles,
