@@ -336,7 +336,7 @@ def my_profile():
     department = Department.query.get(employee.department_id) if employee.department_id else None
     
     # تنسيق التواريخ
-    employee.formatted_hire_date = employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد'
+    employee.formatted_hire_date = employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد'
     employee.formatted_birth_date = employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else 'غير محدد'
     
     return render_template('employee_portal/profile.html',
