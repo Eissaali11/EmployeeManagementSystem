@@ -93,13 +93,13 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
         
         html_content += f"""
                     <tr>
-                        <td>{record.technician or 'غير محدد'}</td>
-                        <td>{record.workshop or 'غير محدد'}</td>
+                        <td>{getattr(record, 'technician_name', None) or 'غير محدد'}</td>
+                        <td>{getattr(record, 'workshop_name', None) or 'غير محدد'}</td>
                         <td>{cost:.2f}</td>
                         <td>{record.repair_status or 'غير محدد'}</td>
                         <td>{exit_date}</td>
                         <td>{entry_date}</td>
-                        <td>{record.entry_reason or 'غير محدد'}</td>
+                        <td>{record.reason or 'غير محدد'}</td>
                     </tr>
         """
     
