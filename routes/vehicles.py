@@ -1980,6 +1980,26 @@ def handover_pdf(id):
         flash(f'خطأ في إنشاء ملف PDF: {str(e)}', 'danger')
         return redirect(url_for('vehicles.view', id=vehicle.id if 'vehicle' in locals() else id))
 
+@vehicles_bp.route('/handover/<int:id>/view/public')
+def handover_view_public(id):
+    """عرض نموذج تسليم/استلام - وصول مفتوح بدون تسجيل دخول"""
+    handover = VehicleHandover.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+    images = VehicleHandoverImage.query.filter_by(handover_record_id=id).all()
+    
+    # تنسيق التاريخ
+    handover.formatted_handover_date = format_date_arabic(handover.handover_date)
+    
+    handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
+    
+    return render_template(
+        'vehicles/handover_view_public.html',
+        handover=handover,
+        vehicle=vehicle,
+        images=images,
+        handover_type_name=handover_type_name
+    )
+
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
     """إنشاء ملف PDF لنموذج تسليم/استلام - وصول مفتوح بدون تسجيل دخول"""
