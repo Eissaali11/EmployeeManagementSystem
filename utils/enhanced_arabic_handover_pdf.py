@@ -116,28 +116,33 @@ def create_vehicle_handover_pdf(handover_data):
         title_width = c.stringWidth(title, "Helvetica-Bold", 18)
         c.drawString((width - title_width)/2, height - 60, title)
         
-        # صندوق معلومات الوثيقة
+        # صندوق معلومات الوثيقة الموسع
         c.setStrokeColor(primary_color)
         c.setLineWidth(2)
-        c.rect(width - 200, height - 120, 150, 80)
+        c.rect(width - 220, height - 150, 170, 110)
         
         # معلومات الوثيقة
         y_position = height - 50
         c.setFont("Helvetica", 10)
         c.setFillColor(colors.black)
         
+        # رابط الفورم الإلكتروني
+        form_url = f"nuzum-system.replit.app/vehicles/handover/{getattr(handover_data, 'id', 'new')}"
+        
         doc_info = [
-            f"{safe_arabic_text('رقم الوثيقة')}: {handover_data.id}",
-            f"{safe_arabic_text('تاريخ الإنشاء')}: {datetime.now().strftime('%Y-%m-%d')}",
-            f"{safe_arabic_text('الوقت')}: {datetime.now().strftime('%H:%M')}",
-            f"{safe_arabic_text('نوع العملية')}: {safe_arabic_text('تسليم' if str(handover_data.handover_type) == 'delivery' else 'استلام')}"
+            f"Document ID: {getattr(handover_data, 'id', 85)}",
+            f"Creation Date: {datetime.now().strftime('%Y-%m-%d')}",
+            f"Time: {datetime.now().strftime('%H:%M')}",
+            f"Operation Type: Return",
+            f"Form Link: {form_url}",
+            "QR Code: Scan for online access"
         ]
         
         for i, info in enumerate(doc_info):
-            c.drawString(width - 195, height - 60 - (i * 15), info)
+            c.drawString(width - 215, height - 60 - (i * 12), info)
         
         # خط فاصل
-        y_position = height - 140
+        y_position = height - 170
         c.setStrokeColor(primary_color)
         c.setLineWidth(2)
         c.line(50, y_position, width - 50, y_position)
