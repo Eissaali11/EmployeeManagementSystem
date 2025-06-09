@@ -2580,9 +2580,10 @@ def export_workshop_to_pdf(id):
             flash('لا توجد سجلات ورشة لهذه المركبة!', 'warning')
             return redirect(url_for('vehicles.view', id=id))
         
-        # إنشاء تقرير PDF باستخدام المولد المحسن
-        from utils.simple_workshop_pdf import generate_workshop_pdf
-        pdf_buffer = generate_workshop_pdf(vehicle, workshop_records)
+        # إنشاء تقرير PDF باستخدام المولد الإنجليزي
+        from utils.english_workshop_pdf import generate_workshop_pdf
+        pdf_data = generate_workshop_pdf(vehicle, workshop_records)
+        pdf_buffer = io.BytesIO(pdf_data)
         
         # اسم الملف
         filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d')}.pdf"
