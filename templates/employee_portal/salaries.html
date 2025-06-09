@@ -419,12 +419,10 @@
                         </div>
                         {% endif %}
                         
-                        {% if salary.bonus is not none %}
                         <div class="salary-detail">
-                            <span class="salary-detail-label">الحافز/المكافأة:</span>
-                            <span class="salary-detail-value">{{ "{:,.0f}".format(salary.bonus) }} ريال</span>
+                            <span class="salary-detail-label">المكافآت:</span>
+                            <span class="salary-detail-value">{{ "{:,.0f}".format(salary.bonus if salary.bonus else 0) }} ريال</span>
                         </div>
-                        {% endif %}
                         
                         {% if salary.deductions %}
                         <div class="salary-detail">
