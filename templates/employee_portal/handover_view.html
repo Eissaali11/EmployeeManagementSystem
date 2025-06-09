@@ -128,9 +128,20 @@
     </style>
 </head>
 <body>
-    <button onclick="window.print()" class="btn btn-primary print-btn">
-        <i class="fas fa-print ms-2"></i>طباعة
-    </button>
+    <div class="print-btn">
+        <button onclick="window.print()" class="btn btn-primary me-2">
+            <i class="fas fa-print ms-2"></i>طباعة
+        </button>
+        {% if handover.form_link %}
+        <a href="{{ handover.form_link }}" 
+           target="_blank" 
+           class="btn btn-success"
+           style="border-radius: 25px; font-weight: bold;">
+            <i class="fas fa-file-pdf ms-2"></i>
+            نموذج
+        </a>
+        {% endif %}
+    </div>
 
     <div class="form-container">
         <div class="form-header">

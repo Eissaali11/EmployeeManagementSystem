@@ -261,7 +261,7 @@ def my_vehicles():
         vehicle.handovers = vehicle_handovers
         project_vehicles.append((vehicle, project))
     
-    return render_template('employee_portal/vehicles_new.html',
+    return render_template('employee_portal/vehicles_enhanced.html',
                          employee=employee,
                          current_driver_vehicles=current_driver_vehicles,
                          rented_vehicles=rented_vehicles,
