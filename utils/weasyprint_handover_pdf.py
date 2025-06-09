@@ -84,23 +84,23 @@ def generate_handover_report_pdf(vehicle, handover_record):
                 </tr>
                 <tr>
                     <td class="label">الوقت:</td>
-                    <td class="value">{handover_record.handover_time.strftime('%H:%M') if handover_record.handover_time else 'غير محدد'}</td>
+                    <td class="value">{getattr(handover_record, 'handover_time', None) and handover_record.handover_time.strftime('%H:%M') or 'غير محدد'}</td>
                 </tr>
                 <tr>
                     <td class="label">اسم الشخص:</td>
-                    <td class="value">{handover_record.person_name or 'غير محدد'}</td>
+                    <td class="value">{getattr(handover_record, 'person_name', None) or 'غير محدد'}</td>
                 </tr>
                 <tr>
                     <td class="label">رقم الهاتف:</td>
-                    <td class="value">{handover_record.phone_number or 'غير محدد'}</td>
+                    <td class="value">{getattr(handover_record, 'phone_number', None) or 'غير محدد'}</td>
                 </tr>
                 <tr>
                     <td class="label">قراءة العداد:</td>
-                    <td class="value">{handover_record.mileage or 'غير محدد'} كم</td>
+                    <td class="value">{getattr(handover_record, 'mileage', None) or 'غير محدد'} كم</td>
                 </tr>
                 <tr>
                     <td class="label">مستوى الوقود:</td>
-                    <td class="value">{handover_record.fuel_level or 'غير محدد'}%</td>
+                    <td class="value">{getattr(handover_record, 'fuel_level', None) or 'غير محدد'}%</td>
                 </tr>
             </table>
         </div>
@@ -139,7 +139,7 @@ def generate_handover_report_pdf(vehicle, handover_record):
         <div class="notes-section">
             <h2>ملاحظات إضافية</h2>
             <div class="notes-content">
-                {handover_record.notes or 'لا توجد ملاحظات إضافية'}
+                {getattr(handover_record, 'notes', None) or 'لا توجد ملاحظات إضافية'}
             </div>
         </div>
 
