@@ -9,7 +9,7 @@ import os
 
 from app import db
 from models import Vehicle, VehicleWorkshop, SystemAudit
-from utils.simple_html_pdf import generate_workshop_pdf
+from utils.weasyprint_arabic_pdf import generate_workshop_pdf
 
 # إنشاء blueprint
 workshop_reports_bp = Blueprint('workshop_reports', __name__, url_prefix='/workshop-reports')
@@ -32,17 +32,23 @@ def vehicle_workshop_pdf(id):
             flash('لا توجد سجلات ورشة لهذه المركبة!', 'warning')
             return redirect(url_for('vehicles.view', id=id))
         
-        # إنشاء تقرير HTML قابل للطباعة
-        html_content = generate_workshop_pdf(vehicle, workshop_records)
+        # إنشاء تقرير PDF بالعربية
+        pdf_data = generate_workshop_pdf(vehicle, workshop_records)
+        
+        # اسم الملف
+        filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         
         # تسجيل نشاط بسيط في السجل
         import logging
-        logging.info(f'تم عرض تقرير الورشة للمركبة {vehicle.plate_number} بواسطة المستخدم {current_user.email if current_user.is_authenticated else "ضيف"}')
+        logging.info(f'تم تصدير تقرير الورشة للمركبة {vehicle.plate_number} بواسطة المستخدم {current_user.email if current_user.is_authenticated else "ضيف"}')
         
-        # إرجاع صفحة HTML مع ترميز UTF-8
-        response = make_response(html_content.decode('utf-8'))
-        response.headers['Content-Type'] = 'text/html; charset=utf-8'
-        return response
+        # إرسال الملف PDF للتحميل
+        return send_file(
+            io.BytesIO(pdf_data),
+            download_name=filename,
+            as_attachment=True,
+            mimetype='application/pdf'
+        )
     
     except Exception as e:
         import logging
