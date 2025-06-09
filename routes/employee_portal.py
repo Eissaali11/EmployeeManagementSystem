@@ -28,11 +28,26 @@ def employee_login():
             flash('يرجى إدخال رقم الهوية ورقم العمل', 'error')
             return render_template('employee_portal/login.html')
         
-        # البحث عن الموظف
-        employee = Employee.query.filter_by(
-            national_id=national_id,
-            employee_id=employee_number
-        ).first()
+        # البحث عن الموظف (مع التعامل مع الأرقام العشرية)
+        try:
+            # تحويل المدخلات لأرقام للمقارنة
+            national_id_float = float(national_id)
+            employee_number_float = float(employee_number)
+            
+            # البحث بالأرقام العشرية أو النصوص
+            employee = Employee.query.filter(
+                or_(
+                    and_(Employee.national_id == national_id, Employee.employee_id == employee_number),
+                    and_(Employee.national_id == str(national_id_float), Employee.employee_id == str(employee_number_float)),
+                    and_(Employee.national_id == national_id_float, Employee.employee_id == employee_number_float)
+                )
+            ).first()
+        except ValueError:
+            # في حالة عدم إمكانية تحويل المدخلات لأرقام
+            employee = Employee.query.filter_by(
+                national_id=national_id,
+                employee_id=employee_number
+            ).first()
         
         if not employee:
             flash('بيانات تسجيل الدخول غير صحيحة', 'error')
