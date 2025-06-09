@@ -27,13 +27,23 @@ def employee_login():
         # البحث عن الموظف
         employee = Employee.query.filter_by(
             national_id=national_id,
-            employee_number=employee_number,
-            is_active=True
+            employee_id=employee_number
         ).first()
         
         if not employee:
             flash('بيانات تسجيل الدخول غير صحيحة', 'error')
             log_audit('failed_login', 'employee', None, f'محاولة دخول فاشلة - هوية: {national_id}, رقم عمل: {employee_number}')
+            return render_template('employee_portal/login.html')
+        
+        # فحص حالة الحساب
+        if employee.status != 'active':
+            if employee.status == 'inactive':
+                flash('حسابك غير نشط. يرجى مراجعة إدارة الموارد البشرية', 'error')
+            elif employee.status == 'on_leave':
+                flash('أنت في إجازة حالياً. لا يمكن الوصول للبوابة', 'error')
+            else:
+                flash('حالة حسابك لا تسمح بالوصول للبوابة', 'error')
+            log_audit('failed_login', 'employee', employee.id, f'محاولة دخول لحساب غير نشط - {employee.name} - الحالة: {employee.status}')
             return render_template('employee_portal/login.html')
         
         # تسجيل الدخول في الجلسة
@@ -69,7 +79,7 @@ def employee_logout():
     return redirect(url_for('employee_portal.employee_login'))
 
 def employee_login_required(f):
-    """ديكوريتر للتحقق من تسجيل دخول الموظف"""
+    """ديكوريتر للتحقق من تسجيل دخول الموظف وحالة الحساب"""
     from functools import wraps
     
     @wraps(f)
@@ -77,6 +87,22 @@ def employee_login_required(f):
         if 'employee_id' not in session:
             flash('يرجى تسجيل الدخول أولاً', 'warning')
             return redirect(url_for('employee_portal.employee_login'))
+        
+        # التحقق من حالة الحساب في كل طلب
+        employee_id = session.get('employee_id')
+        employee = Employee.query.get(employee_id)
+        
+        if not employee or employee.status != 'active':
+            # مسح الجلسة إذا كان الحساب غير نشط
+            session.clear()
+            if employee and employee.status == 'inactive':
+                flash('تم إيقاف حسابك. يرجى مراجعة إدارة الموارد البشرية', 'error')
+            elif employee and employee.status == 'on_leave':
+                flash('حسابك في حالة إجازة. لا يمكن الوصول للبوابة', 'error')
+            else:
+                flash('حالة حسابك تغيرت. يرجى تسجيل الدخول مرة أخرى', 'warning')
+            return redirect(url_for('employee_portal.employee_login'))
+        
         return f(*args, **kwargs)
     return decorated_function
 
