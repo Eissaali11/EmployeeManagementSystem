@@ -3247,3 +3247,63 @@ def get_current_employee(vehicle_id):
             'error': str(e)
         }), 500
 
+@vehicles_bp.route('/handovers')
+@login_required
+def handovers_list():
+    """عرض جميع السيارات مع حالات التسليم والاستلام"""
+    try:
+        # الحصول على جميع السيارات مع معلومات التسليم
+        vehicles = Vehicle.query.all()
+        
+        vehicles_data = []
+        for vehicle in vehicles:
+            # الحصول على آخر سجل تسليم وآخر سجل استلام
+            latest_delivery = VehicleHandover.query.filter_by(
+                vehicle_id=vehicle.id, 
+                handover_type='delivery'
+            ).order_by(VehicleHandover.handover_date.desc()).first()
+            
+            latest_return = VehicleHandover.query.filter_by(
+                vehicle_id=vehicle.id, 
+                handover_type='return'
+            ).order_by(VehicleHandover.handover_date.desc()).first()
+            
+            # تحديد الحالة الحالية
+            current_status = 'متاح'
+            current_employee = None
+            
+            if latest_delivery:
+                if not latest_return or latest_delivery.handover_date > latest_return.handover_date:
+                    current_status = 'مُسلم'
+                    current_employee = latest_delivery.employee_name
+            
+            vehicles_data.append({
+                'vehicle': vehicle,
+                'latest_delivery': latest_delivery,
+                'latest_return': latest_return,
+                'current_status': current_status,
+                'current_employee': current_employee
+            })
+        
+        return render_template('vehicles/handovers_list.html', vehicles_data=vehicles_data)
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تحميل البيانات: {str(e)}', 'danger')
+        return redirect(url_for('vehicles.index'))
+
+@vehicles_bp.route('/handover/<int:handover_id>/form')
+@login_required
+def view_handover_form(handover_id):
+    """عرض النموذج الإلكتروني لسجل التسليم/الاستلام"""
+    try:
+        handover = VehicleHandover.query.get_or_404(handover_id)
+        vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+        
+        return render_template('vehicles/handover_form_view.html', 
+                             handover=handover, 
+                             vehicle=vehicle)
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء عرض النموذج: {str(e)}', 'danger')
+        return redirect(url_for('vehicles.handovers_list'))
+
