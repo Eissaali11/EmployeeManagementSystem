@@ -143,30 +143,48 @@ def create_vehicle_handover_pdf(handover_data):
         
         # إضافة رابط النموذج الإلكتروني إذا كان موجوداً
         if form_link and form_link.strip():
-            # تقسيم الرابط الطويل إلى أجزاء أصغر للعرض
-            if len(form_link) > 50:
+            # استخراج الرابط الفعلي (URL) من النص
+            if 'https://' in form_link:
+                url_start = form_link.find('https://')
+                url_part = form_link[url_start:].split(' ')[0]  # أخذ الرابط فقط بدون النص الإضافي
+                text_part = form_link.replace(url_part, '').strip()  # النص الإضافي
+                
+                doc_info.extend([
+                    "رابط النموذج الإلكتروني:",
+                    f"  {url_part[:45]}",
+                    f"  {url_part[45:]}" if len(url_part) > 45 else "",
+                    f"النص: {text_part}" if text_part else ""
+                ])
+            else:
+                # إذا لم يحتوي على رابط صحيح، عرضه كما هو
                 doc_info.extend([
                     "رابط النموذج الإلكتروني:",
                     f"  {form_link[:50]}",
-                    f"  {form_link[50:100]}" if len(form_link) > 50 else "",
-                    f"  {form_link[100:]}" if len(form_link) > 100 else ""
-                ])
-            else:
-                doc_info.extend([
-                    "رابط النموذج الإلكتروني:",
-                    f"  {form_link}"
+                    f"  {form_link[50:]}" if len(form_link) > 50 else ""
                 ])
         else:
             doc_info.append("رابط النموذج الإلكتروني: غير موجود")
         
         c.setFont("Helvetica", 8)
+        clickable_url = None
         for i, info in enumerate(doc_info):
+            y_pos = height - 70 - (i * 11)
             if info.startswith("رابط النموذج الإلكتروني:"):  # تنسيق غامق للعنوان
                 c.setFont("Helvetica-Bold", 8)
-                c.drawString(width - 275, height - 70 - (i * 11), info)
+                c.drawString(width - 275, y_pos, info)
                 c.setFont("Helvetica", 8)
             elif info.strip():  # تجنب طباعة الأسطر الفارغة
-                c.drawString(width - 275, height - 70 - (i * 11), info)
+                # إذا كان السطر يحتوي على رابط، اجعله قابل للنقر
+                if info.strip().startswith('https://'):
+                    clickable_url = info.strip()
+                    c.setFillColor(colors.blue)  # لون أزرق للرابط
+                    c.drawString(width - 275, y_pos, info)
+                    # إضافة منطقة قابلة للنقر
+                    text_width = c.stringWidth(info, "Helvetica", 8)
+                    c.linkURL(clickable_url, (width - 275, y_pos - 2, width - 275 + text_width, y_pos + 10))
+                    c.setFillColor(colors.black)  # إعادة اللون الأسود
+                else:
+                    c.drawString(width - 275, y_pos, info)
         
         # خط فاصل
         y_position = height - 170
