@@ -1,0 +1,190 @@
+{% extends "layout.html" %}
+{% block title %}تحديث الرابط الخارجي - {{ handover.handover_type }} - {{ vehicle.plate_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin: 20px 0;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+    }
+    
+    .help-text {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    
+    .help-text h6 {
+        color: #1976d2;
+        margin-bottom: 10px;
+    }
+    
+    .help-text ul {
+        margin-bottom: 0;
+        color: #424242;
+    }
+    
+    .help-text li {
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- العنوان الرئيسي -->
+    <div class="page-header">
+        <h2 class="mb-3">
+            <i class="fas fa-external-link-alt me-3"></i>
+            تحديث الرابط الخارجي للنموذج
+        </h2>
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="fas fa-car me-2"></i>السيارة: {{ vehicle.plate_number }}</h5>
+            </div>
+            <div class="col-md-6">
+                <h5>
+                    <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-2"></i>
+                    نوع النموذج: {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }}
+                </h5>
+            </div>
+        </div>
+        <p class="mb-0">
+            <i class="fas fa-calendar me-2"></i>
+            تاريخ {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }}: 
+            {{ handover.handover_date.strftime('%Y-%m-%d') }}
+        </p>
+    </div>
+
+    <!-- نموذج تحديث الرابط -->
+    <div class="form-container">
+        <form method="POST">
+            {{ csrf_token() }}
+            
+            <!-- معلومات مساعدة -->
+            <div class="help-text">
+                <h6><i class="fas fa-info-circle me-2"></i>إرشادات استخدام الرابط الخارجي:</h6>
+                <ul>
+                    <li>يمكنك إضافة رابط لنموذج إلكتروني خارجي (مثل Adobe Acrobat، Google Forms، إلخ)</li>
+                    <li>سيظهر زر "نموذج" في صفحة تفاصيل التسليم/الاستلام للوصول السريع</li>
+                    <li>يمكن للموظفين في البوابة الإلكترونية الوصول للنموذج بسهولة</li>
+                    <li>اتركه فارغاً إذا كنت لا تريد رابط خارجي</li>
+                </ul>
+            </div>
+
+            <!-- حقل الرابط -->
+            <div class="mb-4">
+                <label for="form_link" class="form-label fw-bold">
+                    <i class="fas fa-link me-2"></i>
+                    الرابط الخارجي للنموذج
+                </label>
+                <input type="url" 
+                       class="form-control form-control-lg" 
+                       id="form_link" 
+                       name="form_link" 
+                       value="{{ handover.form_link or '' }}"
+                       placeholder="https://example.com/form-link"
+                       dir="ltr"
+                       style="text-align: left;">
+                <div class="form-text">
+                    مثال: https://acrobat.adobe.com/id/urn:aaid:sc:EU:12345678
+                </div>
+            </div>
+
+            <!-- أزرار الإجراءات -->
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('vehicles.view_handover', id=handover.id) }}" 
+                   class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للتفاصيل
+                </a>
+                
+                <div>
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-save me-2"></i>
+                        حفظ التحديث
+                    </button>
+                    
+                    {% if handover.form_link %}
+                    <a href="{{ handover.form_link }}" 
+                       target="_blank" 
+                       class="btn btn-outline-success">
+                        <i class="fas fa-external-link-alt me-2"></i>
+                        اختبار الرابط
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- معاينة النموذج الحالي -->
+    {% if handover.form_link %}
+    <div class="form-container">
+        <h5 class="mb-3">
+            <i class="fas fa-eye me-2"></i>
+            معاينة الرابط الحالي
+        </h5>
+        <div class="p-3 bg-light text-dark rounded text-center">
+            <div class="mb-3">
+                <strong>الرابط الحالي:</strong>
+                <br>
+                <code>{{ handover.form_link }}</code>
+            </div>
+            <a href="{{ handover.form_link }}" 
+               target="_blank" 
+               class="btn btn-primary btn-lg fw-bold"
+               style="border-radius: 25px; padding: 12px 30px; box-shadow: 0 4px 15px rgba(0,123,255,0.3);">
+                <i class="fas fa-file-pdf ms-2"></i>
+                نموذج
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

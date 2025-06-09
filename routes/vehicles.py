@@ -3321,12 +3321,11 @@ def update_handover_link(handover_id):
         try:
             db.session.commit()
             flash(f'تم تحديث الرابط الخارجي بنجاح', 'success')
-            log_activity(
-                user_id=current_user.id,
+            log_audit(
                 action='تحديث رابط نموذج خارجي',
                 entity_type='VehicleHandover',
                 entity_id=handover.id,
-                description=f'تحديث الرابط الخارجي لنموذج {handover.handover_type} السيارة {vehicle.plate_number}'
+                details=f'تحديث الرابط الخارجي لنموذج {handover.handover_type} السيارة {vehicle.plate_number}'
             )
         except Exception as e:
             db.session.rollback()

@@ -225,6 +225,10 @@
             نموذج {{ handover_type_name }} السيارة: {{ vehicle.plate_number }}
         </h3>
         <div>
+            <a href="{{ url_for('vehicles.update_handover_link', handover_id=handover.id) }}" class="btn btn-warning btn-action">
+                <i class="fas fa-external-link-alt ms-1"></i>
+                تحديث الرابط
+            </a>
             <a href="{{ url_for('vehicles.handover_pdf_public', id=handover.id) }}" class="btn btn-danger btn-action">
                 <i class="fas fa-file-pdf ms-1"></i>
                 تصدير PDF
