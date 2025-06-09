@@ -10,11 +10,12 @@ from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, Flowable
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.enums import TA_RIGHT, TA_CENTER
+from reportlab.lib.enums import TA_RIGHT, TA_CENTER, TA_LEFT
 from reportlab.lib.units import mm
+from reportlab.pdfgen import canvas
 from arabic_reshaper import reshape
 from bidi.algorithm import get_display
 
@@ -111,8 +112,7 @@ def register_fonts():
 def arabic_text(text):
     """
     معالجة النص العربي بشكل صحيح ليظهر في ملفات PDF
-    
-    تستخدم هذه الدالة arabic_reshaper فقط لإعادة تشكيل النص العربي دون تغيير الترتيب
+    مع دعم الاتجاه من اليمين إلى اليسار
     """
     if text is None or text == "":
         return ""
@@ -121,51 +121,40 @@ def arabic_text(text):
         # تحويل إلى نص
         text_str = str(text)
         
-        # حالات خاصة - الأرقام والتواريخ
+        # حالات خاصة - الأرقام والتواريخ والنصوص الإنجليزية
         if text_str.replace('.', '', 1).replace(',', '', 1).isdigit():
             return text_str
             
-        # حالة التواريخ وأي نص يحتوي على أرقام وحروف خاصة فقط
-        if ('-' in text_str or '/' in text_str) and all(not ('\u0600' <= c <= '\u06FF') for c in text_str):
+        # حالة التواريخ والنصوص التي لا تحتوي على عربي
+        if not any('\u0600' <= c <= '\u06FF' for c in text_str):
             return text_str
         
-        # نستخدم فقط إعادة تشكيل النص دون تغيير ترتيب الأحرف
-        # لأن المشكلة تظهر من استخدام get_display الذي يعكس النص
-        reshaped_text = reshape(text_str)
-        
-        # طريقة بديلة - قائمة مصطلحات شائعة في السياق
-        common_terms = {
-            'تقرير سجلات الورشة': 'Workshop Records Report',
-            'المركبة': 'Vehicle',
-            'سجلات الورشة': 'Workshop Records',
-            'الفني المسؤول': 'Technician',
-            'اسم الورشة': 'Workshop',
-            'التكلفة (ريال)': 'Cost (SAR)',
-            'حالة الإصلاح': 'Repair Status',
-            'تاريخ الخروج': 'Exit Date',
-            'تاريخ الدخول': 'Entry Date',
-            'سبب الدخول': 'Entry Reason',
-            'صيانة دورية': 'Regular Maintenance',
-            'عطل': 'Breakdown',
-            'حادث': 'Accident'
+        # معالجة النص العربي بالطريقة الصحيحة
+        # استخدام إعدادات محسنة لـ arabic_reshaper
+        configuration = {
+            'delete_harakat': False,  # عدم حذف التشكيل
+            'support_zwj': True,      # دعم حرف الوصل 
+            'use_unshaped_instead_of_isolated': False,
+            'shift_harakat_position': False,
+            'delete_tatweel': False
         }
         
-        # تحقق إذا كان النص موجودًا في القائمة
-        if text_str in common_terms:
-            return common_terms[text_str]
-            
-        # سجل للتصحيح
-        print(f"النص الأصلي: {text_str}")
-        print(f"النص بعد إعادة التشكيل فقط: {reshaped_text}")
+        # إعادة تشكيل النص مع الإعدادات المحسنة
+        reshaped_text = reshape(text_str, **configuration)
         
-        # نعيد النص الأصلي كما هو بدلاً من إجراء أي معالجة
-        # هذا سيسمح لنا بالتحقق مما إذا كانت المشكلة في reportlab نفسها
-        return text_str
+        # تطبيق خوارزمية البيدي للاتجاه الصحيح
+        bidi_text = get_display(reshaped_text, base_dir='R')  # R = Right-to-Left
+        
+        return bidi_text
         
     except Exception as e:
         print(f"خطأ في معالجة النص العربي: {str(e)}")
-        # إذا فشلت المعالجة، نعيد النص الأصلي
-        return str(text)
+        # في حالة الفشل، نحاول طريقة بسيطة
+        try:
+            reshaped_text = reshape(text_str)
+            return get_display(reshaped_text)
+        except:
+            return str(text)
 
 def generate_workshop_report_pdf(vehicle, workshop_records):
     """
