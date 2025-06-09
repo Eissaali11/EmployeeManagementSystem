@@ -304,60 +304,111 @@ def my_salaries():
 @employee_portal_bp.route('/attendance')
 @employee_login_required
 def my_attendance():
-    """حضور الموظف"""
+    """حضور الموظف مع عرض البيانات الشهرية"""
     employee_id = session.get('employee_id')
     employee = Employee.query.get_or_404(employee_id)
     
-    # فلترة بالشهر والسنة
-    month = request.args.get('month', datetime.now().month, type=int)
-    year = request.args.get('year', datetime.now().year, type=int)
+    # السنة الحالية أو المحددة
+    current_year = request.args.get('year', datetime.now().year, type=int)
     
-    # جلب سجل الحضور للشهر المحدد
+    # جلب جميع سجلات الحضور للسنة
     attendance_records = Attendance.query.filter(
         Attendance.employee_id == employee_id,
-        extract('month', Attendance.date) == month,
-        extract('year', Attendance.date) == year
-    ).order_by(Attendance.date.desc()).all()
+        extract('year', Attendance.date) == current_year
+    ).all()
     
-    # تنسيق التواريخ
-    for record in attendance_records:
-        if record.date:
-            record.formatted_date = record.date.strftime('%Y-%m-%d')
-        else:
-            record.formatted_date = 'غير محدد'
-    
-    # احصائيات الحضور
-    present_days = len([r for r in attendance_records if r.status == 'present'])
-    absent_days = len([r for r in attendance_records if r.status == 'absent'])
-    late_days = len([r for r in attendance_records if r.status == 'late'])
-    vacation_days = len([r for r in attendance_records if r.status == 'vacation'])
-    
-    attendance_stats = {
-        'present_days': present_days,
-        'absent_days': absent_days,
-        'late_days': late_days,
-        'vacation_days': vacation_days,
-        'total_days': len(attendance_records),
-        'attendance_rate': (present_days / len(attendance_records) * 100) if attendance_records else 0
+    # تنظيم البيانات حسب الشهر
+    monthly_data = {}
+    month_names = {
+        1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
+        5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+        9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
     }
     
-    # قائمة الأشهر والسنوات للفلترة
-    months = [
-        (1, 'يناير'), (2, 'فبراير'), (3, 'مارس'), (4, 'أبريل'),
-        (5, 'مايو'), (6, 'يونيو'), (7, 'يوليو'), (8, 'أغسطس'),
-        (9, 'سبتمبر'), (10, 'أكتوبر'), (11, 'نوفمبر'), (12, 'ديسمبر')
-    ]
+    # تهيئة البيانات الشهرية
+    for month in range(1, 13):
+        monthly_data[month] = {
+            'month': month,
+            'month_name': month_names[month],
+            'year': current_year,
+            'present_days': 0,
+            'absent_days': 0,
+            'late_days': 0,
+            'overtime_hours': 0,
+            'attendance_percentage': 0,
+            'details': []
+        }
     
-    years = list(range(datetime.now().year - 5, datetime.now().year + 1))
+    # معالجة سجلات الحضور
+    for record in attendance_records:
+        if record.date:
+            month = record.date.month
+            
+            # تحديد حالة الحضور
+            if hasattr(record, 'is_present') and record.is_present:
+                monthly_data[month]['present_days'] += 1
+                
+                # فحص التأخير
+                if hasattr(record, 'late_minutes') and record.late_minutes and record.late_minutes > 0:
+                    monthly_data[month]['late_days'] += 1
+            else:
+                # إذا لم يكن موجوداً أو غائب
+                if hasattr(record, 'status'):
+                    if record.status == 'absent':
+                        monthly_data[month]['absent_days'] += 1
+                    elif record.status == 'present':
+                        monthly_data[month]['present_days'] += 1
+                        if hasattr(record, 'late_minutes') and record.late_minutes and record.late_minutes > 0:
+                            monthly_data[month]['late_days'] += 1
+                else:
+                    # إذا لم يكن هناك حقل status، تحديد بناءً على is_present
+                    if hasattr(record, 'is_present'):
+                        if record.is_present:
+                            monthly_data[month]['present_days'] += 1
+                        else:
+                            monthly_data[month]['absent_days'] += 1
+                    else:
+                        # افتراضي: حاضر
+                        monthly_data[month]['present_days'] += 1
+            
+            # إضافة الساعات الإضافية
+            if hasattr(record, 'overtime_hours') and record.overtime_hours:
+                monthly_data[month]['overtime_hours'] += record.overtime_hours
+            
+            # إضافة التفاصيل
+            monthly_data[month]['details'].append(record)
     
-    return render_template('employee_portal/attendance.html',
+    # حساب نسب الحضور
+    for month_info in monthly_data.values():
+        total_days = month_info['present_days'] + month_info['absent_days']
+        if total_days > 0:
+            month_info['attendance_percentage'] = (month_info['present_days'] / total_days) * 100
+        else:
+            month_info['attendance_percentage'] = 0
+    
+    # تجهيز البيانات للعرض (الأشهر التي تحتوي على بيانات فقط)
+    monthly_attendance = []
+    for month_info in monthly_data.values():
+        if month_info['present_days'] > 0 or month_info['absent_days'] > 0:
+            monthly_attendance.append(month_info)
+    
+    # ترتيب الأشهر
+    monthly_attendance.sort(key=lambda x: x['month'])
+    
+    # حساب الإحصائيات الإجمالية
+    total_present_days = sum(month['present_days'] for month in monthly_attendance)
+    total_absent_days = sum(month['absent_days'] for month in monthly_attendance)
+    total_late_days = sum(month['late_days'] for month in monthly_attendance)
+    total_overtime_hours = sum(month['overtime_hours'] for month in monthly_attendance)
+    
+    return render_template('employee_portal/attendance_enhanced.html',
                          employee=employee,
-                         attendance_records=attendance_records,
-                         attendance_stats=attendance_stats,
-                         current_month=month,
-                         current_year=year,
-                         months=months,
-                         years=years)
+                         monthly_attendance=monthly_attendance,
+                         current_year=current_year,
+                         total_present_days=total_present_days,
+                         total_absent_days=total_absent_days,
+                         total_late_days=total_late_days,
+                         total_overtime_hours=total_overtime_hours)
 
 @employee_portal_bp.route('/profile')
 @employee_login_required
