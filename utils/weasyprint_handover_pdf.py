@@ -165,7 +165,8 @@ def generate_handover_report_pdf(vehicle, handover_record):
             <p>تم إنشاء هذه الوثيقة تلقائياً في {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
             <div class="electronic-form-link">
                 <p><strong>رابط النموذج الإلكتروني:</strong></p>
-                <p class="link-text">https://d72f2aef-918c-4148-9723-15870f8c7cf6-00-2c1ygyxvqoldk.riker.replit.dev/vehicles/handover/{handover_record.id}/pdf/public</p>
+                <p class="link-description">{('تسليم' if handover_record.handover_type == 'delivery' else 'استلام')} السيارة {handover_record.vehicle.plate_number if handover_record.vehicle else 'غير محدد'} {'من' if handover_record.handover_type == 'delivery' else 'إلى'} {getattr(handover_record, 'person_name', 'غير محدد')}</p>
+                <p class="link-text">https://d72f2aef-918c-4148-9723-15870f8c7cf6-00-2c1ygyxvqoldk.riker.replit.dev/vehicles/handover/{handover_record.id}/view</p>
             </div>
         </div>
     </body>
@@ -437,6 +438,17 @@ def generate_handover_report_pdf(vehicle, handover_record):
     .electronic-form-link p {
         margin: 8px 0;
         font-size: 11px;
+    }
+    
+    .link-description {
+        background-color: #27ae60;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-align: center;
+        margin: 8px 0;
+        font-size: 12px;
     }
     
     .link-text {
