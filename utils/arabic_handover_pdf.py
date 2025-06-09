@@ -155,8 +155,8 @@ def create_vehicle_handover_pdf(handover_data):
             [process_arabic_text("التاريخ"), process_arabic_text(handover_data.handover_date.strftime('%Y-%m-%d') if handover_data.handover_date else "غير محدد")],
             [process_arabic_text("الوقت"), process_arabic_text(handover_data.handover_date.strftime('%H:%M') if handover_data.handover_date else "غير محدد")],
             [process_arabic_text("اسم الشخص"), process_arabic_text(str(handover_data.person_name) if handover_data.person_name else "غير محدد")],
-            [process_arabic_text("رقم الهاتف"), process_arabic_text(str(handover_data.person_mobile) if hasattr(handover_data, 'person_mobile') and handover_data.person_mobile else "غير محدد")],
-            [process_arabic_text("قراءة العداد"), process_arabic_text(f"{handover_data.odometer_reading} كم" if handover_data.odometer_reading else "غير محدد")],
+            [process_arabic_text("رقم الهاتف"), process_arabic_text("غير محدد")],
+            [process_arabic_text("قراءة العداد"), process_arabic_text(f"{handover_data.mileage} كم" if handover_data.mileage else "غير محدد")],
             [process_arabic_text("مستوى الوقود"), process_arabic_text(f"{handover_data.fuel_level}%" if handover_data.fuel_level else "غير محدد")]
         ]
         
