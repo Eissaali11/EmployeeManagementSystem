@@ -149,16 +149,19 @@ def create_vehicle_handover_pdf(handover_data):
         vehicle_title = safe_arabic_text("معلومات المركبة")
         c.drawString(50, y_position, vehicle_title)
         
-        # جدول معلومات المركبة
+        # جدول معلومات المركبة المفصل
         vehicle_data = []
         if hasattr(handover_data, 'vehicle_rel') and handover_data.vehicle_rel:
             vehicle = handover_data.vehicle_rel
             vehicle_data = [
-                [safe_arabic_text("رقم اللوحة"), safe_arabic_text(str(vehicle.plate_number) if vehicle.plate_number else "غير محدد")],
-                [safe_arabic_text("الصنع"), safe_arabic_text(str(vehicle.make) if vehicle.make else "غير محدد")],
-                [safe_arabic_text("الموديل"), safe_arabic_text(str(vehicle.model) if vehicle.model else "غير محدد")],
-                [safe_arabic_text("السنة"), safe_arabic_text(str(vehicle.year) if hasattr(vehicle, 'year') and vehicle.year else "غير محدد")],
-                [safe_arabic_text("اللون"), safe_arabic_text(str(vehicle.color) if hasattr(vehicle, 'color') and vehicle.color else "غير محدد")]
+                [safe_arabic_text("رقم اللوحة"), safe_arabic_text(str(vehicle.plate_number) if vehicle.plate_number else "Not Specified")],
+                [safe_arabic_text("الصنع"), safe_arabic_text(str(vehicle.make) if vehicle.make else "Not Specified")],
+                [safe_arabic_text("الموديل"), safe_arabic_text(str(vehicle.model) if vehicle.model else "Not Specified")],
+                [safe_arabic_text("السنة"), safe_arabic_text(str(vehicle.year) if hasattr(vehicle, 'year') and vehicle.year else "Not Specified")],
+                [safe_arabic_text("اللون"), safe_arabic_text(str(vehicle.color) if hasattr(vehicle, 'color') and vehicle.color else "Not Specified")],
+                ["VIN Number", safe_arabic_text(str(vehicle.vin_number) if hasattr(vehicle, 'vin_number') and vehicle.vin_number else "Not Available")],
+                ["Engine Number", safe_arabic_text(str(vehicle.engine_number) if hasattr(vehicle, 'engine_number') and vehicle.engine_number else "Not Available")],
+                ["Vehicle Status", safe_arabic_text(str(vehicle.status) if hasattr(vehicle, 'status') and vehicle.status else "Active")]
             ]
         else:
             vehicle_data = [[safe_arabic_text("معلومات المركبة"), safe_arabic_text("غير متوفرة")]]
@@ -187,13 +190,16 @@ def create_vehicle_handover_pdf(handover_data):
         handover_title = safe_arabic_text("تفاصيل التسليم")
         c.drawString(50, y_position, handover_title)
         
-        # جدول تفاصيل التسليم
+        # جدول تفاصيل التسليم المفصل
         handover_details = [
-            [safe_arabic_text("التاريخ"), safe_arabic_text(handover_data.handover_date.strftime('%Y-%m-%d') if handover_data.handover_date else "غير محدد")],
-            [safe_arabic_text("الوقت"), safe_arabic_text(handover_data.handover_date.strftime('%H:%M') if handover_data.handover_date else "غير محدد")],
-            [safe_arabic_text("اسم الشخص"), safe_arabic_text(str(handover_data.person_name) if handover_data.person_name else "غير محدد")],
-            [safe_arabic_text("قراءة العداد"), safe_arabic_text(f"{handover_data.mileage} km" if handover_data.mileage else "غير محدد")],
-            [safe_arabic_text("مستوى الوقود"), safe_arabic_text(f"{handover_data.fuel_level}%" if handover_data.fuel_level else "غير محدد")]
+            [safe_arabic_text("التاريخ"), safe_arabic_text(handover_data.handover_date.strftime('%Y-%m-%d') if handover_data.handover_date else "Not Specified")],
+            [safe_arabic_text("الوقت"), safe_arabic_text(handover_data.handover_date.strftime('%H:%M') if handover_data.handover_date else "Not Specified")],
+            [safe_arabic_text("اسم الشخص"), safe_arabic_text(str(handover_data.person_name) if handover_data.person_name else "Not Specified")],
+            ["Employee ID", safe_arabic_text(str(handover_data.employee_id) if handover_data.employee_id else "Not Assigned")],
+            ["Supervisor", safe_arabic_text(str(handover_data.supervisor_name) if handover_data.supervisor_name else "Not Specified")],
+            [safe_arabic_text("قراءة العداد"), safe_arabic_text(f"{handover_data.mileage} km" if handover_data.mileage else "Not Specified")],
+            [safe_arabic_text("مستوى الوقود"), safe_arabic_text(f"{handover_data.fuel_level}%" if handover_data.fuel_level else "Not Specified")],
+            ["Vehicle Condition", safe_arabic_text(str(handover_data.vehicle_condition) if handover_data.vehicle_condition else "Good")]
         ]
         
         handover_table = Table(handover_details, colWidths=[2*inch, 3*inch])
