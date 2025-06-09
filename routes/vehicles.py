@@ -1987,6 +1987,8 @@ def handover_pdf(id):
 def handover_pdf_public(id):
     """إنشاء ملف PDF لنموذج تسليم/استلام - وصول مفتوح بدون تسجيل دخول"""
     try:
+        from utils.enhanced_arabic_handover_pdf import create_vehicle_handover_pdf
+        
         # البحث عن نموذج التسليم/الاستلام
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)

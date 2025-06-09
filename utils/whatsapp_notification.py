@@ -228,3 +228,65 @@ def send_batch_deduction_notifications_whatsapp(department_id=None, month=None, 
             
     except Exception as e:
         return 0, 0, [f"حدث خطأ عام أثناء إرسال إشعارات الخصم: {str(e)}"]
+
+
+def send_vehicle_handover_whatsapp(handover, recipient_phone, message_text=None):
+    """
+    إرسال إشعار تسليم/استلام مركبة عبر WhatsApp
+    
+    Args:
+        handover: كائن VehicleHandover يحتوي على بيانات التسليم
+        recipient_phone: رقم هاتف المستلم
+        message_text: نص الرسالة المخصص (اختياري)
+        
+    Returns:
+        Boolean: True إذا تم الإرسال بنجاح، False إذا فشل الإرسال
+    """
+    try:
+        # التحقق من وجود بيانات اعتماد Twilio
+        if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN or not TWILIO_PHONE_NUMBER:
+            return False, "لم يتم تكوين بيانات اعتماد Twilio"
+            
+        # إعداد عميل Twilio
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        
+        # تنسيق رقم الهاتف (إضافة رمز الدولة +966 إذا لم يكن موجودًا)
+        to_phone = recipient_phone
+        if not to_phone.startswith('+'):
+            # إذا كان الرقم يبدأ بـ 0، نحذفه ونضيف رمز الدولة
+            if to_phone.startswith('0'):
+                to_phone = "+966" + to_phone[1:]
+            else:
+                to_phone = "+966" + to_phone
+        
+        # إنشاء رابط PDF المفتوح بدون تسجيل دخول
+        from flask import url_for, request
+        pdf_url = url_for('vehicles.handover_pdf_public', id=handover.id, _external=True)
+        
+        # إعداد نص الرسالة
+        if not message_text:
+            handover_type = "تسليم" if handover.handover_type == "delivery" else "استلام"
+            vehicle_info = f"{handover.vehicle_rel.plate_number} - {handover.vehicle_rel.make} {handover.vehicle_rel.model}"
+            handover_date = handover.handover_date.strftime('%d %B %Y') if handover.handover_date else "غير محدد"
+            
+            message_text = f"""مرحباً {handover.person_name}
+
+بخصوص المركبة رقم: {handover.vehicle_rel.plate_number}
+تاريخ {handover_type}: {handover_date}
+
+رابط ملف PDF لبيانات التسليم/الاستلام:
+{pdf_url}
+
+شكراً لك"""
+        
+        # إرسال الرسالة
+        message = client.messages.create(
+            to=f'whatsapp:{to_phone}',
+            from_=f'whatsapp:{TWILIO_PHONE_NUMBER}',
+            body=message_text
+        )
+        
+        return True, f"تم إرسال الإشعار بنجاح. SID: {message.sid}"
+        
+    except Exception as e:
+        return False, f"حدث خطأ أثناء إرسال الإشعار: {str(e)}"
