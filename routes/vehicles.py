@@ -1983,6 +1983,33 @@ def handover_pdf(id):
         flash(f'خطأ في إنشاء ملف PDF: {str(e)}', 'danger')
         return redirect(url_for('vehicles.view', id=vehicle.id if 'vehicle' in locals() else id))
 
+@vehicles_bp.route('/handover/<int:id>/pdf/public')
+def handover_pdf_public(id):
+    """إنشاء ملف PDF لنموذج تسليم/استلام - وصول مفتوح بدون تسجيل دخول"""
+    try:
+        # البحث عن نموذج التسليم/الاستلام
+        handover = VehicleHandover.query.get_or_404(id)
+        vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+        
+        # إنشاء ملف PDF باستخدام النموذج المحسن
+        handover.vehicle_rel = vehicle  # إضافة العلاقة المطلوبة
+        handover.id = id  # التأكد من وجود المعرف
+        pdf_buffer = create_vehicle_handover_pdf(handover)
+        
+        # تحديد اسم الملف
+        filename = f"handover_form_{vehicle.plate_number}.pdf"
+        
+        # إرسال الملف للمستخدم
+        return send_file(
+            pdf_buffer,
+            download_name=filename,
+            as_attachment=True,
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        # في حالة حدوث خطأ، عرض رسالة خطأ بسيطة
+        return f"خطأ في إنشاء ملف PDF: {str(e)}", 500
+
 # مسارات التقارير والإحصائيات
 @vehicles_bp.route('/dashboard')
 @login_required
