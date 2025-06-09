@@ -166,22 +166,27 @@ def create_vehicle_handover_pdf(handover_data):
         else:
             vehicle_data = [[safe_arabic_text("معلومات المركبة"), safe_arabic_text("غير متوفرة")]]
         
-        # إنشاء جدول المركبة
-        vehicle_table = Table(vehicle_data, colWidths=[2*inch, 3*inch])
+        # إنشاء جدول المركبة مع تحسين التخطيط
+        vehicle_table = Table(vehicle_data, colWidths=[2.2*inch, 2.8*inch])
         vehicle_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
             ('BACKGROUND', (1, 0), (1, -1), colors.beige),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
         
         table_width, table_height = vehicle_table.wrap(width, height)
-        y_position -= table_height + 20
-        vehicle_table.drawOn(c, 50, y_position)
+        y_position -= 30
+        vehicle_table.drawOn(c, 50, y_position - table_height)
+        y_position -= table_height + 30
         
         # تفاصيل التسليم
         y_position -= 40
