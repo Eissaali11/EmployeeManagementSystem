@@ -416,6 +416,6 @@ def view_handover(handover_id):
     handover = VehicleHandover.query.get_or_404(handover_id)
     vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
     
-    return render_template('vehicles/handover_form_view.html', 
+    return render_template('employee_portal/handover_view.html', 
                          handover=handover, 
                          vehicle=vehicle)
