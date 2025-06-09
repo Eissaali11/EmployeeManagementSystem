@@ -9,7 +9,7 @@ import os
 
 from app import db
 from models import Vehicle, VehicleWorkshop, SystemAudit
-from utils.english_workshop_pdf import generate_workshop_pdf
+from utils.improved_workshop_pdf import generate_workshop_report_pdf
 
 # إنشاء blueprint
 workshop_reports_bp = Blueprint('workshop_reports', __name__, url_prefix='/workshop-reports')
@@ -33,7 +33,7 @@ def vehicle_workshop_pdf(id):
             return redirect(url_for('vehicles.view', id=id))
         
         # إنشاء تقرير PDF بالعربية
-        pdf_data = generate_workshop_pdf(vehicle, workshop_records)
+        pdf_buffer = generate_workshop_report_pdf(vehicle, workshop_records)
         
         # اسم الملف
         filename = f"workshop_report_{vehicle.plate_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
@@ -44,7 +44,7 @@ def vehicle_workshop_pdf(id):
         
         # إرسال الملف PDF للتحميل
         return send_file(
-            io.BytesIO(pdf_data),
+            pdf_buffer,
             download_name=filename,
             as_attachment=True,
             mimetype='application/pdf'
