@@ -3307,3 +3307,34 @@ def view_handover_form(handover_id):
         flash(f'حدث خطأ أثناء عرض النموذج: {str(e)}', 'danger')
         return redirect(url_for('vehicles.handovers_list'))
 
+@vehicles_bp.route('/handover/<int:handover_id>/update_link', methods=['GET', 'POST'])
+@login_required
+def update_handover_link(handover_id):
+    """تحديث الرابط الخارجي لنموذج التسليم/الاستلام"""
+    handover = VehicleHandover.query.get_or_404(handover_id)
+    vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+    
+    if request.method == 'POST':
+        form_link = request.form.get('form_link', '').strip()
+        handover.form_link = form_link if form_link else None
+        
+        try:
+            db.session.commit()
+            flash(f'تم تحديث الرابط الخارجي بنجاح', 'success')
+            log_activity(
+                user_id=current_user.id,
+                action='تحديث رابط نموذج خارجي',
+                entity_type='VehicleHandover',
+                entity_id=handover.id,
+                description=f'تحديث الرابط الخارجي لنموذج {handover.handover_type} السيارة {vehicle.plate_number}'
+            )
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في تحديث الرابط: {str(e)}', 'error')
+        
+        return redirect(url_for('vehicles.view_handover', id=handover_id))
+    
+    return render_template('vehicles/update_handover_link.html', 
+                         handover=handover, 
+                         vehicle=vehicle)
+
