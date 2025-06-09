@@ -116,10 +116,15 @@ def create_vehicle_handover_pdf(handover_data):
         title_width = c.stringWidth(title, "Helvetica-Bold", 18)
         c.drawString((width - title_width)/2, height - 60, title)
         
-        # صندوق معلومات الوثيقة في المنتصف العلوي
+        # صندوق معلومات الوثيقة الأساسية
         c.setStrokeColor(primary_color)
         c.setLineWidth(2)
-        c.rect(50, height - 200, 300, 120)
+        c.rect(50, height - 150, 200, 80)
+        
+        # صندوق الرابط الإلكتروني منفصل
+        c.setStrokeColor(colors.blue)
+        c.setLineWidth(1.5)
+        c.rect(280, height - 200, 280, 120)
         
         # معلومات الوثيقة
         y_position = height - 50
@@ -141,50 +146,68 @@ def create_vehicle_handover_pdf(handover_data):
             f"Vehicle: {vehicle_number} - {person_name}"
         ]
         
-        # إضافة رابط النموذج الإلكتروني إذا كان موجوداً
+        # عرض المعلومات الأساسية في الصندوق الأيسر
+        c.setFont("Helvetica", 8)
+        basic_info = [
+            f"Document ID: {handover_data.id}",
+            f"Type: {'Delivery' if handover_data.handover_type == 'delivery' else 'Return'}",
+            "Operation: Return",
+            f"Vehicle: {vehicle_number} - {person_name}"
+        ]
+        
+        for i, info in enumerate(basic_info):
+            y_pos = height - 90 - (i * 12)
+            c.drawString(60, y_pos, info)
+        
+        # عرض الرابط الإلكتروني في الصندوق الأيمن
         if form_link and form_link.strip():
-            # استخراج الرابط الفعلي (URL) من النص
+            # عنوان القسم
+            c.setFont("Helvetica-Bold", 10)
+            c.setFillColor(colors.blue)
+            c.drawString(290, height - 90, "Electronic Form Link:")
+            
+            # استخراج الرابط الفعلي
             if 'https://' in form_link:
                 url_start = form_link.find('https://')
-                url_part = form_link[url_start:].split(' ')[0]  # أخذ الرابط فقط بدون النص الإضافي
-                text_part = form_link.replace(url_part, '').strip()  # النص الإضافي
+                url_part = form_link[url_start:].split(' ')[0]
+                text_part = form_link.replace(url_part, '').strip()
                 
-                doc_info.extend([
-                    "رابط النموذج الإلكتروني:",
-                    f"  {url_part[:45]}",
-                    f"  {url_part[45:]}" if len(url_part) > 45 else "",
-                    f"النص: {text_part}" if text_part else ""
-                ])
-            else:
-                # إذا لم يحتوي على رابط صحيح، عرضه كما هو
-                doc_info.extend([
-                    "رابط النموذج الإلكتروني:",
-                    f"  {form_link[:50]}",
-                    f"  {form_link[50:]}" if len(form_link) > 50 else ""
-                ])
-        else:
-            doc_info.append("رابط النموذج الإلكتروني: غير موجود")
-        
-        c.setFont("Helvetica", 8)
-        clickable_url = None
-        for i, info in enumerate(doc_info):
-            y_pos = height - 90 - (i * 12)
-            if info.startswith("رابط النموذج الإلكتروني:"):  # تنسيق غامق للعنوان
-                c.setFont("Helvetica-Bold", 8)
-                c.drawString(60, y_pos, info)
+                # عرض الرابط باللون الأزرق وقابل للنقر
                 c.setFont("Helvetica", 8)
-            elif info.strip():  # تجنب طباعة الأسطر الفارغة
-                # إذا كان السطر يحتوي على رابط، اجعله قابل للنقر
-                if info.strip().startswith('https://'):
-                    clickable_url = info.strip()
-                    c.setFillColor(colors.blue)  # لون أزرق للرابط
-                    c.drawString(60, y_pos, info)
-                    # إضافة منطقة قابلة للنقر
-                    text_width = c.stringWidth(info, "Helvetica", 8)
-                    c.linkURL(clickable_url, (60, y_pos - 2, 60 + text_width, y_pos + 10))
-                    c.setFillColor(colors.black)  # إعادة اللون الأسود
-                else:
-                    c.drawString(60, y_pos, info)
+                c.setFillColor(colors.blue)
+                
+                # تقسيم الرابط إلى أجزاء للعرض
+                max_chars = 35
+                url_lines = [url_part[i:i+max_chars] for i in range(0, len(url_part), max_chars)]
+                
+                for i, line in enumerate(url_lines):
+                    y_pos = height - 110 - (i * 12)
+                    c.drawString(290, y_pos, line)
+                    # إضافة منطقة قابلة للنقر للسطر الأول فقط
+                    if i == 0:
+                        text_width = c.stringWidth(line, "Helvetica", 8)
+                        c.linkURL(url_part, (290, y_pos - 2, 290 + text_width, y_pos + 10))
+                
+                # عرض النص الإضافي إن وجد
+                if text_part:
+                    c.setFillColor(colors.black)
+                    c.drawString(290, height - 110 - (len(url_lines) * 12), f"Description: {text_part}")
+            else:
+                # عرض النص كما هو
+                c.setFont("Helvetica", 8)
+                c.setFillColor(colors.black)
+                c.drawString(290, height - 110, form_link[:40])
+                if len(form_link) > 40:
+                    c.drawString(290, height - 122, form_link[40:])
+        else:
+            # عرض رسالة عدم وجود رابط
+            c.setFont("Helvetica-Bold", 10)
+            c.setFillColor(colors.gray)
+            c.drawString(290, height - 90, "Electronic Form Link:")
+            c.setFont("Helvetica", 8)
+            c.drawString(290, height - 110, "Not Available")
+        
+        c.setFillColor(colors.black)  # إعادة اللون الأسود
         
         # خط فاصل
         y_position = height - 170
