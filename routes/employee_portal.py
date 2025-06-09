@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from datetime import datetime, timedelta
 from sqlalchemy import func, or_, and_, extract
-from models import Employee, Vehicle, VehicleRental, VehicleProject, Salary, Attendance, Department, User
+from models import Employee, Vehicle, VehicleRental, VehicleProject, VehicleHandover, Salary, Attendance, Department, User
 from app import db
 # from functions.date_functions import format_date_arabic
 # from utils.audit_log import log_audit
@@ -135,25 +135,32 @@ def dashboard():
     # احصائيات سريعة
     stats = {}
     
-    # السيارات المخصصة للموظف
-    assigned_vehicles = Vehicle.query.filter(
-        or_(
-            Vehicle.current_driver_id == employee_id,
-            VehicleRental.query.filter_by(
-                employee_id=employee_id,
-                is_active=True
-            ).exists(),
-            VehicleProject.query.filter_by(
-                employee_id=employee_id,
-                is_active=True
-            ).exists()
+    # السيارات المخصصة للموظف من خلال سجلات التسليم الأخيرة
+    latest_handovers = db.session.query(
+        VehicleHandover.vehicle_id,
+        func.max(VehicleHandover.handover_date).label('latest_date')
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
+    ).group_by(VehicleHandover.vehicle_id).subquery()
+    
+    assigned_vehicles = db.session.query(Vehicle).join(
+        VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
+    ).join(
+        latest_handovers, 
+        and_(
+            VehicleHandover.vehicle_id == latest_handovers.c.vehicle_id,
+            VehicleHandover.handover_date == latest_handovers.c.latest_date
         )
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
     ).all()
     
     stats['assigned_vehicles_count'] = len(assigned_vehicles)
     
     # آخر راتب
-    latest_salary = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.salary_date.desc()).first()
+    latest_salary = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.created_at.desc()).first()
     stats['latest_salary'] = latest_salary
     
     # حضور هذا الشهر
@@ -184,8 +191,27 @@ def my_vehicles():
     employee_id = session.get('employee_id')
     employee = Employee.query.get_or_404(employee_id)
     
-    # السيارات المخصصة كسائق حالي
-    current_driver_vehicles = Vehicle.query.filter_by(current_driver_id=employee_id).all()
+    # السيارات المخصصة للموظف من خلال سجلات التسليم الأخيرة
+    latest_handovers = db.session.query(
+        VehicleHandover.vehicle_id,
+        func.max(VehicleHandover.handover_date).label('latest_date')
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
+    ).group_by(VehicleHandover.vehicle_id).subquery()
+    
+    current_driver_vehicles = db.session.query(Vehicle).join(
+        VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
+    ).join(
+        latest_handovers, 
+        and_(
+            VehicleHandover.vehicle_id == latest_handovers.c.vehicle_id,
+            VehicleHandover.handover_date == latest_handovers.c.latest_date
+        )
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
+    ).all()
     
     # السيارات المؤجرة للموظف
     rented_vehicles = db.session.query(Vehicle, VehicleRental).join(
