@@ -158,7 +158,7 @@
                         <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
                         <div class="d-flex flex-wrap">
                             {% for handover in vehicle.handovers %}
-                            <a href="{{ url_for('vehicles.handover_form_view', handover_id=handover.id) }}" 
+                            <a href="{{ url_for('vehicles.view_handover_form', handover_id=handover.id) }}" 
                                class="btn btn-sm handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
                                title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
                                 <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
@@ -214,7 +214,7 @@
                         <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
                         <div class="d-flex flex-wrap">
                             {% for handover in vehicle.handovers %}
-                            <a href="{{ url_for('vehicles.handover_form_view', handover_id=handover.id) }}" 
+                            <a href="{{ url_for('vehicles.view_handover_form', handover_id=handover.id) }}" 
                                class="btn btn-sm handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
                                title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
                                 <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
@@ -270,7 +270,7 @@
                         <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
                         <div class="d-flex flex-wrap">
                             {% for handover in vehicle.handovers %}
-                            <a href="{{ url_for('vehicles.handover_form_view', handover_id=handover.id) }}" 
+                            <a href="{{ url_for('vehicles.view_handover_form', handover_id=handover.id) }}" 
                                class="btn btn-sm handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
                                title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
                                 <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
