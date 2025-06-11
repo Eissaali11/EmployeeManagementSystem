@@ -306,7 +306,7 @@ def get_attendance():
             'check_out': att.check_out.isoformat() if att.check_out else None,
             'status': att.status,
             'notes': att.notes,
-            'overtime_hours': float(att.overtime_hours) if att.overtime_hours else 0,
+            'overtime_hours': float(getattr(att, 'overtime_hours', 0)) if getattr(att, 'overtime_hours', None) else 0,
             'late_minutes': att.late_minutes or 0
         } for att in attendance_records.items],
         'pagination': {
@@ -409,7 +409,7 @@ def get_vehicles():
             'model': veh.model,
             'year': veh.year,
             'color': veh.color,
-            'type': veh.type,
+            'type': getattr(veh, 'type', None) or getattr(veh, 'vehicle_type', 'غير محدد'),
             'status': veh.status,
             'driver_id': veh.driver_id,
             'driver_name': veh.driver.name if veh.driver else None,
@@ -487,7 +487,7 @@ def get_employee_salaries(employee_id):
             'year': sal.year,
             'basic_salary': float(sal.basic_salary) if sal.basic_salary else 0,
             'allowances': float(sal.allowances) if sal.allowances else 0,
-            'overtime': float(sal.overtime) if sal.overtime else 0,
+            'overtime': float(getattr(sal, 'overtime', 0)) if getattr(sal, 'overtime', None) else 0,
             'deductions': float(sal.deductions) if sal.deductions else 0,
             'net_salary': float(sal.net_salary) if sal.net_salary else 0,
             'status': sal.status,
@@ -782,7 +782,7 @@ def monthly_attendance_report():
     total_records = len(attendances)
     present_count = len([att for att in attendances if att.status == 'حاضر'])
     absent_count = len([att for att in attendances if att.status == 'غائب'])
-    late_count = len([att for att in attendances if att.late_minutes and att.late_minutes > 0])
+    late_count = len([att for att in attendances if hasattr(att, 'late_minutes') and att.late_minutes and att.late_minutes > 0])
     
     # إحصائيات يومية
     daily_stats = {}
@@ -792,7 +792,7 @@ def monthly_attendance_report():
             daily_stats[date_str] = {'present': 0, 'absent': 0, 'late': 0}
         
         daily_stats[date_str][att.status] = daily_stats[date_str].get(att.status, 0) + 1
-        if att.late_minutes and att.late_minutes > 0:
+        if hasattr(att, 'late_minutes') and att.late_minutes and att.late_minutes > 0:
             daily_stats[date_str]['late'] += 1
     
     return jsonify({
@@ -829,8 +829,8 @@ def vehicles_status_report():
     today = datetime.now().date()
     warning_date = today + timedelta(days=30)
     
-    expiring_insurance = [v for v in vehicles if v.insurance_expiry and v.insurance_expiry <= warning_date]
-    expiring_license = [v for v in vehicles if v.license_expiry and v.license_expiry <= warning_date]
+    expiring_insurance = [v for v in vehicles if hasattr(v, 'insurance_expiry') and v.insurance_expiry and v.insurance_expiry <= warning_date]
+    expiring_license = [v for v in vehicles if hasattr(v, 'license_expiry') and v.license_expiry and v.license_expiry <= warning_date]
     
     return jsonify({
         'total_vehicles': len(vehicles),
@@ -1440,7 +1440,7 @@ def payroll_financial_report():
             'average_salary': total_net / len(payroll_data) if payroll_data else 0
         },
         'payroll_details': payroll_data,
-        'department_breakdown': self._get_payroll_by_department(salaries) if salaries else {}
+        'department_breakdown': _get_payroll_by_department(salaries) if salaries else {}
     })
 
 def _get_payroll_by_department(salaries):
