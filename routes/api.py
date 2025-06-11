@@ -490,7 +490,7 @@ def get_employee_salaries(employee_id):
             'overtime': float(getattr(sal, 'overtime', 0)) if getattr(sal, 'overtime', None) else 0,
             'deductions': float(sal.deductions) if sal.deductions else 0,
             'net_salary': float(sal.net_salary) if sal.net_salary else 0,
-            'status': sal.status,
+            'status': getattr(sal, 'status', 'غير محدد'),
             'payment_date': sal.payment_date.isoformat() if sal.payment_date else None
         } for sal in salaries.items],
         'pagination': {
