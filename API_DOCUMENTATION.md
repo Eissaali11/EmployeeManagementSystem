@@ -505,17 +505,435 @@ class ApiService {
 
 ---
 
+---
+
+## إدارة المستخدمين (Users Management)
+
+### جلب قائمة المستخدمين
+```http
+GET /api/v1/users?page=1&per_page=20
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+### إنشاء مستخدم جديد
+```http
+POST /api/v1/users
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "أحمد محمد",
+  "email": "ahmed@company.com",
+  "password": "secure_password",
+  "role": "manager",
+  "department_id": 1,
+  "permissions": 127,
+  "is_active": true
+}
+```
+
+---
+
+## التقارير والتحليلات (Reports & Analytics)
+
+### تقرير ملخص الموظفين
+```http
+GET /api/v1/reports/employees/summary?department_id=1
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**الرد:**
+```json
+{
+  "total_employees": 45,
+  "status_breakdown": {
+    "active": 42,
+    "inactive": 3
+  },
+  "department_breakdown": {
+    "قسم التشغيل": 25,
+    "قسم الصيانة": 20
+  },
+  "nationality_breakdown": {
+    "سعودي": 30,
+    "مصري": 10,
+    "باكستاني": 5
+  },
+  "average_salary": 7500.00
+}
+```
+
+### تقرير الحضور الشهري
+```http
+GET /api/v1/reports/attendance/monthly?year=2024&month=6&department_id=1
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+### تقرير حالة المركبات
+```http
+GET /api/v1/reports/vehicles/status
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**الرد:**
+```json
+{
+  "total_vehicles": 20,
+  "status_breakdown": {
+    "متاح": 8,
+    "قيد الاستخدام": 12
+  },
+  "type_breakdown": {
+    "سيارة": 15,
+    "شاحنة": 5
+  },
+  "expiring_insurance": [
+    {
+      "id": 5,
+      "plate_number": "ABC-123",
+      "insurance_expiry": "2024-07-15",
+      "days_remaining": 25
+    }
+  ]
+}
+```
+
+### تقرير ملخص الرواتب
+```http
+GET /api/v1/reports/salaries/summary?year=2024&month=6
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+---
+
+## إدارة تسليم واستلام المركبات
+
+### جلب سجلات التسليم والاستلام
+```http
+GET /api/v1/vehicle-handovers?vehicle_id=5&handover_type=تسليم
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+### إنشاء سجل تسليم/استلام
+```http
+POST /api/v1/vehicle-handovers
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "vehicle_id": 5,
+  "employee_id": 169,
+  "handover_type": "تسليم",
+  "handover_date": "2024-06-11T14:30:00",
+  "notes": "تسليم مركبة في حالة جيدة"
+}
+```
+
+---
+
+## البحث المتقدم
+
+### البحث في جميع البيانات
+```http
+POST /api/v1/search
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "query": "أحمد",
+  "filters": {
+    "department_id": 1
+  }
+}
+```
+
+**الرد:**
+```json
+{
+  "employees": [
+    {
+      "id": 169,
+      "name": "أحمد محمد علي",
+      "employee_id": "50799",
+      "department": "قسم التشغيل",
+      "job_title": "مهندس",
+      "mobile": "+966501234567"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": 3,
+      "plate_number": "أحمد-123",
+      "model": "تويوتا كامري",
+      "status": "متاح"
+    }
+  ],
+  "departments": []
+}
+```
+
+---
+
+## تحليلات الأداء المتقدمة
+
+### تحليل أداء الموظفين
+```http
+GET /api/v1/analytics/employee-performance?year=2024&month=6&department_id=1
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**الرد:**
+```json
+{
+  "period": "2024-06",
+  "total_employees_analyzed": 25,
+  "performance_data": [
+    {
+      "employee_id": 169,
+      "employee_name": "أحمد محمد",
+      "attendance_rate": 96.67,
+      "punctuality_rate": 93.33,
+      "total_days": 30,
+      "present_days": 29,
+      "absent_days": 1,
+      "late_days": 2,
+      "overtime_hours": 8.5
+    }
+  ],
+  "summary": {
+    "avg_attendance_rate": 94.2,
+    "avg_punctuality_rate": 91.8,
+    "total_overtime_hours": 156.5
+  }
+}
+```
+
+---
+
+## التقارير المالية
+
+### تقرير كشف الرواتب المالي
+```http
+GET /api/v1/reports/financial/payroll?year=2024&month=6
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**الرد:**
+```json
+{
+  "period": "2024-06",
+  "payroll_summary": {
+    "total_employees": 45,
+    "total_gross_salary": 350000.00,
+    "total_deductions": 15000.00,
+    "total_net_salary": 335000.00,
+    "average_salary": 7444.44
+  },
+  "payroll_details": [
+    {
+      "employee_id": "50799",
+      "employee_name": "أحمد محمد",
+      "department": "قسم التشغيل",
+      "basic_salary": 8000.00,
+      "allowances": 1000.00,
+      "bonus": 500.00,
+      "gross_salary": 9500.00,
+      "deductions": 200.00,
+      "net_salary": 9300.00,
+      "payment_status": "مدفوع"
+    }
+  ]
+}
+```
+
+---
+
+## الخط الزمني للموظف
+
+### جلب تاريخ أنشطة الموظف
+```http
+GET /api/v1/employees/169/timeline
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**الرد:**
+```json
+{
+  "employee": {
+    "id": 169,
+    "name": "أحمد محمد",
+    "employee_id": "50799"
+  },
+  "timeline": [
+    {
+      "date": "2024-06-11",
+      "type": "attendance",
+      "title": "حضور - حاضر",
+      "description": "حضور: 08:00, انصراف: 16:30",
+      "icon": "clock"
+    },
+    {
+      "date": "2024-06-10",
+      "type": "vehicle",
+      "title": "تسليم مركبة",
+      "description": "تسليم مركبة ABC-123",
+      "icon": "truck"
+    },
+    {
+      "date": "2024-01-15",
+      "type": "join",
+      "title": "التحق بالعمل",
+      "description": "انضم أحمد محمد للشركة",
+      "icon": "user-plus"
+    }
+  ]
+}
+```
+
+---
+
+## العمليات الجماعية
+
+### تسجيل حضور جماعي
+```http
+POST /api/v1/bulk/attendance
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "operation": "mark_present",
+  "employee_ids": [169, 171, 172],
+  "date": "2024-06-11"
+}
+```
+
+**الرد:**
+```json
+{
+  "message": "تم تنفيذ العملية بنجاح. نجح: 3, فشل: 0",
+  "results": {
+    "success": 3,
+    "failed": 0,
+    "errors": []
+  }
+}
+```
+
+---
+
+## الإشعارات
+
+### جلب إشعارات النظام
+```http
+GET /api/v1/notifications
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**الرد:**
+```json
+{
+  "notifications": [
+    {
+      "type": "warning",
+      "title": "انتهاء صلاحية التأمين",
+      "message": "تأمين المركبة ABC-123 ينتهي خلال 15 يوم",
+      "entity_type": "vehicle",
+      "entity_id": 5,
+      "created_at": "2024-06-11T14:30:00"
+    },
+    {
+      "type": "info",
+      "title": "موظف جديد",
+      "message": "انضم الموظف محمد أحمد للنظام",
+      "entity_type": "employee",
+      "entity_id": 175,
+      "created_at": "2024-06-10T09:15:00"
+    }
+  ],
+  "unread_count": 5
+}
+```
+
+---
+
+## إعدادات النظام
+
+### جلب إعدادات النظام
+```http
+GET /api/v1/settings
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**الرد:**
+```json
+{
+  "system_name": "نظام نُظم",
+  "version": "2.0.0",
+  "attendance_settings": {
+    "work_start_time": "08:00",
+    "work_end_time": "16:00",
+    "late_threshold_minutes": 15,
+    "overtime_threshold_hours": 8
+  },
+  "salary_settings": {
+    "currency": "ريال سعودي",
+    "default_allowances": 500.0,
+    "overtime_rate_multiplier": 1.5
+  },
+  "vehicle_settings": {
+    "insurance_warning_days": 30,
+    "maintenance_warning_days": 15
+  }
+}
+```
+
+---
+
+## سجلات النظام والتدقيق
+
+### جلب سجلات العمليات
+```http
+GET /api/v1/audit-logs?action=login&user_id=1&date_from=2024-06-01
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+---
+
+## رفع الوثائق
+
+### رفع وثيقة للموظف
+```http
+POST /api/v1/documents/upload
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: multipart/form-data
+
+employee_id: 169
+document_type: contract
+description: عقد العمل الأصلي
+file: [FILE_UPLOAD]
+```
+
+---
+
 ## الخلاصة
 
-هذا API شامل يوفر:
+هذا API شامل ومتكامل يغطي جميع جوانب نظام نُظم:
 
-✅ **مصادقة آمنة** باستخدام JWT  
-✅ **إدارة الموظفين** الكاملة  
-✅ **تسجيل الحضور والانصراف**  
-✅ **إدارة المركبات**  
-✅ **نظام الرواتب**  
-✅ **الوثائق والملفات**  
-✅ **إحصائيات متقدمة**  
-✅ **بوابة الموظفين المستقلة**  
+✅ **مصادقة آمنة** باستخدام JWT للمستخدمين والموظفين  
+✅ **إدارة المستخدمين** مع الأدوار والصلاحيات  
+✅ **إدارة الموظفين** الكاملة مع الملفات الشخصية  
+✅ **نظام الحضور والانصراف** المتطور  
+✅ **إدارة المركبات** وتسليم/استلام المركبات  
+✅ **نظام الرواتب** والتقارير المالية  
+✅ **إدارة الوثائق** ورفع الملفات  
+✅ **التقارير والتحليلات** المتقدمة  
+✅ **تحليلات الأداء** للموظفين والأقسام  
+✅ **البحث المتقدم** في جميع البيانات  
+✅ **العمليات الجماعية** لتوفير الوقت  
+✅ **نظام الإشعارات** الذكي  
+✅ **الخط الزمني** لأنشطة الموظفين  
+✅ **سجلات التدقيق** والعمليات  
+✅ **إعدادات النظام** القابلة للتخصيص  
+✅ **بوابة الموظفين** المستقلة  
 
-يمكن استخدامه مع أي تطبيق جوال أو نظام خارجي يدعم HTTP و JSON.
+يمكن استخدام هذا API مع أي تطبيق جوال أو نظام خارجي يدعم HTTP و JSON، مما يوفر حلاً متكاملاً لإدارة الموارد البشرية والمركبات.
