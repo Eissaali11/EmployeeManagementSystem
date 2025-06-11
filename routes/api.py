@@ -92,18 +92,18 @@ def employee_login():
     """تسجيل دخول الموظفين"""
     data = request.get_json()
     
-    if not data or not data.get('employee_id') or not data.get('work_number'):
-        return jsonify({'error': 'رقم الموظف ورقم العمل مطلوبان'}), 400
+    if not data or not data.get('employee_id') or not data.get('national_id'):
+        return jsonify({'error': 'رقم الموظف والهوية الوطنية مطلوبان'}), 400
     
     employee = Employee.query.filter_by(
         employee_id=data['employee_id'],
-        work_number=data['work_number']
+        national_id=data['national_id']
     ).first()
     
     if not employee:
         return jsonify({'error': 'بيانات تسجيل الدخول غير صحيحة'}), 401
     
-    if not employee.is_active:
+    if employee.status != 'active':
         return jsonify({'error': 'حساب الموظف غير مفعل'}), 401
     
     token = generate_token(None, employee.id)
@@ -186,7 +186,7 @@ def get_employees():
             'status': emp.status,
             'join_date': emp.join_date.isoformat() if emp.join_date else None,
             'basic_salary': float(emp.basic_salary) if emp.basic_salary else None,
-            'is_active': emp.is_active,
+            'is_active': emp.status == 'active',
             'profile_image': emp.profile_image
         } for emp in employees.items],
         'pagination': {
