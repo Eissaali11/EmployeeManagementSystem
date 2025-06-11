@@ -223,11 +223,11 @@ def get_employee(employee_id):
         'basic_salary': float(employee.basic_salary) if employee.basic_salary else None,
         'location': employee.location,
         'project': employee.project,
-        'is_active': employee.is_active,
+        'is_active': employee.status == 'active',
         'profile_image': employee.profile_image,
         'national_id_image': employee.national_id_image,
         'license_image': employee.license_image,
-        'work_number': employee.work_number
+        'national_id': employee.national_id
     })
 
 @api_bp.route('/employees', methods=['POST'])
