@@ -821,7 +821,7 @@ def vehicles_status_report():
     # إحصائيات حسب النوع
     type_stats = {}
     for vehicle in vehicles:
-        vehicle_type = vehicle.type or 'غير محدد'
+        vehicle_type = getattr(vehicle, 'vehicle_type', None) or 'غير محدد'
         type_stats[vehicle_type] = type_stats.get(vehicle_type, 0) + 1
     
     # المركبات المنتهية الصلاحية أو قريبة من الانتهاء
@@ -981,21 +981,20 @@ def get_notifications():
     today = datetime.now().date()
     warning_date = today + timedelta(days=30)
     
-    expiring_vehicles = Vehicle.query.filter(
-        Vehicle.insurance_expiry <= warning_date,
-        Vehicle.insurance_expiry >= today
-    ).all()
+    # تبسيط إشعارات انتهاء التأمين - يمكن إضافة هذا لاحقاً بعد إضافة حقول التأمين
+    expiring_vehicles = []
     
     for vehicle in expiring_vehicles:
-        days_remaining = (vehicle.insurance_expiry - today).days
-        notifications.append({
-            'type': 'warning',
-            'title': 'انتهاء صلاحية التأمين',
-            'message': f'تأمين المركبة {vehicle.plate_number} ينتهي خلال {days_remaining} يوم',
-            'entity_type': 'vehicle',
-            'entity_id': vehicle.id,
-            'created_at': datetime.now().isoformat()
-        })
+        if hasattr(vehicle, 'insurance_expiry') and vehicle.insurance_expiry:
+            days_remaining = (vehicle.insurance_expiry - today).days
+            notifications.append({
+                'type': 'warning',
+                'title': 'انتهاء صلاحية التأمين',
+                'message': f'تأمين المركبة {vehicle.plate_number} ينتهي خلال {days_remaining} يوم',
+                'entity_type': 'vehicle',
+                'entity_id': vehicle.id,
+                'created_at': datetime.now().isoformat()
+            })
     
     # إشعارات الموظفين الجدد
     new_employees = Employee.query.filter(
@@ -1346,10 +1345,10 @@ def employee_performance_analytics():
         elif att.status == 'غائب':
             employee_stats[emp_id]['absent_days'] += 1
         
-        if att.late_minutes and att.late_minutes > 0:
+        if hasattr(att, 'late_minutes') and att.late_minutes and att.late_minutes > 0:
             employee_stats[emp_id]['late_days'] += 1
         
-        if att.overtime_hours:
+        if hasattr(att, 'overtime_hours') and att.overtime_hours:
             employee_stats[emp_id]['overtime_hours'] += att.overtime_hours
     
     # حساب معدلات الأداء
