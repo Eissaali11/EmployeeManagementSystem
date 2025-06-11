@@ -27,12 +27,22 @@ def setup_arabic_font():
         if os.path.exists(font_path):
             try:
                 pdfmetrics.registerFont(TTFont('Arabic', font_path))
+                pdfmetrics.registerFont(TTFont('Arabic-Bold', font_path))
                 return True
-            except:
+            except Exception as e:
+                print(f"فشل في تحميل الخط {font_path}: {e}")
                 continue
     
-    # استخدام خط افتراضي
-    return False
+    # محاولة استخدام خطوط النظام الأساسية
+    try:
+        # تسجيل خط Helvetica للنصوص الإنجليزية
+        from reportlab.pdfbase.pdfmetrics import registerFontFamily
+        registerFontFamily('Arabic', normal='Helvetica', bold='Helvetica-Bold')
+        print("تم استخدام خط Helvetica كبديل")
+        return False
+    except:
+        print("فشل في تسجيل الخط البديل")
+        return False
 
 def create_arabic_style(font_size=12, alignment=TA_RIGHT):
     """إنشاء نمط للنص العربي"""
