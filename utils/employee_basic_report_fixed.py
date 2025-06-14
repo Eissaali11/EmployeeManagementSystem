@@ -259,7 +259,7 @@ def generate_employee_basic_pdf(employee_id):
             print(f"لم يتم العثور على الموظف {employee_id}")
             return None
         
-        print(f"تم العثور على الموظف: {employee.first_name} {employee.last_name}")
+        print(f"تم العثور على الموظف: {employee.name}")
         
         # إنشاء PDF
         pdf = EmployeeBasicReportPDF()
@@ -268,32 +268,37 @@ def generate_employee_basic_pdf(employee_id):
         # المعلومات الأساسية
         pdf.add_section_title('المعلومات الأساسية')
         
-        pdf.add_info_row('الاسم الأول', employee.first_name)
-        pdf.add_info_row('اسم العائلة', employee.last_name)
+        pdf.add_info_row('الاسم', employee.name)
         pdf.add_info_row('رقم الهوية', employee.national_id)
-        pdf.add_info_row('رقم الهاتف', employee.phone)
+        pdf.add_info_row('رقم الهاتف', employee.mobile)
         pdf.add_info_row('البريد الإلكتروني', employee.email)
-        pdf.add_info_row('تاريخ الميلاد', employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else 'غير محدد')
         pdf.add_info_row('الجنسية', employee.nationality)
-        pdf.add_info_row('العنوان', employee.address)
+        pdf.add_info_row('نوع العقد', 'سعودي' if employee.contract_type == 'saudi' else 'وافد')
+        pdf.add_info_row('الموقع', employee.location)
+        pdf.add_info_row('المشروع', employee.project)
         
         # معلومات العمل
         pdf.add_section_title('معلومات العمل')
         
-        pdf.add_info_row('رقم الموظف', employee.employee_number)
+        pdf.add_info_row('رقم الموظف', employee.employee_id)
         pdf.add_info_row('المسمى الوظيفي', employee.job_title)
         pdf.add_info_row('القسم', employee.department.name if employee.department else 'غير محدد')
-        pdf.add_info_row('تاريخ التوظيف', employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد')
+        pdf.add_info_row('تاريخ الانضمام', employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد')
         pdf.add_info_row('الراتب الأساسي', f"{employee.basic_salary:,.2f} ريال" if employee.basic_salary else 'غير محدد')
         pdf.add_info_row('حالة الموظف', employee.status)
+        pdf.add_info_row('التوازن الوطني', 'نعم' if employee.has_national_balance else 'لا')
         
         # إضافة الصورة الشخصية إذا كانت متوفرة
         if employee.profile_image:
             pdf.add_employee_image(employee.profile_image, 'الصورة الشخصية', 80, 80, is_profile=True)
         
         # إضافة صورة الهوية إذا كانت متوفرة
-        if employee.id_document:
-            pdf.add_employee_image(employee.id_document, 'صورة الهوية', 120, 80)
+        if employee.national_id_image:
+            pdf.add_employee_image(employee.national_id_image, 'صورة الهوية الوطنية', 120, 80)
+        
+        # إضافة صورة رخصة القيادة إذا كانت متوفرة
+        if employee.license_image:
+            pdf.add_employee_image(employee.license_image, 'صورة رخصة القيادة', 120, 80)
         
         # سجلات المركبات
         vehicle_handovers = VehicleHandover.query.filter_by(employee_id=employee_id).all()
