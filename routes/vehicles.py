@@ -82,6 +82,7 @@ def update_vehicle_driver(vehicle_id):
 
 def update_all_vehicle_drivers():
     """تحديث أسماء جميع السائقين في جدول السيارات"""
+    from app import db
     vehicles = Vehicle.query.all()
     updated_count = 0
     
@@ -448,6 +449,7 @@ def index():
 @login_required
 def create():
     """إضافة سيارة جديدة"""
+    from app import db
     if request.method == 'POST':
         # استخراج البيانات من النموذج
         plate_number = request.form.get('plate_number')
@@ -491,6 +493,7 @@ def create():
 @login_required
 def view(id):
     """عرض تفاصيل سيارة معينة"""
+    from app import db
     vehicle = Vehicle.query.get_or_404(id)
     
     # الحصول على سجلات مختلفة للسيارة
