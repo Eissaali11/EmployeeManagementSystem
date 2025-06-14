@@ -391,16 +391,15 @@ def export_vehicle_excel(vehicle, workshop_records=None, rental_records=None):
         # ورقة المعلومات الأساسية
         basic_data = {
             'البيان': [
-                'رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون', 'رقم الهيكل',
-                'القسم/المالك', 'الحالة', 'تاريخ انتهاء التأمين', 'تاريخ انتهاء الفحص'
+                'رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون', 'اسم السائق',
+                'الحالة', 'تاريخ انتهاء التفويض', 'تاريخ انتهاء الاستمارة', 'تاريخ انتهاء الفحص الدوري'
             ],
             'القيمة': [
                 vehicle.plate_number,
                 f"{vehicle.make} {vehicle.model}",
                 str(vehicle.year),
                 vehicle.color,
-                vehicle.vin or "غير متوفر",
-                vehicle.department or "غير محدد",
+                vehicle.driver_name or "غير محدد",
                 {
                     'available': 'متاحة',
                     'rented': 'مؤجرة',
@@ -409,8 +408,9 @@ def export_vehicle_excel(vehicle, workshop_records=None, rental_records=None):
                     'accident': 'حادث',
                     'sold': 'مباعة'
                 }.get(vehicle.status, vehicle.status),
-                vehicle.insurance_expiry.strftime("%Y-%m-%d") if vehicle.insurance_expiry else "غير محدد",
-                vehicle.inspection_expiry.strftime("%Y-%m-%d") if vehicle.inspection_expiry else "غير محدد"
+                vehicle.authorization_expiry_date.strftime("%Y-%m-%d") if vehicle.authorization_expiry_date else "غير محدد",
+                vehicle.registration_expiry_date.strftime("%Y-%m-%d") if vehicle.registration_expiry_date else "غير محدد",
+                vehicle.inspection_expiry_date.strftime("%Y-%m-%d") if vehicle.inspection_expiry_date else "غير محدد"
             ]
         }
         

@@ -154,6 +154,7 @@
 - Environment variable protection
 
 ## Changelog
+- June 14, 2025: Fixed Vehicle Excel export 'vin' field error by replacing with existing model fields
 - June 14, 2025: Fixed VehicleSafetyCheck Excel export field mapping errors (tire_condition, checked_by, etc.)
 - June 14, 2025: Fixed circular import issues in vehicles routes causing 404 and 500 errors
 - June 14, 2025: Resolved database access problems by adding proper imports to route functions
