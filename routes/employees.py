@@ -12,7 +12,7 @@ from utils.excel import parse_employee_excel, generate_employee_excel, export_em
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 from utils.employee_comprehensive_report_updated import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
-from utils.employee_simple_report import generate_simple_employee_report
+from utils.employee_working_report import generate_working_employee_report
 from utils.audit_logger import log_activity
 
 employees_bp = Blueprint('employees', __name__)
@@ -604,7 +604,7 @@ def upload_image(id):
 def basic_report(id):
     """تقرير المعلومات الأساسية للموظف"""
     try:
-        pdf_buffer, error = generate_simple_employee_report(id)
+        pdf_buffer, error = generate_working_employee_report(id)
         if pdf_buffer:
             employee = Employee.query.get_or_404(id)
             current_date = datetime.now().strftime('%Y%m%d')

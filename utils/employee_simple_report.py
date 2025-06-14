@@ -48,9 +48,10 @@ def generate_simple_employee_report(employee_id):
         def clean_text(text):
             if not text:
                 return 'Not specified'
-            # إزالة الأحرف غير اللاتينية
             try:
-                return str(text).encode('ascii', 'ignore').decode('ascii')
+                # تحويل النص إلى نص لاتيني فقط
+                cleaned = str(text).encode('ascii', 'ignore').decode('ascii').strip()
+                return cleaned if cleaned else 'Not specified'
             except:
                 return 'Not specified'
         
@@ -85,10 +86,10 @@ def generate_simple_employee_report(employee_id):
             pdf.ln(5)
             
             for handover in vehicle_handovers:
-                vehicle_info = f"Plate: {handover.vehicle.plate_number if handover.vehicle else 'N/A'}"
-                vehicle_info += f" | Type: {handover.handover_type}"
+                vehicle_info = f"Plate: {clean_text(handover.vehicle.plate_number) if handover.vehicle else 'N/A'}"
+                vehicle_info += f" | Type: {clean_text(handover.handover_type)}"
                 vehicle_info += f" | Date: {handover.handover_date.strftime('%Y-%m-%d')}"
-                vehicle_info += f" | Person: {handover.person_name}"
+                vehicle_info += f" | Person: {clean_text(handover.person_name)}"
                 if handover.mileage:
                     vehicle_info += f" | Mileage: {handover.mileage} km"
                 
