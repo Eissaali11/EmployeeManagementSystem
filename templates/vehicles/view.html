@@ -32,13 +32,9 @@
                         تصدير بيانات هذه المركبة
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{{ url_for('vehicles.import_vehicles_excel') }}">
-                        <i class="fas fa-upload ms-2"></i>
-                        استيراد من Excel
-                    </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('vehicles.download_excel_template') }}">
-                        <i class="fas fa-file-download ms-2"></i>
-                        تحميل قالب Excel
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.index') }}">
+                        <i class="fas fa-list ms-2"></i>
+                        العودة للقائمة
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="{{ url_for('vehicles.generate_vehicle_report', id=vehicle.id) }}" target="_blank">
