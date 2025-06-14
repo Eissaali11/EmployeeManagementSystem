@@ -9,24 +9,80 @@
             <i class="fas fa-car ms-2"></i>
             إدارة السيارات
         </h2>
-        <div>
-            <a href="{{ url_for('vehicles.create') }}" class="btn btn-primary">
+        <div class="btn-group-vertical btn-group-sm d-md-none mb-2" role="group">
+            <a href="{{ url_for('vehicles.create') }}" class="btn btn-primary mb-1">
                 <i class="fas fa-plus ms-1"></i>
-                إضافة سيارة جديدة
+                إضافة سيارة
             </a>
-            <a href="{{ url_for('vehicles.detailed_list') }}" class="btn btn-success me-2">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-file-excel ms-1"></i>
+                    Excel
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.export_all_vehicles_excel') }}">
+                        <i class="fas fa-download ms-2"></i>
+                        تصدير البيانات الكاملة
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.import_vehicles_excel') }}">
+                        <i class="fas fa-upload ms-2"></i>
+                        استيراد من Excel
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.download_excel_template') }}">
+                        <i class="fas fa-file-download ms-2"></i>
+                        تحميل قالب Excel
+                    </a></li>
+                </ul>
+            </div>
+            <a href="{{ url_for('vehicles.detailed_list') }}" class="btn btn-success mb-1">
                 <i class="fas fa-list-alt ms-1"></i>
                 القائمة التفصيلية
             </a>
-            <a href="{{ url_for('vehicles.dashboard') }}" class="btn btn-info me-2">
+            <a href="{{ url_for('vehicles.dashboard') }}" class="btn btn-info mb-1">
                 <i class="fas fa-chart-bar ms-1"></i>
                 لوحة المعلومات
             </a>
-            <a href="{{ url_for('vehicles.export_vehicles_excel') }}" class="btn btn-secondary me-2">
-                <i class="fas fa-file-excel ms-1"></i>
-                تصدير Excel
+            <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-danger mb-1">
+                <i class="fas fa-exclamation-triangle ms-1"></i>
+                الوثائق المنتهية
             </a>
-            <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-danger me-2">
+        </div>
+        
+        <div class="d-none d-md-block">
+            <a href="{{ url_for('vehicles.create') }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة سيارة جديدة
+            </a>
+            <div class="btn-group me-2" role="group">
+                <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-file-excel ms-1"></i>
+                    إدارة Excel
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.export_all_vehicles_excel') }}">
+                        <i class="fas fa-download ms-2"></i>
+                        تصدير البيانات الكاملة
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.import_vehicles_excel') }}">
+                        <i class="fas fa-upload ms-2"></i>
+                        استيراد من Excel
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.download_excel_template') }}">
+                        <i class="fas fa-file-download ms-2"></i>
+                        تحميل قالب Excel
+                    </a></li>
+                </ul>
+            </div>
+            <a href="{{ url_for('vehicles.detailed_list') }}" class="btn btn-outline-success me-2">
+                <i class="fas fa-list-alt ms-1"></i>
+                القائمة التفصيلية
+            </a>
+            <a href="{{ url_for('vehicles.dashboard') }}" class="btn btn-outline-info me-2">
+                <i class="fas fa-chart-bar ms-1"></i>
+                لوحة المعلومات
+            </a>
+            <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-outline-danger me-2">
                 <i class="fas fa-exclamation-triangle ms-1"></i>
                 الوثائق المنتهية
             </a>
