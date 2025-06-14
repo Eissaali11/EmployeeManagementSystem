@@ -604,11 +604,13 @@ def upload_image(id):
 def basic_report(id):
     """تقرير المعلومات الأساسية للموظف"""
     try:
-        pdf_buffer, error = generate_simple_designed_employee_report(id)
+        from utils.employee_basic_report_deployment import generate_employee_basic_pdf
+        
+        pdf_buffer = generate_employee_basic_pdf(id)
         if pdf_buffer:
             employee = Employee.query.get_or_404(id)
             current_date = datetime.now().strftime('%Y%m%d')
-            filename = f'employee_report_{employee.employee_id}_{current_date}.pdf'
+            filename = f'employee_basic_report_{employee.employee_id}_{current_date}.pdf'
             
             # تسجيل الإجراء
             audit = SystemAudit(
@@ -627,9 +629,12 @@ def basic_report(id):
                 mimetype='application/pdf'
             )
         else:
-            flash(f'خطأ في إنشاء ملف PDF: {error}', 'danger')
+            flash('لم يتم العثور على بيانات كافية لإنشاء التقرير', 'warning')
             return redirect(url_for('employees.view', id=id))
     except Exception as e:
+        import traceback
+        print(f"Error generating basic report: {str(e)}")
+        print(traceback.format_exc())
         flash(f'خطأ في تصدير PDF: {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))
 
