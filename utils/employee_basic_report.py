@@ -38,53 +38,66 @@ class EmployeeBasicReportPDF(FPDF):
             else:
                 self.font_path = 'fonts'  # مسار افتراضي
         
+    def setup_arabic_font(self):
+        """إعداد الخط العربي"""
+        try:
+            # محاولة تحميل Cairo.ttf من المجلد الجذر
+            if os.path.exists('Cairo.ttf'):
+                self.add_font('Arabic', '', 'Cairo.ttf', uni=True)
+                self.add_font('Arabic', 'B', 'Cairo.ttf', uni=True)
+                return True
+            
+            # محاولة من مجلد fonts
+            if self.font_path:
+                cairo_font = os.path.join(self.font_path, 'Cairo.ttf')
+                if os.path.exists(cairo_font):
+                    self.add_font('Arabic', '', cairo_font, uni=True)
+                    self.add_font('Arabic', 'B', cairo_font, uni=True)
+                    return True
+            
+            return False
+            
+        except Exception as e:
+            print(f"خطأ في تحميل الخط العربي: {e}")
+            return False
+
     def header(self):
         """رأس الصفحة"""
-        # إضافة الخط العربي
-        try:
-            if self.font_path:
-                # محاولة استخدام خطوط Amiri أولاً
-                amiri_regular = os.path.join(self.font_path, 'Amiri-Regular.ttf')
-                amiri_bold = os.path.join(self.font_path, 'Amiri-Bold.ttf')
-                
-                if os.path.exists(amiri_regular) and os.path.exists(amiri_bold):
-                    self.add_font('Arabic', '', amiri_regular, uni=True)
-                    self.add_font('Arabic', 'B', amiri_bold, uni=True)
-                else:
-                    # استخدام Cairo.ttf كبديل
-                    cairo_font = os.path.join(self.font_path, 'Cairo.ttf')
-                    if os.path.exists(cairo_font):
-                        self.add_font('Arabic', '', cairo_font, uni=True)
-                        self.add_font('Arabic', 'B', cairo_font, uni=True)
-                    elif os.path.exists('Cairo.ttf'):
-                        self.add_font('Arabic', '', 'Cairo.ttf', uni=True)
-                        self.add_font('Arabic', 'B', 'Cairo.ttf', uni=True)
-                    else:
-                        # محاولة العثور على خط عربي في النظام
-                        self.set_font('Arial', 'B', 20)
-                        return
-        except Exception as e:
-            print(f"خطأ في تحميل الخط: {e}")
-            self.set_font('Arial', 'B', 20)
-            return
+        # إعداد الخط العربي
+        arabic_font_loaded = self.setup_arabic_font()
         
-        self.set_font('Arabic', 'B', 20)
-        # العنوان الرئيسي
-        title = get_display(reshape('تقرير المعلومات الأساسية للموظف'))
-        self.cell(0, 15, title, 0, 1, 'C')
+        if arabic_font_loaded:
+            self.set_font('Arabic', 'B', 20)
+            # العنوان الرئيسي
+            title = get_display(reshape('تقرير المعلومات الأساسية للموظف'))
+            self.cell(0, 15, title, 0, 1, 'C')
+        else:
+            # استخدام Arial كخط بديل
+            self.set_font('Arial', 'B', 20)
+            self.cell(0, 15, 'Employee Basic Report', 0, 1, 'C')
+        
         self.ln(5)
         
     def footer(self):
         """تذييل الصفحة"""
         self.set_y(-15)
-        self.set_font('Arabic', '', 10)
-        page_text = get_display(reshape(f'صفحة {self.page_no()}'))
-        self.cell(0, 10, page_text, 0, 0, 'C')
         
-        # تاريخ الطباعة
-        current_date = datetime.now().strftime('%Y/%m/%d')
-        date_text = get_display(reshape(f'تاريخ الطباعة: {current_date}'))
-        self.cell(0, 10, date_text, 0, 0, 'L')
+        # التحقق من توفر الخط العربي
+        try:
+            self.set_font('Arabic', '', 10)
+            page_text = get_display(reshape(f'صفحة {self.page_no()}'))
+            self.cell(0, 10, page_text, 0, 0, 'C')
+            
+            # تاريخ الطباعة
+            current_date = datetime.now().strftime('%Y/%m/%d')
+            date_text = get_display(reshape(f'تاريخ الطباعة: {current_date}'))
+            self.cell(0, 10, date_text, 0, 0, 'L')
+        except:
+            # استخدام Arial كخط بديل
+            self.set_font('Arial', '', 10)
+            self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+            current_date = datetime.now().strftime('%Y/%m/%d')
+            self.cell(0, 10, f'Print Date: {current_date}', 0, 0, 'L')
         
     def add_section_title(self, title):
         """إضافة عنوان قسم"""
@@ -256,8 +269,12 @@ class EmployeeBasicReportPDF(FPDF):
                 return False
         else:
             # عرض رسالة عدم وجود صورة مع تصميم جميل
-            self.set_font('Arabic', 'B', 12)
-            title_text = get_display(reshape(title))
+            try:
+                self.set_font('Arabic', 'B', 12)
+                title_text = get_display(reshape(title))
+            except:
+                self.set_font('Arial', 'B', 12)
+                title_text = title
             
             # إطار للعنوان
             self.set_fill_color(255, 240, 240)  # لون وردي فاتح
