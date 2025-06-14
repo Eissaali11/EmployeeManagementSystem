@@ -4191,3 +4191,327 @@ def download_excel_template():
         flash(f'خطأ في إنشاء القالب: {str(e)}', 'danger')
         return redirect(url_for('vehicles.index'))
 
+@vehicles_bp.route('/<int:id>/export_excel')
+@login_required
+def export_single_vehicle_excel(id):
+    """تصدير بيانات مركبة واحدة إلى Excel مع جميع التفاصيل"""
+    try:
+        vehicle = Vehicle.query.get_or_404(id)
+        
+        buffer = io.BytesIO()
+        
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            workbook = writer.book
+            
+            # تنسيق العناوين
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'center',
+                'align': 'center',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'font_size': 12
+            })
+            
+            # تنسيق البيانات
+            data_format = workbook.add_format({
+                'align': 'center',
+                'valign': 'vcenter',
+                'border': 1,
+                'font_size': 10
+            })
+            
+            # ===== ورقة معلومات السيارة الأساسية =====
+            basic_data = {
+                'البيان': [
+                    'رقم اللوحة', 'الماركة', 'الموديل', 'سنة الصنع', 'اللون',
+                    'رقم الهيكل', 'القسم/المالك', 'اسم السائق الحالي', 'الحالة',
+                    'تاريخ انتهاء التأمين', 'تاريخ انتهاء الفحص الدوري',
+                    'تاريخ انتهاء الاستمارة', 'تاريخ انتهاء التفويض',
+                    'ملاحظات', 'تاريخ الإضافة'
+                ],
+                'القيمة': [
+                    vehicle.plate_number,
+                    vehicle.make,
+                    vehicle.model,
+                    vehicle.year,
+                    vehicle.color or '',
+                    vehicle.vin or '',
+                    vehicle.department or '',
+                    vehicle.driver_name or '',
+                    {
+                        'available': 'متاحة',
+                        'rented': 'مؤجرة',
+                        'in_workshop': 'في الورشة',
+                        'in_project': 'في المشروع',
+                        'accident': 'حادث',
+                        'sold': 'مباعة'
+                    }.get(vehicle.status, vehicle.status),
+                    vehicle.insurance_expiry.strftime('%Y-%m-%d') if vehicle.insurance_expiry else '',
+                    vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else '',
+                    vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else '',
+                    vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else '',
+                    vehicle.notes or '',
+                    vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else ''
+                ]
+            }
+            
+            df_basic = pd.DataFrame(basic_data)
+            df_basic.to_excel(writer, sheet_name='معلومات السيارة', index=False)
+            
+            worksheet = writer.sheets['معلومات السيارة']
+            worksheet.set_column('A:A', 25)
+            worksheet.set_column('B:B', 30)
+            
+            for col_num, value in enumerate(df_basic.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+            
+            for row in range(1, len(df_basic) + 1):
+                for col in range(len(df_basic.columns)):
+                    worksheet.write(row, col, df_basic.iloc[row-1, col], data_format)
+            
+            # ===== ورقة سجلات الإيجار =====
+            rental_records = VehicleRental.query.filter_by(vehicle_id=id).all()
+            if rental_records:
+                rental_data = []
+                for record in rental_records:
+                    rental_data.append({
+                        'المستأجر': record.renter_name or '',
+                        'تاريخ البداية': record.start_date.strftime('%Y-%m-%d') if record.start_date else '',
+                        'تاريخ النهاية': record.end_date.strftime('%Y-%m-%d') if record.end_date else 'مستمر',
+                        'التكلفة (ريال)': record.cost or 0,
+                        'الحالة': 'نشط' if record.is_active else 'منتهي',
+                        'جهة الاتصال': record.contact_number or '',
+                        'ملاحظات': record.notes or ''
+                    })
+                
+                df_rental = pd.DataFrame(rental_data)
+                df_rental.to_excel(writer, sheet_name='سجلات الإيجار', index=False)
+                
+                worksheet = writer.sheets['سجلات الإيجار']
+                
+                for col_num, value in enumerate(df_rental.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    worksheet.set_column(col_num, col_num, 15)
+                
+                for row in range(1, len(df_rental) + 1):
+                    for col in range(len(df_rental.columns)):
+                        worksheet.write(row, col, df_rental.iloc[row-1, col], data_format)
+            
+            # ===== ورقة الفحص الدوري =====
+            periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).all()
+            if periodic_inspections:
+                inspection_data = []
+                for record in periodic_inspections:
+                    inspection_data.append({
+                        'تاريخ الفحص': record.inspection_date.strftime('%Y-%m-%d') if record.inspection_date else '',
+                        'تاريخ الانتهاء': record.expiry_date.strftime('%Y-%m-%d') if record.expiry_date else '',
+                        'جهة الفحص': record.inspection_center or '',
+                        'رقم الشهادة': record.certificate_number or '',
+                        'نتيجة الفحص': record.result or '',
+                        'التكلفة (ريال)': record.cost or 0,
+                        'ملاحظات': record.notes or ''
+                    })
+                
+                df_inspection = pd.DataFrame(inspection_data)
+                df_inspection.to_excel(writer, sheet_name='الفحص الدوري', index=False)
+                
+                worksheet = writer.sheets['الفحص الدوري']
+                
+                for col_num, value in enumerate(df_inspection.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    worksheet.set_column(col_num, col_num, 15)
+                
+                for row in range(1, len(df_inspection) + 1):
+                    for col in range(len(df_inspection.columns)):
+                        worksheet.write(row, col, df_inspection.iloc[row-1, col], data_format)
+            
+            # ===== ورقة فحوصات السلامة =====
+            safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).all()
+            if safety_checks:
+                safety_data = []
+                for record in safety_checks:
+                    safety_data.append({
+                        'تاريخ الفحص': record.check_date.strftime('%Y-%m-%d') if record.check_date else '',
+                        'نوع الفحص': record.check_type or '',
+                        'المفحوص بواسطة': record.checked_by or '',
+                        'حالة الإطارات': record.tire_condition or '',
+                        'حالة الفرامل': record.brake_condition or '',
+                        'حالة الأضواء': record.lights_condition or '',
+                        'مستوى الزيت': record.oil_level or '',
+                        'مستوى المياه': record.water_level or '',
+                        'النتيجة العامة': record.overall_result or '',
+                        'إجراءات مطلوبة': record.required_actions or '',
+                        'ملاحظات': record.notes or ''
+                    })
+                
+                df_safety = pd.DataFrame(safety_data)
+                df_safety.to_excel(writer, sheet_name='فحوصات السلامة', index=False)
+                
+                worksheet = writer.sheets['فحوصات السلامة']
+                
+                for col_num, value in enumerate(df_safety.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    worksheet.set_column(col_num, col_num, 15)
+                
+                for row in range(1, len(df_safety) + 1):
+                    for col in range(len(df_safety.columns)):
+                        worksheet.write(row, col, df_safety.iloc[row-1, col], data_format)
+            
+            # ===== ورقة سجلات الورشة =====
+            workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).all()
+            if workshop_records:
+                workshop_data = []
+                for record in workshop_records:
+                    workshop_data.append({
+                        'سبب الدخول': {
+                            'maintenance': 'صيانة دورية',
+                            'breakdown': 'عطل',
+                            'accident': 'حادث'
+                        }.get(record.reason, record.reason),
+                        'تاريخ الدخول': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '',
+                        'تاريخ الخروج': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else 'لا يزال في الورشة',
+                        'حالة الإصلاح': {
+                            'in_progress': 'قيد التنفيذ',
+                            'completed': 'تم الإصلاح',
+                            'pending_approval': 'بانتظار الموافقة'
+                        }.get(record.repair_status, record.repair_status),
+                        'التكلفة (ريال)': record.cost or 0,
+                        'اسم الورشة': record.workshop_name or '',
+                        'الفني المسؤول': record.technician_name or '',
+                        'الوصف': record.description or '',
+                        'ملاحظات': record.notes or ''
+                    })
+                
+                df_workshop = pd.DataFrame(workshop_data)
+                df_workshop.to_excel(writer, sheet_name='سجلات الورشة', index=False)
+                
+                worksheet = writer.sheets['سجلات الورشة']
+                
+                for col_num, value in enumerate(df_workshop.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    worksheet.set_column(col_num, col_num, 15)
+                
+                for row in range(1, len(df_workshop) + 1):
+                    for col in range(len(df_workshop.columns)):
+                        worksheet.write(row, col, df_workshop.iloc[row-1, col], data_format)
+            
+            # ===== ورقة تخصيصات المشاريع =====
+            project_assignments = VehicleProject.query.filter_by(vehicle_id=id).all()
+            if project_assignments:
+                project_data = []
+                for record in project_assignments:
+                    project_data.append({
+                        'اسم المشروع': record.project_name or '',
+                        'وصف المشروع': record.project_description or '',
+                        'موقع المشروع': record.project_location or '',
+                        'تاريخ البداية': record.start_date.strftime('%Y-%m-%d') if record.start_date else '',
+                        'تاريخ النهاية': record.end_date.strftime('%Y-%m-%d') if record.end_date else 'مستمر',
+                        'مدير المشروع': record.project_manager or '',
+                        'الحالة': 'نشط' if record.is_active else 'منتهي',
+                        'ملاحظات': record.notes or ''
+                    })
+                
+                df_projects = pd.DataFrame(project_data)
+                df_projects.to_excel(writer, sheet_name='تخصيصات المشاريع', index=False)
+                
+                worksheet = writer.sheets['تخصيصات المشاريع']
+                
+                for col_num, value in enumerate(df_projects.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    worksheet.set_column(col_num, col_num, 18)
+                
+                for row in range(1, len(df_projects) + 1):
+                    for col in range(len(df_projects.columns)):
+                        worksheet.write(row, col, df_projects.iloc[row-1, col], data_format)
+            
+            # ===== ورقة السائق الحالي =====
+            latest_handover = VehicleHandover.query.filter_by(
+                vehicle_id=id,
+                handover_type='delivery'
+            ).order_by(VehicleHandover.handover_date.desc()).first()
+            
+            if latest_handover:
+                employee = Employee.query.get(latest_handover.employee_id) if latest_handover.employee_id else None
+                current_driver_data = [{
+                    'اسم السائق': latest_handover.person_name or (employee.name if employee else ''),
+                    'الموظف المسؤول': employee.name if employee else '',
+                    'القسم': employee.department.name if employee and employee.department else '',
+                    'رقم الموظف': employee.employee_id if employee else '',
+                    'تاريخ التسليم': latest_handover.handover_date.strftime('%Y-%m-%d') if latest_handover.handover_date else '',
+                    'قراءة العداد عند التسليم': latest_handover.mileage or 0,
+                    'مستوى الوقود': latest_handover.fuel_level or '',
+                    'حالة السيارة': latest_handover.vehicle_condition or '',
+                    'ملاحظات': latest_handover.notes or ''
+                }]
+                
+                df_current_driver = pd.DataFrame(current_driver_data)
+                df_current_driver.to_excel(writer, sheet_name='السائق الحالي', index=False)
+                
+                worksheet = writer.sheets['السائق الحالي']
+                
+                for col_num, value in enumerate(df_current_driver.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    worksheet.set_column(col_num, col_num, 18)
+                
+                for row in range(1, len(df_current_driver) + 1):
+                    for col in range(len(df_current_driver.columns)):
+                        worksheet.write(row, col, df_current_driver.iloc[row-1, col], data_format)
+            
+            # ===== ورقة سجلات التسليم والاستلام =====
+            handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+            if handover_records:
+                handover_data = []
+                for record in handover_records:
+                    employee = Employee.query.get(record.employee_id) if record.employee_id else None
+                    handover_data.append({
+                        'نوع العملية': 'تسليم' if record.handover_type == 'delivery' else 'استلام',
+                        'تاريخ العملية': record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '',
+                        'اسم الشخص': record.person_name or '',
+                        'الموظف المسؤول': employee.name if employee else '',
+                        'القسم': employee.department.name if employee and employee.department else '',
+                        'رقم الموظف': employee.employee_id if employee else '',
+                        'قراءة العداد': record.mileage or 0,
+                        'مستوى الوقود': record.fuel_level or '',
+                        'حالة السيارة': record.vehicle_condition or '',
+                        'الإطار الاحتياطي': 'نعم' if record.has_spare_tire else 'لا',
+                        'طفاية الحريق': 'نعم' if record.has_fire_extinguisher else 'لا',
+                        'حقيبة الإسعافات': 'نعم' if record.has_first_aid_kit else 'لا',
+                        'مثلث التحذير': 'نعم' if record.has_warning_triangle else 'لا',
+                        'العدد والأدوات': 'نعم' if record.has_tools else 'لا',
+                        'ملاحظات': record.notes or ''
+                    })
+                
+                df_handover = pd.DataFrame(handover_data)
+                df_handover.to_excel(writer, sheet_name='سجلات التسليم والاستلام', index=False)
+                
+                worksheet = writer.sheets['سجلات التسليم والاستلام']
+                
+                for col_num, value in enumerate(df_handover.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+                    worksheet.set_column(col_num, col_num, 15)
+                
+                for row in range(1, len(df_handover) + 1):
+                    for col in range(len(df_handover.columns)):
+                        worksheet.write(row, col, df_handover.iloc[row-1, col], data_format)
+        
+        buffer.seek(0)
+        
+        # تسجيل العملية
+        log_audit('export', 'vehicle', id, f'تم تصدير بيانات المركبة {vehicle.plate_number} إلى Excel')
+        
+        filename = f"vehicle_{vehicle.plate_number.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        flash(f'خطأ في تصدير البيانات: {str(e)}', 'danger')
+        return redirect(url_for('vehicles.view', id=id))
+
