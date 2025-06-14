@@ -154,7 +154,11 @@
 - Environment variable protection
 
 ## Changelog
-- June 14, 2025. Initial setup
+- June 14, 2025: Fixed Excel export functionality with comprehensive field mapping and openpyxl compatibility
+- June 14, 2025: Resolved VehiclePeriodicInspection certificate_number field issue 
+- June 14, 2025: Updated VehicleHandover field references (person_name, mileage)
+- June 14, 2025: Removed xlsxwriter dependencies to ensure openpyxl compatibility
+- June 14, 2025: Initial setup
 
 ## User Preferences
 
