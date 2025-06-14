@@ -14,6 +14,7 @@ from fpdf import FPDF
 from werkzeug.datastructures import FileStorage
 
 # Import database after application is initialized to avoid circular imports
+from app import db
 from models import (
     Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
     VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
