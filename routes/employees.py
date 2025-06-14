@@ -12,7 +12,7 @@ from utils.excel import parse_employee_excel, generate_employee_excel, export_em
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 from utils.employee_comprehensive_report_updated import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
-from utils.employee_basic_report import generate_employee_basic_pdf
+from utils.employee_basic_report_fixed import generate_employee_basic_pdf
 from utils.audit_logger import log_activity
 
 employees_bp = Blueprint('employees', __name__)
