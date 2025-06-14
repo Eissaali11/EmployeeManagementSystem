@@ -136,17 +136,22 @@ class EmployeeBasicReportPDF(FPDF):
         # عرض معلومات المركبة
         vehicle_info = f"رقم اللوحة: {record.vehicle.plate_number if record.vehicle else 'غير محدد'}"
         if record.handover_date:
-            vehicle_info += f" - تاريخ الاستلام: {record.handover_date.strftime('%Y-%m-%d')}"
-        if record.return_date:
-            vehicle_info += f" - تاريخ الإرجاع: {record.return_date.strftime('%Y-%m-%d')}"
+            handover_type_ar = "تسليم" if record.handover_type == "تسليم" else "استلام"
+            vehicle_info += f" - {handover_type_ar}: {record.handover_date.strftime('%Y-%m-%d')}"
+        if record.person_name:
+            vehicle_info += f" - الشخص: {record.person_name}"
+        if record.mileage:
+            vehicle_info += f" - المسافة: {record.mileage} كم"
             
         vehicle_text = self.safe_text(vehicle_info)
         if not self.arabic_font_loaded:
             vehicle_text = f"Plate: {record.vehicle.plate_number if record.vehicle else 'N/A'}"
             if record.handover_date:
-                vehicle_text += f" - Handover: {record.handover_date.strftime('%Y-%m-%d')}"
-            if record.return_date:
-                vehicle_text += f" - Return: {record.return_date.strftime('%Y-%m-%d')}"
+                vehicle_text += f" - {record.handover_type}: {record.handover_date.strftime('%Y-%m-%d')}"
+            if record.person_name:
+                vehicle_text += f" - Person: {record.person_name}"
+            if record.mileage:
+                vehicle_text += f" - Mileage: {record.mileage} km"
         
         self.cell(0, 8, vehicle_text, 1, 1, 'R')
         
