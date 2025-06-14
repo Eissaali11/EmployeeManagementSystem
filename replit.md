@@ -154,6 +154,8 @@
 - Environment variable protection
 
 ## Changelog
+- June 14, 2025: Removed redundant "export all vehicles" button from main vehicles page as requested by user
+- June 14, 2025: Fixed Excel import page error by removing unnecessary form dependency
 - June 14, 2025: Improved vehicle view page UI design and added Excel import functionality with template download
 - June 14, 2025: Fixed all VehicleProject Excel export errors (project_description, project_location, project_manager)
 - June 14, 2025: Fixed Vehicle Excel export 'vin' field error by replacing with existing model fields
