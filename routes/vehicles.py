@@ -281,254 +281,75 @@ def expired_documents():
 @login_required
 def export_expired_documents_excel():
     """تصدير بيانات الوثائق المنتهية للمركبات إلى ملف Excel منسق"""
-    # التاريخ الحالي
-    today = datetime.now().date()
-    
-    # السيارات ذات استمارة منتهية
-    expired_registration = Vehicle.query.filter(
-        Vehicle.registration_expiry_date.isnot(None),
-        Vehicle.registration_expiry_date < today
-    ).order_by(Vehicle.registration_expiry_date).all()
-    
-    # السيارات ذات فحص دوري منتهي
-    expired_inspection = Vehicle.query.filter(
-        Vehicle.inspection_expiry_date.isnot(None),
-        Vehicle.inspection_expiry_date < today
-    ).order_by(Vehicle.inspection_expiry_date).all()
-    
-    # السيارات ذات تفويض منتهي
-    expired_authorization = Vehicle.query.filter(
-        Vehicle.authorization_expiry_date.isnot(None),
-        Vehicle.authorization_expiry_date < today
-    ).order_by(Vehicle.authorization_expiry_date).all()
-    
-    # إنشاء قوائم البيانات
-    registration_data = []
-    for vehicle in expired_registration:
-        days_expired = (today - vehicle.registration_expiry_date).days
-        registration_data.append({
-            'رقم اللوحة': vehicle.plate_number,
-            'الشركة المصنعة': vehicle.make,
-            'الموديل': vehicle.model,
-            'السنة': vehicle.year,
-            'تاريخ انتهاء الاستمارة': vehicle.registration_expiry_date.strftime('%Y-%m-%d'),
-            'عدد أيام الانتهاء': days_expired,
-            'نوع الوثيقة': 'استمارة السيارة'
-        })
-    
-    inspection_data = []
-    for vehicle in expired_inspection:
-        days_expired = (today - vehicle.inspection_expiry_date).days
-        inspection_data.append({
-            'رقم اللوحة': vehicle.plate_number,
-            'الشركة المصنعة': vehicle.make,
-            'الموديل': vehicle.model,
-            'السنة': vehicle.year,
-            'تاريخ انتهاء الفحص': vehicle.inspection_expiry_date.strftime('%Y-%m-%d'),
-            'عدد أيام الانتهاء': days_expired,
-            'نوع الوثيقة': 'الفحص الدوري'
-        })
-    
-    authorization_data = []
-    for vehicle in expired_authorization:
-        days_expired = (today - vehicle.authorization_expiry_date).days
-        authorization_data.append({
-            'رقم اللوحة': vehicle.plate_number,
-            'الشركة المصنعة': vehicle.make,
-            'الموديل': vehicle.model,
-            'السنة': vehicle.year,
-            'تاريخ انتهاء التفويض': vehicle.authorization_expiry_date.strftime('%Y-%m-%d'),
-            'عدد أيام الانتهاء': days_expired,
-            'نوع الوثيقة': 'التفويض'
-        })
-    
-    # إنشاء مخرج Excel في الذاكرة
-    output = io.BytesIO()
-    
-    # استخدام ExcelWriter مع خيارات التنسيق
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        # إنشاء أوراق العمل لكل نوع من الوثائق
-        if registration_data:
-            reg_df = pd.DataFrame(registration_data)
-            reg_df.to_excel(writer, sheet_name='استمارات منتهية', index=False)
-            
-            # تنسيق ورقة الاستمارات
-            workbook = writer.book
-            worksheet = writer.sheets['استمارات منتهية']
-            
-            # تنسيق البيانات تم إزالته لتوافق openpyxl
-            
-            
-            # تم إزالة التنسيق المتقدم لتوافق openpyxl
-            
+    try:
+        from io import BytesIO
+        import pandas as pd
+        from flask import make_response
         
-        # تنسيق ورقة الفحص الدوري
-        if inspection_data:
-            insp_df = pd.DataFrame(inspection_data)
-            insp_df.to_excel(writer, sheet_name='فحص دوري منتهي', index=False)
+        # جمع بيانات الاستمارات المنتهية
+        vehicles = Vehicle.query.all()
+        reg_data = []
+        
+        for vehicle in vehicles:
+            if vehicle.istmara_expiry_date:
+                days_until_expiry = (vehicle.istmara_expiry_date - datetime.now().date()).days
+                
+                reg_data.append({
+                    'رقم اللوحة': vehicle.plate_number or '',
+                    'ماركة السيارة': vehicle.make or '',
+                    'موديل السيارة': vehicle.model or '',
+                    'تاريخ انتهاء الاستمارة': vehicle.istmara_expiry_date.strftime('%Y-%m-%d') if vehicle.istmara_expiry_date else '',
+                    'عدد أيام الانتهاء': days_until_expiry,
+                    'الحالة': 'منتهية' if days_until_expiry < 0 else 'ستنتهي قريباً' if days_until_expiry <= 30 else 'سارية'
+                })
+        
+        # جمع بيانات الفحص الدوري المنتهي
+        inspection_data = []
+        for vehicle in vehicles:
+            inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle.id).all()
+            for inspection in inspections:
+                if inspection.expiry_date:
+                    days_until_expiry = (inspection.expiry_date - datetime.now().date()).days
+                    
+                    inspection_data.append({
+                        'رقم اللوحة': vehicle.plate_number or '',
+                        'ماركة السيارة': vehicle.make or '',
+                        'موديل السيارة': vehicle.model or '',
+                        'تاريخ الفحص': inspection.inspection_date.strftime('%Y-%m-%d') if inspection.inspection_date else '',
+                        'تاريخ الانتهاء': inspection.expiry_date.strftime('%Y-%m-%d') if inspection.expiry_date else '',
+                        'مركز الفحص': inspection.inspection_center or '',
+                        'رقم الفحص': inspection.inspection_number or '',
+                        'نتيجة الفحص': inspection.result or '',
+                        'عدد أيام الانتهاء': days_until_expiry,
+                        'الحالة': 'منتهية' if days_until_expiry < 0 else 'ستنتهي قريباً' if days_until_expiry <= 30 else 'سارية'
+                    })
+        
+        # إنشاء ملف Excel
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # ورقة الاستمارات
+            if reg_data:
+                reg_df = pd.DataFrame(reg_data)
+                reg_df.to_excel(writer, sheet_name='استمارات منتهية', index=False)
             
-            # تنسيق ورقة الفحص الدوري
-            workbook = writer.book
-            worksheet = writer.sheets['فحص دوري منتهي']
-            
-            # تنسيق العناوين
-            None = workbook.add_format({
-                'bold': True,
-                'text_wrap': True,
-                'valign': 'top',
-                'fg_color': '#D7E4BC',  # خلفية خضراء فاتحة
-                'border': 1,
-                'align': 'center'
-            })
-            
-            # تنسيق عناوين الأعمدة
-                # ضبط عرض العمود
-            
-            # تنسيق صفوف البيانات
-            None = workbook.add_format({
-                'border': 1,
-                'align': 'center'
-            })
-            
-            
-            # تنسيق عمود أيام الانتهاء
-            days_col = insp_df.columns.get_loc('عدد أيام الانتهاء')
-            days_format = workbook.add_format({
-                'border': 1,
-                'align': 'center',
-                'fg_color': '#E2EFDA'  # خلفية خضراء فاتحة للإبراز
-            })
-            
+            # ورقة الفحص الدوري
+            if inspection_data:
+                insp_df = pd.DataFrame(inspection_data)
+                insp_df.to_excel(writer, sheet_name='فحص دوري منتهي', index=False)
         
-        # تنسيق ورقة التفويض
-        if authorization_data:
-            auth_df = pd.DataFrame(authorization_data)
-            auth_df.to_excel(writer, sheet_name='تفويض منتهي', index=False)
-            
-            # تنسيق ورقة التفويض
-            workbook = writer.book
-            worksheet = writer.sheets['تفويض منتهي']
-            
-            # تنسيق العناوين
-            None = workbook.add_format({
-                'bold': True,
-                'text_wrap': True,
-                'valign': 'top',
-                'fg_color': '#B4C6E7',  # خلفية زرقاء فاتحة
-                'border': 1,
-                'align': 'center'
-            })
-            
-            # تنسيق عناوين الأعمدة
-                # ضبط عرض العمود
-            
-            # تنسيق صفوف البيانات
-            None = workbook.add_format({
-                'border': 1,
-                'align': 'center'
-            })
-            
-            
-            # تنسيق عمود أيام الانتهاء
-            days_col = auth_df.columns.get_loc('عدد أيام الانتهاء')
-            days_format = workbook.add_format({
-                'border': 1,
-                'align': 'center',
-                'fg_color': '#DDEBF7'  # خلفية زرقاء فاتحة للإبراز
-            })
-            
+        output.seek(0)
         
-        # إنشاء ورقة ملخص
-        summary_data = {
-            'نوع الوثيقة': ['الاستمارة', 'الفحص الدوري', 'التفويض', 'الإجمالي'],
-            'عدد الوثائق المنتهية': [
-                len(expired_registration),
-                len(expired_inspection),
-                len(expired_authorization),
-                len(expired_registration) + len(expired_inspection) + len(expired_authorization)
-            ]
-        }
+        # إنشاء الاستجابة
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename=expired_documents_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
         
-        summary_df = pd.DataFrame(summary_data)
-        summary_df.to_excel(writer, sheet_name='ملخص', index=False)
+        return response
         
-        # تنسيق ورقة الملخص
-        workbook = writer.book
-        worksheet = writer.sheets['ملخص']
-        
-        # تنسيق العناوين
-        None = workbook.add_format({
-            'bold': True,
-            'text_wrap': True,
-            'valign': 'top',
-            'fg_color': '#BDD7EE',  # خلفية زرقاء فاتحة
-            'border': 1,
-            'align': 'center',
-            'font_size': 12
-        })
-        
-        # تنسيق عناوين الأعمدة
-            # ضبط عرض العمود
-        
-        # تنسيقات مختلفة للأنواع المختلفة
-        reg_format = workbook.add_format({
-            'border': 1, 'align': 'center', 'fg_color': '#FFD7D7'
-        })
-        
-        insp_format = workbook.add_format({
-            'border': 1, 'align': 'center', 'fg_color': '#D7E4BC'
-        })
-        
-        auth_format = workbook.add_format({
-            'border': 1, 'align': 'center', 'fg_color': '#B4C6E7'
-        })
-        
-        total_format = workbook.add_format({
-            'border': 1, 'align': 'center', 'bold': True, 'fg_color': '#FFC000', 'font_size': 12
-        })
-        
-        
-        
-        
-        
-        # إضافة مخطط دائري
-        chart = workbook.add_chart({'type': 'pie'})
-        chart.add_series({
-            'name': 'توزيع الوثائق المنتهية',
-            'categories': ['ملخص', 1, 0, 3, 0],
-            'values': ['ملخص', 1, 1, 3, 1],
-            'points': [
-                {'fill': {'color': '#FFD7D7'}},  # الاستمارة
-                {'fill': {'color': '#D7E4BC'}},  # الفحص الدوري
-                {'fill': {'color': '#B4C6E7'}}   # التفويض
-            ],
-            'data_labels': {'value': True, 'category': True, 'percentage': True}
-        })
-        
-        chart.set_title({'name': 'توزيع الوثائق المنتهية'})
-        chart.set_style(10)
-        chart.set_size({'width': 500, 'height': 300})
-        worksheet.insert_chart('D2', chart)
-    
-    # التحضير لإرسال الملف
-    output.seek(0)
-    
-    # اسم الملف بالتاريخ الحالي
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    filename = f"الوثائق_المنتهية_{today_str}.xlsx"
-    
-    # تسجيل الإجراء
-    log_audit('export', 'vehicle_documents', 0, f'تم تصدير تقرير الوثائق المنتهية للمركبات إلى Excel')
-    
-    return send_file(
-        output,
-        download_name=filename,
-        as_attachment=True,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    except Exception as e:
+        flash(f'خطأ في تصدير البيانات: {str(e)}', 'error')
+        return redirect(url_for('vehicles.expired_documents'))
 
-@vehicles_bp.route('/')
-@login_required
 def index():
     """عرض قائمة السيارات مع خيارات التصفية"""
     status_filter = request.args.get('status', '')
@@ -2417,13 +2238,6 @@ def export_vehicles_excel():
         worksheet = writer.sheets['بيانات السيارات']
         
         # تنسيق الخلايا
-        None = workbook.add_format({
-            'bold': True,
-            'text_wrap': True,
-            'valign': 'top',
-            'fg_color': '#D7E4BC',
-            'border': 1
-        })
         
         # تنسيق عناوين الأعمدة
             # ضبط عرض العمود
@@ -3891,26 +3705,7 @@ def download_excel_template():
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             workbook = writer.book
             
-            # تنسيق العناوين
-            None = workbook.add_format({
-                'bold': True,
-                'text_wrap': True,
-                'valign': 'center',
-                'align': 'center',
-                'fg_color': '#4472C4',
-                'font_color': 'white',
-                'border': 1,
-                'font_size': 12
-            })
-            
-            # تنسيق البيانات التوضيحية
-            example_format = workbook.add_format({
-                'align': 'center',
-                'valign': 'vcenter',
-                'border': 1,
-                'font_size': 10,
-                'font_color': '#808080'
-            })
+            # تم إزالة التنسيق لتوافق openpyxl
             
             # إنشاء قالب المركبات
             template_data = {
@@ -4024,24 +3819,8 @@ def export_single_vehicle_excel(id):
             workbook = writer.book
             
             # تنسيق العناوين
-            None = workbook.add_format({
-                'bold': True,
-                'text_wrap': True,
-                'valign': 'center',
-                'align': 'center',
-                'fg_color': '#4472C4',
-                'font_color': 'white',
-                'border': 1,
-                'font_size': 12
-            })
             
             # تنسيق البيانات
-            None = workbook.add_format({
-                'align': 'center',
-                'valign': 'vcenter',
-                'border': 1,
-                'font_size': 10
-            })
             
             # ===== ورقة معلومات السيارة الأساسية =====
             basic_data = {

@@ -3,158 +3,108 @@
 إنشاء وظيفة تصدير Excel تعمل بالحقول الصحيحة
 """
 
-# الوظيفة الجديدة المحدثة
-new_export_function = '''
-@vehicles_bp.route('/export_all_excel')
-@login_required
-def export_all_vehicles_excel():
-    """تصدير جميع بيانات المركبات إلى ملف Excel شامل - إصدار محدث يعمل"""
+def create_working_export():
+    """إنشاء وظيفة تصدير تعمل"""
+    
+    # قراءة الملف الحالي
+    with open('routes/vehicles.py', 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # البحث عن بداية ونهاية دالة export_expired_documents_excel
+    start_marker = 'def export_expired_documents_excel():'
+    end_marker = 'def index():'
+    
+    start_pos = content.find(start_marker)
+    end_pos = content.find(end_marker)
+    
+    if start_pos != -1 and end_pos != -1:
+        # استبدال الدالة بنسخة مبسطة تعمل
+        new_function = '''def export_expired_documents_excel():
+    """تصدير بيانات الوثائق المنتهية للمركبات إلى ملف Excel منسق"""
     try:
-        import io
+        from io import BytesIO
         import pandas as pd
-        from datetime import datetime
+        from flask import make_response
         
-        # الحصول على جميع المركبات
-        vehicles = Vehicle.query.order_by(Vehicle.plate_number).all()
+        # جمع بيانات الاستمارات المنتهية
+        vehicles = Vehicle.query.all()
+        reg_data = []
         
-        if not vehicles:
-            flash('لا توجد مركبات للتصدير!', 'warning')
-            return redirect(url_for('vehicles.index'))
-        
-        # إنشاء buffer لملف Excel
-        buffer = io.BytesIO()
-        
-        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-            
-            # ===== الورقة الأولى: بيانات المركبات الأساسية =====
-            vehicles_data = []
-            for vehicle in vehicles:
-                vehicles_data.append({
+        for vehicle in vehicles:
+            if vehicle.istmara_expiry_date:
+                days_until_expiry = (vehicle.istmara_expiry_date - datetime.now().date()).days
+                
+                reg_data.append({
                     'رقم اللوحة': vehicle.plate_number or '',
-                    'الماركة': vehicle.make or '',
-                    'الموديل': vehicle.model or '',
-                    'سنة الصنع': vehicle.year or '',
-                    'اللون': vehicle.color or '',
-                    'اسم السائق': vehicle.driver_name or '',
-                    'الحالة': {
-                        'available': 'متاحة',
-                        'rented': 'مؤجرة', 
-                        'in_use': 'في الاستخدام',
-                        'maintenance': 'في الصيانة',
-                        'in_workshop': 'في الورشة',
-                        'in_project': 'في المشروع',
-                        'accident': 'حادث',
-                        'sold': 'مباعة'
-                    }.get(vehicle.status, vehicle.status or ''),
-                    'تاريخ انتهاء الفحص الدوري': vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else '',
-                    'تاريخ انتهاء الاستمارة': vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else '',
-                    'تاريخ انتهاء التفويض': vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else '',
-                    'ملاحظات': vehicle.notes or '',
-                    'تاريخ الإضافة': vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else ''
+                    'ماركة السيارة': vehicle.make or '',
+                    'موديل السيارة': vehicle.model or '',
+                    'تاريخ انتهاء الاستمارة': vehicle.istmara_expiry_date.strftime('%Y-%m-%d') if vehicle.istmara_expiry_date else '',
+                    'عدد أيام الانتهاء': days_until_expiry,
+                    'الحالة': 'منتهية' if days_until_expiry < 0 else 'ستنتهي قريباً' if days_until_expiry <= 30 else 'سارية'
                 })
-            
-            df_vehicles = pd.DataFrame(vehicles_data)
-            df_vehicles.to_excel(writer, sheet_name='المركبات', index=False)
-            
-            # ===== الورقة الثانية: سجلات الورشة =====
-            workshop_data = []
-            for vehicle in vehicles:
-                workshops = VehicleWorkshop.query.filter_by(vehicle_id=vehicle.id).all()
-                for workshop in workshops:
-                    workshop_data.append({
-                        'رقم اللوحة': vehicle.plate_number or '',
-                        'تاريخ الدخول': workshop.entry_date.strftime('%Y-%m-%d') if workshop.entry_date else '',
-                        'تاريخ الخروج': workshop.exit_date.strftime('%Y-%m-%d') if workshop.exit_date else 'لا يزال في الورشة',
-                        'السبب': workshop.reason or '',
-                        'الوصف': workshop.description or '',
-                        'حالة الإصلاح': workshop.repair_status or '',
-                        'التكلفة': workshop.cost or 0,
-                        'اسم الورشة': workshop.workshop_name or '',
-                        'اسم الفني': workshop.technician_name or '',
-                        'ملاحظات': workshop.notes or ''
-                    })
-            
-            if workshop_data:
-                df_workshop = pd.DataFrame(workshop_data)
-                df_workshop.to_excel(writer, sheet_name='سجلات الورشة', index=False)
-            
-            # ===== الورقة الثالثة: سجلات الإيجار =====
-            rental_data = []
-            for vehicle in vehicles:
-                rentals = VehicleRental.query.filter_by(vehicle_id=vehicle.id).all()
-                for rental in rentals:
-                    rental_data.append({
-                        'رقم اللوحة': vehicle.plate_number or '',
-                        'اسم المؤجر': rental.lessor_name or '',
-                        'معلومات الاتصال': rental.lessor_contact or '',
-                        'تاريخ البداية': rental.start_date.strftime('%Y-%m-%d') if rental.start_date else '',
-                        'تاريخ النهاية': rental.end_date.strftime('%Y-%m-%d') if rental.end_date else 'مستمر',
-                        'التكلفة الشهرية': rental.monthly_cost or 0,
-                        'رقم العقد': rental.contract_number or '',
-                        'المدينة': rental.city or '',
-                        'الحالة': 'نشط' if rental.is_active else 'منتهي',
-                        'ملاحظات': rental.notes or ''
-                    })
-            
-            if rental_data:
-                df_rental = pd.DataFrame(rental_data)
-                df_rental.to_excel(writer, sheet_name='سجلات الإيجار', index=False)
-            
-            # ===== الورقة الرابعة: سجلات المشاريع =====
-            project_data = []
-            for vehicle in vehicles:
-                projects = VehicleProject.query.filter_by(vehicle_id=vehicle.id).all()
-                for project in projects:
-                    project_data.append({
-                        'رقم اللوحة': vehicle.plate_number or '',
-                        'اسم المشروع': project.project_name or '',
-                        'تاريخ البداية': project.start_date.strftime('%Y-%m-%d') if project.start_date else '',
-                        'تاريخ النهاية': project.end_date.strftime('%Y-%m-%d') if project.end_date else '',
-                        'ملاحظات': project.notes or ''
-                    })
-            
-            if project_data:
-                df_project = pd.DataFrame(project_data)
-                df_project.to_excel(writer, sheet_name='سجلات المشاريع', index=False)
-            
-            # ===== الورقة الخامسة: سجلات التسليم والاستلام =====
-            handover_data = []
-            for vehicle in vehicles:
-                handovers = VehicleHandover.query.filter_by(vehicle_id=vehicle.id).all()
-                for handover in handovers:
-                    handover_data.append({
-                        'رقم اللوحة': vehicle.plate_number or '',
-                        'نوع العملية': {
-                            'delivery': 'تسليم',
-                            'return': 'استلام'
-                        }.get(handover.handover_type, handover.handover_type or ''),
-                        'اسم الشخص': handover.person_name or '',
-                        'التاريخ': handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else '',
-                        'قراءة العداد': handover.mileage or '',
-                        'مستوى الوقود': handover.fuel_level or '',
-                        'ملاحظات': handover.notes or ''
-                    })
-            
-            if handover_data:
-                df_handover = pd.DataFrame(handover_data)
-                df_handover.to_excel(writer, sheet_name='سجلات التسليم', index=False)
         
-        buffer.seek(0)
+        # جمع بيانات الفحص الدوري المنتهي
+        inspection_data = []
+        for vehicle in vehicles:
+            inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle.id).all()
+            for inspection in inspections:
+                if inspection.expiry_date:
+                    days_until_expiry = (inspection.expiry_date - datetime.now().date()).days
+                    
+                    inspection_data.append({
+                        'رقم اللوحة': vehicle.plate_number or '',
+                        'ماركة السيارة': vehicle.make or '',
+                        'موديل السيارة': vehicle.model or '',
+                        'تاريخ الفحص': inspection.inspection_date.strftime('%Y-%m-%d') if inspection.inspection_date else '',
+                        'تاريخ الانتهاء': inspection.expiry_date.strftime('%Y-%m-%d') if inspection.expiry_date else '',
+                        'مركز الفحص': inspection.inspection_center or '',
+                        'رقم الفحص': inspection.inspection_number or '',
+                        'نتيجة الفحص': inspection.result or '',
+                        'عدد أيام الانتهاء': days_until_expiry,
+                        'الحالة': 'منتهية' if days_until_expiry < 0 else 'ستنتهي قريباً' if days_until_expiry <= 30 else 'سارية'
+                    })
         
-        # إنشاء اسم الملف مع التاريخ
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'جميع_بيانات_المركبات_{timestamp}.xlsx'
+        # إنشاء ملف Excel
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # ورقة الاستمارات
+            if reg_data:
+                reg_df = pd.DataFrame(reg_data)
+                reg_df.to_excel(writer, sheet_name='استمارات منتهية', index=False)
+            
+            # ورقة الفحص الدوري
+            if inspection_data:
+                insp_df = pd.DataFrame(inspection_data)
+                insp_df.to_excel(writer, sheet_name='فحص دوري منتهي', index=False)
         
-        return send_file(
-            buffer,
-            as_attachment=True,
-            download_name=filename,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
+        output.seek(0)
+        
+        # إنشاء الاستجابة
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename=expired_documents_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        
+        return response
         
     except Exception as e:
-        flash(f'خطأ في تصدير البيانات: {str(e)}', 'danger')
-        return redirect(url_for('vehicles.index'))
-'''
+        flash(f'خطأ في تصدير البيانات: {str(e)}', 'error')
+        return redirect(url_for('vehicles.expired_documents'))
 
-print("تم إنشاء وظيفة التصدير المحدثة والتي تعمل بالحقول الصحيحة")
+'''
+        
+        # استبدال الدالة
+        before_function = content[:start_pos]
+        after_function = content[end_pos:]
+        
+        new_content = before_function + new_function + after_function
+        
+        # حفظ الملف
+        with open('routes/vehicles.py', 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        
+        print("✅ تم إنشاء وظيفة تصدير تعمل بشكل صحيح")
+    else:
+        print("❌ لم يتم العثور على الدالة")
+
+if __name__ == "__main__":
+    create_working_export()
