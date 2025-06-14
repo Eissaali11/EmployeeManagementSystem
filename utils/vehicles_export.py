@@ -367,126 +367,110 @@ def export_vehicle_excel(vehicle, workshop_records=None, rental_records=None):
     """
     buffer = io.BytesIO()
     
-    # إنشاء مصنف Excel مع عدة أوراق عمل
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+    try:
+        # إنشاء مصنف Excel مع عدة أوراق عمل
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            
+            # ورقة المعلومات الأساسية
+            basic_data = {
+                'البيان': [
+                    'رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون', 'السائق الحالي',
+                    'الحالة', 'تاريخ انتهاء الفحص الدوري', 'تاريخ انتهاء الاستمارة', 'الملاحظات'
+                ],
+                'القيمة': [
+                    vehicle.plate_number or '',
+                    f"{vehicle.make or ''} {vehicle.model or ''}".strip(),
+                    str(vehicle.year) if vehicle.year else '',
+                    vehicle.color or '',
+                    vehicle.driver_name or "غير محدد",
+                    {
+                        'available': 'متاحة',
+                        'rented': 'مؤجرة', 
+                        'in_workshop': 'في الورشة',
+                        'in_project': 'في المشروع',
+                        'accident': 'حادث',
+                        'sold': 'مباعة'
+                    }.get(vehicle.status, vehicle.status or ''),
+                    vehicle.inspection_expiry_date.strftime("%Y-%m-%d") if vehicle.inspection_expiry_date else "غير محدد",
+                    vehicle.registration_expiry_date.strftime("%Y-%m-%d") if vehicle.registration_expiry_date else "غير محدد",
+                    vehicle.notes or "لا توجد ملاحظات"
+                ]
+            }
+            
+            # إنشاء DataFrame وكتابته إلى ورقة العمل
+            df_basic = pd.DataFrame(basic_data)
+            df_basic.to_excel(writer, sheet_name='معلومات السيارة', index=False)
+            
+            # إذا كانت سجلات الورشة متوفرة
+            if workshop_records and len(workshop_records) > 0:
+                # تحويل سجلات الورشة إلى DataFrame
+                workshop_data = []
+                
+                for record in workshop_records:
+                    reason_map = {'maintenance': 'صيانة دورية', 'breakdown': 'عطل', 'accident': 'حادث'}
+                    status_map = {'in_progress': 'قيد التنفيذ', 'completed': 'تم الإصلاح', 'pending_approval': 'بانتظار الموافقة'}
+                    
+                    workshop_data.append({
+                        'سبب الدخول': reason_map.get(record.reason, record.reason or "غير محدد"),
+                        'تاريخ الدخول': record.entry_date.strftime("%Y-%m-%d") if record.entry_date else "غير محدد",
+                        'تاريخ الخروج': record.exit_date.strftime("%Y-%m-%d") if record.exit_date else "ما زالت في الورشة",
+                        'حالة الإصلاح': status_map.get(record.repair_status, record.repair_status or "غير محدد"),
+                        'التكلفة (ريال)': record.cost or 0,
+                        'اسم الورشة': record.workshop_name or "غير محدد",
+                        'الفني المسؤول': record.technician_name or "غير محدد",
+                        'الوصف': record.description or "",
+                        'ملاحظات': record.notes or ""
+                    })
+                
+                df_workshop = pd.DataFrame(workshop_data)
+                df_workshop.to_excel(writer, sheet_name='سجلات الورشة', index=False)
+            
+            # إذا كانت سجلات الإيجار متوفرة
+            if rental_records and len(rental_records) > 0:
+                # تحويل سجلات الإيجار إلى DataFrame
+                rental_data = []
+                
+                for record in rental_records:
+                    rental_data.append({
+                        'المستأجر': record.lessor_name or "غير محدد",
+                        'تاريخ البداية': record.start_date.strftime("%Y-%m-%d") if record.start_date else "غير محدد",
+                        'تاريخ النهاية': record.end_date.strftime("%Y-%m-%d") if record.end_date else "مستمر",
+                        'التكلفة الشهرية (ريال)': record.monthly_cost or 0,
+                        'الحالة': "نشط" if record.is_active else "منتهي",
+                        'جهة الاتصال': record.lessor_contact or "",
+                        'رقم العقد': record.contract_number or "",
+                        'المدينة': record.city or "",
+                        'ملاحظات': record.notes or ""
+                    })
+                
+                df_rental = pd.DataFrame(rental_data)
+                df_rental.to_excel(writer, sheet_name='سجلات الإيجار', index=False)
         
-        # ورقة المعلومات الأساسية
-        basic_data = {
-            'البيان': [
-                'رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون', 'السائق الحالي',
-                'الحالة', 'تاريخ انتهاء الفحص الدوري', 'تاريخ انتهاء الاستمارة', 'الملاحظات'
-            ],
+        buffer.seek(0)
+        return buffer
+        
+    except Exception as e:
+        print(f"خطأ في تصدير بيانات السيارة: {str(e)}")
+        # إنشاء ملف Excel بسيط في حالة الخطأ
+        simple_data = {
+            'البيان': ['رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون', 'السائق الحالي', 'الحالة'],
             'القيمة': [
                 vehicle.plate_number or '',
                 f"{vehicle.make or ''} {vehicle.model or ''}".strip(),
                 str(vehicle.year) if vehicle.year else '',
                 vehicle.color or '',
-                vehicle.current_driver or "غير محدد",
-                {
-                    'available': 'متاحة',
-                    'rented': 'مؤجرة', 
-                    'in_workshop': 'في الورشة',
-                    'in_project': 'في المشروع',
-                    'accident': 'حادث',
-                    'sold': 'مباعة'
-                }.get(vehicle.status, vehicle.status or ''),
-                vehicle.periodic_inspection_expiry.strftime("%Y-%m-%d") if vehicle.periodic_inspection_expiry else "غير محدد",
-                vehicle.form_expiry.strftime("%Y-%m-%d") if vehicle.form_expiry else "غير محدد",
-                vehicle.notes or "لا توجد ملاحظات"
+                vehicle.driver_name or "غير محدد",
+                vehicle.status or ''
             ]
         }
         
-        # إنشاء DataFrame وكتابته إلى ورقة العمل
-        df_basic = pd.DataFrame(basic_data)
-        df_basic.to_excel(writer, sheet_name='معلومات السيارة', index=False)
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            df_simple = pd.DataFrame(simple_data)
+            df_simple.to_excel(writer, sheet_name='معلومات السيارة', index=False)
         
-        # إذا كانت سجلات الورشة متوفرة
-        if workshop_records and len(workshop_records) > 0:
-            # تحويل سجلات الورشة إلى DataFrame
-            workshop_data = []
-            
-            for record in workshop_records:
-                reason_map = {'maintenance': 'صيانة دورية', 'breakdown': 'عطل', 'accident': 'حادث'}
-                status_map = {'in_progress': 'قيد التنفيذ', 'completed': 'تم الإصلاح', 'pending_approval': 'بانتظار الموافقة'}
-                
-                workshop_data.append({
-                    'سبب الدخول': reason_map.get(record.reason, record.reason),
-                    'تاريخ الدخول': record.entry_date.strftime("%Y-%m-%d"),
-                    'تاريخ الخروج': record.exit_date.strftime("%Y-%m-%d") if record.exit_date else "ما زالت في الورشة",
-                    'حالة الإصلاح': status_map.get(record.repair_status, record.repair_status),
-                    'التكلفة (ريال)': record.cost,
-                    'اسم الورشة': record.workshop_name or "غير محدد",
-                    'الفني المسؤول': record.technician_name or "غير محدد",
-                    'الوصف': record.description or "",
-                    'ملاحظات': record.notes or ""
-                })
-            
-            df_workshop = pd.DataFrame(workshop_data)
-            df_workshop.to_excel(writer, sheet_name='سجلات الورشة', index=False)
-            
-            # تعديل عرض الأعمدة
-            worksheet = writer.sheets['سجلات الورشة']
-            worksheet.set_column('A:A', 15)
-            worksheet.set_column('B:C', 15)
-            worksheet.set_column('D:D', 15)
-            worksheet.set_column('E:E', 15)
-            worksheet.set_column('F:G', 20)
-            worksheet.set_column('H:I', 30)
-            
-            # تنسيق الخلايا
-            for col_num, col in enumerate(df_workshop.columns):
-                worksheet.write(0, col_num, col, header_format)
-            
-            for row_num in range(len(df_workshop)):
-                for col_num in range(len(df_workshop.columns)):
-                    worksheet.write(row_num + 1, col_num, df_workshop.iloc[row_num, col_num], cell_format)
-            
-            # إضافة صف إجمالي
-            total_row = len(df_workshop) + 2
-            worksheet.write(total_row, 0, 'الإجمالي', header_format)
-            worksheet.write_formula(total_row, 4, f'=SUM(E2:E{len(df_workshop) + 1})', header_format)
-            
-            # دمج الخلايا للإجمالي
-            worksheet.merge_range(total_row, 0, total_row, 3, 'الإجمالي', header_format)
-        
-        # إذا كانت سجلات الإيجار متوفرة
-        if rental_records and len(rental_records) > 0:
-            # تحويل سجلات الإيجار إلى DataFrame
-            rental_data = []
-            
-            for record in rental_records:
-                rental_data.append({
-                    'المستأجر': record.renter_name,
-                    'تاريخ البداية': record.start_date.strftime("%Y-%m-%d"),
-                    'تاريخ النهاية': record.end_date.strftime("%Y-%m-%d") if record.end_date else "مستمر",
-                    'التكلفة (ريال)': record.cost,
-                    'الحالة': "نشط" if record.is_active else "منتهي",
-                    'جهة الاتصال': record.contact_number or "",
-                    'ملاحظات': record.notes or ""
-                })
-            
-            df_rental = pd.DataFrame(rental_data)
-            df_rental.to_excel(writer, sheet_name='سجلات الإيجار', index=False)
-            
-            # تعديل عرض الأعمدة
-            worksheet = writer.sheets['سجلات الإيجار']
-            worksheet.set_column('A:A', 20)
-            worksheet.set_column('B:C', 15)
-            worksheet.set_column('D:D', 15)
-            worksheet.set_column('E:E', 10)
-            worksheet.set_column('F:F', 15)
-            worksheet.set_column('G:G', 30)
-            
-            # تنسيق الخلايا
-            for col_num, col in enumerate(df_rental.columns):
-                worksheet.write(0, col_num, col, header_format)
-            
-            for row_num in range(len(df_rental)):
-                for col_num in range(len(df_rental.columns)):
-                    worksheet.write(row_num + 1, col_num, df_rental.iloc[row_num, col_num], cell_format)
-    
-    buffer.seek(0)
-    return buffer
+        buffer.seek(0)
+        return buffer
 
 
 def export_workshop_records_excel(vehicle, workshop_records):
@@ -502,9 +486,58 @@ def export_workshop_records_excel(vehicle, workshop_records):
     """
     buffer = io.BytesIO()
     
-    # إنشاء مصنف Excel
-    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        workbook = writer.book
+    try:
+        # إنشاء مصنف Excel
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            # معلومات السيارة
+            vehicle_info = {
+                'البيان': ['رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون'],
+                'القيمة': [
+                    vehicle.plate_number or '',
+                    f"{vehicle.make or ''} {vehicle.model or ''}".strip(),
+                    str(vehicle.year) if vehicle.year else '',
+                    vehicle.color or ''
+                ]
+            }
+            
+            # إنشاء ورقة معلومات السيارة
+            df_vehicle = pd.DataFrame(vehicle_info)
+            df_vehicle.to_excel(writer, sheet_name='معلومات السيارة', index=False)
+            
+            # إنشاء ورقة سجلات الورشة
+            if workshop_records:
+                workshop_data = []
+                for record in workshop_records:
+                    workshop_data.append({
+                        'تاريخ الدخول': record.entry_date.strftime("%Y-%m-%d") if record.entry_date else "غير محدد",
+                        'تاريخ الخروج': record.exit_date.strftime("%Y-%m-%d") if record.exit_date else "ما زالت في الورشة",
+                        'سبب الدخول': record.reason or "غير محدد",
+                        'الوصف': record.description or "",
+                        'التكلفة': record.cost or 0,
+                        'ملاحظات': record.notes or ""
+                    })
+                
+                df_workshop = pd.DataFrame(workshop_data)
+                df_workshop.to_excel(writer, sheet_name='سجلات الورشة', index=False)
+        
+        buffer.seek(0)
+        return buffer
+        
+    except Exception as e:
+        print(f"خطأ في تصدير سجلات الورشة: {str(e)}")
+        # إنشاء ملف بسيط في حالة الخطأ
+        simple_data = {
+            'البيان': ['رقم اللوحة', 'النوع'],
+            'القيمة': [vehicle.plate_number or '', f"{vehicle.make or ''} {vehicle.model or ''}".strip()]
+        }
+        
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            df_simple = pd.DataFrame(simple_data)
+            df_simple.to_excel(writer, sheet_name='معلومات السيارة', index=False)
+        
+        buffer.seek(0)
+        return buffer
         
         # نمط العناوين
         header_format = workbook.add_format({
