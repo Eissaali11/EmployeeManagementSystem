@@ -3107,6 +3107,7 @@ def update_handover_link(handover_id):
 def export_all_vehicles_excel():
     """تصدير جميع بيانات المركبات إلى ملف Excel شامل - إصدار محدث يعمل"""
     try:
+        from app import db
         import io
         import pandas as pd
         from datetime import datetime
@@ -3167,15 +3168,15 @@ def export_all_vehicles_excel():
                             'maintenance': 'صيانة دورية',
                             'breakdown': 'عطل', 
                             'accident': 'حادث'
-                        }.get(record.reason, record.reason),
+                        }.get(record.reason, record.reason or ''),
                         'تاريخ الدخول': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '',
                         'تاريخ الخروج': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else 'لا يزال في الورشة',
                         'حالة الإصلاح': {
                             'in_progress': 'قيد التنفيذ',
                             'completed': 'تم الإصلاح',
                             'pending_approval': 'بانتظار الموافقة'
-                        }.get(record.repair_status, record.repair_status),
-                        'التكلفة (ريال)': 0,
+                        }.get(record.repair_status, record.repair_status or ''),
+                        'التكلفة (ريال)': record.cost or 0,
                         'اسم الورشة': record.workshop_name or '',
                         'الفني المسؤول': record.technician_name or '',
                         'الوصف': record.description or '',
