@@ -94,7 +94,7 @@ def export_vehicle_pdf(vehicle, workshop_records=None, rental_records=None):
         [arabic_text("النوع"), arabic_text(f"{vehicle.make} {vehicle.model}")],
         [arabic_text("سنة الصنع"), arabic_text(str(vehicle.year))],
         [arabic_text("اللون"), arabic_text(vehicle.color)],
-        [arabic_text("رقم الهيكل"), arabic_text(vehicle.vin or "غير متوفر")],
+        [arabic_text("السائق الحالي"), arabic_text(vehicle.driver_name or "غير محدد")],
         [arabic_text("القسم/المالك"), arabic_text(vehicle.department or "غير محدد")],
         [arabic_text("الحالة"), arabic_text({
             'available': 'متاحة',

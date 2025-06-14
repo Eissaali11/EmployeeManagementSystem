@@ -232,7 +232,7 @@ def create_vehicle_handover_pdf(handover_data):
                 [safe_arabic_text("الموديل"), safe_arabic_text(str(vehicle.model) if vehicle.model else "Not Specified")],
                 [safe_arabic_text("السنة"), safe_arabic_text(str(vehicle.year) if hasattr(vehicle, 'year') and vehicle.year else "Not Specified")],
                 [safe_arabic_text("اللون"), safe_arabic_text(str(vehicle.color) if hasattr(vehicle, 'color') and vehicle.color else "Not Specified")],
-                ["VIN Number", safe_arabic_text(str(vehicle.vin_number) if hasattr(vehicle, 'vin_number') and vehicle.vin_number else "Not Available")],
+                [safe_arabic_text("السائق الحالي"), safe_arabic_text(str(vehicle.driver_name) if hasattr(vehicle, 'driver_name') and vehicle.driver_name else "غير محدد")],
                 ["Engine Number", safe_arabic_text(str(vehicle.engine_number) if hasattr(vehicle, 'engine_number') and vehicle.engine_number else "Not Available")],
                 ["Vehicle Status", safe_arabic_text(str(vehicle.status) if hasattr(vehicle, 'status') and vehicle.status else "Active")]
             ]

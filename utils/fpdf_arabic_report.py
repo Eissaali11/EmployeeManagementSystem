@@ -167,8 +167,8 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
     ]
     
     # إضافة معلومات إضافية إذا كانت متوفرة
-    if hasattr(vehicle, 'vin') and vehicle.vin:
-        vehicle_info.append(['رقم الهيكل:', vehicle.vin])
+    if hasattr(vehicle, 'driver_name') and vehicle.driver_name:
+        vehicle_info.append(['السائق الحالي:', vehicle.driver_name])
     
     if hasattr(vehicle, 'odometer') and vehicle.odometer:
         vehicle_info.append(['قراءة العداد:', f'{vehicle.odometer} كم'])
