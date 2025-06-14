@@ -744,7 +744,7 @@ def export_all_vehicles_to_excel():
         response = make_response(buffer.getvalue())
         response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        response.headers["Content-Disposition"] = f"attachment; filename=تصدير_جميع_المركبات_{timestamp}.xlsx"
+        response.headers["Content-Disposition"] = f"attachment; filename=vehicles_export_{timestamp}.xlsx"
         
         return response
         

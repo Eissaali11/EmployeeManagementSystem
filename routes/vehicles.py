@@ -2254,9 +2254,9 @@ def export_vehicles_excel():
     # التحضير لإرسال الملف
     output.seek(0)
     
-    # اسم الملف بالتاريخ الحالي
-    today = datetime.datetime.now().strftime('%Y-%m-%d')
-    filename = f"تقرير_السيارات_{today}.xlsx"
+    # اسم الملف بالتاريخ الحالي (باللغة الإنجليزية لتجنب مشاكل التشفير)
+    today = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"vehicles_export_{today}.xlsx"
     
     # إرسال الملف كمرفق للتنزيل
     return send_file(

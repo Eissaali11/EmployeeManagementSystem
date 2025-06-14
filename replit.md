@@ -154,6 +154,11 @@
 - Environment variable protection
 
 ## Changelog
+- June 14, 2025: Fixed vehicle export filename encoding to eliminate HTTP header warnings and ensure proper downloads
+- June 14, 2025: Completely resolved all vehicle template URL routing errors by removing broken import function references
+- June 14, 2025: Successfully restored vehicle management system functionality after extensive debugging and fixes
+- June 14, 2025: Cleaned up all corrupted export code and syntax errors in routes/vehicles.py
+- June 14, 2025: Added complete export_all_vehicles_to_excel function with proper Excel formatting to utils/vehicles_export.py
 - June 14, 2025: Removed "PDF report" button from vehicle view page as requested by user
 - June 14, 2025: Removed redundant "export all vehicles" button from main vehicles page as requested by user
 - June 14, 2025: Fixed Excel import page error by removing unnecessary form dependency
