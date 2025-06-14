@@ -12,7 +12,7 @@ from utils.excel import parse_employee_excel, generate_employee_excel, export_em
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 from utils.employee_comprehensive_report_updated import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
-from utils.employee_minimal_report import generate_minimal_employee_report
+from utils.employee_arabic_report import generate_arabic_employee_report
 from utils.audit_logger import log_activity
 
 employees_bp = Blueprint('employees', __name__)
@@ -604,33 +604,85 @@ def upload_image(id):
 def basic_report(id):
     """تقرير المعلومات الأساسية للموظف"""
     try:
-        pdf_buffer, error = generate_working_employee_report(id)
-        if pdf_buffer:
-            employee = Employee.query.get_or_404(id)
-            current_date = datetime.now().strftime('%Y%m%d')
-            filename = f'employee_report_{employee.employee_id}_{current_date}.pdf'
-            
-            # تسجيل الإجراء
-            audit = SystemAudit(
-                action='export',
-                entity_type='employee_basic_report',
-                entity_id=employee.id,
-                details=f'تم تصدير التقرير الأساسي للموظف: {employee.name}'
-            )
-            db.session.add(audit)
-            db.session.commit()
-            
-            return send_file(
-                BytesIO(pdf_buffer),
-                as_attachment=True,
-                download_name=filename.encode('ascii', 'ignore').decode('ascii'),
-                mimetype='application/pdf'
-            )
+        employee = Employee.query.get_or_404(id)
+        
+        # إنشاء تقرير نصي بسيط
+        report_content = f"""
+=== تقرير معلومات الموظف - نظام نُظم ===
+
+المعلومات الأساسية:
+------------------
+الاسم: {employee.name or 'غير محدد'}
+رقم الموظف: {employee.employee_id or 'غير محدد'}
+الجوال: {employee.mobile or 'غير محدد'}
+البريد الإلكتروني: {employee.email or 'غير محدد'}
+رقم الهوية: {employee.national_id or 'غير محدد'}
+المسمى الوظيفي: {employee.job_title or 'غير محدد'}
+القسم: {employee.department.name if employee.department else 'غير محدد'}
+الحالة: {employee.status or 'غير محدد'}
+تاريخ الانضمام: {employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد'}
+الراتب الأساسي: {f'{employee.basic_salary:,.2f} ريال' if employee.basic_salary else 'غير محدد'}
+
+معلومات إضافية:
+---------------
+نوع العقد: {employee.contract_type or 'غير محدد'}
+الموقع: {employee.location or 'غير محدد'}
+المشروع: {employee.project or 'غير محدد'}
+الرصيد الوطني: {'نعم' if employee.has_national_balance else 'لا'}
+
+الصور والوثائق:
+---------------
+الصورة الشخصية: {'متوفرة' if employee.profile_image else 'غير متوفرة'}
+صورة الهوية الوطنية: {'متوفرة' if employee.national_id_image else 'غير متوفرة'}
+صورة رخصة القيادة: {'متوفرة' if employee.license_image else 'غير متوفرة'}
+
+سجلات المركبات:
+---------------"""
+
+        # إضافة سجلات المركبات
+        vehicle_handovers = VehicleHandover.query.filter_by(employee_id=id).all()
+        if vehicle_handovers:
+            for handover in vehicle_handovers:
+                report_content += f"""
+رقم اللوحة: {handover.vehicle.plate_number if handover.vehicle else 'غير محدد'}
+نوع العملية: {handover.handover_type}
+التاريخ: {handover.handover_date.strftime('%Y-%m-%d')}
+اسم الشخص: {handover.person_name}
+المسافة: {handover.mileage} كم"""
         else:
-            flash(f'خطأ في إنشاء ملف PDF: {error}', 'danger')
-            return redirect(url_for('employees.view', id=id))
+            report_content += "\nلا توجد سجلات مركبات"
+
+        report_content += f"""
+
+==========================================
+تم الإنشاء: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+نظام نُظم - إدارة الموظفين والمركبات
+==========================================
+"""
+        
+        # تسجيل الإجراء
+        audit = SystemAudit(
+            action='export',
+            entity_type='employee_basic_report',
+            entity_id=employee.id,
+            details=f'تم تصدير التقرير الأساسي للموظف: {employee.name}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إرسال التقرير كملف نصي
+        current_date = datetime.now().strftime('%Y%m%d')
+        filename = f'employee_report_{employee.employee_id}_{current_date}.txt'
+        
+        return send_file(
+            BytesIO(report_content.encode('utf-8')),
+            as_attachment=True,
+            download_name=filename,
+            mimetype='text/plain; charset=utf-8'
+        )
+        
     except Exception as e:
-        flash(f'خطأ في تصدير PDF: {str(e)}', 'danger')
+        flash(f'خطأ في تصدير التقرير: {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))
 
 
