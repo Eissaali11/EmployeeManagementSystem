@@ -1,22 +1,16 @@
 """
-تقرير الموظف المبسط مع التصميم المطلوب - نظام نُظم
+إنشاء تقرير الموظف النهائي بالتصميم المطلوب
 """
 import os
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.colors import HexColor
-from models import Employee, VehicleHandover
+import sys
 
-
-def generate_simple_designed_employee_report(employee_id):
-    """إنشاء تقرير الموظف المبسط بالتصميم المطلوب"""
+def create_employee_report_with_design(employee_data):
+    """إنشاء تقرير الموظف بالتصميم المطلوب"""
     try:
-        # البحث عن الموظف
-        employee = Employee.query.get(employee_id)
-        if not employee:
-            return None, "الموظف غير موجود"
-        
         buffer = BytesIO()
         c = canvas.Canvas(buffer, pagesize=A4)
         width, height = A4
@@ -41,7 +35,7 @@ def generate_simple_designed_employee_report(employee_id):
         # الصورة الشخصية
         c.setFillColor(HexColor('#000000'))
         c.setFont("Helvetica-Bold", 12)
-        image_title = "Personal Photo"
+        image_title = "الصورة الشخصية"
         text_width = c.stringWidth(image_title, "Helvetica-Bold", 12)
         c.drawString((width - text_width) / 2, y_position, image_title)
         
@@ -53,23 +47,16 @@ def generate_simple_designed_employee_report(employee_id):
         c.setLineWidth(3)
         c.circle(image_x + 60, image_y + 60, 55)
         
-        if employee.profile_image and os.path.exists(f"static/{employee.profile_image}"):
-            try:
-                c.drawImage(f"static/{employee.profile_image}", image_x + 5, image_y + 5, 
-                           width=110, height=110, preserveAspectRatio=True, mask='auto')
-            except:
-                c.setFont("Helvetica", 10)
-                c.drawString(image_x + 35, image_y + 55, "Image Available")
-        else:
-            c.setFont("Helvetica", 10)
-            c.drawString(image_x + 35, image_y + 55, "No Image")
+        # النص داخل الدائرة
+        c.setFont("Helvetica", 10)
+        c.drawString(image_x + 20, image_y + 55, "صورة شخصية")
         
         y_position = image_y - 40
         
         # صورة الهوية الوطنية
         c.setFillColor(HexColor('#000000'))
         c.setFont("Helvetica-Bold", 12)
-        id_title = "National ID Photo"
+        id_title = "صورة الهوية الوطنية"
         text_width = c.stringWidth(id_title, "Helvetica-Bold", 12)
         c.drawString((width - text_width) / 2, y_position, id_title)
         
@@ -81,23 +68,15 @@ def generate_simple_designed_employee_report(employee_id):
         c.setLineWidth(3)
         c.rect(id_image_x, id_image_y, 200, 80)
         
-        if employee.national_id_image and os.path.exists(f"static/{employee.national_id_image}"):
-            try:
-                c.drawImage(f"static/{employee.national_id_image}", id_image_x + 5, id_image_y + 5, 
-                           width=190, height=70, preserveAspectRatio=True)
-            except:
-                c.setFont("Helvetica", 8)
-                c.drawString(id_image_x + 75, id_image_y + 35, "ID Image Available")
-        else:
-            c.setFont("Helvetica", 8)
-            c.drawString(id_image_x + 85, id_image_y + 35, "No ID Image")
+        c.setFont("Helvetica", 10)
+        c.drawString(id_image_x + 70, id_image_y + 35, "صورة الهوية الوطنية")
         
         y_position = id_image_y - 40
         
         # صورة رخصة القيادة
         c.setFillColor(HexColor('#000000'))
         c.setFont("Helvetica-Bold", 12)
-        license_title = "Driving License Photo"
+        license_title = "صورة رخصة القيادة"
         text_width = c.stringWidth(license_title, "Helvetica-Bold", 12)
         c.drawString((width - text_width) / 2, y_position, license_title)
         
@@ -109,16 +88,8 @@ def generate_simple_designed_employee_report(employee_id):
         c.setLineWidth(3)
         c.rect(license_image_x, license_image_y, 200, 80)
         
-        if employee.license_image and os.path.exists(f"static/{employee.license_image}"):
-            try:
-                c.drawImage(f"static/{employee.license_image}", license_image_x + 5, license_image_y + 5, 
-                           width=190, height=70, preserveAspectRatio=True)
-            except:
-                c.setFont("Helvetica", 8)
-                c.drawString(license_image_x + 70, license_image_y + 35, "License Image Available")
-        else:
-            c.setFont("Helvetica", 8)
-            c.drawString(license_image_x + 80, license_image_y + 35, "No License Image")
+        c.setFont("Helvetica", 10)
+        c.drawString(license_image_x + 60, license_image_y + 35, "صورة رخصة القيادة")
         
         y_position = license_image_y - 60
         
@@ -128,7 +99,7 @@ def generate_simple_designed_employee_report(employee_id):
         
         c.setFillColor(HexColor('#FFFFFF'))
         c.setFont("Helvetica-Bold", 12)
-        basic_info_title = "Basic Information"
+        basic_info_title = "المعلومات الأساسية"
         text_width = c.stringWidth(basic_info_title, "Helvetica-Bold", 12)
         c.drawString((width - text_width) / 2, y_position + 8, basic_info_title)
         
@@ -136,12 +107,12 @@ def generate_simple_designed_employee_report(employee_id):
         
         # بيانات المعلومات الأساسية
         basic_info_data = [
-            ["Name", str(employee.name or "Not specified")],
-            ["Employee ID", str(employee.employee_id or "Not specified")],
-            ["Mobile", str(employee.mobile or "Not specified")],
-            ["National ID", str(employee.national_id or "Not specified")],
-            ["Job Title", str(employee.job_title or "Not specified")],
-            ["Department", str(employee.department.name if employee.department else "Not specified")],
+            ["الاسم", employee_data.get('name', 'غير محدد')],
+            ["رقم الموظف", employee_data.get('employee_id', 'غير محدد')],
+            ["الجوال", employee_data.get('mobile', 'غير محدد')],
+            ["رقم الهوية", employee_data.get('national_id', 'غير محدد')],
+            ["المسمى الوظيفي", employee_data.get('job_title', 'غير محدد')],
+            ["القسم", employee_data.get('department', 'غير محدد')],
         ]
         
         # رسم الجدول
@@ -158,7 +129,7 @@ def generate_simple_designed_employee_report(employee_id):
             c.setFont("Helvetica-Bold", 10)
             c.drawString(60, row_y - 8, label)
             c.setFont("Helvetica", 10)
-            c.drawString(200, row_y - 8, value[:50])  # تحديد طول النص
+            c.drawString(200, row_y - 8, str(value))
         
         y_position -= len(basic_info_data) * 25 + 40
         
@@ -168,7 +139,7 @@ def generate_simple_designed_employee_report(employee_id):
         
         c.setFillColor(HexColor('#FFFFFF'))
         c.setFont("Helvetica-Bold", 12)
-        work_info_title = "Work Information"
+        work_info_title = "معلومات العمل"
         text_width = c.stringWidth(work_info_title, "Helvetica-Bold", 12)
         c.drawString((width - text_width) / 2, y_position + 8, work_info_title)
         
@@ -176,12 +147,12 @@ def generate_simple_designed_employee_report(employee_id):
         
         # بيانات معلومات العمل
         work_info_data = [
-            ["Join Date", employee.join_date.strftime('%Y-%m-%d') if employee.join_date else "Not specified"],
-            ["Basic Salary", f"{employee.basic_salary:,.2f} SAR" if employee.basic_salary else "Not specified"],
-            ["Contract Type", str(employee.contract_type or "Not specified")],
-            ["Location", str(employee.location or "Not specified")],
-            ["Project", str(employee.project or "Not specified")],
-            ["Status", str(employee.status or "Not specified")],
+            ["تاريخ الانضمام", employee_data.get('join_date', 'غير محدد')],
+            ["الراتب الأساسي", employee_data.get('basic_salary', 'غير محدد')],
+            ["نوع العقد", employee_data.get('contract_type', 'غير محدد')],
+            ["الموقع", employee_data.get('location', 'غير محدد')],
+            ["المشروع", employee_data.get('project', 'غير محدد')],
+            ["الحالة", employee_data.get('status', 'غير محدد')],
         ]
         
         # رسم جدول معلومات العمل
@@ -198,26 +169,25 @@ def generate_simple_designed_employee_report(employee_id):
             c.setFont("Helvetica-Bold", 10)
             c.drawString(60, row_y - 8, label)
             c.setFont("Helvetica", 10)
-            c.drawString(200, row_y - 8, str(value)[:50])
+            c.drawString(200, row_y - 8, str(value))
         
         y_position -= len(work_info_data) * 25 + 40
         
-        # سجلات المركبات (إذا كان هناك مساحة)
-        vehicle_handovers = VehicleHandover.query.filter_by(employee_id=employee_id).limit(3).all()
-        if vehicle_handovers and y_position > 150:
+        # سجلات المركبات
+        if employee_data.get('vehicle_records'):
             c.setFillColor(blue_header)
             c.rect(50, y_position, width - 100, 25, fill=True, stroke=False)
             
             c.setFillColor(HexColor('#FFFFFF'))
             c.setFont("Helvetica-Bold", 12)
-            vehicle_title = f"Vehicle Records (Last {len(vehicle_handovers)} operations)"
+            vehicle_title = "سجلات المركبات (آخر 3 عمليات)"
             text_width = c.stringWidth(vehicle_title, "Helvetica-Bold", 12)
             c.drawString((width - text_width) / 2, y_position + 8, vehicle_title)
             
             y_position -= 35
             
             # عناوين الأعمدة
-            headers = ["Plate Number", "Operation Type", "Date", "Person"]
+            headers = ["رقم اللوحة", "نوع العملية", "التاريخ", "المسؤول"]
             
             for i, header in enumerate(headers):
                 c.setFillColor(HexColor('#E7E6E6'))
@@ -229,12 +199,12 @@ def generate_simple_designed_employee_report(employee_id):
             y_position -= 25
             
             # بيانات المركبات
-            for j, handover in enumerate(vehicle_handovers):
+            for j, record in enumerate(employee_data['vehicle_records'][:3]):
                 row_data = [
-                    str(handover.vehicle.plate_number if handover.vehicle else "N/A"),
-                    str(handover.handover_type or "N/A"),
-                    handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else "N/A",
-                    str(handover.person_name or "N/A")
+                    record.get('plate_number', 'غير محدد'),
+                    record.get('handover_type', 'غير محدد'),
+                    record.get('handover_date', 'غير محدد'),
+                    record.get('person_name', 'غير محدد')
                 ]
                 
                 for i, data in enumerate(row_data):
@@ -247,21 +217,66 @@ def generate_simple_designed_employee_report(employee_id):
                     
                     c.setFillColor(HexColor('#000000'))
                     c.setFont("Helvetica", 8)
-                    c.drawString(55 + i * 125, y_position - 8, data[:15])
+                    c.drawString(55 + i * 125, y_position - 8, str(data)[:15])
                 
                 y_position -= 25
         
         # تذييل الصفحة
         c.setFont("Helvetica", 8)
         c.setFillColor(HexColor('#666666'))
-        footer_text = f"Generated: {employee.created_at.strftime('%Y-%m-%d %H:%M') if employee.created_at else 'Unknown'}"
-        c.drawString(50, 30, footer_text)
-        c.drawString(width - 150, 30, "Nuzum Management System")
+        c.drawString(50, 30, "تم الإنشاء: 2025-06-14")
+        c.drawString(width - 150, 30, "نظام نُظم - Nuzum System")
         
         c.save()
         buffer.seek(0)
-        return buffer.getvalue(), None
+        return buffer.getvalue()
         
     except Exception as e:
-        print(f"خطأ في إنشاء التقرير المبسط: {str(e)}")
-        return None, str(e)
+        print(f"خطأ في إنشاء التقرير: {str(e)}")
+        return None
+
+def main():
+    """إنشاء تقرير تجريبي"""
+    employee_data = {
+        'name': 'أحمد محمد علي',
+        'employee_id': '178',
+        'mobile': '0501234567',
+        'national_id': '1234567890',
+        'job_title': 'مطور برمجيات',
+        'department': 'تقنية المعلومات',
+        'join_date': '2023-01-15',
+        'basic_salary': '8000.00 ريال',
+        'contract_type': 'دائم',
+        'location': 'الرياض',
+        'project': 'نظام نُظم',
+        'status': 'نشط',
+        'vehicle_records': [
+            {
+                'plate_number': 'أ ب ج 123',
+                'handover_type': 'تسليم',
+                'handover_date': '2024-01-01',
+                'person_name': 'أحمد علي'
+            },
+            {
+                'plate_number': 'د هـ و 456',
+                'handover_type': 'استلام',
+                'handover_date': '2024-02-01',
+                'person_name': 'محمد أحمد'
+            }
+        ]
+    }
+    
+    pdf_data = create_employee_report_with_design(employee_data)
+    
+    if pdf_data:
+        with open('employee_designed_report_final.pdf', 'wb') as f:
+            f.write(pdf_data)
+        print("✓ تم إنشاء التقرير بالتصميم المطلوب بنجاح!")
+        print(f"حجم الملف: {len(pdf_data)} بايت")
+        return True
+    else:
+        print("✗ فشل في إنشاء التقرير")
+        return False
+
+if __name__ == "__main__":
+    main()
