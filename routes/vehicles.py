@@ -13,7 +13,7 @@ import pandas as pd
 from fpdf import FPDF
 from werkzeug.datastructures import FileStorage
 
-from app import db
+# Import database after application is initialized to avoid circular imports
 from models import (
     Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
     VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
@@ -40,6 +40,7 @@ vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
 
 def update_vehicle_driver(vehicle_id):
     """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
+    from app import db
     try:
         # الحصول على جميع سجلات التسليم (delivery) للسيارة مرتبة حسب التاريخ
         delivery_records = VehicleHandover.query.filter_by(
