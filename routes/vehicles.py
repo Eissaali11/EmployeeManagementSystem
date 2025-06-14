@@ -3317,13 +3317,10 @@ def export_all_vehicles_excel():
                         'نوع الفحص': record.check_type or '',
                         'المشرف': record.supervisor_name or '',
                         'السائق': record.driver_name or '',
-                        'حالة الإطارات': record.tire_condition or '',
-                        'حالة الفرامل': record.brake_condition or '',
-                        'حالة الأضواء': record.lights_condition or '',
-                        'مستوى الزيت': record.oil_level or '',
-                        'مستوى المياه': record.water_level or '',
-                        'النتيجة العامة': record.overall_result or '',
-                        'إجراءات مطلوبة': record.required_actions or '',
+                        'الحالة': record.status or '',
+                        'مشاكل موجودة': 'نعم' if record.issues_found else 'لا',
+                        'وصف المشاكل': record.issues_description or '',
+                        'الإجراءات المتخذة': record.actions_taken or '',
                         'ملاحظات': record.notes or ''
                     })
                 
