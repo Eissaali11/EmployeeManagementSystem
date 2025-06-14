@@ -70,13 +70,9 @@
                         وثائق المركبة
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{{ url_for('vehicles.export_single_vehicle_excel', id=vehicle.id) }}">
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.export_vehicle_to_excel', id=vehicle.id) }}">
                         <i class="fas fa-download ms-2"></i>
                         تصدير Excel
-                    </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('vehicles.import_vehicles_excel') }}">
-                        <i class="fas fa-upload ms-2"></i>
-                        استيراد Excel
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}">
