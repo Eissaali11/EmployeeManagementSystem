@@ -16,97 +16,94 @@ from PIL import Image, ImageDraw
 class EmployeeBasicReportPDF(FPDF):
     def __init__(self):
         super().__init__()
-        # مسار الخطوط يتكيف مع البيئة
-        possible_font_paths = [
-            'fonts',  # للبيئة المحلية والخادم
-            'static/fonts',  # مسار بديل
-            '/home/runner/workspace/static/fonts',  # للـ Replit
-            os.path.join(os.getcwd(), 'fonts'),  # مسار نسبي
-            os.path.join(os.getcwd(), 'static', 'fonts')  # مسار نسبي آخر
-        ]
-        
-        self.font_path = None
-        for path in possible_font_paths:
-            if os.path.exists(path):
-                self.font_path = path
-                break
-        
-        # إذا لم نجد الخطوط، استخدم Cairo.ttf من المجلد الجذر
-        if not self.font_path:
-            if os.path.exists('Cairo.ttf'):
-                self.font_path = '.'
-            else:
-                self.font_path = 'fonts'  # مسار افتراضي
-        
-    def setup_arabic_font(self):
-        """إعداد الخط العربي"""
+        self.arabic_font_loaded = False
+        self.setup_fonts()
+    
+    def setup_fonts(self):
+        """إعداد الخطوط العربية"""
         try:
             # محاولة تحميل Cairo.ttf من المجلد الجذر
             if os.path.exists('Cairo.ttf'):
                 self.add_font('Arabic', '', 'Cairo.ttf', uni=True)
                 self.add_font('Arabic', 'B', 'Cairo.ttf', uni=True)
-                return True
+                self.arabic_font_loaded = True
+                return
             
-            # محاولة من مجلد fonts
-            if self.font_path:
-                cairo_font = os.path.join(self.font_path, 'Cairo.ttf')
-                if os.path.exists(cairo_font):
-                    self.add_font('Arabic', '', cairo_font, uni=True)
-                    self.add_font('Arabic', 'B', cairo_font, uni=True)
-                    return True
+            # البحث في مجلدات أخرى
+            possible_paths = [
+                'fonts/Cairo.ttf',
+                'static/fonts/Cairo.ttf',
+                'fonts/Amiri-Regular.ttf'
+            ]
             
-            return False
+            for font_path in possible_paths:
+                if os.path.exists(font_path):
+                    self.add_font('Arabic', '', font_path, uni=True)
+                    self.add_font('Arabic', 'B', font_path, uni=True)
+                    self.arabic_font_loaded = True
+                    return
             
         except Exception as e:
             print(f"خطأ في تحميل الخط العربي: {e}")
+            self.arabic_font_loaded = False
+    
+    def safe_set_font(self, family='Arabic', style='', size=12):
+        """تعيين خط آمن مع التحقق من توفر الخط العربي"""
+        try:
+            if family == 'Arabic' and self.arabic_font_loaded:
+                self.set_font('Arabic', style, size)
+                return True
+            else:
+                self.set_font('Arial', style, size)
+                return False
+        except:
+            self.set_font('Arial', style, size)
             return False
+    
+    def safe_text(self, text, use_arabic=True):
+        """معالجة آمنة للنص العربي"""
+        if use_arabic and self.arabic_font_loaded:
+            try:
+                return get_display(reshape(text))
+            except:
+                return text
+        return text
 
     def header(self):
         """رأس الصفحة"""
-        # إعداد الخط العربي
-        arabic_font_loaded = self.setup_arabic_font()
-        
-        if arabic_font_loaded:
-            self.set_font('Arabic', 'B', 20)
-            # العنوان الرئيسي
-            title = get_display(reshape('تقرير المعلومات الأساسية للموظف'))
-            self.cell(0, 15, title, 0, 1, 'C')
-        else:
-            # استخدام Arial كخط بديل
-            self.set_font('Arial', 'B', 20)
-            self.cell(0, 15, 'Employee Basic Report', 0, 1, 'C')
-        
+        self.safe_set_font('Arabic', 'B', 20)
+        title = self.safe_text('تقرير المعلومات الأساسية للموظف')
+        if not self.arabic_font_loaded:
+            title = 'Employee Basic Report'
+        self.cell(0, 15, title, 0, 1, 'C')
         self.ln(5)
         
     def footer(self):
         """تذييل الصفحة"""
         self.set_y(-15)
+        self.safe_set_font('Arabic', '', 10)
         
-        # التحقق من توفر الخط العربي
-        try:
-            self.set_font('Arabic', '', 10)
-            page_text = get_display(reshape(f'صفحة {self.page_no()}'))
-            self.cell(0, 10, page_text, 0, 0, 'C')
-            
-            # تاريخ الطباعة
-            current_date = datetime.now().strftime('%Y/%m/%d')
-            date_text = get_display(reshape(f'تاريخ الطباعة: {current_date}'))
-            self.cell(0, 10, date_text, 0, 0, 'L')
-        except:
-            # استخدام Arial كخط بديل
-            self.set_font('Arial', '', 10)
-            self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-            current_date = datetime.now().strftime('%Y/%m/%d')
-            self.cell(0, 10, f'Print Date: {current_date}', 0, 0, 'L')
+        # رقم الصفحة
+        page_text = self.safe_text(f'صفحة {self.page_no()}')
+        if not self.arabic_font_loaded:
+            page_text = f'Page {self.page_no()}'
+        self.cell(0, 10, page_text, 0, 0, 'C')
+        
+        # تاريخ الطباعة
+        current_date = datetime.now().strftime('%Y/%m/%d')
+        date_text = self.safe_text(f'تاريخ الطباعة: {current_date}')
+        if not self.arabic_font_loaded:
+            date_text = f'Print Date: {current_date}'
+        self.cell(0, 10, date_text, 0, 0, 'L')
         
     def add_section_title(self, title):
         """إضافة عنوان قسم"""
         self.ln(5)
-        self.set_font('Arabic', 'B', 16)
+        self.safe_set_font('Arabic', 'B', 16)
         self.set_fill_color(70, 130, 180)  # لون أزرق فاتح
         self.set_text_color(255, 255, 255)  # نص أبيض
         
-        title_text = get_display(reshape(title))
+        title_text = self.safe_text(title)
         self.cell(0, 12, title_text, 1, 1, 'C', True)
         self.set_text_color(0, 0, 0)  # إعادة النص للأسود
         self.ln(5)
@@ -114,14 +111,19 @@ class EmployeeBasicReportPDF(FPDF):
     def add_info_row(self, label, value, is_bold=False):
         """إضافة صف معلومات"""
         font_style = 'B' if is_bold else ''
-        self.set_font('Arabic', font_style, 12)
+        self.safe_set_font('Arabic', font_style, 12)
         
         # التسمية
-        label_text = get_display(reshape(f'{label}:'))
+        label_text = self.safe_text(f'{label}:')
+        if not self.arabic_font_loaded:
+            label_text = f'{label}:'
         self.cell(60, 8, label_text, 1, 0, 'R')
         
         # القيمة
-        value_text = get_display(reshape(str(value) if value else 'غير محدد'))
+        value_str = str(value) if value else 'غير محدد'
+        value_text = self.safe_text(value_str)
+        if not self.arabic_font_loaded and not value:
+            value_text = 'Not specified'
         self.cell(120, 8, value_text, 1, 1, 'R')
         
     def add_vehicle_record(self, record):
@@ -282,9 +284,14 @@ class EmployeeBasicReportPDF(FPDF):
             self.ln(3)
             
             # رسالة عدم التوفر
-            self.set_font('Arabic', '', 11)
+            try:
+                self.set_font('Arabic', '', 11)
+                no_image_text = get_display(reshape('لا توجد صورة متاحة'))
+            except:
+                self.set_font('Arial', '', 11)
+                no_image_text = 'No image available'
+            
             self.set_text_color(128, 128, 128)  # رمادي
-            no_image_text = get_display(reshape('غير متوفرة'))
             self.cell(0, 8, no_image_text, 0, 1, 'C')
             self.set_text_color(0, 0, 0)  # إعادة النص للأسود
             self.ln(8)
