@@ -651,3 +651,103 @@ def export_workshop_records_excel(vehicle, workshop_records):
     
     buffer.seek(0)
     return buffer
+
+
+def export_all_vehicles_to_excel():
+    """
+    تصدير جميع بيانات المركبات إلى ملف Excel شامل
+    
+    Returns:
+        Flask Response: استجابة Flask مع ملف Excel
+    """
+    from flask import make_response, flash, redirect, url_for
+    from models import Vehicle, VehicleWorkshop
+    import openpyxl
+    from openpyxl.styles import Font, Alignment, PatternFill
+    
+    try:
+        # الحصول على جميع المركبات
+        vehicles = Vehicle.query.order_by(Vehicle.plate_number).all()
+        
+        if not vehicles:
+            flash("لا توجد مركبات للتصدير!", "warning")
+            return redirect(url_for("vehicles.index"))
+        
+        # إنشاء مصنف Excel جديد
+        wb = openpyxl.Workbook()
+        
+        # إزالة الورقة الافتراضية
+        wb.remove(wb.active)
+        
+        # إنشاء ورقة المركبات الأساسية
+        vehicles_ws = wb.create_sheet("المركبات")
+        
+        # إعداد التنسيق
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        center_alignment = Alignment(horizontal="center", vertical="center")
+        
+        # عناوين الأعمدة للمركبات
+        vehicle_headers = [
+            "رقم اللوحة", "الماركة", "الموديل", "سنة الصنع", "اللون",
+            "اسم السائق", "الحالة", "تاريخ انتهاء الفحص الدوري",
+            "تاريخ انتهاء الاستمارة", "تاريخ انتهاء التفويض",
+            "ملاحظات", "تاريخ الإضافة"
+        ]
+        
+        # إضافة العناوين
+        for col, header in enumerate(vehicle_headers, 1):
+            cell = vehicles_ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_alignment
+        
+        # إضافة بيانات المركبات
+        for row, vehicle in enumerate(vehicles, 2):
+            vehicles_ws.cell(row=row, column=1, value=vehicle.plate_number or "")
+            vehicles_ws.cell(row=row, column=2, value=vehicle.make or "")
+            vehicles_ws.cell(row=row, column=3, value=vehicle.model or "")
+            vehicles_ws.cell(row=row, column=4, value=vehicle.year or "")
+            vehicles_ws.cell(row=row, column=5, value=vehicle.color or "")
+            vehicles_ws.cell(row=row, column=6, value=vehicle.driver_name or "")
+            
+            # ترجمة حالة المركبة
+            status_map = {
+                "available": "متاحة",
+                "rented": "مؤجرة",
+                "in_use": "في الاستخدام",
+                "maintenance": "في الصيانة",
+                "in_workshop": "في الورشة",
+                "in_project": "في المشروع",
+                "accident": "حادث",
+                "sold": "مباعة"
+            }
+            vehicles_ws.cell(row=row, column=7, value=status_map.get(vehicle.status, vehicle.status or ""))
+            
+            # تواريخ انتهاء الوثائق
+            vehicles_ws.cell(row=row, column=8, value=vehicle.inspection_expiry_date.strftime("%Y-%m-%d") if vehicle.inspection_expiry_date else "")
+            vehicles_ws.cell(row=row, column=9, value=vehicle.registration_expiry_date.strftime("%Y-%m-%d") if vehicle.registration_expiry_date else "")
+            vehicles_ws.cell(row=row, column=10, value=vehicle.authorization_expiry_date.strftime("%Y-%m-%d") if vehicle.authorization_expiry_date else "")
+            vehicles_ws.cell(row=row, column=11, value=vehicle.notes or "")
+            vehicles_ws.cell(row=row, column=12, value=vehicle.created_at.strftime("%Y-%m-%d") if vehicle.created_at else "")
+        
+        # تعديل عرض الأعمدة
+        for col in range(1, len(vehicle_headers) + 1):
+            vehicles_ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 15
+        
+        # حفظ الملف في الذاكرة
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        
+        # إنشاء الاستجابة
+        response = make_response(buffer.getvalue())
+        response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        response.headers["Content-Disposition"] = f"attachment; filename=تصدير_جميع_المركبات_{timestamp}.xlsx"
+        
+        return response
+        
+    except Exception as e:
+        flash(f"خطأ في تصدير البيانات: {str(e)}", "danger")
+        return redirect(url_for("vehicles.index"))
