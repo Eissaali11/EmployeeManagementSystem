@@ -4227,8 +4227,8 @@ def export_single_vehicle_excel(id):
             basic_data = {
                 'البيان': [
                     'رقم اللوحة', 'الماركة', 'الموديل', 'سنة الصنع', 'اللون',
-                    'رقم الهيكل', 'القسم/المالك', 'اسم السائق الحالي', 'الحالة',
-                    'تاريخ انتهاء التأمين', 'تاريخ انتهاء الفحص الدوري',
+                    'اسم السائق الحالي', 'الحالة',
+                    'تاريخ انتهاء الفحص الدوري',
                     'تاريخ انتهاء الاستمارة', 'تاريخ انتهاء التفويض',
                     'ملاحظات', 'تاريخ الإضافة'
                 ],
@@ -4238,8 +4238,6 @@ def export_single_vehicle_excel(id):
                     vehicle.model,
                     vehicle.year,
                     vehicle.color or '',
-                    vehicle.vin or '',
-                    vehicle.department or '',
                     vehicle.driver_name or '',
                     {
                         'available': 'متاحة',
@@ -4249,7 +4247,6 @@ def export_single_vehicle_excel(id):
                         'accident': 'حادث',
                         'sold': 'مباعة'
                     }.get(vehicle.status, vehicle.status),
-                    vehicle.insurance_expiry.strftime('%Y-%m-%d') if vehicle.insurance_expiry else '',
                     vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else '',
                     vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else '',
                     vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else '',
