@@ -368,68 +368,37 @@ def export_vehicle_excel(vehicle, workshop_records=None, rental_records=None):
     buffer = io.BytesIO()
     
     # إنشاء مصنف Excel مع عدة أوراق عمل
-    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        workbook = writer.book
-        
-        # نمط العناوين
-        header_format = workbook.add_format({
-            'bold': True,
-            'text_wrap': True,
-            'valign': 'center',
-            'align': 'center',
-            'fg_color': '#D7E4BC',
-            'border': 1
-        })
-        
-        # نمط الخلايا
-        cell_format = workbook.add_format({
-            'align': 'right',
-            'valign': 'vcenter',
-            'border': 1
-        })
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         
         # ورقة المعلومات الأساسية
         basic_data = {
             'البيان': [
-                'رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون', 'اسم السائق',
-                'الحالة', 'تاريخ انتهاء التفويض', 'تاريخ انتهاء الاستمارة', 'تاريخ انتهاء الفحص الدوري'
+                'رقم اللوحة', 'النوع', 'سنة الصنع', 'اللون', 'السائق الحالي',
+                'الحالة', 'تاريخ انتهاء الفحص الدوري', 'تاريخ انتهاء الاستمارة', 'الملاحظات'
             ],
             'القيمة': [
-                vehicle.plate_number,
-                f"{vehicle.make} {vehicle.model}",
-                str(vehicle.year),
-                vehicle.color,
-                vehicle.driver_name or "غير محدد",
+                vehicle.plate_number or '',
+                f"{vehicle.make or ''} {vehicle.model or ''}".strip(),
+                str(vehicle.year) if vehicle.year else '',
+                vehicle.color or '',
+                vehicle.current_driver or "غير محدد",
                 {
                     'available': 'متاحة',
-                    'rented': 'مؤجرة',
+                    'rented': 'مؤجرة', 
                     'in_workshop': 'في الورشة',
                     'in_project': 'في المشروع',
                     'accident': 'حادث',
                     'sold': 'مباعة'
-                }.get(vehicle.status, vehicle.status),
-                vehicle.authorization_expiry_date.strftime("%Y-%m-%d") if vehicle.authorization_expiry_date else "غير محدد",
-                vehicle.registration_expiry_date.strftime("%Y-%m-%d") if vehicle.registration_expiry_date else "غير محدد",
-                vehicle.inspection_expiry_date.strftime("%Y-%m-%d") if vehicle.inspection_expiry_date else "غير محدد"
+                }.get(vehicle.status, vehicle.status or ''),
+                vehicle.periodic_inspection_expiry.strftime("%Y-%m-%d") if vehicle.periodic_inspection_expiry else "غير محدد",
+                vehicle.form_expiry.strftime("%Y-%m-%d") if vehicle.form_expiry else "غير محدد",
+                vehicle.notes or "لا توجد ملاحظات"
             ]
         }
         
         # إنشاء DataFrame وكتابته إلى ورقة العمل
         df_basic = pd.DataFrame(basic_data)
         df_basic.to_excel(writer, sheet_name='معلومات السيارة', index=False)
-        
-        # تعديل عرض الأعمدة
-        worksheet = writer.sheets['معلومات السيارة']
-        worksheet.set_column('A:A', 25)
-        worksheet.set_column('B:B', 30)
-        
-        # تنسيق الخلايا
-        for col_num, col in enumerate(df_basic.columns):
-            worksheet.write(0, col_num, col, header_format)
-        
-        for row_num in range(len(df_basic)):
-            for col_num in range(len(df_basic.columns)):
-                worksheet.write(row_num + 1, col_num, df_basic.iloc[row_num, col_num], cell_format)
         
         # إذا كانت سجلات الورشة متوفرة
         if workshop_records and len(workshop_records) > 0:
