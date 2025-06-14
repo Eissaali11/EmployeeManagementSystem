@@ -3343,8 +3343,12 @@ def update_handover_link(handover_id):
 @vehicles_bp.route('/export_all_excel')
 @login_required
 def export_all_vehicles_excel():
-    """تصدير جميع بيانات المركبات إلى ملف Excel شامل"""
+    """تصدير جميع بيانات المركبات إلى ملف Excel شامل - إصدار محدث يعمل"""
     try:
+        import io
+        import pandas as pd
+        from datetime import datetime
+        
         # الحصول على جميع المركبات
         vehicles = Vehicle.query.order_by(Vehicle.plate_number).all()
         
@@ -3355,28 +3359,7 @@ def export_all_vehicles_excel():
         # إنشاء buffer لملف Excel
         buffer = io.BytesIO()
         
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            workbook = writer.book
-            
-            # تنسيق العناوين
-            header_format = workbook.add_format({
-                'bold': True,
-                'text_wrap': True,
-                'valign': 'center',
-                'align': 'center',
-                'fg_color': '#4472C4',
-                'font_color': 'white',
-                'border': 1,
-                'font_size': 12
-            })
-            
-            # تنسيق البيانات
-            data_format = workbook.add_format({
-                'align': 'center',
-                'valign': 'vcenter',
-                'border': 1,
-                'font_size': 10
-            })
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
             
             # ===== ورقة المعلومات الأساسية للمركبات =====
             vehicles_data = []
