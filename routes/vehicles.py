@@ -239,6 +239,7 @@ def calculate_rental_adjustment(vehicle_id, year, month):
 @vehicles_bp.route('/expired-documents')
 @login_required
 def expired_documents():
+    from app import db
     """عرض قائمة المستندات المنتهية للمركبات بشكل تفصيلي"""
     # التاريخ الحالي
     today = datetime.now().date()
@@ -351,8 +352,12 @@ def export_expired_documents_excel():
         flash(f'خطأ في تصدير البيانات: {str(e)}', 'error')
         return redirect(url_for('vehicles.expired_documents'))
 
+@vehicles_bp.route('/')
+@vehicles_bp.route('/index')
+@login_required
 def index():
     """عرض قائمة السيارات مع خيارات التصفية"""
+    from app import db
     status_filter = request.args.get('status', '')
     make_filter = request.args.get('make', '')
     
