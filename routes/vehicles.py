@@ -3388,7 +3388,7 @@ def export_all_vehicles_excel():
                     'سنة الصنع': vehicle.year,
                     'اللون': vehicle.color,
                     'تاريخ الإضافة': vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else '',
-                    'القسم/المالك': vehicle.department or '',
+                    'ملاحظات': vehicle.notes or '',
                     'اسم السائق': vehicle.driver_name or '',
                     'الحالة': {
                         'available': 'متاحة',
