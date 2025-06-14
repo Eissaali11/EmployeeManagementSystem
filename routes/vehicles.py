@@ -3393,11 +3393,11 @@ def export_all_vehicles_excel():
                         'ماركة السيارة': vehicle.make if vehicle else '',
                         'موديل السيارة': vehicle.model if vehicle else '',
                         'اسم المشروع': record.project_name or '',
-                        'وصف المشروع': record.project_description or '',
-                        'موقع المشروع': record.project_location or '',
+                        'وصف المشروع': record.notes or '',
+                        'موقع المشروع': record.location or '',
                         'تاريخ البداية': record.start_date.strftime('%Y-%m-%d') if record.start_date else '',
                         'تاريخ النهاية': record.end_date.strftime('%Y-%m-%d') if record.end_date else 'مستمر',
-                        'مدير المشروع': record.project_manager or '',
+                        'مدير المشروع': record.manager_name or '',
                         'الحالة': 'نشط' if record.is_active else 'منتهي',
                         'ملاحظات': record.notes or ''
                     })
@@ -3979,11 +3979,11 @@ def export_single_vehicle_excel(id):
                 for record in project_assignments:
                     project_data.append({
                         'اسم المشروع': record.project_name or '',
-                        'وصف المشروع': record.project_description or '',
-                        'موقع المشروع': record.project_location or '',
+                        'وصف المشروع': record.notes or '',
+                        'موقع المشروع': record.location or '',
                         'تاريخ البداية': record.start_date.strftime('%Y-%m-%d') if record.start_date else '',
                         'تاريخ النهاية': record.end_date.strftime('%Y-%m-%d') if record.end_date else 'مستمر',
-                        'مدير المشروع': record.project_manager or '',
+                        'مدير المشروع': record.manager_name or '',
                         'الحالة': 'نشط' if record.is_active else 'منتهي',
                         'ملاحظات': record.notes or ''
                     })
