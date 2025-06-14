@@ -3382,23 +3382,22 @@ def export_all_vehicles_excel():
             vehicles_data = []
             for vehicle in vehicles:
                 vehicles_data.append({
-                    'رقم اللوحة': vehicle.plate_number,
-                    'الماركة': vehicle.make,
-                    'الموديل': vehicle.model,
-                    'سنة الصنع': vehicle.year,
-                    'اللون': vehicle.color,
-                    'تاريخ الإضافة': vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else '',
-                    'ملاحظات': vehicle.notes or '',
+                    'رقم اللوحة': vehicle.plate_number or '',
+                    'الماركة': vehicle.make or '',
+                    'الموديل': vehicle.model or '',
+                    'سنة الصنع': vehicle.year or '',
+                    'اللون': vehicle.color or '',
                     'اسم السائق': vehicle.driver_name or '',
                     'الحالة': {
                         'available': 'متاحة',
                         'rented': 'مؤجرة', 
+                        'in_use': 'في الاستخدام',
+                        'maintenance': 'في الصيانة',
                         'in_workshop': 'في الورشة',
                         'in_project': 'في المشروع',
                         'accident': 'حادث',
                         'sold': 'مباعة'
-                    }.get(vehicle.status, vehicle.status),
-                    'تاريخ انتهاء التأمين': vehicle.insurance_expiry.strftime('%Y-%m-%d') if vehicle.insurance_expiry else '',
+                    }.get(vehicle.status, vehicle.status or ''),
                     'تاريخ انتهاء الفحص الدوري': vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else '',
                     'تاريخ انتهاء الاستمارة': vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else '',
                     'تاريخ انتهاء التفويض': vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else '',
@@ -3976,7 +3975,6 @@ def import_vehicles_excel():
                 
                 # معالجة التواريخ
                 date_fields = [
-                    ('تاريخ انتهاء التأمين', 'insurance_expiry'),
                     ('تاريخ انتهاء الفحص الدوري', 'inspection_expiry_date'),
                     ('تاريخ انتهاء الاستمارة', 'registration_expiry_date'),
                     ('تاريخ انتهاء التفويض', 'authorization_expiry_date')
