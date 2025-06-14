@@ -32,18 +32,11 @@ def employee_login():
         from sqlalchemy import text
         
         try:
-            # البحث باستخدام تحويل جميع القيم إلى نصوص للمقارنة
-            result = db.session.execute(text("""
-                SELECT id FROM employee 
-                WHERE national_id::text = :national_id 
-                AND employee_id::text = :employee_id
-                LIMIT 1
-            """), {
-                'national_id': national_id,
-                'employee_id': employee_number
-            }).fetchone()
-            
-            employee = Employee.query.get(result[0]) if result else None
+            # البحث عن الموظف بطريقة آمنة
+            employee = Employee.query.filter(
+                Employee.national_id == national_id,
+                Employee.employee_id == employee_number
+            ).first()
             
         except Exception as e:
             print(f"Database error: {e}")
