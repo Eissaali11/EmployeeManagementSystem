@@ -1,144 +1,169 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
 
-{% block title %}استيراد بيانات المركبات من Excel{% endblock %}
+{% block title %}استيراد المركبات من Excel{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-file-excel me-2"></i>
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-upload ms-2"></i>
                         استيراد بيانات المركبات من Excel
                     </h4>
                 </div>
                 <div class="card-body">
-                    <!-- تعليمات الاستخدام -->
-                    <div class="alert alert-info">
-                        <h5><i class="fas fa-info-circle me-2"></i>تعليمات الاستخدام:</h5>
-                        <ol>
-                            <li>قم بتحميل قالب Excel أولاً باستخدام الزر أدناه</li>
-                            <li>املأ البيانات في القالب وفقاً للتعليمات الموجودة</li>
-                            <li>احفظ الملف وقم برفعه هنا</li>
-                            <li>ستتم إضافة المركبات الجديدة وتحديث الموجودة</li>
-                        </ol>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        <strong>تعليمات مهمة:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>يجب أن يكون الملف بصيغة Excel (.xlsx أو .xls)</li>
+                            <li>يجب أن تحتوي الورقة الأولى على اسم "المركبات"</li>
+                            <li>الأعمدة المطلوبة: رقم اللوحة، الماركة، الموديل، سنة الصنع</li>
+                            <li>إذا كان رقم اللوحة موجود، سيتم تحديث البيانات</li>
+                            <li>إذا كان رقم اللوحة غير موجود، سيتم إنشاء مركبة جديدة</li>
+                        </ul>
                     </div>
 
-                    <!-- رابط تحميل القالب -->
-                    <div class="mb-4">
-                        <a href="{{ url_for('vehicles.download_excel_template') }}" 
-                           class="btn btn-success">
-                            <i class="fas fa-download me-2"></i>
-                            تحميل قالب Excel
-                        </a>
-                    </div>
-
-                    <!-- نموذج رفع الملف -->
-                    <form method="POST" enctype="multipart/form-data">
-                        {{ csrf_token() }}
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {{ form.hidden_tag() }}
                         
-                        <div class="mb-3">
-                            <label for="excel_file" class="form-label">
-                                <strong>اختر ملف Excel:</strong>
-                            </label>
-                            <input type="file" 
-                                   class="form-control" 
-                                   id="excel_file" 
-                                   name="excel_file" 
-                                   accept=".xlsx,.xls"
-                                   required>
-                            <div class="form-text">
-                                يجب أن يكون الملف بصيغة Excel (.xlsx أو .xls)
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-secondary">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-file-excel ms-1"></i>
+                                            رفع ملف Excel
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="excel_file" class="form-label">اختر ملف Excel:</label>
+                                            <input type="file" 
+                                                   class="form-control" 
+                                                   id="excel_file" 
+                                                   name="excel_file" 
+                                                   accept=".xlsx,.xls"
+                                                   required>
+                                            <div class="invalid-feedback">
+                                                يرجى اختيار ملف Excel صحيح
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-upload ms-1"></i>
+                                                استيراد البيانات
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="alert alert-warning">
-                            <h6><i class="fas fa-exclamation-triangle me-2"></i>تنبيه مهم:</h6>
-                            <ul class="mb-0">
-                                <li>تأكد من أن البيانات في الملف صحيحة قبل الرفع</li>
-                                <li>إذا كان رقم اللوحة موجود، ستتم تحديث بيانات السيارة</li>
-                                <li>إذا كان رقم اللوحة جديد، ستتم إضافة سيارة جديدة</li>
-                                <li>الأعمدة المطلوبة: رقم اللوحة، الماركة، الموديل، سنة الصنع</li>
-                            </ul>
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{{ url_for('vehicles.index') }}" 
-                               class="btn btn-secondary me-md-2">
-                                <i class="fas fa-arrow-right me-2"></i>
-                                إلغاء
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-upload me-2"></i>
-                                رفع الملف والاستيراد
-                            </button>
+                            
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-download ms-1"></i>
+                                            تحميل القالب
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted">
+                                            قم بتحميل قالب Excel للحصول على الهيكل الصحيح للملف مع أمثلة على البيانات المطلوبة.
+                                        </p>
+                                        
+                                        <div class="d-grid gap-2">
+                                            <a href="{{ url_for('vehicles.download_excel_template') }}" 
+                                               class="btn btn-success">
+                                                <i class="fas fa-file-download ms-1"></i>
+                                                تحميل قالب Excel
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
+                
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-6">
+                            <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right ms-1"></i>
+                                العودة للقائمة
+                            </a>
+                        </div>
+                        <div class="col-6 text-end">
+                            <a href="{{ url_for('vehicles.export_all_vehicles_excel') }}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-file-export ms-1"></i>
+                                تصدير البيانات الحالية
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-
+            
             <!-- معلومات إضافية -->
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5 class="mb-0">معلومات الأعمدة المطلوبة</h5>
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle ms-2"></i>
+                        الأعمدة المدعومة في ملف Excel
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>اسم العمود</th>
-                                    <th>النوع</th>
-                                    <th>مطلوب</th>
-                                    <th>مثال</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>رقم اللوحة</td>
-                                    <td>نص</td>
-                                    <td><span class="badge bg-danger">نعم</span></td>
-                                    <td>أ ب ج 1234</td>
-                                </tr>
-                                <tr>
-                                    <td>الماركة</td>
-                                    <td>نص</td>
-                                    <td><span class="badge bg-danger">نعم</span></td>
-                                    <td>تويوتا</td>
-                                </tr>
-                                <tr>
-                                    <td>الموديل</td>
-                                    <td>نص</td>
-                                    <td><span class="badge bg-danger">نعم</span></td>
-                                    <td>كامري</td>
-                                </tr>
-                                <tr>
-                                    <td>سنة الصنع</td>
-                                    <td>رقم</td>
-                                    <td><span class="badge bg-danger">نعم</span></td>
-                                    <td>2020</td>
-                                </tr>
-                                <tr>
-                                    <td>اللون</td>
-                                    <td>نص</td>
-                                    <td><span class="badge bg-secondary">لا</span></td>
-                                    <td>أبيض</td>
-                                </tr>
-                                <tr>
-                                    <td>الحالة</td>
-                                    <td>نص</td>
-                                    <td><span class="badge bg-secondary">لا</span></td>
-                                    <td>متاحة، مؤجرة، في الورشة</td>
-                                </tr>
-                                <tr>
-                                    <td>تاريخ انتهاء التأمين</td>
-                                    <td>تاريخ</td>
-                                    <td><span class="badge bg-secondary">لا</span></td>
-                                    <td>2024-12-31</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">الأعمدة المطلوبة:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>رقم اللوحة</span>
+                                    <span class="badge bg-danger">مطلوب</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>الماركة</span>
+                                    <span class="badge bg-danger">مطلوب</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>الموديل</span>
+                                    <span class="badge bg-danger">مطلوب</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>سنة الصنع</span>
+                                    <span class="badge bg-danger">مطلوب</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success">الأعمدة الاختيارية:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>اللون</span>
+                                    <span class="badge bg-success">اختياري</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>اسم السائق</span>
+                                    <span class="badge bg-success">اختياري</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>الحالة</span>
+                                    <span class="badge bg-success">اختياري</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>تواريخ انتهاء الوثائق</span>
+                                    <span class="badge bg-success">اختياري</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>ملاحظات</span>
+                                    <span class="badge bg-success">اختياري</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -147,14 +172,30 @@
 </div>
 
 <script>
+// التحقق من صحة النموذج
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// عرض اسم الملف المختار
 document.getElementById('excel_file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const fileSize = file.size / 1024 / 1024; // حجم الملف بالميجابايت
-        if (fileSize > 10) {
-            alert('حجم الملف كبير جداً. يجب أن يكون أقل من 10 ميجابايت');
-            e.target.value = '';
-        }
+    var fileName = e.target.files[0] ? e.target.files[0].name : 'لم يتم اختيار ملف';
+    var fileLabel = document.querySelector('label[for="excel_file"]');
+    if (e.target.files[0]) {
+        fileLabel.innerHTML = '<i class="fas fa-file-excel ms-1"></i> ' + fileName;
+        fileLabel.classList.add('text-success');
     }
 });
 </script>
