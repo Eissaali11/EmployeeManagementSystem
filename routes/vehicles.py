@@ -2413,9 +2413,37 @@ def export_workshop_to_pdf(id):
 @login_required
 def export_vehicle_to_excel(id):
     """تصدير بيانات السيارة إلى ملف Excel"""
-    vehicle = Vehicle.query.get_or_404(id)
-    workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
-    rental_records = VehicleRental.query.filter_by(vehicle_id=id).order_by(VehicleRental.start_date.desc()).all()
+    from app import db
+    
+# رابط تصدير مؤقت للاختبار
+@vehicles_bp.route('/<int:id>/test_export_excel')
+def test_export_vehicle_to_excel(id):
+    """تصدير بيانات السيارة إلى ملف Excel - اختبار"""
+    from app import db
+    from datetime import datetime
+    from flask import send_file, jsonify
+    
+    try:
+        vehicle = Vehicle.query.get_or_404(id)
+        workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
+        rental_records = VehicleRental.query.filter_by(vehicle_id=id).order_by(VehicleRental.start_date.desc()).all()
+        
+        # إنشاء ملف Excel
+        excel_buffer = export_vehicle_excel(vehicle, workshop_records, rental_records)
+        
+        return send_file(
+            excel_buffer,
+            download_name=f'test_vehicle_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.xlsx',
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'type': type(e).__name__,
+            'vehicle_id': id
+        }), 500
     
     # إنشاء ملف Excel
     excel_buffer = export_vehicle_excel(vehicle, workshop_records, rental_records)
@@ -3922,13 +3950,10 @@ def export_single_vehicle_excel(id):
                         'نوع الفحص': record.check_type or '',
                         'المشرف': record.supervisor_name or '',
                         'السائق': record.driver_name or '',
-                        'حالة الإطارات': record.tire_condition or '',
-                        'حالة الفرامل': record.brake_condition or '',
-                        'حالة الأضواء': record.lights_condition or '',
-                        'مستوى الزيت': record.oil_level or '',
-                        'مستوى المياه': record.water_level or '',
-                        'النتيجة العامة': record.overall_result or '',
-                        'إجراءات مطلوبة': record.required_actions or '',
+                        'الحالة': record.status or '',
+                        'مشاكل موجودة': 'نعم' if record.issues_found else 'لا',
+                        'وصف المشاكل': record.issues_description or '',
+                        'الإجراءات المتخذة': record.actions_taken or '',
                         'ملاحظات': record.notes or ''
                     })
                 
