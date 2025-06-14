@@ -12,7 +12,7 @@ from utils.excel import parse_employee_excel, generate_employee_excel, export_em
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 from utils.employee_comprehensive_report_updated import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
-from utils.employee_working_report import generate_working_employee_report
+from utils.employee_minimal_report import generate_minimal_employee_report
 from utils.audit_logger import log_activity
 
 employees_bp = Blueprint('employees', __name__)
@@ -623,7 +623,7 @@ def basic_report(id):
             return send_file(
                 BytesIO(pdf_buffer),
                 as_attachment=True,
-                download_name=filename,
+                download_name=filename.encode('ascii', 'ignore').decode('ascii'),
                 mimetype='application/pdf'
             )
         else:
