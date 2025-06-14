@@ -154,6 +154,11 @@
 - Environment variable protection
 
 ## Changelog
+- June 14, 2025: Enhanced duplicate prevention system with comprehensive validation:
+  • Added duplicate checking within same Excel file before database insertion
+  • Enhanced validation for required fields (plate_number, make, model)
+  • Improved error reporting with specific row numbers and clear messages
+  • Added tracking of processed plate numbers to prevent intra-file duplicates
 - June 14, 2025: Updated vehicle import functionality to match exact user requirements: رقم اللوحة، الماركة، الموديل، سنة الصنع، اللون، اسم السائق، الحالة، تاريخ انتهاء الفحص الدوري، تاريخ انتهاء الاستمارة، ملاحظات، تاريخ الإضافة
 - June 14, 2025: Added automatic data filling for missing fields during import (engine_number, chassis_number, fuel_type, mileage)
 - June 14, 2025: Enhanced import template with proper date format examples and comprehensive field mapping

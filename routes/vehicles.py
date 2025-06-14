@@ -3158,15 +3158,33 @@ def import_vehicles_excel():
         success_count = 0
         error_count = 0
         errors = []
+        processed_plates = set()  # لتتبع أرقام اللوحات المعالجة في نفس الملف
         
         for index, row in df.iterrows():
             try:
-                # التحقق من عدم وجود مركبة بنفس رقم اللوحة
-                existing_vehicle = Vehicle.query.filter_by(plate_number=str(row['رقم اللوحة']).strip()).first()
-                if existing_vehicle:
-                    errors.append(f'الصف {index + 2}: المركبة برقم اللوحة {row["رقم اللوحة"]} موجودة مسبقاً')
+                # التأكد من وجود رقم اللوحة
+                if pd.isna(row['رقم اللوحة']) or str(row['رقم اللوحة']).strip() == '':
+                    errors.append(f'الصف {index + 2}: رقم اللوحة مطلوب')
                     error_count += 1
                     continue
+                
+                plate_number = str(row['رقم اللوحة']).strip()
+                
+                # التحقق من التكرار داخل الملف نفسه
+                if plate_number in processed_plates:
+                    errors.append(f'الصف {index + 2}: رقم اللوحة {plate_number} مكرر في الملف')
+                    error_count += 1
+                    continue
+                
+                # التحقق من عدم وجود مركبة بنفس رقم اللوحة في قاعدة البيانات
+                existing_vehicle = Vehicle.query.filter_by(plate_number=plate_number).first()
+                if existing_vehicle:
+                    errors.append(f'الصف {index + 2}: المركبة برقم اللوحة {plate_number} موجودة مسبقاً في النظام')
+                    error_count += 1
+                    continue
+                
+                # إضافة رقم اللوحة لمجموعة المعالجة
+                processed_plates.add(plate_number)
                 
                 # معالجة التواريخ
                 periodic_inspection_expiry = None
@@ -3184,11 +3202,22 @@ def import_vehicles_excel():
                     except:
                         pass
                 
+                # التحقق من صحة البيانات الأساسية
+                if pd.isna(row['الماركة']) or str(row['الماركة']).strip() == '':
+                    errors.append(f'الصف {index + 2}: الماركة مطلوبة')
+                    error_count += 1
+                    continue
+                
+                if pd.isna(row['الموديل']) or str(row['الموديل']).strip() == '':
+                    errors.append(f'الصف {index + 2}: الموديل مطلوب')
+                    error_count += 1
+                    continue
+
                 # إنشاء مركبة جديدة
                 vehicle = Vehicle(
-                    plate_number=str(row['رقم اللوحة']).strip(),
-                    make=str(row['الماركة']).strip() if pd.notna(row['الماركة']) else '',
-                    model=str(row['الموديل']).strip() if pd.notna(row['الموديل']) else '',
+                    plate_number=plate_number,
+                    make=str(row['الماركة']).strip(),
+                    model=str(row['الموديل']).strip(),
                     year=int(row['سنة الصنع']) if pd.notna(row['سنة الصنع']) and str(row['سنة الصنع']).strip() else None,
                     color=str(row['اللون']).strip() if pd.notna(row['اللون']) else '',
                     current_driver=str(row['اسم السائق']).strip() if 'اسم السائق' in df.columns and pd.notna(row['اسم السائق']) else '',
