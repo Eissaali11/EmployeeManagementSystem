@@ -3117,3 +3117,148 @@ def export_all_vehicles_excel():
     except Exception as e:
         flash(f'خطأ في تصدير البيانات: {str(e)}', 'danger')
         return redirect(url_for('vehicles.index'))
+
+
+@vehicles_bp.route('/import_form')
+@login_required
+def import_vehicles_form():
+    """عرض نموذج استيراد البيانات من Excel"""
+    return render_template('vehicles/import_vehicles.html')
+
+
+@vehicles_bp.route('/import_excel', methods=['POST'])
+@login_required
+def import_vehicles_excel():
+    """استيراد بيانات المركبات من ملف Excel"""
+    try:
+        if 'excel_file' not in request.files:
+            flash('لم يتم اختيار ملف Excel', 'error')
+            return redirect(url_for('vehicles.import_vehicles_form'))
+        
+        file = request.files['excel_file']
+        if file.filename == '':
+            flash('لم يتم اختيار ملف Excel', 'error')
+            return redirect(url_for('vehicles.import_vehicles_form'))
+        
+        if not file.filename.lower().endswith(('.xlsx', '.xls')):
+            flash('يجب أن يكون الملف بصيغة Excel (.xlsx أو .xls)', 'error')
+            return redirect(url_for('vehicles.import_vehicles_form'))
+        
+        # قراءة ملف Excel
+        df = pd.read_excel(file)
+        
+        # التحقق من وجود الأعمدة المطلوبة
+        required_columns = ['رقم اللوحة', 'الماركة', 'الطراز', 'السنة', 'اللون']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            flash(f'الأعمدة التالية مفقودة في الملف: {", ".join(missing_columns)}', 'error')
+            return redirect(url_for('vehicles.import_vehicles_form'))
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # التحقق من عدم وجود مركبة بنفس رقم اللوحة
+                existing_vehicle = Vehicle.query.filter_by(plate_number=str(row['رقم اللوحة']).strip()).first()
+                if existing_vehicle:
+                    errors.append(f'الصف {index + 2}: المركبة برقم اللوحة {row["رقم اللوحة"]} موجودة مسبقاً')
+                    error_count += 1
+                    continue
+                
+                # إنشاء مركبة جديدة
+                vehicle = Vehicle(
+                    plate_number=str(row['رقم اللوحة']).strip(),
+                    make=str(row['الماركة']).strip() if pd.notna(row['الماركة']) else '',
+                    model=str(row['الطراز']).strip() if pd.notna(row['الطراز']) else '',
+                    year=int(row['السنة']) if pd.notna(row['السنة']) and str(row['السنة']).strip() else None,
+                    color=str(row['اللون']).strip() if pd.notna(row['اللون']) else '',
+                    engine_number=str(row['رقم المحرك']).strip() if 'رقم المحرك' in df.columns and pd.notna(row['رقم المحرك']) else '',
+                    chassis_number=str(row['رقم الشاسيه']).strip() if 'رقم الشاسيه' in df.columns and pd.notna(row['رقم الشاسيه']) else '',
+                    fuel_type=str(row['نوع الوقود']).strip() if 'نوع الوقود' in df.columns and pd.notna(row['نوع الوقود']) else 'بنزين',
+                    status=str(row['الحالة']).strip() if 'الحالة' in df.columns and pd.notna(row['الحالة']) else 'متاحة',
+                    notes=str(row['ملاحظات']).strip() if 'ملاحظات' in df.columns and pd.notna(row['ملاحظات']) else '',
+                    created_at=datetime.now(),
+                    updated_at=datetime.now()
+                )
+                
+                db.session.add(vehicle)
+                success_count += 1
+                
+            except Exception as e:
+                errors.append(f'الصف {index + 2}: خطأ في البيانات - {str(e)}')
+                error_count += 1
+                continue
+        
+        # حفظ التغييرات
+        if success_count > 0:
+            db.session.commit()
+            
+            # تسجيل النشاط
+            log_activity(
+                user_id=current_user.id,
+                action_type='استيراد',
+                description=f'تم استيراد {success_count} مركبة من ملف Excel',
+                table_name='vehicles'
+            )
+        
+        # عرض النتائج
+        if success_count > 0:
+            flash(f'تم استيراد {success_count} مركبة بنجاح', 'success')
+        
+        if error_count > 0:
+            flash(f'فشل في استيراد {error_count} مركبة', 'warning')
+            for error in errors[:5]:  # عرض أول 5 أخطاء فقط
+                flash(error, 'error')
+            if len(errors) > 5:
+                flash(f'وهناك {len(errors) - 5} أخطاء أخرى...', 'info')
+        
+        return redirect(url_for('vehicles.index'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'خطأ في معالجة الملف: {str(e)}', 'error')
+        return redirect(url_for('vehicles.import_vehicles_form'))
+
+
+@vehicles_bp.route('/download_template')
+@login_required
+def download_import_template():
+    """تحميل قالب Excel للاستيراد"""
+    try:
+        # إنشاء DataFrame بالأعمدة المطلوبة
+        template_data = {
+            'رقم اللوحة': ['ABC-1234', 'XYZ-5678'],
+            'الماركة': ['تويوتا', 'هونداي'],
+            'الطراز': ['كامري', 'إلنترا'],
+            'السنة': [2020, 2019],
+            'اللون': ['أبيض', 'أزرق'],
+            'رقم المحرك': ['ENG123456', 'ENG789012'],
+            'رقم الشاسيه': ['CHS123456', 'CHS789012'],
+            'نوع الوقود': ['بنزين', 'بنزين'],
+            'الحالة': ['متاحة', 'متاحة'],
+            'ملاحظات': ['', 'مركبة جديدة']
+        }
+        
+        df = pd.DataFrame(template_data)
+        
+        # إنشاء ملف Excel في الذاكرة
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='قالب استيراد المركبات', index=False)
+        
+        output.seek(0)
+        
+        # إرسال الملف
+        return send_file(
+            output,
+            download_name='vehicles_import_template.xlsx',
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        flash(f'خطأ في إنشاء القالب: {str(e)}', 'error')
+        return redirect(url_for('vehicles.index'))
