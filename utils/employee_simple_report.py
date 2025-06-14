@@ -44,14 +44,24 @@ def generate_simple_employee_report(employee_id):
         pdf.cell(0, 10, 'Basic Information', 0, 1, 'L')
         pdf.ln(5)
         
-        pdf.add_info_line('Name', employee.name)
-        pdf.add_info_line('Employee ID', employee.employee_id)
-        pdf.add_info_line('Mobile', employee.mobile)
-        pdf.add_info_line('Email', employee.email)
-        pdf.add_info_line('National ID', employee.national_id)
-        pdf.add_info_line('Job Title', employee.job_title)
-        pdf.add_info_line('Department', employee.department.name if employee.department else 'Not assigned')
-        pdf.add_info_line('Status', employee.status)
+        # تنظيف النص من الأحرف العربية
+        def clean_text(text):
+            if not text:
+                return 'Not specified'
+            # إزالة الأحرف غير اللاتينية
+            try:
+                return str(text).encode('ascii', 'ignore').decode('ascii')
+            except:
+                return 'Not specified'
+        
+        pdf.add_info_line('Name', clean_text(employee.name))
+        pdf.add_info_line('Employee ID', clean_text(employee.employee_id))
+        pdf.add_info_line('Mobile', clean_text(employee.mobile))
+        pdf.add_info_line('Email', clean_text(employee.email))
+        pdf.add_info_line('National ID', clean_text(employee.national_id))
+        pdf.add_info_line('Job Title', clean_text(employee.job_title))
+        pdf.add_info_line('Department', clean_text(employee.department.name) if employee.department else 'Not assigned')
+        pdf.add_info_line('Status', clean_text(employee.status))
         pdf.add_info_line('Join Date', employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'Not specified')
         pdf.add_info_line('Basic Salary', f'{employee.basic_salary:,.2f} SAR' if employee.basic_salary else 'Not specified')
         
@@ -61,9 +71,9 @@ def generate_simple_employee_report(employee_id):
         pdf.cell(0, 10, 'Additional Information', 0, 1, 'L')
         pdf.ln(5)
         
-        pdf.add_info_line('Contract Type', employee.contract_type)
-        pdf.add_info_line('Location', employee.location)
-        pdf.add_info_line('Project', employee.project)
+        pdf.add_info_line('Contract Type', clean_text(employee.contract_type))
+        pdf.add_info_line('Location', clean_text(employee.location))
+        pdf.add_info_line('Project', clean_text(employee.project))
         pdf.add_info_line('National Balance', 'Yes' if employee.has_national_balance else 'No')
         
         # سجلات المركبات
