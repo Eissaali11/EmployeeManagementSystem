@@ -3425,7 +3425,7 @@ def export_all_vehicles_excel():
                             'completed': 'تم الإصلاح',
                             'pending_approval': 'بانتظار الموافقة'
                         }.get(record.repair_status, record.repair_status),
-                        'التكلفة (ريال)': record.cost or 0,
+                        'التكلفة (ريال)': 0,
                         'اسم الورشة': record.workshop_name or '',
                         'الفني المسؤول': record.technician_name or '',
                         'الوصف': record.description or '',
@@ -3567,10 +3567,10 @@ def export_all_vehicles_excel():
                         'موديل السيارة': vehicle.model if vehicle else '',
                         'تاريخ الفحص': record.inspection_date.strftime('%Y-%m-%d') if record.inspection_date else '',
                         'تاريخ الانتهاء': record.expiry_date.strftime('%Y-%m-%d') if record.expiry_date else '',
-                        'جهة الفحص': record.inspection_center or '',
-                        'رقم الشهادة': record.certificate_number or '',
+                        'مركز الفحص': record.inspection_center or '',
+                        'رقم الفحص': record.inspection_number or '',
                         'نتيجة الفحص': record.result or '',
-                        'التكلفة (ريال)': record.cost or 0,
+                        'التكلفة (ريال)': 0,
                         'ملاحظات': record.notes or ''
                     })
                 
@@ -4285,10 +4285,10 @@ def export_single_vehicle_excel(id):
                     inspection_data.append({
                         'تاريخ الفحص': record.inspection_date.strftime('%Y-%m-%d') if record.inspection_date else '',
                         'تاريخ الانتهاء': record.expiry_date.strftime('%Y-%m-%d') if record.expiry_date else '',
-                        'جهة الفحص': record.inspection_center or '',
-                        'رقم الشهادة': record.certificate_number or '',
+                        'مركز الفحص': record.inspection_center or '',
+                        'رقم الفحص': record.inspection_number or '',
                         'نتيجة الفحص': record.result or '',
-                        'التكلفة (ريال)': record.cost or 0,
+                        'التكلفة (ريال)': 0,
                         'ملاحظات': record.notes or ''
                     })
                 
@@ -4355,7 +4355,7 @@ def export_single_vehicle_excel(id):
                             'completed': 'تم الإصلاح',
                             'pending_approval': 'بانتظار الموافقة'
                         }.get(record.repair_status, record.repair_status),
-                        'التكلفة (ريال)': record.cost or 0,
+                        'التكلفة (ريال)': 0,
                         'اسم الورشة': record.workshop_name or '',
                         'الفني المسؤول': record.technician_name or '',
                         'الوصف': record.description or '',
