@@ -154,6 +154,10 @@
 - Environment variable protection
 
 ## Changelog
+- June 14, 2025: Updated vehicle import functionality to match exact user requirements: رقم اللوحة، الماركة، الموديل، سنة الصنع، اللون، اسم السائق، الحالة، تاريخ انتهاء الفحص الدوري، تاريخ انتهاء الاستمارة، ملاحظات، تاريخ الإضافة
+- June 14, 2025: Added automatic data filling for missing fields during import (engine_number, chassis_number, fuel_type, mileage)
+- June 14, 2025: Enhanced import template with proper date format examples and comprehensive field mapping
+- June 14, 2025: Fixed import template column names to match user specifications exactly
 - June 14, 2025: Added comprehensive Excel import functionality for vehicle data matching export format structure
 - June 14, 2025: Created import template download function with proper Arabic column headers
 - June 14, 2025: Added import validation with error handling and success/failure reporting

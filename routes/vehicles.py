@@ -3148,7 +3148,7 @@ def import_vehicles_excel():
         df = pd.read_excel(file)
         
         # التحقق من وجود الأعمدة المطلوبة
-        required_columns = ['رقم اللوحة', 'الماركة', 'الطراز', 'السنة', 'اللون']
+        required_columns = ['رقم اللوحة', 'الماركة', 'الموديل', 'سنة الصنع', 'اللون']
         missing_columns = [col for col in required_columns if col not in df.columns]
         
         if missing_columns:
@@ -3168,18 +3168,39 @@ def import_vehicles_excel():
                     error_count += 1
                     continue
                 
+                # معالجة التواريخ
+                periodic_inspection_expiry = None
+                form_expiry = None
+                
+                if 'تاريخ انتهاء الفحص الدوري' in df.columns and pd.notna(row['تاريخ انتهاء الفحص الدوري']):
+                    try:
+                        periodic_inspection_expiry = pd.to_datetime(row['تاريخ انتهاء الفحص الدوري']).date()
+                    except:
+                        pass
+                
+                if 'تاريخ انتهاء الاستمارة' in df.columns and pd.notna(row['تاريخ انتهاء الاستمارة']):
+                    try:
+                        form_expiry = pd.to_datetime(row['تاريخ انتهاء الاستمارة']).date()
+                    except:
+                        pass
+                
                 # إنشاء مركبة جديدة
                 vehicle = Vehicle(
                     plate_number=str(row['رقم اللوحة']).strip(),
                     make=str(row['الماركة']).strip() if pd.notna(row['الماركة']) else '',
-                    model=str(row['الطراز']).strip() if pd.notna(row['الطراز']) else '',
-                    year=int(row['السنة']) if pd.notna(row['السنة']) and str(row['السنة']).strip() else None,
+                    model=str(row['الموديل']).strip() if pd.notna(row['الموديل']) else '',
+                    year=int(row['سنة الصنع']) if pd.notna(row['سنة الصنع']) and str(row['سنة الصنع']).strip() else None,
                     color=str(row['اللون']).strip() if pd.notna(row['اللون']) else '',
-                    engine_number=str(row['رقم المحرك']).strip() if 'رقم المحرك' in df.columns and pd.notna(row['رقم المحرك']) else '',
-                    chassis_number=str(row['رقم الشاسيه']).strip() if 'رقم الشاسيه' in df.columns and pd.notna(row['رقم الشاسيه']) else '',
-                    fuel_type=str(row['نوع الوقود']).strip() if 'نوع الوقود' in df.columns and pd.notna(row['نوع الوقود']) else 'بنزين',
+                    current_driver=str(row['اسم السائق']).strip() if 'اسم السائق' in df.columns and pd.notna(row['اسم السائق']) else '',
                     status=str(row['الحالة']).strip() if 'الحالة' in df.columns and pd.notna(row['الحالة']) else 'متاحة',
+                    periodic_inspection_expiry=periodic_inspection_expiry,
+                    form_expiry=form_expiry,
                     notes=str(row['ملاحظات']).strip() if 'ملاحظات' in df.columns and pd.notna(row['ملاحظات']) else '',
+                    # البيانات التلقائية للحقول الناقصة
+                    engine_number='',
+                    chassis_number='',
+                    fuel_type='بنزين',
+                    mileage=0,
                     created_at=datetime.now(),
                     updated_at=datetime.now()
                 )
@@ -3232,14 +3253,15 @@ def download_import_template():
         template_data = {
             'رقم اللوحة': ['ABC-1234', 'XYZ-5678'],
             'الماركة': ['تويوتا', 'هونداي'],
-            'الطراز': ['كامري', 'إلنترا'],
-            'السنة': [2020, 2019],
+            'الموديل': ['كامري', 'إلنترا'],
+            'سنة الصنع': [2020, 2019],
             'اللون': ['أبيض', 'أزرق'],
-            'رقم المحرك': ['ENG123456', 'ENG789012'],
-            'رقم الشاسيه': ['CHS123456', 'CHS789012'],
-            'نوع الوقود': ['بنزين', 'بنزين'],
-            'الحالة': ['متاحة', 'متاحة'],
-            'ملاحظات': ['', 'مركبة جديدة']
+            'اسم السائق': ['أحمد محمد', 'علي أحمد'],
+            'الحالة': ['متاحة', 'مستخدمة'],
+            'تاريخ انتهاء الفحص الدوري': ['2025-12-31', '2025-11-30'],
+            'تاريخ انتهاء الاستمارة': ['2025-10-15', '2025-09-20'],
+            'ملاحظات': ['', 'مركبة جديدة'],
+            'تاريخ الإضافة': ['2025-06-14', '2025-06-14']
         }
         
         df = pd.DataFrame(template_data)
