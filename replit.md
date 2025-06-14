@@ -154,6 +154,7 @@
 - Environment variable protection
 
 ## Changelog
+- June 14, 2025: Improved vehicle view page UI design and added Excel import functionality with template download
 - June 14, 2025: Fixed all VehicleProject Excel export errors (project_description, project_location, project_manager)
 - June 14, 2025: Fixed Vehicle Excel export 'vin' field error by replacing with existing model fields
 - June 14, 2025: Fixed VehicleSafetyCheck Excel export field mapping errors (tire_condition, checked_by, etc.)

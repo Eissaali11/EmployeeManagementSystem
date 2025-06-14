@@ -10,32 +10,26 @@
             <i class="fas fa-car ms-2"></i>
             تفاصيل السيارة: {{ vehicle.plate_number }}
         </h2>
-        <div>
+        
+        <!-- الأزرار للشاشات الكبيرة -->
+        <div class="d-none d-lg-flex gap-2">
             <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-warning">
                 <i class="fas fa-edit ms-1"></i>
-                تعديل السيارة
+                تعديل
             </a>
-            <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-primary me-2">
+            <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-primary">
                 <i class="fas fa-id-card ms-1"></i>
-                وثائق المركبة
+                الوثائق
             </a>
-            <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-danger me-2">
-                <i class="fas fa-trash ms-1"></i>
-                حذف السيارة
-            </a>
-            <div class="btn-group me-2" role="group">
+            <div class="btn-group" role="group">
                 <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
                     <i class="fas fa-file-excel ms-1"></i>
-                    تصدير Excel
+                    Excel
                 </button>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="{{ url_for('vehicles.export_single_vehicle_excel', id=vehicle.id) }}">
                         <i class="fas fa-download ms-2"></i>
                         تصدير بيانات هذه المركبة
-                    </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('vehicles.export_all_vehicles_excel') }}">
-                        <i class="fas fa-download ms-2"></i>
-                        تصدير جميع المركبات
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="{{ url_for('vehicles.import_vehicles_excel') }}">
@@ -53,10 +47,57 @@
                     </a></li>
                 </ul>
             </div>
-            <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
-                <i class="fas fa-arrow-right ms-1"></i>
-                العودة للقائمة
+            <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-outline-danger">
+                <i class="fas fa-trash ms-1"></i>
+                حذف
             </a>
+            <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right ms-1"></i>
+                العودة
+            </a>
+        </div>
+        
+        <!-- قائمة منسدلة للشاشات الصغيرة -->
+        <div class="d-lg-none">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-bars ms-1"></i>
+                    الإجراءات
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.edit', id=vehicle.id) }}">
+                        <i class="fas fa-edit ms-2"></i>
+                        تعديل السيارة
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}">
+                        <i class="fas fa-id-card ms-2"></i>
+                        وثائق المركبة
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.export_single_vehicle_excel', id=vehicle.id) }}">
+                        <i class="fas fa-download ms-2"></i>
+                        تصدير Excel
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.import_vehicles_excel') }}">
+                        <i class="fas fa-upload ms-2"></i>
+                        استيراد Excel
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.generate_vehicle_report', id=vehicle.id) }}" target="_blank">
+                        <i class="fas fa-file-pdf ms-2"></i>
+                        تقرير PDF
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}">
+                        <i class="fas fa-trash ms-2"></i>
+                        حذف السيارة
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.index') }}">
+                        <i class="fas fa-arrow-right ms-2"></i>
+                        العودة للقائمة
+                    </a></li>
+                </ul>
+            </div>
         </div>
     </div>
     
