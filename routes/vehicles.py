@@ -356,43 +356,11 @@ def export_expired_documents_excel():
             workbook = writer.book
             worksheet = writer.sheets['استمارات منتهية']
             
-            # تنسيق العناوين
-            header_format = workbook.add_format({
-                'bold': True,
-                'text_wrap': True,
-                'valign': 'top',
-                'fg_color': '#FFD7D7',  # خلفية حمراء فاتحة
-                'border': 1,
-                'align': 'center'
-            })
+            # تنسيق البيانات تم إزالته لتوافق openpyxl
             
-            # تنسيق عناوين الأعمدة
-            for col_num, value in enumerate(reg_df.columns.values):
-                worksheet.write(0, col_num, value, header_format)
-                # ضبط عرض العمود
-                worksheet.set_column(col_num, col_num, 18)
             
-            # تنسيق صفوف البيانات
-            data_format = workbook.add_format({
-                'border': 1,
-                'align': 'center'
-            })
+            # تم إزالة التنسيق المتقدم لتوافق openpyxl
             
-            # تطبيق التنسيق على كل الخلايا
-            for row in range(1, len(reg_df) + 1):
-                for col in range(len(reg_df.columns)):
-                    worksheet.write(row, col, reg_df.iloc[row-1, col], data_format)
-            
-            # تنسيق عمود أيام الانتهاء
-            days_col = reg_df.columns.get_loc('عدد أيام الانتهاء')
-            days_format = workbook.add_format({
-                'border': 1,
-                'align': 'center',
-                'fg_color': '#FFCCCC'  # خلفية حمراء فاتحة للإبراز
-            })
-            
-            for row in range(1, len(reg_df) + 1):
-                worksheet.write(row, days_col, reg_df.iloc[row-1, days_col], days_format)
         
         # تنسيق ورقة الفحص الدوري
         if inspection_data:
@@ -404,7 +372,7 @@ def export_expired_documents_excel():
             worksheet = writer.sheets['فحص دوري منتهي']
             
             # تنسيق العناوين
-            header_format = workbook.add_format({
+            None = workbook.add_format({
                 'bold': True,
                 'text_wrap': True,
                 'valign': 'top',
@@ -414,21 +382,14 @@ def export_expired_documents_excel():
             })
             
             # تنسيق عناوين الأعمدة
-            for col_num, value in enumerate(insp_df.columns.values):
-                worksheet.write(0, col_num, value, header_format)
                 # ضبط عرض العمود
-                worksheet.set_column(col_num, col_num, 18)
             
             # تنسيق صفوف البيانات
-            data_format = workbook.add_format({
+            None = workbook.add_format({
                 'border': 1,
                 'align': 'center'
             })
             
-            # تطبيق التنسيق على كل الخلايا
-            for row in range(1, len(insp_df) + 1):
-                for col in range(len(insp_df.columns)):
-                    worksheet.write(row, col, insp_df.iloc[row-1, col], data_format)
             
             # تنسيق عمود أيام الانتهاء
             days_col = insp_df.columns.get_loc('عدد أيام الانتهاء')
@@ -438,8 +399,6 @@ def export_expired_documents_excel():
                 'fg_color': '#E2EFDA'  # خلفية خضراء فاتحة للإبراز
             })
             
-            for row in range(1, len(insp_df) + 1):
-                worksheet.write(row, days_col, insp_df.iloc[row-1, days_col], days_format)
         
         # تنسيق ورقة التفويض
         if authorization_data:
@@ -451,7 +410,7 @@ def export_expired_documents_excel():
             worksheet = writer.sheets['تفويض منتهي']
             
             # تنسيق العناوين
-            header_format = workbook.add_format({
+            None = workbook.add_format({
                 'bold': True,
                 'text_wrap': True,
                 'valign': 'top',
@@ -461,21 +420,14 @@ def export_expired_documents_excel():
             })
             
             # تنسيق عناوين الأعمدة
-            for col_num, value in enumerate(auth_df.columns.values):
-                worksheet.write(0, col_num, value, header_format)
                 # ضبط عرض العمود
-                worksheet.set_column(col_num, col_num, 18)
             
             # تنسيق صفوف البيانات
-            data_format = workbook.add_format({
+            None = workbook.add_format({
                 'border': 1,
                 'align': 'center'
             })
             
-            # تطبيق التنسيق على كل الخلايا
-            for row in range(1, len(auth_df) + 1):
-                for col in range(len(auth_df.columns)):
-                    worksheet.write(row, col, auth_df.iloc[row-1, col], data_format)
             
             # تنسيق عمود أيام الانتهاء
             days_col = auth_df.columns.get_loc('عدد أيام الانتهاء')
@@ -485,8 +437,6 @@ def export_expired_documents_excel():
                 'fg_color': '#DDEBF7'  # خلفية زرقاء فاتحة للإبراز
             })
             
-            for row in range(1, len(auth_df) + 1):
-                worksheet.write(row, days_col, auth_df.iloc[row-1, days_col], days_format)
         
         # إنشاء ورقة ملخص
         summary_data = {
@@ -507,7 +457,7 @@ def export_expired_documents_excel():
         worksheet = writer.sheets['ملخص']
         
         # تنسيق العناوين
-        header_format = workbook.add_format({
+        None = workbook.add_format({
             'bold': True,
             'text_wrap': True,
             'valign': 'top',
@@ -518,10 +468,7 @@ def export_expired_documents_excel():
         })
         
         # تنسيق عناوين الأعمدة
-        for col_num, value in enumerate(summary_df.columns.values):
-            worksheet.write(0, col_num, value, header_format)
             # ضبط عرض العمود
-            worksheet.set_column(col_num, col_num, 25)
         
         # تنسيقات مختلفة للأنواع المختلفة
         reg_format = workbook.add_format({
@@ -540,18 +487,9 @@ def export_expired_documents_excel():
             'border': 1, 'align': 'center', 'bold': True, 'fg_color': '#FFC000', 'font_size': 12
         })
         
-        # تطبيق التنسيقات
-        worksheet.write(1, 0, summary_df.iloc[0, 0], reg_format)
-        worksheet.write(1, 1, summary_df.iloc[0, 1], reg_format)
         
-        worksheet.write(2, 0, summary_df.iloc[1, 0], insp_format)
-        worksheet.write(2, 1, summary_df.iloc[1, 1], insp_format)
         
-        worksheet.write(3, 0, summary_df.iloc[2, 0], auth_format)
-        worksheet.write(3, 1, summary_df.iloc[2, 1], auth_format)
         
-        worksheet.write(4, 0, summary_df.iloc[3, 0], total_format)
-        worksheet.write(4, 1, summary_df.iloc[3, 1], total_format)
         
         # إضافة مخطط دائري
         chart = workbook.add_chart({'type': 'pie'})
@@ -2479,7 +2417,7 @@ def export_vehicles_excel():
         worksheet = writer.sheets['بيانات السيارات']
         
         # تنسيق الخلايا
-        header_format = workbook.add_format({
+        None = workbook.add_format({
             'bold': True,
             'text_wrap': True,
             'valign': 'top',
@@ -2488,10 +2426,7 @@ def export_vehicles_excel():
         })
         
         # تنسيق عناوين الأعمدة
-        for col_num, value in enumerate(df.columns.values):
-            worksheet.write(0, col_num, value, header_format)
             # ضبط عرض العمود
-            worksheet.set_column(col_num, col_num, 15)
     
     # التحضير لإرسال الملف
     output.seek(0)
@@ -3391,18 +3326,6 @@ def export_all_vehicles_excel():
             df_vehicles = pd.DataFrame(vehicles_data)
             df_vehicles.to_excel(writer, sheet_name='المركبات', index=False)
             
-            worksheet = writer.sheets['المركبات']
-            
-            # تطبيق التنسيق على العناوين
-            for col_num, value in enumerate(df_vehicles.columns.values):
-                worksheet.write(0, col_num, value, header_format)
-                worksheet.set_column(col_num, col_num, 15)
-            
-            # تطبيق التنسيق على البيانات
-            for row in range(1, len(df_vehicles) + 1):
-                for col in range(len(df_vehicles.columns)):
-                    worksheet.write(row, col, df_vehicles.iloc[row-1, col], data_format)
-            
             # ===== ورقة سجلات الورشة =====
             workshop_records = VehicleWorkshop.query.join(Vehicle).all()
             if workshop_records:
@@ -3437,13 +3360,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['سجلات الورشة']
                 
-                for col_num, value in enumerate(df_workshop.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_workshop) + 1):
-                    for col in range(len(df_workshop.columns)):
-                        worksheet.write(row, col, df_workshop.iloc[row-1, col], data_format)
             
             # ===== ورقة سجلات الإيجار =====
             rental_records = VehicleRental.query.join(Vehicle).all()
@@ -3471,13 +3388,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['سجلات الإيجار']
                 
-                for col_num, value in enumerate(df_rental.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_rental) + 1):
-                    for col in range(len(df_rental.columns)):
-                        worksheet.write(row, col, df_rental.iloc[row-1, col], data_format)
             
             # ===== ورقة سجلات التسليم والاستلام =====
             handover_records = VehicleHandover.query.join(Vehicle).all()
@@ -3510,13 +3421,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['سجلات التسليم والاستلام']
                 
-                for col_num, value in enumerate(df_handover.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_handover) + 1):
-                    for col in range(len(df_handover.columns)):
-                        worksheet.write(row, col, df_handover.iloc[row-1, col], data_format)
             
             # ===== ورقة الحوادث المرورية =====
             accident_records = VehicleAccident.query.join(Vehicle).all()
@@ -3547,13 +3452,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['الحوادث المرورية']
                 
-                for col_num, value in enumerate(df_accident.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_accident) + 1):
-                    for col in range(len(df_accident.columns)):
-                        worksheet.write(row, col, df_accident.iloc[row-1, col], data_format)
             
             # ===== ورقة الفحص الدوري =====
             periodic_inspections = VehiclePeriodicInspection.query.join(Vehicle).all()
@@ -3579,13 +3478,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['الفحص الدوري']
                 
-                for col_num, value in enumerate(df_inspection.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_inspection) + 1):
-                    for col in range(len(df_inspection.columns)):
-                        worksheet.write(row, col, df_inspection.iloc[row-1, col], data_format)
             
             # ===== ورقة فحوصات السلامة =====
             safety_checks = VehicleSafetyCheck.query.join(Vehicle).all()
@@ -3615,13 +3508,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['فحوصات السلامة']
                 
-                for col_num, value in enumerate(df_safety.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_safety) + 1):
-                    for col in range(len(df_safety.columns)):
-                        worksheet.write(row, col, df_safety.iloc[row-1, col], data_format)
             
             # ===== ورقة وثائق المركبة =====
             # البحث عن جميع الوثائق المرتبطة بالمركبات
@@ -3668,13 +3555,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['وثائق المركبة']
                 
-                for col_num, value in enumerate(df_documents.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 18)
                 
-                for row in range(1, len(df_documents) + 1):
-                    for col in range(len(df_documents.columns)):
-                        worksheet.write(row, col, df_documents.iloc[row-1, col], data_format)
             
             # ===== ورقة تخصيصات المشاريع =====
             project_assignments = VehicleProject.query.join(Vehicle).all()
@@ -3701,13 +3582,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['تخصيصات المشاريع']
                 
-                for col_num, value in enumerate(df_projects.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 18)
                 
-                for row in range(1, len(df_projects) + 1):
-                    for col in range(len(df_projects.columns)):
-                        worksheet.write(row, col, df_projects.iloc[row-1, col], data_format)
             
             # ===== ورقة السائق الحالي =====
             current_drivers_data = []
@@ -3740,13 +3615,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['السائق الحالي']
                 
-                for col_num, value in enumerate(df_current_drivers.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 18)
                 
-                for row in range(1, len(df_current_drivers) + 1):
-                    for col in range(len(df_current_drivers.columns)):
-                        worksheet.write(row, col, df_current_drivers.iloc[row-1, col], data_format)
             
             # ===== ورقة السائقين السابقين =====
             previous_drivers_data = []
@@ -3779,13 +3648,7 @@ def export_all_vehicles_excel():
                 
                 worksheet = writer.sheets['السائقين السابقين']
                 
-                for col_num, value in enumerate(df_previous_drivers.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_previous_drivers) + 1):
-                    for col in range(len(df_previous_drivers.columns)):
-                        worksheet.write(row, col, df_previous_drivers.iloc[row-1, col], data_format)
             
             # ===== ورقة الإحصائيات العامة =====
             stats_data = []
@@ -3838,14 +3701,7 @@ def export_all_vehicles_excel():
             
             worksheet = writer.sheets['الإحصائيات العامة']
             
-            for col_num, value in enumerate(df_stats.columns.values):
-                worksheet.write(0, col_num, value, header_format)
-                worksheet.set_column(0, 0, 30)
-                worksheet.set_column(1, 1, 20)
             
-            for row in range(1, len(df_stats) + 1):
-                for col in range(len(df_stats.columns)):
-                    worksheet.write(row, col, df_stats.iloc[row-1, col], data_format)
         
         buffer.seek(0)
         
@@ -4036,7 +3892,7 @@ def download_excel_template():
             workbook = writer.book
             
             # تنسيق العناوين
-            header_format = workbook.add_format({
+            None = workbook.add_format({
                 'bold': True,
                 'text_wrap': True,
                 'valign': 'center',
@@ -4079,15 +3935,7 @@ def download_excel_template():
             
             worksheet = writer.sheets['المركبات']
             
-            # تطبيق التنسيق على العناوين
-            for col_num, value in enumerate(df_template.columns.values):
-                worksheet.write(0, col_num, value, header_format)
-                worksheet.set_column(col_num, col_num, 18)
             
-            # تطبيق التنسيق على البيانات التوضيحية
-            for row in range(1, len(df_template) + 1):
-                for col in range(len(df_template.columns)):
-                    worksheet.write(row, col, df_template.iloc[row-1, col], example_format)
             
             # إضافة ورقة التعليمات
             instructions_data = {
@@ -4146,15 +3994,7 @@ def download_excel_template():
             
             worksheet = writer.sheets['تعليمات الاستخدام']
             
-            for col_num, value in enumerate(df_instructions.columns.values):
-                worksheet.write(0, col_num, value, header_format)
-                worksheet.set_column(0, 0, 20)
-                worksheet.set_column(1, 1, 40)
-                worksheet.set_column(2, 2, 30)
             
-            for row in range(1, len(df_instructions) + 1):
-                for col in range(len(df_instructions.columns)):
-                    worksheet.write(row, col, df_instructions.iloc[row-1, col], example_format)
         
         buffer.seek(0)
         
@@ -4184,7 +4024,7 @@ def export_single_vehicle_excel(id):
             workbook = writer.book
             
             # تنسيق العناوين
-            header_format = workbook.add_format({
+            None = workbook.add_format({
                 'bold': True,
                 'text_wrap': True,
                 'valign': 'center',
@@ -4196,7 +4036,7 @@ def export_single_vehicle_excel(id):
             })
             
             # تنسيق البيانات
-            data_format = workbook.add_format({
+            None = workbook.add_format({
                 'align': 'center',
                 'valign': 'vcenter',
                 'border': 1,
@@ -4239,15 +4079,8 @@ def export_single_vehicle_excel(id):
             df_basic.to_excel(writer, sheet_name='معلومات السيارة', index=False)
             
             worksheet = writer.sheets['معلومات السيارة']
-            worksheet.set_column('A:A', 25)
-            worksheet.set_column('B:B', 30)
             
-            for col_num, value in enumerate(df_basic.columns.values):
-                worksheet.write(0, col_num, value, header_format)
             
-            for row in range(1, len(df_basic) + 1):
-                for col in range(len(df_basic.columns)):
-                    worksheet.write(row, col, df_basic.iloc[row-1, col], data_format)
             
             # ===== ورقة سجلات الإيجار =====
             rental_records = VehicleRental.query.filter_by(vehicle_id=id).all()
@@ -4269,13 +4102,7 @@ def export_single_vehicle_excel(id):
                 
                 worksheet = writer.sheets['سجلات الإيجار']
                 
-                for col_num, value in enumerate(df_rental.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_rental) + 1):
-                    for col in range(len(df_rental.columns)):
-                        worksheet.write(row, col, df_rental.iloc[row-1, col], data_format)
             
             # ===== ورقة الفحص الدوري =====
             periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).all()
@@ -4297,13 +4124,7 @@ def export_single_vehicle_excel(id):
                 
                 worksheet = writer.sheets['الفحص الدوري']
                 
-                for col_num, value in enumerate(df_inspection.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_inspection) + 1):
-                    for col in range(len(df_inspection.columns)):
-                        worksheet.write(row, col, df_inspection.iloc[row-1, col], data_format)
             
             # ===== ورقة فحوصات السلامة =====
             safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).all()
@@ -4329,13 +4150,7 @@ def export_single_vehicle_excel(id):
                 
                 worksheet = writer.sheets['فحوصات السلامة']
                 
-                for col_num, value in enumerate(df_safety.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_safety) + 1):
-                    for col in range(len(df_safety.columns)):
-                        worksheet.write(row, col, df_safety.iloc[row-1, col], data_format)
             
             # ===== ورقة سجلات الورشة =====
             workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).all()
@@ -4367,13 +4182,7 @@ def export_single_vehicle_excel(id):
                 
                 worksheet = writer.sheets['سجلات الورشة']
                 
-                for col_num, value in enumerate(df_workshop.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_workshop) + 1):
-                    for col in range(len(df_workshop.columns)):
-                        worksheet.write(row, col, df_workshop.iloc[row-1, col], data_format)
             
             # ===== ورقة تخصيصات المشاريع =====
             project_assignments = VehicleProject.query.filter_by(vehicle_id=id).all()
@@ -4396,13 +4205,7 @@ def export_single_vehicle_excel(id):
                 
                 worksheet = writer.sheets['تخصيصات المشاريع']
                 
-                for col_num, value in enumerate(df_projects.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 18)
                 
-                for row in range(1, len(df_projects) + 1):
-                    for col in range(len(df_projects.columns)):
-                        worksheet.write(row, col, df_projects.iloc[row-1, col], data_format)
             
             # ===== ورقة السائق الحالي =====
             latest_handover = VehicleHandover.query.filter_by(
@@ -4428,13 +4231,7 @@ def export_single_vehicle_excel(id):
                 
                 worksheet = writer.sheets['السائق الحالي']
                 
-                for col_num, value in enumerate(df_current_driver.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 18)
                 
-                for row in range(1, len(df_current_driver) + 1):
-                    for col in range(len(df_current_driver.columns)):
-                        worksheet.write(row, col, df_current_driver.iloc[row-1, col], data_format)
             
             # ===== ورقة سجلات التسليم والاستلام =====
             handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
@@ -4464,13 +4261,7 @@ def export_single_vehicle_excel(id):
                 
                 worksheet = writer.sheets['سجلات التسليم والاستلام']
                 
-                for col_num, value in enumerate(df_handover.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
-                    worksheet.set_column(col_num, col_num, 15)
                 
-                for row in range(1, len(df_handover) + 1):
-                    for col in range(len(df_handover.columns)):
-                        worksheet.write(row, col, df_handover.iloc[row-1, col], data_format)
         
         buffer.seek(0)
         
