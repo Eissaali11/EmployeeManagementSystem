@@ -3472,12 +3472,14 @@ def export_all_vehicles_excel():
                         'رقم اللوحة': vehicle.plate_number if vehicle else '',
                         'ماركة السيارة': vehicle.make if vehicle else '',
                         'موديل السيارة': vehicle.model if vehicle else '',
-                        'المستأجر': record.renter_name or '',
+                        'اسم المؤجر': record.lessor_name or '',
                         'تاريخ البداية': record.start_date.strftime('%Y-%m-%d') if record.start_date else '',
                         'تاريخ النهاية': record.end_date.strftime('%Y-%m-%d') if record.end_date else 'مستمر',
-                        'التكلفة (ريال)': record.cost or 0,
+                        'التكلفة الشهرية (ريال)': record.monthly_cost or 0,
                         'الحالة': 'نشط' if record.is_active else 'منتهي',
-                        'جهة الاتصال': record.contact_number or '',
+                        'معلومات الاتصال': record.lessor_contact or '',
+                        'رقم العقد': record.contract_number or '',
+                        'المدينة': record.city or '',
                         'ملاحظات': record.notes or ''
                     })
                 
@@ -3741,8 +3743,7 @@ def export_all_vehicles_excel():
                         'موديل السيارة': vehicle.model,
                         'اسم السائق': latest_handover.person_name or (employee.name if employee else ''),
                         'الموظف المسؤول': employee.name if employee else '',
-                        'القسم': employee.department.name if employee and employee.department else '',
-                        'رقم الموظف': employee.employee_id if employee else '',
+                                                'رقم الموظف': employee.employee_id if employee else '',
                         'تاريخ التسليم': latest_handover.handover_date.strftime('%Y-%m-%d') if latest_handover.handover_date else '',
                         'قراءة العداد عند التسليم': latest_handover.mileage or 0,
                         'مستوى الوقود': latest_handover.fuel_level or '',
@@ -3781,8 +3782,7 @@ def export_all_vehicles_excel():
                         'نوع العملية': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
                         'اسم الشخص': handover.person_name or '',
                         'الموظف المسؤول': employee.name if employee else '',
-                        'القسم': employee.department.name if employee and employee.department else '',
-                        'رقم الموظف': employee.employee_id if employee else '',
+                                                'رقم الموظف': employee.employee_id if employee else '',
                         'تاريخ العملية': handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else '',
                         'قراءة العداد': handover.mileage or 0,
                         'مستوى الوقود': handover.fuel_level or '',
@@ -3816,7 +3816,7 @@ def export_all_vehicles_excel():
             
             # حساب التكاليف
             total_workshop_cost = db.session.query(func.sum(VehicleWorkshop.cost)).scalar() or 0
-            total_rental_income = db.session.query(func.sum(VehicleRental.cost)).scalar() or 0
+            total_rental_income = db.session.query(func.sum(VehicleRental.monthly_cost)).scalar() or 0
             
             stats_data.append({
                 'البيان': 'إجمالي عدد المركبات',
@@ -4432,8 +4432,7 @@ def export_single_vehicle_excel(id):
                 current_driver_data = [{
                     'اسم السائق': latest_handover.person_name or (employee.name if employee else ''),
                     'الموظف المسؤول': employee.name if employee else '',
-                    'القسم': employee.department.name if employee and employee.department else '',
-                    'رقم الموظف': employee.employee_id if employee else '',
+                                        'رقم الموظف': employee.employee_id if employee else '',
                     'تاريخ التسليم': latest_handover.handover_date.strftime('%Y-%m-%d') if latest_handover.handover_date else '',
                     'قراءة العداد عند التسليم': latest_handover.mileage or 0,
                     'مستوى الوقود': latest_handover.fuel_level or '',
@@ -4465,8 +4464,7 @@ def export_single_vehicle_excel(id):
                         'تاريخ العملية': record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '',
                         'اسم الشخص': record.person_name or '',
                         'الموظف المسؤول': employee.name if employee else '',
-                        'القسم': employee.department.name if employee and employee.department else '',
-                        'رقم الموظف': employee.employee_id if employee else '',
+                                                'رقم الموظف': employee.employee_id if employee else '',
                         'قراءة العداد': record.mileage or 0,
                         'مستوى الوقود': record.fuel_level or '',
                         'حالة السيارة': record.vehicle_condition or '',
