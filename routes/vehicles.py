@@ -3943,8 +3943,7 @@ def import_vehicles_excel():
                     'make': str(row['الماركة']).strip() if pd.notna(row['الماركة']) else '',
                     'model': str(row['الموديل']).strip() if pd.notna(row['الموديل']) else '',
                     'color': str(row['اللون']).strip() if 'اللون' in row and pd.notna(row['اللون']) else '',
-                    'vin': str(row['رقم الهيكل']).strip() if 'رقم الهيكل' in row and pd.notna(row['رقم الهيكل']) else '',
-                    'department': str(row['القسم/المالك']).strip() if 'القسم/المالك' in row and pd.notna(row['القسم/المالك']) else '',
+                    # تم حذف الحقول غير الموجودة في النموذج
                     'driver_name': str(row['اسم السائق']).strip() if 'اسم السائق' in row and pd.notna(row['اسم السائق']) else '',
                     'notes': str(row['ملاحظات']).strip() if 'ملاحظات' in row and pd.notna(row['ملاحظات']) else ''
                 }
