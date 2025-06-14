@@ -4272,12 +4272,12 @@ def export_single_vehicle_excel(id):
                 rental_data = []
                 for record in rental_records:
                     rental_data.append({
-                        'المستأجر': record.renter_name or '',
+                        'اسم المؤجر': record.lessor_name or '',
                         'تاريخ البداية': record.start_date.strftime('%Y-%m-%d') if record.start_date else '',
                         'تاريخ النهاية': record.end_date.strftime('%Y-%m-%d') if record.end_date else 'مستمر',
-                        'التكلفة (ريال)': record.cost or 0,
+                        'التكلفة الشهرية (ريال)': record.monthly_cost or 0,
                         'الحالة': 'نشط' if record.is_active else 'منتهي',
-                        'جهة الاتصال': record.contact_number or '',
+                        'معلومات الاتصال': record.lessor_contact or '',
                         'ملاحظات': record.notes or ''
                     })
                 
