@@ -604,9 +604,9 @@ def upload_image(id):
 def basic_report(id):
     """تقرير المعلومات الأساسية للموظف"""
     try:
-        from utils.employee_basic_report_deployment import generate_employee_basic_pdf
+        from utils.employee_simple_working_report import generate_simple_employee_report
         
-        pdf_buffer = generate_employee_basic_pdf(id)
+        pdf_buffer, error = generate_simple_employee_report(id)
         if pdf_buffer:
             employee = Employee.query.get_or_404(id)
             current_date = datetime.now().strftime('%Y%m%d')
@@ -629,7 +629,7 @@ def basic_report(id):
                 mimetype='application/pdf'
             )
         else:
-            flash('لم يتم العثور على بيانات كافية لإنشاء التقرير', 'warning')
+            flash(f'خطأ في إنشاء التقرير: {error}', 'danger')
             return redirect(url_for('employees.view', id=id))
     except Exception as e:
         import traceback
