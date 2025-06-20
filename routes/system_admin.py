@@ -71,6 +71,7 @@ def dashboard():
         return redirect(url_for('multi_tenant_home'))
 
 @system_admin_bp.route('/companies')
+@system_admin_alt_bp.route('/companies')
 @login_required
 @system_owner_required
 def companies_list():
@@ -115,6 +116,7 @@ def companies_list():
         return redirect(url_for('system_admin.dashboard'))
 
 @system_admin_bp.route('/companies/new', methods=['GET', 'POST'])
+@system_admin_alt_bp.route('/companies/new', methods=['GET', 'POST'])
 @login_required
 @system_owner_required
 def create_new_company():
@@ -257,6 +259,7 @@ def manage_subscription(company_id):
         return redirect(url_for('system_admin.company_details', company_id=company_id))
 
 @system_admin_bp.route('/subscriptions')
+@system_admin_alt_bp.route('/subscriptions')
 @login_required
 @system_owner_required
 def subscriptions():
