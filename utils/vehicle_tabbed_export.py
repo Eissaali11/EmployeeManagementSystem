@@ -115,10 +115,10 @@ def create_vehicle_excel_with_tabs(vehicle,
                 data_row = [
                     record.entry_date.strftime("%Y-%m-%d") if record.entry_date else "",
                     record.exit_date.strftime("%Y-%m-%d") if record.exit_date else "لم يخرج بعد",
-                    record.maintenance_type or "",
+                    record.reason or "",
                     record.description or "",
                     f"{record.cost:.2f}" if record.cost else "",
-                    {'pending': 'قيد الانتظار', 'in_progress': 'قيد التنفيذ', 'completed': 'مكتمل', 'cancelled': 'ملغي'}.get(record.status, record.status or ""),
+                    {'pending': 'قيد الانتظار', 'in_progress': 'قيد التنفيذ', 'completed': 'مكتمل', 'cancelled': 'ملغي'}.get(record.repair_status, record.repair_status or ""),
                     record.workshop_name or "",
                     record.notes or ""
                 ]
