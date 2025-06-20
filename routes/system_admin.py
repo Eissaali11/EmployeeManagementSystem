@@ -411,3 +411,95 @@ def api_stats():
     except Exception as e:
         logger.error(f"خطأ في API الإحصائيات: {str(e)}")
         return jsonify({'error': 'حدث خطأ في جلب الإحصائيات'}), 500
+
+@system_admin_bp.route('/companies/<int:company_id>/edit', methods=['GET', 'POST'])
+@system_admin_alt_bp.route('/companies/<int:company_id>/edit', methods=['GET', 'POST'])
+@login_required
+@system_owner_required
+def edit_company(company_id):
+    """تعديل بيانات الشركة"""
+    try:
+        company = Company.query.get_or_404(company_id)
+        
+        if request.method == 'POST':
+            # جمع البيانات من النموذج
+            name = request.form.get('name', '').strip()
+            contact_email = request.form.get('contact_email', '').strip()
+            contact_phone = request.form.get('contact_phone', '').strip()
+            address = request.form.get('address', '').strip()
+            
+            # التحقق من البيانات المطلوبة
+            if not name:
+                flash('اسم الشركة مطلوب', 'error')
+                return render_template('system_admin/futuristic_edit_company.html', company=company)
+            
+            if not contact_email:
+                flash('البريد الإلكتروني مطلوب', 'error')
+                return render_template('system_admin/futuristic_edit_company.html', company=company)
+            
+            # التحقق من عدم تكرار الإيميل (إلا للشركة الحالية)
+            existing_company = Company.query.filter(
+                Company.contact_email == contact_email,
+                Company.id != company_id
+            ).first()
+            
+            if existing_company:
+                flash('يوجد شركة أخرى مسجلة بنفس البريد الإلكتروني', 'error')
+                return render_template('system_admin/futuristic_edit_company.html', company=company)
+            
+            # تحديث بيانات الشركة
+            company.name = name
+            company.contact_email = contact_email
+            company.contact_phone = contact_phone
+            company.address = address
+            
+            db.session.commit()
+            
+            logger.info(f"تم تعديل بيانات الشركة {company_id} بواسطة {current_user.id}")
+            flash('تم تحديث بيانات الشركة بنجاح', 'success')
+            return redirect(url_for('system_admin.companies_list'))
+        
+        return render_template('system_admin/futuristic_edit_company.html', company=company)
+        
+    except Exception as e:
+        logger.error(f"خطأ في تعديل الشركة {company_id}: {str(e)}")
+        flash('حدث خطأ في تعديل بيانات الشركة', 'error')
+        return redirect(url_for('system_admin.companies_list'))
+
+@system_admin_bp.route('/companies/<int:company_id>/delete', methods=['POST'])
+@system_admin_alt_bp.route('/companies/<int:company_id>/delete', methods=['POST'])
+@login_required
+@system_owner_required
+def delete_company(company_id):
+    """حذف الشركة"""
+    try:
+        company = Company.query.get_or_404(company_id)
+        company_name = company.name
+        
+        # التحقق من وجود بيانات مرتبطة
+        employees_count = Employee.query.filter_by(company_id=company_id).count()
+        vehicles_count = Vehicle.query.filter_by(company_id=company_id).count()
+        users_count = User.query.filter_by(company_id=company_id).count()
+        
+        if employees_count > 0 or vehicles_count > 0 or users_count > 0:
+            flash(f'لا يمكن حذف الشركة لوجود بيانات مرتبطة ({employees_count} موظف، {vehicles_count} مركبة، {users_count} مستخدم)', 'error')
+            return redirect(url_for('system_admin.companies_list'))
+        
+        # حذف الاشتراك المرتبط
+        subscription = CompanySubscription.query.filter_by(company_id=company_id).first()
+        if subscription:
+            db.session.delete(subscription)
+        
+        # حذف الشركة
+        db.session.delete(company)
+        db.session.commit()
+        
+        logger.info(f"تم حذف الشركة {company_name} (ID: {company_id}) بواسطة {current_user.id}")
+        flash(f'تم حذف شركة "{company_name}" بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"خطأ في حذف الشركة {company_id}: {str(e)}")
+        flash('حدث خطأ في حذف الشركة', 'error')
+    
+    return redirect(url_for('system_admin.companies_list'))
