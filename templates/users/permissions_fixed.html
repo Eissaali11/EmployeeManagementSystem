@@ -179,10 +179,13 @@
                                                                name="accessible_departments" 
                                                                value="{{ dept.id }}" 
                                                                id="dept_{{ dept.id }}"
-                                                               {% if user.assigned_department_id == dept.id %}checked{% endif %}>
+                                                               {% if dept.id in accessible_dept_ids %}checked{% endif %}>
                                                         <label class="form-check-label" for="dept_{{ dept.id }}">
                                                             <i class="fas fa-building me-2 text-primary"></i>
                                                             {{ dept.name }}
+                                                            {% if dept.id in accessible_dept_ids %}
+                                                                <span class="badge bg-success ms-2">محدد</span>
+                                                            {% endif %}
                                                         </label>
                                                     </div>
                                                     {% endfor %}

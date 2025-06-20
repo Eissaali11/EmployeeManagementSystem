@@ -74,7 +74,20 @@ def user_permissions(user_id):
     user = User.query.get_or_404(user_id)
     modules = list(Module)
     departments = Department.query.all()
-    return render_template('users/permissions_fixed.html', user=user, modules=modules, departments=departments)
+    
+    # جلب الأقسام المتاحة للمستخدم حالياً
+    user_dept_accesses = UserDepartmentAccess.query.filter_by(user_id=user_id).all()
+    accessible_dept_ids = [acc.department_id for acc in user_dept_accesses]
+    
+    # إضافة القسم الرئيسي إذا كان موجوداً
+    if user.assigned_department_id and user.assigned_department_id not in accessible_dept_ids:
+        accessible_dept_ids.append(user.assigned_department_id)
+    
+    return render_template('users/permissions_fixed.html', 
+                         user=user, 
+                         modules=modules, 
+                         departments=departments,
+                         accessible_dept_ids=accessible_dept_ids)
 
 @users_bp.route('/toggle_active/<int:user_id>', methods=['POST'])
 @login_required
