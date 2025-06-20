@@ -105,8 +105,8 @@ def companies_list():
             page=page, per_page=20, error_out=False
         )
         
-        return render_template('system_admin/companies_list.html',
-                             companies=companies,
+        return render_template('system_admin/futuristic_companies.html',
+                             companies=companies.items,
                              search=search,
                              status_filter=status_filter)
                              
