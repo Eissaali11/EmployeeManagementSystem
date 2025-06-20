@@ -2431,8 +2431,8 @@ def export_vehicle_to_excel(id):
     accident_records = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
     
     # إنشاء ملف Excel شامل مع تبويبات منفصلة
-    from utils.vehicle_complete_export import create_comprehensive_vehicle_export
-    excel_buffer = create_comprehensive_vehicle_export(
+    from utils.vehicle_tabbed_export import create_vehicle_excel_with_tabs
+    excel_buffer = create_vehicle_excel_with_tabs(
         vehicle, 
         workshop_records=workshop_records,
         rental_records=rental_records,

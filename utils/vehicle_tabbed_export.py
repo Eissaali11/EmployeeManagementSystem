@@ -1,22 +1,21 @@
 """
-تصدير شامل لجميع بيانات السيارة مع تبويبات منفصلة لكل قسم
+نظام تصدير Excel شامل للسيارات مع تبويبات منفصلة
 """
 
 import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from openpyxl.utils import get_column_letter
 from io import BytesIO
 from datetime import datetime
 
 
-def create_comprehensive_vehicle_export(vehicle, 
-                                      workshop_records=None,
-                                      rental_records=None,
-                                      project_records=None,
-                                      handover_records=None,
-                                      inspection_records=None,
-                                      safety_check_records=None,
-                                      accident_records=None):
+def create_vehicle_excel_with_tabs(vehicle, 
+                                 workshop_records=None,
+                                 rental_records=None,
+                                 project_records=None,
+                                 handover_records=None,
+                                 inspection_records=None,
+                                 safety_check_records=None,
+                                 accident_records=None):
     """
     إنشاء ملف Excel شامل للسيارة مع تبويبات منفصلة لكل قسم
     """
@@ -25,8 +24,7 @@ def create_comprehensive_vehicle_export(vehicle,
         wb = openpyxl.Workbook()
         
         # حذف الورقة الافتراضية
-        if 'Sheet' in wb.sheetnames:
-            wb.remove(wb['Sheet'])
+        wb.remove(wb.active)
         
         # إعداد الأنماط
         header_font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
@@ -42,12 +40,12 @@ def create_comprehensive_vehicle_export(vehicle,
         header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
         
         # 1. تبويب معلومات السيارة الأساسية
-        ws_basic = wb.create_sheet("معلومات السيارة الأساسية")
+        ws_basic = wb.create_sheet("معلومات السيارة")
         
         # عنوان الصفحة
         ws_basic.merge_cells('A1:B1')
         title_cell = ws_basic['A1']
-        title_cell.value = f"معلومات السيارة الأساسية - {vehicle.plate_number}"
+        title_cell.value = f"معلومات السيارة - {vehicle.plate_number}"
         title_cell.font = Font(name='Arial', size=14, bold=True)
         title_cell.alignment = center_alignment
         title_cell.fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')
@@ -132,9 +130,9 @@ def create_comprehensive_vehicle_export(vehicle,
                     cell.font = data_font
             
             # تعديل عرض الأعمدة
-            column_widths = [12, 12, 15, 25, 10, 12, 15, 20]
-            for i, width in enumerate(column_widths, 1):
-                ws_workshop.column_dimensions[get_column_letter(i)].width = width
+            for i in range(1, 9):
+                column_letter = chr(64 + i)  # A, B, C, etc.
+                ws_workshop.column_dimensions[column_letter].width = 15
         
         # 3. تبويب سجلات الإيجار
         if rental_records:
@@ -176,9 +174,9 @@ def create_comprehensive_vehicle_export(vehicle,
                     cell.font = data_font
             
             # تعديل عرض الأعمدة
-            column_widths = [12, 12, 20, 12, 12, 12, 25]
-            for i, width in enumerate(column_widths, 1):
-                ws_rental.column_dimensions[get_column_letter(i)].width = width
+            for i in range(1, 8):
+                column_letter = chr(64 + i)
+                ws_rental.column_dimensions[column_letter].width = 15
         
         # 4. تبويب سجلات المشاريع
         if project_records:
@@ -220,13 +218,13 @@ def create_comprehensive_vehicle_export(vehicle,
                     cell.font = data_font
             
             # تعديل عرض الأعمدة
-            column_widths = [20, 15, 15, 12, 12, 10, 25]
-            for i, width in enumerate(column_widths, 1):
-                ws_project.column_dimensions[get_column_letter(i)].width = width
+            for i in range(1, 8):
+                column_letter = chr(64 + i)
+                ws_project.column_dimensions[column_letter].width = 18
         
         # 5. تبويب سجلات التسليم والاستلام
         if handover_records:
-            ws_handover = wb.create_sheet("سجلات التسليم والاستلام")
+            ws_handover = wb.create_sheet("التسليم والاستلام")
             
             # عنوان الصفحة
             ws_handover.merge_cells('A1:I1')
@@ -266,144 +264,9 @@ def create_comprehensive_vehicle_export(vehicle,
                     cell.font = data_font
             
             # تعديل عرض الأعمدة
-            column_widths = [10, 12, 20, 15, 20, 10, 12, 25, 30]
-            for i, width in enumerate(column_widths, 1):
-                from openpyxl.utils import get_column_letter
-                ws_handover.column_dimensions[get_column_letter(i)].width = width
-        
-        # 6. تبويب سجلات الفحص الدوري
-        if inspection_records:
-            ws_inspection = wb.create_sheet("سجلات الفحص الدوري")
-            
-            # عنوان الصفحة
-            ws_inspection.merge_cells('A1:F1')
-            title_cell = ws_inspection['A1']
-            title_cell.value = f"سجلات الفحص الدوري - {vehicle.plate_number}"
-            title_cell.font = Font(name='Arial', size=14, bold=True)
-            title_cell.alignment = center_alignment
-            title_cell.fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')
-            
-            # العناوين
-            headers = ["تاريخ الفحص", "تاريخ انتهاء الصلاحية", "النتيجة", "المركز", "رقم الشهادة", "الملاحظات"]
-            for col_idx, header in enumerate(headers, 1):
-                cell = ws_inspection.cell(row=2, column=col_idx, value=header)
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.border = thin_border
-                cell.alignment = center_alignment
-            
-            # البيانات
-            for row_idx, record in enumerate(inspection_records, 3):
-                data_row = [
-                    record.inspection_date.strftime("%Y-%m-%d") if record.inspection_date else "",
-                    record.expiry_date.strftime("%Y-%m-%d") if record.expiry_date else "",
-                    {'passed': 'نجح', 'failed': 'فشل', 'pending': 'قيد الانتظار'}.get(record.result, record.result or ""),
-                    record.inspection_center or "",
-                    record.certificate_number or "",
-                    record.notes or ""
-                ]
-                
-                for col_idx, value in enumerate(data_row, 1):
-                    cell = ws_inspection.cell(row=row_idx, column=col_idx, value=value)
-                    cell.border = thin_border
-                    cell.alignment = right_alignment
-                    cell.font = data_font
-            
-            # تعديل عرض الأعمدة
-            column_widths = [12, 15, 10, 20, 15, 25]
-            for i, width in enumerate(column_widths, 1):
-                ws_inspection.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
-        
-        # 7. تبويب فحوصات السلامة
-        if safety_check_records:
-            ws_safety = wb.create_sheet("فحوصات السلامة")
-            
-            # عنوان الصفحة
-            ws_safety.merge_cells('A1:I1')
-            title_cell = ws_safety['A1']
-            title_cell.value = f"فحوصات السلامة - {vehicle.plate_number}"
-            title_cell.font = Font(name='Arial', size=14, bold=True)
-            title_cell.alignment = center_alignment
-            title_cell.fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')
-            
-            # العناوين
-            headers = ["تاريخ الفحص", "حالة الإطارات", "حالة المكابح", "حالة الإضاءة", "مستوى الزيت", "حالة البطارية", "الفاحص", "النتيجة العامة", "الملاحظات"]
-            for col_idx, header in enumerate(headers, 1):
-                cell = ws_safety.cell(row=2, column=col_idx, value=header)
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.border = thin_border
-                cell.alignment = center_alignment
-            
-            # البيانات
-            for row_idx, record in enumerate(safety_check_records, 3):
-                data_row = [
-                    record.check_date.strftime("%Y-%m-%d") if record.check_date else "",
-                    record.tire_condition or "",
-                    record.brake_condition or "",
-                    record.lights_condition or "",
-                    record.oil_level or "",
-                    record.battery_condition or "",
-                    record.checked_by or "",
-                    {'good': 'جيد', 'fair': 'متوسط', 'poor': 'سيء'}.get(record.overall_result, record.overall_result or ""),
-                    record.notes or ""
-                ]
-                
-                for col_idx, value in enumerate(data_row, 1):
-                    cell = ws_safety.cell(row=row_idx, column=col_idx, value=value)
-                    cell.border = thin_border
-                    cell.alignment = right_alignment
-                    cell.font = data_font
-            
-            # تعديل عرض الأعمدة
-            column_widths = [12, 12, 12, 12, 12, 12, 15, 12, 25]
-            for i, width in enumerate(column_widths, 1):
-                ws_safety.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
-        
-        # 8. تبويب سجلات الحوادث
-        if accident_records:
-            ws_accident = wb.create_sheet("سجلات الحوادث")
-            
-            # عنوان الصفحة
-            ws_accident.merge_cells('A1:H1')
-            title_cell = ws_accident['A1']
-            title_cell.value = f"سجلات الحوادث - {vehicle.plate_number}"
-            title_cell.font = Font(name='Arial', size=14, bold=True)
-            title_cell.alignment = center_alignment
-            title_cell.fill = PatternFill(start_color='D9E1F2', end_color='D9E1F2', fill_type='solid')
-            
-            # العناوين
-            headers = ["تاريخ الحادث", "الموقع", "الوصف", "مستوى الضرر", "تكلفة الإصلاح", "حالة التأمين", "رقم البلاغ", "الملاحظات"]
-            for col_idx, header in enumerate(headers, 1):
-                cell = ws_accident.cell(row=2, column=col_idx, value=header)
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.border = thin_border
-                cell.alignment = center_alignment
-            
-            # البيانات
-            for row_idx, record in enumerate(accident_records, 3):
-                data_row = [
-                    record.accident_date.strftime("%Y-%m-%d") if record.accident_date else "",
-                    record.location or "",
-                    record.description or "",
-                    {'minor': 'بسيط', 'moderate': 'متوسط', 'major': 'كبير', 'total': 'هلاك كلي'}.get(record.damage_level, record.damage_level or ""),
-                    f"{record.repair_cost:.2f}" if record.repair_cost else "",
-                    {'pending': 'قيد المراجعة', 'approved': 'موافق عليه', 'rejected': 'مرفوض'}.get(record.insurance_status, record.insurance_status or ""),
-                    record.police_report_number or "",
-                    record.notes or ""
-                ]
-                
-                for col_idx, value in enumerate(data_row, 1):
-                    cell = ws_accident.cell(row=row_idx, column=col_idx, value=value)
-                    cell.border = thin_border
-                    cell.alignment = right_alignment if col_idx != 5 else center_alignment
-                    cell.font = data_font
-            
-            # تعديل عرض الأعمدة
-            column_widths = [12, 20, 25, 12, 12, 15, 15, 25]
-            for i, width in enumerate(column_widths, 1):
-                ws_accident.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+            for i in range(1, 10):
+                column_letter = chr(64 + i)
+                ws_handover.column_dimensions[column_letter].width = 15
         
         # حفظ الملف في الذاكرة
         buffer = BytesIO()
