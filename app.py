@@ -243,7 +243,14 @@ def root():
     
     # إذا كان المستخدم يستخدم جهاز كمبيوتر
     if current_user.is_authenticated:
-        # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم
+        # توجيه حسب نوع المستخدم
+        if hasattr(current_user, 'user_type'):
+            if current_user.user_type == 'system_admin':
+                return redirect(url_for('system_admin.dashboard'))
+            elif current_user.user_type == 'company_admin':
+                return redirect(url_for('company_admin.dashboard'))
+        
+        # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم العادية
         if current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.DASHBOARD):
             return redirect(url_for('dashboard.index'))
         
@@ -320,8 +327,8 @@ with app.app_context():
     app.register_blueprint(attendance_dashboard_bp, url_prefix='/attendance-dashboard')
     app.register_blueprint(workshop_reports_bp)
     app.register_blueprint(employee_portal_bp)
-    app.register_blueprint(system_admin_bp)
-    app.register_blueprint(company_admin_bp)
+    app.register_blueprint(system_admin_bp, url_prefix='/system-admin')
+    app.register_blueprint(company_admin_bp, url_prefix='/company-admin')
     
     # إضافة دوال مساعدة لقوالب Jinja
     from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions, check_module_access
