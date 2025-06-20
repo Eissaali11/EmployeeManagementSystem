@@ -235,33 +235,6 @@ class CompanyPermission(db.Model):
     def __repr__(self):
         return f'<CompanyPermission {self.company.name} - {self.module_name}>'
 
-class SubscriptionNotification(db.Model):
-    """إشعارات الاشتراك والتنبيهات"""
-    __tablename__ = 'subscription_notifications'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    notification_type = db.Column(db.String(50), nullable=False)  # expiry_warning, limit_reached, trial_ending
-    title = db.Column(db.String(200), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    is_read = db.Column(db.Boolean, default=False)
-    is_urgent = db.Column(db.Boolean, default=False)
-    sent_date = db.Column(db.DateTime, default=datetime.utcnow)
-    expires_at = db.Column(db.DateTime)  # متى ينتهي الإشعار
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # العلاقات
-    company = db.relationship('Company', back_populates='notifications')
-    
-    def is_expired(self):
-        """التحقق من انتهاء صلاحية الإشعار"""
-        if self.expires_at:
-            return datetime.utcnow() > self.expires_at
-        return False
-    
-    def __repr__(self):
-        return f'<Notification {self.title} for {self.company.name}>'
-
 # تعريف أنواع المستخدمين الجديدة
 class UserType(enum.Enum):
     SYSTEM_ADMIN = 'system_admin'    # مالك النظام - يدير جميع الشركات
