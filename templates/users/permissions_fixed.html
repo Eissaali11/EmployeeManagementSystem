@@ -3,79 +3,58 @@
 {% block title %}إدارة صلاحيات المستخدم{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="row">
         <div class="col-12">
+            <!-- Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="h3 mb-0">
-                    <i class="fas fa-key me-2"></i>
-                    إدارة صلاحيات المستخدم: {{ user.name or user.email }}
+                    <i class="fas fa-user-shield me-2 text-primary"></i>
+                    إدارة صلاحيات: {{ user.name or user.email }}
                 </h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="{{ url_for('attendance.dashboard') }}">الرئيسية</a></li>
-                        <li class="breadcrumb-item"><a href="{{ url_for('users.index') }}">إدارة المستخدمين</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">صلاحيات المستخدم</li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('users.index') }}">المستخدمين</a></li>
+                        <li class="breadcrumb-item active">الصلاحيات</li>
                     </ol>
                 </nav>
             </div>
 
-            <!-- معلومات المستخدم -->
+            <!-- User Info -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-light border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-user me-2"></i>
-                        معلومات المستخدم
-                    </h5>
-                </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center mb-2">
-                                <div class="avatar-lg rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                    {{ user.name[0] if user.name else user.email[0] }}
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-lg rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-user fa-2x"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-1">{{ user.name or 'غير محدد' }}</h6>
+                                    <h5 class="mb-1">{{ user.name or 'غير محدد' }}</h5>
                                     <p class="text-muted mb-0">{{ user.email }}</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-2">
-                                <strong>الدور:</strong> 
-                                <span class="badge bg-primary">{{ user.role.value }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <strong>القسم المخصص:</strong> 
-                                {% if user.assigned_department %}
-                                    <span class="badge bg-info">{{ user.assigned_department.name }}</span>
-                                {% else %}
-                                    <span class="text-muted">غير محدد</span>
-                                {% endif %}
-                            </div>
-                            <div class="mb-2">
-                                <strong>الحالة:</strong> 
-                                {% if user.is_active %}
-                                    <span class="badge bg-success">نشط</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">غير نشط</span>
-                                {% endif %}
-                            </div>
+                        <div class="col-md-3">
+                            <strong>الدور:</strong> 
+                            <span class="badge bg-primary fs-6">{{ user.role.value }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>القسم:</strong> 
+                            <span class="badge bg-info fs-6">{{ user.assigned_department.name if user.assigned_department else 'متعدد' }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>الحالة:</strong> 
+                            <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                                {% if user.is_active %}نشط{% else %}معطل{% endif %}
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- أزرار التحكم -->
-            <div class="d-flex gap-2 mb-4">
-                <a href="{{ url_for('users.index') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-right me-2"></i>
-                    العودة لقائمة المستخدمين
-                </a>
-            </div>
-
-            <!-- الصلاحيات التفصيلية -->
+            <!-- Permissions Card -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light border-0">
                     <h5 class="card-title mb-0">
@@ -94,7 +73,7 @@
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             
                             <div class="row">
-                                <!-- صلاحيات الوحدات -->
+                                <!-- Module Permissions -->
                                 <div class="col-lg-8">
                                     <h6 class="fw-bold mb-3">صلاحيات الوحدات</h6>
                                     <div class="table-responsive">
@@ -127,42 +106,27 @@
                                                     <td class="text-center">
                                                         <input type="checkbox" class="form-check-input permission-checkbox" 
                                                                name="permissions" value="{{ module.name }}_1"
-                                                               {% if current_permissions %}
-                                                                   {% set perm_bits = current_permissions.permissions %}
-                                                                   {% if (perm_bits // 1) % 2 == 1 %}checked{% endif %}
-                                                               {% endif %}>
+                                                               {% if current_permissions and ((current_permissions.permissions // 1) % 2 == 1) %}checked{% endif %}>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="checkbox" class="form-check-input permission-checkbox" 
                                                                name="permissions" value="{{ module.name }}_2"
-                                                               {% if current_permissions %}
-                                                                   {% set perm_bits = current_permissions.permissions %}
-                                                                   {% if (perm_bits // 2) % 2 == 1 %}checked{% endif %}
-                                                               {% endif %}>
+                                                               {% if current_permissions and ((current_permissions.permissions // 2) % 2 == 1) %}checked{% endif %}>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="checkbox" class="form-check-input permission-checkbox" 
                                                                name="permissions" value="{{ module.name }}_4"
-                                                               {% if current_permissions %}
-                                                                   {% set perm_bits = current_permissions.permissions %}
-                                                                   {% if (perm_bits // 4) % 2 == 1 %}checked{% endif %}
-                                                               {% endif %}>
+                                                               {% if current_permissions and ((current_permissions.permissions // 4) % 2 == 1) %}checked{% endif %}>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="checkbox" class="form-check-input permission-checkbox" 
                                                                name="permissions" value="{{ module.name }}_8"
-                                                               {% if current_permissions %}
-                                                                   {% set perm_bits = current_permissions.permissions %}
-                                                                   {% if (perm_bits // 8) % 2 == 1 %}checked{% endif %}
-                                                               {% endif %}>
+                                                               {% if current_permissions and ((current_permissions.permissions // 8) % 2 == 1) %}checked{% endif %}>
                                                     </td>
                                                     <td class="text-center">
                                                         <input type="checkbox" class="form-check-input permission-checkbox" 
                                                                name="permissions" value="{{ module.name }}_16"
-                                                               {% if current_permissions %}
-                                                                   {% set perm_bits = current_permissions.permissions %}
-                                                                   {% if (perm_bits // 16) % 2 == 1 %}checked{% endif %}
-                                                               {% endif %}>
+                                                               {% if current_permissions and ((current_permissions.permissions // 16) % 2 == 1) %}checked{% endif %}>
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
@@ -171,9 +135,9 @@
                                     </div>
                                 </div>
                                 
-                                <!-- الأقسام والصلاحيات الحالية -->
+                                <!-- Department Access and Current Permissions -->
                                 <div class="col-lg-4">
-                                    <!-- إدارة الأقسام -->
+                                    <!-- Department Access -->
                                     <div class="card mb-4">
                                         <div class="card-header bg-success text-white">
                                             <h6 class="mb-0">
@@ -215,8 +179,7 @@
                                                                name="accessible_departments" 
                                                                value="{{ dept.id }}" 
                                                                id="dept_{{ dept.id }}"
-                                                               {% if user.assigned_department_id == dept.id or 
-                                                                     user.department_accesses|selectattr('department_id', 'equalto', dept.id)|list|length > 0 %}checked{% endif %}>
+                                                               {% if user.assigned_department_id == dept.id %}checked{% endif %}>
                                                         <label class="form-check-label" for="dept_{{ dept.id }}">
                                                             <i class="fas fa-building me-2 text-primary"></i>
                                                             {{ dept.name }}
@@ -227,24 +190,21 @@
                                                 
                                                 <div class="mt-2">
                                                     <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="selectAllDepartments()">
-                                                        <i class="fas fa-check-all me-1"></i>
                                                         تحديد الكل
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAllDepartments()">
-                                                        <i class="fas fa-times me-1"></i>
                                                         إلغاء الكل
                                                     </button>
                                                 </div>
                                                 
                                                 <small class="text-muted mt-2 d-block">
-                                                    <i class="fas fa-info-circle me-1"></i>
                                                     المستخدم سيتمكن من الوصول لبيانات الأقسام المحددة فقط
                                                 </small>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <!-- الصلاحيات الحالية -->
+                                    <!-- Current Permissions Summary -->
                                     <div class="card">
                                         <div class="card-header bg-info text-white">
                                             <h6 class="mb-0">
@@ -258,20 +218,19 @@
                                                 <div class="mb-3 p-2 border rounded">
                                                     <div class="fw-bold mb-2">{{ module_names.get(perm.module.name, perm.module.value) }}</div>
                                                     <div>
-                                                        {% set perm_bits = perm.permissions %}
-                                                        {% if (perm_bits // 1) % 2 == 1 %}
+                                                        {% if (perm.permissions // 1) % 2 == 1 %}
                                                             <span class="badge bg-success me-1">عرض</span>
                                                         {% endif %}
-                                                        {% if (perm_bits // 2) % 2 == 1 %}
+                                                        {% if (perm.permissions // 2) % 2 == 1 %}
                                                             <span class="badge bg-primary me-1">إنشاء</span>
                                                         {% endif %}
-                                                        {% if (perm_bits // 4) % 2 == 1 %}
+                                                        {% if (perm.permissions // 4) % 2 == 1 %}
                                                             <span class="badge bg-warning me-1">تعديل</span>
                                                         {% endif %}
-                                                        {% if (perm_bits // 8) % 2 == 1 %}
+                                                        {% if (perm.permissions // 8) % 2 == 1 %}
                                                             <span class="badge bg-danger me-1">حذف</span>
                                                         {% endif %}
-                                                        {% if (perm_bits // 16) % 2 == 1 %}
+                                                        {% if (perm.permissions // 16) % 2 == 1 %}
                                                             <span class="badge bg-info me-1">إدارة</span>
                                                         {% endif %}
                                                     </div>
@@ -288,6 +247,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Action Buttons -->
                             <div class="d-flex justify-content-between align-items-center mt-4">
                                 <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-right me-2"></i>
@@ -295,11 +255,9 @@
                                 </a>
                                 <div>
                                     <button type="button" class="btn btn-outline-primary me-2" id="selectAll">
-                                        <i class="fas fa-check-double me-1"></i>
                                         تحديد الكل
                                     </button>
                                     <button type="button" class="btn btn-outline-secondary me-2" id="clearAll">
-                                        <i class="fas fa-times me-1"></i>
                                         إلغاء الكل
                                     </button>
                                     <button type="submit" class="btn btn-success">
@@ -313,19 +271,17 @@
                 </div>
             </div>
 
-            <!-- معلومات إضافية -->
+            <!-- Help Section -->
             <div class="alert alert-info mt-4" role="alert">
                 <h6 class="alert-heading">
                     <i class="fas fa-lightbulb me-2"></i>
-                    فهم نظام الصلاحيات
+                    دليل نظام الصلاحيات
                 </h6>
                 <hr>
                 <ul class="mb-0">
                     <li><strong>المديرون:</strong> لديهم وصول كامل لجميع الوحدات والأقسام</li>
-                    <li><strong>الأقسام المحددة:</strong> تحدد أي موظفين يمكن للمستخدم إدارة بياناتهم</li>
-                    <li><strong>الأدوار:</strong> تحدد الصلاحيات العامة للمستخدم في النظام</li>
-                    <li><strong>الصلاحيات التفصيلية:</strong> تتيح تحكم دقيق في كل وحدة</li>
-                    <li><strong>اختيار متعدد للأقسام:</strong> يمكن منح الوصول لأكثر من قسم واحد</li>
+                    <li><strong>الأقسام المتعددة:</strong> يمكن منح الوصول لأكثر من قسم واحد</li>
+                    <li><strong>الصلاحيات التفصيلية:</strong> تحكم دقيق في كل وحدة (عرض، إنشاء، تعديل، حذف، إدارة)</li>
                 </ul>
             </div>
         </div>
@@ -334,14 +290,14 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle select all permissions button
+    // Handle select all permissions
     document.getElementById('selectAll').addEventListener('click', function() {
         document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
             checkbox.checked = true;
         });
     });
 
-    // Handle clear all permissions button
+    // Handle clear all permissions
     document.getElementById('clearAll').addEventListener('click', function() {
         document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
             checkbox.checked = false;
@@ -361,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Functions for department selection
+// Department selection functions
 function selectAllDepartments() {
     document.querySelectorAll('input[name="accessible_departments"]').forEach(function(checkbox) {
         checkbox.checked = true;
@@ -373,88 +329,5 @@ function clearAllDepartments() {
         checkbox.checked = false;
     });
 }
-</script>
-{% endblock %}
-
-            <!-- معلومات إضافية -->
-            <div class="alert alert-info mt-4" role="alert">
-                <h6 class="alert-heading">
-                    <i class="fas fa-lightbulb me-2"></i>
-                    فهم نظام الصلاحيات
-                </h6>
-                <hr>
-                <ul class="mb-0">
-                    <li><strong>المديرون:</strong> لديهم وصول كامل لجميع الوحدات والأقسام</li>
-                    <li><strong>القسم المخصص:</strong> يحدد أي موظفين يمكن للمستخدم إدارة حضورهم</li>
-                    <li><strong>الأدوار:</strong> تحدد الصلاحيات العامة للمستخدم في النظام</li>
-                    <li><strong>الصلاحيات التفصيلية:</strong> تتيح تحكم دقيق في كل وحدة</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-.avatar-lg {
-    width: 48px;
-    height: 48px;
-    font-size: 18px;
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-.form-check-input:disabled {
-    opacity: 0.5;
-}
-
-.alert-heading {
-    margin-bottom: 0.5rem;
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const selectAllBtn = document.getElementById('selectAll');
-    const clearAllBtn = document.getElementById('clearAll');
-    const checkboxes = document.querySelectorAll('.permission-checkbox');
-    
-    if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', function() {
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = true;
-            });
-        });
-    }
-    
-    if (clearAllBtn) {
-        clearAllBtn.addEventListener('click', function() {
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = false;
-            });
-        });
-    }
-    
-    // تأكيد الحفظ
-    const form = document.getElementById('permissionsForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const checkedBoxes = document.querySelectorAll('.permission-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                e.preventDefault();
-                alert('يرجى تحديد صلاحية واحدة على الأقل');
-                return false;
-            }
-            
-            if (!confirm('هل أنت متأكد من حفظ هذه الصلاحيات؟')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    }
-});
 </script>
 {% endblock %}
