@@ -137,6 +137,79 @@ class SubscriptionService:
             return False, "حدث خطأ في التحقق من الحدود"
     
     @staticmethod
+    def upgrade_subscription(company_id, new_plan_type):
+        """
+        ترقية اشتراك الشركة إلى خطة جديدة
+        """
+        try:
+            subscription = CompanySubscription.query.filter_by(
+                company_id=company_id,
+                is_active=True
+            ).first()
+            
+            if not subscription:
+                # إنشاء اشتراك جديد
+                start_date = datetime.utcnow()
+                end_date = start_date + timedelta(days=365)  # سنة واحدة
+                
+                new_subscription = CompanySubscription(
+                    company_id=company_id,
+                    plan_type=new_plan_type,
+                    is_trial=False,
+                    start_date=start_date,
+                    end_date=end_date,
+                    is_active=True,
+                    auto_renew=True
+                )
+                
+                db.session.add(new_subscription)
+            else:
+                # ترقية الاشتراك الحالي
+                subscription.plan_type = new_plan_type
+                subscription.is_trial = False
+                subscription.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            logger.info(f"تم ترقية اشتراك الشركة {company_id} إلى {new_plan_type}")
+            return True
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"خطأ في ترقية الاشتراك: {str(e)}")
+            return False
+    
+    @staticmethod
+    def extend_subscription(company_id, extend_days):
+        """
+        تمديد اشتراك الشركة
+        """
+        try:
+            subscription = CompanySubscription.query.filter_by(
+                company_id=company_id,
+                is_active=True
+            ).first()
+            
+            if not subscription:
+                return False
+            
+            # تمديد تاريخ الانتهاء
+            if subscription.end_date:
+                subscription.end_date = subscription.end_date + timedelta(days=extend_days)
+            else:
+                subscription.end_date = datetime.utcnow() + timedelta(days=extend_days)
+            
+            subscription.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            logger.info(f"تم تمديد اشتراك الشركة {company_id} لـ {extend_days} يوم")
+            return True
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"خطأ في تمديد الاشتراك: {str(e)}")
+            return False
+    
+    @staticmethod
     def get_subscription_status(company_id):
         """
         جلب حالة الاشتراك التفصيلية

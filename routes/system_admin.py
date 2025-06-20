@@ -270,7 +270,7 @@ def manage_subscription(company_id):
         for plan_type in ['basic', 'premium', 'enterprise']:
             available_plans[plan_type] = SubscriptionService.get_plan_features(plan_type)
         
-        return render_template('system_admin/manage_subscription.html',
+        return render_template('system_admin/futuristic_manage_subscription.html',
                              company=company,
                              subscription_status=subscription_status,
                              available_plans=available_plans)
