@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app import db
 from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
@@ -20,6 +20,27 @@ employees_bp = Blueprint('employees', __name__)
 # المجلد المخصص لحفظ صور الموظفين
 UPLOAD_FOLDER = 'static/uploads/employees'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def get_filtered_employees_query():
+    """إرجاع استعلام الموظفين مع تطبيق فلتر الأقسام المتاحة للمستخدم الحالي"""
+    accessible_dept_ids = current_user.get_accessible_department_ids()
+    
+    if accessible_dept_ids is None:  # مدير النظام - جميع الموظفين
+        return Employee.query
+    elif accessible_dept_ids:  # أقسام محددة
+        return Employee.query.filter(Employee.department_id.in_(accessible_dept_ids))
+    else:  # لا توجد أقسام متاحة
+        return Employee.query.filter(Employee.id == -1)  # استعلام فارغ
+
+def check_employee_access(employee_id):
+    """التحقق من إمكانية الوصول لموظف معين وإرجاع الموظف أو 404"""
+    employee = Employee.query.get_or_404(employee_id)
+    
+    if not current_user.can_access_employee(employee):
+        from flask import abort
+        abort(403)  # ممنوع الوصول
+    
+    return employee
 
 def allowed_file(filename):
     """التحقق من أن الملف من الأنواع المسموحة"""
@@ -48,7 +69,8 @@ def save_employee_image(file, employee_id, image_type):
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def index():
     """List all employees"""
-    employees = Employee.query.all()
+    # استخدام الدالة المساعدة للفلترة
+    employees = get_filtered_employees_query().all()
     return render_template('employees/index.html', employees=employees)
 
 @employees_bp.route('/create', methods=['GET', 'POST'])
@@ -172,7 +194,7 @@ def edit(id):
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def view(id):
     """View detailed employee information"""
-    employee = Employee.query.get_or_404(id)
+    employee = check_employee_access(id)
     
     # Get employee documents
     documents = Document.query.filter_by(employee_id=id).all()

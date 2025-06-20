@@ -220,12 +220,37 @@ class User(UserMixin, db.Model):
         if self.role == UserRole.ADMIN:
             return Department.query.all()
             
-        # إذا كان لديه قسم مخصص، يعرض هذا القسم فقط
+        # جلب الأقسام من UserDepartmentAccess
+        dept_accesses = UserDepartmentAccess.query.filter_by(user_id=self.id).all()
+        accessible_departments = [access.department for access in dept_accesses]
+        
+        # إضافة القسم المخصص إذا كان موجوداً ولم يكن في القائمة
         if self.assigned_department_id:
-            return [self.assigned_department]
+            main_dept = Department.query.get(self.assigned_department_id)
+            if main_dept and main_dept not in accessible_departments:
+                accessible_departments.append(main_dept)
             
-        # إذا لم يكن لديه قسم مخصص، لا يعرض أي قسم
-        return []
+        return accessible_departments
+    
+    def get_accessible_department_ids(self):
+        """جلب معرفات الأقسام المتاحة للمستخدم"""
+        # المديرون لديهم وصول لجميع الأقسام
+        if self.role == UserRole.ADMIN:
+            return None  # None يعني جميع الأقسام
+            
+        accessible_departments = self.get_accessible_departments()
+        return [dept.id for dept in accessible_departments]
+    
+    def can_access_employee(self, employee):
+        """التحقق من إمكانية الوصول لموظف معين"""
+        if self.role == UserRole.ADMIN:
+            return True
+            
+        accessible_dept_ids = self.get_accessible_department_ids()
+        if not accessible_dept_ids:
+            return False
+            
+        return employee.department_id in accessible_dept_ids
     
     def __repr__(self):
         return f'<User {self.email}>'
