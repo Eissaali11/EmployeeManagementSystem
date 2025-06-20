@@ -218,37 +218,45 @@ def my_vehicles():
         vehicle.handovers = vehicle_handovers
         current_driver_vehicles.append(vehicle)
     
-    # السيارات المؤجرة النشطة (عرض عام)
+    # السيارات المؤجرة المرتبطة بالموظف
     rented_vehicles_base = db.session.query(Vehicle, VehicleRental).join(
         VehicleRental, Vehicle.id == VehicleRental.vehicle_id
+    ).join(
+        VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
     ).filter(
-        VehicleRental.is_active == True
-    ).limit(10).all()
+        VehicleRental.is_active == True,
+        VehicleHandover.employee_id == employee_id
+    ).distinct().all()
     
-    # إضافة معلومات النماذج للسيارات المؤجرة
+    # إضافة معلومات النماذج للسيارات المؤجرة (فقط المرتبطة بالموظف)
     rented_vehicles = []
     for vehicle, rental in rented_vehicles_base:
-        # البحث عن نماذج التسليم والاستلام لهذه السيارة
+        # البحث عن نماذج التسليم والاستلام لهذه السيارة والموظف فقط
         vehicle_handovers = VehicleHandover.query.filter_by(
-            vehicle_id=vehicle.id
+            vehicle_id=vehicle.id,
+            employee_id=employee_id
         ).order_by(VehicleHandover.handover_date.desc()).all()
         
         vehicle.handovers = vehicle_handovers
         rented_vehicles.append((vehicle, rental))
     
-    # السيارات في مشاريع نشطة (عرض عام)
+    # السيارات في مشاريع نشطة المرتبطة بالموظف
     project_vehicles_base = db.session.query(Vehicle, VehicleProject).join(
         VehicleProject, Vehicle.id == VehicleProject.vehicle_id
+    ).join(
+        VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
     ).filter(
-        VehicleProject.is_active == True
-    ).limit(10).all()
+        VehicleProject.is_active == True,
+        VehicleHandover.employee_id == employee_id
+    ).distinct().all()
     
-    # إضافة معلومات النماذج للسيارات في المشاريع
+    # إضافة معلومات النماذج للسيارات في المشاريع (فقط المرتبطة بالموظف)
     project_vehicles = []
     for vehicle, project in project_vehicles_base:
-        # البحث عن نماذج التسليم والاستلام لهذه السيارة
+        # البحث عن نماذج التسليم والاستلام لهذه السيارة والموظف فقط
         vehicle_handovers = VehicleHandover.query.filter_by(
-            vehicle_id=vehicle.id
+            vehicle_id=vehicle.id,
+            employee_id=employee_id
         ).order_by(VehicleHandover.handover_date.desc()).all()
         
         vehicle.handovers = vehicle_handovers
