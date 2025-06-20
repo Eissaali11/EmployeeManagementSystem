@@ -74,7 +74,7 @@ def user_permissions(user_id):
     user = User.query.get_or_404(user_id)
     modules = list(Module)
     departments = Department.query.all()
-    return render_template('users/permissions_enhanced.html', user=user, modules=modules, departments=departments)
+    return render_template('users/permissions.html', user=user, modules=modules, departments=departments)
 
 @users_bp.route('/toggle_active/<int:user_id>', methods=['POST'])
 @login_required

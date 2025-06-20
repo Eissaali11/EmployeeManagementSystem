@@ -92,63 +92,197 @@
                     {% else %}
                         <form id="permissionsForm" method="POST" action="{{ url_for('users.update_permissions', user_id=user.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>الوحدة</th>
-                                            <th>عرض</th>
-                                            <th>إنشاء</th>
-                                            <th>تعديل</th>
-                                            <th>حذف</th>
-                                            <th>إدارة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for module in modules %}
-                                        <tr>
-                                            <td class="fw-medium">{{ module.value }}</td>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_1">
-                                            </td>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_2">
-                                            </td>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_4">
-                                            </td>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_8">
-                                            </td>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_16">
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                            
+                            <div class="row">
+                                <!-- صلاحيات الوحدات -->
+                                <div class="col-lg-8">
+                                    <h6 class="fw-bold mb-3">صلاحيات الوحدات</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-bordered">
+                                            <thead class="table-primary">
+                                                <tr>
+                                                    <th style="width: 30%">الوحدة</th>
+                                                    <th style="width: 14%" class="text-center">عرض</th>
+                                                    <th style="width: 14%" class="text-center">إنشاء</th>
+                                                    <th style="width: 14%" class="text-center">تعديل</th>
+                                                    <th style="width: 14%" class="text-center">حذف</th>
+                                                    <th style="width: 14%" class="text-center">إدارة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% set module_names = {
+                                                    'DASHBOARD': 'لوحة التحكم',
+                                                    'EMPLOYEES': 'إدارة الموظفين',
+                                                    'ATTENDANCE': 'نظام الحضور',
+                                                    'DEPARTMENTS': 'إدارة الأقسام',
+                                                    'SALARIES': 'إدارة الرواتب',
+                                                    'DOCUMENTS': 'إدارة الوثائق',
+                                                    'VEHICLES': 'إدارة المركبات',
+                                                    'USERS': 'إدارة المستخدمين'
+                                                } %}
+                                                {% for module in modules %}
+                                                {% set current_permissions = user.permissions|selectattr('module', 'equalto', module)|first %}
+                                                <tr>
+                                                    <td class="fw-medium">{{ module_names.get(module.name, module.value) }}</td>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                               name="permissions" value="{{ module.name }}_1"
+                                                               {% if current_permissions %}
+                                                                   {% set perm_bits = current_permissions.permissions %}
+                                                                   {% if (perm_bits // 1) % 2 == 1 %}checked{% endif %}
+                                                               {% endif %}>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                               name="permissions" value="{{ module.name }}_2"
+                                                               {% if current_permissions %}
+                                                                   {% set perm_bits = current_permissions.permissions %}
+                                                                   {% if (perm_bits // 2) % 2 == 1 %}checked{% endif %}
+                                                               {% endif %}>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                               name="permissions" value="{{ module.name }}_4"
+                                                               {% if current_permissions %}
+                                                                   {% set perm_bits = current_permissions.permissions %}
+                                                                   {% if (perm_bits // 4) % 2 == 1 %}checked{% endif %}
+                                                               {% endif %}>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                               name="permissions" value="{{ module.name }}_8"
+                                                               {% if current_permissions %}
+                                                                   {% set perm_bits = current_permissions.permissions %}
+                                                                   {% if (perm_bits // 8) % 2 == 1 %}checked{% endif %}
+                                                               {% endif %}>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input type="checkbox" class="form-check-input permission-checkbox" 
+                                                               name="permissions" value="{{ module.name }}_16"
+                                                               {% if current_permissions %}
+                                                                   {% set perm_bits = current_permissions.permissions %}
+                                                                   {% if (perm_bits // 16) % 2 == 1 %}checked{% endif %}
+                                                               {% endif %}>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- الأقسام والصلاحيات الحالية -->
+                                <div class="col-lg-4">
+                                    <!-- إدارة الأقسام -->
+                                    <div class="card mb-4">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-building me-2"></i>
+                                                الوصول للأقسام
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" name="department_access" 
+                                                       id="all_departments" value="all"
+                                                       {% if not user.assigned_department_id %}checked{% endif %}>
+                                                <label class="form-check-label" for="all_departments">
+                                                    <i class="fas fa-globe me-2 text-success"></i>
+                                                    جميع الأقسام
+                                                </label>
+                                            </div>
+                                            
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="radio" name="department_access" 
+                                                       id="specific_department" value="specific"
+                                                       {% if user.assigned_department_id %}checked{% endif %}>
+                                                <label class="form-check-label" for="specific_department">
+                                                    <i class="fas fa-building me-2 text-warning"></i>
+                                                    قسم محدد
+                                                </label>
+                                            </div>
+                                            
+                                            <div id="department_selection" class="mt-3" 
+                                                 style="{% if not user.assigned_department_id %}display: none;{% endif %}">
+                                                <select name="assigned_department_id" class="form-select">
+                                                    <option value="">اختر القسم</option>
+                                                    {% for dept in departments %}
+                                                    <option value="{{ dept.id }}" 
+                                                            {% if user.assigned_department_id == dept.id %}selected{% endif %}>
+                                                        {{ dept.name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                                <small class="text-muted mt-1 d-block">
+                                                    المستخدم سيصل لبيانات هذا القسم فقط
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- الصلاحيات الحالية -->
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-list-check me-2"></i>
+                                                الصلاحيات الحالية
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if user.permissions %}
+                                                {% for perm in user.permissions %}
+                                                <div class="mb-3 p-2 border rounded">
+                                                    <div class="fw-bold mb-2">{{ module_names.get(perm.module.name, perm.module.value) }}</div>
+                                                    <div>
+                                                        {% set perm_bits = perm.permissions %}
+                                                        {% if (perm_bits // 1) % 2 == 1 %}
+                                                            <span class="badge bg-success me-1">عرض</span>
+                                                        {% endif %}
+                                                        {% if (perm_bits // 2) % 2 == 1 %}
+                                                            <span class="badge bg-primary me-1">إنشاء</span>
+                                                        {% endif %}
+                                                        {% if (perm_bits // 4) % 2 == 1 %}
+                                                            <span class="badge bg-warning me-1">تعديل</span>
+                                                        {% endif %}
+                                                        {% if (perm_bits // 8) % 2 == 1 %}
+                                                            <span class="badge bg-danger me-1">حذف</span>
+                                                        {% endif %}
+                                                        {% if (perm_bits // 16) % 2 == 1 %}
+                                                            <span class="badge bg-info me-1">إدارة</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="text-center text-muted">
+                                                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                                    <p class="mb-0">لا توجد صلاحيات محددة</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" id="selectAll">
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-right me-2"></i>
+                                    العودة
+                                </a>
+                                <div>
+                                    <button type="button" class="btn btn-outline-primary me-2" id="selectAll">
                                         <i class="fas fa-check-double me-1"></i>
                                         تحديد الكل
                                     </button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAll">
+                                    <button type="button" class="btn btn-outline-secondary me-2" id="clearAll">
                                         <i class="fas fa-times me-1"></i>
                                         إلغاء الكل
                                     </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-2"></i>
+                                        حفظ الصلاحيات
+                                    </button>
                                 </div>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save me-2"></i>
-                                    حفظ الصلاحيات
-                                </button>
                             </div>
                         </form>
                     {% endif %}

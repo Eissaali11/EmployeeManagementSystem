@@ -169,7 +169,7 @@
                                                 <input type="checkbox" class="form-check-input mb-2" 
                                                        id="{{ module.name }}_view"
                                                        name="permissions" value="{{ module.name }}_1"
-                                                       {% if current_permissions and current_permissions.permissions & 1 %}checked{% endif %}>
+                                                       {% if current_permissions and ((current_permissions.permissions // 1) % 2) %}checked{% endif %}>
                                                 <label for="{{ module.name }}_view" class="form-check-label d-block">
                                                     <i class="fas fa-eye text-info d-block mb-1"></i>
                                                     <small>عرض</small>
@@ -179,7 +179,7 @@
                                                 <input type="checkbox" class="form-check-input mb-2" 
                                                        id="{{ module.name }}_create"
                                                        name="permissions" value="{{ module.name }}_2"
-                                                       {% if current_permissions and current_permissions.permissions & 2 %}checked{% endif %}>
+                                                       {% if current_permissions and ((current_permissions.permissions // 2) % 2) %}checked{% endif %}>
                                                 <label for="{{ module.name }}_create" class="form-check-label d-block">
                                                     <i class="fas fa-plus text-success d-block mb-1"></i>
                                                     <small>إنشاء</small>
@@ -189,7 +189,7 @@
                                                 <input type="checkbox" class="form-check-input mb-2" 
                                                        id="{{ module.name }}_edit"
                                                        name="permissions" value="{{ module.name }}_4"
-                                                       {% if current_permissions and current_permissions.permissions & 4 %}checked{% endif %}>
+                                                       {% if current_permissions and ((current_permissions.permissions // 4) % 2) %}checked{% endif %}>
                                                 <label for="{{ module.name }}_edit" class="form-check-label d-block">
                                                     <i class="fas fa-edit text-warning d-block mb-1"></i>
                                                     <small>تعديل</small>
@@ -199,7 +199,7 @@
                                                 <input type="checkbox" class="form-check-input mb-2" 
                                                        id="{{ module.name }}_delete"
                                                        name="permissions" value="{{ module.name }}_8"
-                                                       {% if current_permissions and current_permissions.permissions & 8 %}checked{% endif %}>
+                                                       {% if current_permissions and ((current_permissions.permissions // 8) % 2) %}checked{% endif %}>
                                                 <label for="{{ module.name }}_delete" class="form-check-label d-block">
                                                     <i class="fas fa-trash text-danger d-block mb-1"></i>
                                                     <small>حذف</small>
@@ -209,7 +209,7 @@
                                                 <input type="checkbox" class="form-check-input mb-2" 
                                                        id="{{ module.name }}_manage"
                                                        name="permissions" value="{{ module.name }}_16"
-                                                       {% if current_permissions and current_permissions.permissions & 16 %}checked{% endif %}>
+                                                       {% if current_permissions and ((current_permissions.permissions // 16) % 2) %}checked{% endif %}>
                                                 <label for="{{ module.name }}_manage" class="form-check-label d-block">
                                                     <i class="fas fa-crown text-purple d-block mb-1"></i>
                                                     <small>إدارة</small>
