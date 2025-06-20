@@ -130,15 +130,9 @@
                         {# التحقق من صلاحيات المركبات #}
                         {% if current_user.role == UserRole.ADMIN or current_user|check_module_access(Module.VEHICLES) %}
                         <li class="nav-item mb-1">
-                            <a href="{{ url_for('vehicles.index') }}" class="nav-link nav-link-custom {% if '/vehicles' in request.path and '/handovers' not in request.path %}active{% endif %}">
+                            <a href="{{ url_for('vehicles.index') }}" class="nav-link nav-link-custom {% if '/vehicles' in request.path %}active{% endif %}">
                                 <i class="fas fa-car me-2"></i>
                                 <span>إدارة السيارات</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-1">
-                            <a href="{{ url_for('vehicles.handovers_list') }}" class="nav-link nav-link-custom {% if '/vehicles/handovers' in request.path %}active{% endif %}">
-                                <i class="fas fa-exchange-alt me-2"></i>
-                                <span>السيارات المخصصة حالياً</span>
                             </a>
                         </li>
                         {% endif %}
