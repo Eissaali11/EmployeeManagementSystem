@@ -266,11 +266,7 @@ def generate_weasy_basic_report(employee_id):
 <body>
     <div class="header">
         <div class="header-logo">
-            {% if logo_url %}
-                <img src="{{ logo_url }}" alt="شعار نُظم">
-            {% else %}
-                <div style="width: 80px; height: 60px; background-color: #4a90b8; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">نُظم</div>
-            {% endif %}
+            <div style="width: 100px; height: 70px; background: linear-gradient(135deg, #4a90b8, #2c5f85); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: 'Noto Sans Arabic', Arial, sans-serif;">نُظم</div>
         </div>
         <div class="main-title">تقرير المعلومات الأساسية للموظف</div>
         <div class="header-spacer"></div>
