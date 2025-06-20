@@ -22,35 +22,44 @@ def dashboard():
     try:
         # إحصائيات عامة
         total_companies = Company.query.count()
+        active_companies = Company.query.filter_by(is_active=True).count()
+        total_subscriptions = CompanySubscription.query.count()
         active_subscriptions = CompanySubscription.query.filter_by(is_active=True).count()
-        trial_subscriptions = CompanySubscription.query.filter_by(is_trial=True, is_active=True).count()
+        
+        # إحصائيات النظام
         total_employees = Employee.query.count()
         total_vehicles = Vehicle.query.count()
+        total_revenue = 0  # يمكن حسابه من الاشتراكات لاحقاً
         
-        # الشركات الجديدة هذا الشهر
-        current_month = datetime.utcnow().replace(day=1)
-        new_companies_this_month = Company.query.filter(
-            Company.created_at >= current_month
-        ).count()
-        
-        # الاشتراكات المنتهية قريباً
-        expiring_soon = []
-        try:
-            all_subscriptions = CompanySubscription.query.filter(
-                CompanySubscription.is_active == True
-            ).all()
-            expiring_soon = [sub for sub in all_subscriptions if sub.days_remaining <= 7]
-        except Exception as e:
-            logger.error(f"Error getting expiring subscriptions: {e}")
+        # النشاط الأخير - محاكاة بسيطة للعرض
+        recent_activities = [
+            {
+                'description': f'النظام يحتوي على {total_companies} شركة مسجلة',
+                'icon': 'fa-building',
+                'created_at': datetime.utcnow()
+            },
+            {
+                'description': f'إجمالي {total_employees} موظف في النظام',
+                'icon': 'fa-users',
+                'created_at': datetime.utcnow()
+            },
+            {
+                'description': f'إجمالي {total_vehicles} مركبة مسجلة',
+                'icon': 'fa-car',
+                'created_at': datetime.utcnow()
+            }
+        ]
         
         return render_template('system_admin/dashboard.html',
                              total_companies=total_companies,
+                             active_companies=active_companies,
+                             total_subscriptions=total_subscriptions,
                              active_subscriptions=active_subscriptions,
-                             trial_subscriptions=trial_subscriptions,
                              total_employees=total_employees,
                              total_vehicles=total_vehicles,
-                             new_companies_this_month=new_companies_this_month,
-                             expiring_soon=expiring_soon)
+                             total_revenue=total_revenue,
+                             recent_activities=recent_activities,
+                             now=datetime.utcnow())
                              
     except Exception as e:
         logger.error(f"خطأ في لوحة تحكم مالك النظام: {str(e)}")
@@ -242,6 +251,40 @@ def manage_subscription(company_id):
         logger.error(f"خطأ في إدارة اشتراك الشركة {company_id}: {str(e)}")
         flash('حدث خطأ في تحميل إدارة الاشتراك', 'error')
         return redirect(url_for('system_admin.company_details', company_id=company_id))
+
+@system_admin_bp.route('/subscriptions')
+@login_required
+@system_owner_required
+def subscriptions():
+    """إدارة الاشتراكات"""
+    try:
+        subscriptions = CompanySubscription.query.all()
+        return render_template('system_admin/subscriptions.html',
+                             subscriptions=subscriptions)
+    except Exception as e:
+        logger.error(f"خطأ في عرض الاشتراكات: {str(e)}")
+        flash('حدث خطأ في تحميل الاشتراكات', 'error')
+        return redirect(url_for('system_admin.dashboard'))
+
+@system_admin_bp.route('/reports')
+@login_required
+@system_owner_required
+def reports():
+    """التقارير والإحصائيات"""
+    try:
+        # إحصائيات شاملة للنظام
+        total_companies = Company.query.count()
+        total_employees = Employee.query.count()
+        total_vehicles = Vehicle.query.count()
+        
+        return render_template('system_admin/reports.html',
+                             total_companies=total_companies,
+                             total_employees=total_employees,
+                             total_vehicles=total_vehicles)
+    except Exception as e:
+        logger.error(f"خطأ في عرض التقارير: {str(e)}")
+        flash('حدث خطأ في تحميل التقارير', 'error')
+        return redirect(url_for('system_admin.dashboard'))
 
 
 
