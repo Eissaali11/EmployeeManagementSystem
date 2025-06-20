@@ -154,6 +154,13 @@
 - Environment variable protection
 
 ## Changelog
+- June 20, 2025: Enhanced employee portal with professional designs and data filtering:
+  • Created modern glass-morphism design for employee vehicles page with interactive timeline
+  • Implemented comprehensive vehicle data filtering to show only employee-related handovers
+  • Fixed employee profile page AttributeError by removing invalid birth_date field reference
+  • Designed premium profile page with gradient backgrounds, floating particles, and stats cards
+  • Added responsive grid layouts and smooth animations for better user experience
+  • Ensured all employee portal pages display only data related to the logged-in employee
 - June 14, 2025: Successfully implemented Arabic employee PDF report with exact user-requested design:
   • Created comprehensive PDF report matching provided design template
   • Features circular profile photo frame with blue border
