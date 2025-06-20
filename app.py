@@ -333,7 +333,7 @@ with app.app_context():
     app.register_blueprint(attendance_dashboard_bp, url_prefix='/attendance-dashboard')
     app.register_blueprint(workshop_reports_bp)
     app.register_blueprint(employee_portal_bp)
-    app.register_blueprint(system_admin_bp, url_prefix='/system-admin')
+    app.register_blueprint(system_admin_bp)
     app.register_blueprint(company_admin_bp, url_prefix='/company-admin')
     
     # إضافة دوال مساعدة لقوالب Jinja
