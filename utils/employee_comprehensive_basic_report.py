@@ -22,7 +22,7 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
             # عنوان النظام
             self.set_font('Arial', 'B', 20)
             self.set_text_color(41, 128, 185)
-            self.cell(0, 10, 'NUZUM EMPLOYEE MANAGEMENT SYSTEM', 0, 1, 'C')
+            self.cell(0, 10, 'نظام نُظم لإدارة الموظفين', 0, 1, 'C')
             
             # خط فاصل
             self.set_draw_color(41, 128, 185)
@@ -31,7 +31,7 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
             # عنوان التقرير
             self.set_font('Arial', 'B', 16)
             self.set_text_color(0, 0, 0)
-            self.cell(0, 10, 'Employee Basic Information Report', 0, 1, 'C')
+            self.cell(0, 10, 'تقرير المعلومات الأساسية للموظف', 0, 1, 'C')
             self.ln(5)
         except:
             pass
@@ -42,7 +42,7 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
             self.set_y(-15)
             self.set_font('Arial', 'I', 8)
             self.set_text_color(128, 128, 128)
-            self.cell(0, 10, f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M")} - Page {self.page_no()}', 0, 0, 'C')
+            self.cell(0, 10, f'تم الإنتاج في: {datetime.now().strftime("%Y-%m-%d %H:%M")} - صفحة {self.page_no()}', 0, 0, 'C')
         except:
             pass
             
@@ -150,44 +150,45 @@ def generate_comprehensive_basic_report(employee_id):
             # عنوان التقرير الرئيسي
             pdf.set_font('Arial', 'B', 16)
             pdf.set_text_color(0, 0, 0)
-            pdf.cell(0, 10, f'Basic Information Report for: {employee.get("name", "Unknown")}', 0, 1, 'C')
+            pdf.cell(0, 10, f'تقرير المعلومات الأساسية للموظف: {employee.get("name", "غير محدد")}', 0, 1, 'C')
             pdf.ln(10)
             
             # المعلومات الأساسية
-            pdf.add_section_title('Basic Personal Information')
-            pdf.add_info_row('Employee Name', employee.get('name', 'Not specified'), True)
-            pdf.add_info_row('Employee ID', employee.get('employee_id', 'Not specified'))
-            pdf.add_info_row('National ID', employee.get('national_id', 'Not specified'))
-            pdf.add_info_row('Mobile Phone', employee.get('mobile', 'Not specified'))
-            pdf.add_info_row('Email Address', employee.get('email', 'Not specified'))
-            pdf.add_info_row('Nationality', employee.get('nationality', 'Not specified'))
+            pdf.add_section_title('المعلومات الشخصية الأساسية')
+            pdf.add_info_row('اسم الموظف', employee.get('name', 'غير محدد'), True)
+            pdf.add_info_row('رقم الموظف', employee.get('employee_id', 'غير محدد'))
+            pdf.add_info_row('رقم الهوية الوطنية', employee.get('national_id', 'غير محدد'))
+            pdf.add_info_row('رقم الهاتف المحمول', employee.get('mobile', 'غير محدد'))
+            pdf.add_info_row('عنوان البريد الإلكتروني', employee.get('email', 'غير محدد'))
+            pdf.add_info_row('الجنسية', employee.get('nationality', 'غير محددة'))
             contract_type = employee.get('contract_type', '')
-            contract_display = 'Saudi' if contract_type == 'saudi' else 'Foreign' if contract_type == 'foreign' else 'Not specified'
-            pdf.add_info_row('Contract Type', contract_display)
+            contract_display = 'سعودي' if contract_type == 'saudi' else 'وافد' if contract_type == 'foreign' else 'غير محدد'
+            pdf.add_info_row('نوع العقد', contract_display)
             
             # معلومات العمل
-            pdf.add_section_title('Work Information')
-            pdf.add_info_row('Job Title', employee.get('job_title', 'Not specified'))
-            pdf.add_info_row('Department', employee.get('department_name', 'Not assigned'))
+            pdf.add_section_title('معلومات العمل')
+            pdf.add_info_row('المسمى الوظيفي', employee.get('job_title', 'غير محدد'))
+            pdf.add_info_row('القسم', employee.get('department_name', 'غير محدد'))
             status = employee.get('status', 'unknown')
-            pdf.add_info_row('Employment Status', status.title() if status else 'Not specified')
+            status_display = 'نشط' if status == 'active' else 'غير نشط' if status == 'inactive' else 'في إجازة' if status == 'on_leave' else 'غير محدد'
+            pdf.add_info_row('حالة التوظيف', status_display)
             
             join_date = employee.get('join_date')
-            join_date_str = join_date.strftime('%Y-%m-%d') if join_date else 'Not specified'
-            pdf.add_info_row('Join Date', join_date_str)
+            join_date_str = join_date.strftime('%Y-%m-%d') if join_date else 'غير محدد'
+            pdf.add_info_row('تاريخ الانضمام', join_date_str)
             
-            pdf.add_info_row('Location', employee.get('location', 'Not specified'))
-            pdf.add_info_row('Project', employee.get('project', 'Not specified'))
+            pdf.add_info_row('الموقع', employee.get('location', 'غير محدد'))
+            pdf.add_info_row('المشروع', employee.get('project', 'غير محدد'))
             
             basic_salary = employee.get('basic_salary')
-            salary_str = f"{basic_salary:,.0f} SAR" if basic_salary else 'Not specified'
-            pdf.add_info_row('Basic Salary', salary_str)
+            salary_str = f"{basic_salary:,.0f} ريال سعودي" if basic_salary else 'غير محدد'
+            pdf.add_info_row('الراتب الأساسي', salary_str)
             
             has_balance = employee.get('has_national_balance', False)
-            pdf.add_info_row('National Balance', 'Available' if has_balance else 'Not available')
+            pdf.add_info_row('الرصيد الوطني', 'متوفر' if has_balance else 'غير متوفر')
         
             # قسم الصور
-            pdf.add_section_title('Employee Documents and Photos')
+            pdf.add_section_title('وثائق وصور الموظف')
             pdf.ln(10)
             
             # تحديد مسارات الصور
@@ -232,30 +233,30 @@ def generate_comprehensive_basic_report(employee_id):
             current_y = pdf.get_y()
             
             # الصورة الشخصية
-            pdf.add_image_with_title(profile_image_path, 'Profile Photo', 30, current_y, 45, 55)
+            pdf.add_image_with_title(profile_image_path, 'الصورة الشخصية', 30, current_y, 45, 55)
             
             # صورة الهوية الوطنية
-            pdf.add_image_with_title(national_id_image_path, 'National ID', 85, current_y, 45, 55)
+            pdf.add_image_with_title(national_id_image_path, 'صورة الهوية الوطنية', 85, current_y, 45, 55)
             
             # صورة رخصة القيادة
-            pdf.add_image_with_title(license_image_path, 'Driving License', 140, current_y, 45, 55)
+            pdf.add_image_with_title(license_image_path, 'صورة رخصة القيادة', 140, current_y, 45, 55)
             
             # الانتقال إلى السطر التالي بعد الصور
             pdf.set_y(current_y + 70)
             
             # معلومات إضافية
-            pdf.add_section_title('Additional Information')
+            pdf.add_section_title('معلومات إضافية')
             
             created_at = employee.get('created_at')
-            created_str = created_at.strftime('%Y-%m-%d') if created_at else 'Not specified'
-            pdf.add_info_row('Created Date', created_str)
+            created_str = created_at.strftime('%Y-%m-%d') if created_at else 'غير محدد'
+            pdf.add_info_row('تاريخ الإنشاء', created_str)
             
             updated_at = employee.get('updated_at')
-            updated_str = updated_at.strftime('%Y-%m-%d') if updated_at else 'Not specified'
-            pdf.add_info_row('Last Updated', updated_str)
+            updated_str = updated_at.strftime('%Y-%m-%d') if updated_at else 'غير محدد'
+            pdf.add_info_row('آخر تحديث', updated_str)
             
             # إحصائيات سريعة - سنستخدم استعلامات منفصلة
-            pdf.add_section_title('Quick Statistics')
+            pdf.add_section_title('إحصائيات سريعة')
             
             # حساب الإحصائيات من قاعدة البيانات
             try:
@@ -284,10 +285,10 @@ def generate_comprehensive_basic_report(employee_id):
             if join_date:
                 service_days = (datetime.now().date() - join_date).days
             
-            pdf.add_info_row('Documents Count', str(total_documents))
-            pdf.add_info_row('Attendance Records', str(total_attendances))
-            pdf.add_info_row('Salary Records', str(total_salaries))
-            pdf.add_info_row('Service Days', str(service_days))
+            pdf.add_info_row('عدد الوثائق', str(total_documents))
+            pdf.add_info_row('سجلات الحضور', str(total_attendances))
+            pdf.add_info_row('سجلات الراتب', str(total_salaries))
+            pdf.add_info_row('أيام الخدمة', str(service_days))
             
             # إنشاء buffer وإرجاع PDF
             try:
