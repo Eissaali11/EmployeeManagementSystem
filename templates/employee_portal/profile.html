@@ -1,290 +1,813 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الملف الشخصي - {{ employee.name }} - نُظم</title>
+    
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        .page-header {
-            background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --card-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --border-radius: 20px;
+            --profile-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         }
-        .profile-card {
-            background: white;
-            border-radius: 15px;
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .employee-photo-section {
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--profile-gradient);
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+        }
+
+        .profile-main-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--success-gradient);
+        }
+
+        .profile-photo-section {
             text-align: center;
             margin-bottom: 2rem;
+            position: relative;
         }
-        .employee-photo {
-            width: 200px;
-            height: 200px;
+
+        .profile-photo-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .profile-photo {
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            border: 4px solid #8e44ad;
+            border: 6px solid transparent;
+            background: var(--success-gradient);
+            padding: 4px;
             object-fit: cover;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
         }
-        .default-photo {
-            width: 200px;
-            height: 200px;
+
+        .profile-photo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .profile-photo-inner {
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            border: 4px solid #8e44ad;
+            object-fit: cover;
             background: #f8f9fa;
+        }
+
+        .default-photo {
+            width: 168px;
+            height: 168px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 4rem;
-            color: #8e44ad;
+            color: rgba(255,255,255,0.8);
+            margin: auto;
         }
-        .info-row {
+
+        .employee-name {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .employee-title {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .employee-id-badge {
+            display: inline-block;
+            background: var(--warning-gradient);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .info-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-section:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .info-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .personal-info::before {
+            background: var(--success-gradient);
+        }
+
+        .work-info::before {
+            background: var(--warning-gradient);
+        }
+
+        .contact-info::before {
+            background: var(--info-gradient);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.5rem;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 1rem 0;
-            border-bottom: 1px solid #ecf0f1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
-        .info-row:last-child {
-            border-bottom: none;
+
+        .section-title i {
+            margin-left: 12px;
+            font-size: 1.1rem;
         }
+
+        .personal-info .section-title i {
+            color: #4facfe;
+        }
+
+        .work-info .section-title i {
+            color: #43e97b;
+        }
+
+        .contact-info .section-title i {
+            color: #f093fb;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
         .info-label {
-            font-weight: bold;
-            color: #2c3e50;
-            width: 30%;
-        }
-        .info-value {
-            color: #34495e;
-            width: 70%;
-        }
-        .id-photos-section {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .id-photo {
-            width: 300px;
-            height: 180px;
-            border-radius: 8px;
-            border: 2px solid #dee2e6;
-            object-fit: cover;
-            margin: 1rem;
-        }
-        .default-id-photo {
-            width: 300px;
-            height: 180px;
-            border-radius: 8px;
-            border: 2px solid #dee2e6;
-            background: #f8f9fa;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 120px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            margin: 1rem;
         }
-        .contact-info {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+
+        .info-label i {
+            width: 20px;
+            margin-left: 8px;
+            text-align: center;
         }
-        .emergency-contact {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
+
+        .info-value {
             color: white;
+            font-weight: 500;
+            flex-grow: 1;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .status-inactive {
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .status-on-leave {
+            background: var(--warning-gradient);
+            color: white;
+        }
+
+        .btn-back {
+            background: var(--secondary-gradient);
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .btn-back i {
+            margin-left: 8px;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--success-gradient);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: var(--card-shadow);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #4facfe;
+            margin-bottom: 0.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .documents-preview {
+            margin-top: 2rem;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .document-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .document-info {
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .document-info i {
+            margin-left: 12px;
+            color: #4facfe;
+            width: 20px;
+        }
+
+        .department-card {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .department-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #4facfe;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .employee-name {
+                font-size: 1.5rem;
+            }
+            
+            .profile-photo {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .default-photo {
+                width: 138px;
+                height: 138px;
+                font-size: 3rem;
+            }
+        }
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 0.8;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="page-header">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1><i class="fas fa-user ms-2"></i>الملف الشخصي</h1>
-                    <p class="mb-0">الملف الشخصي للموظف {{ employee.name }}</p>
-                </div>
-                <div class="col-md-4 text-end">
-                    <a href="{{ url_for('employee_portal.dashboard') }}" class="btn btn-light">
-                        <i class="fas fa-arrow-right ms-2"></i>العودة للوحة المعلومات
-                    </a>
-                </div>
-            </div>
-        </div>
+    <!-- Floating Particles Background -->
+    <div class="floating-particles">
+        <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="left: 20%; animation-delay: 1s;"></div>
+        <div class="particle" style="left: 30%; animation-delay: 2s;"></div>
+        <div class="particle" style="left: 40%; animation-delay: 3s;"></div>
+        <div class="particle" style="left: 50%; animation-delay: 4s;"></div>
+        <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+        <div class="particle" style="left: 70%; animation-delay: 1.5s;"></div>
+        <div class="particle" style="left: 80%; animation-delay: 2.5s;"></div>
+        <div class="particle" style="left: 90%; animation-delay: 3.5s;"></div>
     </div>
 
-    <div class="container">
-        <div class="row">
-            <!-- الصورة الشخصية والمعلومات الأساسية -->
-            <div class="col-lg-8">
-                <div class="profile-card">
-                    <div class="employee-photo-section">
-                        {% if employee.profile_image %}
-                            <img src="{{ url_for('static', filename=employee.profile_image) }}" 
-                                 alt="صورة {{ employee.name }}" class="employee-photo">
-                        {% else %}
-                            <div class="default-photo">
-                                <i class="fas fa-user"></i>
-                            </div>
-                        {% endif %}
-                        <h3 class="mt-3">{{ employee.name }}</h3>
-                        <p class="text-muted">{{ employee.job_title or 'غير محدد' }}</p>
-                    </div>
+    <div class="container-fluid py-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-user-circle me-3"></i>
+                الملف الشخصي
+            </h1>
+            <p class="page-subtitle">عرض المعلومات الشخصية والوظيفية</p>
+        </div>
 
-                    <h5 class="mb-3">
-                        <i class="fas fa-info-circle ms-2"></i>المعلومات الشخصية
-                    </h5>
-                    
-                    <div class="info-row">
-                        <div class="info-label">رقم العمل:</div>
-                        <div class="info-value">{{ employee.employee_number }}</div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-label">رقم الهوية الوطنية:</div>
-                        <div class="info-value">{{ employee.national_id }}</div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-label">تاريخ الميلاد:</div>
-                        <div class="info-value">{{ employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else 'غير محدد' }}</div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-label">الجنسية:</div>
-                        <div class="info-value">{{ employee.nationality or 'غير محددة' }}</div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-label">الحالة الاجتماعية:</div>
-                        <div class="info-value">{{ employee.marital_status or 'غير محددة' }}</div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-label">القسم:</div>
-                        <div class="info-value">{{ employee.department.name if employee.department else 'غير محدد' }}</div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-label">تاريخ الالتحاق:</div>
-                        <div class="info-value">{{ employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد' }}</div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-label">الراتب الأساسي:</div>
-                        <div class="info-value">{{ "{:,.0f}".format(employee.basic_salary) if employee.basic_salary else '0' }} ريال</div>
-                    </div>
-                </div>
-
-                <!-- صور الهوية -->
-                <div class="id-photos-section">
-                    <h5 class="mb-3">
-                        <i class="fas fa-id-card ms-2"></i>صور الهوية والوثائق
-                    </h5>
-                    
-                    <div class="row">
-                        <div class="col-md-6 text-center">
-                            <h6>صورة الهوية الوطنية</h6>
-                            {% if employee.national_id_image %}
-                                <img src="{{ url_for('static', filename=employee.national_id_image) }}" 
-                                     alt="صورة هوية {{ employee.name }}" class="id-photo">
+        <!-- Main Profile Card -->
+        <div class="profile-main-card">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="profile-photo-section">
+                        <div class="profile-photo-container">
+                            {% if employee.profile_image %}
+                                <div class="profile-photo">
+                                    <img src="{{ url_for('static', filename='uploads/profiles/' + employee.profile_image) }}" 
+                                         alt="{{ employee.name }}" class="profile-photo-inner">
+                                </div>
                             {% else %}
-                                <div class="default-id-photo">
-                                    <div class="text-center">
-                                        <i class="fas fa-id-card fa-2x mb-2"></i>
-                                        <p class="mb-0">لم يتم رفع صورة الهوية</p>
+                                <div class="profile-photo">
+                                    <div class="default-photo">
+                                        <i class="fas fa-user"></i>
                                     </div>
                                 </div>
                             {% endif %}
                         </div>
                         
-                        <div class="col-md-6 text-center">
-                            <h6>صورة إضافية</h6>
-                            {% if employee.additional_photo %}
-                                <img src="{{ url_for('static', filename='uploads/employees/additional/' + employee.additional_photo) }}" 
-                                     alt="صورة إضافية {{ employee.name }}" class="id-photo">
-                            {% else %}
-                                <div class="default-id-photo">
-                                    <div class="text-center">
-                                        <i class="fas fa-image fa-2x mb-2"></i>
-                                        <p class="mb-0">لم يتم رفع صورة إضافية</p>
-                                    </div>
-                                </div>
-                            {% endif %}
+                        <div class="employee-name">{{ employee.name }}</div>
+                        <div class="employee-title">{{ employee.job_title }}</div>
+                        <div class="employee-id-badge">
+                            <i class="fas fa-id-badge me-2"></i>
+                            {{ employee.employee_id }}
                         </div>
                     </div>
                 </div>
+                
+                <div class="col-lg-8">
+                    <!-- Quick Stats -->
+                    <div class="quick-stats">
+                        <div class="stat-card">
+                            <div class="stat-number">
+                                {{ (employee.created_at.now() - employee.join_date).days if employee.join_date else 0 }}
+                            </div>
+                            <div class="stat-label">أيام في الخدمة</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">{{ employee.documents|length if employee.documents else 0 }}</div>
+                            <div class="stat-label">المستندات</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">{{ employee.attendances|length if employee.attendances else 0 }}</div>
+                            <div class="stat-label">سجلات الحضور</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">{{ employee.salaries|length if employee.salaries else 0 }}</div>
+                            <div class="stat-label">كشوف الراتب</div>
+                        </div>
+                    </div>
+
+                    <!-- Department Card -->
+                    {% if employee.department %}
+                    <div class="department-card">
+                        <div class="department-name">
+                            <i class="fas fa-building me-2"></i>
+                            {{ employee.department.name }}
+                        </div>
+                        <div class="text-white-50">القسم الحالي</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Status -->
+                    <div class="text-center mt-3">
+                        <span class="status-badge status-{{ employee.status }}">
+                            {% if employee.status == 'active' %}
+                                <i class="fas fa-check-circle me-1"></i>نشط
+                            {% elif employee.status == 'inactive' %}
+                                <i class="fas fa-times-circle me-1"></i>غير نشط
+                            {% elif employee.status == 'on_leave' %}
+                                <i class="fas fa-calendar-times me-1"></i>في إجازة
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Grid -->
+        <div class="info-grid">
+            <!-- Personal Information -->
+            <div class="info-section personal-info">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>
+                    المعلومات الشخصية
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-card"></i>
+                        رقم الهوية:
+                    </div>
+                    <div class="info-value">{{ employee.national_id }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-flag"></i>
+                        الجنسية:
+                    </div>
+                    <div class="info-value">{{ employee.nationality or 'غير محدد' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-file-contract"></i>
+                        نوع العقد:
+                    </div>
+                    <div class="info-value">
+                        {{ 'سعودي' if employee.contract_type == 'saudi' else 'وافد' if employee.contract_type == 'foreign' else 'غير محدد' }}
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-balance-scale"></i>
+                        التوازن الوطني:
+                    </div>
+                    <div class="info-value">
+                        {{ 'متوفر' if employee.has_national_balance else 'غير متوفر' }}
+                    </div>
+                </div>
             </div>
 
-            <!-- معلومات الاتصال والطوارئ -->
-            <div class="col-lg-4">
-                <!-- معلومات الاتصال -->
-                <div class="contact-info">
-                    <h5 class="mb-3">
-                        <i class="fas fa-phone ms-2"></i>معلومات الاتصال
-                    </h5>
-                    
-                    <div class="mb-3">
-                        <strong>رقم الهاتف:</strong><br>
-                        {{ employee.phone or 'غير محدد' }}
+            <!-- Work Information -->
+            <div class="info-section work-info">
+                <h3 class="section-title">
+                    <i class="fas fa-briefcase"></i>
+                    المعلومات الوظيفية
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-plus"></i>
+                        تاريخ التوظيف:
                     </div>
-                    
-                    <div class="mb-3">
-                        <strong>البريد الإلكتروني:</strong><br>
-                        {{ employee.email or 'غير محدد' }}
-                    </div>
-                    
-                    <div class="mb-0">
-                        <strong>العنوان:</strong><br>
-                        {{ employee.address or 'غير محدد' }}
-                    </div>
+                    <div class="info-value">{{ employee.formatted_hire_date }}</div>
                 </div>
-
-                <!-- جهة الاتصال في الطوارئ -->
-                <div class="emergency-contact">
-                    <h5 class="mb-3">
-                        <i class="fas fa-exclamation-triangle ms-2"></i>جهة الاتصال في الطوارئ
-                    </h5>
-                    
-                    <div class="mb-3">
-                        <strong>الاسم:</strong><br>
-                        {{ employee.emergency_contact_name or 'غير محدد' }}
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-map-marker-alt"></i>
+                        الموقع:
                     </div>
-                    
-                    <div class="mb-3">
-                        <strong>رقم الهاتف:</strong><br>
-                        {{ employee.emergency_contact_phone or 'غير محدد' }}
-                    </div>
-                    
-                    <div class="mb-0">
-                        <strong>صلة القرابة:</strong><br>
-                        {{ employee.emergency_contact_relationship or 'غير محددة' }}
-                    </div>
+                    <div class="info-value">{{ employee.location or 'غير محدد' }}</div>
                 </div>
-
-                <!-- معلومات إضافية -->
-                {% if employee.notes %}
-                <div class="profile-card">
-                    <h5 class="mb-3">
-                        <i class="fas fa-sticky-note ms-2"></i>ملاحظات إضافية
-                    </h5>
-                    <p>{{ employee.notes }}</p>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-project-diagram"></i>
+                        المشروع:
+                    </div>
+                    <div class="info-value">{{ employee.project or 'غير محدد' }}</div>
                 </div>
-                {% endif %}
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-money-bill-wave"></i>
+                        الراتب الأساسي:
+                    </div>
+                    <div class="info-value">{{ "{:,.0f}".format(employee.basic_salary) if employee.basic_salary else 'غير محدد' }} ريال</div>
+                </div>
             </div>
+
+            <!-- Contact Information -->
+            <div class="info-section contact-info">
+                <h3 class="section-title">
+                    <i class="fas fa-address-book"></i>
+                    معلومات التواصل
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-mobile-alt"></i>
+                        الجوال:
+                    </div>
+                    <div class="info-value">{{ employee.mobile }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-envelope"></i>
+                        البريد الإلكتروني:
+                    </div>
+                    <div class="info-value">{{ employee.email or 'غير محدد' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-plus"></i>
+                        تاريخ الإنشاء:
+                    </div>
+                    <div class="info-value">{{ employee.created_at.strftime('%Y-%m-%d') if employee.created_at else 'غير محدد' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-edit"></i>
+                        آخر تحديث:
+                    </div>
+                    <div class="info-value">{{ employee.updated_at.strftime('%Y-%m-%d') if employee.updated_at else 'غير محدد' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents Preview -->
+        {% if employee.documents %}
+        <div class="info-section documents-preview">
+            <h3 class="section-title">
+                <i class="fas fa-folder-open"></i>
+                المستندات المرفقة
+            </h3>
+            
+            {% for document in employee.documents[:5] %}
+            <div class="document-item">
+                <div class="document-info">
+                    <i class="fas fa-file-alt"></i>
+                    <span>{{ document.document_type or 'مستند' }} - {{ document.issue_date.strftime('%Y-%m-%d') if document.issue_date else 'تاريخ غير محدد' }}</span>
+                </div>
+                <div>
+                    {% if document.expiry_date %}
+                        {% set days_remaining = (document.expiry_date - document.expiry_date.today()).days %}
+                        {% if days_remaining < 0 %}
+                            <span class="badge bg-danger">منتهي الصلاحية</span>
+                        {% elif days_remaining < 30 %}
+                            <span class="badge bg-warning">ينتهي قريباً</span>
+                        {% else %}
+                            <span class="badge bg-success">ساري</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Back Button -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('employee_portal.dashboard') }}" class="btn-back">
+                <i class="fas fa-arrow-right"></i>
+                العودة للوحة التحكم
+            </a>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Add smooth scrolling and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate sections on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all info sections
+            document.querySelectorAll('.info-section, .profile-main-card').forEach(function(section) {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(30px)';
+                section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(section);
+            });
+
+            // Add hover effects to info items
+            document.querySelectorAll('.info-item, .document-item').forEach(function(item) {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px) scale(1.02)';
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0) scale(1)';
+                });
+            });
+
+            // Add click animation to stat cards
+            document.querySelectorAll('.stat-card').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+
+            // Animate particles
+            document.querySelectorAll('.particle').forEach(function(particle, index) {
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+            });
+        });
+    </script>
 </body>
 </html>
