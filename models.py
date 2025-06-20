@@ -614,13 +614,14 @@ class SystemAudit(db.Model):
 class Vehicle(db.Model):
     """نموذج السيارة مع المعلومات الأساسية"""
     id = db.Column(db.Integer, primary_key=True)
-    plate_number = db.Column(db.String(20), nullable=False, unique=True)  # رقم اللوحة
+    plate_number = db.Column(db.String(20), nullable=False)  # رقم اللوحة - سيصبح فريد ضمن الشركة
     make = db.Column(db.String(50), nullable=False)  # الشركة المصنعة (تويوتا، نيسان، إلخ)
     model = db.Column(db.String(50), nullable=False)  # موديل السيارة
     year = db.Column(db.Integer, nullable=False)  # سنة الصنع
     color = db.Column(db.String(30), nullable=False)  # لون السيارة
     status = db.Column(db.String(30), nullable=False, default='available')  # الحالة: متاحة، مؤجرة، في المشروع، في الورشة، حادث
     driver_name = db.Column(db.String(100), nullable=True)  # اسم السائق
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     
     # تواريخ انتهاء الوثائق الهامة
     authorization_expiry_date = db.Column(db.Date)  # تاريخ انتهاء التفويض
@@ -632,6 +633,7 @@ class Vehicle(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # العلاقات
+    company = db.relationship('Company', back_populates='vehicles')
     rental_records = db.relationship('VehicleRental', back_populates='vehicle', cascade='all, delete-orphan')
     workshop_records = db.relationship('VehicleWorkshop', back_populates='vehicle', cascade='all, delete-orphan')
     project_assignments = db.relationship('VehicleProject', back_populates='vehicle', cascade='all, delete-orphan')
@@ -639,6 +641,11 @@ class Vehicle(db.Model):
     periodic_inspections = db.relationship('VehiclePeriodicInspection', back_populates='vehicle', cascade='all, delete-orphan')
     safety_checks = db.relationship('VehicleSafetyCheck', back_populates='vehicle', cascade='all, delete-orphan')
     accidents = db.relationship('VehicleAccident', back_populates='vehicle', cascade='all, delete-orphan')
+    
+    # إضافة قيد فريد مركب لرقم اللوحة ضمن الشركة
+    __table_args__ = (
+        db.UniqueConstraint('company_id', 'plate_number', name='unique_plate_per_company'),
+    )
     
     def __repr__(self):
         return f'<Vehicle {self.plate_number} {self.make} {self.model}>'
@@ -648,6 +655,7 @@ class VehicleRental(db.Model):
     """معلومات إيجار السيارة"""
     id = db.Column(db.Integer, primary_key=True)
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     start_date = db.Column(db.Date, nullable=False)  # تاريخ بداية الإيجار
     end_date = db.Column(db.Date)  # تاريخ نهاية الإيجار (قد يكون فارغا إذا كان الإيجار مستمرا)
     monthly_cost = db.Column(db.Float, nullable=False)  # قيمة الإيجار الشهري
