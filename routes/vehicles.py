@@ -23,6 +23,7 @@ from models import (
 )
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
+from utils.comprehensive_vehicle_export import export_comprehensive_vehicle_excel
 from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
 # from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 # from utils.workshop_report import generate_workshop_report_pdf
@@ -2413,24 +2414,49 @@ def export_workshop_to_pdf(id):
 @vehicles_bp.route('/<int:id>/export/excel')
 @login_required
 def export_vehicle_to_excel(id):
-    """تصدير بيانات السيارة إلى ملف Excel"""
+    """تصدير جميع بيانات أقسام المركبة إلى ملف Excel شامل"""
     from app import db
     from datetime import datetime
     from flask import send_file
     
     vehicle = Vehicle.query.get_or_404(id)
+    
+    # جمع جميع البيانات من كافة الأقسام
     workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
     rental_records = VehicleRental.query.filter_by(vehicle_id=id).order_by(VehicleRental.start_date.desc()).all()
+    project_records = VehicleProject.query.filter_by(vehicle_id=id).order_by(VehicleProject.assignment_date.desc()).all()
+    handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+    inspection_records = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
+    safety_check_records = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
+    accident_records = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
     
-    # إنشاء ملف Excel
-    excel_buffer = export_vehicle_excel(vehicle, workshop_records, rental_records)
+    # إنشاء ملف Excel شامل
+    excel_buffer = export_comprehensive_vehicle_excel(
+        vehicle, 
+        workshop_records=workshop_records,
+        rental_records=rental_records,
+        project_records=project_records,
+        handover_records=handover_records,
+        inspection_records=inspection_records,
+        safety_check_records=safety_check_records,
+        accident_records=accident_records
+    )
     
     # تسجيل الإجراء
-    log_audit('export', 'vehicle', id, f'تم تصدير بيانات السيارة {vehicle.plate_number} إلى Excel')
+    audit = SystemAudit(
+        action='export',
+        entity_type='vehicle',
+        entity_id=id,
+        details=f'تم تصدير بيانات السيارة {vehicle.plate_number}- إلى Excel'
+    )
+    db.session.add(audit)
+    db.session.commit()
+    print(f"تسجيل عملية: export - vehicle - تم تصدير بيانات السيارة {id}- {vehicle.plate_number} إلى Excel")
+    print(f"تم تسجيل العملية بنجاح: {audit.id}")
     
     return send_file(
         excel_buffer,
-        download_name=f'vehicle_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.xlsx',
+        download_name=f'comprehensive_vehicle_{vehicle.plate_number}_{datetime.now().strftime("%Y%m%d")}.xlsx',
         as_attachment=True,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
