@@ -427,6 +427,7 @@ class User(UserMixin, db.Model):
     
     # العلاقة مع صلاحيات المستخدم
     permissions = db.relationship('UserPermission', back_populates='user', cascade='all, delete-orphan')
+    company_permissions = db.relationship('CompanyPermission', back_populates='user', cascade='all, delete-orphan')
     
     # إضافة قيد فريد مركب للإيميل ضمن الشركة (ما عدا مالك النظام)
     __table_args__ = (

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة تحكم مالك النظام - نُظم{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-crown text-warning me-2"></i>
+                    لوحة تحكم مالك النظام
+                </h1>
+                <div class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ moment().format('YYYY-MM-DD') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-building fa-2x text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">إجمالي الشركات</div>
+                            <div class="h5 mb-0">{{ total_companies }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">الشركات النشطة</div>
+                            <div class="h5 mb-0">{{ active_companies }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">اشتراكات التجربة</div>
+                            <div class="h5 mb-0">{{ trial_companies }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-dollar-sign fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">الإيرادات الشهرية</div>
+                            <div class="h5 mb-0">{{ monthly_revenue }} ر.س</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        الإجراءات السريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{{ url_for('system_admin.create_company') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة شركة جديدة
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{{ url_for('system_admin.companies_list') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-list me-2"></i>
+                                إدارة الشركات
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{{ url_for('system_admin.subscriptions_management') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-credit-card me-2"></i>
+                                إدارة الاشتراكات
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{{ url_for('system_admin.system_reports') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                تقارير النظام
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities & Companies List -->
+    <div class="row">
+        <!-- Recent Companies -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        الشركات المسجلة حديثاً
+                    </h5>
+                    <a href="{{ url_for('system_admin.companies_list') }}" class="btn btn-sm btn-outline-primary">
+                        عرض الكل
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_companies %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>اسم الشركة</th>
+                                        <th>تاريخ التسجيل</th>
+                                        <th>نوع الاشتراك</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for company in recent_companies %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                    {{ company.name[0] }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">{{ company.name }}</div>
+                                                    <small class="text-muted">{{ company.contact_email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ company.created_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            {% if company.subscription %}
+                                                <span class="badge bg-{% if company.subscription.plan_type == 'trial' %}warning{% else %}success{% endif %}">
+                                                    {{ company.subscription.plan_type|title }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">غير محدد</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if company.status == 'active' %}success{% elif company.status == 'inactive' %}secondary{% else %}danger{% endif %}">
+                                                {{ company.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('system_admin.company_details', company_id=company.id) }}" 
+                                                   class="btn btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('system_admin.edit_company', company_id=company.id) }}" 
+                                                   class="btn btn-outline-secondary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-building fa-3x mb-3"></i>
+                            <p>لا توجد شركات مسجلة حديثاً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- System Alerts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>
+                        تنبيهات النظام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if system_alerts %}
+                        {% for alert in system_alerts %}
+                        <div class="alert alert-{% if alert.type == 'warning' %}warning{% elif alert.type == 'danger' %}danger{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-{% if alert.type == 'warning' %}exclamation-triangle{% elif alert.type == 'danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-2">
+                                    <h6 class="alert-heading">{{ alert.title }}</h6>
+                                    <p class="mb-0">{{ alert.message }}</p>
+                                    <hr>
+                                    <small class="text-muted">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <p>لا توجد تنبيهات جديدة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh dashboard every 5 minutes
+setInterval(function() {
+    location.reload();
+}, 300000);
+
+// Close alerts automatically after 10 seconds
+setTimeout(function() {
+    $('.alert').alert('close');
+}, 10000);
+</script>
+{% endblock %}

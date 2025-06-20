@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة تحكم مدير الشركة - نُظم{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-building text-primary me-2"></i>
+                        لوحة تحكم الشركة
+                    </h1>
+                    <p class="text-muted mb-0">{{ current_user.company.name }}</p>
+                </div>
+                <div class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>
+                    {{ moment().format('YYYY-MM-DD') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Status Alert -->
+    {% if current_user.company.subscription %}
+        {% if current_user.company.subscription.is_trial() %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-clock me-2"></i>
+                <div>
+                    <strong>فترة تجريبية:</strong>
+                    تنتهي فترتكم التجريبية في {{ current_user.company.subscription.days_remaining }} يوم.
+                    <a href="{{ url_for('company_admin.subscription_upgrade') }}" class="alert-link">ترقية الاشتراك</a>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% elif current_user.company.subscription.is_expiring_soon() %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <div>
+                    <strong>تنبيه الاشتراك:</strong>
+                    ينتهي اشتراككم في {{ current_user.company.subscription.days_remaining }} يوم.
+                    <a href="{{ url_for('company_admin.subscription_renewal') }}" class="alert-link">تجديد الاشتراك</a>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">الموظفون</div>
+                            <div class="h5 mb-0">{{ stats.employees_count }}</div>
+                            <small class="text-muted">من أصل {{ current_user.company.subscription.max_employees if current_user.company.subscription else '∞' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-car fa-2x text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">المركبات</div>
+                            <div class="h5 mb-0">{{ stats.vehicles_count }}</div>
+                            <small class="text-muted">من أصل {{ current_user.company.subscription.max_vehicles if current_user.company.subscription else '∞' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-tie fa-2x text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">المستخدمون</div>
+                            <div class="h5 mb-0">{{ stats.users_count }}</div>
+                            <small class="text-muted">من أصل {{ current_user.company.subscription.max_users if current_user.company.subscription else '∞' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-sitemap fa-2x text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">الأقسام</div>
+                            <div class="h5 mb-0">{{ stats.departments_count }}</div>
+                            <small class="text-muted">من أصل {{ current_user.company.subscription.max_departments if current_user.company.subscription else '∞' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        الإجراءات السريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a href="{{ url_for('employees.add') }}" class="btn btn-primary w-100 d-flex flex-column align-items-center py-3">
+                                <i class="fas fa-user-plus fa-2x mb-2"></i>
+                                <small>إضافة موظف</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a href="{{ url_for('vehicles.add') }}" class="btn btn-success w-100 d-flex flex-column align-items-center py-3">
+                                <i class="fas fa-car fa-2x mb-2"></i>
+                                <small>إضافة مركبة</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a href="{{ url_for('departments.add') }}" class="btn btn-info w-100 d-flex flex-column align-items-center py-3">
+                                <i class="fas fa-sitemap fa-2x mb-2"></i>
+                                <small>إضافة قسم</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a href="{{ url_for('company_admin.create_user') }}" class="btn btn-warning w-100 d-flex flex-column align-items-center py-3">
+                                <i class="fas fa-user-tie fa-2x mb-2"></i>
+                                <small>إضافة مستخدم</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary w-100 d-flex flex-column align-items-center py-3">
+                                <i class="fas fa-clock fa-2x mb-2"></i>
+                                <small>الحضور</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-6 mb-3">
+                            <a href="{{ url_for('salaries.index') }}" class="btn btn-dark w-100 d-flex flex-column align-items-center py-3">
+                                <i class="fas fa-money-bill fa-2x mb-2"></i>
+                                <small>الرواتب</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row">
+        <!-- Recent Activities -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        النشاطات الأخيرة
+                    </h5>
+                    <a href="#" class="btn btn-sm btn-outline-primary">
+                        عرض الكل
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                        <div class="timeline">
+                            {% for activity in recent_activities %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-{% if activity.action == 'create' %}success{% elif activity.action == 'update' %}warning{% elif activity.action == 'delete' %}danger{% else %}info{% endif %}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">{{ activity.action_description }}</h6>
+                                    <p class="timeline-text text-muted">{{ activity.details }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>{{ activity.user.name }}
+                                        <i class="fas fa-clock me-1 ms-2"></i>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-history fa-3x mb-3"></i>
+                            <p>لا توجد نشاطات حديثة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications & Alerts -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>
+                        التنبيهات والإشعارات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="alert alert-{% if notification.is_urgent %}danger{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-{% if notification.notification_type == 'expiry_warning' %}exclamation-triangle{% elif notification.notification_type == 'limit_reached' %}ban{% else %}info-circle{% endif %}"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-2">
+                                    <h6 class="alert-heading">{{ notification.title }}</h6>
+                                    <p class="mb-0">{{ notification.message }}</p>
+                                    <hr>
+                                    <small class="text-muted">{{ notification.sent_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <p>لا توجد تنبيهات جديدة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border-end">
+                                <div class="h4 text-success">{{ stats.active_employees }}</div>
+                                <small class="text-muted">موظف نشط</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="h4 text-primary">{{ stats.available_vehicles }}</div>
+                            <small class="text-muted">مركبة متاحة</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="h4 text-warning">{{ stats.pending_renewals }}</div>
+                                <small class="text-muted">تجديد معلق</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 text-info">{{ stats.monthly_salaries }}</div>
+                            <small class="text-muted">راتب شهري</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Employees & Vehicles -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        الموظفون الجدد
+                    </h5>
+                    <a href="{{ url_for('employees.index') }}" class="btn btn-sm btn-outline-primary">
+                        عرض الكل
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_employees %}
+                        {% for employee in recent_employees %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                {% if employee.profile_image %}
+                                    <img src="{{ url_for('static', filename='uploads/profiles/' + employee.profile_image) }}" 
+                                         class="rounded-circle" width="40" height="40" alt="{{ employee.name }}">
+                                {% else %}
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        {{ employee.name[0] if employee.name else 'م' }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="fw-medium">{{ employee.name }}</div>
+                                <small class="text-muted">{{ employee.position or 'غير محدد' }} - {{ employee.department.name if employee.department else 'غير محدد' }}</small>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-users fa-3x mb-3"></i>
+                            <p>لا يوجد موظفون جدد</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-car me-2"></i>
+                        المركبات الحديثة
+                    </h5>
+                    <a href="{{ url_for('vehicles.index') }}" class="btn btn-sm btn-outline-primary">
+                        عرض الكل
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_vehicles %}
+                        {% for vehicle in recent_vehicles %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="bg-success text-white rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="fw-medium">{{ vehicle.plate_number }}</div>
+                                <small class="text-muted">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.year }}</small>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-{% if vehicle.status == 'available' %}success{% elif vehicle.status == 'in_use' %}warning{% else %}secondary{% endif %}">
+                                    {{ vehicle.status|title }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-car fa-3x mb-3"></i>
+                            <p>لا توجد مركبات حديثة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--bs-border-color);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--bs-body-bg);
+}
+
+.timeline-content {
+    background: var(--bs-gray-100);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--bs-border-color);
+}
+
+.timeline-title {
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.timeline-text {
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+[data-bs-theme="dark"] .timeline-content {
+    background: var(--bs-gray-800);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh stats every 2 minutes
+setInterval(function() {
+    // Only reload if user is still on dashboard
+    if (window.location.pathname.includes('dashboard')) {
+        location.reload();
+    }
+}, 120000);
+
+// Close alerts after some time
+setTimeout(function() {
+    $('.alert').alert('close');
+}, 15000);
+</script>
+{% endblock %}
