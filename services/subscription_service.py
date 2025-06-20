@@ -2,7 +2,7 @@
 خدمة إدارة الاشتراكات والحدود للنظام Multi-Tenant
 """
 from datetime import datetime, timedelta
-from models import Company, CompanySubscription, SubscriptionPlan, SubscriptionNotification
+from models import Company, CompanySubscription, SubscriptionNotification
 from app import db
 import logging
 

@@ -34,10 +34,14 @@ def dashboard():
         ).count()
         
         # الاشتراكات المنتهية قريباً
-        expiring_soon = CompanySubscription.query.filter(
-            CompanySubscription.is_active == True,
-            CompanySubscription.days_remaining <= 7
-        ).all()
+        expiring_soon = []
+        try:
+            all_subscriptions = CompanySubscription.query.filter(
+                CompanySubscription.is_active == True
+            ).all()
+            expiring_soon = [sub for sub in all_subscriptions if sub.days_remaining <= 7]
+        except Exception as e:
+            logger.error(f"Error getting expiring subscriptions: {e}")
         
         return render_template('system_admin/dashboard.html',
                              total_companies=total_companies,

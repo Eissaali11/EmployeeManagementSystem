@@ -4,6 +4,15 @@ from app import db
 import enum
 import json
 
+class Module(enum.Enum):
+    """وحدات النظام المختلفة"""
+    EMPLOYEES = "employees"
+    VEHICLES = "vehicles" 
+    ATTENDANCE = "attendance"
+    SALARIES = "salaries"
+    DEPARTMENTS = "departments"
+    REPORTS = "reports"
+
 # نظام Multi-Tenant - نماذج الشركات والاشتراكات
 
 class Company(db.Model):
@@ -49,7 +58,7 @@ class Company(db.Model):
     employees = db.relationship('Employee', back_populates='company', lazy='dynamic')
     vehicles = db.relationship('Vehicle', back_populates='company', lazy='dynamic')
     departments = db.relationship('Department', back_populates='company', lazy='dynamic')
-    permissions = db.relationship('CompanyPermission', back_populates='company', lazy='dynamic')
+    subscription = db.relationship('CompanySubscription', back_populates='company', uselist=False, lazy=True)
     notifications = db.relationship('SubscriptionNotification', back_populates='company', lazy='dynamic')
     
     def get_days_remaining(self):
@@ -206,17 +215,6 @@ class CompanyPermission(db.Model):
     
     def __repr__(self):
         return f'<CompanyPermission {self.user.email} - {self.module}>'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    module_name = db.Column(db.String(50), nullable=False)  # employees, vehicles, attendance, etc.
-    permissions = db.Column(db.Text)  # JSON: {"read": true, "write": true, "delete": false, "export": true}
-    is_enabled = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # العلاقات
-    company = db.relationship('Company', back_populates='permissions')
     
     def get_permissions(self):
         """جلب الصلاحيات من JSON"""
