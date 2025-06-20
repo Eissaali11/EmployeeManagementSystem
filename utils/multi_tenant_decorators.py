@@ -90,7 +90,8 @@ def validate_company_access(company_id):
         return False
     
     # مالك النظام يمكنه الوصول لجميع الشركات
-    if current_user.user_type == UserType.SYSTEM_ADMIN:
+    user_type = getattr(current_user, 'user_type', None)
+    if (user_type and (str(user_type) == 'SYSTEM_ADMIN' or user_type == UserType.SYSTEM_ADMIN)):
         return True
     
     # المستخدمون الآخرون مقيدون بشركتهم
@@ -100,8 +101,15 @@ def filter_by_company(query, model_class):
     """
     تصفية الاستعلام حسب الشركة
     """
-    if not hasattr(g, 'company_id') or g.user_type == UserType.SYSTEM_ADMIN:
+    # مالك النظام يمكنه رؤية جميع البيانات
+    if (hasattr(g, 'user_type') and 
+        g.user_type and 
+        (str(g.user_type) == 'SYSTEM_ADMIN' or g.user_type == UserType.SYSTEM_ADMIN)):
         return query
+    
+    # إذا لم يحدد company_id، استخدم الشركة الرئيسية للتوافق
+    if not hasattr(g, 'company_id') or g.company_id is None:
+        g.company_id = 1
     
     if hasattr(model_class, 'company_id'):
         return query.filter(model_class.company_id == g.company_id)
