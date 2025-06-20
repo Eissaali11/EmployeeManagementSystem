@@ -340,32 +340,7 @@ def generate_weasy_basic_report(employee_id):
         </tr>
     </table>
     
-    <!-- سجلات أداء الموظف -->
-    <div class="section-header">سجلات أداء الموظف (آخر 10 سجلات)</div>
-    <table class="performance-table">
-        <thead>
-            <tr>
-                <th>ملاحظات</th>
-                <th>نوع السجل</th>
-                <th>التاريخ</th>
-                <th>رقم السجل</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="4">لا توجد سجلات</td>
-            </tr>
-        </tbody>
-    </table>
-    
-    <!-- الراتب الحالي -->
-    <div class="section-header">الراتب الحالي</div>
-    <table class="info-table">
-        <tr>
-            <td>إجمالي الراتب</td>
-            <td>{{ salary_str }}</td>
-        </tr>
-    </table>
+
     
     <div class="footer">
         تم إنتاج هذا التقرير في: {{ generation_date }}
