@@ -318,7 +318,7 @@ with app.app_context():
     from routes.attendance_dashboard import attendance_dashboard_bp
     from routes.workshop_reports import workshop_reports_bp
     from routes.employee_portal import employee_portal_bp
-    from routes.system_admin import system_admin_bp
+    from routes.system_admin import system_admin_bp, system_admin_alt_bp
     from routes.company_admin import company_admin_bp
     
     # تعطيل حماية CSRF لطرق معينة
@@ -343,6 +343,7 @@ with app.app_context():
     app.register_blueprint(workshop_reports_bp)
     app.register_blueprint(employee_portal_bp)
     app.register_blueprint(system_admin_bp)
+    app.register_blueprint(system_admin_alt_bp)
     app.register_blueprint(company_admin_bp, url_prefix='/company-admin')
     
     # إضافة دوال مساعدة لقوالب Jinja

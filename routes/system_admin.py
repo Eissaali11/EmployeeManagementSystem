@@ -13,8 +13,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 system_admin_bp = Blueprint('system_admin', __name__, url_prefix='/system')
+# إضافة blueprint آخر لدعم مسار system-admin
+system_admin_alt_bp = Blueprint('system_admin_alt', __name__, url_prefix='/system-admin')
 
+# إضافة نفس المسارات للبلوبرينت البديل
 @system_admin_bp.route('/dashboard')
+@system_admin_alt_bp.route('/dashboard')
 @login_required
 @system_owner_required
 def dashboard():
