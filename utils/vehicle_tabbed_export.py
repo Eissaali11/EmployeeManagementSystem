@@ -20,6 +20,9 @@ def create_vehicle_excel_with_tabs(vehicle,
     إنشاء ملف Excel شامل للسيارة مع تبويبات منفصلة لكل قسم
     """
     try:
+        print(f"Starting tabbed export for vehicle: {vehicle.plate_number if vehicle else 'None'}")
+        print(f"Workshop records: {len(workshop_records) if workshop_records else 0}")
+        print(f"Rental records: {len(rental_records) if rental_records else 0}")
         # إنشاء كتاب العمل
         wb = openpyxl.Workbook()
         
