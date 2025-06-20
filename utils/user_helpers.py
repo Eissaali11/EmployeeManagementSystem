@@ -421,8 +421,9 @@ def check_module_access(user: User, module: Module, permission: int = Permission
     if not user.is_active:
         return False
     
-    # المدير لديه كل الصلاحيات
-    if user.role == UserRole.ADMIN:
+    # مالك النظام لديه كل الصلاحيات
+    user_type = getattr(user, 'user_type', None)
+    if (user_type and (str(user_type) == 'SYSTEM_ADMIN' or user_type.name == 'SYSTEM_ADMIN')) or user.role == UserRole.ADMIN:
         return True
     
     # البحث عن صلاحيات الوحدة
