@@ -38,6 +38,10 @@ def generate_weasy_basic_report(employee_id):
             # تحديد مسارات الصور
             static_path = os.path.join(os.getcwd(), 'static')
             
+            # شعار النظام
+            logo_path = os.path.join(static_path, 'images', 'logo.png')
+            logo_url = f"file://{logo_path}" if os.path.exists(logo_path) else ""
+            
             profile_image_url = ""
             national_id_image_url = ""
             license_image_url = ""
@@ -118,15 +122,33 @@ def generate_weasy_basic_report(employee_id):
         }
         
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
+            padding: 10px 0;
+        }
+        
+        .header-logo {
+            text-align: right;
+            flex: 1;
+        }
+        
+        .header-logo img {
+            width: 80px;
+            height: auto;
         }
         
         .main-title {
             font-size: 20px;
             font-weight: bold;
             color: #1a5490;
-            margin-bottom: 20px;
+            text-align: center;
+            flex: 2;
+        }
+        
+        .header-spacer {
+            flex: 1;
         }
         
         .images-section {
@@ -243,7 +265,15 @@ def generate_weasy_basic_report(employee_id):
 </head>
 <body>
     <div class="header">
+        <div class="header-logo">
+            {% if logo_url %}
+                <img src="{{ logo_url }}" alt="شعار نُظم">
+            {% else %}
+                <div style="width: 80px; height: 60px; background-color: #4a90b8; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">نُظم</div>
+            {% endif %}
+        </div>
         <div class="main-title">تقرير المعلومات الأساسية للموظف</div>
+        <div class="header-spacer"></div>
     </div>
     
     <!-- قسم الصور -->
@@ -345,6 +375,7 @@ def generate_weasy_basic_report(employee_id):
             # رندر HTML مع البيانات
             html_content = render_template_string(html_template,
                 employee=employee,
+                logo_url=logo_url,
                 profile_image_url=profile_image_url,
                 national_id_image_url=national_id_image_url,
                 license_image_url=license_image_url,
