@@ -624,22 +624,22 @@ def upload_image(id):
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def basic_report(id):
-    """تقرير المعلومات الأساسية للموظف مع الصور"""
+    """تقرير المعلومات الأساسية للموظف مع الصور باللغة العربية"""
     try:
-        from utils.employee_comprehensive_basic_report import generate_comprehensive_basic_report
+        from utils.employee_weasy_basic_report import generate_weasy_basic_report
         
-        pdf_buffer, error = generate_comprehensive_basic_report(id)
+        pdf_buffer, error = generate_weasy_basic_report(id)
         if pdf_buffer:
             employee = Employee.query.get_or_404(id)
             current_date = datetime.now().strftime('%Y%m%d')
-            filename = f'employee_basic_report_{employee.employee_id}_{current_date}.pdf'
+            filename = f'employee_basic_report_designed_{employee.employee_id}_{current_date}.pdf'
             
             # تسجيل الإجراء
             audit = SystemAudit(
                 action='export',
                 entity_type='employee_basic_report',
                 entity_id=employee.id,
-                details=f'تم تصدير التقرير الأساسي للموظف: {employee.name} مع الصور'
+                details=f'تم تصدير التقرير الأساسي المصمم للموظف: {employee.name} مع الصور'
             )
             db.session.add(audit)
             db.session.commit()
