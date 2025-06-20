@@ -30,11 +30,8 @@ def login():
             flash('الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'danger')
             return redirect(url_for('auth.login'))
         
-        try:
-            # التحقق من صحة البريد الإلكتروني
-            valid_email = validate_email(email)
-            email = valid_email.email
-        except EmailNotValidError:
+        # التحقق من صحة البريد الإلكتروني (مرن للحسابات الإدارية)
+        if '@' not in email or '.' not in email:
             flash('البريد الإلكتروني غير صالح', 'danger')
             return redirect(url_for('auth.login'))
         
