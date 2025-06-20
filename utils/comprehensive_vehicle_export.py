@@ -431,7 +431,8 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
         # إنشاء ملف بسيط في حالة الخطأ باستخدام openpyxl فقط
         wb_simple = openpyxl.Workbook()
         ws_simple = wb_simple.active
-        ws_simple.title = "معلومات السيارة"
+        if ws_simple:
+            ws_simple.title = "معلومات السيارة"
         
         # إضافة البيانات الأساسية
         headers = ['البيان', 'القيمة']
@@ -444,13 +445,14 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
         ]
         
         # كتابة العناوين
-        for col_idx, header in enumerate(headers, 1):
-            ws_simple.cell(row=1, column=col_idx, value=header)
-        
-        # كتابة البيانات
-        for row_idx, row_data in enumerate(data, 2):
-            for col_idx, value in enumerate(row_data, 1):
-                ws_simple.cell(row=row_idx, column=col_idx, value=value)
+        if ws_simple:
+            for col_idx, header in enumerate(headers, 1):
+                ws_simple.cell(row=1, column=col_idx, value=header)
+            
+            # كتابة البيانات
+            for row_idx, row_data in enumerate(data, 2):
+                for col_idx, value in enumerate(row_data, 1):
+                    ws_simple.cell(row=row_idx, column=col_idx, value=value)
         
         buffer = BytesIO()
         wb_simple.save(buffer)
