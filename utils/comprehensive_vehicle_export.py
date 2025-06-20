@@ -62,10 +62,7 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
             ["الموديل", vehicle.model or ""],
             ["سنة الصنع", str(vehicle.year) if vehicle.year else ""],
             ["اللون", vehicle.color or ""],
-            ["رقم الهيكل", vehicle.chassis_number or ""],
-            ["رقم المحرك", vehicle.engine_number or ""],
-            ["نوع الوقود", vehicle.fuel_type or ""],
-            ["عداد المسافات", str(vehicle.mileage) if vehicle.mileage else ""],
+
             ["السائق الحالي", vehicle.driver_name or "غير محدد"],
             ["الحالة", {
                 'available': 'متاحة',

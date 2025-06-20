@@ -2430,8 +2430,9 @@ def export_vehicle_to_excel(id):
     safety_check_records = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
     accident_records = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
     
-    # إنشاء ملف Excel شامل
-    excel_buffer = export_comprehensive_vehicle_excel(
+    # إنشاء ملف Excel شامل مع تبويبات منفصلة
+    from utils.vehicle_complete_export import create_comprehensive_vehicle_export
+    excel_buffer = create_comprehensive_vehicle_export(
         vehicle, 
         workshop_records=workshop_records,
         rental_records=rental_records,
