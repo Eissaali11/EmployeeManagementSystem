@@ -278,11 +278,16 @@
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <a href="{{ url_for('users.confirm_delete_permission', user_id=user.id, permission_id=perm.id) }}" 
-                                                           class="btn btn-outline-danger btn-sm" 
-                                                           title="حذف صلاحية {{ module_names.get(perm.module.name, perm.module.value) }}">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
+                                                        <form method="POST" action="{{ url_for('users.delete_permission', user_id=user.id, permission_id=perm.id) }}" 
+                                                              style="display: inline;" 
+                                                              onsubmit="return confirm('هل أنت متأكد من حذف صلاحية {{ module_names.get(perm.module.name, perm.module.value) }}؟')">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                            <button type="submit" 
+                                                                    class="btn btn-outline-danger btn-sm" 
+                                                                    title="حذف صلاحية {{ module_names.get(perm.module.name, perm.module.value) }}">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 </div>
                                                 {% endfor %}
