@@ -1,0 +1,453 @@
+ا يُسمى بنظام "Multi-Tenant" أو الإيجار المتعدد. إليك كيف يمكن تطبيقه:
+
+الهيكل المقترح:
+1. جدول الشركات (Companies)
+معرف الشركة
+اسم الشركة
+معلومات الاتصال
+تاريخ الإنشاء
+حالة الشركة (نشط/معطل)
+2. تعديل جدول المستخدمين
+إضافة حقل company_id لربط كل مستخدم بشركة
+إضافة حقل parent_user_id لتحديد من أنشأ هذا المستخدم
+تحديد نوع المستخدم (admin شركة، موظف عادي)
+3. نظام الصلاحيات المتدرج
+مدير الشركة الرئيسي: يرى جميع بيانات شركته ويمكنه إنشاء مستخدمين
+المستخدمون المنشأون: يرون فقط البيانات المخصصة لهم أو التي أنشأوها
+فلترة البيانات: جميع الاستعلامات تتضمن company_id تلقائياً
+4. المزايا:
+عزل كامل للبيانات بين الشركات
+إدارة مستقلة لكل شركة لمستخدميها
+مرونة في تحديد الصلاحيات
+أمان عالي في منع تسرب البيانات
+5. التطبيق:
+كل شركة تحصل على مساحة منفصلة تماماً
+المدير يحدد من يرى ماذا داخل شركته
+النظام يضمن عدم رؤية بيانات الشركات الأخرى
+هذا النظام سيحتاج تعديلات على قاعدة البيانات والصلاحيات، لكنه قابل للتطبيق بالكامل في النظام الحالي. هل تريد المضي قدماً في تطبيق هذا النظام؟
+
+هل يستطيع اضافة مستخدمين خاصة بي شركته
+
+17 minutes ago
+EA
+
+skrkhtan75
+نعم، تماماً! مدير الشركة يستطيع إضافة مستخدمين خاصين بشركته. إليك كيف سيعمل النظام:
+
+صلاحيات مدير الشركة:
+1. إنشاء مستخدمين جدد
+إضافة موظفين لشركته
+تحديد أسماء المستخدمين وكلمات المرور
+تعيين الأدوار والصلاحيات لكل مستخدم
+2. إدارة المستخدمين الحاليين
+تعديل بيانات المستخدمين
+تفعيل أو إلغاء تفعيل الحسابات
+إعادة تعيين كلمات المرور
+حذف المستخدمين عند الحاجة
+3. تحديد الصلاحيات
+صلاحيات الموظفين: مشاهدة، إضافة، تعديل، حذف
+صلاحيات الأقسام: الموارد البشرية، المركبات، الحضور، الرواتب
+مستويات الوصول: بيانات شخصية فقط، بيانات القسم، بيانات الشركة كاملة
+4. مراقبة النشاطات
+رؤية تسجيل دخول المستخدمين
+متابعة العمليات التي يقومون بها
+تقارير عن استخدام النظام
+5. عزل البيانات
+كل شركة ترى بياناتها فقط
+المستخدمون يرون ما يُسمح لهم به فقط
+حماية كاملة من تسرب بيانات الشركات الأخرى
+هذا يعني أن كل شركة ستكون لها إدارة مستقلة تماماً لمستخدميها وبياناتها. هل تريد تطبيق هذا النظام؟
+
+وكيف نستطيع انشاء حساب مالك النظام لي يقوم برئيات كافة بينات مستخدمين الشركات وكافة بينات النظام بحيث يستطيع انشاء حساب مدير شركة
+
+14 minutes ago
+EA
+
+skrkhtan75
+ممتاز! هذا يحتاج إلى نظام هرمي بثلاث مستويات. إليك الهيكل الكامل:
+
+هيكل النظام المقترح:
+1. مستوى النظام العام (Super Admin)
+مالك النظام: يرى ويدير كل شيء
+الصلاحيات:
+إنشاء حسابات مديري الشركات
+رؤية جميع بيانات كل الشركات
+إدارة النظام بالكامل
+إحصائيات شاملة عن جميع الشركات
+النسخ الاحتياطي واستعادة البيانات
+2. مستوى الشركة (Company Admin)
+مدير الشركة: يدير شركته فقط
+الصلاحيات:
+رؤية بيانات شركته فقط
+إنشاء مستخدمين لشركته
+تحديد صلاحيات موظفيه
+إدارة أقسام شركته
+3. مستوى الموظف (Employee)
+موظف الشركة: يرى ما يُسمح له به
+الصلاحيات:
+بيانات محددة حسب ما يحدده مدير الشركة
+قد يكون قراءة فقط أو تعديل محدود
+جدول الأدوار:
+- system_admin (مالك النظام)
+- company_admin (مدير شركة) 
+- employee (موظف)
+جدول المؤسسات:
+- id
+- name (اسم الشركة)
+- admin_user_id (مدير الشركة)
+- status (نشط/معطل)
+- created_at
+هذا النظام يضمن:
+
+مالك النظام يحكم كل شيء
+كل شركة معزولة عن الأخرى
+مرونة كاملة في إدارة الصلاحيات
+هل تريد تطبيق هذا النظام الهرمي؟
+
+هل نستطيع تحديد الاقسام الصفحات التي يستطيع الوصول اليها كل مدير شركة على حدة
+
+13 minutes ago
+EA
+
+skrkhtan75
+نعم، تماماً! يمكن تحديد الأقسام والصفحات لكل مدير شركة بشكل منفصل ومرن جداً. إليك كيف:
+
+نظام التحكم في الوصول للصفحات:
+1. جدول صلاحيات الشركات (Company Permissions)
+- company_id (معرف الشركة)
+- module_name (اسم القسم: employees, vehicles, attendance, etc.)
+- permissions (read, write, delete, export)
+- is_enabled (مفعل/معطل)
+2. الأقسام القابلة للتحكم:
+إدارة الموظفين (employees)
+إدارة المركبات (vehicles)
+نظام الحضور (attendance)
+إدارة الرواتب (salaries)
+إدارة الأقسام (departments)
+التقارير (reports)
+بوابة الموظف (employee_portal)
+3. مستويات الصلاحيات:
+عرض فقط (read_only)
+إضافة وتعديل (read_write)
+حذف (delete)
+تصدير (export)
+إدارة كاملة (full_access)
+4. التحكم بالصفحات الفرعية:
+تحديد صفحات معينة داخل كل قسم
+إخفاء أزرار معينة (إضافة، حذف، تصدير)
+تخصيص القوائم والروابط
+5. واجهة التحكم:
+لمالك النظام: تحديد أقسام كل شركة عند إنشائها
+لمدير الشركة: يرى فقط الأقسام المسموحة له
+حفظ تلقائي: للتفضيلات والإعدادات
+هذا يعني أن شركة قد تحتاج فقط إدارة الموظفين والحضور، بينما أخرى تحتاج كل الأقسام. هل تريد تطبيق هذا النظام المرن؟
+
+اكتب خطة شاملة لي التنفيذ
+
+11 minutes ago
+EA
+
+skrkhtan75
+خطة شاملة لتطبيق نظام Multi-Tenant للشركات
+المرحلة الأولى: تصميم قاعدة البيانات
+1. إنشاء الجداول الجديدة
+-- جدول الشركات
+CREATE TABLE companies (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact_email VARCHAR(100),
+    contact_phone VARCHAR(20),
+    address TEXT,
+    status VARCHAR(20) DEFAULT 'active',
+    created_at DATETIME,
+    updated_at DATETIME
+);
+-- جدول صلاحيات الشركات
+CREATE TABLE company_permissions (
+    id INTEGER PRIMARY KEY,
+    company_id INTEGER,
+    module_name VARCHAR(50),
+    permissions TEXT, -- JSON: {"read": true, "write": true, "delete": false}
+    is_enabled BOOLEAN DEFAULT true,
+    created_at DATETIME
+);
+-- جدول أنواع المستخدمين
+CREATE TABLE user_types (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(50), -- system_admin, company_admin, employee
+    description TEXT
+);
+2. تعديل الجداول الموجودة
+-- تعديل جدول المستخدمين
+ALTER TABLE user ADD COLUMN company_id INTEGER;
+ALTER TABLE user ADD COLUMN user_type_id INTEGER DEFAULT 3; -- employee
+ALTER TABLE user ADD COLUMN parent_user_id INTEGER; -- من أنشأ هذا المستخدم
+ALTER TABLE user ADD COLUMN created_by INTEGER;
+-- تعديل جدول الموظفين
+ALTER TABLE employee ADD COLUMN company_id INTEGER;
+-- تعديل جدول المركبات
+ALTER TABLE vehicle ADD COLUMN company_id INTEGER;
+-- إضافة company_id لكل الجداول الرئيسية
+ALTER TABLE department ADD COLUMN company_id INTEGER;
+ALTER TABLE attendance ADD COLUMN company_id INTEGER;
+ALTER TABLE salary ADD COLUMN company_id INTEGER;
+المرحلة الثانية: إنشاء النماذج (Models)
+1. نموذج الشركة
+class Company(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    contact_email = db.Column(db.String(100))
+    contact_phone = db.Column(db.String(20))
+    address = db.Column(db.Text)
+    status = db.Column(db.String(20), default='active')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    users = db.relationship('User', back_populates='company')
+    employees = db.relationship('Employee', back_populates='company')
+    permissions = db.relationship('CompanyPermission', back_populates='company')
+2. نموذج صلاحيات الشركة
+class CompanyPermission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    module_name = db.Column(db.String(50), nullable=False)
+    permissions = db.Column(db.Text) # JSON
+    is_enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+3. تعديل نموذج المستخدم
+class User(UserMixin, db.Model):
+    # الحقول الموجودة...
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    user_type_id = db.Column(db.Integer, default=3) # 1=system_admin, 2=company_admin, 3=employee
+    parent_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # العلاقات
+    company = db.relationship('Company', back_populates='users')
+    created_users = db.relationship('User', remote_side=[id])
+المرحلة الثالثة: نظام المصادقة والصلاحيات
+1. دالة التحقق من الصلاحيات
+def check_company_permission(user, module_name, permission_type='read'):
+    if user.user_type_id == 1:  # system_admin
+        return True
+    
+    if not user.company_id:
+        return False
+    
+    permission = CompanyPermission.query.filter_by(
+        company_id=user.company_id,
+        module_name=module_name,
+        is_enabled=True
+    ).first()
+    
+    if not permission:
+        return False
+    
+    perms = json.loads(permission.permissions)
+    return perms.get(permission_type, False)
+2. Decorator للصلاحيات
+def require_permission(module_name, permission_type='read'):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not check_company_permission(current_user, module_name, permission_type):
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+3. فلتر البيانات حسب الشركة
+def get_company_data(model, user):
+    if user.user_type_id == 1:  # system_admin
+        return model.query
+    return model.query.filter_by(company_id=user.company_id)
+المرحلة الرابعة: واجهات الإدارة
+1. لوحة مالك النظام
+إدارة الشركات (إضافة، تعديل، حذف)
+تحديد صلاحيات كل شركة
+إنشاء حسابات مديري الشركات
+عرض إحصائيات شاملة
+2. لوحة مدير الشركة
+إدارة مستخدمي شركته
+عرض الأقسام المسموحة فقط
+تحديد صلاحيات موظفيه
+تقارير خاصة بشركته
+3. واجهة الموظف
+عرض البيانات المسموحة فقط
+التفاعل مع الأقسام حسب الصلاحيات
+المرحلة الخامسة: تعديل الـ Routes
+1. إضافة فلاتر الشركة لكل route
+@employees_bp.route('/')
+@login_required
+@require_permission('employees', 'read')
+def index():
+    employees = get_company_data(Employee, current_user).all()
+    return render_template('employees/index.html', employees=employees)
+2. routes إدارة الشركات
+@admin_bp.route('/companies')
+@login_required
+@require_system_admin
+def companies():
+    companies = Company.query.all()
+    return render_template('admin/companies.html', companies=companies)
+المرحلة السادسة: قوائم التنقل الديناميكية
+1. إخفاء الأقسام غير المسموحة
+def get_allowed_modules(user):
+    if user.user_type_id == 1:  # system_admin
+        return ['employees', 'vehicles', 'attendance', 'salaries', 'departments', 'reports']
+    
+    permissions = CompanyPermission.query.filter_by(
+        company_id=user.company_id,
+        is_enabled=True
+    ).all()
+    
+    return [p.module_name for p in permissions if json.loads(p.permissions).get('read', False)]
+المرحلة السابعة: الأمان والحماية
+1. منع تسرب البيانات
+فحص company_id في كل استعلام
+منع الوصول المباشر للـ URLs
+تشفير المعرفات الحساسة
+2. تسجيل العمليات (Audit Log)
+تسجيل كل العمليات مع معرف الشركة
+مراقبة محاولات الوصول غير المصرح بها
+المرحلة الثامنة: النشر والاختبار
+1. اختبار النظام
+اختبار عزل البيانات
+اختبار الصلاحيات
+اختبار الأمان
+2. إعداد البيانات الأولية
+إنشاء حساب مالك النظام
+إنشاء الصلاحيات الافتراضية
+إعداد شركة تجريبية
+هل تريد البدء في تطبيق هذه الخطة؟
+
+اكتب الخطة نصيا
+
+11 minutes ago
+EA
+
+skrkhtan75
+خطة شاملة لتطبيق نظام Multi-Tenant للشركات
+المرحلة الأولى: تصميم قاعدة البيانات (أسبوع 1)
+إنشاء الجداول الجديدة
+إنشاء جدول الشركات companies مع الحقول الأساسية كالاسم والبيانات والحالة
+إنشاء جدول صلاحيات الشركات company_permissions لتحديد ما تستطيع كل شركة الوصول إليه
+إنشاء جدول أنواع المستخدمين user_types لتصنيف المستخدمين إلى مالك النظام ومدير شركة وموظف
+تعديل الجداول الموجودة
+إضافة حقل company_id لجدول المستخدمين لربط كل مستخدم بشركة محددة
+إضافة حقل user_type_id لتحديد نوع المستخدم
+إضافة حقل parent_user_id لمعرفة من أنشأ هذا المستخدم
+إضافة company_id لجميع الجداول الرئيسية مثل الموظفين والمركبات والأقسام والحضور والرواتب
+المرحلة الثانية: إنشاء النماذج والعلاقات (أسبوع 2)
+نموذج الشركة
+إنشاء كلاس Company مع جميع الحقول المطلوبة
+تعريف العلاقات مع المستخدمين والموظفين والصلاحيات
+إضافة دوال مساعدة للتحقق من حالة الشركة
+نموذج صلاحيات الشركة
+إنشاء كلاس CompanyPermission لحفظ صلاحيات كل شركة
+استخدام JSON لحفظ الصلاحيات التفصيلية للقراءة والكتابة والحذف
+ربط الصلاحيات بالوحدات modules مثل الموظفين والمركبات
+تعديل النماذج الموجودة
+إضافة company_id لجميع النماذج الأساسية
+تعديل نموذج المستخدم ليشمل نوع المستخدم والشركة التابع لها
+إضافة العلاقات الجديدة بين الجداول
+المرحلة الثالثة: نظام المصادقة والصلاحيات (أسبوع 3)
+دوال التحقق من الصلاحيات
+إنشاء دالة check_company_permission للتحقق من صلاحية المستخدم للوصول لوحدة معينة
+إنشاء decorator require_permission لحماية الصفحات
+إنشاء دالة get_company_data لفلترة البيانات حسب الشركة
+مستويات الصلاحيات
+مالك النظام: يرى جميع البيانات ويدير كل الشركات
+مدير الشركة: يرى بيانات شركته فقط ويدير موظفيه
+الموظف: يرى البيانات المسموحة له فقط
+فلترة البيانات
+تطبيق فلتر company_id تلقائياً على جميع الاستعلامات
+منع تسرب بيانات الشركات الأخرى
+ضمان عزل كامل للبيانات
+المرحلة الرابعة: واجهات الإدارة (أسبوع 4)
+لوحة مالك النظام
+صفحة إدارة الشركات مع إمكانية الإضافة والتعديل والحذف
+صفحة تحديد صلاحيات كل شركة
+صفحة إنشاء حسابات مديري الشركات
+لوحة إحصائيات شاملة لجميع الشركات
+لوحة مدير الشركة
+صفحة إدارة مستخدمي الشركة
+عرض الأقسام المسموحة فقط
+تحديد صلاحيات الموظفين
+تقارير خاصة بالشركة
+واجهة الموظف
+عرض البيانات المسموحة حسب الصلاحيات
+إخفاء الأزرار والوظائف غير المسموحة
+تخصيص القوائم حسب النوع
+المرحلة الخامسة: تعديل المسارات (أسبوع 5)
+إضافة فلاتر الشركة
+تعديل جميع مسارات الموظفين لتشمل فلتر company_id
+تعديل مسارات المركبات والحضور والرواتب
+تطبيق نظام الصلاحيات على كل مسار
+مسارات إدارة الشركات
+إنشاء مسارات خاصة بإدارة الشركات
+مسارات تحديد الصلاحيات
+مسارات إنشاء مديري الشركات
+حماية المسارات
+تطبيق decorators الصلاحيات على جميع المسارات
+منع الوصول المباشر للبيانات غير المصرح بها
+إعادة توجيه المستخدمين غير المخولين
+المرحلة السادسة: القوائم الديناميكية (أسبوع 6)
+قوائم التنقل المخصصة
+إنشاء دالة get_allowed_modules لتحديد الوحدات المسموحة لكل مستخدم
+إخفاء الأقسام غير المسموحة من القائمة الجانبية
+تخصيص الصفحة الرئيسية حسب نوع المستخدم
+الأزرار والوظائف
+إخفاء أزرار الإضافة والحذف والتعديل حسب الصلاحيات
+تخصيص أزرار التصدير والتقارير
+عرض رسائل واضحة عند عدم وجود صلاحية
+المرحلة السابعة: الأمان والحماية (أسبوع 7)
+منع تسرب البيانات
+فحص company_id في كل استعلام
+منع الوصول المباشر للمعرفات
+تشفير البيانات الحساسة
+تسجيل العمليات
+تسجيل جميع العمليات مع معرف الشركة
+مراقبة محاولات الوصول غير المصرح بها
+تقارير أمنية دورية
+النسخ الاحتياطي
+نسخ احتياطية منفصلة لكل شركة
+استعادة بيانات شركة محددة عند الحاجة
+المرحلة الثامنة: النشر والاختبار (أسبوع 8)
+اختبار النظام
+اختبار عزل البيانات بين الشركات
+اختبار جميع مستويات الصلاحيات
+اختبار الأمان ومنع التسرب
+إعداد البيانات الأولية
+إنشاء حساب مالك النظام الأول
+إعداد الصلاحيات الافتراضية
+إنشاء شركة تجريبية للاختبار
+التدريب والتوثيق
+دليل استخدام لمالك النظام
+دليل استخدام لمديري الشركات
+دليل الصلاحيات والأمان
+متطلبات التنفيذ
+التقنية
+تعديل قاعدة البيانات الحالية
+إضافة migration scripts للبيانات الموجودة
+تحديث جميع النماذج والمسارات
+الاختبار
+اختبار الوحدة لكل دالة جديدة
+اختبار التكامل للنظام كاملاً
+اختبار الأمان والصلاحيات
+النشر
+نسخة احتياطية كاملة قبل التطبيق
+نشر تدريجي مع مراقبة الأداء
+خطة طوارئ للعودة للنظام السابق
+هذه الخطة تضمن تطبيق نظام multi-tenant آمن ومرن يلبي جميع متطلباتك.
+
+معا تحديد فترات بداية الاشتراك ونهاية الاشتراك
+
+10 minutes ago
+EA
+
+skrkhtan75
+ممتاز! إضافة نظام الاشتراكات سيجعل النظام أكثر احترافية. إليك كيف يمكن تطبيقه:
+
+إضافة نظام الاشتراكات للشركات
+إضافة حقول الاشتراك لجدول الشر

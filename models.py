@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, date
 from flask_login import UserMixin
 from app import db
 import enum
+import json
 
 class Department(db.Model):
     """Department model for organizing employees"""
