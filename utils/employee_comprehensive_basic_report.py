@@ -129,8 +129,8 @@ def generate_comprehensive_basic_report(employee_id):
             # البحث عن الموظف باستخدام SQL مباشر
             employee_query = text("""
                 SELECT e.*, d.name as department_name 
-                FROM employees e 
-                LEFT JOIN departments d ON e.department_id = d.id 
+                FROM employee e 
+                LEFT JOIN department d ON e.department_id = d.id 
                 WHERE e.id = :employee_id
             """)
             
@@ -260,7 +260,7 @@ def generate_comprehensive_basic_report(employee_id):
             # حساب الإحصائيات من قاعدة البيانات
             try:
                 # حساب عدد الوثائق
-                documents_query = text("SELECT COUNT(*) as count FROM documents WHERE employee_id = :emp_id")
+                documents_query = text("SELECT COUNT(*) as count FROM document WHERE employee_id = :emp_id")
                 docs_result = db.session.execute(documents_query, {'emp_id': employee_id}).fetchone()
                 total_documents = docs_result[0] if docs_result else 0
                 
@@ -270,7 +270,7 @@ def generate_comprehensive_basic_report(employee_id):
                 total_attendances = att_result[0] if att_result else 0
                 
                 # حساب عدد سجلات الراتب
-                salary_query = text("SELECT COUNT(*) as count FROM salaries WHERE employee_id = :emp_id")
+                salary_query = text("SELECT COUNT(*) as count FROM salary WHERE employee_id = :emp_id")
                 sal_result = db.session.execute(salary_query, {'emp_id': employee_id}).fetchone()
                 total_salaries = sal_result[0] if sal_result else 0
             except:
