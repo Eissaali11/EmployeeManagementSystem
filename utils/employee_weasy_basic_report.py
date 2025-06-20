@@ -330,14 +330,7 @@ def generate_weasy_basic_report(employee_id):
             <td>تاريخ التعيين</td>
             <td>{{ join_date_str }}</td>
         </tr>
-        <tr>
-            <td>الراتب</td>
-            <td>{{ salary_str }}</td>
-        </tr>
-        <tr>
-            <td>أيام الإجازة المتبقية</td>
-            <td>غير محدد</td>
-        </tr>
+
     </table>
     
 
