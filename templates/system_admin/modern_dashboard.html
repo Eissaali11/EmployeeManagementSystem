@@ -1,0 +1,981 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة تحكم مالك النظام - نُظم{% endblock %}
+
+{% block extra_head %}
+<link href="/static/css/modern-dashboard.css" rel="stylesheet">
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --dark-gradient: linear-gradient(135deg, #232526 0%, #414345 100%);
+        --glass-bg: rgba(255, 255, 255, 0.08);
+        --glass-border: rgba(255, 255, 255, 0.18);
+        --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.18);
+        --neon-blue: #00f5ff;
+        --neon-purple: #bf00ff;
+        --neon-green: #39ff14;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* خلفية متحركة مع جزيئات */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -2;
+        animation: bgShift 20s ease-in-out infinite;
+    }
+
+    @keyframes bgShift {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+
+    /* شبكة ديناميكية */
+    .grid-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+        pointer-events: none;
+        z-index: -1;
+        animation: gridMove 30s linear infinite;
+    }
+
+    @keyframes gridMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+
+    /* كاردات زجاجية محسنة */
+    .modern-card {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 32px;
+        margin-bottom: 24px;
+        box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modern-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+            transparent 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            transparent 100%);
+        transition: left 0.6s ease;
+        z-index: 1;
+    }
+
+    .modern-card:hover::before {
+        left: 100%;
+    }
+
+    .modern-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 
+            0 16px 48px rgba(0, 0, 0, 0.4),
+            0 0 30px rgba(255, 255, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* إحصائيات مميزة */
+    .stat-card {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        border-radius: 20px 20px 0 0;
+    }
+
+    .stat-card.primary::after { background: var(--primary-gradient); }
+    .stat-card.success::after { background: var(--success-gradient); }
+    .stat-card.warning::after { background: var(--warning-gradient); }
+    .stat-card.secondary::after { background: var(--secondary-gradient); }
+
+    .stat-number {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+        line-height: 1;
+        text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+    }
+
+    .stat-card.success .stat-number {
+        background: var(--success-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-card.warning .stat-number {
+        background: var(--warning-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-card.secondary .stat-number {
+        background: var(--secondary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .stat-icon {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        font-size: 1.5rem;
+        opacity: 0.3;
+        color: #fff;
+    }
+
+    /* Header مطور */
+    .dashboard-header {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 40px;
+        margin-bottom: 32px;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            rgba(102, 126, 234, 0.1) 90deg,
+            transparent 180deg,
+            rgba(191, 0, 255, 0.1) 270deg,
+            transparent 360deg
+        );
+        animation: rotate 20s linear infinite;
+        z-index: -1;
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .dashboard-title {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #667eea 50%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+        text-shadow: 0 0 50px rgba(102, 126, 234, 0.3);
+    }
+
+    .dashboard-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.2rem;
+        font-weight: 400;
+        margin: 0;
+    }
+
+    /* أزرار الإجراءات السريعة */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin: 32px 0;
+    }
+
+    .action-btn {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 28px;
+        text-decoration: none;
+        color: #fff;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+            transparent 0%,
+            rgba(102, 126, 234, 0.1) 50%,
+            transparent 100%);
+        transition: left 0.6s ease;
+        z-index: 1;
+    }
+
+    .action-btn:hover::before {
+        left: 100%;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 
+            0 12px 40px rgba(0, 0, 0, 0.3),
+            0 0 30px rgba(102, 126, 234, 0.2);
+        border-color: rgba(102, 126, 234, 0.3);
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .action-content {
+        flex-grow: 1;
+        z-index: 2;
+        position: relative;
+    }
+
+    .action-content h5 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #fff 0%, #667eea 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .action-content p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .action-icon {
+        font-size: 2.5rem;
+        opacity: 0.7;
+        z-index: 2;
+        position: relative;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* النشاط الأخير */
+    .recent-activity {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 32px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        padding: 20px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin: 0 -16px;
+        padding: 20px 16px;
+    }
+
+    .activity-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 16px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .activity-content {
+        flex-grow: 1;
+        color: #fff;
+    }
+
+    .activity-text {
+        margin-bottom: 4px;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .activity-time {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* تحسينات إضافية */
+    .container-fluid {
+        padding: 24px;
+    }
+
+    /* Scrollbar تخصيص */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--secondary-gradient);
+    }
+
+    /* تأثيرات الجزيئات المتحركة */
+    .floating-particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+    }
+
+    .particle {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 15s infinite linear;
+    }
+
+    .particle:nth-child(1) {
+        width: 4px;
+        height: 4px;
+        left: 10%;
+        animation-delay: -2s;
+        animation-duration: 12s;
+    }
+
+    .particle:nth-child(2) {
+        width: 6px;
+        height: 6px;
+        left: 20%;
+        animation-delay: -4s;
+        animation-duration: 18s;
+    }
+
+    .particle:nth-child(3) {
+        width: 3px;
+        height: 3px;
+        left: 70%;
+        animation-delay: -6s;
+        animation-duration: 15s;
+    }
+
+    .particle:nth-child(4) {
+        width: 5px;
+        height: 5px;
+        left: 80%;
+        animation-delay: -8s;
+        animation-duration: 20s;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(100vh) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-100px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* Floating Light Orbs */
+    .floating-orbs {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    .light-orb {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, 
+            rgba(102, 126, 234, 0.4) 0%,
+            rgba(102, 126, 234, 0.2) 40%,
+            transparent 70%);
+        animation: floatOrb 20s ease-in-out infinite;
+        filter: blur(1px);
+    }
+
+    @keyframes floatOrb {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
+            opacity: 0.3;
+        }
+        25% {
+            transform: translate(50px, -30px) scale(1.2);
+            opacity: 0.6;
+        }
+        50% {
+            transform: translate(-30px, 50px) scale(0.8);
+            opacity: 0.4;
+        }
+        75% {
+            transform: translate(70px, 20px) scale(1.1);
+            opacity: 0.5;
+        }
+    }
+
+    /* Header متطور مع تأثيرات إضافية */
+    .dashboard-header {
+        position: relative;
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.12) 0%,
+            rgba(255, 255, 255, 0.06) 100%);
+        backdrop-filter: blur(25px);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        box-shadow: 
+            0 16px 48px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            0 0 60px rgba(102, 126, 234, 0.2);
+    }
+
+    .dashboard-header::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, 
+            var(--neon-cyan) 0%,
+            var(--neon-pink) 25%,
+            var(--neon-yellow) 50%,
+            var(--neon-cyan) 75%,
+            var(--neon-pink) 100%);
+        border-radius: 26px;
+        z-index: -1;
+        animation: borderGlow 4s linear infinite;
+        opacity: 0.3;
+    }
+
+    @keyframes borderGlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* تحسين الإحصائيات */
+    .stat-card {
+        position: relative;
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.03) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 
+            0 12px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        right: -1px;
+        bottom: -1px;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+        border-radius: 21px;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        opacity: 1;
+        animation: cardShine 2s ease-in-out infinite;
+    }
+
+    @keyframes cardShine {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* تأثيرات المؤشر */
+    .action-btn {
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+    }
+
+    .action-btn::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+        z-index: 1;
+    }
+
+    .action-btn:hover::after {
+        width: 300px;
+        height: 300px;
+    }
+
+    /* تأثير النبض المتقدم */
+    .pulse-advanced {
+        animation: pulseAdvanced 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseAdvanced {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.5);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 20px rgba(102, 126, 234, 0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .dashboard-title {
+            font-size: 2rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+        
+        .container-fluid {
+            padding: 16px;
+        }
+
+        .light-orb {
+            width: 80px;
+            height: 80px;
+        }
+
+        .dashboard-header::after {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid-overlay"></div>
+<div class="floating-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+</div>
+
+<!-- Advanced Particles Background -->
+<div class="particles-bg">
+    <div class="particle-dot" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle-dot" style="left: 20%; animation-delay: 2s;"></div>
+    <div class="particle-dot" style="left: 30%; animation-delay: 4s;"></div>
+    <div class="particle-dot" style="left: 40%; animation-delay: 6s;"></div>
+    <div class="particle-dot" style="left: 50%; animation-delay: 8s;"></div>
+    <div class="particle-dot" style="left: 60%; animation-delay: 10s;"></div>
+    <div class="particle-dot" style="left: 70%; animation-delay: 12s;"></div>
+    <div class="particle-dot" style="left: 80%; animation-delay: 14s;"></div>
+    <div class="particle-dot" style="left: 90%; animation-delay: 16s;"></div>
+</div>
+
+<!-- Floating Light Orbs -->
+<div class="floating-orbs">
+    <div class="light-orb" style="left: 15%; top: 20%; animation-delay: 0s;"></div>
+    <div class="light-orb" style="left: 75%; top: 40%; animation-delay: 5s;"></div>
+    <div class="light-orb" style="left: 30%; top: 70%; animation-delay: 10s;"></div>
+</div>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">لوحة تحكم مالك النظام</h1>
+        <p class="dashboard-subtitle">إدارة شاملة لجميع الشركات والاشتراكات في النظام</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card primary neon-glow fade-in-sequence advanced-hover">
+                <div class="stat-icon pulse-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="stat-number stat-counter">{{ total_companies or 0 }}</div>
+                <div class="stat-label">إجمالي الشركات</div>
+                <div class="progress-animated"></div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card success neon-glow fade-in-sequence advanced-hover">
+                <div class="stat-icon pulse-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number stat-counter">{{ active_companies or 0 }}</div>
+                <div class="stat-label">الشركات النشطة</div>
+                <div class="progress-animated"></div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card secondary neon-glow fade-in-sequence advanced-hover">
+                <div class="stat-icon pulse-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="stat-number stat-counter">{{ total_subscriptions or 0 }}</div>
+                <div class="stat-label">إجمالي الاشتراكات</div>
+                <div class="progress-animated"></div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card warning neon-glow fade-in-sequence advanced-hover">
+                <div class="stat-icon pulse-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number stat-counter">{{ total_employees or 0 }}</div>
+                <div class="stat-label">إجمالي الموظفين</div>
+                <div class="progress-animated"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="modern-card bounce-in fog-effect">
+        <h3 class="mb-4 text-gradient text-shadow-glow" style="font-weight: 700;">الإجراءات السريعة</h3>
+        <div class="quick-actions">
+            <a href="{{ url_for('system_admin.companies_list') }}" class="action-btn neon-glow wave-effect side-light shimmer">
+                <div class="action-content">
+                    <h5>إدارة الشركات</h5>
+                    <p>عرض وإدارة جميع الشركات المسجلة</p>
+                </div>
+                <div class="action-icon pulse-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('system_admin.create_new_company') }}" class="action-btn neon-glow wave-effect side-light shimmer">
+                <div class="action-content">
+                    <h5>إنشاء شركة جديدة</h5>
+                    <p>إضافة شركة جديدة للنظام</p>
+                </div>
+                <div class="action-icon pulse-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('system_admin.subscriptions_list') }}" class="action-btn neon-glow wave-effect side-light shimmer">
+                <div class="action-content">
+                    <h5>إدارة الاشتراكات</h5>
+                    <p>متابعة ومراقبة الاشتراكات</p>
+                </div>
+                <div class="action-icon pulse-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('employees.index') }}" class="action-btn neon-glow wave-effect side-light shimmer">
+                <div class="action-content">
+                    <h5>إدارة الموظفين</h5>
+                    <p>الوصول لجميع بيانات الموظفين</p>
+                </div>
+                <div class="action-icon pulse-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('vehicles.index') }}" class="action-btn neon-glow wave-effect side-light shimmer">
+                <div class="action-content">
+                    <h5>إدارة المركبات</h5>
+                    <p>متابعة أسطول المركبات</p>
+                </div>
+                <div class="action-icon pulse-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('system_admin.dashboard') }}" class="action-btn neon-glow wave-effect side-light shimmer">
+                <div class="action-content">
+                    <h5>التقارير والإحصائيات</h5>
+                    <p>تقارير شاملة عن النظام</p>
+                </div>
+                <div class="action-icon pulse-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity & System Status -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="modern-card">
+                <h3 class="mb-4" style="color: #fff; font-weight: 700;">النشاط الأخير</h3>
+                <div class="recent-activity">
+                    {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas {{ activity.icon }}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-text">{{ activity.description }}</div>
+                                <div class="activity-time">
+                                    {% if activity.created_at %}
+                                        {{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        الآن
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-text">مرحباً بك في نظام نُظم متعدد المستأجرين</div>
+                                <div class="activity-time">الآن</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="modern-card">
+                <h3 class="mb-4" style="color: #fff; font-weight: 700;">حالة النظام</h3>
+                <div class="system-status">
+                    <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                        <span style="color: rgba(255, 255, 255, 0.8);">قاعدة البيانات</span>
+                        <span class="badge" style="background: var(--success-gradient); color: #fff;">متصلة</span>
+                    </div>
+                    <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                        <span style="color: rgba(255, 255, 255, 0.8);">الخادم</span>
+                        <span class="badge" style="background: var(--success-gradient); color: #fff;">يعمل</span>
+                    </div>
+                    <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                        <span style="color: rgba(255, 255, 255, 0.8);">الاشتراكات</span>
+                        <span class="badge" style="background: var(--warning-gradient); color: #fff;">{{ active_subscriptions or 0 }} نشط</span>
+                    </div>
+                    <div class="status-item d-flex justify-content-between align-items-center">
+                        <span style="color: rgba(255, 255, 255, 0.8);">آخر تحديث</span>
+                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">{{ now.strftime('%H:%M') if now else 'الآن' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تأثير التحريك للعناصر عند التمرير
+document.addEventListener('DOMContentLoaded', function() {
+    // Intersection Observer للعناصر
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // تطبيق التأثير على جميع البطاقات
+    document.querySelectorAll('.modern-card, .stat-card, .action-btn').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        observer.observe(el);
+    });
+
+    // تحديث الوقت كل دقيقة
+    setInterval(function() {
+        const now = new Date();
+        const timeElements = document.querySelectorAll('.current-time');
+        timeElements.forEach(el => {
+            el.textContent = now.toLocaleTimeString('ar-SA', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        });
+    }, 60000);
+
+    // تأثير parallax للخلفية
+    window.addEventListener('scroll', function() {
+        const scrolled = window.pageYOffset;
+        const parallax = document.querySelector('.grid-overlay');
+        if (parallax) {
+            const speed = scrolled * 0.5;
+            parallax.style.transform = `translateY(${speed}px)`;
+        }
+    });
+
+    // تأثير hover ثلاثي الأبعاد للكاردات
+    document.querySelectorAll('.modern-card, .stat-card').forEach(card => {
+        card.addEventListener('mousemove', function(e) {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / 10;
+            const rotateY = (centerX - x) / 10;
+            
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+        });
+    });
+});
+</script>
+{% endblock %}

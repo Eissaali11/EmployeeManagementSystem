@@ -54,7 +54,7 @@ def dashboard():
             }
         ]
         
-        return render_template('system_admin/dashboard.html',
+        return render_template('system_admin/modern_dashboard.html',
                              total_companies=total_companies,
                              active_companies=active_companies,
                              total_subscriptions=total_subscriptions,

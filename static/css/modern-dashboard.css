@@ -1,0 +1,431 @@
+/* Modern Dashboard Advanced Styles */
+
+/* متغيرات CSS محسنة */
+:root {
+    --neon-cyan: #00ffff;
+    --neon-pink: #ff007f;
+    --neon-yellow: #ffff00;
+    --dark-blue: #0a0a23;
+    --dark-purple: #1a0a2e;
+    --glass-strong: rgba(255, 255, 255, 0.15);
+    --glow-radius: 20px;
+}
+
+/* تأثيرات الضوء النيون */
+.neon-glow {
+    position: relative;
+    overflow: hidden;
+}
+
+.neon-glow::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        var(--neon-cyan) 0%,
+        var(--neon-pink) 25%,
+        var(--neon-yellow) 50%,
+        var(--neon-cyan) 75%,
+        var(--neon-pink) 100%);
+    border-radius: 25px;
+    z-index: -1;
+    animation: glowing 3s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.neon-glow:hover::before {
+    opacity: 0.7;
+}
+
+@keyframes glowing {
+    0% { background-position: 0 0; }
+    50% { background-position: 400% 0; }
+    100% { background-position: 0 0; }
+}
+
+/* تأثير الموجات */
+.wave-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.wave-effect::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 100%);
+    animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+}
+
+/* تأثير التكبير التدريجي */
+.zoom-in {
+    animation: zoomIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes zoomIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* تأثير الانزلاق */
+.slide-up {
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* تأثيرات الإحصائيات المتحركة */
+.stat-counter {
+    animation: countUp 2s ease-out;
+}
+
+@keyframes countUp {
+    0% { 
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* تأثير النبض للأيقونات */
+.pulse-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* تأثير التوهج على الحواف */
+.border-glow {
+    position: relative;
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)) padding-box,
+                linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c) border-box;
+}
+
+/* تأثير الدوران الناعم */
+.rotate-smooth {
+    animation: rotateSmooth 20s linear infinite;
+}
+
+@keyframes rotateSmooth {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* تأثير الارتداد */
+.bounce-in {
+    animation: bounceIn 1s ease;
+}
+
+@keyframes bounceIn {
+    0%, 20%, 40%, 60%, 80% {
+        transform: scale(1) translateY(0);
+    }
+    10%, 30% {
+        transform: scale(1.1) translateY(-5px);
+    }
+    50%, 70% {
+        transform: scale(1.05) translateY(-3px);
+    }
+    90% {
+        transform: scale(1.02) translateY(-1px);
+    }
+    100% {
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* تأثير الضباب الخلفي */
+.fog-effect {
+    position: relative;
+}
+
+.fog-effect::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, 
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 70%);
+    animation: fogMove 8s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes fogMove {
+    0%, 100% { 
+        transform: translateX(-20px) scale(1);
+        opacity: 0.5;
+    }
+    50% { 
+        transform: translateX(20px) scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* تأثير الكاروسيل للعناصر */
+.carousel-item {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.5s ease;
+}
+
+.carousel-item.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* تأثير التلاشي التدريجي */
+.fade-in-sequence {
+    opacity: 0;
+    animation: fadeInSequence 0.8s ease forwards;
+}
+
+.fade-in-sequence:nth-child(1) { animation-delay: 0.1s; }
+.fade-in-sequence:nth-child(2) { animation-delay: 0.2s; }
+.fade-in-sequence:nth-child(3) { animation-delay: 0.3s; }
+.fade-in-sequence:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInSequence {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* تأثير التمرير اللانهائي */
+.infinite-scroll {
+    animation: infiniteScroll 15s linear infinite;
+}
+
+@keyframes infiniteScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* تأثير الانعكاس */
+.reflection-effect {
+    position: relative;
+}
+
+.reflection-effect::after {
+    content: '';
+    position: absolute;
+    bottom: -100%;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(0deg, 
+        rgba(255,255,255,0.1) 0%,
+        transparent 50%);
+    transform: scaleY(-1);
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* تأثيرات التحويم المتقدمة */
+.advanced-hover {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.advanced-hover:hover {
+    transform: translateY(-10px) scale(1.05);
+    filter: brightness(1.2) contrast(1.1);
+}
+
+/* شريط التقدم المتحرك */
+.progress-animated {
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 8px;
+}
+
+.progress-animated::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent 0%,
+        rgba(255, 255, 255, 0.5) 50%,
+        transparent 100%);
+    animation: progressShine 2s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* تأثير الجسيمات المتحركة */
+.particles-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.particle-dot {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    animation: particleFloat 10s infinite linear;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(100vh) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-10vh) translateX(100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* تأثير الضوء الجانبي */
+.side-light {
+    position: relative;
+}
+
+.side-light::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -10px;
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(0deg, 
+        transparent 0%,
+        var(--neon-cyan) 50%,
+        transparent 100%);
+    border-radius: 2px;
+    transform: translateY(-50%);
+    animation: sideGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes sideGlow {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* تحسينات الاستجابة */
+@media (max-width: 768px) {
+    .advanced-hover:hover {
+        transform: none;
+        filter: none;
+    }
+    
+    .neon-glow::before {
+        display: none;
+    }
+    
+    .reflection-effect::after {
+        display: none;
+    }
+}
+
+/* تأثيرات إضافية للنصوص */
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.text-shadow-glow {
+    text-shadow: 
+        0 0 10px rgba(102, 126, 234, 0.5),
+        0 0 20px rgba(102, 126, 234, 0.3),
+        0 0 30px rgba(102, 126, 234, 0.2);
+}
+
+/* تأثير اللمعان */
+.shimmer {
+    background: linear-gradient(45deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        transparent 70%);
+    background-size: 200% 200%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
