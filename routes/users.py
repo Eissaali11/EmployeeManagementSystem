@@ -428,3 +428,78 @@ def update_permissions(user_id):
         flash(f'حدث خطأ أثناء تحديث الصلاحيات: {str(e)}', 'error')
     
     return redirect(url_for('users.user_permissions', user_id=user_id))
+
+@users_bp.route('/confirm_delete_permission/<int:user_id>/<int:permission_id>')
+@login_required
+@admin_required
+def confirm_delete_permission(user_id, permission_id):
+    """صفحة تأكيد حذف صلاحية محددة"""
+    user = User.query.get_or_404(user_id)
+    permission = UserPermission.query.get_or_404(permission_id)
+    
+    # التأكد من أن الصلاحية تخص هذا المستخدم
+    if permission.user_id != user_id:
+        flash('صلاحية غير صحيحة', 'error')
+        return redirect(url_for('users.user_permissions', user_id=user_id))
+    
+    module_names = {
+        'DASHBOARD': 'لوحة التحكم',
+        'EMPLOYEES': 'إدارة الموظفين',
+        'ATTENDANCE': 'نظام الحضور',
+        'DEPARTMENTS': 'إدارة الأقسام',
+        'SALARIES': 'إدارة الرواتب',
+        'DOCUMENTS': 'إدارة الوثائق',
+        'VEHICLES': 'إدارة المركبات',
+        'USERS': 'إدارة المستخدمين'
+    }
+    
+    return render_template('users/confirm_delete_permission.html', 
+                         user=user, permission=permission, module_names=module_names)
+
+@users_bp.route('/delete_permission/<int:user_id>/<int:permission_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_permission(user_id, permission_id):
+    """حذف صلاحية محددة"""
+    user = User.query.get_or_404(user_id)
+    permission = UserPermission.query.get_or_404(permission_id)
+    
+    # التأكد من أن الصلاحية تخص هذا المستخدم
+    if permission.user_id != user_id:
+        flash('صلاحية غير صحيحة', 'error')
+        return redirect(url_for('users.user_permissions', user_id=user_id))
+    
+    try:
+        module_name = permission.module.name
+        db.session.delete(permission)
+        db.session.commit()
+        
+        # تسجيل العملية في سجل النشاط
+        module_names = {
+            'DASHBOARD': 'لوحة التحكم',
+            'EMPLOYEES': 'إدارة الموظفين',
+            'ATTENDANCE': 'نظام الحضور',
+            'DEPARTMENTS': 'إدارة الأقسام',
+            'SALARIES': 'إدارة الرواتب',
+            'DOCUMENTS': 'إدارة الوثائق',
+            'VEHICLES': 'إدارة المركبات',
+            'USERS': 'إدارة المستخدمين'
+        }
+        
+        audit_log = AuditLog(
+            user_id=current_user.id,
+            action='حذف صلاحية',
+            entity_type='مستخدم',
+            entity_id=user_id,
+            details=f'تم حذف صلاحية {module_names.get(module_name, module_name)} من المستخدم {user.name}'
+        )
+        db.session.add(audit_log)
+        db.session.commit()
+        
+        flash(f'تم حذف صلاحية {module_names.get(module_name, module_name)} من المستخدم {user.name} بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حذف الصلاحية: {str(e)}', 'error')
+    
+    return redirect(url_for('users.user_permissions', user_id=user_id))

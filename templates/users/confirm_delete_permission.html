@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block title %}تأكيد حذف الصلاحية{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        تأكيد حذف الصلاحية
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-warning me-2"></i>
+                            تحذير مهم!
+                        </h5>
+                        <p class="mb-0">
+                            سيتم حذف هذه الصلاحية نهائياً من المستخدم. هذا الإجراء لا يمكن التراجع عنه.
+                        </p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">تفاصيل العملية:</h5>
+                            
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <strong>المستخدم:</strong> {{ user.name }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <strong>البريد الإلكتروني:</strong> {{ user.email }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <strong>الوحدة:</strong> 
+                                            <span class="badge bg-primary">{{ module_names.get(permission.module.name, permission.module.value) }}</span>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <strong>الصلاحيات المحددة:</strong>
+                                            <div class="mt-1">
+                                                {% set perm_bits = permission.permissions %}
+                                                {% if (perm_bits // 1) % 2 == 1 %}
+                                                    <span class="badge bg-success me-1">عرض</span>
+                                                {% endif %}
+                                                {% if (perm_bits // 2) % 2 == 1 %}
+                                                    <span class="badge bg-primary me-1">إنشاء</span>
+                                                {% endif %}
+                                                {% if (perm_bits // 4) % 2 == 1 %}
+                                                    <span class="badge bg-warning me-1">تعديل</span>
+                                                {% endif %}
+                                                {% if (perm_bits // 8) % 2 == 1 %}
+                                                    <span class="badge bg-danger me-1">حذف</span>
+                                                {% endif %}
+                                                {% if (perm_bits // 16) % 2 == 1 %}
+                                                    <span class="badge bg-info me-1">إدارة</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>ما سيحدث عند الحذف:</h6>
+                        <ul class="mb-0">
+                            <li>سيفقد المستخدم جميع الصلاحيات المحددة لوحدة {{ module_names.get(permission.module.name, permission.module.value) }}</li>
+                            <li>لن يتمكن من الوصول لهذه الوحدة حتى يتم منحه صلاحيات جديدة</li>
+                            <li>سيتم تسجيل هذا الإجراء في سجل النشاط</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-danger fw-bold mb-3">
+                            <i class="fas fa-question-circle me-2"></i>
+                            هل أنت متأكد من رغبتك في حذف هذه الصلاحية؟
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{{ url_for('users.user_permissions', user_id=user.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>
+                        إلغاء
+                    </a>
+                    
+                    <form method="POST" action="{{ url_for('users.delete_permission', user_id=user.id, permission_id=permission.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>
+                            نعم، احذف الصلاحية
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

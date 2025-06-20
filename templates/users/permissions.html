@@ -255,25 +255,34 @@
                                         <div class="card-body">
                                             {% if user.permissions %}
                                                 {% for perm in user.permissions %}
-                                                <div class="mb-3 p-2 border rounded">
-                                                    <div class="fw-bold mb-2">{{ module_names.get(perm.module.name, perm.module.value) }}</div>
+                                                <div class="mb-3 p-2 border rounded d-flex justify-content-between align-items-start">
                                                     <div>
-                                                        {% set perm_bits = perm.permissions %}
-                                                        {% if (perm_bits // 1) % 2 == 1 %}
-                                                            <span class="badge bg-success me-1">عرض</span>
-                                                        {% endif %}
-                                                        {% if (perm_bits // 2) % 2 == 1 %}
-                                                            <span class="badge bg-primary me-1">إنشاء</span>
-                                                        {% endif %}
-                                                        {% if (perm_bits // 4) % 2 == 1 %}
-                                                            <span class="badge bg-warning me-1">تعديل</span>
-                                                        {% endif %}
-                                                        {% if (perm_bits // 8) % 2 == 1 %}
-                                                            <span class="badge bg-danger me-1">حذف</span>
-                                                        {% endif %}
-                                                        {% if (perm_bits // 16) % 2 == 1 %}
-                                                            <span class="badge bg-info me-1">إدارة</span>
-                                                        {% endif %}
+                                                        <div class="fw-bold mb-2">{{ module_names.get(perm.module.name, perm.module.value) }}</div>
+                                                        <div>
+                                                            {% set perm_bits = perm.permissions %}
+                                                            {% if (perm_bits // 1) % 2 == 1 %}
+                                                                <span class="badge bg-success me-1">عرض</span>
+                                                            {% endif %}
+                                                            {% if (perm_bits // 2) % 2 == 1 %}
+                                                                <span class="badge bg-primary me-1">إنشاء</span>
+                                                            {% endif %}
+                                                            {% if (perm_bits // 4) % 2 == 1 %}
+                                                                <span class="badge bg-warning me-1">تعديل</span>
+                                                            {% endif %}
+                                                            {% if (perm_bits // 8) % 2 == 1 %}
+                                                                <span class="badge bg-danger me-1">حذف</span>
+                                                            {% endif %}
+                                                            {% if (perm_bits // 16) % 2 == 1 %}
+                                                                <span class="badge bg-info me-1">إدارة</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <a href="{{ url_for('users.confirm_delete_permission', user_id=user.id, permission_id=perm.id) }}" 
+                                                           class="btn btn-outline-danger btn-sm" 
+                                                           title="حذف صلاحية {{ module_names.get(perm.module.name, perm.module.value) }}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
                                                     </div>
                                                 </div>
                                                 {% endfor %}
