@@ -91,7 +91,7 @@
                         </div>
                     {% else %}
                         <form id="permissionsForm" method="POST" action="{{ url_for('users.update_permissions', user_id=user.id) }}">
-                            {{ csrf_token() }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead class="table-light">
@@ -110,28 +110,23 @@
                                             <td class="fw-medium">{{ module.value }}</td>
                                             <td>
                                                 <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_1"
-                                                       {% if user.has_permission(module, 1) %}checked{% endif %}>
+                                                       name="permissions" value="{{ module.name }}_1">
                                             </td>
                                             <td>
                                                 <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_2"
-                                                       {% if user.has_permission(module, 2) %}checked{% endif %}>
+                                                       name="permissions" value="{{ module.name }}_2">
                                             </td>
                                             <td>
                                                 <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_4"
-                                                       {% if user.has_permission(module, 4) %}checked{% endif %}>
+                                                       name="permissions" value="{{ module.name }}_4">
                                             </td>
                                             <td>
                                                 <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_8"
-                                                       {% if user.has_permission(module, 8) %}checked{% endif %}>
+                                                       name="permissions" value="{{ module.name }}_8">
                                             </td>
                                             <td>
                                                 <input type="checkbox" class="form-check-input permission-checkbox" 
-                                                       name="permissions" value="{{ module.name }}_16"
-                                                       {% if user.has_permission(module, 16) %}checked{% endif %}>
+                                                       name="permissions" value="{{ module.name }}_16">
                                             </td>
                                         </tr>
                                         {% endfor %}
