@@ -513,8 +513,9 @@
                         <div class="profile-photo-container">
                             {% if employee.profile_image %}
                                 <div class="profile-photo">
-                                    <img src="{{ url_for('static', filename='uploads/employees/' + employee.profile_image) }}" 
-                                         alt="{{ employee.name }}" class="profile-photo-inner">
+                                    <img src="{{ url_for('static', filename=employee.profile_image) }}" 
+                                         alt="{{ employee.name }}" class="profile-photo-inner"
+                                         onerror="this.parentElement.innerHTML='<div class=&quot;default-photo&quot;><i class=&quot;fas fa-user&quot;></i></div>'">
                                 </div>
                             {% else %}
                                 <div class="profile-photo">
