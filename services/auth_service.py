@@ -43,7 +43,7 @@ class AuthService:
         logout_user()
     
     @staticmethod
-    def create_user(name, email, username, password, role=UserRole.EMPLOYEE):
+    def create_user(name, email, username, password, role=UserRole.USER):
         """إنشاء مستخدم جديد"""
         try:
             # التحقق من عدم وجود المستخدم مسبقاً

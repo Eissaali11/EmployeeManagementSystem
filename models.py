@@ -94,9 +94,118 @@ class Company(db.Model):
     def __repr__(self):
         return f'<Company {self.name}>'
 
+class CompanySubscription(db.Model):
+    """اشتراك الشركة"""
+    __tablename__ = 'company_subscriptions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    plan_type = db.Column(db.String(20), nullable=False, default='basic')  # basic, premium, enterprise
+    
+    # معلومات الفترة التجريبية
+    is_trial = db.Column(db.Boolean, default=True)
+    trial_start_date = db.Column(db.DateTime)
+    trial_end_date = db.Column(db.DateTime)
+    
+    # معلومات الاشتراك
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    auto_renew = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    company = db.relationship('Company', back_populates='subscription')
+    
+    @property
+    def days_remaining(self):
+        """حساب الأيام المتبقية"""
+        if not self.end_date:
+            return 0
+        remaining = (self.end_date.date() - datetime.utcnow().date()).days
+        return max(0, remaining)
+    
+    @property
+    def is_expired(self):
+        """التحقق من انتهاء الاشتراك"""
+        return datetime.utcnow().date() > self.end_date.date()
+    
+    @property
+    def is_trial_expired(self):
+        """التحقق من انتهاء الفترة التجريبية"""
+        if not self.is_trial or not self.trial_end_date:
+            return False
+        return datetime.utcnow().date() > self.trial_end_date.date()
+    
+    @property
+    def max_employees(self):
+        """الحد الأقصى للموظفين حسب نوع الخطة"""
+        limits = {'basic': 50, 'premium': 200, 'enterprise': 1000}
+        return limits.get(self.plan_type, 50)
+    
+    @property
+    def max_vehicles(self):
+        """الحد الأقصى للمركبات حسب نوع الخطة"""
+        limits = {'basic': 20, 'premium': 100, 'enterprise': 500}
+        return limits.get(self.plan_type, 20)
+    
+    @property
+    def max_users(self):
+        """الحد الأقصى للمستخدمين حسب نوع الخطة"""
+        limits = {'basic': 5, 'premium': 20, 'enterprise': 100}
+        return limits.get(self.plan_type, 5)
+    
+    @property
+    def features(self):
+        """ميزات الخطة"""
+        all_features = {
+            'basic': ['employees', 'vehicles', 'attendance', 'reports'],
+            'premium': ['employees', 'vehicles', 'attendance', 'reports', 'salaries', 'advanced_reports'],
+            'enterprise': ['employees', 'vehicles', 'attendance', 'reports', 'salaries', 'advanced_reports', 'api_access', 'custom_branding']
+        }
+        return all_features.get(self.plan_type, [])
+    
+    def __repr__(self):
+        return f'<CompanySubscription {self.company.name} - {self.plan_type}>'
+
+class SubscriptionNotification(db.Model):
+    """إشعارات الاشتراك"""
+    __tablename__ = 'subscription_notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
+    notification_type = db.Column(db.String(50), nullable=False)  # expiry_warning, expired, trial_ending, etc.
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    company = db.relationship('Company')
+    
+    def __repr__(self):
+        return f'<SubscriptionNotification {self.company.name} - {self.notification_type}>'
+
 class CompanyPermission(db.Model):
-    """صلاحيات الشركات للوحدات المختلفة"""
+    """صلاحيات المستخدمين داخل الشركة"""
     __tablename__ = 'company_permissions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    module = db.Column(db.Enum(Module), nullable=False)
+    can_view = db.Column(db.Boolean, default=True)
+    can_create = db.Column(db.Boolean, default=False)
+    can_edit = db.Column(db.Boolean, default=False)
+    can_delete = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    user = db.relationship('User', back_populates='company_permissions')
+    
+    def __repr__(self):
+        return f'<CompanyPermission {self.user.email} - {self.module}>'
     
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)

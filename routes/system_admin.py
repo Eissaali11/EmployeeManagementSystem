@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from utils.multi_tenant_decorators import system_owner_required, set_company_context
 from services.subscription_service import SubscriptionService
-from models import Company, User, CompanySubscription, Employee, Vehicle, UserType
+from models import Company, User, CompanySubscription, Employee, Vehicle, UserType, SubscriptionNotification
 from app import db
 from datetime import datetime
 import logging
