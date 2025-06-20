@@ -249,10 +249,11 @@ def root():
     # إذا كان المستخدم يستخدم جهاز كمبيوتر
     if current_user.is_authenticated:
         # توجيه حسب نوع المستخدم
-        if hasattr(current_user, 'user_type'):
-            if current_user.user_type == 'system_admin':
+        if hasattr(current_user, 'user_type') and current_user.user_type:
+            from models import UserType
+            if current_user.user_type == UserType.SYSTEM_ADMIN:
                 return redirect(url_for('system_admin.dashboard'))
-            elif current_user.user_type == 'company_admin':
+            elif current_user.user_type == UserType.COMPANY_ADMIN:
                 return redirect(url_for('company_admin.dashboard'))
         
         # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم العادية

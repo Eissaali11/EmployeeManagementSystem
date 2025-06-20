@@ -18,8 +18,9 @@ def system_owner_required(f):
         if not current_user.is_authenticated:
             abort(401)
         
-        if current_user.user_type != UserType.SYSTEM_ADMIN:
-            logger.warning(f"غير مصرح - المستخدم {current_user.id} حاول الوصول لوظيفة مالك النظام")
+        # التحقق من نوع المستخدم بأمان
+        if not hasattr(current_user, 'user_type') or current_user.user_type != UserType.SYSTEM_ADMIN:
+            logger.warning(f"غير مصرح - المستخدم {current_user.id} ليس مالك نظام، النوع: {getattr(current_user, 'user_type', 'غير محدد')}")
             abort(403)
         
         return f(*args, **kwargs)
