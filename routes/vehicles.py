@@ -3039,7 +3039,7 @@ def handovers_list():
             if latest_delivery:
                 if not latest_return or latest_delivery.handover_date > latest_return.handover_date:
                     current_status = 'مُسلم'
-                    current_employee = latest_delivery.employee_name
+                    current_employee = latest_delivery.person_name
             
             vehicles_data.append({
                 'vehicle': vehicle,
