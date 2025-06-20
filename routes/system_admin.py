@@ -22,7 +22,7 @@ def dashboard():
     try:
         # إحصائيات عامة
         total_companies = Company.query.count()
-        active_companies = Company.query.filter_by(is_active=True).count()
+        active_companies = Company.query.filter_by(status='active').count()
         total_subscriptions = CompanySubscription.query.count()
         active_subscriptions = CompanySubscription.query.filter_by(is_active=True).count()
         
@@ -87,9 +87,9 @@ def companies_list():
         
         # تصفية حسب الحالة
         if status_filter == 'active':
-            query = query.filter(Company.is_active == True)
+            query = query.filter(Company.status == 'active')
         elif status_filter == 'inactive':
-            query = query.filter(Company.is_active == False)
+            query = query.filter(Company.status == 'inactive')
         elif status_filter == 'trial':
             query = query.join(CompanySubscription).filter(
                 CompanySubscription.is_trial == True,

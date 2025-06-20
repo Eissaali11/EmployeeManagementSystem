@@ -223,6 +223,15 @@ def inject_csrf_token():
     return {'csrf_token': get_csrf_token}
 
 # مسار الصفحة الرئيسية لعرض النظام متعدد المستأجرين
+@app.route('/system-admin/dashboard')
+@app.route('/system-admin/<path:path>')
+def system_admin_redirect(path='dashboard'):
+    """توجيه لوحة تحكم مالك النظام"""
+    if path == 'dashboard':
+        return redirect(url_for('system_admin.dashboard'))
+    else:
+        return redirect(url_for('system_admin.dashboard'))
+
 @app.route('/multi-tenant')
 def multi_tenant_home():
     return render_template('multi_tenant_login.html')
