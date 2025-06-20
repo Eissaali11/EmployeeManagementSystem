@@ -67,10 +67,12 @@ def set_company_context(f):
             abort(401)
         
         # مالك النظام يمكنه الوصول لجميع الشركات
-        if current_user.user_type == UserType.SYSTEM_ADMIN:
+        user_type = getattr(current_user, 'user_type', None)
+        if (user_type and (str(user_type) == 'SYSTEM_ADMIN' or user_type == UserType.SYSTEM_ADMIN)):
             # يمكن تمرير company_id في المعاملات للوصول لشركة محددة
             company_id = kwargs.get('company_id') or args[0] if args else None
-            g.company_id = company_id
+            # إذا لم يحدد شركة معينة، استخدم الشركة الرئيسية
+            g.company_id = company_id or current_user.company_id or 1
             g.user_type = UserType.SYSTEM_ADMIN
         else:
             # المستخدمون الآخرون مقيدون بشركتهم
