@@ -266,7 +266,7 @@ def generate_weasy_basic_report(employee_id):
 <body>
     <div class="header">
         <div class="header-logo">
-            <div style="width: 100px; height: 70px; background: linear-gradient(135deg, #4a90b8, #2c5f85); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: 'Noto Sans Arabic', Arial, sans-serif;">نُظم</div>
+            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #4a90b8, #2c5f85); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; border-radius: 50%; border: 3px solid #ffffff; font-family: 'Noto Sans Arabic', Arial, sans-serif;">نُظم</div>
         </div>
         <div class="main-title">تقرير المعلومات الأساسية للموظف</div>
         <div class="header-spacer"></div>
