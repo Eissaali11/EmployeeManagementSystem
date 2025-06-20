@@ -241,7 +241,8 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
             # تعديل عرض الأعمدة
             column_widths = [25, 20, 15, 15, 20, 12, 25]
             for i, width in enumerate(column_widths, 1):
-                ws_projects.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+                from openpyxl.utils import get_column_letter
+                ws_projects.column_dimensions[get_column_letter(i)].width = width
         
         # 5. ورقة سجلات التسليم والاستلام
         if handover_records and len(handover_records) > 0:
@@ -288,7 +289,8 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
             # تعديل عرض الأعمدة
             column_widths = [15, 15, 20, 20, 15, 20, 25]
             for i, width in enumerate(column_widths, 1):
-                ws_handover.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+                from openpyxl.utils import get_column_letter
+                ws_handover.column_dimensions[get_column_letter(i)].width = width
         
         # 6. ورقة سجلات الفحص الدوري
         if inspection_records and len(inspection_records) > 0:
@@ -328,7 +330,8 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
             # تعديل عرض الأعمدة
             column_widths = [15, 15, 15, 15, 20, 20, 12, 25]
             for i, width in enumerate(column_widths, 1):
-                ws_inspection.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+                from openpyxl.utils import get_column_letter
+                ws_inspection.column_dimensions[get_column_letter(i)].width = width
         
         # 7. ورقة فحوصات السلامة
         if safety_check_records and len(safety_check_records) > 0:
@@ -369,7 +372,8 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
             # تعديل عرض الأعمدة
             column_widths = [15, 15, 15, 15, 15, 15, 20, 15, 25]
             for i, width in enumerate(column_widths, 1):
-                ws_safety.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+                from openpyxl.utils import get_column_letter
+                ws_safety.column_dimensions[get_column_letter(i)].width = width
         
         # 8. ورقة سجلات الحوادث
         if accident_records and len(accident_records) > 0:
@@ -409,7 +413,8 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
             # تعديل عرض الأعمدة
             column_widths = [15, 20, 25, 20, 15, 15, 15, 25]
             for i, width in enumerate(column_widths, 1):
-                ws_accident.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+                from openpyxl.utils import get_column_letter
+                ws_accident.column_dimensions[get_column_letter(i)].width = width
         
         # حفظ الملف
         wb.save(buffer)
@@ -423,22 +428,31 @@ def export_comprehensive_vehicle_excel(vehicle, workshop_records=None, rental_re
         import traceback
         traceback.print_exc()
         
-        # إنشاء ملف بسيط في حالة الخطأ
-        simple_data = {
-            'البيان': ['رقم اللوحة', 'الماركة', 'الموديل', 'السائق الحالي', 'الحالة'],
-            'القيمة': [
-                vehicle.plate_number or '',
-                vehicle.make or '',
-                vehicle.model or '',
-                vehicle.driver_name or "غير محدد",
-                vehicle.status or ''
-            ]
-        }
+        # إنشاء ملف بسيط في حالة الخطأ باستخدام openpyxl فقط
+        wb_simple = openpyxl.Workbook()
+        ws_simple = wb_simple.active
+        ws_simple.title = "معلومات السيارة"
+        
+        # إضافة البيانات الأساسية
+        headers = ['البيان', 'القيمة']
+        data = [
+            ['رقم اللوحة', vehicle.plate_number or ''],
+            ['الماركة', vehicle.make or ''],
+            ['الموديل', vehicle.model or ''],
+            ['السائق الحالي', vehicle.driver_name or "غير محدد"],
+            ['الحالة', vehicle.status or '']
+        ]
+        
+        # كتابة العناوين
+        for col_idx, header in enumerate(headers, 1):
+            ws_simple.cell(row=1, column=col_idx, value=header)
+        
+        # كتابة البيانات
+        for row_idx, row_data in enumerate(data, 2):
+            for col_idx, value in enumerate(row_data, 1):
+                ws_simple.cell(row=row_idx, column=col_idx, value=value)
         
         buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-            df_simple = pd.DataFrame(simple_data)
-            df_simple.to_excel(writer, sheet_name='معلومات السيارة', index=False)
-        
+        wb_simple.save(buffer)
         buffer.seek(0)
         return buffer
