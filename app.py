@@ -222,6 +222,11 @@ def inject_csrf_token():
     
     return {'csrf_token': get_csrf_token}
 
+# مسار الصفحة الرئيسية لعرض النظام متعدد المستأجرين
+@app.route('/multi-tenant')
+def multi_tenant_home():
+    return render_template('multi_tenant_login.html')
+
 # مسار الجذر الرئيسي للتطبيق مع توجيه تلقائي حسب نوع الجهاز
 @app.route('/')
 def root():
