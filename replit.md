@@ -154,6 +154,17 @@
 - Environment variable protection
 
 ## Changelog
+- June 20, 2025: Successfully transformed نُظم into comprehensive multi-tenant architecture:
+  • Complete database schema migration to support multiple companies with data isolation
+  • Implemented three-tier user hierarchy: System Owner → Company Admin → Employee
+  • Created subscription management system with trial periods and usage limits
+  • Built system admin dashboard for managing all companies and subscriptions
+  • Developed company admin dashboard with subscription status and usage tracking
+  • Added multi-tenant decorators for access control and data filtering
+  • Implemented subscription service with automated notifications and limits
+  • Created comprehensive permission system with module-based access control
+  • Successfully resolved database enum compatibility and relationship mapping issues
+  • System now supports unlimited companies with complete data isolation
 - June 20, 2025: Successfully implemented comprehensive Arabic employee basic report with all requested features:
   • Created Arabic PDF report generator using ReportLab with proper Arabic text support
   • Implemented complete employee information display in Arabic language
