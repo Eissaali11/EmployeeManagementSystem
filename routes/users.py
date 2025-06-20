@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import User, Department, UserRole, Module, Permission, AuditLog
+from models import User, Department, UserRole, Module, Permission, UserPermission, AuditLog
 from functools import wraps
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
@@ -348,7 +348,7 @@ def update_permissions(user_id):
         selected_permissions = request.form.getlist('permissions')
         
         # حذف جميع صلاحيات المستخدم الحالية
-        Permission.query.filter_by(user_id=user_id).delete()
+        UserPermission.query.filter_by(user_id=user_id).delete()
         
         # إضافة الصلاحيات الجديدة
         for permission_str in selected_permissions:
@@ -356,7 +356,7 @@ def update_permissions(user_id):
             module = Module[module_name]
             permission_value = int(permission_value)
             
-            new_permission = Permission(
+            new_permission = UserPermission(
                 user_id=user_id,
                 module=module,
                 permissions=permission_value
