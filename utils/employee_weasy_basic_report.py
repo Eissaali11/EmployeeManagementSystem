@@ -146,7 +146,7 @@ def generate_weasy_basic_report(employee_id):
         .image-item {
             text-align: center;
             flex: 1;
-            min-width: 150px;
+            min-width: 200px;
         }
         
         .image-title {
@@ -158,8 +158,8 @@ def generate_weasy_basic_report(employee_id):
         }
         
         .image-placeholder {
-            width: 120px;
-            height: 150px;
+            width: 180px;
+            height: 220px;
             border: 1px solid #ccc;
             display: flex;
             align-items: center;
@@ -169,10 +169,12 @@ def generate_weasy_basic_report(employee_id):
         }
         
         .employee-image {
-            width: 120px;
-            height: 150px;
-            object-fit: cover;
+            width: 180px;
+            height: 220px;
+            object-fit: contain;
             border: 1px solid #ccc;
+            margin: 0 auto;
+            display: block;
         }
         
         .section-header {
