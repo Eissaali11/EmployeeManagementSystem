@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from app import db
-from models import User, Department, UserRole, Module, Permission, UserPermission, AuditLog
+from models import User, Department, UserRole, Module, Permission, UserPermission, AuditLog, UserDepartmentAccess
 from functools import wraps
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
@@ -350,14 +350,26 @@ def update_permissions(user_id):
         
         # تحديث الوصول للأقسام
         department_access = request.form.get('department_access')
+        accessible_departments = request.form.getlist('accessible_departments')
+        
+        # حذف جميع الأقسام المخصصة الحالية
+        UserDepartmentAccess.query.filter_by(user_id=user_id).delete()
+        
         if department_access == 'all':
             user.assigned_department_id = None
-        elif department_access == 'specific':
-            assigned_dept_id = request.form.get('assigned_department_id')
-            if assigned_dept_id:
-                user.assigned_department_id = int(assigned_dept_id)
-            else:
-                user.assigned_department_id = None
+        elif department_access == 'specific' and accessible_departments:
+            # إضافة الأقسام المتعددة المحددة
+            for dept_id in accessible_departments:
+                new_access = UserDepartmentAccess(
+                    user_id=user_id,
+                    department_id=int(dept_id)
+                )
+                db.session.add(new_access)
+            
+            # تعيين أول قسم كقسم رئيسي (للتوافق مع النظام الحالي)
+            user.assigned_department_id = int(accessible_departments[0])
+        else:
+            user.assigned_department_id = None
         
         # حذف جميع صلاحيات المستخدم الحالية
         UserPermission.query.filter_by(user_id=user_id).delete()

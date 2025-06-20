@@ -243,6 +243,20 @@ class UserPermission(db.Model):
     def __repr__(self):
         return f'<UserPermission {self.user_id} - {self.module}>'
 
+class UserDepartmentAccess(db.Model):
+    """الأقسام التي يمكن للمستخدم الوصول إليها"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    user = db.relationship('User', backref='department_accesses')
+    department = db.relationship('Department')
+    
+    def __repr__(self):
+        return f'<UserDepartmentAccess {self.user_id} - {self.department_id}>'
+
 class RenewalFee(db.Model):
     """تكاليف رسوم تجديد أوراق الموظفين"""
     id = db.Column(db.Integer, primary_key=True)
