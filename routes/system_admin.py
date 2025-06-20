@@ -123,77 +123,61 @@ def create_new_company():
     """إنشاء شركة جديدة"""
     if request.method == 'POST':
         try:
-            # إنشاء الشركة الجديدة
-            new_company = Company(
-                name=request.form.get('name'),
-                contact_email=request.form.get('contact_email'),
-                contact_phone=request.form.get('contact_phone'),
-                address=request.form.get('address'),
-                status='active'
-            )
+            # جمع البيانات من النموذج
+            name = request.form.get('name', '').strip()
+            contact_email = request.form.get('contact_email', '').strip()
+            contact_phone = request.form.get('contact_phone', '').strip()
+            address = request.form.get('address', '').strip()
             
             # التحقق من البيانات المطلوبة
-            required_fields = ['name', 'contact_email']
-            for field in required_fields:
-                if not company_data.get(field):
-                    flash(f'حقل {field} مطلوب', 'error')
-                    return render_template('system_admin/create_company.html')
+            if not name:
+                flash('اسم الشركة مطلوب', 'error')
+                return render_template('system_admin/futuristic_create_company.html')
+            
+            if not contact_email:
+                flash('البريد الإلكتروني مطلوب', 'error')
+                return render_template('system_admin/futuristic_create_company.html')
             
             # التحقق من عدم تكرار الإيميل
-            existing_company = Company.query.filter_by(
-                contact_email=company_data['contact_email']
-            ).first()
+            existing_company = Company.query.filter_by(contact_email=contact_email).first()
             if existing_company:
-                flash('هذا البريد الإلكتروني مستخدم بالفعل', 'error')
-                return render_template('system_admin/create_company.html')
+                flash('يوجد شركة مسجلة بنفس البريد الإلكتروني', 'error')
+                return render_template('system_admin/futuristic_create_company.html')
             
-            # إنشاء الشركة
-            new_company = Company(**company_data)
+            # إنشاء الشركة الجديدة
+            new_company = Company()
+            new_company.name = name
+            new_company.contact_email = contact_email
+            new_company.contact_phone = contact_phone
+            new_company.address = address
+            new_company.status = 'active'
+            
             db.session.add(new_company)
-            db.session.flush()  # للحصول على ID الشركة
+            db.session.flush()  # للحصول على معرف الشركة
             
-            # إنشاء اشتراك تجريبي
-            plan_type = request.form.get('plan_type', 'basic')
-            success, message = SubscriptionService.create_trial_subscription(
-                new_company.id, plan_type
-            )
+            # إنشاء اشتراك تجريبي افتراضي
+            from datetime import date, timedelta
+            subscription = CompanySubscription()
+            subscription.company_id = new_company.id
+            subscription.plan_type = 'trial'
+            subscription.is_trial = True
+            subscription.start_date = date.today()
+            subscription.end_date = date.today() + timedelta(days=30)
+            subscription.is_active = True
             
-            if not success:
-                db.session.rollback()
-                flash(f'فشل في إنشاء الاشتراك: {message}', 'error')
-                return render_template('system_admin/create_company.html')
-            
-            # إنشاء مدير الشركة
-            admin_email = request.form.get('admin_email')
-            admin_name = request.form.get('admin_name')
-            admin_password = request.form.get('admin_password')
-            
-            if admin_email and admin_name and admin_password:
-                from werkzeug.security import generate_password_hash
-                
-                company_admin = User(
-                    email=admin_email,
-                    name=admin_name,
-                    password_hash=generate_password_hash(admin_password),
-                    company_id=new_company.id,
-                    user_type=UserType.COMPANY_ADMIN,
-                    created_by=current_user.id,
-                    is_active=True
-                )
-                db.session.add(company_admin)
-            
+            db.session.add(subscription)
             db.session.commit()
             
             logger.info(f"تم إنشاء شركة جديدة: {new_company.name} بواسطة {current_user.id}")
             flash('تم إنشاء الشركة بنجاح', 'success')
-            return redirect(url_for('system_admin.company_details', company_id=new_company.id))
+            return redirect(url_for('system_admin.companies_list'))
             
         except Exception as e:
             db.session.rollback()
             logger.error(f"خطأ في إنشاء الشركة: {str(e)}")
             flash('حدث خطأ في إنشاء الشركة', 'error')
     
-    return render_template('system_admin/create_company.html')
+    return render_template('system_admin/futuristic_create_company.html')
 
 @system_admin_bp.route('/companies/<int:company_id>')
 @login_required
