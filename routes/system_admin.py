@@ -213,13 +213,56 @@ def company_details(company_id):
         flash('حدث خطأ في تحميل تفاصيل الشركة', 'error')
         return redirect(url_for('system_admin.companies_list'))
 
-@system_admin_bp.route('/companies/<int:company_id>/subscription')
+@system_admin_bp.route('/companies/<int:company_id>/subscription', methods=['GET', 'POST'])
+@system_admin_alt_bp.route('/companies/<int:company_id>/subscription', methods=['GET', 'POST'])
 @login_required
 @system_owner_required
 def manage_subscription(company_id):
     """إدارة اشتراك الشركة"""
     try:
         company = Company.query.get_or_404(company_id)
+        
+        if request.method == 'POST':
+            # معالجة تحديث الاشتراك
+            plan_type = request.form.get('plan_type')
+            action = request.form.get('action')
+            
+            if action == 'upgrade':
+                # ترقية الاشتراك
+                result = SubscriptionService.upgrade_subscription(company_id, plan_type)
+                if result:
+                    flash('تم ترقية الاشتراك بنجاح', 'success')
+                else:
+                    flash('حدث خطأ في ترقية الاشتراك', 'error')
+            
+            elif action == 'extend':
+                # تمديد الاشتراك
+                extend_days = int(request.form.get('extend_days', 30))
+                result = SubscriptionService.extend_subscription(company_id, extend_days)
+                if result:
+                    flash(f'تم تمديد الاشتراك لـ {extend_days} يوم', 'success')
+                else:
+                    flash('حدث خطأ في تمديد الاشتراك', 'error')
+            
+            elif action == 'suspend':
+                # إيقاف الاشتراك
+                subscription = CompanySubscription.query.filter_by(company_id=company_id).first()
+                if subscription:
+                    subscription.is_active = False
+                    db.session.commit()
+                    flash('تم إيقاف الاشتراك', 'success')
+            
+            elif action == 'activate':
+                # تفعيل الاشتراك
+                subscription = CompanySubscription.query.filter_by(company_id=company_id).first()
+                if subscription:
+                    subscription.is_active = True
+                    db.session.commit()
+                    flash('تم تفعيل الاشتراك', 'success')
+            
+            return redirect(url_for('system_admin.manage_subscription', company_id=company_id))
+        
+        # عرض الصفحة
         subscription_status = SubscriptionService.get_subscription_status(company_id)
         
         # جلب جميع خطط الاشتراك المتاحة
@@ -345,12 +388,13 @@ def toggle_company_status(company_id):
     """تفعيل/إلغاء تفعيل الشركة"""
     try:
         company = Company.query.get_or_404(company_id)
-        company.is_active = not company.is_active
+        # تغيير الحالة بين active و inactive
+        company.status = 'inactive' if company.status == 'active' else 'active'
         company.updated_at = datetime.utcnow()
         
         db.session.commit()
         
-        status = 'تم تفعيل' if company.is_active else 'تم إلغاء تفعيل'
+        status = 'تم تفعيل' if company.status == 'active' else 'تم إلغاء تفعيل'
         flash(f'{status} الشركة بنجاح', 'success')
         logger.info(f"{status} الشركة {company_id} بواسطة {current_user.id}")
         

@@ -167,6 +167,9 @@
   • Implemented secure delete confirmation modal with glass-morphism effects and CSRF protection
   • All system admin pages now feature consistent modern aesthetic with animated elements
   • Successfully tested company creation functionality with proper database integration
+  • Fixed company status toggle error by using correct 'status' field instead of 'is_active'
+  • Resolved "Method Not Allowed" error in subscription management by adding POST method support
+  • Enhanced subscription management with comprehensive form handling for upgrade, extend, suspend, and activate actions
 - June 20, 2025: Successfully completed multi-tenant system with working system admin dashboard:
   • Fixed routing issues between `/system-admin/` and `/system/` URL patterns
   • Created system admin user with credentials: admin@nuzum.sa / admin123 (password hash updated and verified)
