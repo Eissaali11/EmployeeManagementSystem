@@ -70,9 +70,52 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
                 
             self.set_text_color(0, 0, 0)
             
-            # تنظيف النصوص
-            label_text = str(label) if label else 'Not specified'
-            value_text = str(value) if value else 'Not specified'
+            # تنظيف النصوص وتحويلها للإنجليزية إذا لزم الأمر
+            def clean_text(text):
+                if not text:
+                    return 'Not specified'
+                try:
+                    # محاولة تشفير النص بـ latin-1
+                    str(text).encode('latin-1')
+                    return str(text)
+                except UnicodeEncodeError:
+                    # إذا فشل التشفير، استخدم النص الإنجليزي المكافئ
+                    arabic_to_english = {
+                        'اسم الموظف': 'Employee Name',
+                        'رقم الموظف': 'Employee ID',
+                        'رقم الهوية الوطنية': 'National ID',
+                        'رقم الهاتف المحمول': 'Mobile Phone',
+                        'عنوان البريد الإلكتروني': 'Email Address',
+                        'الجنسية': 'Nationality',
+                        'نوع العقد': 'Contract Type',
+                        'المسمى الوظيفي': 'Job Title',
+                        'القسم': 'Department',
+                        'حالة التوظيف': 'Employment Status',
+                        'تاريخ الانضمام': 'Join Date',
+                        'الموقع': 'Location',
+                        'المشروع': 'Project',
+                        'الراتب الأساسي': 'Basic Salary',
+                        'الرصيد الوطني': 'National Balance',
+                        'تاريخ الإنشاء': 'Created Date',
+                        'آخر تحديث': 'Last Updated',
+                        'عدد الوثائق': 'Documents Count',
+                        'سجلات الحضور': 'Attendance Records',
+                        'سجلات الراتب': 'Salary Records',
+                        'أيام الخدمة': 'Service Days',
+                        'غير محدد': 'Not specified',
+                        'غير محددة': 'Not specified',
+                        'سعودي': 'Saudi',
+                        'وافد': 'Foreign',
+                        'نشط': 'Active',
+                        'غير نشط': 'Inactive',
+                        'في إجازة': 'On Leave',
+                        'متوفر': 'Available',
+                        'غير متوفر': 'Not available'
+                    }
+                    return arabic_to_english.get(str(text), str(text).encode('ascii', 'ignore').decode('ascii'))
+            
+            label_text = clean_text(label)
+            value_text = clean_text(value)
             
             # إضافة الصف
             self.cell(60, 8, label_text, 1, 0, 'L', True)
