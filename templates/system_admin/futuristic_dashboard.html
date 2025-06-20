@@ -157,10 +157,9 @@
 
         /* عنوان اللوحة */
         .dashboard-title {
-            font-size: 3.5rem;
+            font-size: 2.5rem;
             font-weight: 900;
-            text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             background: linear-gradient(45deg, 
                 var(--neon-cyan) 0%,
                 var(--neon-pink) 25%,
@@ -172,6 +171,24 @@
             background-clip: text;
             animation: titleGlow 3s ease-in-out infinite alternate;
             text-shadow: 0 0 50px rgba(0, 255, 255, 0.8);
+            position: relative;
+            z-index: 10;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%,
+                rgba(255, 255, 255, 0.06) 100%);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 
+                0 16px 48px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 5;
         }
 
         @keyframes titleGlow {
@@ -557,7 +574,17 @@
     <!-- المحتوى الرئيسي -->
     <div class="main-container">
         <!-- عنوان اللوحة -->
-        <h1 class="dashboard-title">لوحة تحكم مالك النظام المتطورة</h1>
+        <div class="dashboard-header">
+            <div class="text-center">
+                <h1 class="dashboard-title">
+                    <i class="fas fa-tachometer-alt me-3"></i>
+                    لوحة تحكم مالك النظام المتطورة
+                </h1>
+                <p class="text-glow mb-0" style="color: rgba(255, 255, 255, 0.8); font-size: 1.2rem;">
+                    إدارة شاملة لجميع الشركات والاشتراكات في النظام
+                </p>
+            </div>
+        </div>
 
         <!-- الإحصائيات -->
         <div class="stats-grid">
