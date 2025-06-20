@@ -19,8 +19,9 @@ def system_owner_required(f):
             abort(401)
         
         # التحقق من نوع المستخدم بأمان
-        if not hasattr(current_user, 'user_type') or current_user.user_type != UserType.SYSTEM_ADMIN:
-            logger.warning(f"غير مصرح - المستخدم {current_user.id} ليس مالك نظام، النوع: {getattr(current_user, 'user_type', 'غير محدد')}")
+        user_type = getattr(current_user, 'user_type', None)
+        if not user_type or (user_type != UserType.SYSTEM_ADMIN and str(user_type) != 'SYSTEM_ADMIN'):
+            logger.warning(f"غير مصرح - المستخدم {current_user.id} ليس مالك نظام، النوع: {user_type}")
             abort(403)
         
         return f(*args, **kwargs)
@@ -35,8 +36,10 @@ def company_admin_required(f):
         if not current_user.is_authenticated:
             abort(401)
         
-        if current_user.user_type not in [UserType.SYSTEM_ADMIN, UserType.COMPANY_ADMIN]:
-            logger.warning(f"غير مصرح - المستخدم {current_user.id} حاول الوصول لوظيفة مدير الشركة")
+        user_type = getattr(current_user, 'user_type', None)
+        allowed_types = [UserType.SYSTEM_ADMIN, UserType.COMPANY_ADMIN, 'SYSTEM_ADMIN', 'COMPANY_ADMIN']
+        if not user_type or (user_type not in allowed_types and str(user_type) not in allowed_types):
+            logger.warning(f"غير مصرح - المستخدم {current_user.id} حاول الوصول لوظيفة مدير الشركة، النوع: {user_type}")
             abort(403)
         
         return f(*args, **kwargs)

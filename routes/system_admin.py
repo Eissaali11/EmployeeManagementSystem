@@ -55,7 +55,7 @@ def dashboard():
     except Exception as e:
         logger.error(f"خطأ في لوحة تحكم مالك النظام: {str(e)}")
         flash('حدث خطأ في تحميل لوحة التحكم', 'error')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('multi_tenant_home'))
 
 @system_admin_bp.route('/companies')
 @login_required
