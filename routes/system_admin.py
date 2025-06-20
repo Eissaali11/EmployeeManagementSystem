@@ -101,10 +101,10 @@ def companies_list():
         flash('حدث خطأ في تحميل قائمة الشركات', 'error')
         return redirect(url_for('system_admin.dashboard'))
 
-@system_admin_bp.route('/companies/create', methods=['GET', 'POST'])
+@system_admin_bp.route('/companies/new', methods=['GET', 'POST'])
 @login_required
 @system_owner_required
-def create_company():
+def create_new_company():
     """إنشاء شركة جديدة"""
     if request.method == 'POST':
         try:
@@ -242,6 +242,8 @@ def manage_subscription(company_id):
         logger.error(f"خطأ في إدارة اشتراك الشركة {company_id}: {str(e)}")
         flash('حدث خطأ في تحميل إدارة الاشتراك', 'error')
         return redirect(url_for('system_admin.company_details', company_id=company_id))
+
+
 
 @system_admin_bp.route('/companies/<int:company_id>/upgrade', methods=['POST'])
 @login_required
