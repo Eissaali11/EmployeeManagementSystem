@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل الشركة - {{ company.name }} - نُظم{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-building text-primary me-2"></i>
+                    تفاصيل الشركة: {{ company.name }}
+                </h1>
+                <div class="btn-group">
+                    <a href="{{ url_for('system_admin.manage_subscription', company_id=company.id) }}" 
+                       class="btn btn-success">
+                        <i class="fas fa-credit-card me-2"></i>
+                        إدارة الاشتراك
+                    </a>
+                    <a href="{{ url_for('system_admin.companies_list') }}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Status Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                    <h6 class="card-title">حالة الشركة</h6>
+                    {% if company.status == 'active' %}
+                        <span class="badge bg-success">نشطة</span>
+                    {% else %}
+                        <span class="badge bg-danger">غير نشطة</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x text-info mb-2"></i>
+                    <h6 class="card-title">عدد المستخدمين</h6>
+                    <h4 class="text-info">{{ users_count }}</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-id-badge fa-2x text-warning mb-2"></i>
+                    <h6 class="card-title">عدد الموظفين</h6>
+                    <h4 class="text-warning">{{ employees_count }}</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-car fa-2x text-success mb-2"></i>
+                    <h6 class="card-title">عدد المركبات</h6>
+                    <h4 class="text-success">{{ vehicles_count }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Information -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات الشركة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">اسم الشركة</label>
+                            <p class="fw-bold">{{ company.name }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">الاسم بالإنجليزية</label>
+                            <p class="fw-bold">{{ company.name_en or 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">السجل التجاري</label>
+                            <p class="fw-bold">{{ company.commercial_register or 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">الرقم الضريبي</label>
+                            <p class="fw-bold">{{ company.tax_number or 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">البريد الإلكتروني</label>
+                            <p class="fw-bold">{{ company.contact_email }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">رقم الهاتف</label>
+                            <p class="fw-bold">{{ company.contact_phone or 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">المدينة</label>
+                            <p class="fw-bold">{{ company.city or 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">الدولة</label>
+                            <p class="fw-bold">{{ company.country or 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label class="form-label text-muted">العنوان</label>
+                            <p class="fw-bold">{{ company.address or 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">تاريخ الإنشاء</label>
+                            <p class="fw-bold">{{ company.created_at.strftime('%Y-%m-%d %H:%M') if company.created_at else 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">آخر تحديث</label>
+                            <p class="fw-bold">{{ company.updated_at.strftime('%Y-%m-%d %H:%M') if company.updated_at else 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Subscription Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        معلومات الاشتراك
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if subscription %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">نوع الاشتراك</label>
+                            <p class="fw-bold">
+                                <span class="badge bg-info">{{ subscription.plan_type }}</span>
+                                {% if subscription.is_trial %}
+                                    <span class="badge bg-warning text-dark ms-1">تجريبي</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted">حالة الاشتراك</label>
+                            <p class="fw-bold">
+                                {% if subscription.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-danger">منتهي الصلاحية</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted">تاريخ البدء</label>
+                            <p class="fw-bold">{{ subscription.start_date.strftime('%Y-%m-%d') if subscription.start_date else 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted">تاريخ الانتهاء</label>
+                            <p class="fw-bold">{{ subscription.end_date.strftime('%Y-%m-%d') if subscription.end_date else 'غير محدد' }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted">حد الموظفين</label>
+                            <p class="fw-bold">{{ subscription.employee_limit if subscription.employee_limit else 'غير محدود' }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted">حد المركبات</label>
+                            <p class="fw-bold">{{ subscription.vehicle_limit if subscription.vehicle_limit else 'غير محدود' }}</p>
+                        </div>
+                        
+                        {% if subscription.is_trial %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <small>هذا اشتراك تجريبي مجاني</small>
+                        </div>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            لا يوجد اشتراك نشط لهذه الشركة
+                        </div>
+                        <a href="{{ url_for('system_admin.manage_subscription', company_id=company.id) }}" 
+                           class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>
+                            إنشاء اشتراك
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        النشاط الأخير
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>النشاط</th>
+                                        <th>المستخدم</th>
+                                        <th>التفاصيل</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in recent_activities %}
+                                    <tr>
+                                        <td>{{ activity.created_at.strftime('%Y-%m-%d %H:%M') if activity.created_at else 'غير محدد' }}</td>
+                                        <td>{{ activity.action or 'غير محدد' }}</td>
+                                        <td>{{ activity.user.username if activity.user else 'غير محدد' }}</td>
+                                        <td>{{ activity.details or 'لا توجد تفاصيل' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">لا توجد أنشطة حديثة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

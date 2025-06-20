@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة شركة جديدة - نُظم{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-plus text-primary me-2"></i>
+                    إضافة شركة جديدة
+                </h1>
+                <a href="{{ url_for('system_admin.companies_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Company Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        بيانات الشركة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ csrf_token() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    المعلومات الأساسية
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-building me-1"></i>
+                                    اسم الشركة <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       required placeholder="شركة المثال للتجارة">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="name_en" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>
+                                    اسم الشركة بالإنجليزية
+                                </label>
+                                <input type="text" class="form-control" id="name_en" name="name_en" 
+                                       placeholder="Example Trading Company">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="commercial_register" class="form-label">
+                                    <i class="fas fa-certificate me-1"></i>
+                                    رقم السجل التجاري
+                                </label>
+                                <input type="text" class="form-control" id="commercial_register" 
+                                       name="commercial_register" placeholder="1010000000">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="tax_number" class="form-label">
+                                    <i class="fas fa-receipt me-1"></i>
+                                    الرقم الضريبي
+                                </label>
+                                <input type="text" class="form-control" id="tax_number" 
+                                       name="tax_number" placeholder="300000000000003">
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">
+                                    <i class="fas fa-address-book me-1"></i>
+                                    معلومات الاتصال
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>
+                                    البريد الإلكتروني <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" class="form-control" id="contact_email" 
+                                       name="contact_email" required placeholder="admin@company.com">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_phone" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>
+                                    رقم الهاتف
+                                </label>
+                                <input type="tel" class="form-control" id="contact_phone" 
+                                       name="contact_phone" placeholder="+966501234567">
+                            </div>
+                        </div>
+
+                        <!-- Location Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    معلومات الموقع
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">
+                                    <i class="fas fa-city me-1"></i>
+                                    المدينة
+                                </label>
+                                <select class="form-select" id="city" name="city">
+                                    <option value="">اختر المدينة</option>
+                                    <option value="الرياض">الرياض</option>
+                                    <option value="جدة">جدة</option>
+                                    <option value="الدمام">الدمام</option>
+                                    <option value="مكة المكرمة">مكة المكرمة</option>
+                                    <option value="المدينة المنورة">المدينة المنورة</option>
+                                    <option value="الطائف">الطائف</option>
+                                    <option value="تبوك">تبوك</option>
+                                    <option value="خميس مشيط">خميس مشيط</option>
+                                    <option value="حائل">حائل</option>
+                                    <option value="الجبيل">الجبيل</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="country" class="form-label">
+                                    <i class="fas fa-flag me-1"></i>
+                                    الدولة
+                                </label>
+                                <input type="text" class="form-control" id="country" 
+                                       name="country" value="السعودية" readonly>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="address" class="form-label">
+                                    <i class="fas fa-home me-1"></i>
+                                    العنوان التفصيلي
+                                </label>
+                                <textarea class="form-control" id="address" name="address" 
+                                          rows="3" placeholder="العنوان الكامل للشركة"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Subscription Plan -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">
+                                    <i class="fas fa-credit-card me-1"></i>
+                                    خطة الاشتراك
+                                </h6>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label class="form-label">نوع الاشتراك</label>
+                                <div class="row">
+                                    <div class="col-md-4 mb-2">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <input type="radio" class="form-check-input" 
+                                                       id="plan_basic" name="plan_type" value="basic" checked>
+                                                <label class="form-check-label w-100" for="plan_basic">
+                                                    <h6 class="mt-2">الخطة الأساسية</h6>
+                                                    <p class="text-muted small">
+                                                        حتى 50 موظف<br>
+                                                        100 مركبة<br>
+                                                        تقارير أساسية
+                                                    </p>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-2">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <input type="radio" class="form-check-input" 
+                                                       id="plan_professional" name="plan_type" value="professional">
+                                                <label class="form-check-label w-100" for="plan_professional">
+                                                    <h6 class="mt-2">الخطة المتقدمة</h6>
+                                                    <p class="text-muted small">
+                                                        حتى 200 موظف<br>
+                                                        500 مركبة<br>
+                                                        تقارير متقدمة
+                                                    </p>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-2">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <input type="radio" class="form-check-input" 
+                                                       id="plan_enterprise" name="plan_type" value="enterprise">
+                                                <label class="form-check-label w-100" for="plan_enterprise">
+                                                    <h6 class="mt-2">خطة المؤسسات</h6>
+                                                    <p class="text-muted small">
+                                                        موظفين غير محدود<br>
+                                                        مركبات غير محدودة<br>
+                                                        جميع الميزات
+                                                    </p>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trial Period Info -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>فترة تجريبية مجانية:</strong>
+                            ستحصل الشركة على فترة تجريبية مجانية لمدة 30 يوماً لاستكشاف جميع ميزات النظام.
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('system_admin.companies_list') }}" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>
+                                        إنشاء الشركة
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تأكيد الإرسال
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = ['name', 'contact_email'];
+    let hasErrors = false;
+    
+    requiredFields.forEach(field => {
+        const input = document.getElementById(field);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            hasErrors = true;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('يرجى ملء جميع الحقول المطلوبة');
+    }
+});
+</script>
+{% endblock %}
