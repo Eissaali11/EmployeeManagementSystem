@@ -88,20 +88,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     {% if current_user.is_authenticated %}
-                        {% if current_user.user_type and current_user.user_type.value == 'SYSTEM_ADMIN' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('system_admin.dashboard') }}">
-                                    <i class="fas fa-tachometer-alt"></i>
-                                    لوحة تحكم مالك النظام
-                                </a>
-                            </li>
-                        {% elif current_user.user_type and current_user.user_type.value == 'COMPANY_ADMIN' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('company_admin.dashboard') }}">
-                                    <i class="fas fa-building"></i>
-                                    لوحة تحكم الشركة
-                                </a>
-                            </li>
+                        {% if current_user.user_type %}
+                            {% if current_user.user_type.name == 'SYSTEM_ADMIN' or current_user.user_type == 'SYSTEM_ADMIN' %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('system_admin.dashboard') }}">
+                                        <i class="fas fa-tachometer-alt"></i>
+                                        لوحة تحكم مالك النظام
+                                    </a>
+                                </li>
+                            {% elif current_user.user_type.name == 'COMPANY_ADMIN' or current_user.user_type == 'COMPANY_ADMIN' %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('company_admin.dashboard') }}">
+                                        <i class="fas fa-building"></i>
+                                        لوحة تحكم الشركة
+                                    </a>
+                                </li>
+                            {% endif %}
                         {% endif %}
                     {% endif %}
                 </ul>

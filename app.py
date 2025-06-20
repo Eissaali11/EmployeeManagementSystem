@@ -326,7 +326,7 @@ with app.app_context():
     app.register_blueprint(fees_costs_bp, url_prefix='/fees-costs')
     app.register_blueprint(reports_bp, url_prefix='/reports')
     app.register_blueprint(api_bp)
-    app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(mobile_bp, url_prefix='/mobile')
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(mass_attendance_bp, url_prefix='/mass')
