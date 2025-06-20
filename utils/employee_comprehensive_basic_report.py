@@ -22,7 +22,7 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
             # عنوان النظام
             self.set_font('Arial', 'B', 20)
             self.set_text_color(41, 128, 185)
-            self.cell(0, 10, 'نظام نُظم لإدارة الموظفين', 0, 1, 'C')
+            self.cell(0, 10, 'NUZUM EMPLOYEE MANAGEMENT SYSTEM', 0, 1, 'C')
             
             # خط فاصل
             self.set_draw_color(41, 128, 185)
@@ -31,7 +31,7 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
             # عنوان التقرير
             self.set_font('Arial', 'B', 16)
             self.set_text_color(0, 0, 0)
-            self.cell(0, 10, 'تقرير المعلومات الأساسية للموظف', 0, 1, 'C')
+            self.cell(0, 10, 'Employee Basic Information Report', 0, 1, 'C')
             self.ln(5)
         except:
             pass
@@ -42,7 +42,7 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
             self.set_y(-15)
             self.set_font('Arial', 'I', 8)
             self.set_text_color(128, 128, 128)
-            self.cell(0, 10, f'تم الإنتاج في: {datetime.now().strftime("%Y-%m-%d %H:%M")} - صفحة {self.page_no()}', 0, 0, 'C')
+            self.cell(0, 10, f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M")} - Page {self.page_no()}', 0, 0, 'C')
         except:
             pass
             
@@ -53,7 +53,16 @@ class EmployeeComprehensiveBasicReportPDF(FPDF):
             self.set_font('Arial', 'B', 14)
             self.set_fill_color(52, 152, 219)
             self.set_text_color(255, 255, 255)
-            self.cell(0, 10, title, 0, 1, 'L', True)
+            # تحويل النص العربي للإنجليزي إذا لزم الأمر
+            english_titles = {
+                'المعلومات الشخصية الأساسية': 'Basic Personal Information',
+                'معلومات العمل': 'Work Information',
+                'وثائق وصور الموظف': 'Employee Documents and Photos',
+                'معلومات إضافية': 'Additional Information',
+                'إحصائيات سريعة': 'Quick Statistics'
+            }
+            display_title = english_titles.get(title, title)
+            self.cell(0, 10, display_title, 0, 1, 'L', True)
             self.ln(3)
         except:
             pass
@@ -193,7 +202,7 @@ def generate_comprehensive_basic_report(employee_id):
             # عنوان التقرير الرئيسي
             pdf.set_font('Arial', 'B', 16)
             pdf.set_text_color(0, 0, 0)
-            pdf.cell(0, 10, f'تقرير المعلومات الأساسية للموظف: {employee.get("name", "غير محدد")}', 0, 1, 'C')
+            pdf.cell(0, 10, f'Basic Information Report for: {employee.get("name", "Unknown")}', 0, 1, 'C')
             pdf.ln(10)
             
             # المعلومات الأساسية
@@ -276,13 +285,13 @@ def generate_comprehensive_basic_report(employee_id):
             current_y = pdf.get_y()
             
             # الصورة الشخصية
-            pdf.add_image_with_title(profile_image_path, 'الصورة الشخصية', 30, current_y, 45, 55)
+            pdf.add_image_with_title(profile_image_path, 'Profile Photo', 30, current_y, 45, 55)
             
             # صورة الهوية الوطنية
-            pdf.add_image_with_title(national_id_image_path, 'صورة الهوية الوطنية', 85, current_y, 45, 55)
+            pdf.add_image_with_title(national_id_image_path, 'National ID Photo', 85, current_y, 45, 55)
             
             # صورة رخصة القيادة
-            pdf.add_image_with_title(license_image_path, 'صورة رخصة القيادة', 140, current_y, 45, 55)
+            pdf.add_image_with_title(license_image_path, 'Driving License Photo', 140, current_y, 45, 55)
             
             # الانتقال إلى السطر التالي بعد الصور
             pdf.set_y(current_y + 70)
@@ -335,11 +344,41 @@ def generate_comprehensive_basic_report(employee_id):
             
             # إنشاء buffer وإرجاع PDF
             try:
-                pdf_buffer = pdf.output(dest='S').encode('latin1')
-            except:
-                pdf_buffer = bytes(pdf.output(dest='S'))
-            print("PDF generated successfully")
-            return pdf_buffer, None
+                # حفظ الملف كـ bytes مباشرة
+                pdf_output = pdf.output(dest='S')
+                if isinstance(pdf_output, str):
+                    pdf_buffer = pdf_output.encode('latin1', errors='ignore')
+                else:
+                    pdf_buffer = pdf_output
+                print("PDF generated successfully")
+                return pdf_buffer, None
+            except Exception as e:
+                print(f"Error creating PDF buffer: {e}")
+                # محاولة أخيرة لإنشاء PDF بنصوص مبسطة
+                try:
+                    simple_pdf = FPDF()
+                    simple_pdf.add_page()
+                    simple_pdf.set_font('Arial', 'B', 16)
+                    simple_pdf.cell(0, 10, f'Employee Report: {employee.get("name", "Unknown")}', 0, 1, 'C')
+                    simple_pdf.ln(10)
+                    simple_pdf.set_font('Arial', '', 12)
+                    simple_pdf.cell(0, 10, f'Employee ID: {employee.get("employee_id", "N/A")}', 0, 1)
+                    simple_pdf.cell(0, 10, f'National ID: {employee.get("national_id", "N/A")}', 0, 1)
+                    simple_pdf.cell(0, 10, f'Mobile: {employee.get("mobile", "N/A")}', 0, 1)
+                    simple_pdf.cell(0, 10, f'Email: {employee.get("email", "N/A")}', 0, 1)
+                    simple_pdf.cell(0, 10, f'Job Title: {employee.get("job_title", "N/A")}', 0, 1)
+                    simple_pdf.cell(0, 10, f'Department: {employee.get("department_name", "N/A")}', 0, 1)
+                    
+                    simple_output = simple_pdf.output(dest='S')
+                    if isinstance(simple_output, str):
+                        simple_buffer = simple_output.encode('latin1', errors='ignore')
+                    else:
+                        simple_buffer = simple_output
+                    print("Simple PDF generated successfully")
+                    return simple_buffer, None
+                except Exception as simple_error:
+                    print(f"Error creating simple PDF: {simple_error}")
+                    return None, f"Failed to create PDF: {str(e)}"
         
     except Exception as e:
         import traceback
