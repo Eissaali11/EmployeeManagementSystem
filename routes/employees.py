@@ -624,11 +624,11 @@ def upload_image(id):
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def basic_report(id):
-    """تقرير المعلومات الأساسية للموظف"""
+    """تقرير المعلومات الأساسية للموظف مع الصور"""
     try:
-        from utils.employee_simple_working_report import generate_simple_employee_report
+        from utils.employee_comprehensive_basic_report import generate_comprehensive_basic_report
         
-        pdf_buffer, error = generate_simple_employee_report(id)
+        pdf_buffer, error = generate_comprehensive_basic_report(id)
         if pdf_buffer:
             employee = Employee.query.get_or_404(id)
             current_date = datetime.now().strftime('%Y%m%d')
@@ -639,7 +639,7 @@ def basic_report(id):
                 action='export',
                 entity_type='employee_basic_report',
                 entity_id=employee.id,
-                details=f'تم تصدير التقرير الأساسي للموظف: {employee.name}'
+                details=f'تم تصدير التقرير الأساسي للموظف: {employee.name} مع الصور'
             )
             db.session.add(audit)
             db.session.commit()
