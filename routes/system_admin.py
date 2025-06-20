@@ -262,7 +262,7 @@ def manage_subscription(company_id):
 @system_admin_alt_bp.route('/subscriptions')
 @login_required
 @system_owner_required
-def subscriptions():
+def subscriptions_list():
     """إدارة الاشتراكات"""
     try:
         subscriptions = CompanySubscription.query.all()
