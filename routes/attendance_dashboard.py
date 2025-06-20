@@ -40,44 +40,102 @@ def index():
     except ValueError:
         selected_date = datetime.now().date()
     
-    # الحصول على جميع الأقسام
-    departments = Department.query.order_by(Department.name).all()
+    # الحصول على الأقسام المتاحة للمستخدم حسب صلاحياته
+    accessible_dept_ids = current_user.get_accessible_department_ids()
     
-    # إحصائيات إجمالية - عدد الموظفين النشطين فقط
-    total_employees = Employee.query.filter_by(status='active').count()
+    if accessible_dept_ids is None:  # مدير النظام - جميع الأقسام
+        departments = Department.query.order_by(Department.name).all()
+    elif accessible_dept_ids:  # أقسام محددة
+        departments = Department.query.filter(Department.id.in_(accessible_dept_ids)).order_by(Department.name).all()
+    else:  # لا توجد أقسام متاحة
+        departments = []
     
-    # حساب إحصائيات الحضور الإجمالية
-    total_present = db.session.query(func.count(Attendance.id)).join(
-        Employee, Employee.id == Attendance.employee_id
-    ).filter(
-        Employee.status == 'active',
-        Attendance.date == selected_date,
-        Attendance.status == 'present'
-    ).scalar() or 0
-    
-    total_absent = db.session.query(func.count(Attendance.id)).join(
-        Employee, Employee.id == Attendance.employee_id
-    ).filter(
-        Employee.status == 'active',
-        Attendance.date == selected_date,
-        Attendance.status == 'absent'
-    ).scalar() or 0
-    
-    total_leave = db.session.query(func.count(Attendance.id)).join(
-        Employee, Employee.id == Attendance.employee_id
-    ).filter(
-        Employee.status == 'active',
-        Attendance.date == selected_date,
-        Attendance.status == 'leave'
-    ).scalar() or 0
-    
-    total_sick = db.session.query(func.count(Attendance.id)).join(
-        Employee, Employee.id == Attendance.employee_id
-    ).filter(
-        Employee.status == 'active',
-        Attendance.date == selected_date,
-        Attendance.status == 'sick'
-    ).scalar() or 0
+    # إحصائيات إجمالية - عدد الموظفين النشطين حسب الأقسام المتاحة
+    if accessible_dept_ids is None:  # مدير النظام - جميع الموظفين
+        total_employees = Employee.query.filter_by(status='active').count()
+        
+        # حساب إحصائيات الحضور الإجمالية
+        total_present = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Attendance.date == selected_date,
+            Attendance.status == 'present'
+        ).scalar() or 0
+        
+        total_absent = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Attendance.date == selected_date,
+            Attendance.status == 'absent'
+        ).scalar() or 0
+        
+        total_leave = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Attendance.date == selected_date,
+            Attendance.status == 'leave'
+        ).scalar() or 0
+        
+        total_sick = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Attendance.date == selected_date,
+            Attendance.status == 'sick'
+        ).scalar() or 0
+        
+    elif accessible_dept_ids:  # أقسام محددة
+        total_employees = Employee.query.filter(
+            Employee.status == 'active',
+            Employee.department_id.in_(accessible_dept_ids)
+        ).count()
+        
+        # حساب إحصائيات الحضور الإجمالية للأقسام المتاحة
+        total_present = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Employee.department_id.in_(accessible_dept_ids),
+            Attendance.date == selected_date,
+            Attendance.status == 'present'
+        ).scalar() or 0
+        
+        total_absent = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Employee.department_id.in_(accessible_dept_ids),
+            Attendance.date == selected_date,
+            Attendance.status == 'absent'
+        ).scalar() or 0
+        
+        total_leave = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Employee.department_id.in_(accessible_dept_ids),
+            Attendance.date == selected_date,
+            Attendance.status == 'leave'
+        ).scalar() or 0
+        
+        total_sick = db.session.query(func.count(Attendance.id)).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Employee.status == 'active',
+            Employee.department_id.in_(accessible_dept_ids),
+            Attendance.date == selected_date,
+            Attendance.status == 'sick'
+        ).scalar() or 0
+        
+    else:  # لا توجد أقسام متاحة
+        total_employees = 0
+        total_present = 0
+        total_absent = 0
+        total_leave = 0
+        total_sick = 0
     
     # حساب عدد الموظفين الذين لم يتم تسجيل حضورهم
     total_registered = total_present + total_absent + total_leave + total_sick
