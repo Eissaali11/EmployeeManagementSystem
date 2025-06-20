@@ -1,0 +1,417 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة صلاحيات المستخدم المحسنة{% endblock %}
+
+{% block extra_css %}
+<style>
+.permission-card {
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+.module-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+}
+.permission-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    padding: 20px;
+}
+.permission-item {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+.permission-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.permission-item.active {
+    background-color: #d4edda;
+    border-color: #28a745;
+}
+.department-card {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.current-permissions {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+.permission-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 2px;
+}
+.badge-view { background-color: #17a2b8; color: white; }
+.badge-create { background-color: #28a745; color: white; }
+.badge-edit { background-color: #ffc107; color: black; }
+.badge-delete { background-color: #dc3545; color: white; }
+.badge-manage { background-color: #6f42c1; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">
+                    <i class="fas fa-user-shield me-2 text-primary"></i>
+                    إدارة صلاحيات: {{ user.name or user.email }}
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('attendance.dashboard') }}">الرئيسية</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('users.index') }}">المستخدمين</a></li>
+                        <li class="breadcrumb-item active">الصلاحيات</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-lg rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-user fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ user.name or 'غير محدد' }}</h5>
+                                    <p class="text-muted mb-0">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>الدور:</strong> 
+                            <span class="badge bg-primary fs-6">{{ user.role.value }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>القسم:</strong> 
+                            <span class="badge bg-info fs-6">{{ user.assigned_department.name if user.assigned_department else 'جميع الأقسام' }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>الحالة:</strong> 
+                            <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                                {% if user.is_active %}نشط{% else %}معطل{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if user.role.value == 'admin' %}
+                <!-- Admin Notice -->
+                <div class="alert alert-success border-0 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-crown fa-2x me-3 text-warning"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">مدير النظام</h5>
+                            <p class="mb-0">هذا المستخدم لديه صلاحيات كاملة على جميع وحدات النظام وجميع الأقسام.</p>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Permissions Form -->
+                <form id="permissionsForm" method="POST" action="{{ url_for('users.update_permissions', user_id=user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="row">
+                        <!-- Module Permissions -->
+                        <div class="col-lg-8">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-cogs me-2"></i>
+                                        صلاحيات الوحدات
+                                    </h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    {% set module_names = {
+                                        'DASHBOARD': 'لوحة التحكم',
+                                        'EMPLOYEES': 'إدارة الموظفين',
+                                        'ATTENDANCE': 'نظام الحضور',
+                                        'DEPARTMENTS': 'إدارة الأقسام',
+                                        'SALARIES': 'إدارة الرواتب',
+                                        'DOCUMENTS': 'إدارة الوثائق',
+                                        'VEHICLES': 'إدارة المركبات',
+                                        'USERS': 'إدارة المستخدمين'
+                                    } %}
+                                    
+                                    {% for module in modules %}
+                                    {% set current_permissions = user.permissions|selectattr('module', 'equalto', module)|first %}
+                                    <div class="permission-card">
+                                        <div class="module-header">
+                                            <i class="fas fa-cube me-2"></i>
+                                            {{ module_names.get(module.name, module.value) }}
+                                        </div>
+                                        <div class="permission-grid">
+                                            <div class="permission-item">
+                                                <input type="checkbox" class="form-check-input mb-2" 
+                                                       id="{{ module.name }}_view"
+                                                       name="permissions" value="{{ module.name }}_1"
+                                                       {% if current_permissions and current_permissions.permissions & 1 %}checked{% endif %}>
+                                                <label for="{{ module.name }}_view" class="form-check-label d-block">
+                                                    <i class="fas fa-eye text-info d-block mb-1"></i>
+                                                    <small>عرض</small>
+                                                </label>
+                                            </div>
+                                            <div class="permission-item">
+                                                <input type="checkbox" class="form-check-input mb-2" 
+                                                       id="{{ module.name }}_create"
+                                                       name="permissions" value="{{ module.name }}_2"
+                                                       {% if current_permissions and current_permissions.permissions & 2 %}checked{% endif %}>
+                                                <label for="{{ module.name }}_create" class="form-check-label d-block">
+                                                    <i class="fas fa-plus text-success d-block mb-1"></i>
+                                                    <small>إنشاء</small>
+                                                </label>
+                                            </div>
+                                            <div class="permission-item">
+                                                <input type="checkbox" class="form-check-input mb-2" 
+                                                       id="{{ module.name }}_edit"
+                                                       name="permissions" value="{{ module.name }}_4"
+                                                       {% if current_permissions and current_permissions.permissions & 4 %}checked{% endif %}>
+                                                <label for="{{ module.name }}_edit" class="form-check-label d-block">
+                                                    <i class="fas fa-edit text-warning d-block mb-1"></i>
+                                                    <small>تعديل</small>
+                                                </label>
+                                            </div>
+                                            <div class="permission-item">
+                                                <input type="checkbox" class="form-check-input mb-2" 
+                                                       id="{{ module.name }}_delete"
+                                                       name="permissions" value="{{ module.name }}_8"
+                                                       {% if current_permissions and current_permissions.permissions & 8 %}checked{% endif %}>
+                                                <label for="{{ module.name }}_delete" class="form-check-label d-block">
+                                                    <i class="fas fa-trash text-danger d-block mb-1"></i>
+                                                    <small>حذف</small>
+                                                </label>
+                                            </div>
+                                            <div class="permission-item">
+                                                <input type="checkbox" class="form-check-input mb-2" 
+                                                       id="{{ module.name }}_manage"
+                                                       name="permissions" value="{{ module.name }}_16"
+                                                       {% if current_permissions and current_permissions.permissions & 16 %}checked{% endif %}>
+                                                <label for="{{ module.name }}_manage" class="form-check-label d-block">
+                                                    <i class="fas fa-crown text-purple d-block mb-1"></i>
+                                                    <small>إدارة</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Department Access & Current Permissions -->
+                        <div class="col-lg-4">
+                            <!-- Department Access -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="department-card">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-building me-2"></i>
+                                        الوصول للأقسام
+                                    </h5>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="department_access" 
+                                               id="all_departments" value="all"
+                                               {% if not user.assigned_department_id %}checked{% endif %}>
+                                        <label class="form-check-label text-white" for="all_departments">
+                                            <i class="fas fa-globe me-2"></i>
+                                            جميع الأقسام
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="department_access" 
+                                               id="specific_department" value="specific"
+                                               {% if user.assigned_department_id %}checked{% endif %}>
+                                        <label class="form-check-label text-white" for="specific_department">
+                                            <i class="fas fa-building me-2"></i>
+                                            قسم محدد
+                                        </label>
+                                    </div>
+                                    <div id="department_selection" class="mt-3" 
+                                         style="{% if not user.assigned_department_id %}display: none;{% endif %}">
+                                        <select name="assigned_department_id" class="form-select">
+                                            <option value="">اختر القسم</option>
+                                            {% for dept in user.get_accessible_departments() %}
+                                            <option value="{{ dept.id }}" 
+                                                    {% if user.assigned_department_id == dept.id %}selected{% endif %}>
+                                                {{ dept.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-white-50 mt-1 d-block">
+                                            المستخدم سيصل لبيانات هذا القسم فقط
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Current Permissions Summary -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-list-check me-2"></i>
+                                        ملخص الصلاحيات الحالية
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if user.permissions %}
+                                        {% for perm in user.permissions %}
+                                        <div class="mb-3 p-2 border rounded">
+                                            <div class="fw-bold mb-2">{{ module_names.get(perm.module.name, perm.module.value) }}</div>
+                                            <div>
+                                                {% if perm.permissions & 1 %}
+                                                    <span class="permission-badge badge-view">عرض</span>
+                                                {% endif %}
+                                                {% if perm.permissions & 2 %}
+                                                    <span class="permission-badge badge-create">إنشاء</span>
+                                                {% endif %}
+                                                {% if perm.permissions & 4 %}
+                                                    <span class="permission-badge badge-edit">تعديل</span>
+                                                {% endif %}
+                                                {% if perm.permissions & 8 %}
+                                                    <span class="permission-badge badge-delete">حذف</span>
+                                                {% endif %}
+                                                {% if perm.permissions & 16 %}
+                                                    <span class="permission-badge badge-manage">إدارة</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                            <p class="mb-0">لا توجد صلاحيات محددة</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            العودة
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-success me-2" onclick="selectAllPermissions()">
+                                <i class="fas fa-check-double me-2"></i>
+                                تحديد الكل
+                            </button>
+                            <button type="button" class="btn btn-outline-warning me-2" onclick="clearAllPermissions()">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء الكل
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ التغييرات
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+
+            <!-- Help Section -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        دليل الصلاحيات
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">أنواع الصلاحيات:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-eye text-info me-2"></i><strong>عرض:</strong> إمكانية مشاهدة البيانات فقط</li>
+                                <li><i class="fas fa-plus text-success me-2"></i><strong>إنشاء:</strong> إضافة سجلات جديدة</li>
+                                <li><i class="fas fa-edit text-warning me-2"></i><strong>تعديل:</strong> تحديث البيانات الموجودة</li>
+                                <li><i class="fas fa-trash text-danger me-2"></i><strong>حذف:</strong> إزالة السجلات</li>
+                                <li><i class="fas fa-crown text-purple me-2"></i><strong>إدارة:</strong> صلاحيات إدارية كاملة</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">الوصول للأقسام:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-globe text-success me-2"></i><strong>جميع الأقسام:</strong> وصول كامل لكل البيانات</li>
+                                <li><i class="fas fa-building text-warning me-2"></i><strong>قسم محدد:</strong> وصول محدود لقسم واحد</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectAllPermissions() {
+    document.querySelectorAll('input[name="permissions"]').forEach(checkbox => {
+        checkbox.checked = true;
+        updatePermissionItem(checkbox);
+    });
+}
+
+function clearAllPermissions() {
+    document.querySelectorAll('input[name="permissions"]').forEach(checkbox => {
+        checkbox.checked = false;
+        updatePermissionItem(checkbox);
+    });
+}
+
+function updatePermissionItem(checkbox) {
+    const permissionItem = checkbox.closest('.permission-item');
+    if (checkbox.checked) {
+        permissionItem.classList.add('active');
+    } else {
+        permissionItem.classList.remove('active');
+    }
+}
+
+// Department access radio buttons
+document.querySelectorAll('input[name="department_access"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const departmentSelection = document.getElementById('department_selection');
+        if (this.value === 'specific') {
+            departmentSelection.style.display = 'block';
+        } else {
+            departmentSelection.style.display = 'none';
+        }
+    });
+});
+
+// Initialize permission items
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="permissions"]').forEach(checkbox => {
+        updatePermissionItem(checkbox);
+        checkbox.addEventListener('change', function() {
+            updatePermissionItem(this);
+        });
+    });
+});
+</script>
+{% endblock %}

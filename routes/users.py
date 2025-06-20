@@ -73,7 +73,8 @@ def user_permissions(user_id):
     """إدارة صلاحيات المستخدم التفصيلية"""
     user = User.query.get_or_404(user_id)
     modules = list(Module)
-    return render_template('users/permissions.html', user=user, modules=modules)
+    departments = Department.query.all()
+    return render_template('users/permissions_enhanced.html', user=user, modules=modules, departments=departments)
 
 @users_bp.route('/toggle_active/<int:user_id>', methods=['POST'])
 @login_required
@@ -347,19 +348,38 @@ def update_permissions(user_id):
         # جلب الصلاحيات المحددة
         selected_permissions = request.form.getlist('permissions')
         
+        # تحديث الوصول للأقسام
+        department_access = request.form.get('department_access')
+        if department_access == 'all':
+            user.assigned_department_id = None
+        elif department_access == 'specific':
+            assigned_dept_id = request.form.get('assigned_department_id')
+            if assigned_dept_id:
+                user.assigned_department_id = int(assigned_dept_id)
+            else:
+                user.assigned_department_id = None
+        
         # حذف جميع صلاحيات المستخدم الحالية
         UserPermission.query.filter_by(user_id=user_id).delete()
         
-        # إضافة الصلاحيات الجديدة
+        # تجميع الصلاحيات حسب الوحدة
+        module_permissions = {}
         for permission_str in selected_permissions:
             module_name, permission_value = permission_str.split('_')
-            module = Module[module_name]
             permission_value = int(permission_value)
+            
+            if module_name not in module_permissions:
+                module_permissions[module_name] = 0
+            module_permissions[module_name] |= permission_value
+        
+        # إضافة الصلاحيات الجديدة
+        for module_name, combined_permissions in module_permissions.items():
+            module = Module[module_name]
             
             new_permission = UserPermission(
                 user_id=user_id,
                 module=module,
-                permissions=permission_value
+                permissions=combined_permissions
             )
             db.session.add(new_permission)
         
