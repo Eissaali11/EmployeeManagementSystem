@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الاشتراكات المتطورة - نُظم</title>
+    
+    <!-- Bootstrap CSS with Dark Theme -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts for Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --dark-gradient: linear-gradient(135deg, #232526 0%, #414345 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --neon-cyan: #00ffff;
+            --neon-pink: #ff00ff;
+            --neon-yellow: #ffff00;
+            --neon-green: #00ff00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* خلفية متحركة مع جسيمات */
+        .animated-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(79, 172, 254, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            animation: backgroundShift 20s ease-in-out infinite;
+            z-index: -3;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+
+        /* شبكة مضيئة */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 100px 100px;
+            animation: gridMove 30s linear infinite;
+            z-index: -2;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 100px); }
+        }
+
+        /* جسيمات متحركة */
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-pink));
+            border-radius: 50%;
+            animation: floatParticle 15s linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 30%; animation-delay: 5s; }
+        .particle:nth-child(3) { left: 60%; animation-delay: 10s; }
+        .particle:nth-child(4) { left: 80%; animation-delay: 15s; }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* شريط التنقل المتطور */
+        .futuristic-navbar {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-weight: 900;
+            font-size: 1.8rem;
+            color: #ffffff !important;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-link {
+            color: #ffffff !important;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-link:hover {
+            color: var(--neon-cyan) !important;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .dropdown-toggle {
+            color: #ffffff !important;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Container الرئيسي */
+        .main-container {
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* عنوان الصفحة */
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, 
+                var(--neon-cyan) 0%,
+                var(--neon-pink) 25%,
+                var(--neon-yellow) 50%,
+                var(--neon-green) 75%,
+                var(--neon-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            text-shadow: 0 0 50px rgba(0, 255, 255, 0.8);
+            position: relative;
+            z-index: 10;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.12) 0%,
+                rgba(255, 255, 255, 0.06) 100%);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 
+                0 16px 48px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 5;
+        }
+
+        @keyframes titleGlow {
+            0% { filter: brightness(1) drop-shadow(0 0 20px rgba(0, 255, 255, 0.5)); }
+            100% { filter: brightness(1.3) drop-shadow(0 0 40px rgba(255, 0, 255, 0.8)); }
+        }
+
+        /* كرت عصري */
+        .futuristic-card {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%,
+                rgba(255, 255, 255, 0.03) 100%);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 
+                0 16px 64px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .futuristic-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+
+        .futuristic-card:hover::before {
+            opacity: 1;
+            animation: cardShimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes cardShimmer {
+            0% { transform: rotate(45deg) translateX(-100%); }
+            100% { transform: rotate(45deg) translateX(100%); }
+        }
+
+        .futuristic-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 24px 80px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(102, 126, 234, 0.3);
+        }
+
+        /* الإحصائيات */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.03) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                var(--neon-cyan) 0%,
+                var(--neon-pink) 25%,
+                var(--neon-yellow) 50%,
+                var(--neon-green) 75%,
+                var(--neon-cyan) 100%);
+            border-radius: 18px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::after {
+            opacity: 0.3;
+            animation: borderFlow 3s linear infinite;
+        }
+
+        @keyframes borderFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* أزرار متطورة */
+        .futuristic-btn {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .futuristic-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .futuristic-btn:hover::before {
+            left: 100%;
+        }
+
+        .futuristic-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            border-color: rgba(0, 255, 255, 0.5);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(0, 255, 255, 0.3);
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        /* النماذج */
+        .futuristic-form {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.06) 0%,
+                rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .futuristic-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .futuristic-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            color: #ffffff;
+            outline: none;
+        }
+
+        .futuristic-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* جدول متطور */
+        .futuristic-table {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.05) 0%,
+                rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .futuristic-table table {
+            margin: 0;
+            background: transparent;
+        }
+
+        .futuristic-table th {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.05) 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 1rem;
+        }
+
+        .futuristic-table td {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .futuristic-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+
+        /* شارات الحالة */
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-active {
+            background: linear-gradient(135deg, var(--neon-green) 0%, rgba(0, 255, 0, 0.6) 100%);
+            color: #000;
+        }
+
+        .status-trial {
+            background: linear-gradient(135deg, var(--neon-yellow) 0%, rgba(255, 255, 0, 0.6) 100%);
+            color: #000;
+        }
+
+        .status-expired {
+            background: linear-gradient(135deg, #ff6b6b 0%, rgba(255, 107, 107, 0.6) 100%);
+            color: #fff;
+        }
+
+        /* تأثيرات إضافية */
+        .glow-effect {
+            animation: glowPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glowPulse {
+            0% { 
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            }
+            100% { 
+                box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+            }
+        }
+
+        .bounce-in {
+            animation: bounceIn 1s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(50px);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05) translateY(-10px);
+            }
+            70% {
+                transform: scale(0.9) translateY(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* خاصية التوهج للنصوص */
+        .text-glow {
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .futuristic-table {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- خلفية متحركة -->
+    <div class="animated-background"></div>
+    <div class="grid-overlay"></div>
+    <div class="floating-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- شريط التنقل -->
+    <nav class="navbar navbar-expand-lg futuristic-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/multi-tenant">
+                <i class="fas fa-building"></i>
+                نُظم
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-glow" href="/system/dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            لوحة التحكم
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-glow" href="/system/companies">
+                            <i class="fas fa-building"></i>
+                            إدارة الشركات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-glow" href="/system/subscriptions">
+                            <i class="fas fa-credit-card"></i>
+                            إدارة الاشتراكات
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-glow" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i>
+                            مالك النظام
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/auth/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                تسجيل الخروج
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-container">
+        <!-- عنوان الصفحة -->
+        <div class="page-header">
+            <div class="text-center">
+                <h1 class="page-title">
+                    <i class="fas fa-credit-card me-3"></i>
+                    إدارة الاشتراكات المتطورة
+                </h1>
+                <p class="text-glow mb-0" style="color: rgba(255, 255, 255, 0.8); font-size: 1.1rem;">
+                    مراقبة وإدارة جميع اشتراكات الشركات في النظام
+                </p>
+            </div>
+        </div>
+
+        <!-- الإحصائيات -->
+        <div class="stats-grid">
+            <div class="stat-card bounce-in glow-effect" style="animation-delay: 0.1s;">
+                <div class="stat-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div class="stat-number">{{ total_subscriptions }}</div>
+                <div class="stat-label">إجمالي الاشتراكات</div>
+            </div>
+
+            <div class="stat-card bounce-in glow-effect" style="animation-delay: 0.2s;">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number">{{ active_subscriptions }}</div>
+                <div class="stat-label">الاشتراكات النشطة</div>
+            </div>
+
+            <div class="stat-card bounce-in glow-effect" style="animation-delay: 0.3s;">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-number">{{ trial_subscriptions }}</div>
+                <div class="stat-label">فترات تجريبية</div>
+            </div>
+
+            <div class="stat-card bounce-in glow-effect" style="animation-delay: 0.4s;">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-number">{{ expired_subscriptions }}</div>
+                <div class="stat-label">منتهية الصلاحية</div>
+            </div>
+        </div>
+
+        <!-- البحث والتصفية -->
+        <div class="futuristic-card bounce-in glow-effect" style="animation-delay: 0.5s;">
+            <h3 class="mb-4 text-glow" style="color: #fff; font-weight: 700; font-size: 1.5rem;">البحث والتصفية</h3>
+            <div class="futuristic-form">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="search" class="form-label text-glow">البحث</label>
+                        <input type="text" class="form-control futuristic-input" id="search" name="search" 
+                               value="{{ search or '' }}" placeholder="اسم الشركة">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="status" class="form-label text-glow">الحالة</label>
+                        <select class="form-select futuristic-input" id="status" name="status">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>جميع الاشتراكات</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>نشطة</option>
+                            <option value="trial" {% if status_filter == 'trial' %}selected{% endif %}>فترة تجريبية</option>
+                            <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>منتهية الصلاحية</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="futuristic-btn w-100">
+                            <i class="fas fa-search"></i>
+                            بحث
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- قائمة الاشتراكات -->
+        <div class="futuristic-card fade-in-up" style="animation-delay: 0.7s;">
+            <h3 class="mb-4 text-glow" style="color: #fff; font-weight: 700; font-size: 1.5rem;">قائمة الاشتراكات</h3>
+            
+            {% if subscriptions %}
+            <div class="futuristic-table">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>اسم الشركة</th>
+                            <th>نوع الخطة</th>
+                            <th>تاريخ البداية</th>
+                            <th>تاريخ الانتهاء</th>
+                            <th>الحالة</th>
+                            <th>الأيام المتبقية</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscription in subscriptions %}
+                        <tr>
+                            <td class="text-glow">{{ subscription.company.name }}</td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {% if subscription.plan_type == 'basic' %}أساسية
+                                    {% elif subscription.plan_type == 'premium' %}متقدمة
+                                    {% elif subscription.plan_type == 'enterprise' %}مؤسسية
+                                    {% else %}{{ subscription.plan_type }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>{{ subscription.start_date.strftime('%Y-%m-%d') if subscription.start_date else 'غير محدد' }}</td>
+                            <td>{{ subscription.end_date.strftime('%Y-%m-%d') if subscription.end_date else 'غير محدد' }}</td>
+                            <td>
+                                {% if subscription.is_active and subscription.is_trial %}
+                                    <span class="status-badge status-trial">
+                                        <i class="fas fa-clock"></i>
+                                        فترة تجريبية
+                                    </span>
+                                {% elif subscription.is_active %}
+                                    <span class="status-badge status-active">
+                                        <i class="fas fa-check-circle"></i>
+                                        نشط
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge status-expired">
+                                        <i class="fas fa-times-circle"></i>
+                                        منتهي الصلاحية
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if subscription.days_remaining %}
+                                    {% if subscription.days_remaining > 0 %}
+                                        <span class="text-success">{{ subscription.days_remaining }} يوم</span>
+                                    {% else %}
+                                        <span class="text-danger">منتهي</span>
+                                    {% endif %}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('system_admin.company_details', company_id=subscription.company_id) }}" 
+                                       class="futuristic-btn" title="عرض الشركة">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('system_admin.manage_subscription', company_id=subscription.company_id) }}" 
+                                       class="futuristic-btn" title="إدارة الاشتراك">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="text-glow" style="font-size: 3rem; margin-bottom: 1rem;">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h4 class="text-glow">لا توجد اشتراكات متاحة</h4>
+                <p class="text-muted">لا توجد اشتراكات مطابقة لمعايير البحث</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // تأثيرات إضافية عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // تأثير parallax للخلفية
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const parallax = document.querySelector('.grid-overlay');
+                if (parallax) {
+                    const speed = scrolled * 0.5;
+                    parallax.style.transform = `translateY(${speed}px)`;
+                }
+            });
+
+            // تأثير hover ثلاثي الأبعاد للكاردات
+            document.querySelectorAll('.futuristic-card, .stat-card').forEach(card => {
+                card.addEventListener('mousemove', function(e) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const rotateX = (y - centerY) / 20;
+                    const rotateY = (centerX - x) / 20;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(20px)`;
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+                });
+            });
+
+            // تأثير النقر على الأزرار
+            document.querySelectorAll('.futuristic-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: ripple 0.6s linear;
+                        pointer-events: none;
+                    `;
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+
+        // CSS for ripple effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

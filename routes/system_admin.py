@@ -123,19 +123,14 @@ def create_new_company():
     """إنشاء شركة جديدة"""
     if request.method == 'POST':
         try:
-            company_data = {
-                'name': request.form.get('name'),
-                'name_en': request.form.get('name_en'),
-                'commercial_register': request.form.get('commercial_register'),
-                'tax_number': request.form.get('tax_number'),
-                'contact_email': request.form.get('contact_email'),
-                'contact_phone': request.form.get('contact_phone'),
-                'address': request.form.get('address'),
-                'city': request.form.get('city'),
-                'country': request.form.get('country', 'السعودية'),
-                'is_active': True,
-                'created_by_user_id': current_user.id
-            }
+            # إنشاء الشركة الجديدة
+            new_company = Company(
+                name=request.form.get('name'),
+                contact_email=request.form.get('contact_email'),
+                contact_phone=request.form.get('contact_phone'),
+                address=request.form.get('address'),
+                status='active'
+            )
             
             # التحقق من البيانات المطلوبة
             required_fields = ['name', 'contact_email']
@@ -265,12 +260,46 @@ def manage_subscription(company_id):
 def subscriptions_list():
     """إدارة الاشتراكات"""
     try:
-        subscriptions = CompanySubscription.query.all()
-        return render_template('system_admin/subscriptions.html',
-                             subscriptions=subscriptions)
+        page = request.args.get('page', 1, type=int)
+        search = request.args.get('search', '')
+        status_filter = request.args.get('status', 'all')
+        
+        query = CompanySubscription.query.join(Company)
+        
+        # البحث
+        if search:
+            query = query.filter(Company.name.contains(search))
+        
+        # تصفية حسب الحالة
+        if status_filter == 'active':
+            query = query.filter(CompanySubscription.is_active == True)
+        elif status_filter == 'trial':
+            query = query.filter(CompanySubscription.is_trial == True)
+        elif status_filter == 'expired':
+            query = query.filter(CompanySubscription.is_active == False)
+        
+        subscriptions = query.order_by(CompanySubscription.created_at.desc()).paginate(
+            page=page, per_page=20, error_out=False
+        )
+        
+        # إحصائيات
+        total_subscriptions = CompanySubscription.query.count()
+        active_subscriptions = CompanySubscription.query.filter_by(is_active=True).count()
+        trial_subscriptions = CompanySubscription.query.filter_by(is_trial=True, is_active=True).count()
+        expired_subscriptions = CompanySubscription.query.filter_by(is_active=False).count()
+        
+        return render_template('system_admin/futuristic_subscriptions.html',
+                             subscriptions=subscriptions.items,
+                             search=search,
+                             status_filter=status_filter,
+                             total_subscriptions=total_subscriptions,
+                             active_subscriptions=active_subscriptions,
+                             trial_subscriptions=trial_subscriptions,
+                             expired_subscriptions=expired_subscriptions)
+                             
     except Exception as e:
-        logger.error(f"خطأ في عرض الاشتراكات: {str(e)}")
-        flash('حدث خطأ في تحميل الاشتراكات', 'error')
+        logger.error(f"خطأ في قائمة الاشتراكات: {str(e)}")
+        flash('حدث خطأ في تحميل قائمة الاشتراكات', 'error')
         return redirect(url_for('system_admin.dashboard'))
 
 @system_admin_bp.route('/reports')
