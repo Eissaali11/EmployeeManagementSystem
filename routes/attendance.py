@@ -50,14 +50,33 @@ def index():
     from flask_login import current_user
     
     if current_user.is_authenticated:
-        departments = current_user.get_accessible_departments()
+        # الحصول على معرفات الأقسام المتاحة للمستخدم
+        accessible_dept_ids = current_user.get_accessible_department_ids()
         
-        # إذا كان لدى المستخدم قسم مخصص، فلتر البيانات تلقائياً لهذا القسم
-        if current_user.assigned_department_id and not department_id:
-            department_id = str(current_user.assigned_department_id)
-            query = query.join(Employee).filter(Employee.department_id == current_user.assigned_department_id)
-            base_query = base_query.join(Employee).filter(Employee.department_id == current_user.assigned_department_id)
-            attendances = query.all()
+        if accessible_dept_ids is None:  # مدير النظام - جميع الأقسام
+            departments = Department.query.all()
+        elif accessible_dept_ids:  # أقسام محددة
+            departments = Department.query.filter(Department.id.in_(accessible_dept_ids)).all()
+            
+            # تطبيق فلتر الأقسام على الحضور
+            if not department_id:  # إذا لم يتم تحديد قسم، اعرض من جميع الأقسام المتاحة
+                query = query.join(Employee).filter(Employee.department_id.in_(accessible_dept_ids))
+                base_query = base_query.join(Employee).filter(Employee.department_id.in_(accessible_dept_ids))
+                attendances = query.all()
+            else:  # التحقق من أن القسم المحدد ضمن الأقسام المتاحة
+                if int(department_id) in accessible_dept_ids:
+                    query = query.join(Employee).filter(Employee.department_id == int(department_id))
+                    base_query = base_query.join(Employee).filter(Employee.department_id == int(department_id))
+                    attendances = query.all()
+                else:
+                    # إذا كان القسم غير متاح، اعرض من جميع الأقسام المتاحة
+                    query = query.join(Employee).filter(Employee.department_id.in_(accessible_dept_ids))
+                    base_query = base_query.join(Employee).filter(Employee.department_id.in_(accessible_dept_ids))
+                    attendances = query.all()
+                    department_id = ''  # إعادة تعيين الفلتر
+        else:  # لا توجد أقسام متاحة
+            departments = []
+            attendances = []
     else:
         departments = Department.query.all()
     
@@ -192,31 +211,18 @@ def record():
     
     employees = []
     if current_user.is_authenticated:
-        try:
-            user_role = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
-            print(f"المستخدم الحالي: {current_user.name}, الدور: {user_role}, القسم المخصص: {current_user.assigned_department_id}")
-            
-            if user_role in ['ADMIN', 'MANAGER', 'SUPERVISOR']:
-                # المديرون والمشرفون يمكنهم رؤية جميع الموظفين
-                employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
-                print(f"تم العثور على {len(employees)} موظف نشط للمدير/المشرف")
-            elif current_user.assigned_department_id:
-                # المستخدمون مع قسم مخصص يرون موظفي قسمهم فقط
-                employees = Employee.query.filter_by(
-                    status='active',
-                    department_id=current_user.assigned_department_id
-                ).order_by(Employee.name).all()
-                print(f"تم العثور على {len(employees)} موظف نشط للقسم {current_user.assigned_department_id}")
-            else:
-                # كحل بديل، عرض جميع الموظفين للمستخدمين المسجلين
-                employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
-                print(f"عرض جميع الموظفين كحل بديل: {len(employees)} موظف")
-        except Exception as e:
-            print(f"خطأ في تحديد صلاحيات المستخدم: {e}")
-            # كحل بديل في حالة الخطأ، عرض جميع الموظفين
+        # الحصول على معرفات الأقسام المتاحة للمستخدم
+        accessible_dept_ids = current_user.get_accessible_department_ids()
+        
+        if accessible_dept_ids is None:  # مدير النظام - جميع الموظفين
             employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
-    else:
-        print("المستخدم غير مسجل دخول")
+        elif accessible_dept_ids:  # أقسام محددة
+            employees = Employee.query.filter(
+                Employee.status == 'active',
+                Employee.department_id.in_(accessible_dept_ids)
+            ).order_by(Employee.name).all()
+        else:  # لا توجد أقسام متاحة
+            employees = []
     
     # Default to today's date
     today = datetime.now().date()
@@ -577,9 +583,23 @@ def all_departments_attendance_simple():
             flash(f'حدث خطأ أثناء معالجة البيانات: {str(e)}', 'danger')
             print(f"خطأ: {str(e)}")
     
-    # الحصول على الأقسام مع عدد الموظفين النشطين لكل قسم
+    # الحصول على الأقسام مع عدد الموظفين النشطين لكل قسم حسب صلاحيات المستخدم
+    from flask_login import current_user
     departments = []
-    all_departments = Department.query.all()
+    
+    if current_user.is_authenticated:
+        # الحصول على معرفات الأقسام المتاحة للمستخدم
+        accessible_dept_ids = current_user.get_accessible_department_ids()
+        
+        if accessible_dept_ids is None:  # مدير النظام - جميع الأقسام
+            all_departments = Department.query.all()
+        elif accessible_dept_ids:  # أقسام محددة
+            all_departments = Department.query.filter(Department.id.in_(accessible_dept_ids)).all()
+        else:  # لا توجد أقسام متاحة
+            all_departments = []
+    else:
+        all_departments = Department.query.all()
+    
     for dept in all_departments:
         active_count = Employee.query.filter_by(department_id=dept.id, status='active').count()
         if active_count > 0:  # فقط أضف الأقسام التي لديها موظفين نشطين
@@ -731,10 +751,24 @@ def all_departments_attendance():
             db.session.rollback()
             flash(f'حدث خطأ عام: {str(e)}', 'danger')
     
-    # الحصول على جميع الأقسام مع عدد الموظفين النشطين لكل قسم
+    # الحصول على الأقسام مع عدد الموظفين النشطين لكل قسم حسب صلاحيات المستخدم
     try:
+        from flask_login import current_user
         departments = []
-        all_departments = Department.query.all()
+        
+        if current_user.is_authenticated:
+            # الحصول على معرفات الأقسام المتاحة للمستخدم
+            accessible_dept_ids = current_user.get_accessible_department_ids()
+            
+            if accessible_dept_ids is None:  # مدير النظام - جميع الأقسام
+                all_departments = Department.query.all()
+            elif accessible_dept_ids:  # أقسام محددة
+                all_departments = Department.query.filter(Department.id.in_(accessible_dept_ids)).all()
+            else:  # لا توجد أقسام متاحة
+                all_departments = []
+        else:
+            all_departments = Department.query.all()
+        
         for dept in all_departments:
             active_count = Employee.query.filter_by(department_id=dept.id, status='active').count()
             if active_count > 0:  # فقط أضف الأقسام التي لديها موظفين نشطين
@@ -1478,8 +1512,15 @@ def department_stats():
     from flask_login import current_user
     
     if current_user.is_authenticated:
-        # إذا كان المستخدم مسجل دخوله، عرض الأقسام المسموحة فقط
-        departments = current_user.get_accessible_departments()
+        # الحصول على معرفات الأقسام المتاحة للمستخدم
+        accessible_dept_ids = current_user.get_accessible_department_ids()
+        
+        if accessible_dept_ids is None:  # مدير النظام - جميع الأقسام
+            departments = Department.query.all()
+        elif accessible_dept_ids:  # أقسام محددة
+            departments = Department.query.filter(Department.id.in_(accessible_dept_ids)).all()
+        else:  # لا توجد أقسام متاحة
+            departments = []
     else:
         # إذا لم يكن مسجل دخوله، عرض جميع الأقسام (للعرض العام)
         departments = Department.query.all()
