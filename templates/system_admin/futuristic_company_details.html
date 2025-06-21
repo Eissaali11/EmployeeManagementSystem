@@ -788,33 +788,37 @@
             </div>
         </div>
 
-        <!-- Recent Activity Table -->
+        <!-- Recent Users Table -->
         {% if recent_activities %}
         <div class="row mb-5">
             <div class="col-12">
                 <div class="glass-container p-4">
                     <h2 class="section-header section-info">
                         <i class="fas fa-clock"></i>
-                        النشاطات الأخيرة
+                        المستخدمين الجدد
                     </h2>
                     
                     <div class="data-table">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th><i class="fas fa-calendar"></i> التاريخ</th>
-                                    <th><i class="fas fa-user"></i> المستخدم</th>
-                                    <th><i class="fas fa-cog"></i> النشاط</th>
-                                    <th><i class="fas fa-info"></i> التفاصيل</th>
+                                    <th><i class="fas fa-calendar"></i> تاريخ التسجيل</th>
+                                    <th><i class="fas fa-user"></i> الاسم</th>
+                                    <th><i class="fas fa-envelope"></i> البريد الإلكتروني</th>
+                                    <th><i class="fas fa-user-tag"></i> النوع</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for activity in recent_activities %}
+                                {% for user in recent_activities %}
                                 <tr>
-                                    <td>{{ activity.created_at.strftime('%Y-%m-%d %H:%M') if activity.created_at else 'غير محدد' }}</td>
-                                    <td>{{ activity.user.name if activity.user else 'نظام' }}</td>
-                                    <td>{{ activity.action_type }}</td>
-                                    <td>{{ activity.description or 'لا توجد تفاصيل' }}</td>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'غير محدد' }}</td>
+                                    <td>{{ user.name or user.email.split('@')[0] }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="status-badge status-active">
+                                            {{ 'مدير شركة' if user.user_type and user.user_type.name == 'COMPANY_ADMIN' else 'موظف' }}
+                                        </span>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -883,32 +887,29 @@
                             <!-- View Employees -->
                             {% if employees_count > 0 %}
                             <div class="col-lg-4 col-md-6 mb-3">
-                                <a href="{{ url_for('employees.index', company_filter=company.id) }}" 
-                                   class="cosmic-btn cosmic-btn-secondary">
+                                <div class="cosmic-btn cosmic-btn-secondary">
                                     <i class="fas fa-users"></i>
-                                    عرض الموظفين ({{ employees_count }})
-                                </a>
+                                    الموظفين ({{ employees_count }})
+                                </div>
                             </div>
                             {% endif %}
 
                             <!-- View Vehicles -->
                             {% if vehicles_count > 0 %}
                             <div class="col-lg-4 col-md-6 mb-3">
-                                <a href="{{ url_for('vehicles.index', company_filter=company.id) }}" 
-                                   class="cosmic-btn cosmic-btn-secondary">
+                                <div class="cosmic-btn cosmic-btn-secondary">
                                     <i class="fas fa-car"></i>
-                                    عرض المركبات ({{ vehicles_count }})
-                                </a>
+                                    المركبات ({{ vehicles_count }})
+                                </div>
                             </div>
                             {% endif %}
 
-                            <!-- Generate Report -->
+                            <!-- Company Statistics -->
                             <div class="col-lg-4 col-md-6 mb-3">
-                                <a href="{{ url_for('system_admin.company_report', company_id=company.id) }}" 
-                                   class="cosmic-btn cosmic-btn-secondary">
-                                    <i class="fas fa-file-pdf"></i>
-                                    تقرير الشركة
-                                </a>
+                                <div class="cosmic-btn cosmic-btn-secondary">
+                                    <i class="fas fa-chart-bar"></i>
+                                    الإحصائيات
+                                </div>
                             </div>
                         </div>
                     </div>
