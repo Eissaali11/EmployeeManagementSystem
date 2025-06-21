@@ -190,23 +190,25 @@ def company_details(company_id):
         # إحصائيات الشركة
         total_employees = Employee.query.filter_by(company_id=company_id).count()
         total_vehicles = Vehicle.query.filter_by(company_id=company_id).count()
-        total_users = User.query.filter_by(company_id=company_id).count()
+        # تجنب استخدام Department إذا لم تكن متوفرة
+        total_departments = 0
         
-        # حالة الاشتراك
-        subscription_status = SubscriptionService.get_subscription_status(company_id)
+        # حساب عدد الأيام منذ إنشاء الشركة
+        days_since_creation = 0
+        if company.created_at:
+            from datetime import datetime
+            days_since_creation = (datetime.now() - company.created_at).days
         
-        # آخر المستخدمين
-        recent_users = User.query.filter_by(company_id=company_id)\
-                                .order_by(User.created_at.desc())\
-                                .limit(5).all()
+        # جلب معلومات الاشتراك
+        subscription = CompanySubscription.query.filter_by(company_id=company_id).first()
         
-        return render_template('system_admin/futuristic_company_details.html',
+        return render_template('system_admin/modern_company_details.html',
                              company=company,
-                             employees_count=total_employees,
-                             vehicles_count=total_vehicles,
-                             users_count=total_users,
-                             subscription_status=subscription_status,
-                             recent_activities=recent_users)
+                             total_employees=total_employees,
+                             total_vehicles=total_vehicles,
+                             total_departments=total_departments,
+                             days_since_creation=days_since_creation,
+                             subscription=subscription)
                              
     except Exception as e:
         logger.error(f"خطأ في تفاصيل الشركة {company_id}: {str(e)}")
