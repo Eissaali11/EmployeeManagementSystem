@@ -340,10 +340,33 @@ def reports():
         total_employees = Employee.query.count()
         total_vehicles = Vehicle.query.count()
         
-        return render_template('system_admin/reports.html',
+        # جلب إحصائيات إضافية للتصميم الجديد
+        active_subscriptions = CompanySubscription.query.filter_by(is_active=True).count()
+        todays_registrations = Company.query.filter(
+            Company.created_at >= datetime.utcnow().date()
+        ).count() if Company.query.first() and Company.query.first().created_at else 0
+        
+        # جلب الشركات المسجلة حديثاً
+        recent_companies = Company.query.order_by(Company.created_at.desc()).limit(5).all()
+        
+        # بيانات النمو الشهري (مثال)
+        companies_growth = [2, 5, 8, 12, 15, total_companies]
+        subscription_distribution = [
+            active_subscriptions * 0.4,  # أساسي
+            active_subscriptions * 0.35, # مميز
+            active_subscriptions * 0.25  # مؤسسات
+        ]
+        
+        return render_template('system_admin/futuristic_reports.html',
                              total_companies=total_companies,
                              total_employees=total_employees,
-                             total_vehicles=total_vehicles)
+                             total_vehicles=total_vehicles,
+                             active_subscriptions=active_subscriptions,
+                             todays_registrations=todays_registrations,
+                             monthly_revenue=active_subscriptions * 150,  # تقدير إيرادات شهرية
+                             recent_companies=recent_companies,
+                             companies_growth=companies_growth,
+                             subscription_distribution=subscription_distribution)
     except Exception as e:
         logger.error(f"خطأ في عرض التقارير: {str(e)}")
         flash('حدث خطأ في تحميل التقارير', 'error')
