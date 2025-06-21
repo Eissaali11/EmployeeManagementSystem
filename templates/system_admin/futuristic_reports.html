@@ -585,332 +585,140 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Main Statistics Cards -->
-        <div class="row mb-5">
-            <!-- Total Companies -->
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="stat-card quantum-glass">
-                    <div class="stat-icon">
+        <!-- Compact Statistics -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card quantum-glass" style="padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; color: var(--neon-cyan); text-align: center; margin-bottom: 1rem;">
                         <i class="fas fa-building"></i>
                     </div>
-                    <div class="stat-value" id="companies-count">
+                    <div style="font-size: 2rem; font-weight: 900; text-align: center; color: var(--neon-green); margin-bottom: 0.5rem;">
                         {{ total_companies }}
                     </div>
-                    <div class="stat-label">إجمالي الشركات</div>
-                    
-                    <!-- Progress Ring -->
-                    <div class="progress-ring mt-3">
-                        <svg>
-                            <defs>
-                                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#00ffff"/>
-                                    <stop offset="100%" style="stop-color:#8a2be2"/>
-                                </linearGradient>
-                            </defs>
-                            <circle class="bg" cx="75" cy="75" r="70"/>
-                            <circle class="progress" cx="75" cy="75" r="70" stroke-dashoffset="110"/>
-                        </svg>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold;">
-                            {{ "%.0f"|format((total_companies / 100 * 100) if total_companies <= 100 else 100) }}%
-                        </div>
-                    </div>
+                    <div style="text-align: center; color: rgba(255,255,255,0.9);">إجمالي الشركات</div>
                 </div>
             </div>
 
-            <!-- Total Active Subscriptions -->
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="stat-card quantum-glass">
-                    <div class="stat-icon">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card quantum-glass" style="padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; color: var(--neon-yellow); text-align: center; margin-bottom: 1rem;">
                         <i class="fas fa-crown"></i>
                     </div>
-                    <div class="stat-value" id="subscriptions-count">
+                    <div style="font-size: 2rem; font-weight: 900; text-align: center; color: var(--neon-yellow); margin-bottom: 0.5rem;">
                         {{ active_subscriptions }}
                     </div>
-                    <div class="stat-label">الاشتراكات النشطة</div>
-                    
-                    <!-- Progress Ring -->
-                    <div class="progress-ring mt-3">
-                        <svg>
-                            <defs>
-                                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#39ff14"/>
-                                    <stop offset="100%" style="stop-color:#ffff00"/>
-                                </linearGradient>
-                            </defs>
-                            <circle class="bg" cx="75" cy="75" r="70"/>
-                            <circle class="progress" cx="75" cy="75" r="70" stroke="url(#gradient2)" stroke-dashoffset="220"/>
-                        </svg>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold;">
-                            {{ "%.0f"|format((active_subscriptions / total_companies * 100) if total_companies > 0 else 0) }}%
-                        </div>
-                    </div>
+                    <div style="text-align: center; color: rgba(255,255,255,0.9);">الاشتراكات النشطة</div>
                 </div>
             </div>
 
-            <!-- Total Employees -->
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="stat-card quantum-glass">
-                    <div class="stat-icon">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card quantum-glass" style="padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; color: var(--neon-pink); text-align: center; margin-bottom: 1rem;">
                         <i class="fas fa-users"></i>
                     </div>
-                    <div class="stat-value" id="employees-count">
+                    <div style="font-size: 2rem; font-weight: 900; text-align: center; color: var(--neon-pink); margin-bottom: 0.5rem;">
                         {{ total_employees }}
                     </div>
-                    <div class="stat-label">إجمالي الموظفين</div>
-                    
-                    <!-- Progress Ring -->
-                    <div class="progress-ring mt-3">
-                        <svg>
-                            <defs>
-                                <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#ff1493"/>
-                                    <stop offset="100%" style="stop-color:#ff8c00"/>
-                                </linearGradient>
-                            </defs>
-                            <circle class="bg" cx="75" cy="75" r="70"/>
-                            <circle class="progress" cx="75" cy="75" r="70" stroke="url(#gradient3)" stroke-dashoffset="132"/>
-                        </svg>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold;">
-                            {{ "%.0f"|format((total_employees / 1000 * 100) if total_employees <= 1000 else 100) }}%
-                        </div>
-                    </div>
+                    <div style="text-align: center; color: rgba(255,255,255,0.9);">إجمالي الموظفين</div>
                 </div>
             </div>
 
-            <!-- Total Vehicles -->
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="stat-card quantum-glass">
-                    <div class="stat-icon">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card quantum-glass" style="padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; color: var(--neon-blue); text-align: center; margin-bottom: 1rem;">
                         <i class="fas fa-car"></i>
                     </div>
-                    <div class="stat-value" id="vehicles-count">
+                    <div style="font-size: 2rem; font-weight: 900; text-align: center; color: var(--neon-blue); margin-bottom: 0.5rem;">
                         {{ total_vehicles }}
                     </div>
-                    <div class="stat-label">إجمالي المركبات</div>
-                    
-                    <!-- Progress Ring -->
-                    <div class="progress-ring mt-3">
-                        <svg>
-                            <defs>
-                                <linearGradient id="gradient4" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#0080ff"/>
-                                    <stop offset="100%" style="stop-color:#00ffff"/>
-                                </linearGradient>
-                            </defs>
-                            <circle class="bg" cx="75" cy="75" r="70"/>
-                            <circle class="progress" cx="75" cy="75" r="70" stroke="url(#gradient4)" stroke-dashoffset="176"/>
-                        </svg>
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold;">
-                            {{ "%.0f"|format((total_vehicles / 500 * 100) if total_vehicles <= 500 else 100) }}%
-                        </div>
-                    </div>
+                    <div style="text-align: center; color: rgba(255,255,255,0.9);">إجمالي المركبات</div>
                 </div>
             </div>
         </div>
 
         <!-- Charts Section -->
-        <div class="row mb-5">
+        <div class="row mb-4">
             <!-- Companies Growth Chart -->
-            <div class="col-lg-6 col-md-12 mb-4">
+            <div class="col-lg-6 col-md-12 mb-3">
                 <div class="chart-container quantum-glass">
-                    <h3 class="chart-title">
+                    <h4 class="chart-title mb-2">
                         <i class="fas fa-chart-area"></i>
-                        نمو الشركات الشهري
-                    </h3>
-                    <canvas id="companiesChart" height="300"></canvas>
+                        نمو الشركات
+                    </h4>
+                    <canvas id="companiesChart" height="200"></canvas>
                 </div>
             </div>
 
             <!-- Subscription Types Distribution -->
-            <div class="col-lg-6 col-md-12 mb-4">
+            <div class="col-lg-6 col-md-12 mb-3">
                 <div class="chart-container quantum-glass">
-                    <h3 class="chart-title">
+                    <h4 class="chart-title mb-2">
                         <i class="fas fa-chart-pie"></i>
-                        توزيع أنواع الاشتراكات
-                    </h3>
-                    <canvas id="subscriptionChart" height="300"></canvas>
+                        توزيع الاشتراكات
+                    </h4>
+                    <canvas id="subscriptionChart" height="200"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Activity Statistics -->
-        <div class="row mb-5">
+
+
+        <!-- Compact Recent Activity -->
+        <div class="row mb-4">
             <div class="col-12">
-                <div class="quantum-glass p-4">
-                    <h3 class="chart-title mb-4">
-                        <i class="fas fa-pulse"></i>
-                        إحصائيات النشاط المباشر
-                    </h3>
+                <div class="quantum-glass p-3">
+                    <h4 class="chart-title mb-3">
+                        <i class="fas fa-clock"></i>
+                        آخر 5 شركات مسجلة
+                    </h4>
                     
                     <div class="row">
-                        <!-- Today's Registrations -->
-                        <div class="col-lg-4 col-md-6 mb-3">
-                            <div class="text-center">
-                                <div style="font-size: 2.5rem; color: var(--neon-green); margin-bottom: 0.5rem;">
-                                    <i class="fas fa-user-plus"></i>
+                        {% for company in recent_companies[:5] %}
+                        <div class="col-lg-2 col-md-4 col-6 mb-2">
+                            <div class="text-center" style="padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                <div style="font-size: 1.5rem; color: var(--neon-cyan); margin-bottom: 0.5rem;">
+                                    <i class="fas fa-building"></i>
                                 </div>
-                                <div style="font-size: 2rem; font-weight: bold; color: var(--neon-green);">
-                                    {{ todays_registrations or 0 }}
+                                <div style="font-size: 0.9rem; font-weight: bold; color: white; margin-bottom: 0.25rem;">
+                                    {{ company.name[:15] }}{{ '...' if company.name|length > 15 else '' }}
                                 </div>
-                                <div style="color: rgba(255, 255, 255, 0.8);">تسجيلات اليوم</div>
+                                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">
+                                    {{ company.created_at.strftime('%m-%d') if company.created_at else 'جديد' }}
+                                </div>
                             </div>
                         </div>
-
-                        <!-- This Month's Revenue -->
-                        <div class="col-lg-4 col-md-6 mb-3">
-                            <div class="text-center">
-                                <div style="font-size: 2.5rem; color: var(--neon-yellow); margin-bottom: 0.5rem;">
-                                    <i class="fas fa-dollar-sign"></i>
-                                </div>
-                                <div style="font-size: 2rem; font-weight: bold; color: var(--neon-yellow);">
-                                    {{ monthly_revenue or 0 }}
-                                </div>
-                                <div style="color: rgba(255, 255, 255, 0.8);">إيرادات الشهر</div>
-                            </div>
+                        {% endfor %}
+                        {% if not recent_companies %}
+                        <div class="col-12 text-center" style="color: rgba(255, 255, 255, 0.6);">
+                            لا توجد شركات مسجلة حديثاً
                         </div>
-
-                        <!-- System Uptime -->
-                        <div class="col-lg-4 col-md-6 mb-3">
-                            <div class="text-center">
-                                <div style="font-size: 2.5rem; color: var(--neon-cyan); margin-bottom: 0.5rem;">
-                                    <i class="fas fa-server"></i>
-                                </div>
-                                <div style="font-size: 2rem; font-weight: bold; color: var(--neon-cyan);">
-                                    99.9%
-                                </div>
-                                <div style="color: rgba(255, 255, 255, 0.8);">وقت تشغيل النظام</div>
-                            </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Companies Table -->
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="quantum-glass p-4">
-                    <h3 class="chart-title mb-4">
-                        <i class="fas fa-building"></i>
-                        الشركات المسجلة حديثاً
-                    </h3>
-                    
-                    <div class="quantum-table">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-hashtag"></i> #</th>
-                                    <th><i class="fas fa-building"></i> اسم الشركة</th>
-                                    <th><i class="fas fa-envelope"></i> البريد الإلكتروني</th>
-                                    <th><i class="fas fa-calendar"></i> تاريخ التسجيل</th>
-                                    <th><i class="fas fa-crown"></i> نوع الاشتراك</th>
-                                    <th><i class="fas fa-toggle-on"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for company in recent_companies %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>{{ company.name }}</td>
-                                    <td>{{ company.contact_email or 'غير محدد' }}</td>
-                                    <td>{{ company.created_at.strftime('%Y-%m-%d') if company.created_at else 'غير محدد' }}</td>
-                                    <td>
-                                        <span style="color: var(--neon-yellow); font-weight: bold;">
-                                            {{ 'تجريبي' if company.subscription and company.subscription.is_trial else 'مدفوع' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span style="color: {{ 'var(--neon-green)' if company.status == 'active' else 'var(--neon-red)' }}; font-weight: bold;">
-                                            {{ 'نشطة' if company.status == 'active' else 'غير نشطة' }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                {% if not recent_companies %}
-                                <tr>
-                                    <td colspan="6" style="text-align: center; color: rgba(255, 255, 255, 0.6);">
-                                        لا توجد شركات مسجلة حديثاً
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Export and Report Actions -->
+        <!-- Quick Actions -->
         <div class="row">
             <div class="col-12">
-                <div class="quantum-glass p-4">
-                    <h3 class="chart-title mb-4">
-                        <i class="fas fa-download"></i>
-                        تصدير التقارير والإحصائيات
-                    </h3>
-                    
+                <div class="quantum-glass p-3">
                     <div class="text-center">
-                        <div class="row">
-                            <!-- Export Companies Report -->
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <a href="{{ url_for('system_admin.companies_list') }}?export=all" 
-                                   class="quantum-btn">
-                                    <i class="fas fa-file-excel"></i>
-                                    تقرير الشركات
-                                </a>
-                            </div>
-
-                            <!-- Export Statistics -->
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <button class="quantum-btn quantum-btn-secondary" onclick="exportStatistics()">
-                                    <i class="fas fa-chart-bar"></i>
-                                    تقرير الإحصائيات
-                                </button>
-                            </div>
-
-                            <!-- Export Financial Report -->
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <button class="quantum-btn quantum-btn-warning" onclick="exportFinancial()">
-                                    <i class="fas fa-dollar-sign"></i>
-                                    التقرير المالي
-                                </button>
-                            </div>
-
-                            <!-- System Health Report -->
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <button class="quantum-btn quantum-btn-info" onclick="systemHealth()">
-                                    <i class="fas fa-heartbeat"></i>
-                                    صحة النظام
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <!-- Refresh Data -->
-                            <div class="col-lg-4 col-md-6 mb-3">
-                                <button class="quantum-btn quantum-btn-secondary" onclick="refreshData()">
-                                    <i class="fas fa-sync-alt"></i>
-                                    تحديث البيانات
-                                </button>
-                            </div>
-
-                            <!-- Schedule Report -->
-                            <div class="col-lg-4 col-md-6 mb-3">
-                                <button class="quantum-btn quantum-btn-info" onclick="scheduleReport()">
-                                    <i class="fas fa-clock"></i>
-                                    جدولة التقارير
-                                </button>
-                            </div>
-
-                            <!-- Back to Dashboard -->
-                            <div class="col-lg-4 col-md-6 mb-3">
-                                <a href="{{ url_for('system_admin.dashboard') }}" 
-                                   class="quantum-btn quantum-btn-danger">
-                                    <i class="fas fa-arrow-right"></i>
-                                    العودة للوحة التحكم
-                                </a>
-                            </div>
-                        </div>
+                        <a href="{{ url_for('system_admin.companies_list') }}?export=all" 
+                           class="quantum-btn">
+                            <i class="fas fa-file-excel"></i>
+                            تصدير التقرير
+                        </a>
+                        
+                        <button class="quantum-btn quantum-btn-secondary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i>
+                            تحديث
+                        </button>
+                        
+                        <a href="{{ url_for('system_admin.dashboard') }}" 
+                           class="quantum-btn quantum-btn-danger">
+                            <i class="fas fa-arrow-right"></i>
+                            العودة
+                        </a>
                     </div>
                 </div>
             </div>
