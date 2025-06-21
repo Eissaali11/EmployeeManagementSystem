@@ -132,17 +132,17 @@ def create_new_company():
             # التحقق من البيانات المطلوبة
             if not name:
                 flash('اسم الشركة مطلوب', 'error')
-                return render_template('system_admin/futuristic_create_company.html')
+                return render_template('system_admin/simple_create_company.html')
             
             if not contact_email:
                 flash('البريد الإلكتروني مطلوب', 'error')
-                return render_template('system_admin/futuristic_create_company.html')
+                return render_template('system_admin/simple_create_company.html')
             
             # التحقق من عدم تكرار الإيميل
             existing_company = Company.query.filter_by(contact_email=contact_email).first()
             if existing_company:
                 flash('يوجد شركة مسجلة بنفس البريد الإلكتروني', 'error')
-                return render_template('system_admin/futuristic_create_company.html')
+                return render_template('system_admin/simple_create_company.html')
             
             # إنشاء الشركة الجديدة
             new_company = Company()
@@ -177,7 +177,7 @@ def create_new_company():
             logger.error(f"خطأ في إنشاء الشركة: {str(e)}")
             flash('حدث خطأ في إنشاء الشركة', 'error')
     
-    return render_template('system_admin/futuristic_create_company.html')
+    return render_template('system_admin/simple_create_company.html')
 
 @system_admin_bp.route('/companies/<int:company_id>')
 @login_required

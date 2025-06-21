@@ -527,18 +527,11 @@
 
                                 <!-- الوصف -->
                                 <div class="col-12 mb-3">
-                                    <label for="{{ form.description.id }}" class="form-label text-glow">
+                                    <label for="description" class="form-label text-glow">
                                         <i class="fas fa-info-circle me-2"></i>
                                         وصف الشركة
                                     </label>
-                                    {{ form.description(class="form-control futuristic-input", rows="3", placeholder="وصف مختصر عن نشاط الشركة") }}
-                                    {% if form.description.errors %}
-                                        <div class="text-danger mt-2">
-                                            {% for error in form.description.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
+                                    <textarea name="description" id="description" class="form-control futuristic-input" rows="3" placeholder="وصف مختصر عن نشاط الشركة"></textarea>
                                 </div>
                             </div>
 
