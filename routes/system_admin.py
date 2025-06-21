@@ -200,13 +200,13 @@ def company_details(company_id):
                                 .order_by(User.created_at.desc())\
                                 .limit(5).all()
         
-        return render_template('system_admin/company_details.html',
+        return render_template('system_admin/futuristic_company_details.html',
                              company=company,
-                             total_employees=total_employees,
-                             total_vehicles=total_vehicles,
-                             total_users=total_users,
+                             employees_count=total_employees,
+                             vehicles_count=total_vehicles,
+                             users_count=total_users,
                              subscription_status=subscription_status,
-                             recent_users=recent_users)
+                             recent_activities=recent_users)
                              
     except Exception as e:
         logger.error(f"خطأ في تفاصيل الشركة {company_id}: {str(e)}")
