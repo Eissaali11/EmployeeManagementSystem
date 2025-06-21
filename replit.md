@@ -154,6 +154,12 @@
 - Environment variable protection
 
 ## Changelog
+- June 21, 2025: Simplified reports page and fixed company creation form issues:
+  • Removed complex analytics data (charts, statistics) from reports page per user request
+  • Created simple reports page with basic export functionality and clean design
+  • Fixed company creation form by replacing Flask-WTF form objects with plain HTML inputs
+  • Resolved "form is undefined" error that was causing Internal Server Error on /system/companies/new
+  • Maintained futuristic design while removing problematic 3D effects and analytics complexity
 - June 20, 2025: Successfully implemented ultra-modern futuristic UI design for system admin interface:
   • Created cutting-edge dashboard design with neon gradients, glass-morphism effects, and floating particles
   • Implemented advanced CSS animations including 3D hover effects, parallax scrolling, and animated backgrounds

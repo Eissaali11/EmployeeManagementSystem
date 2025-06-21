@@ -487,71 +487,42 @@
                     
                     <div class="futuristic-form">
                         <form method="POST">
-                            {{ form.hidden_tag() }}
                             
                             <div class="row">
                                 <!-- اسم الشركة -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ form.name.id }}" class="form-label text-glow">
+                                    <label for="name" class="form-label text-glow">
                                         <i class="fas fa-building me-2"></i>
                                         اسم الشركة *
                                     </label>
-                                    {{ form.name(class="form-control futuristic-input", placeholder="أدخل اسم الشركة") }}
-                                    {% if form.name.errors %}
-                                        <div class="text-danger mt-2">
-                                            {% for error in form.name.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
+                                    <input type="text" name="name" id="name" class="form-control futuristic-input" placeholder="أدخل اسم الشركة" required>
                                 </div>
 
                                 <!-- البريد الإلكتروني -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ form.contact_email.id }}" class="form-label text-glow">
+                                    <label for="contact_email" class="form-label text-glow">
                                         <i class="fas fa-envelope me-2"></i>
                                         البريد الإلكتروني *
                                     </label>
-                                    {{ form.contact_email(class="form-control futuristic-input", placeholder="example@company.com") }}
-                                    {% if form.contact_email.errors %}
-                                        <div class="text-danger mt-2">
-                                            {% for error in form.contact_email.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
+                                    <input type="email" name="contact_email" id="contact_email" class="form-control futuristic-input" placeholder="example@company.com" required>
                                 </div>
 
                                 <!-- رقم الهاتف -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ form.contact_phone.id }}" class="form-label text-glow">
+                                    <label for="contact_phone" class="form-label text-glow">
                                         <i class="fas fa-phone me-2"></i>
                                         رقم الهاتف
                                     </label>
-                                    {{ form.contact_phone(class="form-control futuristic-input", placeholder="+966xxxxxxxxx") }}
-                                    {% if form.contact_phone.errors %}
-                                        <div class="text-danger mt-2">
-                                            {% for error in form.contact_phone.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
+                                    <input type="tel" name="contact_phone" id="contact_phone" class="form-control futuristic-input" placeholder="+966xxxxxxxxx">
                                 </div>
 
                                 <!-- العنوان -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="{{ form.address.id }}" class="form-label text-glow">
+                                    <label for="address" class="form-label text-glow">
                                         <i class="fas fa-map-marker-alt me-2"></i>
                                         العنوان
                                     </label>
-                                    {{ form.address(class="form-control futuristic-input", placeholder="عنوان الشركة") }}
-                                    {% if form.address.errors %}
-                                        <div class="text-danger mt-2">
-                                            {% for error in form.address.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
+                                    <input type="text" name="address" id="address" class="form-control futuristic-input" placeholder="عنوان الشركة">
                                 </div>
 
                                 <!-- الوصف -->
