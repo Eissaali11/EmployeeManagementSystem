@@ -1,118 +1,106 @@
 """
-خدمة المصادقة والتفويض
+خدمة المصادقة والترخيص
 """
-from flask import flash, redirect, url_for
-from flask_login import login_user, logout_user, current_user
-from werkzeug.security import check_password_hash, generate_password_hash
-from models import User, UserRole
-from core.extensions import db
-from utils.audit_logger import log_activity
+
+import jwt
+from datetime import datetime, timedelta
+from werkzeug.security import check_password_hash
+from models import User, Employee
+import os
 
 class AuthService:
-    """خدمة إدارة المصادقة والتفويض"""
+    SECRET_KEY = os.environ.get('SESSION_SECRET', 'default-secret-key')
     
-    @staticmethod
-    def authenticate_user(email, password, remember_me=False):
+    @classmethod
+    def authenticate_user(cls, email, password):
         """مصادقة المستخدم"""
-        user = User.query.filter_by(email=email).first()
-        
-        if user and user.is_active and check_password_hash(user.password_hash, password):
-            login_user(user, remember=remember_me)
-            log_activity(
-                user_id=user.id,
-                action='login',
-                details=f'تم تسجيل دخول المستخدم {user.name}'
-            )
-            return True, user
-        
-        log_activity(
-            action='failed_login',
-            details=f'محاولة تسجيل دخول فاشلة للبريد الإلكتروني: {email}'
-        )
-        return False, None
-    
-    @staticmethod
-    def logout_user_session():
-        """تسجيل خروج المستخدم"""
-        if current_user.is_authenticated:
-            log_activity(
-                user_id=current_user.id,
-                action='logout',
-                details=f'تم تسجيل خروج المستخدم {current_user.name}'
-            )
-        logout_user()
-    
-    @staticmethod
-    def create_user(name, email, username, password, role=UserRole.USER):
-        """إنشاء مستخدم جديد"""
         try:
-            # التحقق من عدم وجود المستخدم مسبقاً
-            existing_user = User.query.filter(
-                (User.email == email) | (User.username == username)
-            ).first()
+            user = User.query.filter_by(email=email).first()
             
-            if existing_user:
-                return False, "المستخدم موجود مسبقاً"
+            if not user:
+                return {
+                    'success': False,
+                    'message': 'بيانات غير صحيحة'
+                }
             
-            # إنشاء المستخدم الجديد
-            user = User(
-                name=name,
-                email=email,
-                username=username,
-                password_hash=generate_password_hash(password),
-                role=role,
-                is_active=True
-            )
+            if not check_password_hash(user.password_hash, password):
+                return {
+                    'success': False,
+                    'message': 'كلمة المرور غير صحيحة'
+                }
             
-            db.session.add(user)
-            db.session.commit()
+            # إنشاء Token
+            token = cls.generate_token(user.id, user.company_id)
             
-            log_activity(
-                user_id=current_user.id if current_user.is_authenticated else None,
-                action='create_user',
-                details=f'تم إنشاء مستخدم جديد: {name} ({email})'
-            )
-            
-            return True, user
+            return {
+                'success': True,
+                'data': {
+                    'token': token,
+                    'user': {
+                        'id': user.id,
+                        'email': user.email,
+                        'name': user.name,
+                        'company_id': user.company_id
+                    }
+                }
+            }
             
         except Exception as e:
-            db.session.rollback()
-            return False, str(e)
+            return {
+                'success': False,
+                'message': 'خطأ في المصادقة'
+            }
     
-    @staticmethod
-    def update_user_password(user, new_password):
-        """تحديث كلمة مرور المستخدم"""
+    @classmethod
+    def generate_employee_token(cls, employee):
+        """إنشاء Token للموظف"""
         try:
-            user.password_hash = generate_password_hash(new_password)
-            db.session.commit()
+            payload = {
+                'employee_id': employee.id,
+                'company_id': employee.company_id,
+                'exp': datetime.utcnow() + timedelta(hours=24),
+                'iat': datetime.utcnow()
+            }
             
-            log_activity(
-                user_id=current_user.id if current_user.is_authenticated else None,
-                action='update_password',
-                details=f'تم تحديث كلمة مرور المستخدم: {user.name}'
-            )
+            token = jwt.encode(payload, cls.SECRET_KEY, algorithm='HS256')
             
-            return True
+            return {
+                'token': token,
+                'expires_in': 86400  # 24 hours
+            }
+            
         except Exception as e:
-            db.session.rollback()
-            return False
+            raise Exception(f"خطأ في إنشاء Token: {str(e)}")
     
-    @staticmethod
-    def check_permission(user, module, permission=None):
-        """التحقق من صلاحيات المستخدم"""
-        if not user or not user.is_authenticated:
-            return False
-        
-        # المديرون لديهم جميع الصلاحيات
-        if user.role == UserRole.ADMIN:
-            return True
-        
-        return user.can_access_module(module, permission)
+    @classmethod
+    def generate_token(cls, user_id, company_id):
+        """إنشاء JWT Token"""
+        try:
+            payload = {
+                'user_id': user_id,
+                'company_id': company_id,
+                'exp': datetime.utcnow() + timedelta(hours=24),
+                'iat': datetime.utcnow()
+            }
+            
+            return jwt.encode(payload, cls.SECRET_KEY, algorithm='HS256')
+            
+        except Exception as e:
+            raise Exception(f"خطأ في إنشاء Token: {str(e)}")
     
-    @staticmethod
-    def get_user_accessible_departments(user):
-        """جلب الأقسام التي يمكن للمستخدم الوصول إليها"""
-        if not user or not user.is_authenticated:
-            return []
-        
-        return user.get_accessible_departments()
+    @classmethod
+    def refresh_token(cls, user):
+        """تجديد Token"""
+        return cls.generate_token(user.id, user.company_id)
+    
+    @classmethod
+    def verify_token(cls, token):
+        """التحقق من صحة Token"""
+        try:
+            payload = jwt.decode(token, cls.SECRET_KEY, algorithms=['HS256'])
+            return payload
+            
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None

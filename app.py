@@ -310,7 +310,7 @@ with app.app_context():
     from routes.auth import auth_bp
     from routes.vehicles import vehicles_bp
     from routes.fees_costs import fees_costs_bp
-    from routes.api import api_bp
+    from routes.restful_api import api_bp
     from routes.enhanced_reports import enhanced_reports_bp
     from routes.mobile import mobile_bp
     from routes.users import users_bp
