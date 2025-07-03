@@ -95,6 +95,7 @@ def create_app():
         return render_template('index.html')
     
     @app.route('/dashboard')
+    @app.route('/dashboard/')
     def dashboard():
         """لوحة المعلومات"""
         if not current_user.is_authenticated:
