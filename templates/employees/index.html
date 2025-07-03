@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">إدارة الموظفين</h2>
+    <a href="{{ url_for('employees.new') }}" class="btn btn-primary">إضافة موظف جديد</a>
+</div>
+
+<!-- شريط البحث والفلترة -->
+<div class="card bg-dark text-light mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" placeholder="البحث بالاسم..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="department">
+                    <option value="">جميع الأقسام</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {{ 'selected' if department_id == dept.id|string }}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-light">بحث</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- قائمة الموظفين -->
+<div class="card bg-dark text-light">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>القسم</th>
+                        <th>المنصب</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>الهاتف</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees.items %}
+                    <tr>
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.department.name if employee.department else '-' }}</td>
+                        <td>{{ employee.position or '-' }}</td>
+                        <td>{{ employee.email }}</td>
+                        <td>{{ employee.phone or '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('employees.show', id=employee.id) }}" class="btn btn-sm btn-outline-info">عرض</a>
+                            <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-sm btn-outline-warning">تعديل</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">لا توجد موظفين</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if employees.pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if employees.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('employees.index', page=employees.prev_num, search=search, department=department_id) }}">السابق</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in employees.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != employees.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('employees.index', page=page_num, search=search, department=department_id) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if employees.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('employees.index', page=employees.next_num, search=search, department=department_id) }}">التالي</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

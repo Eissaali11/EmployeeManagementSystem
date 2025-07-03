@@ -154,6 +154,15 @@
 - Environment variable protection
 
 ## Changelog
+- July 3, 2025: **نجحت في إعادة إنشاء ملفات النظام الأساسية بعد الحذف الخاطئ:**
+  • أعادت إنشاء routes/employees.py مع جميع وظائف إدارة الموظفين (CRUD كامل)
+  • أعادت إنشاء routes/vehicles.py مع إدارة المركبات والتسليم والاستلام
+  • أعادت إنشاء routes/departments.py مع إدارة الأقسام والهيكل التنظيمي
+  • أنشأت templates/ كاملة للموظفين والمركبات والأقسام مع تصميم متجاوب
+  • ربطت جميع المسارات بالتطبيق الرئيسي مع حل مشكلة تعارض الأسماء
+  • حدثت لوحة المعلومات لتشمل روابط إدارة جميع الأقسام
+  • النظام يعمل بشكل كامل مع 59 موظف، 20 مركبة، 6 أقسام
+  • واجهة API تعمل بكامل وظائفها مع 25+ مسار
 - July 3, 2025: Successfully completed code cleanup and project optimization:
   • Removed all unused files and dependencies for cleaner project structure
   • Eliminated unnecessary deployment scripts, test files, and archived assets

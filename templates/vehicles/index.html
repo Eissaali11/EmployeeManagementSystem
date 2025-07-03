@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white">إدارة المركبات</h2>
+    <a href="{{ url_for('vehicles.new') }}" class="btn btn-primary">إضافة مركبة جديدة</a>
+</div>
+
+<!-- شريط البحث والفلترة -->
+<div class="card bg-dark text-light mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" placeholder="البحث برقم اللوحة أو الماركة..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">جميع الحالات</option>
+                    <option value="متاحة" {{ 'selected' if status == 'متاحة' }}>متاحة</option>
+                    <option value="مستلمة" {{ 'selected' if status == 'مستلمة' }}>مستلمة</option>
+                    <option value="صيانة" {{ 'selected' if status == 'صيانة' }}>صيانة</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-light">بحث</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- قائمة المركبات -->
+<div class="card bg-dark text-light">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>رقم اللوحة</th>
+                        <th>الماركة</th>
+                        <th>الموديل</th>
+                        <th>السنة</th>
+                        <th>الحالة</th>
+                        <th>المسافة المقطوعة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle in vehicles.items %}
+                    <tr>
+                        <td><strong>{{ vehicle.plate_number }}</strong></td>
+                        <td>{{ vehicle.make }}</td>
+                        <td>{{ vehicle.model }}</td>
+                        <td>{{ vehicle.year }}</td>
+                        <td>
+                            {% if vehicle.status == 'متاحة' %}
+                            <span class="badge bg-success">متاحة</span>
+                            {% elif vehicle.status == 'مستلمة' %}
+                            <span class="badge bg-warning">مستلمة</span>
+                            {% elif vehicle.status == 'صيانة' %}
+                            <span class="badge bg-danger">صيانة</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ "{:,}".format(vehicle.mileage) }} كم</td>
+                        <td>
+                            <a href="{{ url_for('vehicles.show', id=vehicle.id) }}" class="btn btn-sm btn-outline-info">عرض</a>
+                            <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-sm btn-outline-warning">تعديل</a>
+                            {% if vehicle.status == 'متاحة' %}
+                            <a href="{{ url_for('vehicles.handover', id=vehicle.id) }}" class="btn btn-sm btn-outline-success">تسليم</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">لا توجد مركبات</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if vehicles.pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if vehicles.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('vehicles.index', page=vehicles.prev_num, search=search, status=status) }}">السابق</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in vehicles.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != vehicles.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('vehicles.index', page=page_num, search=search, status=status) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if vehicles.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('vehicles.index', page=vehicles.next_num, search=search, status=status) }}">التالي</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

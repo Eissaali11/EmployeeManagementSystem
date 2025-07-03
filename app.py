@@ -166,6 +166,24 @@ def create_app():
         
         logger.info("Database tables created successfully.")
     
+    # Register blueprints with unique names
+    try:
+        from routes.restful_api import api_bp
+        app.register_blueprint(api_bp, name='restful_api')
+        
+        from routes.employees import employees_bp
+        app.register_blueprint(employees_bp)
+        
+        from routes.vehicles import vehicles_bp
+        app.register_blueprint(vehicles_bp)
+        
+        from routes.departments import departments_bp
+        app.register_blueprint(departments_bp)
+        
+        logger.info("All blueprints registered successfully")
+    except Exception as e:
+        logger.error(f"Error registering blueprints: {e}")
+    
     return app
 
 # Create the application
