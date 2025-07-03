@@ -1,298 +1,60 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-    .dashboard-card {
-        border-radius: 15px;
-        border: none;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, #2c5f7a 0%, #3d7eaa 100%);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin-bottom: 15px;
-    }
-    .chart-container {
-        background: linear-gradient(135deg, #2c5f7a 0%, #3d7eaa 100%);
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-        color: white;
-    }
-    .sidebar {
-        background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
-        min-height: 100vh;
-        padding: 20px;
-        border-radius: 0 15px 15px 0;
-    }
-    .sidebar-item {
-        padding: 12px 15px;
-        margin: 5px 0;
-        border-radius: 8px;
-        color: white;
-        text-decoration: none;
-        display: block;
-        transition: all 0.3s;
-    }
-    .sidebar-item:hover {
-        background: rgba(255,255,255,0.1);
-        color: white;
-        text-decoration: none;
-    }
-    .main-content {
-        padding: 20px;
-    }
-</style>
+<div class="row">
+    <div class="col-12">
+        <h1 class="text-white mb-4">لوحة المعلومات</h1>
+    </div>
+</div>
 
-<div class="row g-0">
-    <!-- الشريط الجانبي -->
-    <div class="col-md-2">
-        <div class="sidebar">
-            <h5 class="text-white mb-4">نُظم</h5>
-            <a href="/dashboard" class="sidebar-item">
-                <i class="fas fa-tachometer-alt me-2"></i> لوحة التحكم
-            </a>
-            <a href="/employees" class="sidebar-item">
-                <i class="fas fa-users me-2"></i> الموظفين
-            </a>
-            <a href="/departments" class="sidebar-item">
-                <i class="fas fa-building me-2"></i> الأقسام
-            </a>
-            <a href="/vehicles" class="sidebar-item">
-                <i class="fas fa-car me-2"></i> المركبات
-            </a>
-            <a href="/attendance" class="sidebar-item">
-                <i class="fas fa-calendar-check me-2"></i> الحضور
-            </a>
-            <a href="/salaries" class="sidebar-item">
-                <i class="fas fa-money-bill-wave me-2"></i> الرواتب
-            </a>
-            <a href="/reports" class="sidebar-item">
-                <i class="fas fa-chart-bar me-2"></i> التقارير
-            </a>
-            <a href="/settings" class="sidebar-item">
-                <i class="fas fa-cog me-2"></i> الإعدادات
-            </a>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">إجمالي الموظفين</h5>
+                <h2 class="card-text">{{ total_employees }}</h2>
+            </div>
         </div>
     </div>
-
-    <!-- المحتوى الرئيسي -->
-    <div class="col-md-10">
-        <div class="main-content">
-            <!-- رأس الصفحة -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-white">لوحة المعلومات</h2>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-success">متصل</span>
-                    <span class="text-white">مرحبا بك في نُظم النظام</span>
-                </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">إجمالي المركبات</h5>
+                <h2 class="card-text">{{ total_vehicles }}</h2>
             </div>
-
-            <!-- البطاقات الإحصائية -->
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="dashboard-card text-white p-4">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon bg-warning text-dark">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">{{ total_employees }}</h4>
-                                <p class="mb-0">الموظفين النشطين</p>
-                                <small class="text-success">+5 هذا الشهر</small>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button class="btn btn-outline-light btn-sm">عرض التفاصيل</button>
-                            <button class="btn btn-warning btn-sm">إضافة موظف</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="dashboard-card text-white p-4">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon bg-info text-white">
-                                <i class="fas fa-calendar"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">53</h4>
-                                <p class="mb-0">حضور اليوم</p>
-                                <small class="text-success">معدل 95%</small>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button class="btn btn-outline-light btn-sm">تفاصيل الحضور</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="dashboard-card text-white p-4">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon bg-success text-white">
-                                <i class="fas fa-building"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">{{ total_departments }}</h4>
-                                <p class="mb-0">الأقسام</p>
-                                <small class="text-info">6 أقسام نشطة</small>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button class="btn btn-outline-light btn-sm">عرض الأقسام</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="dashboard-card text-white p-4">
-                        <div class="d-flex align-items-center">
-                            <div class="stat-icon bg-purple text-white" style="background: #6f42c1;">
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h4 class="mb-0">{{ total_vehicles }}</h4>
-                                <p class="mb-0">من أصل {{ total_vehicles }}</p>
-                                <small class="text-success">18 متاحة</small>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button class="btn btn-outline-light btn-sm">عرض المركبات</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- الرسوم البيانية -->
-            <div class="row mt-4">
-                <!-- توزيع حالة الموظفين -->
-                <div class="col-md-4">
-                    <div class="chart-container">
-                        <h5 class="mb-3"><i class="fas fa-chart-pie me-2"></i>توزيع حالة الموظفين</h5>
-                        <canvas id="employeeStatusChart" width="300" height="300"></canvas>
-                    </div>
-                </div>
-
-                <!-- إجمالي الرواتب الشهرية -->
-                <div class="col-md-4">
-                    <div class="chart-container">
-                        <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>إجمالي الرواتب الشهرية</h5>
-                        <canvas id="salaryChart" width="300" height="300"></canvas>
-                    </div>
-                </div>
-
-                <!-- توزيع الموظفين حسب الأقسام -->
-                <div class="col-md-4">
-                    <div class="chart-container">
-                        <h5 class="mb-3"><i class="fas fa-chart-doughnut me-2"></i>توزيع الموظفين حسب الأقسام</h5>
-                        <canvas id="departmentChart" width="300" height="300"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- إضافة واجهة برمجة التطبيقات -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="chart-container">
-                        <h5 class="mb-3"><i class="fas fa-code me-2"></i>واجهة برمجة التطبيقات</h5>
-                        <p>يوفر النظام واجهة برمجة تطبيقات شاملة مع أكثر من 25 مسار API</p>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <a href="/api/v1/health" class="btn btn-outline-light me-2">فحص صحة النظام</a>
-                                <a href="/api/v1/info" class="btn btn-outline-info">معلومات API</a>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted">
-                                استخدم Postman Collection للاختبار الكامل للنظام
-                            </small>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">إجمالي الأقسام</h5>
+                <h2 class="card-text">{{ total_departments }}</h2>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// رسم بياني لحالة الموظفين
-const employeeCtx = document.getElementById('employeeStatusChart').getContext('2d');
-new Chart(employeeCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['نشط', 'إجازة', 'مريض'],
-        datasets: [{
-            data: [45, 8, 6],
-            backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { color: 'white' }
-            }
-        }
-    }
-});
-
-// رسم بياني للرواتب
-const salaryCtx = document.getElementById('salaryChart').getContext('2d');
-new Chart(salaryCtx, {
-    type: 'bar',
-    data: {
-        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'],
-        datasets: [{
-            label: 'الرواتب (ألف ريال)',
-            data: [120, 135, 128, 142, 138],
-            backgroundColor: '#17a2b8',
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { labels: { color: 'white' } }
-        },
-        scales: {
-            y: { ticks: { color: 'white' } },
-            x: { ticks: { color: 'white' } }
-        }
-    }
-});
-
-// رسم بياني للأقسام
-const deptCtx = document.getElementById('departmentChart').getContext('2d');
-new Chart(deptCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['الإدارة', 'المالية', 'الموارد البشرية', 'التقنية', 'المبيعات', 'الصيانة'],
-        datasets: [{
-            data: [8, 12, 6, 15, 10, 8],
-            backgroundColor: ['#007bff', '#28a745', '#dc3545', '#ffc107', '#6f42c1', '#fd7e14'],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { color: 'white' }
-            }
-        }
-    }
-});
-</script>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-dark text-light">
+            <div class="card-header">
+                <h5 class="card-title">واجهة برمجة التطبيقات</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">يوفر النظام واجهة برمجة تطبيقات شاملة مع أكثر من 25 مسار API</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="/api/v1/health" class="btn btn-outline-success me-2">فحص صحة النظام</a>
+                        <a href="/api/v1/info" class="btn btn-outline-info">معلومات API</a>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        استخدم Postman Collection للاختبار الكامل للنظام
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
