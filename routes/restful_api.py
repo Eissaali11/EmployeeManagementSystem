@@ -1,1170 +1,1240 @@
 """
-RESTful API شامل لنظام نُظم
-API كامل لجميع خصائص النظام مع معالجة الأخطاء
+RESTful API Routes for نُظم Employee Management System
+نظام إدارة الموظفين - مسارات API الشاملة
 """
 
 from flask import Blueprint, request, jsonify, current_app
-from flask_login import login_required, current_user
-from datetime import datetime, date, timedelta
-from sqlalchemy import func, desc, asc, and_, or_
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-import logging
-import traceback
-import json
+from flask_login import current_user, login_required
+from functools import wraps
+from datetime import datetime, timedelta
 import jwt
-import os
-from werkzeug.security import check_password_hash
-
-# استيراد النماذج المتوفرة
+import logging
+from sqlalchemy import and_, or_, desc, func, extract
+from sqlalchemy.orm import joinedload
+from app import db
 from models import (
     User, Employee, Vehicle, Department, Attendance, 
-    Salary, Company, CompanySubscription, VehicleHandover,
-    VehicleWorkshop, VehiclePeriodicInspection, VehicleSafetyCheck,
-    AuditLog
+    Salary, AuditLog, VehicleHandover, VehicleWorkshop
 )
-from app import db
 
-# إعداد Blueprint
-api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
-
-# إعداد الـ Logger
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ==================== مساعدات API ====================
+# Create Blueprint
+api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
 
-def api_response(data=None, message="success", status_code=200, meta=None):
+# JWT Secret Key
+JWT_SECRET_KEY = 'nuzum-api-secret-key-2024'
+JWT_ALGORITHM = 'HS256'
+JWT_EXPIRATION_DELTA = timedelta(hours=24)
+
+def create_token(user_id, user_email=None, user_type='user'):
+    """إنشاء JWT token للمستخدم"""
+    try:
+        payload = {
+            'user_id': user_id,
+            'user_email': user_email,
+            'user_type': user_type,
+            'exp': datetime.utcnow() + JWT_EXPIRATION_DELTA,
+            'iat': datetime.utcnow()
+        }
+        return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    except Exception as e:
+        logger.error(f"خطأ في إنشاء Token: {str(e)}")
+        return None
+
+def verify_token(token):
+    """التحقق من صحة JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+def require_auth(f):
+    """Decorator للتحقق من المصادقة"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = None
+        
+        # Get token from Authorization header
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            try:
+                token = auth_header.split(" ")[1]  # Bearer TOKEN
+            except IndexError:
+                return jsonify({
+                    'success': False,
+                    'message': 'تنسيق رمز المصادقة غير صحيح',
+                    'error': 'Invalid token format'
+                }), 401
+        
+        if not token:
+            return jsonify({
+                'success': False,
+                'message': 'مطلوب رمز المصادقة للوصول',
+                'error': 'No token provided'
+            }), 401
+        
+        # Verify token
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({
+                'success': False,
+                'message': 'رمز المصادقة غير صحيح أو منتهي الصلاحية',
+                'error': 'Invalid or expired token'
+            }), 401
+        
+        # Store user info in request context
+        request.current_user_id = payload['user_id']
+        request.current_user_email = payload.get('user_email')
+        request.current_user_type = payload.get('user_type', 'user')
+        
+        return f(*args, **kwargs)
+    
+    return decorated_function
+
+def api_response(success=True, data=None, message=None, error=None, status_code=200):
     """إنشاء استجابة API موحدة"""
     response = {
-        "success": status_code < 400,
-        "message": message,
-        "timestamp": datetime.utcnow().isoformat(),
+        'success': success,
+        'timestamp': datetime.utcnow().isoformat(),
+        'message': message or ('success' if success else 'error')
     }
     
     if data is not None:
-        response["data"] = data
+        response['data'] = data
     
-    if meta is not None:
-        response["meta"] = meta
-        
+    if error:
+        response['error'] = error
+    
     return jsonify(response), status_code
 
-def api_error(message="خطأ في الخادم", status_code=500, details=None):
-    """إنشاء استجابة خطأ API"""
-    response = {
-        "success": False,
-        "error": {
-            "message": message,
-            "code": status_code,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+# ========== Authentication Endpoints ==========
+
+@api_bp.route('/health', methods=['GET'])
+def health_check():
+    """فحص صحة API"""
+    return api_response(
+        data={
+            'status': 'healthy',
+            'version': '1.0',
+            'timestamp': datetime.utcnow().isoformat()
+        },
+        message='API يعمل بشكل طبيعي'
+    )
+
+@api_bp.route('/info', methods=['GET'])
+def api_info():
+    """معلومات API والمسارات المتاحة"""
+    endpoints = {
+        'health': 'GET /api/v1/health',
+        'info': 'GET /api/v1/info',
+        'authentication': {
+            'login': 'POST /api/v1/auth/login',
+            'employee_login': 'POST /api/v1/auth/employee-login'
+        },
+        'dashboard': {
+            'stats': 'GET /api/v1/dashboard/stats'
+        },
+        'employees': {
+            'list': 'GET /api/v1/employees',
+            'get': 'GET /api/v1/employees/{id}',
+            'create': 'POST /api/v1/employees',
+            'update': 'PUT /api/v1/employees/{id}',
+            'delete': 'DELETE /api/v1/employees/{id}',
+            'salaries': 'GET /api/v1/employees/{id}/salaries'
+        },
+        'vehicles': {
+            'list': 'GET /api/v1/vehicles',
+            'get': 'GET /api/v1/vehicles/{id}'
+        },
+        'departments': {
+            'list': 'GET /api/v1/departments'
+        },
+        'attendance': {
+            'list': 'GET /api/v1/attendance',
+            'create': 'POST /api/v1/attendance'
+        },
+        'search': 'POST /api/v1/search',
+        'reports': {
+            'employees_summary': 'GET /api/v1/reports/employees/summary',
+            'monthly_attendance': 'GET /api/v1/reports/attendance/monthly'
+        },
+        'notifications': 'GET /api/v1/notifications'
     }
     
-    if details:
-        response["error"]["details"] = details
-        
-    logger.error(f"API Error {status_code}: {message}")
-    if details:
-        logger.error(f"Details: {details}")
-        
-    return jsonify(response), status_code
-
-def paginate_query(query, page=1, per_page=20, max_per_page=100):
-    """تطبيق Pagination على الاستعلام"""
-    page = max(1, int(page))
-    per_page = min(max_per_page, max(1, int(per_page)))
-    
-    try:
-        paginated = query.paginate(
-            page=page, 
-            per_page=per_page, 
-            error_out=False
-        )
-        
-        return {
-            "items": paginated.items,
-            "pagination": {
-                "page": page,
-                "per_page": per_page,
-                "total": paginated.total,
-                "pages": paginated.pages,
-                "has_next": paginated.has_next,
-                "has_prev": paginated.has_prev,
-                "next_page": paginated.next_num if paginated.has_next else None,
-                "prev_page": paginated.prev_num if paginated.has_prev else None
-            }
+    return api_response(
+        data={
+            'name': 'نُظم API',
+            'version': '1.0',
+            'description': 'RESTful API شامل لنظام إدارة الموظفين والمركبات',
+            'endpoints': endpoints
         }
-    except Exception as e:
-        # إذا فشل pagination، نرجع البيانات كقائمة عادية
-        items = query.limit(per_page).offset((page - 1) * per_page).all()
-        total = query.count()
-        
-        return {
-            "items": items,
-            "pagination": {
-                "page": page,
-                "per_page": per_page,
-                "total": total,
-                "pages": (total + per_page - 1) // per_page,
-                "has_next": page * per_page < total,
-                "has_prev": page > 1,
-                "next_page": page + 1 if page * per_page < total else None,
-                "prev_page": page - 1 if page > 1 else None
-            }
-        }
-
-def serialize_model(model, fields=None, exclude=None):
-    """تحويل النموذج إلى dictionary"""
-    if model is None:
-        return None
-        
-    data = {}
-    
-    # جلب جميع الحقول من النموذج
-    for column in model.__table__.columns:
-        try:
-            value = getattr(model, column.name)
-            
-            # تحويل التواريخ والأوقات إلى string
-            if isinstance(value, (datetime, date)):
-                value = value.isoformat()
-            elif isinstance(value, timedelta):
-                value = str(value)
-                
-            data[column.name] = value
-        except AttributeError:
-            # تجاهل الحقول غير الموجودة
-            continue
-    
-    # تطبيق فلتر الحقول المطلوبة
-    if fields:
-        data = {k: v for k, v in data.items() if k in fields}
-    
-    # استبعاد الحقول غير المرغوبة
-    if exclude:
-        data = {k: v for k, v in data.items() if k not in exclude}
-    
-    return data
-
-def validate_required_fields(data, required_fields):
-    """التحقق من وجود الحقول المطلوبة"""
-    errors = []
-    for field in required_fields:
-        if field not in data or data[field] is None or str(data[field]).strip() == '':
-            errors.append(f"الحقل '{field}' مطلوب")
-    return errors
-
-def validate_email(email):
-    """التحقق من صحة البريد الإلكتروني"""
-    import re
-    if not email:
-        return False
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return bool(re.match(pattern, email))
-
-def generate_token(user_id, company_id):
-    """إنشاء JWT Token"""
-    try:
-        secret_key = os.environ.get('SESSION_SECRET', 'default-secret-key')
-        payload = {
-            'user_id': user_id,
-            'company_id': company_id,
-            'exp': datetime.utcnow() + timedelta(hours=24),
-            'iat': datetime.utcnow()
-        }
-        
-        return jwt.encode(payload, secret_key, algorithm='HS256')
-        
-    except Exception as e:
-        raise Exception(f"خطأ في إنشاء Token: {str(e)}")
-
-# ==================== المصادقة والترخيص ====================
+    )
 
 @api_bp.route('/auth/login', methods=['POST'])
 def login():
     """تسجيل دخول المستخدم"""
     try:
         data = request.get_json()
+        if not data or not data.get('email') or not data.get('password'):
+            return api_response(
+                success=False,
+                message='البريد الإلكتروني وكلمة المرور مطلوبان',
+                error='Missing email or password',
+                status_code=400
+            )
         
-        if not data:
-            return api_error("البيانات مطلوبة", 400)
+        email = data.get('email')
+        password = data.get('password')
         
-        # التحقق من البيانات المطلوبة
-        required_fields = ['email', 'password']
-        validation_errors = validate_required_fields(data, required_fields)
-        if validation_errors:
-            return api_error("بيانات مطلوبة مفقودة", 400, validation_errors)
+        # Find user
+        user = User.query.filter_by(email=email).first()
         
-        # التحقق من صحة البريد الإلكتروني
-        if not validate_email(data['email']):
-            return api_error("صيغة البريد الإلكتروني غير صحيحة", 400)
+        if not user or not user.check_password(password):
+            return api_response(
+                success=False,
+                message='البريد الإلكتروني أو كلمة المرور غير صحيحة',
+                error='Invalid credentials',
+                status_code=401
+            )
         
-        # البحث عن المستخدم
-        user = User.query.filter_by(email=data['email']).first()
+        # Create token
+        token = create_token(user.id, user.email, 'user')
         
-        if not user:
-            return api_error("بيانات غير صحيحة", 401)
+        if not token:
+            return api_response(
+                success=False,
+                message='خطأ في إنشاء رمز المصادقة',
+                error='Token creation failed',
+                status_code=500
+            )
         
-        if not check_password_hash(user.password_hash, data['password']):
-            return api_error("كلمة المرور غير صحيحة", 401)
-        
-        # إنشاء Token
-        token = generate_token(user.id, user.company_id)
-        
-        return api_response({
-            "token": token,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "company_id": user.company_id,
-                "role": getattr(user, 'role', 'user')
-            }
-        }, "تم تسجيل الدخول بنجاح")
+        return api_response(
+            data={
+                'token': token,
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'name': user.name,
+                    'role': user.role
+                }
+            },
+            message='تم تسجيل الدخول بنجاح'
+        )
         
     except Exception as e:
         logger.error(f"خطأ في تسجيل الدخول: {str(e)}")
-        return api_error("خطأ في تسجيل الدخول")
+        return api_response(
+            success=False,
+            message='خطأ في تسجيل الدخول',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/auth/employee-login', methods=['POST'])
 def employee_login():
-    """تسجيل دخول الموظف بالرقم الوظيفي والهوية"""
+    """تسجيل دخول الموظف"""
     try:
         data = request.get_json()
+        if not data or not data.get('employee_id') or not data.get('national_id'):
+            return api_response(
+                success=False,
+                message='رقم الموظف ورقم الهوية مطلوبان',
+                error='Missing employee_id or national_id',
+                status_code=400
+            )
         
-        if not data:
-            return api_error("البيانات مطلوبة", 400)
+        employee_id = data.get('employee_id')
+        national_id = data.get('national_id')
         
-        required_fields = ['employee_id', 'national_id']
-        validation_errors = validate_required_fields(data, required_fields)
-        if validation_errors:
-            return api_error("بيانات مطلوبة مفقودة", 400, validation_errors)
-        
-        # البحث عن الموظف
+        # Find employee
         employee = Employee.query.filter_by(
-            employee_id=data['employee_id'],
-            national_id=data['national_id']
+            employee_id=employee_id,
+            national_id=national_id
         ).first()
         
         if not employee:
-            return api_error("بيانات غير صحيحة", 401)
+            return api_response(
+                success=False,
+                message='رقم الموظف أو رقم الهوية غير صحيح',
+                error='Invalid employee credentials',
+                status_code=401
+            )
         
-        # إنشاء Token للموظف
-        secret_key = os.environ.get('SESSION_SECRET', 'default-secret-key')
-        payload = {
-            'employee_id': employee.id,
-            'company_id': employee.company_id,
-            'exp': datetime.utcnow() + timedelta(hours=24),
-            'iat': datetime.utcnow()
-        }
+        # Create token
+        token = create_token(employee.id, employee.email, 'employee')
         
-        token = jwt.encode(payload, secret_key, algorithm='HS256')
+        if not token:
+            return api_response(
+                success=False,
+                message='خطأ في إنشاء رمز المصادقة',
+                error='Token creation failed',
+                status_code=500
+            )
         
-        return api_response({
-            "token": token,
-            "employee": serialize_model(employee, exclude=['national_id'])
-        }, "تم تسجيل الدخول بنجاح")
+        return api_response(
+            data={
+                'token': token,
+                'employee': {
+                    'id': employee.id,
+                    'employee_id': employee.employee_id,
+                    'name': employee.name,
+                    'department': employee.department.name if employee.department else None
+                }
+            },
+            message='تم تسجيل دخول الموظف بنجاح'
+        )
         
     except Exception as e:
         logger.error(f"خطأ في تسجيل دخول الموظف: {str(e)}")
-        return api_error("خطأ في تسجيل الدخول")
+        return api_response(
+            success=False,
+            message='خطأ في تسجيل دخول الموظف',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== لوحة المعلومات والإحصائيات ====================
+# ========== Dashboard Endpoints ==========
 
 @api_bp.route('/dashboard/stats', methods=['GET'])
-@login_required
+@require_auth
 def dashboard_stats():
     """إحصائيات لوحة المعلومات"""
     try:
-        company_id = current_user.company_id
+        # Get basic statistics
+        total_employees = Employee.query.count()
+        total_vehicles = Vehicle.query.count()
+        total_departments = Department.query.count()
         
-        # الإحصائيات الأساسية
-        stats = {
-            "employees": {
-                "total": Employee.query.filter_by(company_id=company_id).count(),
-                "active": Employee.query.filter_by(company_id=company_id, status='active').count(),
-                "new_this_month": 0  # سيتم حسابها إذا كان هناك حقل hire_date
+        # Get attendance stats for current month
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        
+        monthly_attendance = Attendance.query.filter(
+            extract('month', Attendance.date) == current_month,
+            extract('year', Attendance.date) == current_year
+        ).count()
+        
+        # Get recent activities
+        recent_employees = Employee.query.order_by(desc(Employee.created_at)).limit(5).all()
+        
+        return api_response(
+            data={
+                'totals': {
+                    'employees': total_employees,
+                    'vehicles': total_vehicles,
+                    'departments': total_departments,
+                    'monthly_attendance': monthly_attendance
+                },
+                'recent_employees': [{
+                    'id': emp.id,
+                    'name': emp.name,
+                    'employee_id': emp.employee_id,
+                    'department': emp.department.name if emp.department else None,
+                    'created_at': emp.created_at.isoformat() if emp.created_at else None
+                } for emp in recent_employees]
             },
-            "vehicles": {
-                "total": Vehicle.query.filter_by(company_id=company_id).count(),
-                "active": Vehicle.query.filter_by(company_id=company_id, status='active').count(),
-                "in_workshop": Vehicle.query.filter_by(company_id=company_id, status='workshop').count()
-            },
-            "departments": {
-                "total": Department.query.filter_by(company_id=company_id).count(),
-                "with_managers": 0  # سيتم حسابها إذا كان هناك حقل manager_id
-            },
-            "attendance": {
-                "present_today": 0,  # سيتم حسابها إذا كان هناك سجلات حضور
-                "absent_today": 0
-            }
-        }
-        
-        # محاولة حساب الموظفين الجدد هذا الشهر
-        try:
-            month_start = date.today().replace(day=1)
-            new_employees = Employee.query.filter(
-                Employee.company_id == company_id,
-                Employee.hire_date >= month_start
-            ).count()
-            stats["employees"]["new_this_month"] = new_employees
-        except:
-            pass
-        
-        # محاولة حساب الأقسام مع المديرين
-        try:
-            with_managers = Department.query.filter(
-                Department.company_id == company_id,
-                Department.manager_id.isnot(None)
-            ).count()
-            stats["departments"]["with_managers"] = with_managers
-        except:
-            pass
-        
-        # محاولة حساب الحضور اليوم
-        try:
-            present_today = Attendance.query.filter(
-                Attendance.company_id == company_id,
-                Attendance.date == date.today(),
-                Attendance.status == 'present'
-            ).count()
-            
-            absent_today = Attendance.query.filter(
-                Attendance.company_id == company_id,
-                Attendance.date == date.today(),
-                Attendance.status == 'absent'
-            ).count()
-            
-            stats["attendance"]["present_today"] = present_today
-            stats["attendance"]["absent_today"] = absent_today
-        except:
-            pass
-        
-        return api_response({"statistics": stats})
+            message='تم جلب إحصائيات لوحة المعلومات بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في إحصائيات لوحة المعلومات: {str(e)}")
-        return api_error("خطأ في جلب الإحصائيات")
+        logger.error(f"خطأ في جلب إحصائيات لوحة المعلومات: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في جلب إحصائيات لوحة المعلومات',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== إدارة الموظفين ====================
+# ========== Employee Management Endpoints ==========
 
 @api_bp.route('/employees', methods=['GET'])
-@login_required
+@require_auth
 def get_employees():
-    """جلب قائمة الموظفين مع البحث والتصفية"""
+    """قائمة الموظفين مع البحث والترقيم"""
     try:
-        company_id = current_user.company_id
-        
-        # المعاملات
+        # Get query parameters
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
         search = request.args.get('search', '')
         department_id = request.args.get('department_id', type=int)
         status = request.args.get('status', '')
-        sort_by = request.args.get('sort_by', 'id')
+        sort_by = request.args.get('sort_by', 'created_at')
         sort_order = request.args.get('sort_order', 'desc')
         
-        # بناء الاستعلام
-        query = Employee.query.filter_by(company_id=company_id)
+        # Build query
+        query = Employee.query
         
-        # البحث
+        # Apply search
         if search:
             query = query.filter(
                 or_(
-                    Employee.name.contains(search),
-                    Employee.employee_id.contains(search),
-                    Employee.email.contains(search) if hasattr(Employee, 'email') else False
+                    Employee.name.ilike(f'%{search}%'),
+                    Employee.employee_id.ilike(f'%{search}%'),
+                    Employee.national_id.ilike(f'%{search}%')
                 )
             )
         
-        # التصفية حسب القسم
+        # Apply filters
         if department_id:
-            query = query.filter_by(department_id=department_id)
+            query = query.filter(Employee.department_id == department_id)
         
-        # التصفية حسب الحالة
         if status:
-            query = query.filter_by(status=status)
+            query = query.filter(Employee.status == status)
         
-        # الترتيب
-        if hasattr(Employee, sort_by):
-            if sort_order == 'desc':
-                query = query.order_by(desc(getattr(Employee, sort_by)))
-            else:
-                query = query.order_by(asc(getattr(Employee, sort_by)))
+        # Apply sorting
+        if sort_by == 'name':
+            order_column = Employee.name
+        elif sort_by == 'employee_id':
+            order_column = Employee.employee_id
+        elif sort_by == 'created_at':
+            order_column = Employee.created_at
+        else:
+            order_column = Employee.created_at
         
-        # التصفح
-        result = paginate_query(query, page, per_page)
+        if sort_order == 'desc':
+            query = query.order_by(desc(order_column))
+        else:
+            query = query.order_by(order_column)
         
-        # تسلسل البيانات
-        employees = [serialize_model(emp, exclude=['national_id']) for emp in result['items']]
+        # Execute pagination
+        pagination = query.paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
         
-        return api_response(employees, meta=result['pagination'])
+        employees = pagination.items
+        
+        return api_response(
+            data={
+                'employees': [{
+                    'id': emp.id,
+                    'name': emp.name,
+                    'employee_id': emp.employee_id,
+                    'national_id': emp.national_id,
+                    'department': {
+                        'id': emp.department.id,
+                        'name': emp.department.name
+                    } if emp.department else None,
+                    'position': emp.position,
+                    'status': emp.status,
+                    'phone': emp.phone,
+                    'email': emp.email,
+                    'created_at': emp.created_at.isoformat() if emp.created_at else None
+                } for emp in employees],
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total,
+                    'pages': pagination.pages,
+                    'has_next': pagination.has_next,
+                    'has_prev': pagination.has_prev
+                }
+            },
+            message='تم جلب قائمة الموظفين بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في جلب الموظفين: {str(e)}")
-        return api_error("خطأ في جلب قائمة الموظفين")
+        logger.error(f"خطأ في جلب قائمة الموظفين: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في جلب قائمة الموظفين',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/employees/<int:employee_id>', methods=['GET'])
-@login_required
+@require_auth
 def get_employee(employee_id):
-    """جلب بيانات موظف محدد"""
+    """تفاصيل موظف محدد"""
     try:
-        employee = Employee.query.filter_by(
-            id=employee_id,
-            company_id=current_user.company_id
-        ).first()
+        employee = Employee.query.get_or_404(employee_id)
         
-        if not employee:
-            return api_error("الموظف غير موجود", 404)
+        # Get employee's salary records
+        salaries = Salary.query.filter_by(employee_id=employee_id).order_by(desc(Salary.created_at)).limit(5).all()
         
-        # جلب البيانات المرتبطة
-        employee_data = serialize_model(employee, exclude=['national_id'])
+        # Get employee's attendance records
+        attendance = Attendance.query.filter_by(employee_id=employee_id).order_by(desc(Attendance.date)).limit(10).all()
         
-        # إضافة بيانات القسم
-        try:
-            if employee.department:
-                employee_data['department'] = serialize_model(employee.department)
-        except:
-            pass
-        
-        return api_response(employee_data)
+        return api_response(
+            data={
+                'employee': {
+                    'id': employee.id,
+                    'name': employee.name,
+                    'employee_id': employee.employee_id,
+                    'national_id': employee.national_id,
+                    'department': {
+                        'id': employee.department.id,
+                        'name': employee.department.name
+                    } if employee.department else None,
+                    'position': employee.position,
+                    'status': employee.status,
+                    'phone': employee.phone,
+                    'email': employee.email,
+                    'address': employee.address,
+                    'created_at': employee.created_at.isoformat() if employee.created_at else None,
+                    'updated_at': employee.updated_at.isoformat() if employee.updated_at else None
+                },
+                'recent_salaries': [{
+                    'id': sal.id,
+                    'amount': float(sal.amount),
+                    'month': sal.month,
+                    'year': sal.year,
+                    'created_at': sal.created_at.isoformat() if sal.created_at else None
+                } for sal in salaries],
+                'recent_attendance': [{
+                    'id': att.id,
+                    'date': att.date.isoformat(),
+                    'status': att.status,
+                    'created_at': att.created_at.isoformat() if att.created_at else None
+                } for att in attendance]
+            },
+            message='تم جلب تفاصيل الموظف بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في جلب بيانات الموظف {employee_id}: {str(e)}")
-        return api_error("خطأ في جلب بيانات الموظف")
+        logger.error(f"خطأ في جلب تفاصيل الموظف: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في جلب تفاصيل الموظف',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/employees', methods=['POST'])
-@login_required
+@require_auth
 def create_employee():
     """إضافة موظف جديد"""
     try:
         data = request.get_json()
         
-        if not data:
-            return api_error("البيانات مطلوبة", 400)
+        # Validate required fields
+        required_fields = ['name', 'employee_id', 'national_id', 'department_id']
+        for field in required_fields:
+            if not data.get(field):
+                return api_response(
+                    success=False,
+                    message=f'الحقل {field} مطلوب',
+                    error=f'Missing required field: {field}',
+                    status_code=400
+                )
         
-        # التحقق من البيانات المطلوبة
-        required_fields = ['name', 'employee_id', 'national_id']
-        validation_errors = validate_required_fields(data, required_fields)
-        if validation_errors:
-            return api_error("بيانات مطلوبة مفقودة", 400, validation_errors)
-        
-        # التحقق من عدم تكرار رقم الموظف أو الهوية
-        existing = Employee.query.filter(
-            Employee.company_id == current_user.company_id,
+        # Check for duplicates
+        existing_employee = Employee.query.filter(
             or_(
                 Employee.employee_id == data['employee_id'],
                 Employee.national_id == data['national_id']
             )
         ).first()
         
-        if existing:
-            return api_error("رقم الموظف أو الهوية الوطنية مستخدم بالفعل", 409)
+        if existing_employee:
+            return api_response(
+                success=False,
+                message='رقم الموظف أو رقم الهوية مستخدم بالفعل',
+                error='Employee ID or National ID already exists',
+                status_code=400
+            )
         
-        # إنشاء الموظف الجديد
-        employee_data = {
-            'company_id': current_user.company_id,
-            'name': data['name'],
-            'employee_id': data['employee_id'],
-            'national_id': data['national_id']
-        }
-        
-        # إضافة الحقول الاختيارية إذا كانت موجودة
-        optional_fields = ['email', 'phone', 'department_id', 'job_title', 'basic_salary', 'status']
-        for field in optional_fields:
-            if field in data and hasattr(Employee, field):
-                employee_data[field] = data[field]
-        
-        # تعيين الحالة الافتراضية
-        if 'status' not in employee_data:
-            employee_data['status'] = 'active'
-        
-        # محاولة تعيين تاريخ التوظيف
-        if 'hire_date' in data and hasattr(Employee, 'hire_date'):
-            try:
-                employee_data['hire_date'] = datetime.strptime(data['hire_date'], '%Y-%m-%d').date()
-            except:
-                employee_data['hire_date'] = date.today()
-        elif hasattr(Employee, 'hire_date'):
-            employee_data['hire_date'] = date.today()
-        
-        employee = Employee(**employee_data)
+        # Create new employee
+        employee = Employee(
+            name=data['name'],
+            employee_id=data['employee_id'],
+            national_id=data['national_id'],
+            department_id=data['department_id'],
+            position=data.get('position', ''),
+            phone=data.get('phone', ''),
+            email=data.get('email', ''),
+            address=data.get('address', ''),
+            status=data.get('status', 'active')
+        )
         
         db.session.add(employee)
         db.session.commit()
         
         return api_response(
-            serialize_model(employee, exclude=['national_id']),
-            "تم إضافة الموظف بنجاح",
-            201
+            data={
+                'employee': {
+                    'id': employee.id,
+                    'name': employee.name,
+                    'employee_id': employee.employee_id,
+                    'national_id': employee.national_id,
+                    'department_id': employee.department_id,
+                    'position': employee.position,
+                    'status': employee.status
+                }
+            },
+            message='تم إضافة الموظف بنجاح',
+            status_code=201
         )
         
-    except IntegrityError as e:
-        db.session.rollback()
-        logger.error(f"خطأ في قاعدة البيانات عند إضافة موظف: {str(e)}")
-        return api_error("خطأ في البيانات المدخلة", 400)
     except Exception as e:
         db.session.rollback()
-        logger.error(f"خطأ في إضافة موظف: {str(e)}")
-        return api_error("خطأ في إضافة الموظف")
+        logger.error(f"خطأ في إضافة الموظف: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في إضافة الموظف',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/employees/<int:employee_id>', methods=['PUT'])
-@login_required
+@require_auth
 def update_employee(employee_id):
     """تحديث بيانات موظف"""
     try:
-        employee = Employee.query.filter_by(
-            id=employee_id,
-            company_id=current_user.company_id
-        ).first()
-        
-        if not employee:
-            return api_error("الموظف غير موجود", 404)
-        
+        employee = Employee.query.get_or_404(employee_id)
         data = request.get_json()
         
-        if not data:
-            return api_error("البيانات مطلوبة", 400)
+        # Update fields
+        if 'name' in data:
+            employee.name = data['name']
+        if 'position' in data:
+            employee.position = data['position']
+        if 'department_id' in data:
+            employee.department_id = data['department_id']
+        if 'phone' in data:
+            employee.phone = data['phone']
+        if 'email' in data:
+            employee.email = data['email']
+        if 'address' in data:
+            employee.address = data['address']
+        if 'status' in data:
+            employee.status = data['status']
         
-        # تحديث البيانات
-        updateable_fields = [
-            'name', 'email', 'phone', 'department_id', 'basic_salary', 
-            'status', 'job_title'
-        ]
-        
-        for field in updateable_fields:
-            if field in data and hasattr(employee, field):
-                setattr(employee, field, data[field])
-        
-        # تحديث تاريخ التوظيف إذا كان موجوداً
-        if 'hire_date' in data and hasattr(employee, 'hire_date'):
-            try:
-                setattr(employee, 'hire_date', datetime.strptime(data['hire_date'], '%Y-%m-%d').date())
-            except:
-                pass
-        
-        # تحديث وقت التعديل إذا كان موجوداً
-        if hasattr(employee, 'updated_at'):
-            employee.updated_at = datetime.utcnow()
-        
+        employee.updated_at = datetime.utcnow()
         db.session.commit()
         
         return api_response(
-            serialize_model(employee, exclude=['national_id']),
-            "تم تحديث بيانات الموظف بنجاح"
+            data={
+                'employee': {
+                    'id': employee.id,
+                    'name': employee.name,
+                    'employee_id': employee.employee_id,
+                    'position': employee.position,
+                    'status': employee.status,
+                    'updated_at': employee.updated_at.isoformat()
+                }
+            },
+            message='تم تحديث بيانات الموظف بنجاح'
         )
         
     except Exception as e:
         db.session.rollback()
-        logger.error(f"خطأ في تحديث الموظف {employee_id}: {str(e)}")
-        return api_error("خطأ في تحديث بيانات الموظف")
+        logger.error(f"خطأ في تحديث الموظف: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في تحديث الموظف',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/employees/<int:employee_id>', methods=['DELETE'])
-@login_required
+@require_auth
 def delete_employee(employee_id):
-    """حذف موظف"""
+    """حذف موظف (soft delete)"""
     try:
-        employee = Employee.query.filter_by(
-            id=employee_id,
-            company_id=current_user.company_id
-        ).first()
+        employee = Employee.query.get_or_404(employee_id)
         
-        if not employee:
-            return api_error("الموظف غير موجود", 404)
-        
-        employee_name = employee.name
-        
-        # تعطيل الموظف بدلاً من الحذف الفعلي
+        # Soft delete - just mark as inactive
         employee.status = 'inactive'
-        
-        # تعيين تاريخ الحذف إذا كان الحقل موجوداً
-        if hasattr(employee, 'deleted_at'):
-            employee.deleted_at = datetime.utcnow()
-        
+        employee.updated_at = datetime.utcnow()
         db.session.commit()
         
-        return api_response(None, f"تم حذف الموظف {employee_name} بنجاح")
+        return api_response(
+            message='تم حذف الموظف بنجاح'
+        )
         
     except Exception as e:
         db.session.rollback()
-        logger.error(f"خطأ في حذف الموظف {employee_id}: {str(e)}")
-        return api_error("خطأ في حذف الموظف")
+        logger.error(f"خطأ في حذف الموظف: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في حذف الموظف',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== إدارة المركبات ====================
+# ========== Vehicle Management Endpoints ==========
 
 @api_bp.route('/vehicles', methods=['GET'])
-@login_required
+@require_auth
 def get_vehicles():
-    """جلب قائمة المركبات"""
+    """قائمة المركبات"""
     try:
-        company_id = current_user.company_id
-        
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
         search = request.args.get('search', '')
-        status = request.args.get('status', '')
         
-        query = Vehicle.query.filter_by(company_id=company_id)
+        query = Vehicle.query
         
         if search:
             query = query.filter(
                 or_(
-                    Vehicle.plate_number.contains(search),
-                    Vehicle.make.contains(search) if hasattr(Vehicle, 'make') else False,
-                    Vehicle.model.contains(search) if hasattr(Vehicle, 'model') else False
+                    Vehicle.plate_number.ilike(f'%{search}%'),
+                    Vehicle.make.ilike(f'%{search}%'),
+                    Vehicle.model.ilike(f'%{search}%')
                 )
             )
         
-        if status:
-            query = query.filter_by(status=status)
+        pagination = query.paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
         
-        query = query.order_by(desc(Vehicle.id))
+        vehicles = pagination.items
         
-        result = paginate_query(query, page, per_page)
-        vehicles = [serialize_model(vehicle) for vehicle in result['items']]
-        
-        return api_response(vehicles, meta=result['pagination'])
+        return api_response(
+            data={
+                'vehicles': [{
+                    'id': veh.id,
+                    'plate_number': veh.plate_number,
+                    'make': veh.make,
+                    'model': veh.model,
+                    'year': veh.year,
+                    'color': veh.color,
+                    'status': veh.status,
+                    'created_at': veh.created_at.isoformat() if veh.created_at else None
+                } for veh in vehicles],
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total,
+                    'pages': pagination.pages,
+                    'has_next': pagination.has_next,
+                    'has_prev': pagination.has_prev
+                }
+            },
+            message='تم جلب قائمة المركبات بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في جلب المركبات: {str(e)}")
-        return api_error("خطأ في جلب قائمة المركبات")
+        logger.error(f"خطأ في جلب قائمة المركبات: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في جلب قائمة المركبات',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/vehicles/<int:vehicle_id>', methods=['GET'])
-@login_required
+@require_auth
 def get_vehicle(vehicle_id):
-    """جلب بيانات مركبة محددة"""
+    """تفاصيل مركبة محددة"""
     try:
-        vehicle = Vehicle.query.filter_by(
-            id=vehicle_id,
-            company_id=current_user.company_id
-        ).first()
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
         
-        if not vehicle:
-            return api_error("المركبة غير موجودة", 404)
+        # Get vehicle handover records
+        handovers = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(desc(VehicleHandover.created_at)).limit(10).all()
         
-        vehicle_data = serialize_model(vehicle)
+        # Get vehicle workshop records
+        workshops = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id).order_by(desc(VehicleWorkshop.created_at)).limit(10).all()
         
-        # إضافة سجلات التسليم إذا كانت متوفرة
-        try:
-            handovers = VehicleHandover.query.filter_by(vehicle_id=vehicle_id)\
-                .order_by(desc(VehicleHandover.id)).limit(10).all()
-            vehicle_data['handovers'] = [serialize_model(h) for h in handovers]
-        except:
-            vehicle_data['handovers'] = []
-        
-        # إضافة سجلات الورشة إذا كانت متوفرة
-        try:
-            workshops = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id)\
-                .order_by(desc(VehicleWorkshop.id)).limit(5).all()
-            vehicle_data['workshops'] = [serialize_model(w) for w in workshops]
-        except:
-            vehicle_data['workshops'] = []
-        
-        return api_response(vehicle_data)
+        return api_response(
+            data={
+                'vehicle': {
+                    'id': vehicle.id,
+                    'plate_number': vehicle.plate_number,
+                    'make': vehicle.make,
+                    'model': vehicle.model,
+                    'year': vehicle.year,
+                    'color': vehicle.color,
+                    'status': vehicle.status,
+                    'created_at': vehicle.created_at.isoformat() if vehicle.created_at else None
+                },
+                'handovers': [{
+                    'id': hand.id,
+                    'employee_name': hand.employee_name,
+                    'handover_date': hand.handover_date.isoformat() if hand.handover_date else None,
+                    'return_date': hand.return_date.isoformat() if hand.return_date else None,
+                    'status': hand.status
+                } for hand in handovers],
+                'workshops': [{
+                    'id': work.id,
+                    'description': work.description,
+                    'cost': float(work.cost) if work.cost else 0,
+                    'date': work.date.isoformat() if work.date else None
+                } for work in workshops]
+            },
+            message='تم جلب تفاصيل المركبة بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في جلب بيانات المركبة {vehicle_id}: {str(e)}")
-        return api_error("خطأ في جلب بيانات المركبة")
+        logger.error(f"خطأ في جلب تفاصيل المركبة: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في جلب تفاصيل المركبة',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== إدارة الأقسام ====================
+# ========== Department Management Endpoints ==========
 
 @api_bp.route('/departments', methods=['GET'])
-@login_required
+@require_auth
 def get_departments():
-    """جلب قائمة الأقسام"""
+    """قائمة الأقسام"""
     try:
-        departments = Department.query.filter_by(
-            company_id=current_user.company_id
-        ).order_by(Department.name).all()
+        departments = Department.query.all()
         
-        departments_data = []
-        for dept in departments:
-            dept_data = serialize_model(dept)
-            
-            # إضافة عدد الموظفين
-            dept_data['employees_count'] = Employee.query.filter_by(
-                department_id=dept.id
-            ).count()
-            
-            # إضافة بيانات المدير إذا كان موجوداً
-            try:
-                if hasattr(dept, 'manager_id') and dept.manager_id:
-                    manager = Employee.query.get(dept.manager_id)
-                    if manager:
-                        dept_data['manager'] = serialize_model(manager, fields=['id', 'name', 'employee_id'])
-            except:
-                pass
-            
-            departments_data.append(dept_data)
-        
-        return api_response(departments_data)
+        return api_response(
+            data={
+                'departments': [{
+                    'id': dept.id,
+                    'name': dept.name,
+                    'description': dept.description,
+                    'employee_count': Employee.query.filter_by(department_id=dept.id).count(),
+                    'created_at': dept.created_at.isoformat() if dept.created_at else None
+                } for dept in departments]
+            },
+            message='تم جلب قائمة الأقسام بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في جلب الأقسام: {str(e)}")
-        return api_error("خطأ في جلب قائمة الأقسام")
+        logger.error(f"خطأ في جلب قائمة الأقسام: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في جلب قائمة الأقسام',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== إدارة الحضور ====================
+# ========== Attendance Management Endpoints ==========
 
 @api_bp.route('/attendance', methods=['GET'])
-@login_required
+@require_auth
 def get_attendance():
-    """جلب سجلات الحضور"""
+    """قائمة سجلات الحضور"""
     try:
-        company_id = current_user.company_id
-        
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
         employee_id = request.args.get('employee_id', type=int)
         date_from = request.args.get('date_from')
         date_to = request.args.get('date_to')
+        status = request.args.get('status')
         
-        query = Attendance.query.filter_by(company_id=company_id)
+        query = Attendance.query
         
+        # Apply filters
         if employee_id:
-            query = query.filter_by(employee_id=employee_id)
+            query = query.filter(Attendance.employee_id == employee_id)
         
         if date_from:
-            try:
-                query = query.filter(Attendance.date >= datetime.strptime(date_from, '%Y-%m-%d').date())
-            except:
-                pass
+            query = query.filter(Attendance.date >= datetime.strptime(date_from, '%Y-%m-%d').date())
         
         if date_to:
-            try:
-                query = query.filter(Attendance.date <= datetime.strptime(date_to, '%Y-%m-%d').date())
-            except:
-                pass
+            query = query.filter(Attendance.date <= datetime.strptime(date_to, '%Y-%m-%d').date())
         
-        query = query.order_by(desc(Attendance.date))
+        if status:
+            query = query.filter(Attendance.status == status)
         
-        result = paginate_query(query, page, per_page)
+        pagination = query.order_by(desc(Attendance.date)).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
         
-        attendance_data = []
-        for att in result['items']:
-            att_data = serialize_model(att)
-            
-            # إضافة بيانات الموظف
-            try:
-                if att.employee:
-                    att_data['employee'] = serialize_model(att.employee, fields=['id', 'name', 'employee_id'])
-            except:
-                pass
-            
-            attendance_data.append(att_data)
+        attendance_records = pagination.items
         
-        return api_response(attendance_data, meta=result['pagination'])
+        return api_response(
+            data={
+                'attendance': [{
+                    'id': att.id,
+                    'employee': {
+                        'id': att.employee.id,
+                        'name': att.employee.name,
+                        'employee_id': att.employee.employee_id
+                    } if att.employee else None,
+                    'date': att.date.isoformat(),
+                    'status': att.status,
+                    'notes': att.notes,
+                    'created_at': att.created_at.isoformat() if att.created_at else None
+                } for att in attendance_records],
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total,
+                    'pages': pagination.pages,
+                    'has_next': pagination.has_next,
+                    'has_prev': pagination.has_prev
+                }
+            },
+            message='تم جلب سجلات الحضور بنجاح'
+        )
         
     except Exception as e:
         logger.error(f"خطأ في جلب سجلات الحضور: {str(e)}")
-        return api_error("خطأ في جلب سجلات الحضور")
+        return api_response(
+            success=False,
+            message='خطأ في جلب سجلات الحضور',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/attendance', methods=['POST'])
-@login_required
-def record_attendance():
-    """تسجيل حضور"""
+@require_auth
+def create_attendance():
+    """تسجيل حضور جديد"""
     try:
         data = request.get_json()
         
-        if not data:
-            return api_error("البيانات مطلوبة", 400)
-        
+        # Validate required fields
         required_fields = ['employee_id', 'date', 'status']
-        validation_errors = validate_required_fields(data, required_fields)
-        if validation_errors:
-            return api_error("بيانات مطلوبة مفقودة", 400, validation_errors)
+        for field in required_fields:
+            if not data.get(field):
+                return api_response(
+                    success=False,
+                    message=f'الحقل {field} مطلوب',
+                    error=f'Missing required field: {field}',
+                    status_code=400
+                )
         
-        # التحقق من وجود الموظف
-        employee = Employee.query.filter_by(
-            id=data['employee_id'],
-            company_id=current_user.company_id
-        ).first()
-        
+        # Check if employee exists
+        employee = Employee.query.get(data['employee_id'])
         if not employee:
-            return api_error("الموظف غير موجود", 404)
+            return api_response(
+                success=False,
+                message='الموظف غير موجود',
+                error='Employee not found',
+                status_code=404
+            )
         
-        try:
-            attendance_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        except:
-            return api_error("تنسيق التاريخ غير صحيح، استخدم YYYY-MM-DD", 400)
-        
-        # التحقق من عدم تكرار التسجيل لنفس اليوم
-        existing = Attendance.query.filter_by(
+        # Check if attendance already exists for this date
+        attendance_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        existing_attendance = Attendance.query.filter_by(
             employee_id=data['employee_id'],
             date=attendance_date
         ).first()
         
-        if existing:
-            return api_error("تم تسجيل الحضور لهذا اليوم بالفعل", 409)
+        if existing_attendance:
+            return api_response(
+                success=False,
+                message='تم تسجيل الحضور لهذا التاريخ مسبقاً',
+                error='Attendance already exists for this date',
+                status_code=400
+            )
         
-        # إنشاء سجل الحضور
-        attendance_data = {
-            'company_id': current_user.company_id,
-            'employee_id': data['employee_id'],
-            'date': attendance_date,
-            'status': data['status']
-        }
-        
-        # إضافة أوقات الدخول والخروج إذا كانت متوفرة
-        if 'check_in_time' in data and hasattr(Attendance, 'check_in_time'):
-            try:
-                attendance_data['check_in_time'] = datetime.strptime(data['check_in_time'], '%H:%M').time()
-            except:
-                pass
-        
-        if 'check_out_time' in data and hasattr(Attendance, 'check_out_time'):
-            try:
-                attendance_data['check_out_time'] = datetime.strptime(data['check_out_time'], '%H:%M').time()
-            except:
-                pass
-        
-        if 'notes' in data and hasattr(Attendance, 'notes'):
-            attendance_data['notes'] = data['notes']
-        
-        attendance = Attendance(**attendance_data)
+        # Create new attendance record
+        attendance = Attendance(
+            employee_id=data['employee_id'],
+            date=attendance_date,
+            status=data['status'],
+            notes=data.get('notes', '')
+        )
         
         db.session.add(attendance)
         db.session.commit()
         
         return api_response(
-            serialize_model(attendance),
-            "تم تسجيل الحضور بنجاح",
-            201
+            data={
+                'attendance': {
+                    'id': attendance.id,
+                    'employee_id': attendance.employee_id,
+                    'date': attendance.date.isoformat(),
+                    'status': attendance.status,
+                    'notes': attendance.notes
+                }
+            },
+            message='تم تسجيل الحضور بنجاح',
+            status_code=201
         )
         
     except Exception as e:
         db.session.rollback()
         logger.error(f"خطأ في تسجيل الحضور: {str(e)}")
-        return api_error("خطأ في تسجيل الحضور")
+        return api_response(
+            success=False,
+            message='خطأ في تسجيل الحضور',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== إدارة الرواتب ====================
+# ========== Salary Management Endpoints ==========
 
 @api_bp.route('/employees/<int:employee_id>/salaries', methods=['GET'])
-@login_required
+@require_auth
 def get_employee_salaries(employee_id):
-    """جلب سجلات رواتب الموظف"""
+    """سجلات رواتب موظف محدد"""
     try:
-        # التحقق من وجود الموظف
-        employee = Employee.query.filter_by(
-            id=employee_id,
-            company_id=current_user.company_id
-        ).first()
-        
-        if not employee:
-            return api_error("الموظف غير موجود", 404)
+        employee = Employee.query.get_or_404(employee_id)
         
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 12, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
         
-        query = Salary.query.filter_by(employee_id=employee_id)
+        pagination = Salary.query.filter_by(employee_id=employee_id).order_by(desc(Salary.created_at)).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
         
-        # ترتيب حسب التاريخ إذا كان متوفراً
-        if hasattr(Salary, 'payment_date'):
-            query = query.order_by(desc(Salary.payment_date))
-        else:
-            query = query.order_by(desc(Salary.id))
+        salaries = pagination.items
         
-        result = paginate_query(query, page, per_page)
-        salaries = [serialize_model(salary) for salary in result['items']]
-        
-        return api_response(salaries, meta=result['pagination'])
+        return api_response(
+            data={
+                'employee': {
+                    'id': employee.id,
+                    'name': employee.name,
+                    'employee_id': employee.employee_id
+                },
+                'salaries': [{
+                    'id': sal.id,
+                    'amount': float(sal.amount),
+                    'month': sal.month,
+                    'year': sal.year,
+                    'created_at': sal.created_at.isoformat() if sal.created_at else None
+                } for sal in salaries],
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total,
+                    'pages': pagination.pages,
+                    'has_next': pagination.has_next,
+                    'has_prev': pagination.has_prev
+                }
+            },
+            message='تم جلب سجلات الرواتب بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في جلب رواتب الموظف {employee_id}: {str(e)}")
-        return api_error("خطأ في جلب سجلات الرواتب")
+        logger.error(f"خطأ في جلب سجلات الرواتب: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في جلب سجلات الرواتب',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== التقارير ====================
+# ========== Reports Endpoints ==========
 
 @api_bp.route('/reports/employees/summary', methods=['GET'])
-@login_required
+@require_auth
 def employees_summary_report():
     """تقرير ملخص الموظفين"""
     try:
-        company_id = current_user.company_id
+        # Get summary statistics
+        total_employees = Employee.query.count()
+        active_employees = Employee.query.filter_by(status='active').count()
+        inactive_employees = Employee.query.filter_by(status='inactive').count()
         
-        # إحصائيات الموظفين
-        total_employees = Employee.query.filter_by(company_id=company_id).count()
-        active_employees = Employee.query.filter_by(company_id=company_id, status='active').count()
+        # Get department-wise statistics
+        departments = db.session.query(
+            Department.name,
+            func.count(Employee.id).label('employee_count')
+        ).join(Employee).group_by(Department.name).all()
         
-        # التوزيع حسب الأقسام
-        dept_stats = []
-        try:
-            dept_data = db.session.query(
-                Department.name,
-                func.count(Employee.id).label('count')
-            ).join(Employee)\
-             .filter(Employee.company_id == company_id)\
-             .group_by(Department.name).all()
-            
-            dept_stats = [
-                {"department": dept[0], "count": dept[1]} 
-                for dept in dept_data
-            ]
-        except:
-            pass
+        # Get recent hires
+        recent_hires = Employee.query.order_by(desc(Employee.created_at)).limit(10).all()
         
-        # الموظفين الجدد هذا الشهر
-        new_employees = 0
-        try:
-            if hasattr(Employee, 'hire_date'):
-                month_start = date.today().replace(day=1)
-                new_employees = Employee.query.filter(
-                    Employee.company_id == company_id,
-                    Employee.hire_date >= month_start
-                ).count()
-        except:
-            pass
-        
-        report_data = {
-            "summary": {
-                "total_employees": total_employees,
-                "active_employees": active_employees,
-                "inactive_employees": total_employees - active_employees,
-                "new_this_month": new_employees
+        return api_response(
+            data={
+                'summary': {
+                    'total_employees': total_employees,
+                    'active_employees': active_employees,
+                    'inactive_employees': inactive_employees
+                },
+                'departments': [{
+                    'name': dept.name,
+                    'employee_count': dept.employee_count
+                } for dept in departments],
+                'recent_hires': [{
+                    'id': emp.id,
+                    'name': emp.name,
+                    'employee_id': emp.employee_id,
+                    'department': emp.department.name if emp.department else None,
+                    'created_at': emp.created_at.isoformat() if emp.created_at else None
+                } for emp in recent_hires]
             },
-            "departments_distribution": dept_stats,
-            "generated_at": datetime.utcnow().isoformat()
-        }
-        
-        return api_response(report_data)
+            message='تم إنشاء تقرير ملخص الموظفين بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في تقرير ملخص الموظفين: {str(e)}")
-        return api_error("خطأ في إنشاء التقرير")
+        logger.error(f"خطأ في إنشاء تقرير ملخص الموظفين: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في إنشاء تقرير ملخص الموظفين',
+            error=str(e),
+            status_code=500
+        )
 
 @api_bp.route('/reports/attendance/monthly', methods=['GET'])
-@login_required
+@require_auth
 def monthly_attendance_report():
     """تقرير الحضور الشهري"""
     try:
-        company_id = current_user.company_id
-        year = request.args.get('year', date.today().year, type=int)
-        month = request.args.get('month', date.today().month, type=int)
+        year = request.args.get('year', datetime.now().year, type=int)
+        month = request.args.get('month', datetime.now().month, type=int)
         
-        # نطاق التواريخ
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            end_date = date(year, month + 1, 1) - timedelta(days=1)
+        # Get attendance statistics for the month
+        attendance_stats = db.session.query(
+            Attendance.status,
+            func.count(Attendance.id).label('count')
+        ).filter(
+            extract('year', Attendance.date) == year,
+            extract('month', Attendance.date) == month
+        ).group_by(Attendance.status).all()
         
-        # إحصائيات الحضور
-        status_distribution = {}
-        daily_attendance = []
+        # Get employee-wise attendance
+        employee_attendance = db.session.query(
+            Employee.name,
+            Employee.employee_id,
+            func.count(Attendance.id).label('attendance_count')
+        ).join(Attendance).filter(
+            extract('year', Attendance.date) == year,
+            extract('month', Attendance.date) == month
+        ).group_by(Employee.id, Employee.name, Employee.employee_id).all()
         
-        try:
-            # إحصائيات الحالات
-            attendance_stats = db.session.query(
-                Attendance.status,
-                func.count(Attendance.id).label('count')
-            ).filter(
-                Attendance.company_id == company_id,
-                Attendance.date >= start_date,
-                Attendance.date <= end_date
-            ).group_by(Attendance.status).all()
-            
-            status_distribution = {
-                status[0]: status[1] for status in attendance_stats
-            }
-            
-            # الحضور اليومي
-            current_date = start_date
-            while current_date <= end_date:
-                daily_count = Attendance.query.filter(
-                    Attendance.company_id == company_id,
-                    Attendance.date == current_date,
-                    Attendance.status == 'present'
-                ).count()
-                
-                daily_attendance.append({
-                    "date": current_date.isoformat(),
-                    "present_count": daily_count
-                })
-                
-                current_date += timedelta(days=1)
-        except:
-            pass
-        
-        report_data = {
-            "period": {
-                "year": year,
-                "month": month,
-                "start_date": start_date.isoformat(),
-                "end_date": end_date.isoformat()
+        return api_response(
+            data={
+                'period': {
+                    'year': year,
+                    'month': month
+                },
+                'attendance_summary': [{
+                    'status': stat.status,
+                    'count': stat.count
+                } for stat in attendance_stats],
+                'employee_attendance': [{
+                    'employee_name': emp.name,
+                    'employee_id': emp.employee_id,
+                    'attendance_count': emp.attendance_count
+                } for emp in employee_attendance]
             },
-            "summary": status_distribution,
-            "daily_attendance": daily_attendance,
-            "generated_at": datetime.utcnow().isoformat()
-        }
-        
-        return api_response(report_data)
+            message='تم إنشاء تقرير الحضور الشهري بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في تقرير الحضور الشهري: {str(e)}")
-        return api_error("خطأ في إنشاء تقرير الحضور")
+        logger.error(f"خطأ في إنشاء تقرير الحضور الشهري: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في إنشاء تقرير الحضور الشهري',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== البحث المتقدم ====================
+# ========== Search Endpoints ==========
 
 @api_bp.route('/search', methods=['POST'])
-@login_required
-def advanced_search():
-    """البحث المتقدم في النظام"""
+@require_auth
+def search_system():
+    """البحث الشامل في النظام"""
     try:
         data = request.get_json()
+        query = data.get('query', '').strip()
         
-        if not data:
-            return api_error("البيانات مطلوبة", 400)
+        if not query:
+            return api_response(
+                success=False,
+                message='كلمة البحث مطلوبة',
+                error='Search query is required',
+                status_code=400
+            )
         
-        query_text = data.get('query', '').strip()
-        search_in = data.get('search_in', ['employees', 'vehicles'])
+        # Search employees
+        employees = Employee.query.filter(
+            or_(
+                Employee.name.ilike(f'%{query}%'),
+                Employee.employee_id.ilike(f'%{query}%'),
+                Employee.national_id.ilike(f'%{query}%')
+            )
+        ).limit(10).all()
         
-        if not query_text:
-            return api_error("استعلام البحث مطلوب", 400)
+        # Search vehicles
+        vehicles = Vehicle.query.filter(
+            or_(
+                Vehicle.plate_number.ilike(f'%{query}%'),
+                Vehicle.make.ilike(f'%{query}%'),
+                Vehicle.model.ilike(f'%{query}%')
+            )
+        ).limit(10).all()
         
-        results = {}
-        company_id = current_user.company_id
+        # Search departments
+        departments = Department.query.filter(
+            Department.name.ilike(f'%{query}%')
+        ).limit(5).all()
         
-        # البحث في الموظفين
-        if 'employees' in search_in:
-            try:
-                employees = Employee.query.filter(
-                    Employee.company_id == company_id,
-                    or_(
-                        Employee.name.contains(query_text),
-                        Employee.employee_id.contains(query_text),
-                        Employee.email.contains(query_text) if hasattr(Employee, 'email') else False
-                    )
-                ).limit(10).all()
-                
-                results['employees'] = [
-                    serialize_model(emp, fields=['id', 'name', 'employee_id', 'email', 'job_title'])
-                    for emp in employees
-                ]
-            except:
-                results['employees'] = []
-        
-        # البحث في المركبات
-        if 'vehicles' in search_in:
-            try:
-                vehicles = Vehicle.query.filter(
-                    Vehicle.company_id == company_id,
-                    or_(
-                        Vehicle.plate_number.contains(query_text),
-                        Vehicle.make.contains(query_text) if hasattr(Vehicle, 'make') else False,
-                        Vehicle.model.contains(query_text) if hasattr(Vehicle, 'model') else False
-                    )
-                ).limit(10).all()
-                
-                results['vehicles'] = [
-                    serialize_model(veh, fields=['id', 'plate_number', 'make', 'model', 'status'])
-                    for veh in vehicles
-                ]
-            except:
-                results['vehicles'] = []
-        
-        return api_response(results)
+        return api_response(
+            data={
+                'query': query,
+                'results': {
+                    'employees': [{
+                        'id': emp.id,
+                        'name': emp.name,
+                        'employee_id': emp.employee_id,
+                        'department': emp.department.name if emp.department else None
+                    } for emp in employees],
+                    'vehicles': [{
+                        'id': veh.id,
+                        'plate_number': veh.plate_number,
+                        'make': veh.make,
+                        'model': veh.model
+                    } for veh in vehicles],
+                    'departments': [{
+                        'id': dept.id,
+                        'name': dept.name,
+                        'description': dept.description
+                    } for dept in departments]
+                }
+            },
+            message='تم البحث بنجاح'
+        )
         
     except Exception as e:
-        logger.error(f"خطأ في البحث المتقدم: {str(e)}")
-        return api_error("خطأ في البحث")
+        logger.error(f"خطأ في البحث: {str(e)}")
+        return api_response(
+            success=False,
+            message='خطأ في البحث',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== الإشعارات ====================
+# ========== Notification Endpoints ==========
 
 @api_bp.route('/notifications', methods=['GET'])
-@login_required
+@require_auth
 def get_notifications():
-    """جلب الإشعارات"""
+    """قائمة الإشعارات"""
     try:
-        # نظام إشعارات مبسط
+        # For now, return sample notifications
+        # In future, implement proper notification system
         notifications = [
             {
-                "id": 1,
-                "type": "info",
-                "title": "مرحباً بك في نظام نُظم",
-                "message": "تم تسجيل دخولك بنجاح إلى النظام",
-                "created_at": datetime.utcnow().isoformat(),
-                "read": False
+                'id': 1,
+                'title': 'موظف جديد',
+                'message': 'تم إضافة موظف جديد إلى النظام',
+                'type': 'info',
+                'created_at': datetime.utcnow().isoformat(),
+                'read': False
+            },
+            {
+                'id': 2,
+                'title': 'تحديث مركبة',
+                'message': 'تم تحديث بيانات المركبة رقم 123',
+                'type': 'update',
+                'created_at': (datetime.utcnow() - timedelta(hours=1)).isoformat(),
+                'read': True
             }
         ]
         
-        # يمكن إضافة منطق أكثر تعقيداً هنا لجلب الإشعارات من قاعدة البيانات
-        
-        return api_response(notifications)
+        return api_response(
+            data={'notifications': notifications},
+            message='تم جلب الإشعارات بنجاح'
+        )
         
     except Exception as e:
         logger.error(f"خطأ في جلب الإشعارات: {str(e)}")
-        return api_error("خطأ في جلب الإشعارات")
+        return api_response(
+            success=False,
+            message='خطأ في جلب الإشعارات',
+            error=str(e),
+            status_code=500
+        )
 
-# ==================== معالج الأخطاء العام ====================
-
-@api_bp.errorhandler(404)
-def not_found(error):
-    return api_error("المسار غير موجود", 404)
-
-@api_bp.errorhandler(405)
-def method_not_allowed(error):
-    return api_error("الطريقة غير مسموحة", 405)
-
-@api_bp.errorhandler(500)
-def internal_error(error):
-    return api_error("خطأ داخلي في الخادم", 500)
-
-# ==================== مسارات إضافية مفيدة ====================
-
-@api_bp.route('/health', methods=['GET'])
-def health_check():
-    """فحص صحة API"""
-    return api_response({
-        "status": "healthy",
-        "version": "1.0",
-        "timestamp": datetime.utcnow().isoformat()
-    }, "API يعمل بشكل طبيعي")
-
-@api_bp.route('/info', methods=['GET'])
-def api_info():
-    """معلومات API"""
-    endpoints = {
-        "authentication": {
-            "login": "POST /api/v1/auth/login",
-            "employee_login": "POST /api/v1/auth/employee-login"
-        },
-        "dashboard": {
-            "stats": "GET /api/v1/dashboard/stats"
-        },
-        "employees": {
-            "list": "GET /api/v1/employees",
-            "get": "GET /api/v1/employees/{id}",
-            "create": "POST /api/v1/employees",
-            "update": "PUT /api/v1/employees/{id}",
-            "delete": "DELETE /api/v1/employees/{id}",
-            "salaries": "GET /api/v1/employees/{id}/salaries"
-        },
-        "vehicles": {
-            "list": "GET /api/v1/vehicles",
-            "get": "GET /api/v1/vehicles/{id}"
-        },
-        "departments": {
-            "list": "GET /api/v1/departments"
-        },
-        "attendance": {
-            "list": "GET /api/v1/attendance",
-            "create": "POST /api/v1/attendance"
-        },
-        "reports": {
-            "employees_summary": "GET /api/v1/reports/employees/summary",
-            "monthly_attendance": "GET /api/v1/reports/attendance/monthly"
-        },
-        "search": "POST /api/v1/search",
-        "notifications": "GET /api/v1/notifications",
-        "health": "GET /api/v1/health",
-        "info": "GET /api/v1/info"
-    }
-    
-    return api_response({
-        "name": "نُظم API",
-        "version": "1.0",
-        "description": "RESTful API شامل لنظام إدارة الموظفين والمركبات",
-        "endpoints": endpoints
-    })
-
-# تسجيل تحميل المودول
+# Log successful API loading
 logger.info("تم تحميل RESTful API نُظم بنجاح")
 logger.info("جميع المسارات متاحة ومحمية من الأخطاء")

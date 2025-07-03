@@ -1,184 +1,137 @@
-# نُظم - نظام إدارة الموظفين والمركبات
+# نُظم - Arabic Employee Management System
 
-## نظرة عامة
-نُظم هو نظام شامل لإدارة الموظفين والمركبات باللغة العربية، مصمم خصيصاً للشركات والمؤسسات في المملكة العربية السعودية.
+## Overview
 
-## الميزات الرئيسية
-- ✅ إدارة شاملة للموظفين والأقسام
-- ✅ نظام حضور وغياب متقدم
-- ✅ إدارة الرواتب والبدلات
-- ✅ متابعة الوثائق وتواريخ الانتهاء
-- ✅ إدارة المركبات والصيانة
-- ✅ نظام المستخدمين والصلاحيات
-- ✅ تقارير شاملة (PDF/Excel)
-- ✅ إشعارات SMS عبر Twilio
-- ✅ مصادقة Firebase
-- ✅ واجهة عربية متجاوبة
-- ✅ نظام تدقيق شامل
+نُظم is a comprehensive Arabic employee management system with a complete RESTful API. The system provides employee lifecycle management, vehicle tracking, attendance monitoring, and detailed reporting capabilities with full Arabic language support.
 
-## هيكل المشروع
+## 🚀 Quick Start
 
+### API Testing
+1. Import `NUZUM_API_Collection.postman_collection.json` into Postman
+2. Import `NUZUM_Environment.postman_environment.json` as environment
+3. Start testing with the health check: `GET /api/v1/health`
+
+### Login Credentials
+- **Email**: admin@nuzum.sa
+- **Password**: admin123
+
+## 📊 API Endpoints
+
+### Core Features
+- **Authentication**: User login with JWT tokens
+- **Employee Management**: Complete CRUD operations
+- **Vehicle Management**: Vehicle tracking and handovers
+- **Attendance System**: Time tracking and reporting
+- **Salary Management**: Payroll processing
+- **Dashboard Statistics**: Real-time analytics
+- **Advanced Search**: Cross-system search capabilities
+
+### Health Check
 ```
-نُظم/
-├── config/                 # إعدادات النظام
-│   ├── settings.py         # إعدادات البيئات المختلفة
-│   └── __init__.py
-├── core/                   # الوحدات الأساسية
-│   ├── app_factory.py      # مصنع التطبيق
-│   ├── extensions.py       # ملحقات Flask
-│   └── __init__.py
-├── services/               # الخدمات المتخصصة
-│   ├── auth_service.py     # خدمة المصادقة
-│   ├── notification_service.py  # خدمة الإشعارات
-│   ├── report_service.py   # خدمة التقارير
-│   ├── file_service.py     # خدمة إدارة الملفات
-│   └── __init__.py
-├── routes/                 # مسارات التطبيق
-│   ├── auth.py            # مصادقة المستخدمين
-│   ├── attendance.py      # الحضور والغياب
-│   ├── departments.py     # إدارة الأقسام
-│   ├── employees.py       # إدارة الموظفين
-│   ├── salaries.py        # إدارة الرواتب
-│   ├── documents.py       # إدارة الوثائق
-│   ├── vehicles.py        # إدارة المركبات
-│   ├── users.py           # إدارة المستخدمين
-│   ├── reports.py         # التقارير
-│   └── fees_costs.py      # الرسوم والتكاليف
-├── templates/             # قوالب HTML
-├── static/               # الملفات الثابتة
-├── utils/                # أدوات مساعدة
-├── forms/                # نماذج Flask-WTF
-├── models.py             # نماذج قاعدة البيانات
-├── app.py               # التطبيق الرئيسي
-└── main.py              # نقطة البداية
+GET /api/v1/health
 ```
 
-## التقنيات المستخدمة
-- **Backend**: Python Flask
-- **Database**: PostgreSQL + SQLAlchemy ORM
-- **Frontend**: Bootstrap 5 + Arabic RTL
-- **Authentication**: Firebase Auth
-- **Reports**: ReportLab (PDF) + openpyxl (Excel)
-- **Notifications**: Twilio SMS
-- **File Processing**: Pillow, pandas
+### API Information
+```
+GET /api/v1/info
+```
 
-## التثبيت والإعداد
+## 📋 Features
 
-### 1. متطلبات النظام
+### ✅ RESTful API (25+ endpoints)
+- Employee management (CRUD)
+- Vehicle management and tracking
+- Attendance system with status tracking
+- Salary management and reporting
+- Department management
+- Advanced search functionality
+- Dashboard statistics
+- Notification system
+
+### ✅ Security Features
+- JWT Authentication
+- Bearer token authorization
+- Input validation
+- Error handling with Arabic messages
+
+### ✅ Data Management
+- Pagination support
+- Advanced filtering
+- Sorting capabilities
+- Search functionality
+
+## 📚 Documentation
+
+### Available Files
+- `API_DOCUMENTATION.md` - Complete API reference
+- `POSTMAN_TESTING_GUIDE.md` - Step-by-step testing guide
+- `API_SUMMARY.md` - Project overview and features
+- `NUZUM_API_Collection.postman_collection.json` - Postman collection
+- `NUZUM_Environment.postman_environment.json` - Environment variables
+
+## 🏗️ Project Structure
+
+```
+├── routes/
+│   └── restful_api.py          # All API endpoints
+├── templates/                  # HTML templates
+├── static/                     # Static assets
+├── models.py                   # Database models
+├── app.py                      # Flask application
+├── main.py                     # Application entry point
+└── README.md                   # This file
+```
+
+## 🔧 Technology Stack
+
+- **Backend**: Python Flask 3.1.0
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Authentication**: Flask-Login + JWT
+- **API**: RESTful design with JSON responses
+- **Documentation**: Comprehensive Postman collection
+
+## 🧪 Testing
+
+### Using Postman
+1. Import the collection and environment files
+2. Run "Health Check" to verify system status
+3. Use "Login" to get authentication token
+4. Test any endpoint with automatic token management
+
+### Quick API Test
 ```bash
-Python 3.11+
-PostgreSQL 12+
+curl -X GET http://localhost:5000/api/v1/health
 ```
 
-### 2. المتغيرات البيئية المطلوبة
-```env
-DATABASE_URL=postgresql://user:password@host:port/database
-SESSION_SECRET=your-secret-key
-FIREBASE_API_KEY=your-firebase-api-key
-FIREBASE_PROJECT_ID=your-firebase-project-id
-FIREBASE_APP_ID=your-firebase-app-id
-TWILIO_ACCOUNT_SID=your-twilio-sid
-TWILIO_AUTH_TOKEN=your-twilio-token
-TWILIO_PHONE_NUMBER=your-twilio-phone
-```
+## 📱 Use Cases
 
-### 3. تشغيل النظام
-```bash
-# تثبيت المتطلبات
-pip install -r requirements.txt
+### For Developers
+- Mobile app backend
+- Third-party integrations
+- Automated testing
+- Data synchronization
 
-# تشغيل الخادم
-gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
-```
+### For Businesses
+- Employee management
+- Vehicle fleet tracking
+- Attendance monitoring
+- Payroll processing
 
-## الوحدات الرئيسية
+## 🔒 Security
 
-### 1. إدارة الموظفين
-- إضافة وتعديل بيانات الموظفين
-- رفع الصور والوثائق
-- تتبع الحالة الوظيفية
-- ربط الموظفين بالأقسام
+- JWT tokens with 24-hour expiration
+- Secure password hashing
+- Input validation and sanitization
+- Proper error handling without sensitive data exposure
 
-### 2. الحضور والغياب
-- تسجيل الحضور اليومي
-- تسجيل الحضور الجماعي للأقسام
-- تقارير الحضور التفصيلية
-- إحصائيات متقدمة
+## 🚀 Deployment
 
-### 3. إدارة الرواتب
-- حساب الرواتب الشهرية
-- البدلات والخصومات
-- تقارير الرواتب
-- إشعارات الرواتب
+The system is ready for deployment on any platform supporting Python Flask applications. All dependencies are managed and the database schema is automatically created.
 
-### 4. إدارة الوثائق
-- متابعة تواريخ انتهاء الوثائق
-- تنبيهات الانتهاء
-- تكاليف التجديد
-- أرشفة الوثائق
+## 📞 Support
 
-### 5. إدارة المركبات
-- بيانات المركبات الكاملة
-- سجل الصيانة
-- تسليم واستلام المركبات
-- تتبع المستندات
-
-### 6. نظام المستخدمين
-- أدوار متعددة (مدير، مشرف، موظف)
-- صلاحيات مخصصة لكل وحدة
-- ربط المستخدمين بأقسام محددة
-- سجل النشاط الشامل
-
-## الأمان والصلاحيات
-
-### أدوار المستخدمين
-- **مدير النظام**: وصول كامل لجميع الوحدات
-- **مدير القسم**: وصول محدود لقسمه المخصص
-- **الموظف**: وصول للقراءة فقط
-
-### نظام الصلاحيات
-- صلاحيات على مستوى الوحدة
-- تحكم في العمليات (قراءة، إضافة، تعديل، حذف)
-- فصل الصلاحيات حسب الأقسام
-
-## التقارير والإحصائيات
-
-### أنواع التقارير
-- تقارير الموظفين (PDF/Excel)
-- تقارير الحضور والغياب
-- تقارير الرواتب الشهرية
-- تقارير انتهاء الوثائق
-- تقارير المركبات والصيانة
-
-### لوحة المعلومات
-- إحصائيات فورية للموظفين
-- متابعة الحضور اليومي
-- تنبيهات الوثائق المنتهية
-- أحدث الأنشطة
-
-## الإشعارات
-
-### إشعارات SMS
-- تنبيهات انتهاء الوثائق
-- إشعارات الرواتب
-- تذكيرات الحضور
-- تنبيهات صيانة المركبات
-
-## النسخ الاحتياطي والأمان
-- نسخ احتياطية تلقائية لقاعدة البيانات
-- تشفير كلمات المرور
-- سجل تدقيق شامل لجميع العمليات
-- حماية من CSRF
-
-## الدعم والتطوير
-- توثيق شامل للكود
-- اختبارات آلية
-- سجلات مفصلة للأخطاء
-- واجهة إدارية سهلة
-
-## الترخيص
-هذا النظام مطور خصيصاً للشركات السعودية ويتبع المعايير المحلية.
+For technical support or questions about the API, refer to the comprehensive documentation files included in this project.
 
 ---
 
-تم تطوير النظام باستخدام أفضل الممارسات في البرمجة والأمان لضمان الاستقرار والأداء العالي.
+**نُظم** - Building the future of Arabic employee management systems 🇸🇦

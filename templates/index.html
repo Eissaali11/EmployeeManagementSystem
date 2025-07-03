@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card bg-dark text-light">
+            <div class="card-body text-center">
+                <h1 class="card-title display-4 mb-4">مرحباً بك في نُظم</h1>
+                <p class="card-text lead">نظام إدارة الموظفين والمركبات الشامل</p>
+                <p class="card-text">نُظم هو نظام متكامل لإدارة الموظفين والمركبات مع واجهة برمجة تطبيقات شاملة</p>
+                
+                <div class="row mt-5">
+                    <div class="col-md-4">
+                        <div class="card bg-secondary">
+                            <div class="card-body">
+                                <h5 class="card-title">إدارة الموظفين</h5>
+                                <p class="card-text">نظام شامل لإدارة بيانات الموظفين والحضور والرواتب</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-secondary">
+                            <div class="card-body">
+                                <h5 class="card-title">إدارة المركبات</h5>
+                                <p class="card-text">تتبع المركبات والصيانة وسجلات التسليم</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-secondary">
+                            <div class="card-body">
+                                <h5 class="card-title">واجهة برمجة التطبيقات</h5>
+                                <p class="card-text">RESTful API شامل مع أكثر من 25 مسار</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-5">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-3">تسجيل الدخول</a>
+                    <a href="/api/v1/info" class="btn btn-outline-light btn-lg">واجهة برمجة التطبيقات</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
