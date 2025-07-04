@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="نظام إدارة الموظفين - نسخة الجوال">
+    <meta name="theme-color" content="#1E88E5">
+    
+    <title>غير متصل - نظام إدارة الموظفين</title>
+    
+    <!-- روابط PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='mobile/manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='mobile/images/icon-192.png') }}">
+    
+    <!-- أيقونات الموقع -->
+    <link rel="icon" href="{{ url_for('static', filename='mobile/images/favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='mobile/images/favicon.ico') }}" type="image/x-icon">
+    
+    <!-- الخطوط وملفات CSS -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mobile/css/mobile-style.css') }}">
+    
+    <style>
+        .offline-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .offline-icon {
+            font-size: 60px;
+            color: #1E88E5;
+            margin-bottom: 20px;
+        }
+        
+        .offline-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .offline-message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #757575;
+        }
+        
+        .mobile-btn-retry {
+            background-color: #1E88E5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .mobile-btn-retry:hover {
+            background-color: #1565C0;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">
+            <i class="fas fa-wifi-slash"></i>
+        </div>
+        <h1 class="offline-title">أنت غير متصل بالإنترنت</h1>
+        <p class="offline-message">لا يمكن الوصول إلى الخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.</p>
+        <button class="mobile-btn-retry" id="retry-button">
+            <i class="fas fa-sync-alt"></i> المحاولة مرة أخرى
+        </button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const retryButton = document.getElementById('retry-button');
+            
+            if (retryButton) {
+                retryButton.addEventListener('click', function() {
+                    // محاولة إعادة التحميل
+                    window.location.reload();
+                });
+            }
+            
+            // التحقق من عودة الاتصال
+            window.addEventListener('online', function() {
+                window.location.reload();
+            });
+        });
+    </script>
+</body>
+</html>

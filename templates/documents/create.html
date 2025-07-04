@@ -1,0 +1,294 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>إضافة وثيقة جديدة</h1>
+        <a href="{{ url_for('documents.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">بيانات الوثيقة</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('documents.create') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <!-- اختيار طريقة الإضافة: موظف واحد أو قسم كامل -->
+                        <div class="mb-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="add_type" id="add_single" value="single" checked>
+                                <label class="form-check-label" for="add_single">
+                                    <i class="fas fa-user me-1"></i> إضافة لموظف واحد
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="add_type" id="add_department" value="department">
+                                <label class="form-check-label" for="add_department">
+                                    <i class="fas fa-users me-1"></i> إضافة لقسم كامل
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- قسم اختيار الموظف - يظهر فقط عند اختيار "إضافة لموظف واحد" -->
+                            <div class="col-md-6 mb-3" id="employee_selection">
+                                <label for="employee_id" class="form-label required-field">الموظف</label>
+                                <select class="form-select" id="employee_id" name="employee_id">
+                                    <option value="">اختر الموظف</option>
+                                    {% for employee in employees %}
+                                    <option value="{{ employee.id }}">
+                                        {{ employee.name }} ({{ employee.employee_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- قسم اختيار القسم - يظهر فقط عند اختيار "إضافة لقسم كامل" -->
+                            <div class="col-md-6 mb-3 d-none" id="department_selection">
+                                <label for="department_id" class="form-label required-field">القسم</label>
+                                <select class="form-select" id="department_id" name="department_id">
+                                    <option value="">اختر القسم</option>
+                                    {% for department in departments %}
+                                    <option value="{{ department.id }}">
+                                        {{ department.name }} ({{ department.employees|length }} موظف)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="document_type" class="form-label required-field">نوع الوثيقة</label>
+                                <select class="form-select" id="document_type" name="document_type" required>
+                                    <option value="">اختر نوع الوثيقة</option>
+                                    {% for doc_type in document_types %}
+                                    <option value="{{ doc_type }}">
+                                        {% if doc_type == 'national_id' %}
+                                        الهوية الوطنية
+                                        {% elif doc_type == 'passport' %}
+                                        جواز السفر
+                                        {% elif doc_type == 'health_certificate' %}
+                                        الشهادة الصحية
+                                        {% elif doc_type == 'work_permit' %}
+                                        تصريح العمل
+                                        {% elif doc_type == 'education_certificate' %}
+                                        الشهادة الدراسية
+                                        {% else %}
+                                        {{ doc_type }}
+                                        {% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3" id="document_number_container">
+                            <label for="document_number" class="form-label required-field">رقم الوثيقة</label>
+                            <input type="text" class="form-control" id="document_number" name="document_number" required>
+                            <small class="form-text text-muted d-none" id="department_document_number_info">
+                                <i class="fas fa-info-circle"></i>
+                                سيتم استخدام رقم الهوية الخاص بكل موظف عند إضافة الوثائق للقسم
+                            </small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="issue_date" id="issue_date_label" class="form-label required-field">تاريخ الإصدار</label>
+                                <input type="date" class="form-control date-picker" id="issue_date" name="issue_date" required>
+                                <div class="mt-1">
+                                    <span class="gregorian-date">{{ gregorian_today }}</span>
+                                    <span class="hijri-date" style="display: none;">{{ hijri_today }}</span>
+                                </div>
+                                <small class="form-text text-muted d-none" id="date_optional_info">
+                                    <i class="fas fa-info-circle"></i>
+                                    التواريخ اختيارية عند إضافة وثائق لقسم كامل
+                                </small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="expiry_date" id="expiry_date_label" class="form-label required-field">تاريخ الانتهاء</label>
+                                <input type="date" class="form-control date-picker" id="expiry_date" name="expiry_date" required>
+                                <div class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i>
+                                    يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> حفظ البيانات
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo me-1"></i> إعادة تعيين
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تفعيل البحث في قائمة الموظفين باستخدام Select2
+        $('#employee_id').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'اختر الموظف',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
+        // تفعيل البحث في قائمة الأقسام باستخدام Select2
+        $('#department_id').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'اختر القسم',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
+        // تفعيل البحث في قائمة أنواع الوثائق
+        $('#document_type').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'اختر نوع الوثيقة',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
+        // التبديل بين اختيار الموظف أو القسم
+        const addSingleRadio = document.getElementById('add_single');
+        const addDepartmentRadio = document.getElementById('add_department');
+        const employeeSelection = document.getElementById('employee_selection');
+        const departmentSelection = document.getElementById('department_selection');
+        
+        // تبديل العرض عند تغيير خيار الإضافة
+        function toggleSelectionMode() {
+            const documentNumberInput = document.getElementById('document_number');
+            const documentNumberInfo = document.getElementById('department_document_number_info');
+            const issueDateInput = document.getElementById('issue_date');
+            const expiryDateInput = document.getElementById('expiry_date');
+            const issueDateLabel = document.getElementById('issue_date_label');
+            const expiryDateLabel = document.getElementById('expiry_date_label');
+            const dateOptionalInfo = document.getElementById('date_optional_info');
+            
+            if (addSingleRadio.checked) {
+                // وضع إضافة لموظف واحد
+                employeeSelection.classList.remove('d-none');
+                departmentSelection.classList.add('d-none');
+                document.getElementById('employee_id').setAttribute('required', '');
+                document.getElementById('department_id').removeAttribute('required');
+                
+                // إظهار حقل رقم الوثيقة
+                documentNumberInput.setAttribute('required', '');
+                documentNumberInput.removeAttribute('readonly');
+                documentNumberInput.value = '';
+                documentNumberInfo.classList.add('d-none');
+                
+                // تعيين حقول التاريخ كإلزامية
+                issueDateInput.setAttribute('required', '');
+                expiryDateInput.setAttribute('required', '');
+                issueDateLabel.classList.add('required-field');
+                expiryDateLabel.classList.add('required-field');
+                dateOptionalInfo.classList.add('d-none');
+            } else {
+                // وضع إضافة لقسم كامل
+                employeeSelection.classList.add('d-none');
+                departmentSelection.classList.remove('d-none');
+                document.getElementById('department_id').setAttribute('required', '');
+                document.getElementById('employee_id').removeAttribute('required');
+                
+                // إظهار رسالة توضيحية وتعطيل حقل رقم الوثيقة
+                documentNumberInput.removeAttribute('required');
+                documentNumberInput.setAttribute('readonly', 'readonly');
+                documentNumberInput.value = 'سيتم استخدام رقم الهوية الخاص بكل موظف';
+                documentNumberInfo.classList.remove('d-none');
+                
+                // تعيين حقول التاريخ كاختيارية
+                issueDateInput.removeAttribute('required');
+                expiryDateInput.removeAttribute('required');
+                issueDateLabel.classList.remove('required-field');
+                expiryDateLabel.classList.remove('required-field');
+                dateOptionalInfo.classList.remove('d-none');
+            }
+        }
+        
+        // استدعاء الدالة عند تحميل الصفحة
+        toggleSelectionMode();
+        
+        // استدعاء الدالة عند تغيير الخيار
+        addSingleRadio.addEventListener('change', toggleSelectionMode);
+        addDepartmentRadio.addEventListener('change', toggleSelectionMode);
+        
+        // التحقق من أن تاريخ الانتهاء بعد تاريخ الإصدار
+        const form = document.querySelector('form');
+        const issueDateInput = document.getElementById('issue_date');
+        const expiryDateInput = document.getElementById('expiry_date');
+        
+        if (form && issueDateInput && expiryDateInput) {
+            form.addEventListener('submit', function(e) {
+                const addType = document.querySelector('input[name="add_type"]:checked').value;
+                
+                // التحقق من التواريخ فقط إذا تم إدخالها (يكون إلزامياً فقط في حالة موظف واحد)
+                if (issueDateInput.value && expiryDateInput.value) {
+                    const issueDate = new Date(issueDateInput.value);
+                    const expiryDate = new Date(expiryDateInput.value);
+                    
+                    if (expiryDate <= issueDate) {
+                        e.preventDefault();
+                        alert('يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار');
+                        expiryDateInput.focus();
+                        return;
+                    }
+                } else if (addType === 'single') {
+                    // التحقق من إدخال التواريخ فقط في حالة موظف واحد
+                    if (!issueDateInput.value || !expiryDateInput.value) {
+                        e.preventDefault();
+                        alert('يرجى إدخال تاريخ الإصدار وتاريخ الانتهاء');
+                        return;
+                    }
+                }
+                
+                // التحقق من اختيار إما موظف أو قسم
+                if (addType === 'single' && !document.getElementById('employee_id').value) {
+                    e.preventDefault();
+                    alert('يرجى اختيار الموظف');
+                    return;
+                } else if (addType === 'department' && !document.getElementById('department_id').value) {
+                    e.preventDefault();
+                    alert('يرجى اختيار القسم');
+                    return;
+                }
+            });
+            
+            // التحقق عند تغيير التاريخ أيضًا
+            expiryDateInput.addEventListener('change', function() {
+                const issueDate = new Date(issueDateInput.value);
+                const expiryDate = new Date(this.value);
+                
+                if (issueDate && expiryDate <= issueDate) {
+                    alert('يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار');
+                    this.value = '';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

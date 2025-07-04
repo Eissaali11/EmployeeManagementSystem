@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - نُظم</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Tajawal (Arabic) -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #1e2a38;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* شريط التقويم العلوي */
+        .topbar {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .calendar-switch {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .calendar-switch i {
+            margin-left: 5px;
+        }
+        
+        /* محتوى الصفحة الرئيسي */
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+        
+        /* مكونات صفحة تسجيل الدخول */
+        .login-page {
+            display: flex;
+            width: 100%;
+            height: calc(100vh - 40px); /* ارتفاع الصفحة ناقص ارتفاع الشريط العلوي */
+        }
+        
+        /* قسم المعلومات (الجانب الأيمن) */
+        .login-info {
+            flex: 1;
+            padding: 40px;
+            color: #fff;
+            background: linear-gradient(to bottom right, #1e3c72, #2c3e50);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .login-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('{{ url_for('static', filename='img/pattern.png') }}');
+            background-size: cover;
+            opacity: 0.05;
+            z-index: 0;
+        }
+        
+        .system-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #3498db;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .system-description {
+            line-height: 1.8;
+            margin-bottom: 30px;
+            font-size: 16px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* قائمة المميزات */
+        .feature-list {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(52, 152, 219, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            font-size: 20px;
+            color: #3498db;
+            flex-shrink: 0;
+        }
+        
+        .feature-text h3 {
+            margin: 0 0 5px;
+            font-size: 18px;
+            color: #3498db;
+        }
+        
+        .feature-text p {
+            margin: 0;
+            font-size: 14px;
+            color: #ecf0f1;
+            opacity: 0.8;
+        }
+        
+        /* قسم نموذج تسجيل الدخول (الجانب الأيسر) */
+        .login-form {
+            width: 450px;
+            padding: 40px;
+            background-color: #1e2a38;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background-color: #1e3c72;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .logo-text {
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .system-name {
+            text-align: center;
+            color: #3498db;
+            margin: 15px 0;
+            font-size: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 24px;
+            position: relative;
+        }
+        
+        h1:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+        }
+        
+        /* التبويبات */
+        .login-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .login-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .login-tab.active {
+            color: #3498db;
+        }
+        
+        .login-tab.active:after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+        }
+        
+        /* نموذج التسجيل */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #2c3e50;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* تذكرني */
+        .remember-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .remember-me {
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        input[type="checkbox"] {
+            margin-left: 5px;
+        }
+        
+        /* زر تسجيل الدخول */
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover {
+            background: linear-gradient(to right, #2980b9, #27ae60);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        button i {
+            margin-left: 10px;
+        }
+        
+        /* رسائل الخطأ والنجاح */
+        .error-message, .alert-danger {
+            background-color: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            color: #e74c3c;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .success-message, .alert-success {
+            background-color: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            color: #2ecc71;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        /* معلومات تسجيل الدخول التجريبية */
+        .login-test-info {
+            margin-top: 20px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 14px;
+            color: #3498db;
+        }
+        
+        .login-test-info strong {
+            color: #2ecc71;
+        }
+        
+        /* تذييل الصفحة */
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+        
+        /* تصميم متجاوب */
+        @media (max-width: 991px) {
+            .login-page {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .login-info {
+                padding: 40px 20px;
+            }
+            
+            .login-form {
+                width: 100%;
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- شريط التقويم العلوي -->
+    <div class="topbar">
+        <div class="calendar-switch">
+            <i class="fas fa-calendar-alt"></i> التقويم الهجري
+        </div>
+    </div>
+    
+    <!-- محتوى الصفحة الرئيسي -->
+    <div class="main-container">
+        <div class="login-page">
+            <!-- قسم نموذج تسجيل الدخول (الجانب الأيسر) -->
+            <div class="login-form">
+                <div class="logo-container">
+                    <div class="logo-img">
+                        <span class="logo-text">نُظم</span>
+                    </div>
+                    <h2 class="system-name">نظام إدارة متكامل</h2>
+                </div>
+                
+                <h1>تسجيل الدخول</h1>
+                
+                <div class="login-tabs">
+                    <div class="login-tab active" id="email-tab" onclick="switchTab('email')">البريد الإلكتروني</div>
+                    <div class="login-tab" id="google-tab" onclick="switchTab('google')">Google</div>
+                </div>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- تسجيل الدخول بالبريد الإلكتروني -->
+                <div id="email-login" class="tab-content active">
+                    <form id="login-form" method="POST" action="{{ url_for('auth.login') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            <label for="email">البريد الإلكتروني</label>
+                            <input type="email" id="email" name="email" placeholder="أدخل البريد الإلكتروني" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">كلمة المرور</label>
+                            <input type="password" id="password" name="password" placeholder="أدخل كلمة المرور" required>
+                        </div>
+                        
+                        <div class="remember-row">
+                            <div class="remember-me">
+                                <input type="checkbox" id="remember" name="remember">
+                                <label for="remember">تذكرني</label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- تسجيل الدخول باستخدام Google -->
+                <div id="google-login" class="tab-content" style="display: none;">
+                    <div class="text-center py-3">
+                        <div class="mb-4">
+                            <i class="fab fa-google text-danger fa-3x mb-3"></i>
+                            <p>يمكنك تسجيل الدخول باستخدام حساب Google الخاص بك للوصول السريع والآمن</p>
+                        </div>
+                        <button id="googleSignIn" onclick="handleGoogleLogin()">
+                            <i class="fab fa-google"></i> تسجيل الدخول باستخدام Google
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="employee-portal-link" style="margin-bottom: 20px; text-align: center;">
+                    <a href="{{ url_for('employee_portal.employee_login') }}" style="color: #3498db; text-decoration: none; display: inline-flex; align-items: center; padding: 10px 15px; border: 1px solid #3498db; border-radius: 5px; transition: all 0.3s;">
+                        <i class="fas fa-user-tie" style="margin-left: 8px;"></i>
+                        بوابة الموظفين
+                    </a>
+                </div>
+                
+                <div class="login-test-info">
+                    <strong>بيانات الدخول التجريبية:</strong>
+                    <ul>
+                        <li>البريد الإلكتروني: admin@example.com</li>
+                        <li>كلمة المرور: admin123</li>
+                    </ul>
+                </div>
+                
+                <div class="login-footer">
+                    نُظم &copy; 2024 | نظام إدارة متكامل
+                </div>
+            </div>
+            
+            <!-- قسم المعلومات (الجانب الأيمن) -->
+            <div class="login-info">
+                <h2 class="system-title">نُظم</h2>
+                <p class="system-description">
+                    نُظم هو نظام إدارة متكامل مصمم خصيصًا للشركات، يجمع بين سهولة الاستخدام والميزات المتقدمة لتلبية جميع احتياجات إدارة الشركة من موظفين ومركبات وموارد.
+                </p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>إدارة شاملة للموظفين</h3>
+                            <p>سجلات كاملة للموظفين مع معلومات شخصية، مهنية، ومستندات رسمية مع نظام حضور وانصراف متكامل</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>تقارير تحليلية متقدمة</h3>
+                            <p>رؤى دقيقة عن أداء الموظفين وتكاليف الموارد البشرية بتنسيقات متعددة مع إمكانية التصدير</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>تطبيق جوال متكامل</h3>
+                            <p>إمكانية الوصول إلى النظام من أي مكان وتنبيهات فورية للمدراء والموظفين مع دعم العمل بدون إنترنت</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>إدارة متكاملة للمركبات</h3>
+                            <p>متابعة حالة مركبات الشركة، الصيانة، والمصاريف بشكل لحظي مع نظام فحص وتسليم المركبات</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h3>إدارة الرواتب والمستحقات</h3>
+                            <p>نظام متكامل لحساب الرواتب والبدلات وإرسال إشعارات الراتب تلقائيًا بصيغة PDF أو عبر واتساب</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Firebase -->
+    <script type="module">
+      // استيراد المكتبات المطلوبة من Firebase
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js';
+      import { 
+        getAuth, 
+        signInWithPopup, 
+        signInWithEmailAndPassword,
+        GoogleAuthProvider
+      } from 'https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js';
+
+      // تكوين Firebase
+      const firebaseConfig = {
+        apiKey: "{{ firebase_api_key }}",
+        authDomain: "{{ firebase_project_id }}.firebaseapp.com",
+        projectId: "{{ firebase_project_id }}",
+        storageBucket: "{{ firebase_project_id }}.appspot.com",
+        appId: "{{ firebase_app_id }}"
+      };
+
+      // تهيئة Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+      
+      // تعريف دالة تسجيل الدخول بـ Google
+      window.handleGoogleLogin = async function() {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const user = result.user;
+          
+          // إرسال بيانات المستخدم إلى الخادم
+          await sendUserDataToServer(user);
+        } catch (error) {
+          console.error("خطأ في تسجيل الدخول باستخدام Google:", error);
+          alert("حدث خطأ أثناء تسجيل الدخول: " + error.message);
+        }
+      };
+      
+      // إرسال بيانات المستخدم إلى الخادم
+      async function sendUserDataToServer(user) {
+        try {
+          const idToken = await user.getIdToken();
+          
+          const response = await fetch("{{ url_for('auth.process_auth') }}", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              uid: user.uid,
+              email: user.email,
+              name: user.displayName || user.email.split('@')[0],
+              picture: user.photoURL || ''
+            }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              window.location.href = data.redirect || "/";
+            } else {
+              alert(data.message || "حدث خطأ أثناء تسجيل الدخول");
+            }
+          } else {
+            alert("حدث خطأ في الاتصال بالخادم");
+          }
+        } catch (error) {
+          console.error("خطأ في إرسال البيانات إلى الخادم:", error);
+          alert("حدث خطأ أثناء معالجة تسجيل الدخول");
+        }
+      }
+    </script>
+    
+    <script>
+        // دالة تبديل التبويبات
+        function switchTab(tab) {
+            // إخفاء جميع المحتويات
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // إزالة الكلاس active من جميع التبويبات
+            document.querySelectorAll('.login-tab').forEach(tabEl => {
+                tabEl.classList.remove('active');
+            });
+            
+            // تفعيل التبويب المحدد
+            document.getElementById(tab + '-tab').classList.add('active');
+            document.getElementById(tab + '-login').style.display = 'block';
+        }
+        
+        // تعيين التقويم الهجري كافتراضي
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Calendar type set to Gregorian");
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير الرواتب</title>
+    <style>
+        @page {
+            size: landscape;
+        }
+        body {
+            font-family: 'Arial', 'Tahoma', sans-serif;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+            text-align: right;
+            color: #333;
+            font-size: 12px;
+        }
+        h1 {
+            text-align: center;
+            color: #0d6efd;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .report-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .report-details {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .details-item {
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .total-row {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .no-salary {
+            background-color: #f2f2f2;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <h1>تقرير الرواتب - {{ month_name }} {{ year }}</h1>
+    </div>
+    
+    <div class="report-details">
+        <div class="details-item"><strong>الشهر:</strong> {{ month_name }}</div>
+        <div class="details-item"><strong>السنة:</strong> {{ year }}</div>
+        <div class="details-item"><strong>القسم:</strong> {{ department_name }}</div>
+        <div class="details-item"><strong>تاريخ التقرير:</strong> {{ report_date }}</div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>الاسم</th>
+                <th>الرقم الوظيفي</th>
+                <th>القسم</th>
+                <th>المسمى الوظيفي</th>
+                <th>الراتب الأساسي</th>
+                <th>البدلات</th>
+                <th>الاستقطاعات</th>
+                <th>المكافآت</th>
+                <th>صافي الراتب</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if salaries %}
+                {% for salary in salaries %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ salary.employee.name }}</td>
+                    <td>{{ salary.employee.employee_id }}</td>
+                    <td>{{ salary.employee.department.name if salary.employee.department else "-" }}</td>
+                    <td>{{ salary.employee.job_title }}</td>
+                    <td>{{ '{:,.2f}'.format(salary.basic_salary) }}</td>
+                    <td>{{ '{:,.2f}'.format(salary.allowances) }}</td>
+                    <td>{{ '{:,.2f}'.format(salary.deductions) }}</td>
+                    <td>{{ '{:,.2f}'.format(salary.bonus) }}</td>
+                    <td><strong>{{ '{:,.2f}'.format(salary.net_salary) }}</strong></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="10" style="text-align: center;">لا توجد سجلات رواتب متطابقة مع معايير البحث</td>
+                </tr>
+            {% endif %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="5" class="text-center">الإجمالي</td>
+                <td>{{ '{:,.2f}'.format(totals.basic) }}</td>
+                <td>{{ '{:,.2f}'.format(totals.allowances) }}</td>
+                <td>{{ '{:,.2f}'.format(totals.deductions) }}</td>
+                <td>{{ '{:,.2f}'.format(totals.bonus) }}</td>
+                <td><strong>{{ '{:,.2f}'.format(totals.net) }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div class="report-details">
+        <div class="details-item"><strong>إجمالي الموظفين:</strong> {{ salaries|length }}</div>
+    </div>
+    
+    <div class="footer">
+        تم إنشاء هذا التقرير بواسطة نظام إدارة الموظفين © {{ report_date.split('-')[0] }}
+    </div>
+</body>
+</html>

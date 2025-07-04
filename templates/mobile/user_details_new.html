@@ -1,0 +1,206 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}تفاصيل المستخدم - النسخة المحمولة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3">تفاصيل المستخدم</h1>
+        <div>
+            {% if current_user.role == "admin" or current_user|check_module_access('users', 'edit') %}
+            <a href="{{ url_for('mobile.edit_user_new', user_id=user.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> تعديل
+            </a>
+            {% endif %}
+            <a href="{{ url_for('mobile.users_new') }}" class="btn btn-light">
+                <i class="fas fa-arrow-right"></i> العودة
+            </a>
+        </div>
+    </div>
+
+    <!-- بطاقة معلومات المستخدم -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="fas fa-user-circle"></i> بيانات المستخدم</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted d-block">اسم المستخدم</label>
+                    <div class="fw-bold fs-5">{{ user.name }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted d-block">البريد الإلكتروني</label>
+                    <div class="fw-bold fs-5">{{ user.email }}</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted d-block">الدور</label>
+                    <div>
+                        {% if user.role == "admin" %}
+                        <span class="badge bg-danger">مدير النظام</span>
+                        {% elif user.role == "manager" %}
+                        <span class="badge bg-primary">مدير</span>
+                        {% elif user.role == "hr" %}
+                        <span class="badge bg-success">موارد بشرية</span>
+                        {% elif user.role == "finance" %}
+                        <span class="badge bg-info">مالية</span>
+                        {% elif user.role == "fleet" %}
+                        <span class="badge bg-warning">إدارة المركبات</span>
+                        {% else %}
+                        <span class="badge bg-secondary">مستخدم</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted d-block">الحالة</label>
+                    <div>
+                        {% if user.is_active %}
+                        <span class="badge bg-success">نشط</span>
+                        {% else %}
+                        <span class="badge bg-danger">غير نشط</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted d-block">نوع الحساب</label>
+                    <div>
+                        {% if user.auth_type == "firebase" %}
+                        <span class="badge bg-primary"><i class="fab fa-google"></i> جوجل</span>
+                        {% else %}
+                        <span class="badge bg-secondary"><i class="fas fa-envelope"></i> محلي</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted d-block">آخر تسجيل دخول</label>
+                    <div>
+                        {% if user.last_login %}
+                        {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                        <span class="text-muted">لم يسجل دخول من قبل</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقة صلاحيات المستخدم -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="fas fa-lock"></i> صلاحيات المستخدم</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                الصلاحيات مُحددة تلقائياً بناءً على دور المستخدم في النظام.
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الوحدة</th>
+                            <th>وصول</th>
+                            <th>عرض</th>
+                            <th>إضافة</th>
+                            <th>تعديل</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for permission in user.permissions %}
+                        <tr>
+                            <td>
+                                {% if permission.module == "dashboard" %}
+                                <i class="fas fa-tachometer-alt text-primary"></i> لوحة التحكم
+                                {% elif permission.module == "employees" %}
+                                <i class="fas fa-users text-success"></i> الموظفين
+                                {% elif permission.module == "departments" %}
+                                <i class="fas fa-sitemap text-info"></i> الأقسام
+                                {% elif permission.module == "attendance" %}
+                                <i class="fas fa-calendar-check text-warning"></i> الحضور والغياب
+                                {% elif permission.module == "salaries" %}
+                                <i class="fas fa-money-bill-wave text-danger"></i> الرواتب
+                                {% elif permission.module == "documents" %}
+                                <i class="fas fa-file-alt text-secondary"></i> الوثائق
+                                {% elif permission.module == "vehicles" %}
+                                <i class="fas fa-car text-primary"></i> المركبات
+                                {% elif permission.module == "reports" %}
+                                <i class="fas fa-chart-bar text-info"></i> التقارير
+                                {% elif permission.module == "fees" %}
+                                <i class="fas fa-receipt text-warning"></i> الرسوم
+                                {% elif permission.module == "users" %}
+                                <i class="fas fa-user-cog text-danger"></i> المستخدمين
+                                {% else %}
+                                {{ permission.module }}
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if permission.permissions|bitwise_and(1) %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                {% else %}
+                                <span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if permission.permissions|bitwise_and(2) %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                {% else %}
+                                <span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if permission.permissions|bitwise_and(4) %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                {% else %}
+                                <span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if permission.permissions|bitwise_and(8) %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                {% else %}
+                                <span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if permission.permissions|bitwise_and(16) %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                {% else %}
+                                <span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-3">
+                                <div class="text-muted">
+                                    <i class="fas fa-exclamation-circle mb-2"></i>
+                                    <p>لا توجد صلاحيات محددة لهذا المستخدم</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- زر الحذف -->
+    {% if current_user.role == "admin" or current_user|check_module_access('users', 'delete') %}
+    {% if user.id != current_user.id %}
+    <div class="card shadow-sm border-0 border-danger mb-4">
+        <div class="card-body text-center">
+            <h5 class="text-danger mb-3"><i class="fas fa-exclamation-triangle"></i> منطقة خطرة</h5>
+            <p class="text-muted">حذف المستخدم سيؤدي إلى إزالة بياناته بشكل نهائي من النظام</p>
+            <a href="{{ url_for('mobile.delete_user_new', user_id=user.id) }}" class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i> حذف المستخدم
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

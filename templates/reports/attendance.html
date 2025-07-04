@@ -1,0 +1,214 @@
+{% extends 'layout.html' %}
+
+{% block title %}تقرير الحضور والغياب - نظام إدارة الموظفين{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('reports.index') }}">التقارير</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">تقرير الحضور والغياب</li>
+                </ol>
+            </nav>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        تقرير الحضور والغياب
+                    </h5>
+                    <div>
+                        <a href="{{ url_for('reports.attendance_pdf', from_date=from_date.strftime('%Y-%m-%d'), to_date=to_date.strftime('%Y-%m-%d'), department_id=department_id, status=status) }}" class="btn btn-light btn-sm ms-1" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            تصدير PDF
+                        </a>
+                        <a href="{{ url_for('reports.attendance_excel', from_date=from_date.strftime('%Y-%m-%d'), to_date=to_date.strftime('%Y-%m-%d'), department_id=department_id, status=status) }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-file-excel me-1"></i>
+                            تصدير Excel
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="from_date" class="form-label">من تاريخ</label>
+                                    <input type="date" class="form-control" id="from_date" name="from_date" value="{{ from_date.strftime('%Y-%m-%d') }}">
+                                    <div class="form-text text-muted small">
+                                        <span id="from_date_hijri"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="to_date" class="form-label">إلى تاريخ</label>
+                                    <input type="date" class="form-control" id="to_date" name="to_date" value="{{ to_date.strftime('%Y-%m-%d') }}">
+                                    <div class="form-text text-muted small">
+                                        <span id="to_date_hijri"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="department_id" class="form-label">القسم</label>
+                                    <select class="form-select" id="department_id" name="department_id">
+                                        <option value="">-- جميع الأقسام --</option>
+                                        {% for department in departments %}
+                                        <option value="{{ department.id }}" {% if department_id|string == department.id|string %}selected{% endif %}>
+                                            {{ department.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="status" class="form-label">الحالة</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="">-- جميع الحالات --</option>
+                                        <option value="present" {% if status == 'present' %}selected{% endif %}>حاضر</option>
+                                        <option value="absent" {% if status == 'absent' %}selected{% endif %}>غائب</option>
+                                        <option value="leave" {% if status == 'leave' %}selected{% endif %}>إجازة</option>
+                                        <option value="sick" {% if status == 'sick' %}selected{% endif %}>مرضي</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter me-1"></i>
+                                    تصفية
+                                </button>
+                                <a href="{{ url_for('reports.attendance_report') }}" class="btn btn-secondary">
+                                    <i class="fas fa-sync-alt me-1"></i>
+                                    إعادة تعيين
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>التاريخ</th>
+                                    <th>الاسم</th>
+                                    <th>الرقم الوظيفي</th>
+                                    <th>القسم</th>
+                                    <th>وقت الحضور</th>
+                                    <th>وقت الانصراف</th>
+                                    <th>الحالة</th>
+                                    <th>ملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if results %}
+                                    {% for attendance, employee in results %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>
+                                            {{ format_date_gregorian(attendance.date) }}
+                                            <div class="small text-muted">{{ format_date_hijri(attendance.date) }}</div>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('employees.view', id=employee.id) }}">
+                                                {{ employee.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ employee.employee_id }}</td>
+                                        <td>{{ employee.department.name if employee.department else "-" }}</td>
+                                        <td>{{ attendance.check_in or "-" }}</td>
+                                        <td>{{ attendance.check_out or "-" }}</td>
+                                        <td>
+                                            {% if attendance.status == 'present' %}
+                                                <span class="badge bg-success">حاضر</span>
+                                            {% elif attendance.status == 'absent' %}
+                                                <span class="badge bg-danger">غائب</span>
+                                            {% elif attendance.status == 'leave' %}
+                                                <span class="badge bg-info">إجازة</span>
+                                            {% elif attendance.status == 'sick' %}
+                                                <span class="badge bg-warning">مرضي</span>
+                                            {% else %}
+                                                {{ attendance.status }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ attendance.notes or "-" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="9" class="text-center py-3">لا توجد سجلات حضور متطابقة مع معايير البحث</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <p class="text-muted">إجمالي السجلات: {{ results|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // تنسيق الجدول بواسطة DataTables للحصول على تجربة أفضل
+    $(document).ready(function() {
+        $('table').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+            },
+            "order": [[1, "desc"]], // ترتيب حسب التاريخ (تنازلي)
+            "pageLength": 25,
+            "paging": true,
+            "info": true,
+            "searching": true
+        });
+        
+        // تحديث التاريخ الهجري المقابل عند تغيير من تاريخ / إلى تاريخ
+        function updateHijriDates() {
+            const fromDateStr = $('#from_date').val();
+            const toDateStr = $('#to_date').val();
+            
+            if (fromDateStr) {
+                const fromDate = new Date(fromDateStr);
+                const fromHijri = gregorianToHijri(fromDate);
+                $('#from_date_hijri').text(fromHijri);
+            }
+            
+            if (toDateStr) {
+                const toDate = new Date(toDateStr);
+                const toHijri = gregorianToHijri(toDate);
+                $('#to_date_hijri').text(toHijri);
+            }
+        }
+        
+        // تحويل التاريخ الميلادي إلى هجري بتنسيق مخصص
+        function gregorianToHijri(date) {
+            // هذه دالة بسيطة للتحويل - يجب استخدام مكتبة أكثر دقة في الإنتاج
+            const hijriYear = Math.floor(((date.getFullYear() - 622) * 0.97) + 1);
+            const months = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
+            const hijriMonth = months[date.getMonth()]; // تقريبي فقط للعرض
+            const hijriDay = date.getDate(); // تقريبي فقط للعرض
+            
+            return hijriDay + ' ' + hijriMonth + ' ' + hijriYear + ' هـ';
+        }
+        
+        // تنفيذ التحديث مرة واحدة عند تحميل الصفحة
+        updateHijriDates();
+        
+        // تحديث التواريخ الهجرية عند تغيير التواريخ الميلادية
+        $('#from_date, #to_date').on('change', updateHijriDates);
+    });
+</script>
+{% endblock %}

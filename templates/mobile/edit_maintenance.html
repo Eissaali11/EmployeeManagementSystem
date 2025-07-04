@@ -1,0 +1,217 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تعديل سجل صيانة{% endblock %}
+{% block header_title %}تعديل سجل صيانة{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-edit"></i>
+      تعديل سجل صيانة
+    </h2>
+    <a href="{{ url_for('mobile.maintenance_details', maintenance_id=maintenance.id) }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-times"></i>
+      إلغاء
+    </a>
+  </div>
+  
+  <form method="post" class="mobile-form">
+    <!-- بيانات السيارة والصيانة -->
+    <div class="mobile-form-group">
+      <label for="vehicle_id">
+        <i class="fas fa-car"></i>
+        السيارة *
+      </label>
+      <select name="vehicle_id" id="vehicle_id" required class="mobile-form-control">
+        <option value="">اختر السيارة</option>
+        {% for vehicle in vehicles %}
+        <option value="{{ vehicle.id }}" {% if vehicle.id|string == maintenance.vehicle_id|string %}selected{% endif %}>
+          {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="maintenance_type">
+        <i class="fas fa-tools"></i>
+        نوع الصيانة *
+      </label>
+      <select name="maintenance_type" id="maintenance_type" required class="mobile-form-control">
+        <option value="دورية" {% if maintenance.maintenance_type == 'دورية' %}selected{% endif %}>دورية</option>
+        <option value="طارئة" {% if maintenance.maintenance_type == 'طارئة' %}selected{% endif %}>طارئة</option>
+        <option value="إصلاح" {% if maintenance.maintenance_type == 'إصلاح' %}selected{% endif %}>إصلاح</option>
+        <option value="فحص" {% if maintenance.maintenance_type == 'فحص' %}selected{% endif %}>فحص</option>
+        <option value="أخرى" {% if maintenance.maintenance_type not in ['دورية', 'طارئة', 'إصلاح', 'فحص'] %}selected{% endif %}>أخرى</option>
+      </select>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="date">
+        <i class="fas fa-calendar-alt"></i>
+        تاريخ الصيانة *
+      </label>
+      <input type="date" name="date" id="date" required class="mobile-form-control" value="{{ maintenance.date.strftime('%Y-%m-%d') }}">
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="description">
+        <i class="fas fa-file-alt"></i>
+        وصف الصيانة *
+      </label>
+      <input type="text" name="description" id="description" required class="mobile-form-control" value="{{ maintenance.description }}">
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="status">
+        <i class="fas fa-info-circle"></i>
+        حالة الصيانة *
+      </label>
+      <select name="status" id="status" required class="mobile-form-control">
+        <option value="قيد الانتظار" {% if maintenance.status == 'قيد الانتظار' %}selected{% endif %}>قيد الانتظار</option>
+        <option value="قيد التنفيذ" {% if maintenance.status == 'قيد التنفيذ' %}selected{% endif %}>قيد التنفيذ</option>
+        <option value="منجزة" {% if maintenance.status == 'منجزة' %}selected{% endif %}>منجزة</option>
+        <option value="ملغية" {% if maintenance.status == 'ملغية' %}selected{% endif %}>ملغية</option>
+      </select>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="technician">
+        <i class="fas fa-user-cog"></i>
+        اسم الفني *
+      </label>
+      <input type="text" name="technician" id="technician" required class="mobile-form-control" value="{{ maintenance.technician }}">
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="cost">
+        <i class="fas fa-money-bill-wave"></i>
+        التكلفة (ريال)
+      </label>
+      <input type="number" name="cost" id="cost" step="0.01" min="0" class="mobile-form-control" value="{{ maintenance.cost }}">
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="receipt_image_url">
+        <i class="fas fa-receipt"></i>
+        رابط صورة الإيصال
+      </label>
+      <input type="url" name="receipt_image_url" id="receipt_image_url" class="mobile-form-control" value="{{ maintenance.receipt_image_url or '' }}" placeholder="https://example.com/receipt.jpg">
+      <div class="mobile-form-hint">أدخل رابط لصورة الإيصال أو فاتورة الصيانة</div>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="delivery_receipt_url">
+        <i class="fas fa-file-export"></i>
+        رابط إيصال تسليم السيارة للورشة
+      </label>
+      <input type="url" name="delivery_receipt_url" id="delivery_receipt_url" class="mobile-form-control" value="{{ maintenance.delivery_receipt_url or '' }}" placeholder="https://example.com/delivery.jpg">
+      <div class="mobile-form-hint">أدخل رابط لإيصال تسليم السيارة للورشة</div>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="pickup_receipt_url">
+        <i class="fas fa-file-import"></i>
+        رابط إيصال استلام السيارة من الورشة
+      </label>
+      <input type="url" name="pickup_receipt_url" id="pickup_receipt_url" class="mobile-form-control" value="{{ maintenance.pickup_receipt_url or '' }}" placeholder="https://example.com/pickup.jpg">
+      <div class="mobile-form-hint">أدخل رابط لإيصال استلام السيارة من الورشة</div>
+    </div>
+    
+    <!-- تفاصيل إضافية -->
+    <div class="mobile-form-section-title">
+      <i class="fas fa-clipboard-list"></i>
+      تفاصيل إضافية
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="parts_replaced">
+        <i class="fas fa-cogs"></i>
+        قطع الغيار المستبدلة
+      </label>
+      <textarea name="parts_replaced" id="parts_replaced" rows="3" class="mobile-form-control">{{ maintenance.parts_replaced or '' }}</textarea>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="actions_taken">
+        <i class="fas fa-tasks"></i>
+        الإجراءات المتخذة
+      </label>
+      <textarea name="actions_taken" id="actions_taken" rows="3" class="mobile-form-control">{{ maintenance.actions_taken or '' }}</textarea>
+    </div>
+    
+    <div class="mobile-form-group">
+      <label for="notes">
+        <i class="fas fa-sticky-note"></i>
+        ملاحظات
+      </label>
+      <textarea name="notes" id="notes" rows="3" class="mobile-form-control">{{ maintenance.notes or '' }}</textarea>
+    </div>
+    
+    <div class="mobile-form-actions">
+      <button type="submit" class="mobile-btn mobile-btn-primary btn-block">
+        <i class="fas fa-save"></i>
+        حفظ التغييرات
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mobile-form {
+    padding: 1rem;
+  }
+  
+  .mobile-form-section-title {
+    margin: 1.5rem 0 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 0.5rem;
+  }
+  
+  .mobile-form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .mobile-form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+  
+  .mobile-form-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+  
+  .mobile-form-actions {
+    padding: 1rem 0;
+    margin-top: 1.5rem;
+  }
+  
+  .btn-block {
+    width: 100%;
+    padding: 0.85rem;
+  }
+</style>
+{% endblock %}

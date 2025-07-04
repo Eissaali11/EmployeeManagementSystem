@@ -1,0 +1,241 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الأقسام - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الأقسام{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="إضافة" onclick="location.href='{{ url_for('mobile.add_department') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-search"></i> البحث
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.departments') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <input type="text" name="search" class="mobile-form-control" placeholder="البحث عن قسم..." value="{{ request.args.get('search', '') }}">
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                <a href="{{ url_for('mobile.departments') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
+                    <i class="fas fa-redo"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- إحصائيات الأقسام -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> إحصائيات الأقسام
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="departments-stats">
+            <div class="departments-stat">
+                <div class="stat-count">{{ departments|length if departments else 0 }}</div>
+                <div class="stat-label">إجمالي الأقسام</div>
+            </div>
+            <div class="departments-stat">
+                <div class="stat-count">{{ employees_count if employees_count else 0 }}</div>
+                <div class="stat-label">إجمالي الموظفين</div>
+            </div>
+        </div>
+        
+        <!-- رسم بياني للأقسام -->
+        <div class="chart-container">
+            <canvas id="departmentsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- قائمة الأقسام -->
+{% if departments %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-building"></i> قائمة الأقسام
+        <div class="mobile-card-subtitle">{{ departments|length }} قسم</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for department in departments %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.department_details', department_id=department.id) }}'">
+                <div class="mobile-list-item-color" style="background-color: {{ department.color if department.color else '#ccc' }}"></div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ department.name }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        <i class="fas fa-users"></i> {{ department.employees|length if department.employees else 0 }} موظف
+                    </div>
+                    <div class="mobile-list-item-info">
+                        {{ department.description|truncate(60) if department.description else 'لا يوجد وصف' }}
+                    </div>
+                </div>
+                <div class="mobile-list-item-action">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-building fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد أقسام</h5>
+        <p class="text-secondary">لم يتم العثور على أي أقسام في النظام</p>
+        <a href="{{ url_for('mobile.add_department') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-plus"></i> إضافة قسم جديد
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:last-child {
+    border-bottom: none;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-color {
+    width: 5px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 2px 0 0 2px;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+    padding-right: 10px;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-action {
+    display: flex;
+    align-items: center;
+    color: #ccc;
+}
+
+.departments-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.departments-stat {
+    flex: 1;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 0 5px;
+}
+
+.stat-count {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #777;
+}
+
+.chart-container {
+    height: 200px;
+    margin: 20px 0;
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إنشاء بيانات الرسم البياني للأقسام
+    const departmentsData = {
+        labels: [{% for department in departments %}'{{ department.name }}',{% endfor %}],
+        datasets: [{
+            label: 'عدد الموظفين',
+            data: [{% for department in departments %}{{ department.employees|length if department.employees else 0 }},{% endfor %}],
+            backgroundColor: [{% for department in departments %}'{{ department.color if department.color else "#" + ((loop.index * 123) % 999)|string }}',{% endfor %}],
+            borderWidth: 0
+        }]
+    };
+
+    // إنشاء الرسم البياني للأقسام
+    const ctx = document.getElementById('departmentsChart').getContext('2d');
+    const departmentsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: departmentsData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

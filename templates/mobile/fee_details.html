@@ -1,0 +1,538 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تفاصيل الرسوم{% endblock %}
+
+{% block content %}
+<div class="mobile-header">
+    <div class="mobile-header-left">
+        <a href="{{ url_for('mobile.fees') }}" class="mobile-back-btn">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="mobile-header-title">تفاصيل الرسم</div>
+    <div class="mobile-header-right">
+        <a href="#" class="mobile-action-btn" id="printBtn">
+            <i class="fas fa-print"></i>
+        </a>
+    </div>
+</div>
+
+<div class="mobile-container">
+    <!-- معلومات الرسم الأساسية -->
+    <div class="mobile-card mb-4">
+        <div class="mobile-card-header d-flex align-items-center">
+            <h5 class="mobile-card-title mb-0">
+                معلومات الرسم
+            </h5>
+            <span class="mobile-status-badge ms-auto {% if fee.payment_status == 'paid' %}success{% elif fee.payment_status == 'pending' %}warning{% else %}danger{% endif %}">
+                {{ fee.payment_status|default('قيد الانتظار') }}
+            </span>
+        </div>
+        <div class="mobile-card-content">
+            <div class="fee-data-grid">
+                <div class="fee-data-item">
+                    <div class="fee-data-label">نوع الوثيقة</div>
+                    <div class="fee-data-value">{{ fee.document_type|default('لم يتم تحديد النوع') }}</div>
+                </div>
+
+                <div class="fee-data-item">
+                    <div class="fee-data-label">المستند المرتبط</div>
+                    <div class="fee-data-value">
+                        {% if fee.document %}
+                        <a href="{{ url_for('mobile.document_details', document_id=fee.document.id) }}" class="fee-link">
+                            {{ fee.document.document_number or 'وثيقة رقم ' + fee.document.id|string }}
+                        </a>
+                        {% else %}
+                        غير مرتبط بمستند
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="fee-date-section">
+                    <div class="fee-data-item">
+                        <div class="fee-data-label">تاريخ الاستحقاق</div>
+                        <div class="fee-data-value date">{{ fee.due_date.strftime('%Y-%m-%d')|default('غير محدد') }}</div>
+                    </div>
+
+                    {% if fee.payment_date %}
+                    <div class="fee-data-item">
+                        <div class="fee-data-label">تاريخ السداد</div>
+                        <div class="fee-data-value date">{{ fee.payment_date.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="fee-costs-section">
+                    <div class="fee-data-item costs">
+                        <div class="fee-data-label">رسوم الجوازات</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.passport_fee|default(0)) }}</div>
+                    </div>
+
+                    <div class="fee-data-item costs">
+                        <div class="fee-data-label">رسوم مكتب العمل</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.labor_office_fee|default(0)) }}</div>
+                    </div>
+
+                    <div class="fee-data-item costs">
+                        <div class="fee-data-label">رسوم التأمين</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.insurance_fee|default(0)) }}</div>
+                    </div>
+
+                    <div class="fee-data-item costs">
+                        <div class="fee-data-label">رسوم التأمينات الاجتماعية</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block;">{{ '{:,.2f}'.format(fee.social_insurance_fee|default(0)) }}</div>
+                    </div>
+
+                    <div class="fee-data-item total">
+                        <div class="fee-data-label">إجمالي الرسوم</div>
+                        <div class="fee-data-value amount" style="width: 100%; text-align: left; direction: ltr; display: block; font-size: 1.3rem;">{{ '{:,.2f}'.format(fee.total_fees|default(0)) }}</div>
+                    </div>
+                </div>
+
+                <div class="fee-data-item">
+                    <div class="fee-data-label">نقل كفالة</div>
+                    <div class="fee-data-value">{{ 'نعم' if fee.transfer_sponsorship else 'لا' }}</div>
+                </div>
+
+                {% if fee.notes %}
+                <div class="fee-data-item notes">
+                    <div class="fee-data-label">ملاحظات</div>
+                    <div class="fee-data-value">{{ fee.notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="mobile-action-buttons">
+        <a href="{{ url_for('mobile.fees') }}" class="mobile-btn mobile-btn-outline-secondary">
+            <i class="fas fa-arrow-right me-2"></i> العودة للقائمة
+        </a>
+        
+        <a href="#" class="mobile-btn mobile-btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editFeeModal">
+            <i class="fas fa-edit me-2"></i> تعديل
+        </a>
+        
+        {% if fee.payment_status != 'paid' %}
+        <a href="#" class="mobile-btn mobile-btn-primary" data-bs-toggle="modal" data-bs-target="#markAsPaidModal">
+            <i class="fas fa-check-circle me-2"></i> تسجيل كمدفوع
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- نموذج تعديل الرسم -->
+<div class="modal fade" id="editFeeModal" tabindex="-1" aria-labelledby="editFeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editFeeModalLabel">تعديل الرسم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editFeeForm" method="post" action="{{ url_for('mobile.edit_fee', fee_id=fee.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label for="document_type" class="form-label">نوع الوثيقة</label>
+                        <input type="text" class="form-control" id="document_type" name="document_type" value="{{ fee.document_type }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label">تاريخ الاستحقاق</label>
+                        <input type="date" class="form-control" id="due_date" name="due_date" value="{{ fee.due_date.strftime('%Y-%m-%d') if fee.due_date else '' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="payment_status" class="form-label">حالة الدفع</label>
+                        <select class="form-select" id="payment_status" name="payment_status">
+                            <option value="pending" {% if fee.payment_status == 'pending' %}selected{% endif %}>قيد الانتظار</option>
+                            <option value="paid" {% if fee.payment_status == 'paid' %}selected{% endif %}>مدفوع</option>
+                            <option value="overdue" {% if fee.payment_status == 'overdue' %}selected{% endif %}>متأخر</option>
+                        </select>
+                    </div>
+
+                    {% if fee.payment_status == 'paid' %}
+                    <div class="mb-3" id="payment_date_group">
+                        <label for="payment_date" class="form-label">تاريخ السداد</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ fee.payment_date.strftime('%Y-%m-%d') if fee.payment_date else '' }}">
+                    </div>
+                    {% endif %}
+
+                    <h5 class="text-primary mt-4 mb-3">تفاصيل الرسوم</h5>
+
+                    <div class="mb-3">
+                        <label for="passport_fee" class="form-label">رسوم الجوازات</label>
+                        <input type="number" step="0.01" class="form-control text-start" id="passport_fee" name="passport_fee" value="{{ fee.passport_fee|default(0) }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="labor_office_fee" class="form-label">رسوم مكتب العمل</label>
+                        <input type="number" step="0.01" class="form-control text-start" id="labor_office_fee" name="labor_office_fee" value="{{ fee.labor_office_fee|default(0) }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="insurance_fee" class="form-label">رسوم التأمين</label>
+                        <input type="number" step="0.01" class="form-control text-start" id="insurance_fee" name="insurance_fee" value="{{ fee.insurance_fee|default(0) }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="social_insurance_fee" class="form-label">رسوم التأمينات الاجتماعية</label>
+                        <input type="number" step="0.01" class="form-control text-start" id="social_insurance_fee" name="social_insurance_fee" value="{{ fee.social_insurance_fee|default(0) }}">
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="transfer_sponsorship" name="transfer_sponsorship" {% if fee.transfer_sponsorship %}checked{% endif %}>
+                        <label class="form-check-label" for="transfer_sponsorship">يتطلب نقل كفالة</label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ fee.notes }}</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="mobile-btn mobile-btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="mobile-btn mobile-btn-primary" id="submitEditForm" onclick="document.getElementById('editFeeForm').submit();">حفظ التغييرات</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج تسجيل كمدفوع -->
+<div class="modal fade" id="markAsPaidModal" tabindex="-1" aria-labelledby="markAsPaidModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markAsPaidModalLabel">تسجيل الرسم كمدفوع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="markAsPaidForm" method="post" action="{{ url_for('mobile.mark_fee_as_paid', fee_id=fee.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        سيتم تغيير حالة الرسم من "{{ fee.payment_status }}" إلى "مدفوع".
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_date" class="form-label">تاريخ السداد</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ now.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="receipt_number" class="form-label">رقم الإيصال (اختياري)</label>
+                        <input type="text" class="form-control" id="receipt_number" name="receipt_number">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_notes" class="form-label">ملاحظات السداد (اختياري)</label>
+                        <textarea class="form-control" id="payment_notes" name="payment_notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="mobile-btn mobile-btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="mobile-btn mobile-btn-primary" id="submitPaidForm" onclick="document.getElementById('markAsPaidForm').submit();">تأكيد السداد</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* تنسيق الصفحة العام */
+.mobile-container {
+    padding-bottom: 40px;
+}
+
+.mobile-card {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.mobile-card-header {
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eee;
+    padding: 15px;
+}
+
+.mobile-card-title {
+    color: #333;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.mobile-card-content {
+    padding: 18px;
+}
+
+/* شارة الحالة */
+.mobile-status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.mobile-status-badge.success {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+}
+
+.mobile-status-badge.warning {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.mobile-status-badge.danger {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+/* عرض بيانات الرسوم */
+.fee-data-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.fee-data-item {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+
+.fee-data-label {
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.fee-data-value {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+}
+
+.fee-data-value.amount {
+    color: #0d6efd;
+    font-family: 'Roboto', 'Tajawal', sans-serif;
+    direction: ltr;
+    text-align: right;
+}
+
+.fee-data-value.date {
+    font-family: 'Roboto', 'Tajawal', sans-serif;
+}
+
+/* قسم التواريخ */
+.fee-date-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+/* قسم التكاليف */
+.fee-costs-section {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.fee-costs-section .fee-data-item {
+    border-bottom: 1px dashed #e0e0e0;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.fee-costs-section .fee-data-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.fee-data-item.total {
+    background-color: rgba(13, 110, 253, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 10px;
+    border-bottom: none;
+}
+
+.fee-data-item.total .fee-data-label {
+    font-weight: bold;
+    color: #0d6efd;
+    font-size: 0.9rem;
+}
+
+.fee-data-item.total .fee-data-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.fee-link {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.fee-link:hover {
+    text-decoration: underline;
+}
+
+.fee-data-item.notes .fee-data-value {
+    white-space: pre-line;
+    line-height: 1.5;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: normal;
+}
+
+/* أزرار الإجراءات */
+.mobile-action-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+    margin-bottom: 30px;
+    gap: 10px;
+}
+
+.mobile-btn {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.mobile-btn i {
+    margin-right: 8px;
+}
+
+.mobile-btn-primary {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.mobile-btn-primary:hover {
+    background-color: #0b5ed7;
+    color: white;
+}
+
+.mobile-btn-outline-secondary {
+    border: 1px solid #6c757d;
+    color: #6c757d;
+}
+
+.mobile-btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.mobile-btn-outline-warning {
+    border: 1px solid #ffc107;
+    color: #ffc107;
+}
+
+.mobile-btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+/* تحسين عرض في الشاشات المتوسطة والكبيرة */
+@media (min-width: 576px) {
+    .fee-data-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .fee-costs-section,
+    .fee-date-section,
+    .fee-data-item.notes {
+        grid-column: span 2;
+    }
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // زر الطباعة
+    document.getElementById('printBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.print();
+    });
+    
+    // تقديم نموذج التعديل
+    document.getElementById('submitEditForm').addEventListener('click', function() {
+        document.getElementById('editFeeForm').submit();
+    });
+    
+    // تقديم نموذج تسجيل كمدفوع
+    document.getElementById('submitPaidForm').addEventListener('click', function() {
+        document.getElementById('markAsPaidForm').submit();
+    });
+    
+    // عرض/إخفاء حقل تاريخ السداد بناءً على حالة الدفع المحددة
+    const paymentStatusSelect = document.getElementById('payment_status');
+    const paymentDateGroup = document.getElementById('payment_date_group');
+    
+    if (paymentStatusSelect) {
+        paymentStatusSelect.addEventListener('change', function() {
+            if (this.value === 'paid') {
+                // إنشاء حقل تاريخ السداد إذا لم يكن موجودًا
+                if (!document.getElementById('payment_date_group')) {
+                    const formGroup = document.createElement('div');
+                    formGroup.className = 'mb-3';
+                    formGroup.id = 'payment_date_group';
+                    
+                    const label = document.createElement('label');
+                    label.className = 'form-label';
+                    label.htmlFor = 'payment_date';
+                    label.textContent = 'تاريخ السداد';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'date';
+                    input.className = 'form-control';
+                    input.id = 'payment_date';
+                    input.name = 'payment_date';
+                    input.value = new Date().toISOString().split('T')[0];
+                    input.required = true;
+                    
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(input);
+                    
+                    // إدراج الحقل بعد حقل حالة الدفع
+                    this.parentNode.after(formGroup);
+                }
+            } else {
+                // إزالة حقل تاريخ السداد إذا كان موجودًا
+                const paymentDateGroup = document.getElementById('payment_date_group');
+                if (paymentDateGroup) {
+                    paymentDateGroup.remove();
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

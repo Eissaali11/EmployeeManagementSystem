@@ -1,0 +1,119 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تعديل بيانات موظف</h1>
+        <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">تعديل بيانات: {{ employee.name }}</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('employees.edit', id=employee.id) }}" method="post">
+                <div class="row">
+                    <!-- معلومات أساسية -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="name" class="form-label required-field">الاسم الكامل</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ employee.name }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="employee_id" class="form-label required-field">الرقم الوظيفي</label>
+                            <input type="text" class="form-control" id="employee_id" name="employee_id" value="{{ employee.employee_id }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="national_id" class="form-label required-field">رقم الهوية</label>
+                            <input type="text" class="form-control" id="national_id" name="national_id" value="{{ employee.national_id }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="mobile" class="form-label required-field">رقم الجوال</label>
+                            <input type="text" class="form-control" id="mobile" name="mobile" value="{{ employee.mobile }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="email" class="form-label">البريد الإلكتروني</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ employee.email }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="job_title" class="form-label required-field">المسمى الوظيفي</label>
+                            <input type="text" class="form-control" id="job_title" name="job_title" value="{{ employee.job_title }}" required>
+                        </div>
+                    </div>
+
+                    <!-- معلومات العمل -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label required-field">الحالة</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="active" {% if employee.status == 'active' %}selected{% endif %}>نشط</option>
+                                <option value="inactive" {% if employee.status == 'inactive' %}selected{% endif %}>غير نشط</option>
+                                <option value="on_leave" {% if employee.status == 'on_leave' %}selected{% endif %}>في إجازة</option>
+                                <option value="terminated" {% if employee.status == 'terminated' %}selected{% endif %}>متوقف عن العمل</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="department_id" class="form-label">القسم</label>
+                            <select class="form-select" id="department_id" name="department_id">
+                                <option value="">- بدون قسم -</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}" {% if employee.department_id == department.id %}selected{% endif %}>
+                                    {{ department.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="location" class="form-label required-field">الموقع</label>
+                            <input type="text" class="form-control" id="location" name="location" value="{{ employee.location }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="project" class="form-label required-field">المشروع</label>
+                            <input type="text" class="form-control" id="project" name="project" value="{{ employee.project }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="join_date" class="form-label">تاريخ الالتحاق</label>
+                            <input type="date" class="form-control date-picker" id="join_date" name="join_date" 
+                                  value="{{ employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '' }}">
+                            <div class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                يمكنك استخدام التاريخ الميلادي أو الهجري عن طريق زر التبديل أعلى الصفحة
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> حفظ التغييرات
+                    </button>
+                    <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

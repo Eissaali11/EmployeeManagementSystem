@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}نموذج {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }} السيارة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-{{ 'truck-loading' if handover.handover_type == 'delivery' else 'truck-pickup' }} ms-2"></i>
+                        نموذج {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }} السيارة
+                    </h4>
+                    <div>
+                        <a href="{{ url_for('vehicles.handovers_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right ms-2"></i>العودة للقائمة
+                        </a>
+                        <button onclick="window.print()" class="btn btn-primary">
+                            <i class="fas fa-print ms-2"></i>طباعة
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- معلومات السيارة -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5 class="section-title">
+                                    <i class="fas fa-car ms-2"></i>معلومات السيارة
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="info-item">
+                                            <label>رقم اللوحة:</label>
+                                            <span class="value">{{ vehicle.plate_number }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-item">
+                                            <label>الماركة:</label>
+                                            <span class="value">{{ vehicle.make }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-item">
+                                            <label>الموديل:</label>
+                                            <span class="value">{{ vehicle.model }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="info-item">
+                                            <label>سنة الصنع:</label>
+                                            <span class="value">{{ vehicle.year or 'غير محدد' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- معلومات التسليم/الاستلام -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5 class="section-title">
+                                    <i class="fas fa-info-circle ms-2"></i>معلومات {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }}
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="info-item">
+                                            <label>اسم الموظف:</label>
+                                            <span class="value">{{ handover.employee_name }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info-item">
+                                            <label>رقم الهوية:</label>
+                                            <span class="value">{{ handover.employee_id or 'غير محدد' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="info-item">
+                                            <label>تاريخ {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }}:</label>
+                                            <span class="value">{{ handover.handover_date.strftime('%Y-%m-%d') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="info-item">
+                                            <label>رقم الكيلومترات:</label>
+                                            <span class="value">{{ "{:,}".format(handover.mileage) if handover.mileage else 'غير محدد' }} كم</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-item">
+                                            <label>مستوى الوقود:</label>
+                                            <span class="value">{{ handover.fuel_level or 'غير محدد' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- حالة السيارة -->
+                    {% if handover.condition_notes %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5 class="section-title">
+                                    <i class="fas fa-clipboard-check ms-2"></i>حالة السيارة
+                                </h5>
+                                <div class="condition-notes">
+                                    {{ handover.condition_notes|nl2br }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- الملاحظات -->
+                    {% if handover.notes %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5 class="section-title">
+                                    <i class="fas fa-sticky-note ms-2"></i>الملاحظات
+                                </h5>
+                                <div class="notes">
+                                    {{ handover.notes|nl2br }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- الصور المرفقة -->
+                    {% if handover.images %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5 class="section-title">
+                                    <i class="fas fa-images ms-2"></i>الصور المرفقة
+                                </h5>
+                                <div class="row">
+                                    {% for image in handover.images %}
+                                    <div class="col-md-3 mb-3">
+                                        <div class="image-container">
+                                            <img src="{{ url_for('static', filename='uploads/handovers/' + image.filename) }}" 
+                                                 alt="صورة {{ loop.index }}" 
+                                                 class="handover-image"
+                                                 onclick="showImageModal(this)">
+                                            {% if image.description %}
+                                            <div class="image-description">{{ image.description }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- التوقيعات -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <h5 class="section-title">
+                                    <i class="fas fa-signature ms-2"></i>التوقيعات
+                                </h5>
+                                <div class="row signature-section">
+                                    <div class="col-md-6">
+                                        <div class="signature-box">
+                                            <div class="signature-title">توقيع {{ 'المستلم' if handover.handover_type == 'delivery' else 'المُسلم' }}</div>
+                                            <div class="signature-name">{{ handover.employee_name }}</div>
+                                            <div class="signature-line"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="signature-box">
+                                            <div class="signature-title">توقيع {{ 'المُسلم' if handover.handover_type == 'delivery' else 'المستلم' }}</div>
+                                            <div class="signature-name">إدارة الأسطول</div>
+                                            <div class="signature-line"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-footer mt-4">
+                                    <div class="text-center">
+                                        <small class="text-muted">
+                                            تم إنشاء هذا النموذج بواسطة نظام نُظم - {{ handover.created_at.strftime('%Y-%m-%d %H:%M') if handover.created_at else '' }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لعرض الصور -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">عرض الصورة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="صورة" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS مخصص -->
+<style>
+.form-section {
+    background: var(--bs-light);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.section-title {
+    color: var(--bs-dark);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--bs-primary);
+}
+
+.info-item {
+    margin-bottom: 1rem;
+}
+
+.info-item label {
+    font-weight: 600;
+    color: var(--bs-dark);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.info-item .value {
+    color: var(--bs-secondary);
+    font-size: 1.1rem;
+    display: block;
+    padding: 0.5rem;
+    background: white;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+}
+
+.condition-notes, .notes {
+    background: white;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+    padding: 1rem;
+    color: var(--bs-dark);
+    line-height: 1.6;
+    min-height: 80px;
+}
+
+.image-container {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.handover-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.handover-image:hover {
+    transform: scale(1.05);
+}
+
+.image-description {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--bs-secondary);
+    text-align: center;
+}
+
+.signature-section {
+    margin-top: 2rem;
+}
+
+.signature-box {
+    text-align: center;
+    padding: 1.5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    background: white;
+}
+
+.signature-title {
+    font-weight: 600;
+    color: var(--bs-dark);
+    margin-bottom: 1rem;
+}
+
+.signature-name {
+    color: var(--bs-secondary);
+    margin-bottom: 2rem;
+}
+
+.signature-line {
+    border-bottom: 2px solid var(--bs-dark);
+    width: 70%;
+    margin: 0 auto;
+    height: 40px;
+}
+
+.form-footer {
+    border-top: 1px solid var(--bs-border-color);
+    padding-top: 1rem;
+}
+
+/* أنماط الطباعة */
+@media print {
+    .card-header .btn, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .form-section {
+        page-break-inside: avoid;
+        margin-bottom: 1.5rem;
+    }
+    
+    .signature-section {
+        page-break-inside: avoid;
+    }
+}
+
+@media (max-width: 768px) {
+    .info-item {
+        margin-bottom: 1.5rem;
+    }
+    
+    .signature-section {
+        margin-top: 1rem;
+    }
+    
+    .signature-box {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<!-- JavaScript -->
+<script>
+function showImageModal(img) {
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    document.getElementById('modalImage').src = img.src;
+    modal.show();
+}
+
+// تحسين الطباعة
+window.addEventListener('beforeprint', function() {
+    document.title = 'نموذج {{ "تسليم" if handover.handover_type == "delivery" else "استلام" }} - {{ vehicle.plate_number }}';
+});
+</script>
+{% endblock %}

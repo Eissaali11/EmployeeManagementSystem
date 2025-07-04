@@ -1,0 +1,303 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إضافة وثيقة سيارة جديدة{% endblock %}
+{% block header_title %}إضافة وثيقة سيارة{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-file-alt"></i>
+      إضافة وثيقة سيارة جديدة
+    </h2>
+    <a href="{{ url_for('mobile.vehicle_documents') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+
+  <!-- نموذج إضافة وثيقة سيارة -->
+  <div class="mobile-card">
+    <div class="mobile-card-body">
+      <form method="post" action="{{ url_for('mobile.vehicles') }}" enctype="multipart/form-data" id="documentForm">
+        {{ form.csrf_token if form and form.csrf_token }}
+        
+        <!-- بيانات الوثيقة الأساسية -->
+        <div class="mobile-form-section">
+          <h3 class="mobile-form-section-title">بيانات الوثيقة الأساسية</h3>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">السيارة</label>
+            <select class="mobile-form-select" name="vehicle_id" required>
+              <option value="" selected disabled>اختر السيارة</option>
+              <option value="1">تويوتا كامري - أ ب ج ١٢٣٤</option>
+              <option value="2">هونداي سوناتا - س ع د ٥٦٧٨</option>
+              <option value="3">نيسان باترول - ك و ي ٩٨٧٦</option>
+            </select>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">نوع الوثيقة</label>
+            <select class="mobile-form-select" name="document_type" required>
+              <option value="" selected disabled>اختر نوع الوثيقة</option>
+              <option value="registration">رخصة سير</option>
+              <option value="insurance">وثيقة تأمين</option>
+              <option value="inspection">الفحص الفني</option>
+              <option value="authorization">تفويض قيادة</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">رقم الوثيقة</label>
+            <input type="text" class="mobile-form-input" name="document_number" required placeholder="مثال: 123456789">
+          </div>
+          
+          <div class="mobile-form-row">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">تاريخ الإصدار</label>
+              <input type="date" class="mobile-form-input" name="issue_date" required>
+            </div>
+            
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">تاريخ الانتهاء</label>
+              <input type="date" class="mobile-form-input" name="expiry_date" required>
+            </div>
+          </div>
+        </div>
+        
+        <!-- بيانات إضافية -->
+        <div class="mobile-form-section">
+          <h3 class="mobile-form-section-title">بيانات إضافية</h3>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">الجهة المصدرة</label>
+            <input type="text" class="mobile-form-input" name="issuing_authority" placeholder="مثال: إدارة المرور">
+          </div>
+          
+          <div class="mobile-form-row">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">تكلفة الإصدار (ر.س)</label>
+              <input type="number" step="0.01" class="mobile-form-input" name="issue_cost" placeholder="مثال: 450.00">
+            </div>
+            
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">تكلفة التجديد (ر.س)</label>
+              <input type="number" step="0.01" class="mobile-form-input" name="renewal_cost" placeholder="مثال: 450.00">
+            </div>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">ملاحظات</label>
+            <textarea class="mobile-form-textarea" name="notes" rows="3" placeholder="أي ملاحظات إضافية"></textarea>
+          </div>
+          
+          <div class="mobile-form-group">
+            <div class="mobile-form-checkbox">
+              <input type="checkbox" id="reminder" name="reminder" class="mobile-form-checkbox-input" checked>
+              <label for="reminder" class="mobile-form-checkbox-label">تفعيل التنبيهات قبل انتهاء الوثيقة</label>
+            </div>
+          </div>
+          
+          <div class="mobile-form-group" id="reminder_days_group">
+            <label class="mobile-form-label">التنبيه قبل الانتهاء بـ (أيام)</label>
+            <input type="number" class="mobile-form-input" name="reminder_days" value="30" min="1" max="90">
+          </div>
+        </div>
+        
+        <!-- تحميل صورة الوثيقة -->
+        <div class="mobile-form-section">
+          <h3 class="mobile-form-section-title">صورة الوثيقة</h3>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">صورة الوثيقة (الوجه الأمامي)</label>
+            <div class="mobile-form-file">
+              <input type="file" id="documentImage" name="document_image" accept="image/*" class="mobile-form-file-input" required>
+              <label for="documentImage" class="mobile-form-file-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>اختر صورة الوثيقة</span>
+              </label>
+              <div class="mobile-form-file-preview" id="frontImagePreview"></div>
+            </div>
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">صورة الوثيقة (الوجه الخلفي)</label>
+            <div class="mobile-form-file">
+              <input type="file" id="documentBackImage" name="document_back_image" accept="image/*" class="mobile-form-file-input">
+              <label for="documentBackImage" class="mobile-form-file-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>اختر صورة الوجه الخلفي (اختياري)</span>
+              </label>
+              <div class="mobile-form-file-preview" id="backImagePreview"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mobile-form-actions">
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-save"></i>
+            حفظ الوثيقة
+          </button>
+          <button type="reset" class="mobile-btn mobile-btn-secondary">
+            <i class="fas fa-undo"></i>
+            إعادة تعيين
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mobile-form-file {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  
+  .mobile-form-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  
+  .mobile-form-file-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: var(--card-bg);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+  }
+  
+  .mobile-form-file-label:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  .mobile-form-file-preview {
+    margin-top: 8px;
+    width: 100%;
+    height: 150px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+  }
+  
+  .mobile-form-file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .mobile-form-section {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .mobile-form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  
+  .mobile-form-section-title {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+  
+  .mobile-form-row {
+    display: flex;
+    gap: 16px;
+  }
+  
+  .mobile-form-row .mobile-form-group {
+    flex: 1;
+  }
+  
+  .mobile-form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  
+  .mobile-form-checkbox-input {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .mobile-form-checkbox-label {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // معاينة الصورة قبل الرفع (الوجه الأمامي)
+  document.getElementById('documentImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('frontImagePreview');
+    
+    if (file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="معاينة الصورة">`;
+      };
+      
+      reader.readAsDataURL(file);
+    } else {
+      preview.innerHTML = '';
+    }
+  });
+  
+  // معاينة الصورة قبل الرفع (الوجه الخلفي)
+  document.getElementById('documentBackImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('backImagePreview');
+    
+    if (file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="معاينة الصورة">`;
+      };
+      
+      reader.readAsDataURL(file);
+    } else {
+      preview.innerHTML = '';
+    }
+  });
+  
+  // تفعيل/تعطيل حقل عدد أيام التنبيه حسب حالة التنبيه
+  document.getElementById('reminder').addEventListener('change', function() {
+    const reminderDaysGroup = document.getElementById('reminder_days_group');
+    
+    if (this.checked) {
+      reminderDaysGroup.style.display = 'block';
+    } else {
+      reminderDaysGroup.style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}الملف الشخصي - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}الملف الشخصي{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-user"></i> بيانات الحساب
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.profile') }}" method="POST" class="mobile-form">
+            {{ form.hidden_tag() if form }}
+            
+            <div class="profile-avatar-container">
+                <div class="profile-avatar-large">
+                    <i class="fas fa-user"></i>
+                </div>
+                <button type="button" class="change-avatar-btn">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>اسم المستخدم*</label>
+                <input type="text" name="username" class="mobile-form-control" required 
+                       value="{{ current_user.username }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>البريد الإلكتروني*</label>
+                <input type="email" name="email" class="mobile-form-control" required 
+                       value="{{ current_user.email }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الاسم الكامل</label>
+                <input type="text" name="full_name" class="mobile-form-control" 
+                       value="{{ current_user.full_name }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>رقم الهاتف</label>
+                <input type="tel" name="phone" class="mobile-form-control" 
+                       value="{{ current_user.phone }}">
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="mobile-btn mobile-btn-primary w-100">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-shield-alt"></i> الأمان
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="security-item">
+            <div class="security-info">
+                <div class="security-title">كلمة المرور</div>
+                <div class="security-subtitle">آخر تغيير: قبل 30 يوم</div>
+            </div>
+            <a href="{{ url_for('mobile.change_password') }}" class="mobile-btn mobile-btn-sm">تغيير</a>
+        </div>
+        
+        <div class="security-item">
+            <div class="security-info">
+                <div class="security-title">المصادقة الثنائية</div>
+                <div class="security-subtitle">غير مفعّلة</div>
+            </div>
+            <a href="{{ url_for('mobile.settings') }}" class="mobile-btn mobile-btn-sm">تفعيل</a>
+        </div>
+        
+        <div class="security-item">
+            <div class="security-info">
+                <div class="security-title">سجل تسجيل الدخول</div>
+                <div class="security-subtitle">عرض محاولات تسجيل الدخول</div>
+            </div>
+            <a href="{{ url_for('mobile.settings') }}" class="mobile-btn mobile-btn-sm">عرض</a>
+        </div>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-bell"></i> تفضيلات الإشعارات
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="preference-item">
+            <div class="preference-label">إشعارات الحضور والغياب</div>
+            <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="preference-item">
+            <div class="preference-label">إشعارات الرواتب</div>
+            <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="preference-item">
+            <div class="preference-label">إشعارات انتهاء الوثائق</div>
+            <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        
+        <div class="preference-item">
+            <div class="preference-label">الإشعارات عبر البريد الإلكتروني</div>
+            <label class="toggle-switch">
+                <input type="checkbox">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-avatar-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-avatar-large i {
+    font-size: 3rem;
+    color: #757575;
+}
+
+.change-avatar-btn {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 36px;
+    height: 36px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.mobile-form-group {
+    margin-bottom: 15px;
+}
+
+.mobile-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.mobile-form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.mobile-form-control:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+.security-item, .preference-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.security-item:last-child, .preference-item:last-child {
+    border-bottom: none;
+}
+
+.security-info {
+    flex: 1;
+}
+
+.security-title, .preference-label {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.security-subtitle {
+    font-size: 0.85rem;
+    color: #757575;
+}
+
+.mobile-btn-sm {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    border-radius: 4px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    right: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(-22px);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة الملف الشخصي');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إضافة فحص سلامة جديد - {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center px-3 py-2">
+    <div>
+        <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    <h5 class="mb-0 text-center">إضافة فحص سلامة جديد</h5>
+    <div style="width:40px"></div>
+</div>
+
+<div class="container mb-5">
+    <div class="vehicle-card mb-3">
+        <div class="vehicle-header">
+            <div class="d-flex align-items-center">
+                <div class="vehicle-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">{{ vehicle.make }} {{ vehicle.model }}</div>
+                    <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" class="needs-validation" novalidate>
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">معلومات فحص السلامة</h6>
+            </div>
+            <div class="card-body">
+                <!-- تاريخ الفحص -->
+                <div class="mb-3">
+                    <label for="check_date" class="form-label">تاريخ الفحص <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="check_date" name="check_date" 
+                           value="{{ now.strftime('%Y-%m-%d') }}" required>
+                    <div class="invalid-feedback">يرجى تحديد تاريخ الفحص</div>
+                </div>
+
+                <!-- نوع الفحص -->
+                <div class="mb-3">
+                    <label for="check_type" class="form-label">نوع الفحص <span class="text-danger">*</span></label>
+                    <select class="form-select" id="check_type" name="check_type" required>
+                        <option value="daily">يومي</option>
+                        <option value="weekly">أسبوعي</option>
+                        <option value="monthly">شهري</option>
+                    </select>
+                    <div class="invalid-feedback">يرجى تحديد نوع الفحص</div>
+                </div>
+
+                <!-- السائق -->
+                <div class="mb-3">
+                    <label for="driver_name" class="form-label">اسم السائق</label>
+                    <input type="text" class="form-control" id="driver_name" name="driver_name" placeholder="أدخل اسم السائق">
+                </div>
+
+                <!-- المشرف -->
+                <div class="mb-3">
+                    <label for="supervisor_name" class="form-label">اسم المشرف</label>
+                    <input type="text" class="form-control" id="supervisor_name" name="supervisor_name" placeholder="أدخل اسم المشرف">
+                </div>
+
+                <!-- نتيجة الفحص -->
+                <div class="mb-3">
+                    <label for="result" class="form-label">نتيجة الفحص <span class="text-danger">*</span></label>
+                    <select class="form-select" id="result" name="result" required>
+                        <option value="passed">اجتياز</option>
+                        <option value="failed">وجود مشاكل</option>
+                    </select>
+                    <div class="invalid-feedback">يرجى تحديد نتيجة الفحص</div>
+                </div>
+
+                <!-- ملاحظات -->
+                <div class="mb-3">
+                    <label for="notes" class="form-label">ملاحظات</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary mb-3">
+                <i class="fas fa-save ms-1"></i>
+                حفظ فحص السلامة
+            </button>
+            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary">
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+.vehicle-card {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.vehicle-header {
+    padding: 15px;
+}
+
+.vehicle-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f3ff;
+    border-radius: 8px;
+    margin-left: 15px;
+    color: #0d6efd;
+}
+
+.vehicle-name {
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.vehicle-plate {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+</style>
+
+<script>
+// تفعيل التحقق من صحة النموذج
+(function() {
+    'use strict';
+    
+    var forms = document.querySelectorAll('.needs-validation');
+    
+    Array.prototype.slice.call(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+{% endblock %}

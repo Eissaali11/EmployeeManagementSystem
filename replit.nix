@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.unrar
     pkgs.pango
     pkgs.harfbuzz
     pkgs.glib

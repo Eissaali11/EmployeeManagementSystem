@@ -1,0 +1,209 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}التقارير - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}التقارير{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-file-alt"></i> التقارير المتاحة
+    </div>
+    
+    <div class="mobile-card-content">
+        <p class="text-center text-muted mb-4">
+            اختر نوع التقرير الذي ترغب في إنشائه أو مشاهدته
+        </p>
+        
+        <div class="report-options">
+            <a href="{{ url_for('mobile.report_employees') }}" class="report-option-btn">
+                <i class="fas fa-users"></i>
+                <span>تقرير الموظفين</span>
+            </a>
+            
+            <a href="{{ url_for('mobile.report_attendance') }}" class="report-option-btn">
+                <i class="fas fa-clipboard-check"></i>
+                <span>تقرير الحضور</span>
+            </a>
+            
+            <a href="{{ url_for('mobile.report_salaries') }}" class="report-option-btn">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>تقرير الرواتب</span>
+            </a>
+            
+            <a href="{{ url_for('mobile.report_documents') }}" class="report-option-btn">
+                <i class="fas fa-file-signature"></i>
+                <span>تقرير الوثائق</span>
+            </a>
+            
+            <a href="{{ url_for('mobile.report_vehicles') }}" class="report-option-btn">
+                <i class="fas fa-car"></i>
+                <span>تقرير السيارات</span>
+            </a>
+            
+            <a href="{{ url_for('mobile.report_fees') }}" class="report-option-btn">
+                <i class="fas fa-dollar-sign"></i>
+                <span>تقرير الرسوم</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-history"></i> التقارير الأخيرة
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="recent-reports">
+            {% if recent_reports and recent_reports|length > 0 %}
+                <div class="mobile-list">
+                    {% for report in recent_reports %}
+                    <div class="mobile-list-item">
+                        <div class="mobile-list-item-icon">
+                            {% if report.type == 'employees' %}
+                            <i class="fas fa-users"></i>
+                            {% elif report.type == 'attendance' %}
+                            <i class="fas fa-clipboard-check"></i>
+                            {% elif report.type == 'salaries' %}
+                            <i class="fas fa-money-bill-wave"></i>
+                            {% elif report.type == 'documents' %}
+                            <i class="fas fa-file-signature"></i>
+                            {% elif report.type == 'vehicles' %}
+                            <i class="fas fa-car"></i>
+                            {% elif report.type == 'fees' %}
+                            <i class="fas fa-dollar-sign"></i>
+                            {% else %}
+                            <i class="fas fa-file-alt"></i>
+                            {% endif %}
+                        </div>
+                        <div class="mobile-list-item-content">
+                            <div class="mobile-list-item-title">{{ report.title }}</div>
+                            <div class="mobile-list-item-subtitle">
+                                <i class="far fa-calendar-alt"></i> {{ report.date }}
+                            </div>
+                        </div>
+                        <div class="mobile-list-item-actions">
+                            <a href="{{ report.pdf_url }}" class="mobile-list-action-btn" title="تنزيل PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            <a href="{{ report.excel_url }}" class="mobile-list-action-btn" title="تنزيل Excel">
+                                <i class="fas fa-file-excel"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-import fa-3x text-secondary mb-3"></i>
+                        <p class="text-muted">لم يتم إنشاء أي تقارير حتى الآن</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.report-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.report-option-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px 15px;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.report-option-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.report-option-btn i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.report-option-btn span {
+    font-size: 0.9rem;
+}
+
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.mobile-list-item-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 15px;
+    color: #666;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+}
+
+.mobile-list-item-actions {
+    display: flex;
+    align-items: center;
+}
+
+.mobile-list-action-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    color: #757575;
+    text-decoration: none;
+    margin-right: 5px;
+}
+
+.mobile-list-action-btn:hover {
+    background-color: #f5f5f5;
+    color: var(--primary-color);
+}
+
+.empty-state {
+    padding: 30px 0;
+    color: #757575;
+}
+</style>
+{% endblock %}

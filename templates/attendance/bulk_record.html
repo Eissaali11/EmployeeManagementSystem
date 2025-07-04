@@ -1,0 +1,212 @@
+{% extends "layout.html" %}
+
+{% block title %}تسجيل الحضور الجماعي{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-user-clock"></i>
+                        تسجيل الحضور الجماعي
+                        {% if current_user.assigned_department %}
+                        - {{ current_user.assigned_department.name }}
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="bulkAttendanceForm">
+                        {{ csrf_token() }}
+                        
+                        <!-- فترة التسجيل -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="period_type" class="form-label">نوع الفترة</label>
+                                <select class="form-select" id="period_type" name="period_type" required>
+                                    <option value="">اختر نوع الفترة</option>
+                                    <option value="daily">يومي</option>
+                                    <option value="weekly">أسبوعي</option>
+                                    <option value="monthly">شهري</option>
+                                    <option value="custom">فترة مخصصة</option>
+                                </select>
+                            </div>
+                            
+                            <!-- التاريخ اليومي -->
+                            <div class="col-md-4" id="daily_date" style="display: none;">
+                                <label for="single_date" class="form-label">التاريخ</label>
+                                <input type="date" class="form-control" id="single_date" name="single_date" value="{{ today }}">
+                            </div>
+                            
+                            <!-- الأسبوع -->
+                            <div class="col-md-4" id="weekly_date" style="display: none;">
+                                <label for="week_start" class="form-label">بداية الأسبوع</label>
+                                <input type="date" class="form-control" id="week_start" name="week_start">
+                            </div>
+                            
+                            <!-- الشهر -->
+                            <div class="col-md-4" id="monthly_date" style="display: none;">
+                                <label for="month_year" class="form-label">الشهر والسنة</label>
+                                <input type="month" class="form-control" id="month_year" name="month_year">
+                            </div>
+                            
+                            <!-- فترة مخصصة -->
+                            <div class="col-md-4" id="custom_start" style="display: none;">
+                                <label for="start_date" class="form-label">تاريخ البداية</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date">
+                            </div>
+                            
+                            <div class="col-md-4" id="custom_end" style="display: none;">
+                                <label for="end_date" class="form-label">تاريخ النهاية</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date">
+                            </div>
+                        </div>
+                        
+                        <!-- حالة الحضور الافتراضية -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="default_status" class="form-label">حالة الحضور الافتراضية</label>
+                                <select class="form-select" id="default_status" name="default_status" required>
+                                    <option value="present">حاضر</option>
+                                    <option value="absent">غائب</option>
+                                    <option value="leave">إجازة</option>
+                                    <option value="sick">مرضي</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">خيارات إضافية</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="skip_weekends" name="skip_weekends" checked>
+                                    <label class="form-check-label" for="skip_weekends">
+                                        تجاهل عطلة نهاية الأسبوع (الجمعة والسبت)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="overwrite_existing" name="overwrite_existing">
+                                    <label class="form-check-label" for="overwrite_existing">
+                                        استبدال التسجيلات الموجودة
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- قائمة الموظفين -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <h5>موظفي القسم</h5>
+                                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    <input type="checkbox" id="select_all" checked>
+                                                    الكل
+                                                </th>
+                                                <th>اسم الموظف</th>
+                                                <th>الرقم الوظيفي</th>
+                                                <th>المنصب</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for employee in employees %}
+                                            <tr>
+                                                <td>
+                                                    <input type="checkbox" name="employee_ids" value="{{ employee.id }}" class="employee-checkbox" checked>
+                                                </td>
+                                                <td>{{ employee.name }}</td>
+                                                <td>{{ employee.employee_id or 'غير محدد' }}</td>
+                                                <td>{{ employee.position or 'غير محدد' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    تسجيل الحضور
+                                </button>
+                                <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i>
+                                    العودة
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const periodType = document.getElementById('period_type');
+    const dailyDate = document.getElementById('daily_date');
+    const weeklyDate = document.getElementById('weekly_date');
+    const monthlyDate = document.getElementById('monthly_date');
+    const customStart = document.getElementById('custom_start');
+    const customEnd = document.getElementById('custom_end');
+    const selectAll = document.getElementById('select_all');
+    const employeeCheckboxes = document.querySelectorAll('.employee-checkbox');
+    
+    // إظهار/إخفاء حقول التاريخ حسب نوع الفترة
+    periodType.addEventListener('change', function() {
+        // إخفاء جميع الحقول
+        dailyDate.style.display = 'none';
+        weeklyDate.style.display = 'none';
+        monthlyDate.style.display = 'none';
+        customStart.style.display = 'none';
+        customEnd.style.display = 'none';
+        
+        // إظهار الحقل المناسب
+        switch(this.value) {
+            case 'daily':
+                dailyDate.style.display = 'block';
+                break;
+            case 'weekly':
+                weeklyDate.style.display = 'block';
+                break;
+            case 'monthly':
+                monthlyDate.style.display = 'block';
+                break;
+            case 'custom':
+                customStart.style.display = 'block';
+                customEnd.style.display = 'block';
+                break;
+        }
+    });
+    
+    // تحديد/إلغاء تحديد جميع الموظفين
+    selectAll.addEventListener('change', function() {
+        employeeCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+    
+    // تحديث حالة "تحديد الكل" عند تغيير تحديد الموظفين
+    employeeCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const allChecked = Array.from(employeeCheckboxes).every(cb => cb.checked);
+            const noneChecked = Array.from(employeeCheckboxes).every(cb => !cb.checked);
+            
+            if (allChecked) {
+                selectAll.checked = true;
+                selectAll.indeterminate = false;
+            } else if (noneChecked) {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            } else {
+                selectAll.indeterminate = true;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

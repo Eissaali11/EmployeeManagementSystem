@@ -180,6 +180,12 @@ def create_app():
         from routes.departments import departments_bp
         app.register_blueprint(departments_bp)
         
+        from routes.salaries import salaries_bp
+        app.register_blueprint(salaries_bp)
+        
+        from routes.attendance import attendance_bp
+        app.register_blueprint(attendance_bp)
+        
         logger.info("All blueprints registered successfully")
     except Exception as e:
         logger.error(f"Error registering blueprints: {e}")

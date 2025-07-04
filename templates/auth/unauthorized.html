@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block title %}غير مصرح{% endblock %}
+
+{% block styles %}
+<style>
+    .unauthorized-container {
+        max-width: 800px;
+        margin: 3rem auto;
+        text-align: center;
+    }
+    
+    .unauthorized-icon {
+        font-size: 5rem;
+        color: var(--bs-danger);
+        margin-bottom: 2rem;
+    }
+    
+    .unauthorized-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--bs-danger);
+    }
+    
+    .unauthorized-message {
+        font-size: 1.25rem;
+        margin-bottom: 2.5rem;
+        color: var(--bs-light);
+    }
+    
+    .unauthorized-actions {
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="unauthorized-container">
+        <div class="unauthorized-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h1 class="unauthorized-title">غير مصرح بالوصول</h1>
+        
+        <div class="unauthorized-message">
+            <p>عفواً، ليس لديك الصلاحيات الكافية للوصول إلى هذه الصفحة.</p>
+            <p>يرجى التواصل مع مدير النظام إذا كنت تعتقد أن هذا خطأ.</p>
+        </div>
+        
+        <div class="unauthorized-actions">
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-home me-2"></i> العودة للرئيسية
+            </a>
+            
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-lg ms-3">
+                <i class="fas fa-sign-in-alt me-2"></i> تسجيل الدخول
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

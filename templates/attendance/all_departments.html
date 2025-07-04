@@ -1,0 +1,502 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    /* تنسيقات العناصر */
+    .date-select {
+        height: 44px;
+        font-size: 16px;
+        border-width: 2px;
+    }
+    
+    .date-select:focus {
+        border-color: #4a6fdc;
+        box-shadow: 0 0 0 0.25rem rgba(74, 111, 220, 0.25);
+    }
+    
+    /* تنسيقات أزرار الحضور */
+    .attendance-status-btn {
+        transition: all 0.3s ease;
+        min-width: 120px;
+        margin: 5px !important;
+    }
+    
+    .attendance-status-btn.active {
+        transform: scale(1.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    /* تنسيقات جدول الأقسام */
+    #departments-list-container {
+        transition: all 0.3s ease;
+    }
+    
+    .highlight-new {
+        animation: highlight 2s ease-in-out;
+    }
+    
+    @keyframes highlight {
+        0% { background-color: rgba(74, 111, 220, 0.2); }
+        100% { background-color: transparent; }
+    }
+    
+    /* تنسيقات حالات الحضور */
+    .status-present {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .status-absent {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .status-leave {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    .status-sick {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+    
+    /* تنسيقات ملخص الفترة الزمنية */
+    #date-range-summary {
+        background-color: rgba(13, 110, 253, 0.1);
+        border-color: rgba(13, 110, 253, 0.2);
+    }
+    
+    #date-range-summary h5 {
+        color: #0d6efd;
+    }
+
+    /* تنسيقات لبطاقات الأقسام */
+    .department-card {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .department-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .department-card .card-header {
+        background-color: #4a6fdc;
+        color: white;
+        padding: 15px;
+    }
+    
+    .department-card .card-body {
+        padding: 20px;
+    }
+    
+    .departments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .department-checkbox {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .select-all-container {
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* تأثير تنبض للعدادات */
+    .badge-pulse {
+        animation: pulse 0.5s ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تسجيل حضور لجميع الأقسام</h1>
+        <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        تسجيل حضور لجميع الأقسام لعدة أيام دفعة واحدة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('attendance.all_departments_attendance') }}" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label required-field">تاريخ البداية</label>
+                                <input type="date" class="form-control date-picker" id="start_date" name="start_date" 
+                                       value="{{ today.strftime('%Y-%m-%d') }}" required onchange="updateDateRange()">
+                                <div class="mt-1">
+                                    <span class="gregorian-date" id="start-gregorian-date">{{ gregorian_date }}</span>
+                                    <span class="hijri-date" id="start-hijri-date" style="display: none;">{{ hijri_date }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label required-field">تاريخ النهاية</label>
+                                <input type="date" class="form-control date-picker" id="end_date" name="end_date" 
+                                       value="{{ today.strftime('%Y-%m-%d') }}" required onchange="updateDateRange()">
+                                <div class="mt-1">
+                                    <span class="gregorian-date" id="end-gregorian-date">{{ gregorian_date }}</span>
+                                    <span class="hijri-date" id="end-hijri-date" style="display: none;">{{ hijri_date }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label required-field">حالة الحضور للأقسام</label>
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <button type="button" class="btn btn-success btn-lg attendance-status-btn m-1 active" data-status="present" onclick="setAttendanceStatus('present')">
+                                    <i class="fas fa-check-circle me-1"></i> حاضر
+                                    <span id="badge-present" class="badge bg-white text-success ms-1">0</span>
+                                </button>
+                                <button type="button" class="btn btn-danger btn-lg attendance-status-btn m-1" data-status="absent" onclick="setAttendanceStatus('absent')">
+                                    <i class="fas fa-times-circle me-1"></i> غائب
+                                    <span id="badge-absent" class="badge bg-white text-danger ms-1">0</span>
+                                </button>
+                                <button type="button" class="btn btn-warning btn-lg attendance-status-btn m-1" data-status="leave" onclick="setAttendanceStatus('leave')">
+                                    <i class="fas fa-calendar-minus me-1"></i> إجازة
+                                    <span id="badge-leave" class="badge bg-white text-warning ms-1">0</span>
+                                </button>
+                                <button type="button" class="btn btn-info btn-lg attendance-status-btn m-1" data-status="sick" onclick="setAttendanceStatus('sick')">
+                                    <i class="fas fa-procedures me-1"></i> مرضي
+                                    <span id="badge-sick" class="badge bg-white text-info ms-1">0</span>
+                                </button>
+                            </div>
+                            <!-- حقل مخفي لتخزين القيمة المختارة -->
+                            <input type="hidden" id="status" name="status" value="present">
+                            
+                            <!-- توضيح حول عدد الموظفين المتأثرين -->
+                            <div class="mt-2 text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                الأرقام تمثل عدد الموظفين الذين سيتم تسجيلهم بالحالة المحددة
+                            </div>
+                        </div>
+                        
+                        <!-- عرض ملخص الفترة المحددة -->
+                        <div id="date-range-summary" class="alert alert-primary mt-4 mb-4">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                ملخص الفترة الزمنية
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>الفترة:</strong> <span id="date-range-text">يوم واحد</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>عدد الأيام:</strong> <span id="days-count">1</span></p>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <p class="mb-0">
+                                    <strong>ملاحظة:</strong> 
+                                    سيتم تطبيق حالة الحضور المحددة على جميع موظفي الأقسام المحددة لجميع أيام الفترة.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- اختيار الأقسام -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="fas fa-building me-2"></i>
+                                اختر الأقسام المطلوبة
+                            </h5>
+                            
+                            <div class="select-all-container mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input department-checkbox" type="checkbox" id="select-all-departments" onchange="toggleAllDepartments()">
+                                    <label class="form-check-label fw-bold" for="select-all-departments">
+                                        تحديد/إلغاء تحديد جميع الأقسام
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="departments-grid">
+                                {% for department in departments %}
+                                <div class="department-card card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ department.name }}</h6>
+                                        <div class="form-check">
+                                            <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ department.id }}" id="department-{{ department.id }}">
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>عدد الموظفين:</strong> {{ department.employees|selectattr('status', 'equalto', 'active')|list|length }}</p>
+                                        <p class="mb-0 text-muted small">سيتم تسجيل الحضور لجميع الموظفين النشطين في هذا القسم</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- عداد الموظفين المحددين -->
+                        <div class="alert alert-success mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-users me-1"></i>
+                                    <strong>إجمالي الموظفين المحددين:</strong> 
+                                    <span id="selected-employees-count" class="badge bg-primary fw-bold" style="font-size: 1.1rem;">0</span>
+                                </div>
+                                <div>
+                                    <strong>الأقسام المحددة:</strong>
+                                    <span id="selected-departments-count" class="badge bg-info fw-bold" style="font-size: 1.1rem;">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>ملاحظة:</strong> 
+                            هذه العملية ستؤثر على جميع موظفي الأقسام المحددة خلال الفترة الزمنية المحددة. سيتم تعيين حالة الحضور المختارة لجميع الموظفين النشطين.
+                        </div>
+                        
+                        <div id="form-validation-alert" class="alert alert-warning" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>تنبيه:</strong> <span id="validation-message"></span>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button id="submit-btn" type="submit" class="btn btn-primary btn-lg" disabled>
+                                <i class="fas fa-save me-1"></i> تسجيل الحضور للأقسام المحددة
+                            </button>
+                            <button type="reset" class="btn btn-secondary" onclick="resetForm()">
+                                <i class="fas fa-undo me-1"></i> إعادة تعيين
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // عند تحميل الصفحة، نقوم بتهيئة النموذج
+    window.addEventListener('DOMContentLoaded', function() {
+        updateDateRange();
+        validateForm();
+        
+        // إضافة تأثير انتقالي على العدادات
+        animateCounter('selected-employees-count', 0);
+        animateCounter('selected-departments-count', 0);
+        
+        // تحديث عدادات الحالات 
+        const currentStatus = document.getElementById('status').value;
+        updateSelectedStatusBadges(currentStatus);
+    });
+    
+    // دالة لإضافة تأثير انتقالي على العدادات
+    function animateCounter(elementId, finalValue) {
+        const element = document.getElementById(elementId);
+        element.classList.add('badge-transition');
+        element.textContent = finalValue;
+    }
+    
+    // تحديث معلومات نطاق التاريخ
+    function updateDateRange() {
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        const daysCountElement = document.getElementById('days-count');
+        const dateRangeTextElement = document.getElementById('date-range-text');
+        
+        if (!startDateInput.value || !endDateInput.value) {
+            return;
+        }
+        
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        // التحقق من صحة النطاق
+        if (endDate < startDate) {
+            showValidationAlert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له.');
+            return;
+        } else {
+            hideValidationAlert();
+        }
+        
+        // حساب عدد الأيام
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // إضافة 1 لتضمين اليوم الأخير
+        
+        // عرض النتيجة
+        daysCountElement.textContent = diffDays;
+        
+        // تنسيق نص نطاق التاريخ
+        if (diffDays === 1) {
+            dateRangeTextElement.textContent = 'يوم واحد';
+        } else {
+            const startDateFormatted = new Intl.DateTimeFormat('ar-SA').format(startDate);
+            const endDateFormatted = new Intl.DateTimeFormat('ar-SA').format(endDate);
+            dateRangeTextElement.textContent = `من ${startDateFormatted} إلى ${endDateFormatted}`;
+        }
+        
+        validateForm();
+    }
+    
+    // تحديد/إلغاء تحديد جميع الأقسام
+    function toggleAllDepartments() {
+        const selectAllCheckbox = document.getElementById('select-all-departments');
+        const departmentCheckboxes = document.querySelectorAll('input[name="department_ids"]');
+        
+        departmentCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        
+        validateForm();
+    }
+    
+    // التحقق من صحة الفورم قبل الإرسال وتحديث عدد الموظفين
+    function validateForm() {
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        const departmentCheckboxes = document.querySelectorAll('input[name="department_ids"]:checked');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        // تحديث عداد الأقسام المحددة
+        document.getElementById('selected-departments-count').textContent = departmentCheckboxes.length;
+        
+        // حساب إجمالي عدد الموظفين في الأقسام المحددة
+        let totalEmployees = 0;
+        departmentCheckboxes.forEach(checkbox => {
+            const cardBody = checkbox.closest('.department-card').querySelector('.card-body');
+            const employeesCountText = cardBody.querySelector('p').textContent;
+            const countMatch = employeesCountText.match(/(\d+)/);
+            if (countMatch && countMatch[1]) {
+                totalEmployees += parseInt(countMatch[1], 10);
+            }
+        });
+        
+        // تحديث عداد الموظفين المحددين
+        document.getElementById('selected-employees-count').textContent = totalEmployees;
+        
+        // تحديث عدادات الحالات
+        const currentStatus = document.getElementById('status').value;
+        updateSelectedStatusBadges(currentStatus);
+        
+        // التحقق من تحديد قسم واحد على الأقل
+        if (departmentCheckboxes.length === 0) {
+            showValidationAlert('الرجاء تحديد قسم واحد على الأقل');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        // التحقق من صحة التواريخ
+        if (startDateInput.value && endDateInput.value) {
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            
+            if (endDate < startDate) {
+                showValidationAlert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له.');
+                submitBtn.disabled = true;
+                return;
+            }
+        } else {
+            showValidationAlert('الرجاء تحديد تاريخ البداية والنهاية');
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        // إذا وصلنا إلى هنا، فكل شيء على ما يرام
+        hideValidationAlert();
+        submitBtn.disabled = false;
+    }
+    
+    // عرض رسالة تحذير للتحقق من صحة النموذج
+    function showValidationAlert(message) {
+        const validationAlert = document.getElementById('form-validation-alert');
+        const validationMessage = document.getElementById('validation-message');
+        
+        validationMessage.textContent = message;
+        validationAlert.style.display = 'block';
+    }
+    
+    // إخفاء رسالة التحقق
+    function hideValidationAlert() {
+        document.getElementById('form-validation-alert').style.display = 'none';
+    }
+    
+    // تعيين حالة الحضور
+    function setAttendanceStatus(status) {
+        // تحديث الحقل المخفي
+        document.getElementById('status').value = status;
+        
+        // تحديث التصميم لإبراز الزر المختار
+        const buttons = document.querySelectorAll('.attendance-status-btn');
+        buttons.forEach(button => {
+            if (button.getAttribute('data-status') === status) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+        
+        // تحديث عداد الموظفين بالنسبة للحالة المختارة
+        updateSelectedStatusBadges(status);
+    }
+    
+    // تحديث أعداد الموظفين حسب الحالة المختارة
+    function updateSelectedStatusBadges(activeStatus) {
+        const employeesCount = parseInt(document.getElementById('selected-employees-count').textContent) || 0;
+        
+        // إعادة تعيين جميع العدادات إلى صفر باستثناء الحالة النشطة
+        document.getElementById('badge-present').textContent = (activeStatus === 'present') ? employeesCount : 0;
+        document.getElementById('badge-absent').textContent = (activeStatus === 'absent') ? employeesCount : 0;
+        document.getElementById('badge-leave').textContent = (activeStatus === 'leave') ? employeesCount : 0;
+        document.getElementById('badge-sick').textContent = (activeStatus === 'sick') ? employeesCount : 0;
+        
+        // إضافة تأثير للحالة النشطة
+        const activeBadge = document.getElementById('badge-' + activeStatus);
+        activeBadge.classList.add('badge-pulse');
+        setTimeout(() => {
+            activeBadge.classList.remove('badge-pulse');
+        }, 500);
+    }
+    
+    // إعادة تعيين النموذج
+    function resetForm() {
+        setTimeout(function() {
+            // تأخير قصير لإعطاء النموذج وقتًا لإعادة التعيين
+            document.getElementById('select-all-departments').checked = false;
+            setAttendanceStatus('present');
+            updateDateRange();
+            validateForm();
+        }, 100);
+    }
+    
+    // إضافة مستمع لتغييرات checkboxes الأقسام
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.name === 'department_ids') {
+            validateForm();
+            
+            // تحديث حالة زر "تحديد الكل" بناءً على حالة جميع الأقسام
+            const allCheckboxes = document.querySelectorAll('input[name="department_ids"]');
+            const checkedCheckboxes = document.querySelectorAll('input[name="department_ids"]:checked');
+            const selectAllCheckbox = document.getElementById('select-all-departments');
+            
+            selectAllCheckbox.checked = (allCheckboxes.length === checkedCheckboxes.length);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'layout.html' %}
+
+{% block title %}فحوصات السيارة {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 rtl">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>فحوصات السيارة: {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</h3>
+        <div>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right ml-1"></i> العودة للسيارة
+            </a>
+            <a href="{{ url_for('vehicles.create_inspection', id=vehicle.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus ml-1"></i> إضافة فحص دوري جديد
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">سجلات الفحص الدوري</h5>
+                </div>
+                <div class="card-body">
+                    {% if inspections %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الفحص</th>
+                                        <th>تاريخ الفحص</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>نوع الفحص</th>
+                                        <th>الحالة</th>
+                                        <th>مركز الفحص</th>
+                                        <th>التكلفة</th>
+                                        <th>ملاحظات</th>
+                                        <th>خيارات التحكم</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inspection in inspections %}
+                                    <tr class="{% if inspection.is_expired %}table-danger{% elif inspection.is_expiring_soon %}table-warning{% endif %}">
+                                        <td>{{ inspection.inspection_center or inspection.inspection_number }}</td>
+                                        <td>{{ inspection.formatted_inspection_date }}</td>
+                                        <td>{{ inspection.formatted_expiry_date }}</td>
+                                        <td>
+                                            {% if (inspection.result or inspection.inspection_type) == 'technical' %}
+                                                فحص فني
+                                            {% elif (inspection.result or inspection.inspection_type) == 'periodic' %}
+                                                فحص دوري
+                                            {% elif (inspection.result or inspection.inspection_type) == 'safety' %}
+                                                فحص أمان
+                                            {% else %}
+                                                {{ inspection.result or inspection.inspection_type }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if inspection.inspection_status == 'valid' %}
+                                                <span class="badge bg-success">ساري</span>
+                                            {% elif inspection.inspection_status == 'expired' %}
+                                                <span class="badge bg-danger">منتهي</span>
+                                            {% elif inspection.inspection_status == 'expiring_soon' %}
+                                                <span class="badge bg-warning">ينتهي قريبًا</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ inspection.inspection_status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ inspection.supervisor_name or inspection.inspector_name }}</td>
+                                        <td>{{ inspection.cost|int if inspection.cost == inspection.cost|int else inspection.cost }} ريال</td>
+                                        <td>
+                                            {% if inspection.notes %}
+                                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="{{ inspection.notes }}">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a href="{{ url_for('vehicles.edit_inspection', id=inspection.id) }}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-edit ml-1"></i> تعديل
+                                                </a>
+                                                <a href="{{ url_for('vehicles.confirm_delete_inspection', id=inspection.id) }}" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash ml-1"></i> حذف
+                                                </a>
+                                                {% if inspection.certificate_file %}
+                                                <a href="{{ url_for('static', filename=inspection.certificate_file) }}" target="_blank" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-file-pdf ml-1"></i> عرض الشهادة
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <p>لا توجد سجلات فحص دوري لهذه السيارة</p>
+                            <a href="{{ url_for('vehicles.create_inspection', id=vehicle.id) }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus ml-1"></i> إضافة فحص دوري جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تفعيل tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}

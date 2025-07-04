@@ -1,0 +1,409 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تقرير الموظفين - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تقرير الموظفين{% endblock %}
+
+{% block content %}
+<!-- خيارات التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> خيارات التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.report_employees') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>القسم</label>
+                <select name="department_id" class="mobile-form-select">
+                    <option value="">جميع الأقسام</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if request.args.get('department_id') == department.id|string %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>حالة الموظف</label>
+                <select name="status" class="mobile-form-select">
+                    <option value="">جميع الحالات</option>
+                    <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>نشط</option>
+                    <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>غير نشط</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>البحث</label>
+                <input type="text" name="search" class="mobile-form-control" placeholder="بحث بالاسم أو رقم الهوية" value="{{ request.args.get('search', '') }}">
+            </div>
+            
+            <div class="mobile-form-row buttons-row">
+                <button type="submit" class="mobile-btn mobile-btn-primary">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                
+                <button type="button" class="mobile-btn mobile-btn-secondary" onclick="location.href='{{ url_for('mobile.report_employees') }}'">
+                    <i class="fas fa-redo"></i> إعادة ضبط
+                </button>
+                
+                <div class="dropdown">
+                    <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
+                        <i class="fas fa-download"></i> تصدير
+                    </button>
+                    <div class="dropdown-menu export-dropdown-menu" id="exportMenu">
+                        <a href="{{ url_for('mobile.report_employees') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
+                            <i class="fas fa-file-pdf"></i> تصدير PDF
+                        </a>
+                        <a href="{{ url_for('mobile.report_employees') }}?{{ request.query_string.decode('utf-8') }}&export=excel" class="dropdown-item">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- نتائج التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list"></i> نتائج التقرير
+        <div class="mobile-card-subtitle">{{ employees|length }} موظف</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if employees %}
+        <div class="table-responsive">
+            <table class="mobile-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>القسم</th>
+                        <th>المسمى الوظيفي</th>
+                        <th>الراتب</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr onclick="location.href='{{ url_for('mobile.employee_details', employee_id=employee.id) }}'">
+                        <td>{{ loop.index }}</td>
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.department.name if employee.department else '-' }}</td>
+                        <td>{{ employee.job_title or '-' }}</td>
+                        <td>{{ '{:,.2f}'.format(employee.salary) if employee.salary else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">لا توجد بيانات متطابقة مع معايير البحث</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ملخص التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> ملخص التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="report-summary">
+            <div class="summary-item total">
+                <div class="summary-value">{{ employees|length }}</div>
+                <div class="summary-label">إجمالي الموظفين</div>
+            </div>
+            
+            <div class="summary-item male">
+                <div class="summary-value">{{ employees|selectattr('gender', 'equalto', 'ذكر')|list|length }}</div>
+                <div class="summary-label">الذكور</div>
+            </div>
+            
+            <div class="summary-item female">
+                <div class="summary-value">{{ employees|selectattr('gender', 'equalto', 'أنثى')|list|length }}</div>
+                <div class="summary-label">الإناث</div>
+            </div>
+            
+            <div class="summary-item active">
+                <div class="summary-value">{{ employees|selectattr('status', 'equalto', 'active')|list|length }}</div>
+                <div class="summary-label">نشط</div>
+            </div>
+            
+            <div class="summary-item inactive">
+                <div class="summary-value">{{ employees|selectattr('status', 'equalto', 'inactive')|list|length }}</div>
+                <div class="summary-label">غير نشط</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="employeesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.buttons-row {
+    flex-wrap: wrap;
+}
+
+.mobile-form-row .mobile-btn {
+    flex: 1;
+    margin-bottom: 10px;
+}
+
+.dropdown {
+    position: relative;
+    flex: 1;
+}
+
+.dropdown-toggle {
+    width: 100%;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.mobile-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mobile-table th,
+.mobile-table td {
+    padding: 10px 15px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+}
+
+.mobile-table th {
+    background-color: #f9f9f9;
+    color: #757575;
+    font-weight: 500;
+}
+
+.mobile-table tbody tr {
+    cursor: pointer;
+}
+
+.mobile-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.report-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    flex: 1;
+    min-width: calc(50% - 10px);
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.summary-item.total {
+    flex-basis: 100%;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.summary-item.male {
+    background-color: rgba(54, 162, 235, 0.1);
+    color: #36a2eb;
+}
+
+.summary-item.female {
+    background-color: rgba(255, 99, 132, 0.1);
+    color: #ff6384;
+}
+
+.summary-item.active {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.summary-item.inactive {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+}
+
+.chart-container {
+    height: 250px;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تفعيل قائمة التصدير المنسدلة
+    const dropdownToggle = document.getElementById('exportDropdown');
+    const dropdownMenu = document.getElementById('exportMenu');
+    
+    // التأكد من وجود الزر والقائمة
+    if (dropdownToggle && dropdownMenu) {
+        console.log("زر التصدير والقائمة المنسدلة موجودان");
+        
+        // ضبط موضع القائمة المنسدلة نسبة للزر
+        function positionDropdown() {
+            if (dropdownMenu.style.display === 'block') {
+                const btnRect = dropdownToggle.getBoundingClientRect();
+                dropdownMenu.style.top = (btnRect.bottom) + 'px';
+                dropdownMenu.style.left = btnRect.left + 'px';
+                dropdownMenu.style.minWidth = btnRect.width + 'px';
+            }
+        }
+        
+        // إضافة حدث النقر على الزر
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log("تم النقر على زر التصدير");
+            
+            // تبديل حالة عرض القائمة
+            if (dropdownMenu.style.display === 'block') {
+                dropdownMenu.style.display = 'none';
+                console.log("تم إخفاء القائمة المنسدلة");
+            } else {
+                dropdownMenu.style.display = 'block';
+                positionDropdown();
+                console.log("تم إظهار القائمة المنسدلة");
+            }
+        });
+        
+        // إضافة النقر على روابط القائمة
+        const dropdownLinks = dropdownMenu.querySelectorAll('a.dropdown-item');
+        dropdownLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                console.log("تم النقر على عنصر من القائمة: " + this.textContent.trim());
+            });
+        });
+        
+        // إغلاق القائمة عند النقر في أي مكان آخر
+        document.addEventListener('click', function(e) {
+            if (dropdownMenu.style.display === 'block' && 
+                !dropdownToggle.contains(e.target) && 
+                !dropdownMenu.contains(e.target)) {
+                dropdownMenu.style.display = 'none';
+                console.log("تم إغلاق القائمة عند النقر خارجها");
+            }
+        });
+        
+        // إعادة ضبط موضع القائمة عند التمرير أو تغيير حجم النافذة
+        window.addEventListener('scroll', positionDropdown);
+        window.addEventListener('resize', positionDropdown);
+    } else {
+        console.error("لم يتم العثور على زر التصدير أو القائمة المنسدلة");
+    }
+    
+    // إنشاء رسم بياني للموظفين
+    const ctx = document.getElementById('employeesChart').getContext('2d');
+    const employeesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['ذكور', 'إناث'],
+            datasets: [{
+                data: [
+                    {{ employees|selectattr('gender', 'equalto', 'ذكر')|list|length }},
+                    {{ employees|selectattr('gender', 'equalto', 'أنثى')|list|length }}
+                ],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'توزيع الموظفين حسب الجنس',
+                    font: {
+                        family: 'Tajawal, Arial',
+                        size: 14
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

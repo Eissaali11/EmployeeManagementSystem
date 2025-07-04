@@ -1,0 +1,394 @@
+{% extends 'layout.html' %}
+
+{% block title %}عرض المستخدم - {{ user.name }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .user-profile-container {
+        background-color: #f8f9fa;
+        padding: 30px 0;
+        min-height: calc(100vh - 56px);
+    }
+    
+    .user-header {
+        background-color: #1da18e;
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-avatar-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        border: 3px solid white;
+    }
+    
+    .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        border: 3px solid white;
+    }
+    
+    .user-role-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 10px;
+    }
+    
+    .role-admin {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .role-manager {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .role-hr {
+        background-color: #20c997;
+        color: white;
+    }
+    
+    .role-finance {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .role-fleet {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .role-user {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .info-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+        overflow: hidden;
+    }
+    
+    .info-card .card-header {
+        background-color: #1da18e;
+        color: white;
+        font-weight: bold;
+        padding: 15px 20px;
+    }
+    
+    .info-row {
+        display: flex;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .info-row:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .info-label {
+        width: 150px;
+        color: #555;
+        font-weight: bold;
+    }
+    
+    .info-value {
+        flex: 1;
+    }
+    
+    .module-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+        transition: transform 0.2s;
+    }
+    
+    .module-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .module-card .card-header {
+        padding: 15px;
+    }
+    
+    .module-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    
+    .module-permissions {
+        padding: 15px;
+    }
+    
+    .permission-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        margin-left: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .permission-view {
+        background-color: #e3f2fd;
+        color: #0d6efd;
+    }
+    
+    .permission-create {
+        background-color: #e8f5e9;
+        color: #28a745;
+    }
+    
+    .permission-edit {
+        background-color: #fff3cd;
+        color: #fd7e14;
+    }
+    
+    .permission-delete {
+        background-color: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .permission-manage {
+        background-color: #d1ecf1;
+        color: #17a2b8;
+    }
+    
+    .action-buttons {
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="user-profile-container">
+    <div class="container">
+        <!-- بطاقة المستخدم -->
+        <div class="user-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="user-avatar-large me-4">
+                        {% else %}
+                        <div class="avatar-placeholder me-4">
+                            <i class="fas fa-user fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div>
+                            <h1 class="mb-0">{{ user.name }}</h1>
+                            <p class="mb-2 text-light">{{ user.email }}</p>
+                            
+                            <div class="user-role-badge role-{{ user.role.value if user.role and user.role.value else 'user' }}">
+                                <i class="fas fa-user-shield me-1"></i>
+                                {{ get_role_display_name(user.role) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{{ url_for('users.index') }}" class="btn btn-light">
+                        <i class="fas fa-arrow-right ms-1"></i>
+                        العودة للقائمة
+                    </a>
+                    
+                    <a href="{{ url_for('users.edit_role', user_id=user.id) }}" class="btn btn-warning ms-2">
+                        <i class="fas fa-edit ms-1"></i>
+                        تعديل الدور
+                    </a>
+                    
+                    <a href="{{ url_for('users.user_permissions', user_id=user.id) }}" class="btn btn-info ms-2">
+                        <i class="fas fa-lock ms-1"></i>
+                        الصلاحيات
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <!-- معلومات المستخدم -->
+                <div class="card info-card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات المستخدم
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-label">اسم المستخدم</div>
+                            <div class="info-value">{{ user.name }}</div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">البريد الإلكتروني</div>
+                            <div class="info-value">{{ user.email }}</div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">الحالة</div>
+                            <div class="info-value">
+                                {% if user.is_active %}
+                                <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                <span class="badge bg-danger">غير نشط</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">طريقة الدخول</div>
+                            <div class="info-value">
+                                {% if user.auth_type == 'firebase' %}
+                                <span class="badge bg-primary">Google</span>
+                                {% else %}
+                                <span class="badge bg-secondary">حساب محلي</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">تاريخ الإنشاء</div>
+                            <div class="info-value">{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'غير معروف' }}</div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">آخر تسجيل دخول</div>
+                            <div class="info-value">{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'غير معروف' }}</div>
+                        </div>
+                        
+                        {% if user.employee %}
+                        <div class="info-row">
+                            <div class="info-label">مرتبط بموظف</div>
+                            <div class="info-value">
+                                <a href="{{ url_for('employees.view', id=user.employee.id) }}" class="badge bg-info text-decoration-none">
+                                    <i class="fas fa-id-card ms-1"></i>
+                                    {{ user.employee.name }}
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <!-- الصلاحيات -->
+                <div class="card info-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-shield-alt me-2"></i>
+                            الصلاحيات
+                        </div>
+                        <a href="{{ url_for('users.user_permissions', user_id=user.id) }}" class="btn btn-sm btn-light">
+                            <i class="fas fa-edit ms-1"></i>
+                            تعديل الصلاحيات
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if user.permissions %}
+                            <div class="row">
+                                {% for permission in user.permissions %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="module-card">
+                                        <div class="card-header bg-light">
+                                            <h5 class="module-title">{{ get_module_display_name(permission.module) }}</h5>
+                                        </div>
+                                        <div class="module-permissions">
+                                            {% set perms = format_permissions(permission.permissions) %}
+                                            {% for perm in perms %}
+                                                {% if perm == 'عرض' %}
+                                                <span class="permission-badge permission-view">
+                                                    <i class="fas fa-eye ms-1"></i>
+                                                    عرض
+                                                </span>
+                                                {% elif perm == 'إنشاء' %}
+                                                <span class="permission-badge permission-create">
+                                                    <i class="fas fa-plus ms-1"></i>
+                                                    إنشاء
+                                                </span>
+                                                {% elif perm == 'تعديل' %}
+                                                <span class="permission-badge permission-edit">
+                                                    <i class="fas fa-edit ms-1"></i>
+                                                    تعديل
+                                                </span>
+                                                {% elif perm == 'حذف' %}
+                                                <span class="permission-badge permission-delete">
+                                                    <i class="fas fa-trash ms-1"></i>
+                                                    حذف
+                                                </span>
+                                                {% elif perm == 'إدارة' %}
+                                                <span class="permission-badge permission-manage">
+                                                    <i class="fas fa-cogs ms-1"></i>
+                                                    إدارة
+                                                </span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle ms-2"></i>
+                                لا توجد صلاحيات محددة لهذا المستخدم.
+                                {% if user.role.value == 'admin' %}
+                                <div class="mt-2">
+                                    <strong>ملاحظة:</strong> مدير النظام لديه صلاحيات كاملة على جميع الأقسام.
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- سجل النشاط -->
+                <div class="card info-card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-history me-2"></i>
+                            سجل النشاط
+                        </div>
+                        <a href="{{ url_for('users.activity_log', id=user.id) }}" class="btn btn-sm btn-light">
+                            <i class="fas fa-external-link-alt ms-1"></i>
+                            عرض التفاصيل
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center">
+                            <a href="{{ url_for('users.activity_log', id=user.id) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-list-ul ms-1"></i>
+                                عرض سجل النشاط الكامل
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid p-3">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>تعديل تكاليف الرسوم
+                    </h5>
+                    <div>
+                        <a href="{{ url_for('fees_costs.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="alert-heading">معلومات الوثيقة</h5>
+                                <p class="mb-0">
+                                    <strong>نوع الوثيقة:</strong> {{ fees_cost.document_type }} <br>
+                                    <strong>الموظف:</strong> {{ fees_cost.document.employee.name }} <br>
+                                    <strong>رقم الوثيقة:</strong> {{ fees_cost.document.document_number }} <br>
+                                    <strong>تاريخ الانتهاء:</strong> {{ fees_cost.document.expiry_date.strftime('%Y-%m-%d') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('fees_costs.edit', id=fees_cost.id) }}" method="post" class="needs-validation" novalidate>
+                        <input type="hidden" name="document_type" value="{{ fees_cost.document_type }}">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="passport_fee" class="form-label">رسوم الجوازات (ر.س)</label>
+                                <input type="number" class="form-control" id="passport_fee" name="passport_fee" min="0" step="0.01" value="{{ fees_cost.passport_fee }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="labor_office_fee" class="form-label">رسوم مكتب العمل (ر.س)</label>
+                                <input type="number" class="form-control" id="labor_office_fee" name="labor_office_fee" min="0" step="0.01" value="{{ fees_cost.labor_office_fee }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="insurance_fee" class="form-label">رسوم التأمين (ر.س)</label>
+                                <input type="number" class="form-control" id="insurance_fee" name="insurance_fee" min="0" step="0.01" value="{{ fees_cost.insurance_fee }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="social_insurance_fee" class="form-label">رسوم التأمينات الاجتماعية (ر.س)</label>
+                                <input type="number" class="form-control" id="social_insurance_fee" name="social_insurance_fee" min="0" step="0.01" value="{{ fees_cost.social_insurance_fee }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="transfer_sponsorship" class="form-label">نقل كفالة</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="transfer_sponsorship" name="transfer_sponsorship" {% if fees_cost.transfer_sponsorship %}checked{% endif %}>
+                                    <label class="form-check-label" for="transfer_sponsorship">يتطلب نقل كفالة</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="payment_status" class="form-label required">حالة السداد</label>
+                                <select class="form-select" id="payment_status" name="payment_status" required>
+                                    <option value="pending" {% if fees_cost.payment_status == 'pending' %}selected{% endif %}>قيد الانتظار</option>
+                                    <option value="paid" {% if fees_cost.payment_status == 'paid' %}selected{% endif %}>تم السداد</option>
+                                    <option value="overdue" {% if fees_cost.payment_status == 'overdue' %}selected{% endif %}>متأخر</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    يرجى اختيار حالة السداد
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="due_date" class="form-label required">تاريخ الاستحقاق</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date" value="{{ fees_cost.due_date.strftime('%Y-%m-%d') }}" required>
+                                <div class="invalid-feedback">
+                                    يرجى إدخال تاريخ الاستحقاق
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="payment_date" class="form-label {% if fees_cost.payment_status == 'paid' %}required{% endif %}">تاريخ السداد</label>
+                                <input type="date" class="form-control" id="payment_date" name="payment_date" value="{% if fees_cost.payment_date %}{{ fees_cost.payment_date.strftime('%Y-%m-%d') }}{% endif %}" {% if fees_cost.payment_status == 'paid' %}required{% endif %}>
+                                <small class="form-text text-muted">في حالة تم السداد فقط</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="notes" class="form-label">ملاحظات</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3">{{ fees_cost.notes }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mt-4 shadow-sm border-success">
+                                    <div class="card-header bg-success bg-opacity-25 text-success">
+                                        <h6 class="mb-0">ملخص التكاليف</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td>رسوم الجوازات:</td>
+                                                <td class="text-end" id="passport_fee_summary">{{ "%.2f"|format(fees_cost.passport_fee) }} ر.س</td>
+                                            </tr>
+                                            <tr>
+                                                <td>رسوم مكتب العمل:</td>
+                                                <td class="text-end" id="labor_fee_summary">{{ "%.2f"|format(fees_cost.labor_office_fee) }} ر.س</td>
+                                            </tr>
+                                            <tr>
+                                                <td>رسوم التأمين:</td>
+                                                <td class="text-end" id="insurance_fee_summary">{{ "%.2f"|format(fees_cost.insurance_fee) }} ر.س</td>
+                                            </tr>
+                                            <tr>
+                                                <td>رسوم التأمينات الاجتماعية:</td>
+                                                <td class="text-end" id="social_insurance_fee_summary">{{ "%.2f"|format(fees_cost.social_insurance_fee) }} ر.س</td>
+                                            </tr>
+                                            <tr class="table-success">
+                                                <th>الإجمالي:</th>
+                                                <th class="text-end" id="total_fees_summary">{{ "%.2f"|format(fees_cost.total_fees) }} ر.س</th>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> حفظ التغييرات
+                            </button>
+                            <a href="{{ url_for('fees_costs.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // تحديث ملخص التكاليف عند تغيير قيم الرسوم
+        function updateFeeSummary() {
+            const passportFee = parseFloat($('#passport_fee').val()) || 0;
+            const laborFee = parseFloat($('#labor_office_fee').val()) || 0;
+            const insuranceFee = parseFloat($('#insurance_fee').val()) || 0;
+            const socialInsuranceFee = parseFloat($('#social_insurance_fee').val()) || 0;
+            
+            $('#passport_fee_summary').text(passportFee.toFixed(2) + ' ر.س');
+            $('#labor_fee_summary').text(laborFee.toFixed(2) + ' ر.س');
+            $('#insurance_fee_summary').text(insuranceFee.toFixed(2) + ' ر.س');
+            $('#social_insurance_fee_summary').text(socialInsuranceFee.toFixed(2) + ' ر.س');
+            
+            const total = passportFee + laborFee + insuranceFee + socialInsuranceFee;
+            $('#total_fees_summary').text(total.toFixed(2) + ' ر.س');
+        }
+
+        // تحديث الملخص عند تغيير أي حقل من حقول الرسوم
+        $('#passport_fee, #labor_office_fee, #insurance_fee, #social_insurance_fee').on('input', updateFeeSummary);
+
+        // تحديث حالة حقل تاريخ السداد بناءً على حالة السداد
+        $('#payment_status').on('change', function() {
+            if ($(this).val() === 'paid') {
+                $('#payment_date').prop('required', true);
+                $('#payment_date').closest('.col-md-3').find('label').addClass('required');
+                if (!$('#payment_date').val()) {
+                    $('#payment_date').val('{{ today }}');
+                }
+            } else {
+                $('#payment_date').prop('required', false);
+                $('#payment_date').closest('.col-md-3').find('label').removeClass('required');
+            }
+        });
+
+        // التحقق من صحة النموذج قبل الإرسال
+        (function() {
+            'use strict';
+            
+            // استهداف جميع النماذج التي تحتوي على فئة 'needs-validation'
+            const forms = document.querySelectorAll('.needs-validation');
+            
+            // التكرار عبر النماذج ومنع الإرسال إذا كانت غير صالحة
+            Array.from(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    });
+</script>
+{% endblock %}

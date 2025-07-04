@@ -1,0 +1,1011 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إحصائيات استهلاك الوقود{% endblock %}
+{% block header_title %}إحصائيات استهلاك الوقود{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-chart-bar"></i>
+      إحصائيات استهلاك الوقود
+    </h2>
+    <a href="{{ url_for('mobile.vehicle_expenses') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+  
+  <!-- فلاتر التقرير -->
+  <div class="mobile-card mb-4">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <a href="#" class="filter-toggle" onclick="toggleFilterOptions(); return false;">
+          <i class="fas fa-filter"></i>
+          فلترة التقرير
+          <small><i class="fas fa-chevron-down" id="filter-toggle-icon"></i></small>
+        </a>
+      </div>
+    </div>
+    <div class="mobile-card-body" id="filterOptionsSection">
+      <form id="statsFilterForm" method="GET" action="{{ url_for('mobile.fuel_consumption_stats') }}">
+        <!-- الفلاتر الأساسية -->
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">السيارة</label>
+          <select name="vehicle_id" class="mobile-form-select">
+            <option value="">جميع السيارات</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}" {% if selected_vehicle == vehicle.id %}selected{% endif %}>
+              {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">نوع الوقود</label>
+          <select name="fuel_type" class="mobile-form-select">
+            <option value="">جميع الأنواع</option>
+            <option value="بنزين 91" {% if selected_fuel_type == 'بنزين 91' %}selected{% endif %}>بنزين 91</option>
+            <option value="بنزين 95" {% if selected_fuel_type == 'بنزين 95' %}selected{% endif %}>بنزين 95</option>
+            <option value="ديزل" {% if selected_fuel_type == 'ديزل' %}selected{% endif %}>ديزل</option>
+            <option value="غاز" {% if selected_fuel_type == 'غاز' %}selected{% endif %}>غاز</option>
+            <option value="آخر" {% if selected_fuel_type == 'آخر' %}selected{% endif %}>أنواع أخرى</option>
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">الفترة الزمنية</label>
+          <select name="period" id="periodSelect" class="mobile-form-select" onchange="updateDateFilters()">
+            <option value="custom" {% if period == 'custom' %}selected{% endif %}>تحديد مخصص</option>
+            <option value="week" {% if period == 'week' %}selected{% endif %}>آخر أسبوع</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>آخر شهر</option>
+            <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>آخر ثلاثة أشهر</option>
+            <option value="year" {% if period == 'year' %}selected{% endif %}>السنة الحالية</option>
+          </select>
+        </div>
+        
+        <!-- فلاتر التاريخ المخصصة -->
+        <div id="customDateSection" style="{% if period != 'custom' %}display: none;{% endif %}">
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">تاريخ البداية</label>
+            <input type="date" name="start_date" class="mobile-form-input" value="{{ start_date if start_date else '' }}">
+          </div>
+          
+          <div class="mobile-form-group">
+            <label class="mobile-form-label">تاريخ النهاية</label>
+            <input type="date" name="end_date" class="mobile-form-input" value="{{ end_date if end_date else '' }}">
+          </div>
+        </div>
+        
+        <!-- فلترة أيام محددة -->
+        <div class="mobile-form-section">
+          <h3 class="mobile-form-section-title">
+            <a href="#" class="toggle-days-options" onclick="toggleDaysFilter(); return false;">
+              <i class="fas fa-calendar-day"></i>
+              تحديد أيام معينة
+              <small><i class="fas fa-chevron-down" id="days-toggle-icon"></i></small>
+            </a>
+          </h3>
+          
+          <div id="daysFilterSection" style="display: none;">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">أيام الأسبوع</label>
+              <div class="mobile-weekday-selector">
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day0" name="weekdays" value="0" class="mobile-weekday-checkbox" 
+                  {% if '0' in selected_weekdays %}checked{% endif %}>
+                  <label for="day0" class="mobile-weekday-label">الأحد</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day1" name="weekdays" value="1" class="mobile-weekday-checkbox"
+                  {% if '1' in selected_weekdays %}checked{% endif %}>
+                  <label for="day1" class="mobile-weekday-label">الاثنين</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day2" name="weekdays" value="2" class="mobile-weekday-checkbox"
+                  {% if '2' in selected_weekdays %}checked{% endif %}>
+                  <label for="day2" class="mobile-weekday-label">الثلاثاء</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day3" name="weekdays" value="3" class="mobile-weekday-checkbox"
+                  {% if '3' in selected_weekdays %}checked{% endif %}>
+                  <label for="day3" class="mobile-weekday-label">الأربعاء</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day4" name="weekdays" value="4" class="mobile-weekday-checkbox"
+                  {% if '4' in selected_weekdays %}checked{% endif %}>
+                  <label for="day4" class="mobile-weekday-label">الخميس</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day5" name="weekdays" value="5" class="mobile-weekday-checkbox"
+                  {% if '5' in selected_weekdays %}checked{% endif %}>
+                  <label for="day5" class="mobile-weekday-label">الجمعة</label>
+                </div>
+                <div class="mobile-weekday-item">
+                  <input type="checkbox" id="day6" name="weekdays" value="6" class="mobile-weekday-checkbox"
+                  {% if '6' in selected_weekdays %}checked{% endif %}>
+                  <label for="day6" class="mobile-weekday-label">السبت</label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- اختيار كل الأيام أو إلغاء الكل -->
+            <div class="mobile-checkbox-actions">
+              <button type="button" class="mobile-btn-link" onclick="selectAllDays()">تحديد الكل</button>
+              <button type="button" class="mobile-btn-link" onclick="clearAllDays()">إلغاء الكل</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mobile-form-actions">
+          <button type="reset" class="mobile-btn mobile-btn-secondary">
+            <i class="fas fa-redo"></i>
+            إعادة تعيين
+          </button>
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-search"></i>
+            تطبيق الفلتر
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- ملخص الإحصائيات -->
+  <div class="mobile-card mb-4">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-tachometer-alt"></i>
+        ملخص الاستهلاك - {{ period_text }}
+      </div>
+    </div>
+    <div class="mobile-card-body">
+      <!-- الإحصائيات الإجمالية -->
+      <div class="mobile-stats-grid">
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">إجمالي اللترات</div>
+          <div class="mobile-stat-value highlight">{{ "{:,.1f}".format(total_liters) }}</div>
+          <div class="mobile-stat-unit">لتر</div>
+        </div>
+        
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">إجمالي التكلفة</div>
+          <div class="mobile-stat-value danger">{{ "{:,.2f}".format(total_cost) }}</div>
+          <div class="mobile-stat-unit">ر.س</div>
+        </div>
+        
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">متوسط التكلفة اليومي</div>
+          <div class="mobile-stat-value warning">{{ "{:,.2f}".format(daily_avg_cost) }}</div>
+          <div class="mobile-stat-unit">ر.س</div>
+        </div>
+        
+        <div class="mobile-stat-item">
+          <div class="mobile-stat-label">متوسط تكلفة اللتر</div>
+          <div class="mobile-stat-value success">{{ "{:,.2f}".format(avg_cost_per_liter) }}</div>
+          <div class="mobile-stat-unit">ر.س</div>
+        </div>
+      </div>
+      
+      <!-- إحصائيات حسب نوع الوقود -->
+      <div class="mobile-fuel-type-stats">
+        <h4 class="mobile-stats-subtitle">الاستهلاك حسب نوع الوقود</h4>
+        
+        <div class="mobile-fuel-type-table">
+          <div class="mobile-fuel-type-row header">
+            <div class="fuel-type">نوع الوقود</div>
+            <div class="fuel-liters">الكمية (لتر)</div>
+            <div class="fuel-cost">التكلفة (ر.س)</div>
+            <div class="fuel-percentage">النسبة</div>
+          </div>
+          
+          {% for fuel_type, stats in fuel_types_stats.items() %}
+          <div class="mobile-fuel-type-row">
+            <div class="fuel-type">{{ fuel_type }}</div>
+            <div class="fuel-liters">{{ "{:,.1f}".format(stats.liters) }}</div>
+            <div class="fuel-cost">{{ "{:,.2f}".format(stats.cost) }}</div>
+            <div class="fuel-percentage">
+              <div class="percentage-bar">
+                <div class="percentage-fill" style="width: {{ stats.percentage }}%"></div>
+              </div>
+              <span>{{ "{:.1f}".format(stats.percentage) }}%</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- الرسم البياني -->
+  <div class="mobile-card mb-4">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-chart-line"></i>
+        تطور الاستهلاك
+      </div>
+    </div>
+    <div class="mobile-card-body">
+      <div class="chart-controls mb-3">
+        <div class="mobile-tab-group">
+          <button class="mobile-tab active" data-chart-type="line" onclick="switchChartType('line')">خط بياني</button>
+          <button class="mobile-tab" data-chart-type="bar" onclick="switchChartType('bar')">أعمدة</button>
+          <button class="mobile-tab" data-chart-type="pie" onclick="switchChartType('pie')">دائري</button>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="consumptionChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <!-- قائمة عمليات التعبئة -->
+  <div class="mobile-card">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-gas-pump"></i>
+        سجل تعبئة الوقود
+      </div>
+    </div>
+    <div class="mobile-card-body p-0">
+      {% if fuel_records %}
+      <div class="mobile-fuel-records-list">
+        {% for record in fuel_records %}
+        <div class="mobile-fuel-record-item">
+          <div class="mobile-fuel-record-date">
+            <div class="mobile-fuel-record-day">{{ record.date.strftime('%d') }}</div>
+            <div class="mobile-fuel-record-month">{{ record.date.strftime('%b') }}</div>
+          </div>
+          <div class="mobile-fuel-record-details">
+            <div class="mobile-fuel-record-title">{{ record.vehicle.make }} {{ record.vehicle.model }}</div>
+            <div class="mobile-fuel-record-subtitle">{{ record.vehicle.plate_number }}</div>
+            <div class="mobile-fuel-record-info">
+              {{ "{:,.1f}".format(record.liters) }} لتر 
+              <span class="fuel-type-badge {{ record.fuel_type.replace(' ', '-').lower() }}">{{ record.fuel_type }}</span>
+              {% if record.kilometer_reading %}
+              - {{ "{:,}".format(record.kilometer_reading) }} كم
+              {% endif %}
+            </div>
+          </div>
+          <div class="mobile-fuel-record-cost">
+            <div class="mobile-fuel-record-amount">{{ "{:,.2f}".format(record.cost) }}</div>
+            <div class="mobile-fuel-record-currency">ر.س</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="mobile-empty-state">
+        <div class="mobile-empty-icon">
+          <i class="fas fa-gas-pump"></i>
+        </div>
+        <p>لا توجد سجلات تعبئة وقود خلال هذه الفترة</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mb-3 {
+    margin-bottom: 1rem;
+  }
+  
+  .mb-4 {
+    margin-bottom: 1.5rem;
+  }
+
+  .p-0 {
+    padding: 0 !important;
+  }
+  
+  .mobile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .mobile-stat-item {
+    padding: 1rem;
+    background-color: rgba(var(--card-bg-rgb), 0.7);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-light);
+    text-align: center;
+  }
+  
+  .mobile-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  
+  .mobile-stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .mobile-stat-unit {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
+  .highlight {
+    color: var(--primary-color);
+  }
+  
+  .success {
+    color: var(--success-color);
+  }
+  
+  .warning {
+    color: var(--warning-color);
+  }
+  
+  .danger {
+    color: var(--danger-color);
+  }
+  
+  .mobile-fuel-records-list {
+    padding: 0;
+  }
+  
+  .mobile-fuel-record-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .mobile-fuel-record-item:last-child {
+    border-bottom: none;
+  }
+  
+  .mobile-fuel-record-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    border-radius: 8px;
+    margin-left: 1rem;
+  }
+  
+  .mobile-fuel-record-day {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  .mobile-fuel-record-month {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobile-fuel-record-details {
+    flex: 1;
+  }
+  
+  .mobile-fuel-record-title {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+  
+  .mobile-fuel-record-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
+  
+  .mobile-fuel-record-info {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  
+  .mobile-fuel-record-cost {
+    text-align: left;
+  }
+  
+  .mobile-fuel-record-amount {
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  .mobile-fuel-record-currency {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  
+  .mobile-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  
+  .mobile-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    opacity: 0.2;
+  }
+  
+  .mobile-empty-state p {
+    color: var(--text-secondary);
+  }
+  
+  .mobile-form-section {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    background-color: rgba(var(--card-bg-rgb), 0.5);
+  }
+  
+  .mobile-form-section-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+    font-weight: 500;
+  }
+  
+  .mobile-form-section-title a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-color);
+  }
+  
+  .mobile-form-section-title i {
+    margin-left: 0.5rem;
+    color: var(--primary-color);
+  }
+  
+  .mobile-form-section-title small {
+    margin-right: auto;
+  }
+  
+  .mobile-weekday-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-weekday-item {
+    position: relative;
+  }
+  
+  .mobile-weekday-checkbox {
+    position: absolute;
+    opacity: 0;
+  }
+  
+  .mobile-weekday-label {
+    display: block;
+    padding: 0.5rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    text-align: center;
+    min-width: 4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-weekday-checkbox:checked + .mobile-weekday-label {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+  
+  .mobile-checkbox-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-btn-link {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0;
+    text-decoration: underline;
+  }
+  
+  .mobile-form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .mobile-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .mobile-form-input,
+  .mobile-form-select,
+  .mobile-form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    font-size: var(--font-size-normal);
+    transition: border-color var(--transition-normal);
+  }
+  
+  .mobile-form-input:focus,
+  .mobile-form-select:focus,
+  .mobile-form-textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+  }
+  
+  .mobile-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .mobile-stats-subtitle {
+    font-size: 1rem;
+    margin: 1rem 0;
+    color: var(--text-color);
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .mobile-fuel-type-stats {
+    margin-top: 1.5rem;
+  }
+  
+  .mobile-fuel-type-table {
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+  
+  .mobile-fuel-type-row {
+    display: flex;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .mobile-fuel-type-row:last-child {
+    border-bottom: none;
+  }
+  
+  .mobile-fuel-type-row.header {
+    background-color: rgba(var(--primary-rgb), 0.05);
+    font-weight: 500;
+    font-size: 0.85rem;
+  }
+  
+  .fuel-type {
+    width: 30%;
+  }
+  
+  .fuel-liters {
+    width: 20%;
+    text-align: center;
+  }
+  
+  .fuel-cost {
+    width: 20%;
+    text-align: center;
+  }
+  
+  .fuel-percentage {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .percentage-bar {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(var(--border-rgb), 0.3);
+    border-radius: 3px;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+  }
+  
+  .percentage-fill {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 3px;
+  }
+  
+  .fuel-type-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+    color: white;
+    background-color: var(--primary-color);
+  }
+  
+  .fuel-type-badge.بنزين-91 {
+    background-color: #4caf50;
+  }
+  
+  .fuel-type-badge.بنزين-95 {
+    background-color: #2196f3;
+  }
+  
+  .fuel-type-badge.ديزل {
+    background-color: #ff9800;
+  }
+  
+  .fuel-type-badge.غاز {
+    background-color: #9c27b0;
+  }
+  
+  .fuel-type-badge.آخر {
+    background-color: #607d8b;
+  }
+  
+  .chart-controls {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .mobile-tab-group {
+    display: flex;
+    background-color: rgba(var(--card-bg-rgb), 0.7);
+    border-radius: 2rem;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+  }
+  
+  .mobile-tab {
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-tab.active {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .chart-container {
+    position: relative;
+    height: 250px;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // إعداد الرسم البياني
+    initializeChart();
+    
+    // إعداد وظائف الفلترة
+    setupFilterFunctions();
+  });
+  
+  let currentChart = null;
+  
+  function initializeChart() {
+    const ctx = document.getElementById('consumptionChart').getContext('2d');
+    
+    // البيانات المجمعة حسب نوع الوقود
+    const fuelTypeData = {
+      labels: {{ chart_labels|tojson }},
+      datasets: [
+        {% for fuel_type, data in fuel_type_chart_data.items() %}
+        {
+          label: "{{ fuel_type }}",
+          data: {{ data.costs|tojson }},
+          borderColor: getFuelTypeColor("{{ fuel_type }}"),
+          backgroundColor: getFuelTypeColor("{{ fuel_type }}", 0.1),
+          tension: 0.3,
+          fill: true
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]
+    };
+    
+    // البيانات الإجمالية
+    const totalData = {
+      labels: {{ chart_labels|tojson }},
+      datasets: [
+        {
+          label: 'كمية الوقود (لتر)',
+          data: {{ chart_liters|tojson }},
+          borderColor: '#4f91f4',
+          backgroundColor: 'rgba(79, 145, 244, 0.1)',
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'التكلفة (ر.س)',
+          data: {{ chart_costs|tojson }},
+          borderColor: '#f67280',
+          backgroundColor: 'rgba(246, 114, 128, 0.1)',
+          tension: 0.3,
+          fill: true,
+          yAxisID: 'y1'
+        }
+      ]
+    };
+    
+    // بيانات المخطط الدائري
+    const pieData = {
+      labels: Object.keys({{ fuel_types_stats|tojson }}),
+      datasets: [{
+        data: Object.values({{ fuel_types_stats|tojson }}).map(item => item.cost),
+        backgroundColor: Object.keys({{ fuel_types_stats|tojson }}).map(getFuelTypeColor),
+        hoverOffset: 4
+      }]
+    };
+    
+    // إنشاء الرسم البياني
+    createLineChart(ctx, totalData);
+  }
+  
+  function createLineChart(ctx, data) {
+    if (currentChart) {
+      currentChart.destroy();
+    }
+    
+    currentChart = new Chart(ctx, {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15
+            }
+          },
+          tooltip: {
+            rtl: true
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'كمية الوقود (لتر)'
+            }
+          },
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'التكلفة (ر.س)'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          },
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          }
+        }
+      },
+    });
+  }
+  
+  function createBarChart(ctx, data) {
+    if (currentChart) {
+      currentChart.destroy();
+    }
+    
+    currentChart = new Chart(ctx, {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            rtl: true
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+  
+  function createPieChart(ctx, data) {
+    if (currentChart) {
+      currentChart.destroy();
+    }
+    
+    currentChart = new Chart(ctx, {
+      type: 'pie',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          tooltip: {
+            rtl: true
+          }
+        }
+      }
+    });
+  }
+  
+  function switchChartType(type) {
+    const ctx = document.getElementById('consumptionChart').getContext('2d');
+    const tabs = document.querySelectorAll('.mobile-tab');
+    
+    // تحديث الأزرار النشطة
+    tabs.forEach(tab => {
+      if (tab.dataset.chartType === type) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+    
+    // تحديث نوع الرسم البياني
+    if (type === 'line') {
+      // البيانات الإجمالية
+      const totalData = {
+        labels: {{ chart_labels|tojson }},
+        datasets: [
+          {
+            label: 'كمية الوقود (لتر)',
+            data: {{ chart_liters|tojson }},
+            borderColor: '#4f91f4',
+            backgroundColor: 'rgba(79, 145, 244, 0.1)',
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: 'التكلفة (ر.س)',
+            data: {{ chart_costs|tojson }},
+            borderColor: '#f67280',
+            backgroundColor: 'rgba(246, 114, 128, 0.1)',
+            tension: 0.3,
+            fill: true,
+            yAxisID: 'y1'
+          }
+        ]
+      };
+      createLineChart(ctx, totalData);
+    } else if (type === 'bar') {
+      // البيانات المجمعة حسب نوع الوقود
+      const fuelTypeData = {
+        labels: {{ chart_labels|tojson }},
+        datasets: [
+          {% for fuel_type, data in fuel_type_chart_data.items() %}
+          {
+            label: "{{ fuel_type }}",
+            data: {{ data.liters|tojson }},
+            backgroundColor: getFuelTypeColor("{{ fuel_type }}"),
+            borderColor: getFuelTypeColor("{{ fuel_type }}"),
+            borderWidth: 1
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      };
+      createBarChart(ctx, fuelTypeData);
+    } else if (type === 'pie') {
+      // بيانات المخطط الدائري
+      const pieData = {
+        labels: Object.keys({{ fuel_types_stats|tojson }}),
+        datasets: [{
+          data: Object.values({{ fuel_types_stats|tojson }}).map(item => item.cost),
+          backgroundColor: Object.keys({{ fuel_types_stats|tojson }}).map(getFuelTypeColor),
+          hoverOffset: 4
+        }]
+      };
+      createPieChart(ctx, pieData);
+    }
+  }
+  
+  function getFuelTypeColor(fuelType, alpha = 1) {
+    const colors = {
+      'بنزين 91': `rgba(76, 175, 80, ${alpha})`,
+      'بنزين 95': `rgba(33, 150, 243, ${alpha})`,
+      'ديزل': `rgba(255, 152, 0, ${alpha})`,
+      'غاز': `rgba(156, 39, 176, ${alpha})`,
+      'آخر': `rgba(96, 125, 139, ${alpha})`
+    };
+    
+    return colors[fuelType] || `rgba(79, 145, 244, ${alpha})`;
+  }
+  
+  function setupFilterFunctions() {
+    // وظيفة لعرض/إخفاء خيارات الفلترة
+    document.querySelector('.filter-toggle').addEventListener('click', function() {
+      const filterIcon = document.getElementById('filter-toggle-icon');
+      const filterSection = document.getElementById('filterOptionsSection');
+      
+      if (filterSection.style.display === 'none') {
+        filterSection.style.display = 'block';
+        filterIcon.className = 'fas fa-chevron-up';
+      } else {
+        filterSection.style.display = 'none';
+        filterIcon.className = 'fas fa-chevron-down';
+      }
+    });
+    
+    // تحديث حقول التاريخ حسب الفترة المحددة
+    document.getElementById('periodSelect').addEventListener('change', updateDateFilters);
+  }
+  
+  function toggleDaysFilter() {
+    const daysSection = document.getElementById('daysFilterSection');
+    const daysToggleIcon = document.getElementById('days-toggle-icon');
+    
+    if (daysSection.style.display === 'none') {
+      daysSection.style.display = 'block';
+      daysToggleIcon.className = 'fas fa-chevron-up';
+    } else {
+      daysSection.style.display = 'none';
+      daysToggleIcon.className = 'fas fa-chevron-down';
+    }
+  }
+  
+  function updateDateFilters() {
+    const periodSelect = document.getElementById('periodSelect');
+    const customDateSection = document.getElementById('customDateSection');
+    
+    if (periodSelect.value === 'custom') {
+      customDateSection.style.display = 'block';
+    } else {
+      customDateSection.style.display = 'none';
+    }
+  }
+  
+  function selectAllDays() {
+    document.querySelectorAll('input[name="weekdays"]').forEach(checkbox => {
+      checkbox.checked = true;
+    });
+  }
+  
+  function clearAllDays() {
+    document.querySelectorAll('input[name="weekdays"]').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block title %}تأكيد حذف المستخدم{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        تأكيد حذف المستخدم
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-warning me-2"></i>
+                            تحذير مهم!
+                        </h5>
+                        <p class="mb-0">
+                            هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع البيانات المرتبطة بهذا المستخدم نهائياً.
+                        </p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">بيانات المستخدم المراد حذفه:</h5>
+                            
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <strong>الاسم:</strong> {{ user.name }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <strong>اسم المستخدم:</strong> {{ user.username }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <strong>البريد الإلكتروني:</strong> {{ user.email }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <strong>الدور:</strong> 
+                                            <span class="badge 
+                                                {% if user.role == 'admin' %}bg-primary
+                                                {% elif user.role == 'manager' %}bg-info
+                                                {% elif user.role == 'employee' %}bg-success
+                                                {% else %}bg-secondary{% endif %}">
+                                                {% if user.role == 'admin' %}مدير النظام
+                                                {% elif user.role == 'manager' %}مدير قسم
+                                                {% elif user.role == 'employee' %}موظف
+                                                {% else %}{{ user.role }}{% endif %}
+                                            </span>
+                                        </div>
+                                        {% if user.assigned_department %}
+                                        <div class="col-md-6 mb-3">
+                                            <strong>القسم:</strong> {{ user.assigned_department.name }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="col-md-6 mb-3">
+                                            <strong>الحالة:</strong> 
+                                            <span class="badge {% if user.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {% if user.is_active %}نشط{% else %}غير نشط{% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>ما سيتم حذفه:</h6>
+                        <ul class="mb-0">
+                            <li>حساب المستخدم وجميع بياناته الشخصية</li>
+                            <li>سجل نشاط المستخدم</li>
+                            <li>الصلاحيات والأدوار المخصصة</li>
+                            <li>أي بيانات مرتبطة بهذا المستخدم في النظام</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-danger fw-bold mb-3">
+                            <i class="fas fa-question-circle me-2"></i>
+                            هل أنت متأكد من رغبتك في حذف هذا المستخدم؟
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>
+                        إلغاء
+                    </a>
+                    
+                    <form method="POST" action="{{ url_for('users.delete', user_id=user.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>
+                            نعم، احذف المستخدم
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -163,6 +163,10 @@
   • حدثت لوحة المعلومات لتشمل روابط إدارة جميع الأقسام
   • النظام يعمل بشكل كامل مع 59 موظف، 20 مركبة، 6 أقسام
   • واجهة API تعمل بكامل وظائفها مع 25+ مسار
+  • أضافت ملفات إدارة الرواتب والحضور من النسخة الاحتياطية
+  • دمجت مجلدات services وutils مع المشروع الحالي
+  • أضافت مسارات الرواتب والحضور إلى التطبيق الرئيسي
+  • حدثت لوحة المعلومات لتشمل الوظائف الجديدة
 - July 3, 2025: Successfully completed code cleanup and project optimization:
   • Removed all unused files and dependencies for cleaner project structure
   • Eliminated unnecessary deployment scripts, test files, and archived assets

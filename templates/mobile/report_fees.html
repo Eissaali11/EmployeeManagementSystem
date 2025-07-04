@@ -1,0 +1,414 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تقرير الرسوم - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تقرير الرسوم{% endblock %}
+
+{% block content %}
+<!-- خيارات التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> خيارات التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.report_fees') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>نوع الرسم</label>
+                <select name="fee_type" class="mobile-form-select">
+                    <option value="">جميع الأنواع</option>
+                    {% for type in fee_types %}
+                    <option value="{{ type }}" {% if request.args.get('fee_type') == type %}selected{% endif %}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>من تاريخ</label>
+                    <input type="date" name="date_from" class="mobile-form-control" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>إلى تاريخ</label>
+                    <input type="date" name="date_to" class="mobile-form-control" value="{{ request.args.get('date_to', '') }}">
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>حالة الدفع</label>
+                <select name="status" class="mobile-form-select">
+                    <option value="">الكل</option>
+                    <option value="paid" {% if request.args.get('status') == 'paid' %}selected{% endif %}>مدفوع</option>
+                    <option value="unpaid" {% if request.args.get('status') == 'unpaid' %}selected{% endif %}>غير مدفوع</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row buttons-row">
+                <button type="submit" class="mobile-btn mobile-btn-primary">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+                
+                <button type="button" class="mobile-btn mobile-btn-secondary" onclick="location.href='{{ url_for('mobile.report_fees') }}'">
+                    <i class="fas fa-redo"></i> إعادة ضبط
+                </button>
+                
+                <div class="dropdown">
+                    <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
+                        <i class="fas fa-download"></i> تصدير
+                    </button>
+                    <div class="dropdown-menu export-dropdown-menu" id="exportMenu">
+                        <a href="{{ url_for('mobile.report_fees') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
+                            <i class="fas fa-file-pdf"></i> تصدير PDF
+                        </a>
+                        <a href="{{ url_for('mobile.report_fees') }}?{{ request.query_string.decode('utf-8') }}&export=excel" class="dropdown-item">
+                            <i class="fas fa-file-excel"></i> تصدير Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- نتائج التقرير -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list"></i> نتائج التقرير
+        <div class="mobile-card-subtitle">{{ fees|length }} رسم</div>
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        {% if fees %}
+        <div class="table-responsive">
+            <table class="mobile-table">
+                <thead>
+                    <tr>
+                        <th>النوع</th>
+                        <th>الوصف</th>
+                        <th>المبلغ</th>
+                        <th>تاريخ الاستحقاق</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fee in fees %}
+                    <tr>
+                        <td>{{ fee.fee_type }}</td>
+                        <td>{{ fee.description }}</td>
+                        <td>{{ '{:,.2f}'.format(fee.amount) }}</td>
+                        <td>{{ fee.due_date.strftime('%Y-%m-%d') if fee.due_date else '-' }}</td>
+                        <td>
+                            <span class="fee-badge fee-{{ 'paid' if fee.is_paid else 'unpaid' }}">
+                                {{ 'مدفوع' if fee.is_paid else 'غير مدفوع' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">لا توجد بيانات متطابقة مع معايير البحث</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ملخص التقرير -->
+{% if fees %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-chart-pie"></i> ملخص التقرير
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="report-summary">
+            <div class="summary-item total">
+                <div class="summary-value">{{ '{:,.2f}'.format(total_fees) }}</div>
+                <div class="summary-label">إجمالي الرسوم</div>
+            </div>
+            
+            <div class="summary-item paid">
+                <div class="summary-value">{{ '{:,.2f}'.format(total_paid) }}</div>
+                <div class="summary-label">الرسوم المدفوعة</div>
+            </div>
+            
+            <div class="summary-item unpaid">
+                <div class="summary-value">{{ '{:,.2f}'.format(total_unpaid) }}</div>
+                <div class="summary-label">الرسوم غير المدفوعة</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="feesChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.buttons-row {
+    flex-wrap: wrap;
+}
+
+.mobile-form-row .mobile-btn {
+    flex: 1;
+    margin-bottom: 10px;
+}
+
+.dropdown {
+    position: relative;
+    flex: 1;
+}
+
+.dropdown-toggle {
+    width: 100%;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    text-align: inherit;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.mobile-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mobile-table th,
+.mobile-table td {
+    padding: 10px 15px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+}
+
+.mobile-table th {
+    background-color: #f9f9f9;
+    color: #757575;
+    font-weight: 500;
+}
+
+.mobile-card-subtitle {
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 5px;
+}
+
+.fee-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.fee-paid {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.fee-unpaid {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.report-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    flex: 1;
+    min-width: calc(50% - 10px);
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.summary-item.total {
+    flex-basis: 100%;
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.summary-item.paid {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.summary-item.unpaid {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 0.85rem;
+}
+
+.chart-container {
+    height: 250px;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تفعيل قائمة التصدير المنسدلة
+    const dropdownToggle = document.getElementById('exportDropdown');
+    const dropdownMenu = document.getElementById('exportMenu');
+    
+    // التأكد من وجود الزر والقائمة
+    if (dropdownToggle && dropdownMenu) {
+        console.log("زر التصدير والقائمة المنسدلة موجودان");
+        
+        // ضبط موضع القائمة المنسدلة نسبة للزر
+        function positionDropdown() {
+            if (dropdownMenu.style.display === 'block') {
+                const btnRect = dropdownToggle.getBoundingClientRect();
+                dropdownMenu.style.top = (btnRect.bottom) + 'px';
+                dropdownMenu.style.left = btnRect.left + 'px';
+                dropdownMenu.style.minWidth = btnRect.width + 'px';
+            }
+        }
+        
+        // إضافة حدث النقر على الزر
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log("تم النقر على زر التصدير");
+            
+            // تبديل حالة عرض القائمة
+            if (dropdownMenu.style.display === 'block') {
+                dropdownMenu.style.display = 'none';
+                console.log("تم إخفاء القائمة المنسدلة");
+            } else {
+                dropdownMenu.style.display = 'block';
+                positionDropdown();
+                console.log("تم إظهار القائمة المنسدلة");
+            }
+        });
+        
+        // إضافة النقر على روابط القائمة
+        const dropdownLinks = dropdownMenu.querySelectorAll('a.dropdown-item');
+        dropdownLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                console.log("تم النقر على عنصر من القائمة: " + this.textContent.trim());
+            });
+        });
+        
+        // إغلاق القائمة عند النقر في أي مكان آخر
+        document.addEventListener('click', function(e) {
+            if (dropdownMenu.style.display === 'block' && 
+                !dropdownToggle.contains(e.target) && 
+                !dropdownMenu.contains(e.target)) {
+                dropdownMenu.style.display = 'none';
+                console.log("تم إغلاق القائمة عند النقر خارجها");
+            }
+        });
+        
+        // إعادة ضبط موضع القائمة عند التمرير أو تغيير حجم النافذة
+        window.addEventListener('scroll', positionDropdown);
+        window.addEventListener('resize', positionDropdown);
+    } else {
+        console.error("لم يتم العثور على زر التصدير أو القائمة المنسدلة");
+    }
+    
+    {% if fees %}
+    // إنشاء رسم بياني للرسوم
+    const ctx = document.getElementById('feesChart').getContext('2d');
+    const feesChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['مدفوع', 'غير مدفوع'],
+            datasets: [{
+                data: [
+                    {{ total_paid }},
+                    {{ total_unpaid }}
+                ],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(220, 53, 69, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'Tajawal, Arial'
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'توزيع حالة دفع الرسوم',
+                    font: {
+                        family: 'Tajawal, Arial',
+                        size: 14
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

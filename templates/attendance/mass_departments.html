@@ -1,0 +1,312 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    /* تأثير نبض للشارات */
+    .badge-pulse {
+        animation: pulse 0.5s ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">تسجيل حضور جماعي للأقسام</h1>
+        <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+        </a>
+    </div>
+    
+    <!-- بطاقة الإدخال -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-users-cog me-2"></i>
+                تسجيل حضور لعدة أقسام لفترة زمنية محددة
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- رسائل النظام -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- إذا حدث خطأ -->
+            {% if error %}
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> حدث خطأ</h5>
+                    <p>{{ error }}</p>
+                </div>
+            {% endif %}
+            
+            <!-- نموذج الإدخال -->
+            <form action="{{ url_for('mass.departments') }}" method="post" id="mass-attendance-form">
+                <div class="row mb-4">
+                    <!-- تاريخ البداية -->
+                    <div class="col-md-6 mb-3">
+                        <label for="start_date" class="form-label fw-bold">تاريخ البداية</label>
+                        <input type="date" class="form-control form-control-lg" 
+                               id="start_date" name="start_date" 
+                               value="{{ today.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <!-- تاريخ النهاية -->
+                    <div class="col-md-6 mb-3">
+                        <label for="end_date" class="form-label fw-bold">تاريخ النهاية</label>
+                        <input type="date" class="form-control form-control-lg" 
+                               id="end_date" name="end_date" 
+                               value="{{ today.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+                
+                <!-- حالة الحضور -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">حالة الحضور</label>
+                    <div class="d-flex flex-wrap">
+                        <div class="form-check form-check-inline me-4">
+                            <input class="form-check-input" type="radio" name="status" 
+                                   id="status_present" value="present" checked onchange="updateSelectedStatusBadges('present')">
+                            <label class="form-check-label" for="status_present">
+                                <span class="badge bg-success py-2 px-3">حاضر
+                                    <span id="badge-present" class="badge bg-white text-success ms-1">0</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline me-4">
+                            <input class="form-check-input" type="radio" name="status" 
+                                   id="status_absent" value="absent" onchange="updateSelectedStatusBadges('absent')">
+                            <label class="form-check-label" for="status_absent">
+                                <span class="badge bg-danger py-2 px-3">غائب
+                                    <span id="badge-absent" class="badge bg-white text-danger ms-1">0</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline me-4">
+                            <input class="form-check-input" type="radio" name="status" 
+                                   id="status_leave" value="leave" onchange="updateSelectedStatusBadges('leave')">
+                            <label class="form-check-label" for="status_leave">
+                                <span class="badge bg-warning py-2 px-3">إجازة
+                                    <span id="badge-leave" class="badge bg-white text-warning ms-1">0</span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline me-4">
+                            <input class="form-check-input" type="radio" name="status" 
+                                   id="status_sick" value="sick" onchange="updateSelectedStatusBadges('sick')">
+                            <label class="form-check-label" for="status_sick">
+                                <span class="badge bg-info py-2 px-3">مرضي
+                                    <span id="badge-sick" class="badge bg-white text-info ms-1">0</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- توضيح حول عدد الموظفين المتأثرين -->
+                    <div class="mt-2 text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        الأرقام تمثل عدد الموظفين الذين سيتم تسجيلهم بالحالة المحددة
+                    </div>
+                </div>
+                
+                <!-- الأقسام -->
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold">اختر الأقسام المطلوبة</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="select-all">
+                                <label class="form-check-label fw-bold" for="select-all">
+                                    تحديد الكل
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% if departments %}
+                                {% for department in departments %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input department-checkbox" 
+                                               type="checkbox" name="department_ids" 
+                                               value="{{ department.id }}" 
+                                               id="dept-{{ department.id }}">
+                                        <label class="form-check-label" for="dept-{{ department.id }}">
+                                            {{ department.name }}
+                                            <span class="text-muted">
+                                                ({{ department.employees|selectattr('status', 'equalto', 'active')|list|length }} موظف)
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    لا توجد أقسام متاحة حالياً
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ملاحظة توضيحية -->
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>ملاحظة:</strong> سيتم تطبيق حالة الحضور المحددة على جميع موظفي الأقسام المختارة خلال الفترة الزمنية المحددة.
+                </div>
+                
+                <!-- أزرار التحكم -->
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                        <i class="fas fa-save me-2"></i> تسجيل الحضور
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo me-1"></i> إعادة تعيين
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // العناصر
+        const selectAllCheckbox = document.getElementById('select-all');
+        const departmentCheckboxes = document.querySelectorAll('.department-checkbox');
+        const submitButton = document.getElementById('submit-btn');
+        const massForm = document.getElementById('mass-attendance-form');
+        
+        // التحديث الأولي لعدادات الحالات
+        updateSelectedStatusBadges('present');
+        
+        // تحديد/إلغاء تحديد جميع الأقسام
+        selectAllCheckbox.addEventListener('change', function() {
+            departmentCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            validateForm();
+        });
+        
+        // تحديث زر "تحديد الكل" عند تغيير أي قسم
+        departmentCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allChecked = [...departmentCheckboxes].every(c => c.checked);
+                selectAllCheckbox.checked = allChecked;
+                validateForm();
+            });
+        });
+        
+        // التحقق من صحة النموذج قبل الإرسال
+        function validateForm() {
+            const anyDepartmentChecked = [...departmentCheckboxes].some(c => c.checked);
+            submitButton.disabled = !anyDepartmentChecked;
+            
+            // تحديث عداد الموظفين
+            updateEmployeeCount();
+            
+            // تحديث العدادات في أزرار الحالات
+            updateSelectedStatusBadges(getSelectedStatus());
+        }
+        
+        // وظيفة لحساب عدد الموظفين في الأقسام المحددة
+        function updateEmployeeCount() {
+            let totalEmployees = 0;
+            const checkedDepartments = [...departmentCheckboxes].filter(c => c.checked);
+            
+            checkedDepartments.forEach(checkbox => {
+                // الحصول على عدد الموظفين من النص داخل label
+                const labelText = checkbox.nextElementSibling.textContent;
+                const match = labelText.match(/\((\d+)\)/);
+                if (match && match[1]) {
+                    totalEmployees += parseInt(match[1], 10);
+                }
+            });
+            
+            return totalEmployees;
+        }
+        
+        // الحصول على الحالة المحددة
+        function getSelectedStatus() {
+            const radioButtons = document.querySelectorAll('input[name="status"]');
+            for (const radio of radioButtons) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return 'present'; // الافتراضي
+        }
+        
+        // تحديث عدادات الحالة المحددة
+        function updateSelectedStatusBadges(activeStatus) {
+            const employeesCount = updateEmployeeCount();
+            
+            // إعادة تعيين جميع العدادات إلى صفر
+            document.getElementById('badge-present').textContent = '0';
+            document.getElementById('badge-absent').textContent = '0';
+            document.getElementById('badge-leave').textContent = '0';
+            document.getElementById('badge-sick').textContent = '0';
+            
+            // تحديث العداد للحالة النشطة
+            document.getElementById('badge-' + activeStatus).textContent = employeesCount;
+            
+            // إضافة تأثير للعداد المحدث
+            const activeBadge = document.getElementById('badge-' + activeStatus);
+            activeBadge.classList.add('badge-pulse');
+            setTimeout(() => {
+                activeBadge.classList.remove('badge-pulse');
+            }, 500);
+        }
+        
+        // التحقق عند تحميل الصفحة
+        validateForm();
+        
+        // التحقق من صحة النموذج قبل الإرسال
+        massForm.addEventListener('submit', function(e) {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const anyDepartmentChecked = [...departmentCheckboxes].some(c => c.checked);
+            
+            if (!startDate || !endDate) {
+                e.preventDefault();
+                alert('الرجاء تحديد تاريخ البداية والنهاية');
+                return false;
+            }
+            
+            if (!anyDepartmentChecked) {
+                e.preventDefault();
+                alert('الرجاء اختيار قسم واحد على الأقل');
+                return false;
+            }
+            
+            // مقارنة التواريخ
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (end < start) {
+                e.preventDefault();
+                alert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له');
+                return false;
+            }
+            
+            return true;
+        });
+    });
+</script>
+{% endblock %}

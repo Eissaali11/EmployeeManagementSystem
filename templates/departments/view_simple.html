@@ -1,0 +1,349 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    /* تنسيق قائمة الموظفين */
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    /* تأثير تمييز نتائج البحث */
+    .search-highlight {
+        background-color: rgba(13, 110, 253, 0.08) !important;
+        box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.25);
+    }
+    
+    /* تأثير النص المميز */
+    .highlighted-text {
+        color: #0d6efd;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- شريط العنوان مع إجراءات القسم -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded shadow-sm">
+        <div>
+            <h1 class="mb-0 text-primary">{{ department.name }}</h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-sitemap me-1"></i> قسم
+                {% if department.manager %}
+                | <i class="fas fa-user-tie me-1"></i> المدير: {{ department.manager.name }}
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('departments.edit', id=department.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> تعديل القسم
+            </a>
+            <a href="{{ url_for('departments.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+            </a>
+        </div>
+    </div>
+    
+    <!-- معلومات القسم مع قائمة الموظفين -->
+    <div class="row">
+        <!-- معلومات إضافية عن القسم -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i> تفاصيل القسم
+                    </h5>
+                </div>
+                <div class="card-body">                    
+                    {% if department.description %}
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">الوصف:</h6>
+                        <p>{{ department.description }}</p>
+                    </div>
+                    <hr>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">مدير القسم:</h6>
+                        {% if department.manager %}
+                        <div class="d-flex align-items-center p-2 bg-light rounded">
+                            <div class="p-2 rounded-circle bg-primary bg-opacity-10 me-2">
+                                <i class="fas fa-user-tie fs-5 text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">{{ department.manager.name }}</h5>
+                                <p class="mb-0 text-muted small">{{ department.manager.job_title }}</p>
+                                <p class="mb-0 small text-primary">
+                                    الرقم الوظيفي: {{ department.manager.employee_id }}
+                                </p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning py-2">
+                            <i class="fas fa-exclamation-triangle me-1"></i> لا يوجد مدير معين
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قائمة الموظفين في القسم -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>موظفي القسم
+                    </h5>
+                </div>
+                
+                <!-- حقل البحث المحسن -->
+                <div class="p-3 border-bottom bg-light">
+                    <div class="row">
+                        <div class="col-md-8 mb-2 mb-md-0">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-0">
+                                    <i class="fas fa-search text-primary"></i>
+                                </span>
+                                <input type="text" id="searchInput" class="form-control border-0 shadow-none" 
+                                       placeholder="ابحث عن موظف (الاسم، الرقم الوظيفي، المسمى، الحالة...)" 
+                                       aria-label="البحث عن موظف">
+                                <button class="btn btn-primary" type="button" id="searchButton">
+                                    <i class="fas fa-search me-1"></i> بحث
+                                </button>
+                            </div>
+                            <div id="searchResultsInfo" class="mt-2 small text-muted ps-2" style="display:none;">
+                                نتائج البحث: <strong id="employeeCount">0</strong> موظف
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0">
+                    {% if employees %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>معلومات الموظف</th>
+                                    <th class="text-center">الحالة</th>
+                                    <th>تاريخ التعيين</th>
+                                    <th class="text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employees %}
+                                <tr data-employee-id="{{ employee.id }}" class="align-middle">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="p-2 rounded-circle bg-secondary bg-opacity-10 me-2">
+                                                <i class="fas fa-user fs-5 text-secondary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">{{ employee.name }}
+                                                {% if department.manager and department.manager.id == employee.id %}
+                                                <span class="badge bg-primary ms-1">مدير</span>
+                                                {% endif %}
+                                                </h6>
+                                                <p class="mb-0 text-muted small">{{ employee.job_title }}</p>
+                                                <span class="badge bg-secondary bg-opacity-10 text-dark">{{ employee.employee_id }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if employee.status == 'active' %}
+                                            <span class="badge bg-success">نشط</span>
+                                        {% elif employee.status == 'inactive' %}
+                                            <span class="badge bg-danger">غير نشط</span>
+                                        {% elif employee.status == 'on_leave' %}
+                                            <span class="badge bg-warning">في إجازة</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ employee.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد' }}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-outline-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('employees.delete', id=employee.id) }}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center p-5">
+                        <div class="mb-3">
+                            <i class="fas fa-users fa-3x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">لا يوجد موظفين في هذا القسم</h4>
+                        <p class="text-muted mb-4">يمكنك إضافة موظفين جدد أو استيرادهم من ملف Excel</p>
+                        <a href="{{ url_for('employees.create') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> إضافة موظف جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if employees %}
+                <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('employees.create', department_id=department.id) }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> إضافة موظف
+                        </a>
+                        <a href="{{ url_for('departments.export_all_employees', id=department.id) }}" class="btn btn-outline-success ms-1">
+                            <i class="fas fa-file-excel me-1"></i> تصدير الكل
+                        </a>
+                    </div>
+                    <div>
+                        <span class="text-muted">{{ employees|length }} موظف في هذا القسم</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نصوص التنبيهات -->
+<div id="alertContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 5"></div>
+
+<script>
+// عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // عناصر البحث
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const searchResultsInfo = document.getElementById('searchResultsInfo');
+    const employeeCountElement = document.getElementById('employeeCount');
+    const employeeRows = document.querySelectorAll('tr[data-employee-id]');
+    
+    // ربط أحداث البحث
+    if (searchButton && searchInput) {
+        // البحث عند النقر على زر البحث
+        searchButton.addEventListener('click', function() {
+            performSearch();
+        });
+        
+        // البحث عند الضغط على Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+    }
+    
+    // دالة البحث
+    function performSearch() {
+        // الحصول على نص البحث
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        let foundCount = 0;
+        
+        // إعادة تعيين تأثيرات البحث السابقة
+        employeeRows.forEach(row => {
+            row.classList.remove('search-highlight');
+            row.querySelectorAll('.highlighted-text').forEach(el => {
+                el.classList.remove('highlighted-text');
+            });
+        });
+        
+        // إذا كان البحث فارغاً، أظهر جميع الصفوف
+        if (searchTerm === '') {
+            employeeRows.forEach(row => {
+                row.style.display = '';
+            });
+            searchResultsInfo.style.display = 'none';
+            return;
+        }
+        
+        // البحث في كل صف
+        employeeRows.forEach(row => {
+            // جمع بيانات الموظف
+            const employeeName = row.querySelector('h6')?.textContent.toLowerCase() || '';
+            const employeeId = row.querySelector('.badge.bg-secondary')?.textContent.toLowerCase() || '';
+            const jobTitle = row.querySelector('p.mb-0')?.textContent.toLowerCase() || '';
+            const status = row.querySelector('.badge.bg-success, .badge.bg-danger, .badge.bg-warning')?.textContent.toLowerCase() || '';
+            const hireDate = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+            
+            // جمع كل البيانات للبحث
+            const allText = `${employeeName} ${employeeId} ${jobTitle} ${status} ${hireDate}`;
+            
+            // التحقق من وجود كلمة البحث
+            if (allText.includes(searchTerm)) {
+                row.style.display = '';
+                row.classList.add('search-highlight');
+                
+                // تمييز النص المطابق
+                highlightMatchingText(row, searchTerm);
+                
+                foundCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // عرض نتائج البحث
+        searchResultsInfo.style.display = 'block';
+        if (employeeCountElement) {
+            employeeCountElement.textContent = foundCount;
+        }
+        
+        // عرض تنبيه بالنتائج
+        if (foundCount > 0) {
+            showAlert(`تم العثور على ${foundCount} موظف يطابق البحث`, 'success');
+        } else {
+            showAlert('لم يتم العثور على نتائج', 'warning');
+        }
+    }
+    
+    // دالة تمييز النص المطابق
+    function highlightMatchingText(row, searchTerm) {
+        const elements = row.querySelectorAll('h6, p, span.badge, td');
+        
+        elements.forEach(el => {
+            const text = el.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                el.classList.add('highlighted-text');
+            }
+        });
+    }
+    
+    // دالة عرض تنبيه
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertId = `alert-${Date.now()}`;
+        
+        const alertHtml = `
+            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button>
+            </div>
+        `;
+        
+        alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // إخفاء التنبيه تلقائياً بعد 5 ثوانٍ
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

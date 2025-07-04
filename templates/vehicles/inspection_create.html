@@ -1,0 +1,146 @@
+{% extends 'layout.html' %}
+
+{% block title %}إضافة فحص دوري - {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 rtl">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">إضافة فحص دوري جديد للسيارة: {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('vehicles.create_inspection', id=vehicle.id) }}" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="inspection_date">تاريخ الفحص <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="inspection_date" name="inspection_date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="expiry_date">تاريخ انتهاء الفحص <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="expiry_date" name="expiry_date" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="inspection_center">مركز الفحص <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="inspection_center" name="inspection_center" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="supervisor_name">اسم المشرف <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="supervisor_name" name="supervisor_name" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="result">نتيجة الفحص <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="result" name="result" required>
+                                        <option value="" selected disabled>-- اختر نوع الفحص --</option>
+                                        {% for type in inspection_types %}
+                                            <option value="{{ type }}">
+                                                {% if type == 'technical' %}
+                                                    فحص فني
+                                                {% elif type == 'periodic' %}
+                                                    فحص دوري
+                                                {% elif type == 'safety' %}
+                                                    فحص أمان
+                                                {% else %}
+                                                    {{ type }}
+                                                {% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="cost">تكلفة الفحص (ريال)</label>
+                                    <input type="number" step="0.01" class="form-control" id="cost" name="cost" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="results">نتائج الفحص</label>
+                                    <textarea class="form-control" id="results" name="results" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="recommendations">التوصيات</label>
+                                    <textarea class="form-control" id="recommendations" name="recommendations" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="certificate_file">شهادة الفحص (صورة/PDF)</label>
+                                    <input type="file" class="form-control" id="certificate_file" name="certificate_file" accept="image/*,application/pdf">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="notes">ملاحظات إضافية</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('vehicles.vehicle_inspections', id=vehicle.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times ml-1"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save ml-1"></i> حفظ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تعيين قيمة افتراضية لتاريخ الفحص (اليوم)
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0');
+        var yyyy = today.getFullYear();
+        today = yyyy + '-' + mm + '-' + dd;
+        document.getElementById('inspection_date').value = today;
+        
+        // تعيين تاريخ انتهاء افتراضي (بعد سنة)
+        var nextYear = new Date();
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        dd = String(nextYear.getDate()).padStart(2, '0');
+        mm = String(nextYear.getMonth() + 1).padStart(2, '0');
+        yyyy = nextYear.getFullYear();
+        nextYear = yyyy + '-' + mm + '-' + dd;
+        document.getElementById('expiry_date').value = nextYear;
+    });
+</script>
+{% endblock %}

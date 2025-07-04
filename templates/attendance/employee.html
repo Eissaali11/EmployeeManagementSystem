@@ -1,0 +1,186 @@
+{% extends 'layout.html' %}
+
+{% block title %}سجل حضور {{ employee.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-user-clock me-2"></i>
+            سجل حضور الموظف
+        </h1>
+        <div>
+            <a href="{{ url_for('attendance.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right me-1"></i>
+                العودة لسجلات الحضور
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 class="card-title mb-4">بيانات الموظف</h4>
+                    <table class="table table-sm">
+                        <tr>
+                            <th style="width: 150px">اسم الموظف:</th>
+                            <td>{{ employee.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>الرقم الوظيفي:</th>
+                            <td>{{ employee.employee_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>القسم:</th>
+                            <td>{{ employee.department.name if employee.department else 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>الحالة:</th>
+                            <td>
+                                {% if employee.status == 'active' %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير نشط</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h4 class="card-title mb-4">ملخص الحضور الشهري</h4>
+                    <div class="text-center">
+                        <!-- يمكن إضافة مخطط دائري هنا لتوضيح نسب الحضور -->
+                        <div style="height: 150px; width: 150px; margin: 0 auto;">
+                            <canvas id="attendanceSummaryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">سجلات الحضور</h4>
+            <div class="date-info">
+                <span class="badge bg-light text-dark me-2" dir="ltr">{{ gregorian_today }}</span>
+                <span class="badge bg-light text-dark" dir="ltr">{{ hijri_today }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if attendance_by_month %}
+                {% for (year, month), records in attendance_by_month.items() %}
+                    <div class="month-section mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            {{ month }}/{{ year }}
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 120px">التاريخ</th>
+                                        <th style="width: 100px">الحالة</th>
+                                        <th style="width: 110px">وقت الحضور</th>
+                                        <th style="width: 110px">وقت الانصراف</th>
+                                        <th>ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in records %}
+                                        <tr>
+                                            <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                                            <td>
+                                                {% if record.status == 'present' %}
+                                                    <span class="badge bg-success">حاضر</span>
+                                                {% elif record.status == 'absent' %}
+                                                    <span class="badge bg-danger">غائب</span>
+                                                {% elif record.status == 'leave' %}
+                                                    <span class="badge bg-warning text-dark">إجازة</span>
+                                                {% elif record.status == 'sick' %}
+                                                    <span class="badge bg-info">مرضي</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ record.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ record.check_in.strftime('%H:%M') if record.check_in else '-' }}</td>
+                                            <td>{{ record.check_out.strftime('%H:%M') if record.check_out else '-' }}</td>
+                                            <td>{{ record.notes or '-' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    لا توجد سجلات حضور لهذا الموظف في الشهر الحالي.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إعداد مخطط ملخص الحضور (يمكن استبداله بإحصائيات فعلية)
+    let ctx = document.getElementById('attendanceSummaryChart').getContext('2d');
+    
+    // يمكن تخصيص هذه القيم بناءً على إحصائيات فعلية
+    let present = 0;
+    let absent = 0;
+    let leave = 0;
+    let sick = 0;
+    
+    {% for record in attendance_by_month.get((today.year, today.month), []) %}
+        {% if record.status == 'present' %}
+            present += 1;
+        {% elif record.status == 'absent' %}
+            absent += 1;
+        {% elif record.status == 'leave' %}
+            leave += 1;
+        {% elif record.status == 'sick' %}
+            sick += 1;
+        {% endif %}
+    {% endfor %}
+    
+    let attendanceChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['حاضر', 'غائب', 'إجازة', 'مرضي'],
+            datasets: [{
+                data: [present, absent, leave, sick],
+                backgroundColor: [
+                    '#28a745',
+                    '#dc3545',
+                    '#ffc107',
+                    '#17a2b8'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        boxWidth: 10,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

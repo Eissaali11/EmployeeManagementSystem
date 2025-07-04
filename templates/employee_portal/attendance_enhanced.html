@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل الحضور - {{ employee.name }} - نُظم</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+            color: #fff;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .page-header h1 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .page-header p {
+            color: #bdc3c7;
+            margin-bottom: 0;
+        }
+        
+        .stats-overview {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .monthly-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .month-card {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .month-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .month-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #3498db 0%, #9b59b6 100%);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .month-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+        
+        .attendance-percentage {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .attendance-percentage.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .attendance-percentage.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .month-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stat-box:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #bdc3c7;
+            font-weight: 500;
+        }
+        
+        .present-stat { color: #27ae60; }
+        .absent-stat { color: #e74c3c; }
+        .late-stat { color: #f39c12; }
+        .overtime-stat { color: #3498db; }
+        
+        .monthly-details {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .monthly-details.show {
+            display: block;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .toggle-details {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-details:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .chart-container {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        
+        .chart-container h4 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .summary-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .summary-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            color: #bdc3c7;
+            font-weight: 500;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #bdc3c7;
+        }
+        
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .monthly-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .month-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-calendar-check ms-2"></i>سجل الحضور</h1>
+                    <p>عرض سجل حضور الموظف {{ employee.name }} لعام {{ current_year }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('employee_portal.dashboard') }}" class="btn back-btn">
+                        <i class="fas fa-arrow-right ms-2"></i>العودة للوحة المعلومات
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-icon present-stat">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="summary-number present-stat">{{ total_present_days or 0 }}</div>
+                <div class="summary-label">إجمالي أيام الحضور</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon absent-stat">
+                    <i class="fas fa-calendar-times"></i>
+                </div>
+                <div class="summary-number absent-stat">{{ total_absent_days or 0 }}</div>
+                <div class="summary-label">إجمالي أيام الغياب</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon late-stat">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="summary-number late-stat">{{ total_late_days or 0 }}</div>
+                <div class="summary-label">إجمالي أيام التأخير</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon overtime-stat">
+                    <i class="fas fa-stopwatch"></i>
+                </div>
+                <div class="summary-number overtime-stat">{{ total_overtime_hours or 0 }}</div>
+                <div class="summary-label">إجمالي الساعات الإضافية</div>
+            </div>
+        </div>
+
+        <!-- Monthly Attendance Cards -->
+        {% if monthly_attendance %}
+        <div class="monthly-grid">
+            {% for month_data in monthly_attendance %}
+            <div class="month-card">
+                <div class="month-header">
+                    <h5 class="month-title">
+                        <i class="fas fa-calendar ms-2"></i>
+                        {{ month_data.month_name }} {{ month_data.year }}
+                    </h5>
+                    <span class="attendance-percentage 
+                        {% if month_data.attendance_percentage >= 90 %}
+                        {% elif month_data.attendance_percentage >= 75 %}warning
+                        {% else %}danger
+                        {% endif %}">
+                        {{ "%.1f"|format(month_data.attendance_percentage) }}%
+                    </span>
+                </div>
+                
+                <div class="month-stats">
+                    <div class="stat-box">
+                        <div class="stat-number present-stat">{{ month_data.present_days }}</div>
+                        <div class="stat-label">أيام الحضور</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number absent-stat">{{ month_data.absent_days }}</div>
+                        <div class="stat-label">أيام الغياب</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number late-stat">{{ month_data.late_days }}</div>
+                        <div class="stat-label">أيام التأخير</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number overtime-stat">{{ month_data.overtime_hours or 0 }}</div>
+                        <div class="stat-label">ساعات إضافية</div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button class="toggle-details" onclick="toggleMonthDetails({{ month_data.month }})">
+                        <i class="fas fa-eye ms-1"></i>
+                        عرض التفاصيل
+                    </button>
+                </div>
+                
+                <div class="monthly-details" id="details-{{ month_data.month }}">
+                    <h6 class="mb-3">
+                        <i class="fas fa-list ms-2"></i>
+                        تفاصيل الحضور - {{ month_data.month_name }}
+                    </h6>
+                    
+                    {% if month_data.details %}
+                        {% for detail in month_data.details %}
+                        <div class="detail-item">
+                            <div>
+                                <i class="fas fa-calendar-day ms-1"></i>
+                                {{ detail.date.strftime('%Y-%m-%d') if detail.date else 'غير محدد' }}
+                            </div>
+                            <div>
+                                {% if detail.status == 'present' or (detail.is_present if detail.is_present is not none else false) %}
+                                    {% if detail.late_minutes and detail.late_minutes > 0 %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock ms-1"></i>
+                                            متأخر {{ detail.late_minutes }} دقيقة
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check ms-1"></i>
+                                            حاضر
+                                        </span>
+                                    {% endif %}
+                                {% elif detail.status == 'absent' or (detail.is_present == false) %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times ms-1"></i>
+                                        غائب
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check ms-1"></i>
+                                        حاضر
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle ms-1"></i>
+                            لا توجد سجلات حضور لهذا الشهر
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="month-card">
+            <div class="no-data">
+                <i class="fas fa-calendar-times"></i>
+                <h5>لا توجد سجلات حضور</h5>
+                <p>لم يتم العثور على سجلات حضور لهذا العام</p>
+            </div>
+        </div>
+        {% endif %}
+
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        function toggleMonthDetails(month) {
+            const details = document.getElementById(`details-${month}`);
+            const button = event.target;
+            
+            if (details.classList.contains('show')) {
+                details.classList.remove('show');
+                button.innerHTML = '<i class="fas fa-eye ms-1"></i> عرض التفاصيل';
+            } else {
+                details.classList.add('show');
+                button.innerHTML = '<i class="fas fa-eye-slash ms-1"></i> إخفاء التفاصيل';
+            }
+        }
+
+
+
+        // Add smooth animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.month-card, .summary-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

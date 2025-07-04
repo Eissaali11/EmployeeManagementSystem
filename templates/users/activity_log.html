@@ -1,0 +1,350 @@
+{% extends 'layout.html' %}
+
+{% block title %}سجل النشاط - {{ user.name }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .activity-log-container {
+        background-color: #f8f9fa;
+        padding: 30px 0;
+        min-height: calc(100vh - 56px);
+    }
+    
+    .header-card {
+        background-color: #1da18e;
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .header-card h1 {
+        margin-bottom: 0;
+        font-size: 1.8rem;
+    }
+    
+    .activity-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+    
+    .activity-card .card-header {
+        background-color: #1da18e;
+        color: white;
+        font-weight: bold;
+        padding: 15px 20px;
+    }
+    
+    .activity-table {
+        width: 100%;
+    }
+    
+    .activity-table th {
+        background-color: #f8f9fa;
+        padding: 12px 15px;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .activity-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .activity-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .activity-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .action-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .action-create {
+        background-color: #d4edda;
+        color: #28a745;
+    }
+    
+    .action-update {
+        background-color: #fff3cd;
+        color: #fd7e14;
+    }
+    
+    .action-delete {
+        background-color: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .action-login {
+        background-color: #cce5ff;
+        color: #0d6efd;
+    }
+    
+    .action-logout {
+        background-color: #e2e3e5;
+        color: #6c757d;
+    }
+    
+    .action-access-denied {
+        background-color: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .activity-details {
+        cursor: pointer;
+    }
+    
+    .activity-changes {
+        display: none;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-top: 1px solid #e9ecef;
+        margin-top: 15px;
+    }
+    
+    .activity-changes pre {
+        margin: 0;
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #e9ecef;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 0;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+        margin-bottom: 15px;
+        color: #495057;
+    }
+    
+    .empty-state p {
+        color: #6c757d;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .filter-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .filter-card .card-header {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e9ecef;
+        color: #495057;
+    }
+    
+    .filter-options {
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-option {
+        margin-left: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .timestamp-col {
+        min-width: 150px;
+    }
+    
+    .action-col {
+        width: 120px;
+    }
+    
+    .entity-col {
+        width: 180px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="activity-log-container">
+    <div class="container">
+        <!-- رأس الصفحة -->
+        <div class="header-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1>
+                        <i class="fas fa-history ms-2"></i>
+                        سجل النشاط - {{ user.name }}
+                    </h1>
+                </div>
+                
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-light">
+                        <i class="fas fa-arrow-right ms-1"></i>
+                        العودة للمستخدم
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- مرشحات البحث -->
+        <div class="card filter-card">
+            <div class="card-header">
+                <i class="fas fa-filter ms-2"></i>
+                خيارات العرض
+            </div>
+            <div class="card-body">
+                <form method="GET" class="filter-options">
+                    <!-- اختيار الفترة الزمنية -->
+                    <div class="filter-option">
+                        <label class="mb-1">الفترة الزمنية:</label>
+                        <select name="days" class="form-select" onchange="this.form.submit()">
+                            <option value="7" {% if days == 7 %}selected{% endif %}>آخر 7 أيام</option>
+                            <option value="30" {% if days == 30 %}selected{% endif %}>آخر 30 يوم</option>
+                            <option value="90" {% if days == 90 %}selected{% endif %}>آخر 3 أشهر</option>
+                            <option value="180" {% if days == 180 %}selected{% endif %}>آخر 6 أشهر</option>
+                            <option value="365" {% if days == 365 %}selected{% endif %}>آخر سنة</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- عرض الأنشطة -->
+        <div class="card activity-card">
+            <div class="card-header">
+                <i class="fas fa-list ms-2"></i>
+                قائمة الأنشطة
+            </div>
+            <div class="card-body">
+                {% if activities and activities.items %}
+                    <div class="table-responsive">
+                        <table class="activity-table">
+                            <thead>
+                                <tr>
+                                    <th class="timestamp-col">التاريخ والوقت</th>
+                                    <th class="action-col">الإجراء</th>
+                                    <th class="entity-col">نوع الكيان</th>
+                                    <th>التفاصيل</th>
+                                    <th class="text-center">عنوان IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in activities.items %}
+                                <tr>
+                                    <td class="timestamp-col">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td class="action-col">
+                                        {% if activity.action == 'create' %}
+                                            <span class="action-badge action-create">إضافة</span>
+                                        {% elif activity.action == 'update' %}
+                                            <span class="action-badge action-update">تعديل</span>
+                                        {% elif activity.action == 'delete' %}
+                                            <span class="action-badge action-delete">حذف</span>
+                                        {% elif activity.action == 'login' %}
+                                            <span class="action-badge action-login">تسجيل دخول</span>
+                                        {% elif activity.action == 'logout' %}
+                                            <span class="action-badge action-logout">تسجيل خروج</span>
+                                        {% elif activity.action == 'access_denied' %}
+                                            <span class="action-badge action-access-denied">وصول مرفوض</span>
+                                        {% else %}
+                                            <span class="action-badge">{{ activity.action }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="entity-col">
+                                        {% if activity.entity_type == 'user' %}
+                                            <i class="fas fa-user ms-1"></i> مستخدم
+                                        {% elif activity.entity_type == 'employee' %}
+                                            <i class="fas fa-id-card ms-1"></i> موظف
+                                        {% elif activity.entity_type == 'department' %}
+                                            <i class="fas fa-building ms-1"></i> قسم
+                                        {% elif activity.entity_type == 'salary' %}
+                                            <i class="fas fa-money-bill-wave ms-1"></i> راتب
+                                        {% elif activity.entity_type == 'document' %}
+                                            <i class="fas fa-file-alt ms-1"></i> مستند
+                                        {% elif activity.entity_type == 'vehicle' %}
+                                            <i class="fas fa-car ms-1"></i> مركبة
+                                        {% else %}
+                                            <i class="fas fa-cube ms-1"></i> {{ activity.entity_type }}
+                                        {% endif %}
+                                        {% if activity.entity_name %}
+                                            <span class="text-muted d-block small mt-1">{{ activity.entity_name }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if activity.details %}
+                                            {{ activity.details }}
+                                        {% elif activity.previous_data or activity.new_data %}
+                                            <button class="btn btn-sm btn-link activity-details" 
+                                                    onclick="toggleActivityDetails({{ activity.id }})">
+                                                عرض التغييرات
+                                            </button>
+                                            <div id="details-{{ activity.id }}" class="activity-changes">
+                                                {% if activity.previous_data and activity.new_data %}
+                                                    <h6>البيانات قبل التعديل:</h6>
+                                                    <pre>{{ activity.previous_data }}</pre>
+                                                    <h6 class="mt-3">البيانات بعد التعديل:</h6>
+                                                    <pre>{{ activity.new_data }}</pre>
+                                                {% elif activity.new_data %}
+                                                    <h6>البيانات المضافة:</h6>
+                                                    <pre>{{ activity.new_data }}</pre>
+                                                {% elif activity.previous_data %}
+                                                    <h6>البيانات المحذوفة:</h6>
+                                                    <pre>{{ activity.previous_data }}</pre>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ activity.ip_address }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-search mb-3"></i>
+                        <h3>لا توجد أنشطة مسجلة</h3>
+                        <p>لم يتم العثور على أي سجلات نشاط للمستخدم خلال الفترة الزمنية المحددة.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    function toggleActivityDetails(activityId) {
+        const detailsElement = document.getElementById(`details-${activityId}`);
+        if (detailsElement.style.display === 'block') {
+            detailsElement.style.display = 'none';
+        } else {
+            detailsElement.style.display = 'block';
+        }
+    }
+</script>
+{% endblock %}

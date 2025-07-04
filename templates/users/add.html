@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block title %}إضافة مستخدم جديد{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-plus me-2"></i>
+                        إضافة مستخدم جديد
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('users.add') }}">
+                        {{ csrf_token() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">كلمة المرور <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">يجب أن تحتوي على 6 أحرف على الأقل</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="role" class="form-label">الدور</label>
+                                <select class="form-select" id="role" name="role">
+                                    <option value="user">مستخدم</option>
+                                    <option value="manager">مشرف</option>
+                                    <option value="hr">موارد بشرية</option>
+                                    <option value="finance">مالية</option>
+                                    <option value="fleet">أسطول</option>
+                                    <option value="admin">مدير</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label for="department_id" class="form-label">القسم المخصص</label>
+                                <select class="form-select" id="department_id" name="department_id">
+                                    <option value="">-- غير محدد --</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">تحديد القسم يحدد أي موظفين يمكن للمستخدم إدارة حضورهم</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>
+                                        إضافة المستخدم
+                                    </button>
+                                    <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>
+                                        العودة
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- ملاحظات هامة -->
+            <div class="alert alert-info mt-4" role="alert">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ملاحظات هامة
+                </h6>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>كلمة المرور:</strong> يجب أن تحتوي على 6 أحرف على الأقل</li>
+                    <li><strong>الدور:</strong> يحدد صلاحيات المستخدم في النظام</li>
+                    <li><strong>القسم المخصص:</strong> يحدد أي موظفين يمكن للمستخدم إدارة حضورهم</li>
+                    <li><strong>المديرون:</strong> لديهم وصول كامل لجميع الأقسام بغض النظر عن القسم المخصص</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إظهار/إخفاء كلمة المرور
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        const icon = this.querySelector('i');
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+    });
+});
+</script>
+{% endblock %}

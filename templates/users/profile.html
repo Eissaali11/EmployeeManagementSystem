@@ -1,0 +1,314 @@
+{% extends 'layout.html' %}
+
+{% block title %}الملف الشخصي{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .profile-container {
+        background-color: #f8f9fa;
+        min-height: calc(100vh - 56px);
+        padding: 30px 0;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, #1da18e 0%, #0e6959 100%);
+        border-radius: 10px;
+        padding: 30px;
+        margin-bottom: 25px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .profile-info {
+        margin-left: 20px;
+    }
+    
+    .profile-name {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .profile-email {
+        font-size: 16px;
+        opacity: 0.9;
+    }
+    
+    .profile-role {
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        margin-top: 10px;
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .profile-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+    }
+    
+    .profile-card .card-header {
+        background-color: #1da18e;
+        color: white;
+        font-weight: bold;
+        padding: 15px 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .form-control {
+        border-radius: 5px;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+    }
+    
+    .form-control:focus {
+        border-color: #1da18e;
+        box-shadow: 0 0 0 0.2rem rgba(29, 161, 142, 0.25);
+    }
+    
+    .form-text {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .actions-bar {
+        margin-top: 20px;
+    }
+    
+    .activity-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .activity-time {
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .activity-description {
+        margin-top: 5px;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+    
+    .icon-login {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .icon-update {
+        background-color: #fff3cd;
+        color: #664d03;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="container">
+        <div class="profile-header">
+            <div class="d-flex align-items-center">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="profile-avatar">
+                {% else %}
+                <div class="avatar-placeholder">
+                    <i class="fas fa-user fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <div class="profile-info">
+                    <h1 class="profile-name">{{ user.name }}</h1>
+                    <div class="profile-email">{{ user.email }}</div>
+                    <div class="profile-role">
+                        <i class="fas fa-user-shield me-1"></i>
+                        {{ get_role_display_name(user.role) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card profile-card">
+                    <div class="card-header">
+                        <i class="fas fa-user-edit me-2"></i>
+                        تعديل الملف الشخصي
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('users.profile') }}">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="form-group">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder="أدخل اسمك") }}
+                                {% if form.name.errors %}
+                                    {% for error in form.name.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control", placeholder="أدخل بريدك الإلكتروني") }}
+                                {% if form.email.errors %}
+                                    {% for error in form.email.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.password.label(class="form-label") }}
+                                        {{ form.password(class="form-control", placeholder="أدخل كلمة المرور الجديدة") }}
+                                        {% if form.password.errors %}
+                                            {% for error in form.password.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                        <small class="form-text">اترك الحقل فارغًا للاحتفاظ بكلمة المرور الحالية.</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        {{ form.confirm_password.label(class="form-label") }}
+                                        {{ form.confirm_password(class="form-control", placeholder="أدخل تأكيد كلمة المرور الجديدة") }}
+                                        {% if form.confirm_password.errors %}
+                                            {% for error in form.confirm_password.errors %}
+                                            <small class="text-danger">{{ error }}</small>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="actions-bar">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save ms-1"></i>
+                                    حفظ التغييرات
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card profile-card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات الحساب
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>نوع المصادقة:</strong>
+                            {% if user.auth_type == 'firebase' %}
+                            <span class="badge bg-primary">Google / Firebase</span>
+                            {% else %}
+                            <span class="badge bg-secondary">حساب محلي</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>حالة الحساب:</strong>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">نشط</span>
+                            {% else %}
+                            <span class="badge bg-danger">غير نشط</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>تاريخ الإنشاء:</strong>
+                            <div>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'غير معروف' }}</div>
+                        </div>
+                        
+                        <div>
+                            <strong>آخر تسجيل دخول:</strong>
+                            <div>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'غير معروف' }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card profile-card">
+                    <div class="card-header">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        الصلاحيات
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            {% if user.role == UserRole.ADMIN %}
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                أنت <strong>مدير النظام</strong> ولديك وصول كامل إلى جميع وظائف النظام.
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                لديك صلاحيات <strong>{{ get_role_display_name(user.role) }}</strong>. لمزيد من المعلومات، راجع مدير النظام.
+                            </div>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

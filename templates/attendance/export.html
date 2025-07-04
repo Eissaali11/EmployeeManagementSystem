@@ -1,0 +1,103 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تصدير بيانات الحضور</h1>
+        <div>
+            <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i> العودة إلى سجلات الحضور
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-export me-2"></i>تصدير بيانات الحضور إلى ملف إكسل
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('attendance.export_excel') }}" method="get">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">تاريخ البداية</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ default_start_date }}" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">تاريخ النهاية</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date">
+                                <small class="form-text text-muted">إذا تركت هذا الحقل فارغاً، سيتم تصدير بيانات يوم البداية فقط</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="department_id" class="form-label">القسم</label>
+                            <select class="form-select" id="department_id" name="department_id">
+                                <option value="">جميع الأقسام</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}">{{ department.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-info-circle me-2 fs-4"></i>
+                                <h5 class="mb-0">معلومات حول ملف التصدير</h5>
+                            </div>
+                            <ul class="mb-0">
+                                <li>سيتم تنظيم البيانات حسب الأقسام في صفحات منفصلة داخل ملف الإكسل</li>
+                                <li>سيتم عرض أسماء الموظفين في الأعمدة الثابتة والتواريخ في الصفوف</li>
+                                <li>سيتم تمييز حضور الموظفين بالحرف (P) باللون الأخضر وغيابهم بالحرف (A) باللون الأحمر</li>
+                                <li>سيتم عرض أسماء أيام الأسبوع مع التواريخ في رؤوس الأعمدة</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-file-export me-2"></i> تصدير البيانات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- تعليق هذا القسم مؤقتاً حتى نضيف صورة مناسبة -->
+            <!--
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-image me-2"></i>نموذج ملف التصدير
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='images/sample_attendance_export.png') }}" alt="نموذج ملف التصدير" class="img-fluid border" style="max-width: 90%;">
+                </div>
+            </div>
+            -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // عند تغيير تاريخ البداية، تحديث تاريخ النهاية إذا كان فارغاً
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function() {
+            if (!endDateInput.value) {
+                endDateInput.value = this.value;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

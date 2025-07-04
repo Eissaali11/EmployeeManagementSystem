@@ -1,0 +1,305 @@
+{% extends 'layout.html' %}
+
+{% block title %}التقارير المحسنة{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white text-center py-5">
+                    <i class="fas fa-chart-line fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-5 fw-bold mb-2">التقارير المحسنة بدعم كامل للغة العربية</h2>
+                    <p class="lead mb-0">إنشاء إشعارات رواتب للموظف بتصميم محسن مع دعم كامل للغة العربية</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                <i class="fas fa-info-circle me-3 fs-5"></i>
+                <div>
+                    <strong>تنبيه:</strong> هذه الميزة ستكون متاحة قريباً. يمكنك الوصول إلى هذه الخدمة مباشرة من
+                    خلال صفحة الرواتب.
+                </div>
+            </div>
+
+            <!-- Reports Grid -->
+            <div class="row g-4">
+                <!-- تقرير الرواتب -->
+                <div class="col-xl-6 col-lg-12">
+                    <div class="card shadow-lg border-0 h-100 hover-transform">
+                        <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-money-bill-wave fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-0 fw-bold">تقرير الرواتب</h5>
+                                    <small class="opacity-75">عرض تقرير الرواتب الشهرية مع إمكانية التصدير إلى PDF مع دعم كامل للغة العربية</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="get" action="{{ url_for('enhanced_reports.salaries_pdf') }}" class="needs-validation" novalidate>
+                                <div class="row g-3 align-items-center mb-3">
+                                    <div class="col-md-4">
+                                        <label for="month" class="form-label fw-semibold">الشهر</label>
+                                        <select class="form-select form-select-lg" id="month" name="month">
+                                            {% for i in range(1, 13) %}
+                                            <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>
+                                                {{ get_month_name_ar(i) }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="year" class="form-label fw-semibold">السنة</label>
+                                        <select class="form-select form-select-lg" id="year" name="year">
+                                            {% for year in range(current_year-5, current_year+1) %}
+                                            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="department_id" class="form-label fw-semibold">القسم</label>
+                                        <select class="form-select form-select-lg" id="department_id" name="department_id">
+                                            <option value="">جميع الأقسام</option>
+                                            {% for department in departments %}
+                                            <option value="{{ department.id }}">{{ department.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-2">
+                                    <button type="submit" class="btn btn-lg btn-gradient text-white flex-fill me-md-2 mb-2 mb-md-0" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                                        <i class="fas fa-file-pdf me-2"></i> تصدير PDF
+                                    </button>
+                                    <button type="submit" class="btn btn-lg btn-success flex-fill" formaction="{{ url_for('enhanced_reports.salaries_excel') }}">
+                                        <i class="fas fa-file-excel me-2"></i> تصدير Excel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                        
+                <!-- إشعار راتب -->
+                <div class="col-xl-6 col-lg-12">
+                    <div class="card shadow-lg border-0 h-100 hover-transform">
+                        <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #6f42c1, #e83e8c);">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-receipt fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-0 fw-bold">إشعار راتب</h5>
+                                    <small class="opacity-75">إنشاء إشعار راتب للموظف بتصميم محسن مع دعم كامل للغة العربية</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="get" action="{{ url_for('enhanced_reports.salaries_pdf') }}" class="needs-validation" novalidate>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="employee_id" class="form-label fw-semibold">الموظف</label>
+                                        <select class="form-select form-select-lg" id="employee_id" name="employee_id" required>
+                                            <option value="">اختر الموظف</option>
+                                            {% for employee in employees %}
+                                            <option value="{{ employee.id }}">{{ employee.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="slip_month" class="form-label fw-semibold">الشهر</label>
+                                        <select class="form-select form-select-lg" id="slip_month" name="month" required>
+                                            {% for i in range(1, 13) %}
+                                            <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>
+                                                {{ get_month_name_ar(i) }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="slip_year" class="form-label fw-semibold">السنة</label>
+                                        <select class="form-select form-select-lg" id="slip_year" name="year" required>
+                                            {% for year in range(current_year-2, current_year+1) %}
+                                            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-lg btn-gradient text-white fw-bold" style="background: linear-gradient(45deg, #6f42c1, #e83e8c);">
+                                        <i class="fas fa-file-invoice me-2"></i> إنشاء إشعار الراتب
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                        
+                <!-- تقرير المركبات -->
+                <div class="col-xl-6 col-lg-12">
+                    <div class="card shadow-lg border-0 h-100 hover-transform">
+                        <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #fd7e14, #ffc107);">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-car fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-0 fw-bold">تقرير المركبات</h5>
+                                    <small class="opacity-75">عرض تقرير المركبات مع إمكانية التصدير إلى PDF مع دعم كامل للغة العربية</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <small>هذه الميزة ستكون متاحة قريباً. يمكنك الوصول إلى هذه الخدمة مباشرة من خلال صفحة المركبات.</small>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-lg btn-outline-warning disabled" disabled>
+                                    <i class="fas fa-file-pdf me-2"></i> تصدير PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- نموذج تسليم/استلام مركبة -->
+                <div class="col-xl-6 col-lg-12">
+                    <div class="card shadow-lg border-0 h-100 hover-transform">
+                        <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #17a2b8, #20c997);">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exchange-alt fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="mb-0 fw-bold">نموذج تسليم/استلام مركبة</h5>
+                                    <small class="opacity-75">إنشاء نموذج تسليم أو استلام مركبة بتصميم محسن مع دعم كامل للغة العربية</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <small>هذه الميزة ستكون متاحة قريباً. يمكنك الوصول إلى هذه الخدمة مباشرة من خلال صفحة المركبات.</small>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-lg btn-outline-info disabled" disabled>
+                                    <i class="fas fa-file-contract me-2"></i> إنشاء نموذج
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Sections -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>
+                        نصائح مفيدة للاستخدام الأمثل
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-file-pdf text-danger fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold">تقارير PDF</h6>
+                                    <p class="mb-0 text-muted">جميع تقارير PDF تدعم اللغة العربية بالكامل مع تنسيق احترافي</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-file-excel text-success fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold">تقارير Excel</h6>
+                                    <p class="mb-0 text-muted">إمكانية تصدير البيانات بصيغة Excel للتحليل والمعالجة</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-filter text-info fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold">فلترة متقدمة</h6>
+                                    <p class="mb-0 text-muted">إمكانية فلترة التقارير حسب الأقسام والفترات الزمنية</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-transform {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-transform:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+}
+
+.btn-gradient {
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.form-select-lg, .form-control-lg {
+    border-radius: 0.5rem;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-select-lg:focus, .form-control-lg:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.card-header.bg-gradient {
+    border: none;
+}
+
+.bg-gradient {
+    position: relative;
+    overflow: hidden;
+}
+
+.bg-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.bg-gradient:hover::before {
+    left: 100%;
+}
+</style>
+
+{% endblock %}

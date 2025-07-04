@@ -1,0 +1,281 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تسجيل حضور - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تسجيل حضور جديد{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-calendar-plus"></i> تسجيل حضور وغياب
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.add_attendance') }}" method="POST" class="mobile-form">
+            {{ form.hidden_tag() if form }}
+            
+            <div class="mobile-form-group">
+                <label>التاريخ*</label>
+                <input type="date" name="date" class="mobile-form-control" required 
+                       value="{{ current_date.strftime('%Y-%m-%d') }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الموظف*</label>
+                <select name="employee_id" class="mobile-form-select" required>
+                    <option value="">اختر الموظف</option>
+                    {% for employee in employees %}
+                    <option value="{{ employee.id }}">{{ employee.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الحالة*</label>
+                <select name="status" class="mobile-form-select" required>
+                    <option value="">اختر الحالة</option>
+                    <option value="حاضر">حاضر</option>
+                    <option value="غائب">غائب</option>
+                    <option value="إجازة">إجازة</option>
+                    <option value="تأخير">تأخير</option>
+                    <option value="مغادرة مبكرة">مغادرة مبكرة</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>وقت الحضور</label>
+                    <input type="time" name="check_in" class="mobile-form-control">
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>وقت الإنصراف</label>
+                    <input type="time" name="check_out" class="mobile-form-control">
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>ملاحظات</label>
+                <textarea name="notes" class="mobile-form-control" rows="3" placeholder="ملاحظات إضافية"></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="mobile-btn mobile-btn-primary w-100">
+                    <i class="fas fa-save"></i> حفظ التسجيل
+                </button>
+                <a href="{{ url_for('mobile.attendance') }}" class="mobile-btn mobile-btn-secondary w-100 mt-2">
+                    <i class="fas fa-times"></i> إلغاء
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- تسجيل حضور سريع -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-user-clock"></i> تسجيل حضور سريع
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="quick-attendance-form">
+            <p class="text-center mb-3">يمكنك تسجيل حضور أو انصراف سريع للموظف المختار</p>
+            
+            <form action="{{ url_for('mobile.add_attendance') }}" method="POST" class="mobile-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="quick" value="true">
+                
+                <div class="mobile-form-group">
+                    <select name="employee_id" class="mobile-form-select" required>
+                        <option value="">اختر الموظف</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.id }}">{{ employee.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="quick-actions">
+                    <button type="submit" name="action" value="check_in" class="quick-action-btn check-in">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>تسجيل حضور</span>
+                    </button>
+                    
+                    <button type="submit" name="action" value="check_out" class="quick-action-btn check-out">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل انصراف</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- تسجيل حضور الجميع -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-users"></i> تسجيل حضور الجميع
+    </div>
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.add_attendance') }}" method="POST" class="mobile-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="all_employees" value="true">
+            
+            <div class="mobile-form-group">
+                <label>التاريخ*</label>
+                <input type="date" name="date" class="mobile-form-control" required 
+                       value="{{ current_date.strftime('%Y-%m-%d') }}">
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>الحالة*</label>
+                <select name="status" class="mobile-form-select" required>
+                    <option value="">اختر الحالة</option>
+                    <option value="حاضر">حاضر</option>
+                    <option value="غائب">غائب</option>
+                    <option value="إجازة">إجازة</option>
+                </select>
+            </div>
+            
+            <div class="mobile-form-row">
+                <div class="mobile-form-group">
+                    <label>وقت الحضور</label>
+                    <input type="time" name="check_in" class="mobile-form-control">
+                </div>
+                
+                <div class="mobile-form-group">
+                    <label>وقت الإنصراف</label>
+                    <input type="time" name="check_out" class="mobile-form-control">
+                </div>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>ملاحظات</label>
+                <textarea name="notes" class="mobile-form-control" rows="2" placeholder="ملاحظات تنطبق على الجميع"></textarea>
+            </div>
+            
+            <button type="submit" class="mobile-btn mobile-btn-primary w-100">
+                <i class="fas fa-users-check"></i> تسجيل حضور الجميع
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+.mobile-form-row {
+    display: flex;
+    gap: 10px;
+}
+
+.mobile-form-row .mobile-form-group {
+    flex: 1;
+}
+
+.mobile-form-group {
+    margin-bottom: 15px;
+}
+
+.mobile-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.mobile-form-control, .mobile-form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.mobile-form-control:focus, .mobile-form-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+.quick-attendance-form {
+    padding: 10px 0;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.quick-action-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quick-action-btn.check-in {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.quick-action-btn.check-out {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+}
+
+.quick-action-btn:hover {
+    filter: brightness(0.9);
+}
+
+.quick-action-btn i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.mobile-btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.mobile-btn-outline:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // الحصول على عناصر النموذج
+    const statusSelect = document.querySelector('select[name="status"]');
+    const checkInInput = document.querySelector('input[name="check_in"]');
+    const checkOutInput = document.querySelector('input[name="check_out"]');
+    
+    // تعطيل حقول الوقت إذا كانت الحالة غائب أو إجازة
+    if (statusSelect && checkInInput && checkOutInput) {
+        statusSelect.addEventListener('change', function() {
+            const isAbsent = this.value === 'غائب' || this.value === 'إجازة';
+            
+            checkInInput.disabled = isAbsent;
+            checkOutInput.disabled = isAbsent;
+            
+            if (isAbsent) {
+                checkInInput.value = '';
+                checkOutInput.value = '';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

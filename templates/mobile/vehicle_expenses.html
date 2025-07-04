@@ -1,0 +1,280 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}مصروفات الوقود{% endblock %}
+{% block header_title %}مصروفات الوقود{% endblock %}
+
+{% block content %}
+<div class="mobile-section">
+  <div class="mobile-section-header">
+    <h2 class="mobile-section-title">
+      <i class="fas fa-gas-pump"></i>
+      مصروفات الوقود
+    </h2>
+    <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
+      <i class="fas fa-arrow-right"></i>
+      عودة
+    </a>
+  </div>
+
+  <!-- إحصائيات سريعة -->
+  <div class="mobile-summary-cards">
+    <div class="mobile-summary-card primary">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-gas-pump"></i>
+      </div>
+      <div class="mobile-summary-value">{{ "{:,.0f}".format(weekly_cost) }}</div>
+      <div class="mobile-summary-label">وقود (أسبوعي)</div>
+    </div>
+    
+    <div class="mobile-summary-card success">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-calendar-week"></i>
+      </div>
+      <div class="mobile-summary-value">{{ "{:,.0f}".format(monthly_cost) }}</div>
+      <div class="mobile-summary-label">وقود (شهري)</div>
+    </div>
+    
+    <div class="mobile-summary-card warning">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-tachometer-alt"></i>
+      </div>
+      <div class="mobile-summary-value">{{ "{:,.1f}".format(weekly_liters) }}</div>
+      <div class="mobile-summary-label">لتر (أسبوعي)</div>
+    </div>
+    
+    <div class="mobile-summary-card danger">
+      <div class="mobile-summary-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="mobile-summary-value">{{ "{:,.1f}".format(monthly_liters) }}</div>
+      <div class="mobile-summary-label">لتر (شهري)</div>
+    </div>
+  </div>
+
+  <!-- الأزرار الرئيسية -->
+  <div class="mobile-action-buttons mb-3">
+    <a href="{{ url_for('mobile.add_fuel_consumption') }}" class="mobile-action-button">
+      <div class="mobile-action-icon">
+        <i class="fas fa-plus-circle"></i>
+      </div>
+      <div class="mobile-action-label">إضافة تعبئة وقود</div>
+    </a>
+    
+    <a href="{{ url_for('mobile.fuel_consumption_stats') }}" class="mobile-action-button">
+      <div class="mobile-action-icon">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <div class="mobile-action-label">إحصائيات الاستهلاك</div>
+    </a>
+  </div>
+
+  <!-- قائمة سجلات تعبئة الوقود -->
+  <div class="mobile-card">
+    <div class="mobile-card-header">
+      <div class="mobile-card-title">
+        <i class="fas fa-list"></i>
+        آخر عمليات تعبئة الوقود
+      </div>
+      <div class="mobile-card-actions">
+        <button class="mobile-btn-icon" onclick="toggleFilters()">
+          <i class="fas fa-filter"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- فلاتر البحث (مخفية افتراضياً) -->
+    <div class="mobile-card-body" id="filtersSection" style="display: none;">
+      <form id="filterForm" method="GET" action="{{ url_for('mobile.vehicle_expenses') }}">
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">السيارة</label>
+          <select name="vehicle_id" class="mobile-form-select">
+            <option value="">جميع السيارات</option>
+            {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}" {% if selected_vehicle == vehicle.id %}selected{% endif %}>
+              {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="mobile-form-group">
+          <label class="mobile-form-label">الفترة الزمنية</label>
+          <select name="period" class="mobile-form-select">
+            <option value="week" {% if period == 'week' %}selected{% endif %}>آخر أسبوع</option>
+            <option value="month" {% if period == 'month' %}selected{% endif %}>آخر شهر</option>
+            <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>آخر ثلاثة أشهر</option>
+            <option value="year" {% if period == 'year' %}selected{% endif %}>السنة الحالية</option>
+          </select>
+        </div>
+        
+        <div class="mobile-form-actions">
+          <button type="submit" class="mobile-btn mobile-btn-primary">
+            <i class="fas fa-search"></i>
+            تطبيق الفلتر
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <div class="mobile-expenses-list">
+      {% if fuel_records %}
+        {% for record in fuel_records %}
+        <div class="mobile-expense-item">
+          <div class="mobile-expense-icon">
+            <i class="fas fa-gas-pump"></i>
+          </div>
+          <div class="mobile-expense-details">
+            <div class="mobile-expense-title">تعبئة {{ record.fuel_type }} ({{ "{:,.1f}".format(record.liters) }} لتر)</div>
+            <div class="mobile-expense-subtitle">{{ record.vehicle.make }} {{ record.vehicle.model }} - {{ record.vehicle.plate_number }}</div>
+            <div class="mobile-expense-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
+          </div>
+          <div class="mobile-expense-amount">{{ "{:,.2f}".format(record.cost) }} ر.س</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="mobile-empty-state">
+          <div class="mobile-empty-icon">
+            <i class="fas fa-gas-pump"></i>
+          </div>
+          <p>لا توجد سجلات تعبئة وقود حاليا</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <!-- زر إضافة تعبئة وقود جديدة -->
+  <button class="mobile-fab" onclick="location.href='{{ url_for('mobile.add_fuel_consumption') }}'">
+    <i class="fas fa-plus"></i>
+  </button>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  .mb-3 {
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .mobile-action-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    padding: 1.25rem 1rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .mobile-action-button:hover, 
+  .mobile-action-button:active {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mobile-action-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+  }
+  
+  .mobile-action-label {
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .mobile-expenses-list {
+    padding: 0;
+  }
+  
+  .mobile-expense-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .mobile-expense-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(var(--primary-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+  }
+  
+  .mobile-expense-details {
+    flex: 1;
+  }
+  
+  .mobile-expense-title {
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 4px;
+  }
+  
+  .mobile-expense-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+  
+  .mobile-expense-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+  }
+  
+  .mobile-expense-amount {
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-color);
+  }
+  
+  .mobile-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  
+  .mobile-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    opacity: 0.2;
+  }
+  
+  .mobile-empty-state p {
+    color: var(--text-secondary);
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    if (filtersSection.style.display === 'none') {
+      filtersSection.style.display = 'block';
+    } else {
+      filtersSection.style.display = 'none';
+    }
+  }
+  
+  function applyFilters() {
+    // تنفيذ عملية الفلترة
+    alert('تم تطبيق الفلتر');
+    toggleFilters();
+  }
+</script>
+{% endblock %}

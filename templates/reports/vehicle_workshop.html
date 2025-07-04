@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير سجلات الورشة</title>
+    <style>
+        @font-face {
+            font-family: 'Amiri';
+            src: url('/static/fonts/Amiri-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'Amiri';
+            src: url('/static/fonts/Amiri-Bold.ttf') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        
+        body {
+            font-family: 'Amiri', sans-serif;
+            direction: rtl;
+            text-align: right;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .report-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .report-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .report-subtitle {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .report-date {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .vehicle-info {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .vehicle-info h2 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <div class="report-title">تقرير سجلات الورشة</div>
+        <div class="report-subtitle">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</div>
+        <div class="report-date">تاريخ التقرير: {{ generated_at }}</div>
+    </div>
+    
+    <div class="vehicle-info">
+        <h2>معلومات المركبة</h2>
+        <div class="info-row">
+            <span class="info-label">رقم اللوحة:</span>
+            <span>{{ vehicle.plate_number }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">الماركة:</span>
+            <span>{{ vehicle.make }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">الموديل:</span>
+            <span>{{ vehicle.model }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">سنة الصنع:</span>
+            <span>{{ vehicle.year }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">رقم الهيكل:</span>
+            <span>{{ vehicle.vin }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">عدد الكيلومترات:</span>
+            <span>{{ vehicle.odometer }} كم</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">القسم:</span>
+            <span>{{ vehicle.department }}</span>
+        </div>
+    </div>
+    
+    <h2>سجلات الورشة</h2>
+    {% if workshop_records %}
+        <table>
+            <thead>
+                <tr>
+                    <th>سبب الدخول</th>
+                    <th>تاريخ الدخول</th>
+                    <th>تاريخ الخروج</th>
+                    <th>حالة الإصلاح</th>
+                    <th>اسم الورشة</th>
+                    <th>الفني المسؤول</th>
+                    <th>التكلفة (ريال)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in workshop_records %}
+                <tr>
+                    <td>{% if record.reason_text is defined %}{{ record.reason_text }}{% else %}{{ record.reason }}{% endif %}</td>
+                    <td>{% if record.entry_date %}{{ record.entry_date.strftime('%Y-%m-%d') }}{% else %}غير محدد{% endif %}</td>
+                    <td>{% if record.exit_date %}{{ record.exit_date.strftime('%Y-%m-%d') }}{% else %}قيد الإصلاح{% endif %}</td>
+                    <td>{% if record.status_text is defined %}{{ record.status_text }}{% else %}{{ record.repair_status }}{% endif %}</td>
+                    <td>{% if record.workshop_name %}{{ record.workshop_name }}{% else %}غير محدد{% endif %}</td>
+                    <td>{% if record.technician_name is defined %}{{ record.technician_name }}{% elif record.technician is defined %}{{ record.technician }}{% else %}غير محدد{% endif %}</td>
+                    <td>{% if record.cost %}{{ "{:,.2f}".format(record.cost) }}{% else %}غير محدد{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>لا توجد سجلات ورشة لهذه المركبة.</p>
+    {% endif %}
+    
+    <div class="footer">
+        <p>تم إنشاء هذا التقرير بواسطة نظام إدارة المركبات</p>
+        <p>© {{ now.year }} جميع الحقوق محفوظة</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}إدارة المستخدمين - النسخة المحمولة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3">إدارة المستخدمين</h1>
+        {% if current_user.role == "admin" or current_user|check_module_access('users', 'create') %}
+        <a href="{{ url_for('mobile.add_user_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> إضافة مستخدم
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- بطاقة البحث والتصفية -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('mobile.users_new') }}">
+                <div class="row g-2">
+                    <div class="col-8">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="البحث حسب الاسم أو البريد الإلكتروني..." name="search" value="{{ request.args.get('search', '') }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <select class="form-select" name="role" onchange="this.form.submit()">
+                            <option value="all" {{ 'selected' if selected_role == 'all' else '' }}>كل الأدوار</option>
+                            <option value="admin" {{ 'selected' if selected_role == 'admin' else '' }}>مدير النظام</option>
+                            <option value="manager" {{ 'selected' if selected_role == 'manager' else '' }}>مدير</option>
+                            <option value="hr" {{ 'selected' if selected_role == 'hr' else '' }}>موارد بشرية</option>
+                            <option value="finance" {{ 'selected' if selected_role == 'finance' else '' }}>مالية</option>
+                            <option value="fleet" {{ 'selected' if selected_role == 'fleet' else '' }}>إدارة المركبات</option>
+                            <option value="user" {{ 'selected' if selected_role == 'user' else '' }}>مستخدم عادي</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- قائمة المستخدمين -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="fas fa-users"></i> المستخدمين ({{ pagination.total if pagination else 0 }})</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% for user in users %}
+                <a href="{{ url_for('mobile.user_details_new', user_id=user.id) }}" class="list-group-item list-group-item-action py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                <i class="fas fa-user text-secondary fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 me-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold">{{ user.username }}</h6>
+                                <div>
+                                    {% if not user.is_active %}
+                                    <span class="badge bg-danger">غير نشط</span>
+                                    {% endif %}
+                                    
+                                    {% if user.role == "admin" %}
+                                    <span class="badge bg-danger">مدير النظام</span>
+                                    {% elif user.role == "manager" %}
+                                    <span class="badge bg-primary">مدير</span>
+                                    {% elif user.role == "hr" %}
+                                    <span class="badge bg-success">موارد بشرية</span>
+                                    {% elif user.role == "finance" %}
+                                    <span class="badge bg-info">مالية</span>
+                                    {% elif user.role == "fleet" %}
+                                    <span class="badge bg-warning">إدارة المركبات</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">مستخدم</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <p class="mb-0 text-muted small">{{ user.email }}</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chevron-left text-muted"></i>
+                        </div>
+                    </div>
+                </a>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="text-muted">
+                        <i class="fas fa-user-slash fa-3x mb-3"></i>
+                        <p>لا يوجد مستخدمين للعرض</p>
+                        {% if current_user.role == "admin" or current_user|check_module_access('users', 'create') %}
+                        <a href="{{ url_for('mobile.add_user_new') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus-circle"></i> إضافة مستخدم
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if pagination and pagination.pages > 1 %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item {{ 'disabled' if pagination.page == 1 else '' }}">
+                        <a class="page-link" href="{{ url_for('mobile.users_new', page=pagination.page - 1, role=selected_role, search=request.args.get('search', '')) }}">السابق</a>
+                    </li>
+                    {% for p in range(1, pagination.pages + 1) %}
+                    <li class="page-item {{ 'active' if p == pagination.page else '' }}">
+                        <a class="page-link" href="{{ url_for('mobile.users_new', page=p, role=selected_role, search=request.args.get('search', '')) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {{ 'disabled' if pagination.page == pagination.pages else '' }}">
+                        <a class="page-link" href="{{ url_for('mobile.users_new', page=pagination.page + 1, role=selected_role, search=request.args.get('search', '')) }}">التالي</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

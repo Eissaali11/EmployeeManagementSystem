@@ -1,0 +1,136 @@
+{% extends 'layout.html' %}
+
+{% block title %}تأكيد حذف الموظفين{% endblock %}
+
+{% block styles %}
+<style>
+    .delete-card {
+        max-width: 800px;
+        margin: 50px auto;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .delete-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        padding: 20px;
+    }
+    
+    .delete-body {
+        padding: 30px 20px;
+    }
+    
+    .delete-icon {
+        font-size: 5rem;
+        color: #dc3545;
+        margin-bottom: 1.5rem;
+    }
+    
+    .delete-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #333;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .delete-footer {
+        background-color: #f8f9fa;
+        border-top: 1px solid #eee;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .employees-table {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="delete-card">
+        <div class="delete-header">
+            <h4 class="text-center mb-0">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                تأكيد حذف الموظفين
+            </h4>
+        </div>
+        
+        <div class="delete-body">
+            <div class="text-center mb-4">
+                <div class="delete-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                
+                <h3 class="mb-4">هل أنت متأكد من حذف {{ employees|length }} موظف؟</h3>
+            </div>
+            
+            <div class="delete-warning">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>تحذير:</strong> سيتم حذف جميع سجلات الموظفين وبياناتهم المرتبطة بهم نهائياً ولا يمكن استعادة البيانات بعد الحذف.
+                </div>
+                
+                <h5 class="mt-4 mb-3">قائمة الموظفين المراد حذفهم:</h5>
+                
+                <div class="employees-table">
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">م</th>
+                                <th style="width: 100px;">رقم الموظف</th>
+                                <th>اسم الموظف</th>
+                                <th>الوظيفة</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ employee.employee_id or '' }}</td>
+                                <td>{{ employee.name }}</td>
+                                <td>{{ employee.job_title or '' }}</td>
+                                <td>
+                                    {% if employee.status == 'active' %}
+                                    <span class="badge bg-success">نشط</span>
+                                    {% elif employee.status == 'on_leave' %}
+                                    <span class="badge bg-warning">في إجازة</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">غير نشط</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="delete-footer">
+            <form method="POST" action="{{ url_for('departments.delete_employees', id=department.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                {% for employee in employees %}
+                <input type="hidden" name="employee_ids" value="{{ employee.id }}">
+                {% endfor %}
+                
+                <div class="d-flex justify-content-center">
+                    <a href="{{ return_url }}" class="btn btn-secondary btn-lg me-3">
+                        <i class="fas fa-times me-2"></i> إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="fas fa-trash-alt me-2"></i> تأكيد حذف {{ employees|length }} موظف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

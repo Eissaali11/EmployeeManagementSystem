@@ -1,0 +1,487 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    /* تحسين مظهر القسم وقائمة الموظفين */
+    .section-title {
+        border-right: 4px solid #0d6efd;
+        padding-right: 10px;
+    }
+    
+    .department-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .department-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .employee-row {
+        transition: all 0.3s ease;
+    }
+    
+    /* تأثير البحث - تمييز الصفوف */
+    .search-highlight {
+        background-color: rgba(13, 110, 253, 0.05) !important;
+        box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.1) !important;
+    }
+    
+    /* تحسين شكل مربع البحث */
+    .search-container {
+        position: relative;
+    }
+    
+    #employeeSearch {
+        padding-right: 40px;
+        border-color: #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    #employeeSearch:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+    
+    #searchResultsInfo {
+        border-right: 3px solid #0d6efd;
+        padding-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- شريط العنوان مع إجراءات القسم -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded shadow-sm">
+        <div>
+            <h1 class="mb-0 text-primary">{{ department.name }}</h1>
+            <p class="text-muted mb-0">
+                <i class="fas fa-sitemap me-1"></i> قسم
+                {% if department.manager %}
+                | <i class="fas fa-user-tie me-1"></i> المدير: {{ department.manager.name }}
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('departments.edit', id=department.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> تعديل القسم
+            </a>
+            <a href="{{ url_for('departments.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <!-- لوحة البيانات (Dashboard) -->
+    <div class="row mb-4">
+        <!-- إجمالي الموظفين -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 rounded-3 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">إجمالي الموظفين</h6>
+                            <h2 class="mb-0 display-6 fw-bold">{{ employees|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-primary bg-opacity-10 text-primary fs-3">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer border-0 bg-primary bg-opacity-10 py-2 text-primary">
+                    <small><i class="fas fa-clock me-1"></i> آخر تحديث: اليوم</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الموظفين النشطين -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 rounded-3 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">موظفين نشطين</h6>
+                            <h2 class="mb-0 display-6 fw-bold text-success">{{ employees|selectattr('status', 'equalto', 'active')|list|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-success bg-opacity-10 text-success fs-3">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer border-0 bg-success bg-opacity-10 py-2 text-success">
+                    <small>
+                        <i class="fas fa-percentage me-1"></i> 
+                        {{ ((employees|selectattr('status', 'equalto', 'active')|list|length / employees|length * 100) if employees|length > 0 else 0)|round|int }}% من إجمالي الموظفين
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الموظفين في إجازة -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 rounded-3 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">في إجازة</h6>
+                            <h2 class="mb-0 display-6 fw-bold text-warning">{{ employees|selectattr('status', 'equalto', 'on_leave')|list|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-warning bg-opacity-10 text-warning fs-3">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer border-0 bg-warning bg-opacity-10 py-2 text-warning">
+                    <small>
+                        <i class="fas fa-percentage me-1"></i> 
+                        {{ ((employees|selectattr('status', 'equalto', 'on_leave')|list|length / employees|length * 100) if employees|length > 0 else 0)|round|int }}% من إجمالي الموظفين
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الموظفين غير النشطين -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 rounded-3 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">غير نشط</h6>
+                            <h2 class="mb-0 display-6 fw-bold text-danger">{{ employees|selectattr('status', 'equalto', 'inactive')|list|length }}</h2>
+                        </div>
+                        <div class="p-3 rounded-circle bg-danger bg-opacity-10 text-danger fs-3">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer border-0 bg-danger bg-opacity-10 py-2 text-danger">
+                    <small>
+                        <i class="fas fa-percentage me-1"></i> 
+                        {{ ((employees|selectattr('status', 'equalto', 'inactive')|list|length / employees|length * 100) if employees|length > 0 else 0)|round|int }}% من إجمالي الموظفين
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات القسم مع قائمة الموظفين -->
+    <div class="row">
+        <!-- معلومات إضافية عن القسم -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-3 mb-4 department-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i> تفاصيل القسم
+                    </h5>
+                </div>
+                <div class="card-body">                    
+                    {% if department.description %}
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">الوصف:</h6>
+                        <p>{{ department.description }}</p>
+                    </div>
+                    <hr>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">مدير القسم:</h6>
+                        {% if department.manager %}
+                        <div class="d-flex align-items-center p-2 bg-light rounded">
+                            <div class="p-2 rounded-circle bg-primary bg-opacity-10 me-2">
+                                <i class="fas fa-user-tie fs-5 text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">{{ department.manager.name }}</h5>
+                                <p class="mb-0 text-muted small">{{ department.manager.job_title }}</p>
+                                <p class="mb-0 small text-primary">
+                                    الرقم الوظيفي: {{ department.manager.employee_id }}
+                                </p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning py-2">
+                            <i class="fas fa-exclamation-triangle me-1"></i> لا يوجد مدير معين
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- إجراءات جماعية -->
+            <div class="card shadow-sm border-0 rounded-3 department-card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i> إجراءات جماعية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <a href="{{ url_for('departments.import_employees', id=department.id) }}" class="btn btn-success btn-lg w-100 mb-2">
+                            <i class="fas fa-file-excel me-1"></i> استيراد موظفين من Excel
+                        </a>
+                        <button id="exportSelectedEmployees" class="btn btn-primary btn-lg w-100 mb-2">
+                            <i class="fas fa-file-export me-1"></i> تصدير الموظفين المحددين
+                        </button>
+                        <button id="deleteSelectedEmployees" class="btn btn-danger btn-lg w-100">
+                            <i class="fas fa-trash me-1"></i> حذف الموظفين المحددين
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button id="selectAllEmployees" class="btn btn-sm btn-outline-secondary w-50 me-2">
+                            <i class="fas fa-check-square me-1"></i> تحديد الكل
+                        </button>
+                        <button id="deselectAllEmployees" class="btn btn-sm btn-outline-secondary w-50">
+                            <i class="fas fa-square me-1"></i> إلغاء التحديد
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قائمة الموظفين في القسم -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm border-0 rounded-3 department-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>موظفي القسم ({{ employees|length }})
+                    </h5>
+                </div>
+                
+                <!-- زر البحث المحسن -->
+                <div class="p-3 border-bottom bg-light">
+                    <div class="row">
+                        <div class="col-lg-8 mb-2 mb-lg-0">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-0">
+                                    <i class="fas fa-search text-primary"></i>
+                                </span>
+                                <input type="text" id="employeeSearch" class="form-control border-0 shadow-none" 
+                                       placeholder="ابحث باسم الموظف، الرقم الوظيفي، المسمى الوظيفي، الحالة..." 
+                                       aria-label="البحث عن موظف">
+                                <button class="btn btn-primary" type="button" id="searchButton">
+                                    <i class="fas fa-search me-1"></i> بحث
+                                </button>
+                            </div>
+                            
+                            <div id="searchResultsInfo" class="mt-2 small text-muted ps-2" style="display: none;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                نتائج البحث: <strong id="employeeCount">0</strong> موظف
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <div class="d-flex">
+                                <div class="dropdown flex-grow-1 me-2">
+                                    <button class="btn btn-outline-primary w-100 d-flex justify-content-between align-items-center" 
+                                        type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span><i class="fas fa-filter me-1"></i> تصفية</span>
+                                        <span class="badge bg-primary rounded-pill" id="filtersAppliedBadge">3</span>
+                                    </button>
+                                    <ul class="dropdown-menu w-100 p-3" aria-labelledby="filterDropdown">
+                                        <li><h6 class="dropdown-header">تصفية حسب الحالة</h6></li>
+                                        <li>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input filter-status" type="checkbox" value="active" id="filter-active" checked>
+                                                <label class="form-check-label d-flex justify-content-between align-items-center" for="filter-active">
+                                                    <span>نشط</span>
+                                                    <span class="badge bg-success rounded-pill">{{ employees|selectattr('status', 'equalto', 'active')|list|length }}</span>
+                                                </label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input filter-status" type="checkbox" value="on_leave" id="filter-on_leave" checked>
+                                                <label class="form-check-label d-flex justify-content-between align-items-center" for="filter-on_leave">
+                                                    <span>في إجازة</span>
+                                                    <span class="badge bg-warning rounded-pill">{{ employees|selectattr('status', 'equalto', 'on_leave')|list|length }}</span>
+                                                </label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input filter-status" type="checkbox" value="inactive" id="filter-inactive" checked>
+                                                <label class="form-check-label d-flex justify-content-between align-items-center" for="filter-inactive">
+                                                    <span>غير نشط</span>
+                                                    <span class="badge bg-danger rounded-pill">{{ employees|selectattr('status', 'equalto', 'inactive')|list|length }}</span>
+                                                </label>
+                                            </div>
+                                        </li>
+                                        <li><hr class="dropdown-divider my-3"></li>
+                                        <li class="d-flex justify-content-between">
+                                            <button class="btn btn-sm btn-outline-secondary me-1" id="clearFilters">
+                                                <i class="fas fa-times me-1"></i> إلغاء التصفية
+                                            </button>
+                                            <button class="btn btn-sm btn-primary" id="applyFilters">
+                                                <i class="fas fa-check me-1"></i> تطبيق
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-pill fs-6">
+                                        <i class="fas fa-users me-1"></i>
+                                        <span>{{ employees|length }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0">
+                    {% if employees %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="checkAllEmployees">
+                                        </div>
+                                    </th>
+                                    <th>معلومات الموظف</th>
+                                    <th class="text-center">الحالة</th>
+                                    <th>تاريخ التعيين</th>
+                                    <th class="text-center">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employees %}
+                                <tr data-employee-id="{{ employee.id }}" class="align-middle employee-row">
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input employee-checkbox" type="checkbox" name="employee_checkbox" value="{{ employee.id }}" id="employee_{{ employee.id }}">
+                                            <label class="form-check-label" for="employee_{{ employee.id }}"></label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="p-2 rounded-circle bg-secondary bg-opacity-10 me-2">
+                                                <i class="fas fa-user fs-5 text-secondary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">{{ employee.name }}
+                                                {% if department.manager and department.manager.id == employee.id %}
+                                                <span class="badge bg-primary ms-1">مدير</span>
+                                                {% endif %}
+                                                </h6>
+                                                <p class="mb-0 text-muted small">{{ employee.job_title }}</p>
+                                                <span class="badge bg-secondary bg-opacity-10 text-dark">{{ employee.employee_id }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm dropdown-toggle
+                                                {% if employee.status == 'active' %}
+                                                    btn-outline-success
+                                                {% elif employee.status == 'inactive' %}
+                                                    btn-outline-danger
+                                                {% elif employee.status == 'on_leave' %}
+                                                    btn-outline-warning
+                                                {% else %}
+                                                    btn-outline-secondary
+                                                {% endif %}"
+                                                type="button" id="status-{{ employee.id }}" data-bs-toggle="dropdown" data-employee-id="{{ employee.id }}">
+                                                
+                                                {% if employee.status == 'active' %}
+                                                    <i class="fas fa-user-check me-1"></i> نشط
+                                                {% elif employee.status == 'inactive' %}
+                                                    <i class="fas fa-user-times me-1"></i> غير نشط
+                                                {% elif employee.status == 'on_leave' %}
+                                                    <i class="fas fa-user-clock me-1"></i> في إجازة
+                                                {% else %}
+                                                    <i class="fas fa-user me-1"></i> {{ employee.status }}
+                                                {% endif %}
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="status-{{ employee.id }}">
+                                                <li><h6 class="dropdown-header">تغيير الحالة</h6></li>
+                                                <li>
+                                                    <button class="dropdown-item status-change-btn" 
+                                                            data-employee-id="{{ employee.id }}" 
+                                                            data-status="active">
+                                                        <i class="fas fa-user-check text-success me-1"></i> نشط
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item status-change-btn" 
+                                                            data-employee-id="{{ employee.id }}" 
+                                                            data-status="on_leave">
+                                                        <i class="fas fa-user-clock text-warning me-1"></i> في إجازة
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item status-change-btn" 
+                                                            data-employee-id="{{ employee.id }}" 
+                                                            data-status="inactive">
+                                                        <i class="fas fa-user-times text-danger me-1"></i> غير نشط
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد' }}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-outline-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('employees.delete', id=employee.id) }}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center p-5">
+                        <div class="mb-3">
+                            <i class="fas fa-users fa-3x text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">لا يوجد موظفين في هذا القسم</h4>
+                        <p class="text-muted mb-4">يمكنك إضافة موظفين جدد أو استيرادهم من ملف Excel</p>
+                        <a href="{{ url_for('employees.create') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> إضافة موظف جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if employees %}
+                <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('employees.create', department_id=department.id) }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> إضافة موظف
+                        </a>
+                        <a href="{{ url_for('departments.export_all_employees', id=department.id) }}" class="btn btn-outline-success ms-1">
+                            <i class="fas fa-file-excel me-1"></i> تصدير الكل
+                        </a>
+                    </div>
+                    <div>
+                        <span class="text-muted">{{ employees|length }} موظف في هذا القسم</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- استدعاء ملف البحث الخاص بالقسم -->
+<script src="{{ url_for('static', filename='js/department_search.js') }}"></script>
+{% endblock %}

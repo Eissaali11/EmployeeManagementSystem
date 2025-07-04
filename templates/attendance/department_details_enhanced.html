@@ -1,0 +1,333 @@
+{% extends 'layout.html' %}
+
+{% block title %}تفاصيل حضور قسم {{ department.name }}{% endblock %}
+
+{% block styles %}
+<style>
+    .stats-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s ease;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    .gradient-bg-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .gradient-bg-2 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .gradient-bg-3 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .gradient-bg-4 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .table-attendance th {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        font-size: 11px;
+        padding: 8px 4px;
+        text-align: center;
+    }
+    .employee-name-col {
+        position: sticky;
+        right: 0;
+        background: white;
+        z-index: 5;
+        font-weight: bold;
+        min-width: 180px;
+    }
+    .attendance-cell {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        font-size: 10px;
+        border-radius: 4px;
+        padding: 2px;
+    }
+    .status-present { background-color: #d4edda; color: #155724; }
+    .status-absent { background-color: #f8d7da; color: #721c24; }
+    .status-leave { background-color: #fff3cd; color: #856404; }
+    .status-sick { background-color: #d1ecf1; color: #0c5460; }
+    .chart-container {
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- رأس الصفحة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1">
+                        <i class="fas fa-building text-primary me-2"></i>
+                        تفاصيل حضور قسم {{ department.name }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        البيانات الشهرية من {{ start_date.strftime('%Y/%m/%d') }} إلى {{ end_date.strftime('%Y/%m/%d') }}
+                        {% if project_name %}
+                        - المشروع: {{ project_name }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للوحة المعلومات
+                    </a>
+                    <button class="btn btn-success" onclick="exportDepartmentData()">
+                        <i class="fas fa-file-excel me-1"></i>
+                        تصدير Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإحصائيات الإجمالية -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card shadow-sm h-100 gradient-bg-1">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="mb-1">{{ total_stats.total_employees }}</h3>
+                    <small>إجمالي الموظفين</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card shadow-sm h-100 gradient-bg-2">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h3 class="mb-1">{{ total_stats.present }}</h3>
+                    <small>إجمالي الحضور</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card shadow-sm h-100 gradient-bg-3">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                    <h3 class="mb-1">{{ total_stats.attendance_rate }}%</h3>
+                    <small>معدل الحضور</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card shadow-sm h-100 gradient-bg-4">
+                <div class="card-body text-white text-center">
+                    <i class="fas fa-calendar-day fa-2x mb-2"></i>
+                    <h3 class="mb-1">{{ total_stats.working_days }}</h3>
+                    <small>أيام العمل</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإحصائيات التفصيلية -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar text-primary me-2"></i>
+                        الإحصائيات الأسبوعية للشهر الحالي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الأسبوع</th>
+                                    <th class="text-center">حاضر</th>
+                                    <th class="text-center">غائب</th>
+                                    <th class="text-center">إجازة</th>
+                                    <th class="text-center">مرضي</th>
+                                    <th class="text-center">معدل الحضور</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for week in weekly_stats %}
+                                <tr>
+                                    <td class="fw-bold">{{ week.start_date.strftime('%m/%d') }} - {{ week.end_date.strftime('%m/%d') }}</td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-success text-white">{{ week.present }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-danger text-white">{{ week.absent }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-warning text-dark">{{ week.leave }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-info text-white">{{ week.sick }}</span>
+                                    </td>
+                                    <td class="text-center fw-bold">
+                                        {% set total_week = week.present + week.absent + week.leave + week.sick %}
+                                        {% if total_week > 0 %}
+                                            {{ "%.1f"|format((week.present / total_week) * 100) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie text-primary me-2"></i>
+                        توزيع الحضور الشهري
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="p-3 rounded status-present">
+                                <h4 class="mb-1">{{ total_stats.present }}</h4>
+                                <small>حاضر</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="p-3 rounded status-absent">
+                                <h4 class="mb-1">{{ total_stats.absent }}</h4>
+                                <small>غائب</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded status-leave">
+                                <h4 class="mb-1">{{ total_stats.leave }}</h4>
+                                <small>إجازة</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded status-sick">
+                                <h4 class="mb-1">{{ total_stats.sick }}</h4>
+                                <small>مرضي</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول الحضور التفصيلي -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-check text-primary me-2"></i>
+                        جدول الحضور اليومي للشهر الحالي
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-sm table-striped table-attendance mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="employee-name-col">اسم الموظف</th>
+                                    <th class="text-center">المجموع</th>
+                                    <th class="text-center">الحضور</th>
+                                    <th class="text-center">الغياب</th>
+                                    <th class="text-center">الإجازة</th>
+                                    <th class="text-center">المرضي</th>
+                                    <th class="text-center">المعدل</th>
+                                    {% for date in date_range %}
+                                    <th class="text-center" style="writing-mode: vertical-rl; font-size: 9px;">
+                                        {{ date.strftime('%d') }}
+                                    </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emp_id, emp_data in employee_attendance.items() %}
+                                <tr>
+                                    <td class="employee-name-col">
+                                        <strong>{{ emp_data.employee.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ emp_data.employee.position or 'غير محدد' }}</small>
+                                    </td>
+                                    <td class="text-center fw-bold">
+                                        {{ emp_data.stats.present + emp_data.stats.absent + emp_data.stats.leave + emp_data.stats.sick }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-success text-white">{{ emp_data.stats.present }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-danger text-white">{{ emp_data.stats.absent }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-warning text-dark">{{ emp_data.stats.leave }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="status-badge bg-info text-white">{{ emp_data.stats.sick }}</span>
+                                    </td>
+                                    <td class="text-center fw-bold">
+                                        {% set total_emp = emp_data.stats.present + emp_data.stats.absent + emp_data.stats.leave + emp_data.stats.sick %}
+                                        {% if total_emp > 0 %}
+                                            {{ "%.1f"|format((emp_data.stats.present / total_emp) * 100) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                    {% for date in date_range %}
+                                    <td class="text-center attendance-cell">
+                                        {% set found = namespace(value=false) %}
+                                        {% for record in emp_data.records %}
+                                            {% if record.date == date and not found.value %}
+                                                {% set found.value = true %}
+                                                {% if record.status == 'present' %}
+                                                    <span class="status-present">✓</span>
+                                                {% elif record.status == 'absent' %}
+                                                    <span class="status-absent">✗</span>
+                                                {% elif record.status == 'leave' %}
+                                                    <span class="status-leave">إ</span>
+                                                {% elif record.status == 'sick' %}
+                                                    <span class="status-sick">م</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if not found.value %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportDepartmentData() {
+    const dept = '{{ department.name }}';
+    const project = '{{ project_name or "" }}';
+    
+    let url = `/attendance/export-excel-department?department=${encodeURIComponent(dept)}`;
+    if (project) {
+        url += `&project=${encodeURIComponent(project)}`;
+    }
+    
+    window.location.href = url;
+}
+</script>
+{% endblock %}
