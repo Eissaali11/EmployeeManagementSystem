@@ -7,41 +7,13 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
 from utils.employee_comprehensive_report_updated import generate_employee_comprehensive_pdf, generate_employee_comprehensive_excel
-from utils.employee_basic_report import generate_employee_basic_pdf
-from utils.audit_logger import log_activity
 
 employees_bp = Blueprint('employees', __name__)
-
-# المجلد المخصص لحفظ صور الموظفين
-UPLOAD_FOLDER = 'static/uploads/employees'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-def allowed_file(filename):
-    """التحقق من أن الملف من الأنواع المسموحة"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def save_employee_image(file, employee_id, image_type):
-    """حفظ صورة الموظف وإرجاع المسار"""
-    if file and allowed_file(file.filename):
-        # التأكد من وجود المجلد
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        
-        # إنشاء اسم ملف فريد
-        filename = secure_filename(file.filename)
-        name, ext = os.path.splitext(filename)
-        unique_filename = f"{employee_id}_{image_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
-        
-        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
-        file.save(filepath)
-        
-        # إرجاع المسار النسبي للحفظ في قاعدة البيانات
-        return f"uploads/employees/{unique_filename}"
-    return None
 
 @employees_bp.route('/')
 @login_required
@@ -94,20 +66,21 @@ def create():
             db.session.commit()
             
             # Log the action
-            log_activity('create', 'Employee', employee.id, f'تم إنشاء موظف جديد: {name}')
+            audit = SystemAudit(
+                action='create',
+                entity_type='employee',
+                entity_id=employee.id,
+                details=f'تم إنشاء موظف جديد: {name}'
+            )
+            db.session.add(audit)
+            db.session.commit()
             
             flash('تم إنشاء الموظف بنجاح', 'success')
             return redirect(url_for('employees.index'))
         
-        except IntegrityError as e:
+        except IntegrityError:
             db.session.rollback()
-            error_message = str(e)
-            if "employee_id" in error_message.lower():
-                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الموظف موجود بالفعل في النظام", "danger")
-            elif "national_id" in error_message.lower():
-                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الهوية موجود بالفعل في النظام", "danger")
-            else:
-                flash("هذه المعلومات مسجلة مسبقاً، لا يمكن تكرار بيانات الموظفين", "danger")
+            flash('هناك خطأ في البيانات. قد يكون رقم الموظف أو رقم الهوية موجود مسبقًا', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
@@ -146,20 +119,21 @@ def edit(id):
             db.session.commit()
             
             # Log the action
-            log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الموظف: {employee.name}')
+            audit = SystemAudit(
+                action='update',
+                entity_type='employee',
+                entity_id=employee.id,
+                details=f'تم تحديث بيانات الموظف: {employee.name}'
+            )
+            db.session.add(audit)
+            db.session.commit()
             
             flash('تم تحديث بيانات الموظف بنجاح', 'success')
             return redirect(url_for('employees.index'))
         
-        except IntegrityError as e:
+        except IntegrityError:
             db.session.rollback()
-            error_message = str(e)
-            if "employee_id" in error_message.lower():
-                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الموظف موجود بالفعل في النظام", "danger")
-            elif "national_id" in error_message.lower():
-                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الهوية موجود بالفعل في النظام", "danger")
-            else:
-                flash("هذه المعلومات مسجلة مسبقاً، لا يمكن تكرار بيانات الموظفين", "danger")
+            flash('هناك خطأ في البيانات. قد يكون رقم الموظف أو رقم الهوية موجود مسبقًا', 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
@@ -218,17 +192,13 @@ def view(id):
     # Get salary records
     salaries = Salary.query.filter_by(employee_id=id).order_by(Salary.year.desc(), Salary.month.desc()).all()
     
-    # Get vehicle handover records
-    vehicle_handovers = VehicleHandover.query.filter_by(employee_id=id).order_by(VehicleHandover.handover_date.desc()).all()
-    
     return render_template('employees/view.html', 
                           employee=employee, 
                           documents=documents,
                           documents_by_type=documents_by_type,
                           document_types_map=document_types_map,
                           attendances=attendances,
-                          salaries=salaries,
-                          vehicle_handovers=vehicle_handovers)
+                          salaries=salaries)
 
 @employees_bp.route('/<int:id>/confirm_delete')
 @login_required
@@ -534,103 +504,6 @@ def export_attendance_excel(id):
         print(traceback.format_exc())
         
         flash(f'حدث خطأ أثناء تصدير ملف الحضور: {str(e)}', 'danger')
-        return redirect(url_for('employees.view', id=id))
-
-@employees_bp.route('/<int:id>/upload_image', methods=['POST'])
-@login_required
-@require_module_access(Module.EMPLOYEES, Permission.EDIT)
-def upload_image(id):
-    """رفع صورة للموظف (الصورة الشخصية، صورة الهوية، أو صورة الرخصة)"""
-    employee = Employee.query.get_or_404(id)
-    
-    image_type = request.form.get('image_type')
-    if not image_type or image_type not in ['profile', 'national_id', 'license']:
-        flash('نوع الصورة غير صحيح', 'danger')
-        return redirect(url_for('employees.view', id=id))
-    
-    if 'image' not in request.files:
-        flash('لم يتم اختيار ملف', 'danger')
-        return redirect(url_for('employees.view', id=id))
-    
-    file = request.files['image']
-    if file.filename == '':
-        flash('لم يتم اختيار ملف', 'danger')
-        return redirect(url_for('employees.view', id=id))
-    
-    # حفظ الصورة
-    image_path = save_employee_image(file, employee.employee_id, image_type)
-    if image_path:
-        try:
-            # حذف الصورة القديمة إذا كانت موجودة
-            old_path = None
-            if image_type == 'profile':
-                old_path = employee.profile_image
-                employee.profile_image = image_path
-            elif image_type == 'national_id':
-                old_path = employee.national_id_image
-                employee.national_id_image = image_path
-            elif image_type == 'license':
-                old_path = employee.license_image
-                employee.license_image = image_path
-            
-            # حذف الصورة القديمة من الملفات
-            if old_path:
-                old_file_path = os.path.join('static', old_path)
-                if os.path.exists(old_file_path):
-                    os.remove(old_file_path)
-            
-            db.session.commit()
-            
-            # رسائل النجاح حسب نوع الصورة
-            success_messages = {
-                'profile': 'تم رفع الصورة الشخصية بنجاح',
-                'national_id': 'تم رفع صورة الهوية بنجاح',
-                'license': 'تم رفع صورة الرخصة بنجاح'
-            }
-            flash(success_messages[image_type], 'success')
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f'خطأ في حفظ الصورة: {str(e)}', 'danger')
-    else:
-        flash('فشل في رفع الصورة. تأكد من أن الملف من النوع المسموح (PNG, JPG, JPEG, GIF)', 'danger')
-    
-    return redirect(url_for('employees.view', id=id))
-
-
-@employees_bp.route('/<int:id>/basic_report')
-@login_required
-@require_module_access(Module.EMPLOYEES, Permission.VIEW)
-def basic_report(id):
-    """تقرير المعلومات الأساسية للموظف"""
-    try:
-        pdf_buffer = generate_employee_basic_pdf(id)
-        if pdf_buffer:
-            employee = Employee.query.get_or_404(id)
-            current_date = datetime.now().strftime('%Y%m%d')
-            filename = f'تقرير_أساسي_{employee.name}_{current_date}.pdf'
-            
-            # تسجيل الإجراء
-            audit = SystemAudit(
-                action='export',
-                entity_type='employee_basic_report',
-                entity_id=employee.id,
-                details=f'تم تصدير التقرير الأساسي للموظف: {employee.name}'
-            )
-            db.session.add(audit)
-            db.session.commit()
-            
-            return send_file(
-                pdf_buffer,
-                as_attachment=True,
-                download_name=filename,
-                mimetype='application/pdf'
-            )
-        else:
-            flash('خطأ في إنشاء ملف PDF', 'danger')
-            return redirect(url_for('employees.view', id=id))
-    except Exception as e:
-        flash(f'خطأ في تصدير PDF: {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))
 
 

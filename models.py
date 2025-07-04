@@ -2,244 +2,6 @@ from datetime import datetime, timedelta, date
 from flask_login import UserMixin
 from app import db
 import enum
-import json
-
-class Module(enum.Enum):
-    """وحدات النظام المختلفة"""
-    EMPLOYEES = "employees"
-    VEHICLES = "vehicles" 
-    ATTENDANCE = "attendance"
-    SALARIES = "salaries"
-    DEPARTMENTS = "departments"
-    REPORTS = "reports"
-
-# نظام Multi-Tenant - نماذج الشركات والاشتراكات
-
-class Company(db.Model):
-    """نموذج الشركات مع نظام الاشتراكات والتجارب المجانية"""
-    __tablename__ = 'companies'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    contact_email = db.Column(db.String(100))
-    contact_phone = db.Column(db.String(20))
-    address = db.Column(db.Text)
-    status = db.Column(db.String(20), default='active')  # active, inactive, suspended
-    
-    # حقول التجربة المجانية
-    is_trial = db.Column(db.Boolean, default=False)
-    trial_start_date = db.Column(db.Date)
-    trial_end_date = db.Column(db.Date)
-    trial_days = db.Column(db.Integer, default=30)
-    trial_extended = db.Column(db.Boolean, default=False)
-    
-    # حقول الاشتراك
-    subscription_start_date = db.Column(db.Date)
-    subscription_end_date = db.Column(db.Date)
-    subscription_status = db.Column(db.String(20), default='active')  # active, trial, expired, suspended
-    subscription_plan = db.Column(db.String(50), default='basic')  # basic, premium, enterprise, trial
-    
-    # حدود الاستخدام
-    max_users = db.Column(db.Integer, default=5)
-    max_employees = db.Column(db.Integer, default=25)
-    max_vehicles = db.Column(db.Integer, default=10)
-    max_departments = db.Column(db.Integer, default=5)
-    
-    # الفواتير والدفع
-    monthly_fee = db.Column(db.Float, default=0.0)
-    last_payment_date = db.Column(db.Date)
-    next_payment_due = db.Column(db.Date)
-    
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # العلاقات
-    users = db.relationship('User', back_populates='company', lazy='dynamic')
-    employees = db.relationship('Employee', back_populates='company', lazy='dynamic')
-    vehicles = db.relationship('Vehicle', back_populates='company', lazy='dynamic')
-    departments = db.relationship('Department', back_populates='company', lazy='dynamic')
-    subscription = db.relationship('CompanySubscription', back_populates='company', uselist=False, lazy=True)
-    notifications = db.relationship('SubscriptionNotification', back_populates='company', lazy='dynamic')
-    
-    def get_days_remaining(self):
-        """حساب الأيام المتبقية في الاشتراك"""
-        if self.subscription_end_date:
-            return (self.subscription_end_date - date.today()).days
-        return None
-    
-    def is_subscription_active(self):
-        """التحقق من صلاحية الاشتراك"""
-        if not self.subscription_end_date:
-            return False
-        return self.subscription_end_date >= date.today() and self.subscription_status == 'active'
-    
-    def is_trial_active(self):
-        """التحقق من صلاحية التجربة المجانية"""
-        if not self.is_trial or not self.trial_end_date:
-            return False
-        return self.trial_end_date >= date.today() and self.subscription_status == 'trial'
-    
-    def get_usage_stats(self):
-        """إحصائيات الاستخدام الحالي"""
-        return {
-            'users': self.users.count(),
-            'employees': self.employees.count(),
-            'vehicles': self.vehicles.count(),
-            'departments': self.departments.count()
-        }
-    
-    def can_add_user(self):
-        """التحقق من إمكانية إضافة مستخدم جديد"""
-        return self.users.count() < self.max_users
-    
-    def can_add_employee(self):
-        """التحقق من إمكانية إضافة موظف جديد"""
-        return self.employees.count() < self.max_employees
-    
-    def can_add_vehicle(self):
-        """التحقق من إمكانية إضافة مركبة جديدة"""
-        return self.vehicles.count() < self.max_vehicles
-    
-    def __repr__(self):
-        return f'<Company {self.name}>'
-
-class CompanySubscription(db.Model):
-    """اشتراك الشركة"""
-    __tablename__ = 'company_subscriptions'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    plan_type = db.Column(db.String(20), nullable=False, default='basic')  # basic, premium, enterprise
-    
-    # معلومات الفترة التجريبية
-    is_trial = db.Column(db.Boolean, default=True)
-    trial_start_date = db.Column(db.DateTime)
-    trial_end_date = db.Column(db.DateTime)
-    
-    # معلومات الاشتراك
-    start_date = db.Column(db.DateTime, nullable=False)
-    end_date = db.Column(db.DateTime, nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
-    auto_renew = db.Column(db.Boolean, default=False)
-    
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # العلاقات
-    company = db.relationship('Company', back_populates='subscription')
-    
-    @property
-    def days_remaining(self):
-        """حساب الأيام المتبقية"""
-        if not self.end_date:
-            return 0
-        remaining = (self.end_date.date() - datetime.utcnow().date()).days
-        return max(0, remaining)
-    
-    @property
-    def is_expired(self):
-        """التحقق من انتهاء الاشتراك"""
-        return datetime.utcnow().date() > self.end_date.date()
-    
-    @property
-    def is_trial_expired(self):
-        """التحقق من انتهاء الفترة التجريبية"""
-        if not self.is_trial or not self.trial_end_date:
-            return False
-        return datetime.utcnow().date() > self.trial_end_date.date()
-    
-    @property
-    def max_employees(self):
-        """الحد الأقصى للموظفين حسب نوع الخطة"""
-        limits = {'basic': 50, 'premium': 200, 'enterprise': 1000}
-        return limits.get(self.plan_type, 50)
-    
-    @property
-    def max_vehicles(self):
-        """الحد الأقصى للمركبات حسب نوع الخطة"""
-        limits = {'basic': 20, 'premium': 100, 'enterprise': 500}
-        return limits.get(self.plan_type, 20)
-    
-    @property
-    def max_users(self):
-        """الحد الأقصى للمستخدمين حسب نوع الخطة"""
-        limits = {'basic': 5, 'premium': 20, 'enterprise': 100}
-        return limits.get(self.plan_type, 5)
-    
-    @property
-    def features(self):
-        """ميزات الخطة"""
-        all_features = {
-            'basic': ['employees', 'vehicles', 'attendance', 'reports'],
-            'premium': ['employees', 'vehicles', 'attendance', 'reports', 'salaries', 'advanced_reports'],
-            'enterprise': ['employees', 'vehicles', 'attendance', 'reports', 'salaries', 'advanced_reports', 'api_access', 'custom_branding']
-        }
-        return all_features.get(self.plan_type, [])
-    
-    def __repr__(self):
-        return f'<CompanySubscription {self.company.name} - {self.plan_type}>'
-
-class SubscriptionNotification(db.Model):
-    """إشعارات الاشتراك"""
-    __tablename__ = 'subscription_notifications'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    notification_type = db.Column(db.String(50), nullable=False)  # expiry_warning, expired, trial_ending, etc.
-    title = db.Column(db.String(200), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # العلاقات
-    company = db.relationship('Company')
-    
-    def __repr__(self):
-        return f'<SubscriptionNotification {self.company.name} - {self.notification_type}>'
-
-class CompanyPermission(db.Model):
-    """صلاحيات المستخدمين داخل الشركة"""
-    __tablename__ = 'company_permissions'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    module = db.Column(db.Enum(Module), nullable=False)
-    can_view = db.Column(db.Boolean, default=True)
-    can_create = db.Column(db.Boolean, default=False)
-    can_edit = db.Column(db.Boolean, default=False)
-    can_delete = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # العلاقات
-    user = db.relationship('User', back_populates='company_permissions')
-    
-    def __repr__(self):
-        return f'<CompanyPermission {self.user.email} - {self.module}>'
-    
-    def get_permissions(self):
-        """جلب الصلاحيات من JSON"""
-        try:
-            return json.loads(self.permissions) if self.permissions else {}
-        except:
-            return {}
-    
-    def set_permissions(self, perms_dict):
-        """حفظ الصلاحيات كـ JSON"""
-        self.permissions = json.dumps(perms_dict)
-    
-    def has_permission(self, permission_type):
-        """التحقق من وجود صلاحية معينة"""
-        perms = self.get_permissions()
-        return perms.get(permission_type, False)
-    
-    def __repr__(self):
-        return f'<CompanyPermission {self.company.name} - {self.module_name}>'
-
-# تعريف أنواع المستخدمين الجديدة
-class UserType(enum.Enum):
-    SYSTEM_ADMIN = 'system_admin'    # مالك النظام - يدير جميع الشركات
-    COMPANY_ADMIN = 'company_admin'  # مدير الشركة - يدير شركته فقط
-    EMPLOYEE = 'employee'            # موظف - صلاحيات محدودة
 
 class Department(db.Model):
     """Department model for organizing employees"""
@@ -247,12 +9,10 @@ class Department(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     manager_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    company = db.relationship('Company', back_populates='departments')
     employees = db.relationship('Employee', back_populates='department', foreign_keys='Employee.department_id')
     manager = db.relationship('Employee', foreign_keys=[manager_id], uselist=False)
     
@@ -262,8 +22,8 @@ class Department(db.Model):
 class Employee(db.Model):
     """Employee model with all required personal and professional information"""
     id = db.Column(db.Integer, primary_key=True)
-    employee_id = db.Column(db.String(20), nullable=False)  # Internal employee ID - سيصبح فريد ضمن الشركة
-    national_id = db.Column(db.String(20), nullable=False)  # National ID number - سيصبح فريد ضمن الشركة
+    employee_id = db.Column(db.String(20), unique=True, nullable=False)  # Internal employee ID
+    national_id = db.Column(db.String(20), unique=True, nullable=False)  # National ID number
     name = db.Column(db.String(100), nullable=False)
     mobile = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(100))
@@ -272,7 +32,6 @@ class Employee(db.Model):
     location = db.Column(db.String(100))
     project = db.Column(db.String(100))
     department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='SET NULL'), nullable=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     join_date = db.Column(db.Date)
     nationality = db.Column(db.String(50))  # جنسية الموظف
     contract_type = db.Column(db.String(20), default='foreign')  # سعودي / وافد - saudi / foreign
@@ -285,18 +44,11 @@ class Employee(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    company = db.relationship('Company', back_populates='employees')
     department = db.relationship('Department', back_populates='employees', foreign_keys=[department_id])
     attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
     salaries = db.relationship('Salary', back_populates='employee', cascade='all, delete-orphan')
     documents = db.relationship('Document', back_populates='employee', cascade='all, delete-orphan')
     vehicle_handovers = db.relationship('VehicleHandover', back_populates='employee_rel', foreign_keys='VehicleHandover.employee_id')
-    
-    # إضافة قيد فريد مركب للموظف والهوية ضمن الشركة
-    __table_args__ = (
-        db.UniqueConstraint('company_id', 'employee_id', name='unique_employee_per_company'),
-        db.UniqueConstraint('company_id', 'national_id', name='unique_national_id_per_company'),
-    )
     
     def __repr__(self):
         return f'<Employee {self.name} ({self.employee_id})>'
@@ -305,7 +57,6 @@ class Attendance(db.Model):
     """Attendance records for employees"""
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     date = db.Column(db.Date, nullable=False)
     check_in = db.Column(db.Time, nullable=True)
     check_out = db.Column(db.Time, nullable=True)
@@ -324,7 +75,6 @@ class Salary(db.Model):
     """Employee salary information"""
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     month = db.Column(db.Integer, nullable=False)
     year = db.Column(db.Integer, nullable=False)
     basic_salary = db.Column(db.Float, nullable=False)
@@ -392,22 +142,14 @@ class Module(enum.Enum):
     FEES = 'fees'
 
 class User(UserMixin, db.Model):
-    """User model for authentication with Multi-Tenant support"""
+    """User model for authentication"""
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), nullable=False)  # سيصبح فريد ضمن الشركة
+    email = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100))
     firebase_uid = db.Column(db.String(128), unique=True, nullable=True)  # جعلها اختيارية للسماح بتسجيل الدخول المحلي
     password_hash = db.Column(db.String(256), nullable=True)  # حقل لتخزين هاش كلمة المرور
     profile_picture = db.Column(db.String(255))
-    
-    # نظام Multi-Tenant
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=True)  # نالابل للنظام مالك
-    user_type = db.Column(db.Enum(UserType), default=UserType.EMPLOYEE)  # نوع المستخدم الجديد
-    parent_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # من أنشأ هذا المستخدم
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # من أنشأ هذا المستخدم
-    
-    # الحقول القديمة المحدثة
-    role = db.Column(db.Enum(UserRole), default=UserRole.USER)  # دور المستخدم القديم - سيتم الاستغناء عنه تدريجياً
+    role = db.Column(db.Enum(UserRole), default=UserRole.USER)  # دور المستخدم
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
@@ -421,18 +163,8 @@ class User(UserMixin, db.Model):
     assigned_department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=True)
     assigned_department = db.relationship('Department', foreign_keys=[assigned_department_id], uselist=False)
     
-    # العلاقات الجديدة
-    company = db.relationship('Company', back_populates='users')
-    created_users = db.relationship('User', remote_side=[id], foreign_keys=[created_by], backref='creator')
-    
     # العلاقة مع صلاحيات المستخدم
     permissions = db.relationship('UserPermission', back_populates='user', cascade='all, delete-orphan')
-    company_permissions = db.relationship('CompanyPermission', back_populates='user', cascade='all, delete-orphan')
-    
-    # إضافة قيد فريد مركب للإيميل ضمن الشركة (ما عدا مالك النظام)
-    __table_args__ = (
-        db.UniqueConstraint('company_id', 'email', name='unique_email_per_company'),
-    )
     
     def set_password(self, password):
         """تعيين كلمة المرور المشفرة"""
@@ -488,37 +220,12 @@ class User(UserMixin, db.Model):
         if self.role == UserRole.ADMIN:
             return Department.query.all()
             
-        # جلب الأقسام من UserDepartmentAccess
-        dept_accesses = UserDepartmentAccess.query.filter_by(user_id=self.id).all()
-        accessible_departments = [access.department for access in dept_accesses]
-        
-        # إضافة القسم المخصص إذا كان موجوداً ولم يكن في القائمة
+        # إذا كان لديه قسم مخصص، يعرض هذا القسم فقط
         if self.assigned_department_id:
-            main_dept = Department.query.get(self.assigned_department_id)
-            if main_dept and main_dept not in accessible_departments:
-                accessible_departments.append(main_dept)
+            return [self.assigned_department]
             
-        return accessible_departments
-    
-    def get_accessible_department_ids(self):
-        """جلب معرفات الأقسام المتاحة للمستخدم"""
-        # المديرون لديهم وصول لجميع الأقسام
-        if self.role == UserRole.ADMIN:
-            return None  # None يعني جميع الأقسام
-            
-        accessible_departments = self.get_accessible_departments()
-        return [dept.id for dept in accessible_departments]
-    
-    def can_access_employee(self, employee):
-        """التحقق من إمكانية الوصول لموظف معين"""
-        if self.role == UserRole.ADMIN:
-            return True
-            
-        accessible_dept_ids = self.get_accessible_department_ids()
-        if not accessible_dept_ids:
-            return False
-            
-        return employee.department_id in accessible_dept_ids
+        # إذا لم يكن لديه قسم مخصص، لا يعرض أي قسم
+        return []
     
     def __repr__(self):
         return f'<User {self.email}>'
@@ -535,20 +242,6 @@ class UserPermission(db.Model):
     
     def __repr__(self):
         return f'<UserPermission {self.user_id} - {self.module}>'
-
-class UserDepartmentAccess(db.Model):
-    """الأقسام التي يمكن للمستخدم الوصول إليها"""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # العلاقات
-    user = db.relationship('User', backref='department_accesses')
-    department = db.relationship('Department')
-    
-    def __repr__(self):
-        return f'<UserDepartmentAccess {self.user_id} - {self.department_id}>'
 
 class RenewalFee(db.Model):
     """تكاليف رسوم تجديد أوراق الموظفين"""
@@ -695,14 +388,13 @@ class SystemAudit(db.Model):
 class Vehicle(db.Model):
     """نموذج السيارة مع المعلومات الأساسية"""
     id = db.Column(db.Integer, primary_key=True)
-    plate_number = db.Column(db.String(20), nullable=False)  # رقم اللوحة - سيصبح فريد ضمن الشركة
+    plate_number = db.Column(db.String(20), nullable=False, unique=True)  # رقم اللوحة
     make = db.Column(db.String(50), nullable=False)  # الشركة المصنعة (تويوتا، نيسان، إلخ)
     model = db.Column(db.String(50), nullable=False)  # موديل السيارة
     year = db.Column(db.Integer, nullable=False)  # سنة الصنع
     color = db.Column(db.String(30), nullable=False)  # لون السيارة
     status = db.Column(db.String(30), nullable=False, default='available')  # الحالة: متاحة، مؤجرة، في المشروع، في الورشة، حادث
     driver_name = db.Column(db.String(100), nullable=True)  # اسم السائق
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     
     # تواريخ انتهاء الوثائق الهامة
     authorization_expiry_date = db.Column(db.Date)  # تاريخ انتهاء التفويض
@@ -714,7 +406,6 @@ class Vehicle(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # العلاقات
-    company = db.relationship('Company', back_populates='vehicles')
     rental_records = db.relationship('VehicleRental', back_populates='vehicle', cascade='all, delete-orphan')
     workshop_records = db.relationship('VehicleWorkshop', back_populates='vehicle', cascade='all, delete-orphan')
     project_assignments = db.relationship('VehicleProject', back_populates='vehicle', cascade='all, delete-orphan')
@@ -722,11 +413,6 @@ class Vehicle(db.Model):
     periodic_inspections = db.relationship('VehiclePeriodicInspection', back_populates='vehicle', cascade='all, delete-orphan')
     safety_checks = db.relationship('VehicleSafetyCheck', back_populates='vehicle', cascade='all, delete-orphan')
     accidents = db.relationship('VehicleAccident', back_populates='vehicle', cascade='all, delete-orphan')
-    
-    # إضافة قيد فريد مركب لرقم اللوحة ضمن الشركة
-    __table_args__ = (
-        db.UniqueConstraint('company_id', 'plate_number', name='unique_plate_per_company'),
-    )
     
     def __repr__(self):
         return f'<Vehicle {self.plate_number} {self.make} {self.model}>'
@@ -736,7 +422,6 @@ class VehicleRental(db.Model):
     """معلومات إيجار السيارة"""
     id = db.Column(db.Integer, primary_key=True)
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)  # ربط بالشركة
     start_date = db.Column(db.Date, nullable=False)  # تاريخ بداية الإيجار
     end_date = db.Column(db.Date)  # تاريخ نهاية الإيجار (قد يكون فارغا إذا كان الإيجار مستمرا)
     monthly_cost = db.Column(db.Float, nullable=False)  # قيمة الإيجار الشهري
