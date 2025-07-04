@@ -102,6 +102,7 @@ def create_app():
             return redirect(url_for('login'))
         
         # Get basic statistics
+        from models import Employee, Vehicle, Department
         total_employees = Employee.query.count()
         total_vehicles = Vehicle.query.count()
         total_departments = Department.query.count()
