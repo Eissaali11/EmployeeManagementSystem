@@ -2611,6 +2611,22 @@ def handover_pdf_public(id):
         # إنشاء PDF باستخدام WeasyPrint مع خط beIN-Normal
         pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
         
+        # التحقق من نجاح إنشاء PDF
+        if not pdf_buffer:
+            current_app.logger.error(f"فشل في إنشاء PDF للتسليم {id}")
+            return "خطأ في إنشاء ملف PDF. يرجى المحاولة مرة أخرى.", 500
+        
+        # التحقق من حجم PDF
+        pdf_buffer.seek(0, 2)  # الانتقال إلى نهاية الملف
+        pdf_size = pdf_buffer.tell()
+        pdf_buffer.seek(0)  # العودة إلى البداية
+        
+        if pdf_size == 0:
+            current_app.logger.error(f"PDF فارغ للتسليم {id}")
+            return "ملف PDF فارغ. يرجى المحاولة مرة أخرى.", 500
+        
+        current_app.logger.info(f"تم إنشاء PDF بحجم {pdf_size} بايت للتسليم {id}")
+        
         # تحضير اسم الملف
         plate_clean = handover.vehicle.plate_number if handover.vehicle else f"record_{handover.id}"
         filename = f"handover_{plate_clean}_{handover.handover_date}.pdf"
