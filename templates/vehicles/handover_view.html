@@ -208,6 +208,24 @@
         margin-bottom: 20px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
+
+    .table-info-box {
+        background-color: #323c50;
+        border-radius: 10px;
+        overflow: hidden;
+        color: #e9ecef;
+    }
+    
+    .table-info-box th,
+    .table-info-box td {
+        padding: 12px 15px;
+        border: 1px solid #454d66;
+    }
+    
+    .table-info-box th {
+        background-color: #1e2639;
+        font-weight: 600;
+    }
 </style>
 {% endblock %}
 
@@ -217,7 +235,7 @@
     <!-- شريط التنقل العلوي -->
     <div class="page-navigator d-flex justify-content-between align-items-center mb-4">
         <h3 class="text-white mb-0">
-            {% if handover.handover_type == 'delivery' %}
+            {% if handover.handover_type in ['delivery', 'تسليم', 'handover'] %}
                 <i class="fas fa-share ms-2 text-success"></i>
             {% else %}
                 <i class="fas fa-reply ms-2 text-info"></i>
@@ -225,10 +243,6 @@
             نموذج {{ handover_type_name }} السيارة: {{ vehicle.plate_number }}
         </h3>
         <div>
-            <a href="{{ url_for('vehicles.update_handover_link', handover_id=handover.id) }}" class="btn btn-warning btn-action">
-                <i class="fas fa-external-link-alt ms-1"></i>
-                تحديث الرابط
-            </a>
             <a href="{{ url_for('vehicles.handover_pdf_public', id=handover.id) }}" class="btn btn-danger btn-action">
                 <i class="fas fa-file-pdf ms-1"></i>
                 تصدير PDF
@@ -245,15 +259,15 @@
     </div>
     
     <!-- البطاقة الرئيسية -->
-    <div class="main-card {{ 'delivery-card' if handover.handover_type == 'delivery' else 'return-card' }}">
+    <div class="main-card {{ 'delivery-card' if handover.handover_type in ['delivery', 'تسليم', 'handover'] else 'return-card' }}">
         <div class="card-body">
             <div class="row">
                 <!-- معلومات النموذج والسيارة -->
                 <div class="col-md-8">
                     <div class="row">
                         <div class="col-12 mb-4">
-                            <div class="inner-card {{ 'delivery-card' if handover.handover_type == 'delivery' else 'return-card' }}">
-                                <div class="card-header {{ 'bg-success text-white' if handover.handover_type == 'delivery' else 'bg-info text-white' }}">
+                            <div class="inner-card {{ 'delivery-card' if handover.handover_type in ['delivery', 'تسليم', 'handover'] else 'return-card' }}">
+                                <div class="card-header {{ 'bg-success text-white' if handover.handover_type in ['delivery', 'تسليم', 'handover'] else 'bg-info text-white' }}">
                                     <h5 class="mb-0">
                                         <i class="fas fa-info-circle ms-2"></i>
                                         معلومات {{ handover_type_name }}
@@ -265,19 +279,19 @@
                                             <table class="info-table">
                                                 <tr>
                                                     <th>التاريخ:</th>
-                                                    <td>{{ handover.formatted_handover_date }}</td>
+                                                    <td>{{ handover.formatted_handover_date if handover.formatted_handover_date else handover.handover_date }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>اسم الشخص:</th>
-                                                    <td>{{ handover.person_name }}</td>
+                                                    <td>{{ handover.person_name or 'غير محدد' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>مستوى الوقود:</th>
-                                                    <td>{{ handover.fuel_level }}</td>
+                                                    <td>{{ handover.fuel_level or 'غير محدد' }}</td>
                                                 </tr>
                                                 <tr>
                                                     <th>العداد:</th>
-                                                    <td>{{ "{:,}".format(handover.mileage) }} كم</td>
+                                                    <td>{{ "{:,}".format(handover.mileage) if handover.mileage else 'غير محدد' }} كم</td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -340,10 +354,12 @@
                                         </div>
                                     </div>
                                     
+                                    {% if handover.vehicle_condition %}
                                     <div class="mt-3">
                                         <h6>حالة السيارة:</h6>
                                         <div class="p-3 bg-light text-dark rounded">{{ handover.vehicle_condition }}</div>
                                     </div>
+                                    {% endif %}
                                     
                                     {% if handover.form_link %}
                                     <div class="mt-3">
@@ -394,7 +410,7 @@
                                                 </tr>
                                                 <tr>
                                                     <th>سنة الصنع:</th>
-                                                    <td>{{ vehicle.year }}</td>
+                                                    <td>{{ vehicle.year or 'غير محدد' }}</td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -403,8 +419,8 @@
                                                 <tr>
                                                     <th>اللون:</th>
                                                     <td>
-                                                        <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
-                                                            {{ vehicle.color }}
+                                                        <span class="badge rounded-pill" style="background-color: {{ vehicle.color or '#6c757d' }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                                            {{ vehicle.color or 'غير محدد' }}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -442,7 +458,7 @@
                             <h5 class="mb-0">
                                 <i class="fas fa-file-alt ms-2"></i>
                                 الملفات التوثيقية
-                                <span class="badge bg-secondary">{{ images|length }}</span>
+                                <span class="badge bg-secondary">{{ images|length if images else 0 }}</span>
                             </h5>
                         </div>
                         <div class="card-body">
@@ -455,89 +471,61 @@
                                                     <!-- عرض ملف PDF -->
                                                     <div class="pdf-preview text-center p-3 bg-dark rounded position-relative overflow-hidden" style="min-height: 200px;">
                                                         <!-- أيقونة PDF بالخلفية -->
-                                                        <div class="position-absolute" style="opacity: 0.2; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;">
-                                                            <i class="fas fa-file-pdf fa-6x text-danger"></i>
+                                                        <div class="position-absolute" style="opacity: 0.2; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                                            <i class="fas fa-file-pdf" style="font-size: 80px; color: #dc3545;"></i>
                                                         </div>
-                                                        <!-- معلومات الملف -->
-                                                        <div class="position-relative z-index-2" style="z-index: 2;">
-                                                            <div class="pdf-icon mb-3">
-                                                                <i class="fas fa-file-pdf fa-3x text-danger"></i>
-                                                                <div class="mt-2 text-light pdf-filename">
-                                                                    {{ image.get_path().split('/')[-1] }}
-                                                                </div>
+                                                        
+                                                        <!-- محتوى المقدمة -->
+                                                        <div class="position-relative z-index-2">
+                                                            <h6 class="text-white mb-3">
+                                                                <i class="fas fa-file-pdf text-danger ms-2"></i>
+                                                                ملف PDF
+                                                            </h6>
+                                                            
+                                                            <!-- اسم الملف -->
+                                                            <div class="pdf-filename mb-3">
+                                                                {{ image.filename or 'ملف PDF' }}
                                                             </div>
-                                                            <a href="{{ url_for('static', filename=image.get_path()) }}" class="btn btn-danger btn-lg" target="_blank">
-                                                                <i class="fas fa-external-link-alt me-2"></i>
-                                                                فتح الملف
-                                                            </a>
-                                                            <a href="{{ url_for('static', filename=image.get_path()) }}" class="btn btn-outline-light btn-lg ms-2" download>
-                                                                <i class="fas fa-download me-2"></i>
-                                                                تحميل
-                                                            </a>
+                                                            
+                                                            <!-- أزرار التفاعل -->
+                                                            <div class="d-flex justify-content-center gap-2">
+                                                                <a href="{{ url_for('static', filename='uploads/vehicles/handovers/' + image.image_path.split('/')[-1]) }}" 
+                                                                   target="_blank" 
+                                                                   class="btn btn-outline-primary btn-sm">
+                                                                    <i class="fas fa-eye ms-1"></i>
+                                                                    عرض
+                                                                </a>
+                                                                <a href="{{ url_for('static', filename='uploads/vehicles/handovers/' + image.image_path.split('/')[-1]) }}" 
+                                                                   download 
+                                                                   class="btn btn-outline-success btn-sm">
+                                                                    <i class="fas fa-download ms-1"></i>
+                                                                    تحميل
+                                                                </a>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    {% if image.get_description() %}
-                                                        <div class="image-caption">{{ image.get_description() }}</div>
-                                                    {% endif %}
                                                 {% else %}
-                                                    <!-- عرض صورة -->
-                                                    <img src="{{ url_for('static', filename=image.get_path()) }}" alt="صورة توثيقية" class="img-fluid" data-bs-toggle="modal" data-bs-target="#imageModal{{ image.id }}">
-                                                    {% if image.get_description() %}
-                                                        <div class="image-caption">{{ image.get_description() }}</div>
+                                                    <!-- عرض صورة عادية -->
+                                                    <img src="{{ url_for('static', filename='uploads/vehicles/handovers/' + image.image_path.split('/')[-1]) }}" 
+                                                         alt="صورة توثيقية" 
+                                                         class="img-fluid rounded shadow">
+                                                    {% if image.filename %}
+                                                        <div class="image-caption">{{ image.filename }}</div>
                                                     {% endif %}
                                                 {% endif %}
                                             </div>
-                                            
-                                            <!-- Modal للصورة (في حالة أنه ليس PDF) -->
-                                            {% if not image.is_pdf() %}
-                                            <div class="modal fade" id="imageModal{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel{{ image.id }}" aria-hidden="true">
-                                                <div class="modal-dialog modal-lg">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="imageModalLabel{{ image.id }}">
-                                                                {% if image.get_description() %}
-                                                                    {{ image.get_description() }}
-                                                                {% else %}
-                                                                    ملف توثيقي {{ loop.index }}
-                                                                {% endif %}
-                                                            </h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
-                                                        </div>
-                                                        <div class="modal-body text-center">
-                                                            <img src="{{ url_for('static', filename=image.get_path()) }}" alt="صورة توثيقية" class="img-fluid">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endif %}
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="text-center py-5 text-dark">
-                                    <i class="fas fa-photo-video fa-4x text-muted mb-3"></i>
-                                    <p>لا توجد ملفات توثيقية لهذا النموذج</p>
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-file-alt fa-3x mb-3 opacity-50"></i>
+                                    <p>لا توجد ملفات مرفقة</p>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- أزرار الإجراءات -->
-            <div class="text-center mt-4">
-                <a href="{{ url_for('vehicles.handover_pdf_public', id=handover.id) }}" class="btn btn-danger btn-action">
-                    <i class="fas fa-file-pdf ms-1"></i>
-                    تصدير النموذج كملف PDF
-                </a>
-                <a href="{{ url_for('vehicles.create_handover', id=vehicle.id) }}" class="btn btn-primary btn-action ms-2">
-                    <i class="fas fa-plus ms-1"></i>
-                    إضافة نموذج جديد
-                </a>
-                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-light btn-action ms-2">
-                    <i class="fas fa-arrow-right ms-1"></i>
-                    العودة لتفاصيل السيارة
-                </a>
             </div>
         </div>
     </div>
