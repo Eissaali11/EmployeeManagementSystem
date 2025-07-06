@@ -95,8 +95,9 @@ def update_all_vehicle_drivers():
 def get_vehicle_current_employee_id(vehicle_id):
         """الحصول على معرف الموظف الحالي للسيارة"""
         latest_delivery = VehicleHandover.query.filter_by(
-                vehicle_id=vehicle_id, 
-                handover_type='delivery'
+                vehicle_id=vehicle_id
+        ).filter(
+                VehicleHandover.handover_type.in_(['delivery', 'تسليم', 'handover'])
         ).order_by(VehicleHandover.handover_date.desc()).first()
         
         if latest_delivery and latest_delivery.employee_id:
@@ -621,7 +622,11 @@ def index():
         
         # إضافة معرف الموظف الحالي لكل سيارة
         for vehicle in vehicles:
-                vehicle.current_employee_id = get_vehicle_current_employee_id(vehicle.id)
+                try:
+                        vehicle.current_employee_id = get_vehicle_current_employee_id(vehicle.id)
+                except Exception as e:
+                        vehicle.current_employee_id = None
+                        print(f"خطأ في الحصول على معرف الموظف للمركبة {vehicle.id}: {e}")
         
         # تحقق من تواريخ انتهاء الوثائق والتنبيه بالقريبة للانتهاء
         expiring_documents = []
