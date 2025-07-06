@@ -55,8 +55,8 @@ def generate_handover_report_pdf_weasyprint(handover):
         # ونمررها في قائمة stylesheets
         font_css = CSS(string=f'''
             @font-face {{
-                font-family: Amiri;
-                src: url(file://{os.path.join(static_folder, 'fonts', 'Tajawal-Regular.ttf')});
+                font-family: beIN-Normal;
+                src: url(file://{os.path.join(static_folder, 'fonts', 'beIN-Normal.ttf')});
             }}
         ''')
 

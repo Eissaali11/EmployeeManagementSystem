@@ -1255,10 +1255,11 @@ def vehicle_details(vehicle_id):
             # الحصول على بيانات السيارة من قاعدة البيانات
         vehicle = Vehicle.query.get_or_404(vehicle_id)
 
-        maintenance_records = VehicleMaintenance.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleMaintenance.date.desc()).limit(5).all()
+        maintenance_records = VehicleMaintenance.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleMaintenance.date.desc()).all()
         
-            # الحصول على سجلات الورشة
-        workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleWorkshop.entry_date.desc()).limit(5).all()
+            # الحصول على سجلات الورشة - جميع السجلات بدون حد
+        workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleWorkshop.entry_date.desc()).all()
+        print(f"DEBUG: عدد سجلات الورشة للسيارة {vehicle_id}: {len(workshop_records)}")
         
             # الحصول على تعيينات المشاريع
         project_assignments = VehicleProject.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleProject.start_date.desc()).limit(5).all()
