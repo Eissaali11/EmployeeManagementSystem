@@ -209,6 +209,9 @@
                     <hr>
                     <!-- نظام رفع الملفات الجديد -->
                     <label for="files" class="form-label">ملفات توثيقية (صور/PDF)</label>
+                    <div class="alert alert-info py-2 mb-2">
+                        <small><i class="fas fa-info-circle me-1"></i>الحد الأقصى: 20 ميجابايت. لتجنب الأخطاء، استخدم صور مضغوطة أو قلل العدد.</small>
+                    </div>
                     <input type="file" id="files" name="files" multiple class="d-none">
                     <button class="btn btn-outline-secondary w-100" type="button" id="trigger-file-select"><i class="fas fa-file-upload me-2"></i>اختر ملفات...</button>
                     <div id="file-previews" class="row g-2 mt-2"></div>
@@ -495,6 +498,34 @@
         
         // === 7. معالج الإرسال النهائي ===
         mainForm.addEventListener('submit', function (e) {
+            // فحص حجم الملفات قبل الإرسال
+            const filesInput = document.getElementById('files');
+            let totalSize = 0;
+            
+            if (filesInput.files) {
+                for (let file of filesInput.files) {
+                    totalSize += file.size;
+                }
+            }
+            
+            // حساب حجم التواقيع والمخططات
+            const signatures = ['supervisor-signature-data', 'driver-signature-data', 'movement-officer-signature-data', 'damage-diagram-data'];
+            for (let id of signatures) {
+                const input = document.getElementById(id);
+                if (input && input.value && input.value.startsWith('data:image')) {
+                    // تقدير حجم base64 (حوالي 75% من الحجم الفعلي)
+                    totalSize += input.value.length * 0.75;
+                }
+            }
+            
+            const maxSize = 20 * 1024 * 1024; // 20 MB
+            if (totalSize > maxSize) {
+                e.preventDefault();
+                const sizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                alert(`حجم البيانات كبير جداً (${sizeMB} ميجابايت). الحد الأقصى 20 ميجابايت. يرجى تقليل عدد الصور أو ضغطها.`);
+                return false;
+            }
+            
             // أ. حفظ مخطط الضرر
             if (damageCanvas && damageCanvas.getObjects().length > 0) {
                 document.getElementById('damage-diagram-data').value = damageCanvas.toDataURL({ format: 'png', quality: 0.8 });

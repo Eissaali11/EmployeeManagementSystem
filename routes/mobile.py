@@ -1771,8 +1771,9 @@ def create_handover_mobile():
     if request.method == 'POST':
         # فحص حجم البيانات المرسلة
         content_length = request.content_length
-        if content_length and content_length > 50 * 1024 * 1024:  # 50 MB
-            flash('حجم البيانات كبير جداً. يرجى تقليل عدد الصور أو ضغطها.', 'danger')
+        if content_length and content_length > 20 * 1024 * 1024:  # 20 MB
+            size_mb = content_length / (1024 * 1024)
+            flash(f'حجم البيانات كبير جداً ({size_mb:.1f} ميجابايت). الحد الأقصى 20 ميجابايت. يرجى تقليل عدد الصور أو ضغطها قبل الإرسال.', 'danger')
             return redirect(url_for('mobile.create_handover_mobile'))
         
         # يجب اختيار المركبة أولاً في نسخة الموبايل
