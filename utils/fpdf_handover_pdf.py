@@ -73,49 +73,20 @@ def generate_handover_report_pdf_weasyprint(handover):
         print(f"Selected font: {selected_font_family}")
         print(f"Font path: {selected_font_path}")
         print(f"Font exists: {os.path.exists(selected_font_path) if selected_font_path else False}")
+
+
+        font_css = CSS(string=f'''
+            @font-face {{
+                font-family: Tajawal;
+                src: url(file://{os.path.join(static_folder, 'fonts', 'Tajawal-Regular.ttf')});
+            }}
+        ''')
         
         # إنشاء CSS للخط المختار
-        if selected_font_path:
-            font_css = CSS(string=f'''
-                @font-face {{
-                    font-family: '{selected_font_family}';
-                    src: url('file://{selected_font_path}');
-                    font-weight: normal;
-                    font-style: normal;
-                }}
-                
-                * {{
-                    font-family: '{selected_font_family}', 'Arial', sans-serif !important;
-                }}
-                
-                body, p, h1, h2, h3, h4, h5, h6, td, th, div, span {{
-                    font-family: '{selected_font_family}', 'Arial', sans-serif !important;
-                }}
-                
-                .arabic-text {{
-                    font-family: '{selected_font_family}', 'Arial', sans-serif !important;
-                    direction: rtl;
-                    text-align: right;
-                }}
-            ''')
-        else:
+        
             # Fallback إلى Arial إذا لم نجد أي خط
-            font_css = CSS(string='''
-                * {
-                    font-family: 'Arial', sans-serif !important;
-                }
-                
-                body, p, h1, h2, h3, h4, h5, h6, td, th, div, span {
-                    font-family: 'Arial', sans-serif !important;
-                }
-                
-                .arabic-text {
-                    font-family: 'Arial', sans-serif !important;
-                    direction: rtl;
-                    text-align: right;
-                }
-            ''')
 
+        
         # --- 3. Create an HTML object ---
         # base_url مهم جدًا لكي تجد WeasyPrint الصور (مثل logo.png)
         # الموجودة في مجلد static
