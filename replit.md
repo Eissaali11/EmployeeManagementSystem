@@ -154,6 +154,16 @@
 - Environment variable protection
 
 ## Changelog
+- July 6, 2025: **تحديث شامل لخط beIN-Normal في جميع تقارير PDF:**
+  • استبدلت جميع استخدامات خط Amiri بخط beIN-Normal في مولدات PDF
+  • حدثت utils/simple_arabic_pdf.py لاستخدام خط beIN-Normal كخط أساسي
+  • حدثت utils/handover_report.py لاستخدام خط beIN-Normal في جميع الجداول والنصوص
+  • حدثت utils/fpdf_handover_pdf.py مع CSS محدث لتطبيق خط beIN-Normal على جميع عناصر PDF
+  • أنشأت utils/arabic_handover_pdf.py كمولد PDF جديد مخصص لخط beIN-Normal
+  • حدثت routes/vehicles.py و routes/mobile.py لاستخدام مولد PDF الجديد
+  • أصلحت مشاكل الاستيراد الدائري باستخدام SQL مباشر
+  • تحديث template HTML لاستخدام متغير الخط الجديد beIN-Normal
+  • جميع تقارير PDF تستخدم الآن خط beIN-Normal بدلاً من Amiri
 - July 6, 2025: **استبدلت جميع ملفات المشروع بالنسخة الجديدة car_care-main.zip:**
   • نسخت جميع الملفات من car_care-main.zip واستبدلت المشروع بالكامل
   • تم تثبيت جميع الحزم المطلوبة بنجاح (arabic-reshaper, fpdf2, reportlab, weasyprint)
