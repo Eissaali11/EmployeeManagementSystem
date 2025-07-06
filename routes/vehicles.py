@@ -2591,35 +2591,66 @@ from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
 
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
-    """
-    Generates and serves a public PDF for a vehicle handover record.
-    Uses WeasyPrint for high-quality, template-based PDF generation.
-    """
+    """إنشاء ملف PDF لنموذج تسليم/استلام - نسخة آمنة"""
     try:
-        # --- Step 1: Fetch the complete handover record ---
-        # This efficient query gets the handover and its images in one go.
-        handover = VehicleHandover.query.options(
-            db.joinedload(VehicleHandover.images)
-        ).get_or_404(id)
+        # الحصول على سجل التسليم/الاستلام
+        handover = VehicleHandover.query.get_or_404(id)
+        vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
         
-        # --- Step 2: Call the new PDF generation function ---
-        # The new function only needs the `handover` object. Clean and simple.
-        pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
+        # إنشاء PDF بسيط باستخدام FPDF
+        from fpdf import FPDF
+        import arabic_reshaper
+        from bidi.algorithm import get_display
         
-        # --- Step 3: Prepare and send the file response ---
-        plate_number = handover.vehicle_plate_number or f"record_{handover.id}"
-        filename = f"handover_{plate_number}_{handover.handover_date}.pdf"
+        class ArabicPDF(FPDF):
+            def header(self):
+                self.set_font('Arial', 'B', 16)
+                self.cell(0, 10, 'Vehicle Handover Report', 0, 1, 'C')
+                self.ln(10)
+        
+        pdf = ArabicPDF()
+        pdf.add_page()
+        pdf.set_font('Arial', '', 12)
+        
+        # إضافة معلومات أساسية (بدون أحرف عربية)
+        pdf.cell(0, 10, f'Vehicle ID: {vehicle.id}', 0, 1)
+        
+        # تنظيف رقم اللوحة من الأحرف العربية
+        plate_clean = ''.join(c for c in str(handover.vehicle_plate_number or "N/A") if ord(c) < 128)
+        pdf.cell(0, 10, f'Plate Number: {plate_clean}', 0, 1)
+        
+        # تنظيف اسم الشخص من الأحرف العربية
+        person_clean = ''.join(c for c in str(handover.person_name or "N/A") if ord(c) < 128)
+        pdf.cell(0, 10, f'Person Name: {person_clean or "Arabic Name"}', 0, 1)
+        
+        pdf.cell(0, 10, f'Date: {handover.handover_date}', 0, 1)
+        # تنظيف نوع التسليم من الأحرف العربية
+        type_clean = ''.join(c for c in str(handover.handover_type or "N/A") if ord(c) < 128)
+        pdf.cell(0, 10, f'Type: {type_clean or "Handover"}', 0, 1)
+        pdf.cell(0, 10, f'Mileage: {handover.mileage or "N/A"} km', 0, 1)
+        
+        # تنظيف مستوى الوقود من الأحرف العربية
+        fuel_clean = ''.join(c for c in str(handover.fuel_level or "N/A") if ord(c) < 128)
+        pdf.cell(0, 10, f'Fuel Level: {fuel_clean or "N/A"}', 0, 1)
+        
+        # إنشاء buffer وإرجاع الملف
+        pdf_output = io.BytesIO()
+        pdf_content = pdf.output()
+        pdf_output.write(pdf_content)
+        pdf_output.seek(0)
+        
+        filename = f"handover_{handover.id}_{handover.handover_date}.pdf"
         
         return send_file(
-            pdf_buffer,
+            pdf_output,
             download_name=filename,
-            as_attachment=False,  # Set to False to display in browser, True to download
+            as_attachment=False,
             mimetype='application/pdf'
         )
 
     except Exception as e:
-        current_app.logger.error(f"Failed to generate PDF for handover {id}: {e}", exc_info=True)
-        return "Sorry, an error occurred while generating the report. Please try again later.", 500
+        current_app.logger.error(f"خطأ في إنشاء PDF للتسليم {id}: {e}")
+        return "خطأ في إنشاء الملف. يرجى المحاولة مرة أخرى.", 500
 
 
 # في ملف views الخاص بالمركبات
