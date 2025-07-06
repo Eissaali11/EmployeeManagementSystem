@@ -3,6 +3,18 @@ from flask_login import UserMixin
 from app import db
 import enum
 
+# في ملف models.py، يفضل وضعه قبل تعريف كلاس Employee و Department
+# في models.py، يفضل وضعه مع جداول الربط الأخرى
+
+user_accessible_departments = db.Table('user_accessible_departments',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('department_id', db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), primary_key=True)
+)
+# جدول الربط بين الموظفين والأقسام
+employee_departments = db.Table('employee_departments',
+    db.Column('employee_id', db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('department_id', db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), primary_key=True)
+)
 class Department(db.Model):
     """Department model for organizing employees"""
     id = db.Column(db.Integer, primary_key=True)
@@ -13,11 +25,34 @@ class Department(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    employees = db.relationship('Employee', back_populates='department', foreign_keys='Employee.department_id')
+    employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments')
+    # employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments', lazy='dynamic')
+
     manager = db.relationship('Employee', foreign_keys=[manager_id], uselist=False)
+    accessible_users = db.relationship('User', 
+                                       secondary=user_accessible_departments,
+                                       back_populates='departments')
     
     def __repr__(self):
         return f'<Department {self.name}>'
+
+# في models.py (قبل class Employee)
+
+class Nationality(db.Model):
+    """جدول لتخزين الجنسيات المختلفة"""
+    __tablename__ = 'nationalities'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name_ar = db.Column(db.String(100), nullable=False, unique=True) # اسم الجنسية بالعربية (مثال: "سعودي")
+    name_en = db.Column(db.String(100), nullable=True, unique=True) # اسم الجنسية بالإنجليزية (مثال: "Saudi")
+    country_code = db.Column(db.String(3), nullable=True) # رمز الدولة ISO 3166-1 alpha-3 (مثال: "SAU")
+    
+    # علاقة عكسية لجلب جميع الموظفين الذين يحملون هذه الجنسية
+    employees = db.relationship('Employee', back_populates='nationality_rel')
+
+    def __repr__(self):
+        return f'<Nationality {self.name_ar}>'
+
 
 class Employee(db.Model):
     """Employee model with all required personal and professional information"""
@@ -26,14 +61,16 @@ class Employee(db.Model):
     national_id = db.Column(db.String(20), unique=True, nullable=False)  # National ID number
     name = db.Column(db.String(100), nullable=False)
     mobile = db.Column(db.String(20), nullable=False)
+    mobilePersonal  = db.Column(db.String(20), nullable=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='SET NULL'), nullable=True)
     email = db.Column(db.String(100))
     job_title = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='active')  # active, inactive, on_leave
     location = db.Column(db.String(100))
     project = db.Column(db.String(100))
-    department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='SET NULL'), nullable=True)
     join_date = db.Column(db.Date)
     nationality = db.Column(db.String(50))  # جنسية الموظف
+    nationality_id = db.Column(db.Integer, db.ForeignKey('nationalities.id', name='fk_employee_nationality_id'), nullable=True)
     contract_type = db.Column(db.String(20), default='foreign')  # سعودي / وافد - saudi / foreign
     basic_salary = db.Column(db.Float, default=0.0)  # الراتب الأساسي
     has_national_balance = db.Column(db.Boolean, default=False)  # هل يتوفر توازن وطني
@@ -42,14 +79,43 @@ class Employee(db.Model):
     license_image = db.Column(db.String(255))  # صورة رخصة القيادة
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    contract_status = db.Column(db.String(50), nullable=True) # مثال: "ساري", "منتهي", "في فترة التجربة"
+    license_status = db.Column(db.String(50), nullable=True)  # مثال: "سارية", "منتهية", "موقوفة"
+
+    def to_dict(self):
+        """
+        تقوم بتحويل كائن الموظف إلى قاموس (dictionary) يمكن تحويله بسهولة إلى JSON.
+        """
+        return {
+            'id': self.id,
+            'name': self.name,
+            'employee_id': self.employee_id,
+            'national_id': self.national_id
+            # ,
+            # # نقوم بمعالجة العلاقة مع القسم لمنع الأخطاء إذا كان القسم غير موجود
+            # 'departments': [{'id': dept.id, 'name': dept.name} for dept in self.departments] if self.department else None 
+        }
     
     # Relationships
-    department = db.relationship('Department', back_populates='employees', foreign_keys=[department_id])
+    departments = db.relationship('Department', secondary=employee_departments, back_populates='employees') 
     attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
     salaries = db.relationship('Salary', back_populates='employee', cascade='all, delete-orphan')
     documents = db.relationship('Document', back_populates='employee', cascade='all, delete-orphan')
-    vehicle_handovers = db.relationship('VehicleHandover', back_populates='employee_rel', foreign_keys='VehicleHandover.employee_id')
-    
+    # vehicle_handovers = db.relationship('VehicleHandover', back_populates='employee_rel', foreign_keys='VehicleHandover.employee_id')
+    nationality_rel = db.relationship('Nationality', back_populates='employees')
+
+    handovers_as_driver = db.relationship(
+        'VehicleHandover', 
+        foreign_keys='VehicleHandover.employee_id', 
+        back_populates='driver_employee',
+        cascade="all, delete" # اختياري: إذا حذفت موظف، تحذف سجلات التسليم المرتبطة به
+    )
+    handovers_as_supervisor = db.relationship(
+        'VehicleHandover', 
+        foreign_keys='VehicleHandover.supervisor_employee_id', 
+        back_populates='supervisor_employee',
+        cascade="all, delete" # اختياري: نفس الملاحظة أعلاه
+    )
     def __repr__(self):
         return f'<Employee {self.name} ({self.employee_id})>'
 
@@ -125,7 +191,7 @@ class Permission:
     CREATE = 0x02          # إنشاء سجلات جديدة
     EDIT = 0x04            # تعديل السجلات
     DELETE = 0x08          # حذف السجلات
-    MANAGE = 0x10          # إدارة القسم الخاص
+    MANAGE = 0x16          # إدارة القسم الخاص
     ADMIN = 0xff           # كل الصلاحيات
 
 # صلاحيات الأقسام
@@ -162,14 +228,23 @@ class User(UserMixin, db.Model):
     # القسم المخصص للمستخدم (للتحكم في الوصول)
     assigned_department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=True)
     assigned_department = db.relationship('Department', foreign_keys=[assigned_department_id], uselist=False)
+    departments = db.relationship('Department', 
+                                  secondary=user_accessible_departments,
+                                  back_populates='accessible_users')
     
     # العلاقة مع صلاحيات المستخدم
     permissions = db.relationship('UserPermission', back_populates='user', cascade='all, delete-orphan')
+
     
     def set_password(self, password):
         """تعيين كلمة المرور المشفرة"""
         from werkzeug.security import generate_password_hash
         self.password_hash = generate_password_hash(password)
+
+
+   
+    
+
     
     def check_password(self, password):
         """التحقق من كلمة المرور"""
@@ -190,6 +265,21 @@ class User(UserMixin, db.Model):
                 return user_permission.permissions & permission
                 
         return False
+
+    def can_access_department(self, department_id):
+        if self.role == UserRole.ADMIN:
+            return True
+        
+        # تحقق مما إذا كان معرف القسم موجوداً في قائمة الأقسام المخصصة للمستخدم
+        return any(dept.id == department_id for dept in self.departments)
+
+    def get_accessible_departments(self):
+        if self.role == UserRole.ADMIN:
+            from app.models import Department
+            return Department.query.all()
+        
+        # أرجع قائمة الأقسام المرتبطة مباشرة
+        return self.departments
         
     def has_module_access(self, module):
         """التحقق مما إذا كان المستخدم لديه وصول إلى وحدة معينة"""
@@ -409,11 +499,11 @@ class Vehicle(db.Model):
     rental_records = db.relationship('VehicleRental', back_populates='vehicle', cascade='all, delete-orphan')
     workshop_records = db.relationship('VehicleWorkshop', back_populates='vehicle', cascade='all, delete-orphan')
     project_assignments = db.relationship('VehicleProject', back_populates='vehicle', cascade='all, delete-orphan')
-    handover_records = db.relationship('VehicleHandover', back_populates='vehicle', cascade='all, delete-orphan')
+    handover_records = db.relationship('VehicleHandover', back_populates='vehicle', cascade='all, delete-orphan') 
     periodic_inspections = db.relationship('VehiclePeriodicInspection', back_populates='vehicle', cascade='all, delete-orphan')
     safety_checks = db.relationship('VehicleSafetyCheck', back_populates='vehicle', cascade='all, delete-orphan')
     accidents = db.relationship('VehicleAccident', back_populates='vehicle', cascade='all, delete-orphan')
-    
+
     def __repr__(self):
         return f'<Vehicle {self.plate_number} {self.make} {self.model}>'
 
@@ -482,10 +572,6 @@ class VehicleWorkshopImage(db.Model):
     def __repr__(self):
         return f'<VehicleWorkshopImage {self.workshop_record_id} {self.image_type}>'
 
-
-
-
-
 class VehicleProject(db.Model):
     """معلومات تخصيص السيارة لمشروع معين"""
     id = db.Column(db.Integer, primary_key=True)
@@ -507,34 +593,175 @@ class VehicleProject(db.Model):
         return f'<VehicleProject {self.vehicle_id} {self.project_name}>'
 
 
+# في ملف models.py، استبدل الكلاس VehicleHandover القديم بالكامل بهذا الكود.
+
 class VehicleHandover(db.Model):
-    """نموذج تسليم واستلام السيارة"""
+    """
+    نموذج تسليم واستلام السيارة (نسخة معدلة ومكتفية ذاتياً)
+    يحتوي على نسخة من جميع المعلومات وقت حدوث العملية لضمان سلامة السجلات التاريخية.
+    """
+    __tablename__ = 'vehicle_handover'  # من الجيد تحديد اسم الجدول بشكل صريح
+
     id = db.Column(db.Integer, primary_key=True)
+    
+    # --- 1. معلومات العملية الأساسية ---
+    # هذه الحقول موجودة بالفعل وتم الإبقاء عليها كما هي
+    handover_type = db.Column(db.String(20), nullable=False)  # 'delivery' (تسليم) أو 'receipt' (استلام)
+    handover_date = db.Column(db.Date, nullable=False)
+    mileage = db.Column(db.Integer, nullable=False)
+
+    # حقول جديدة تمت إضافتها بناءً على التصميم الجديد
+    handover_time = db.Column(db.Time, nullable=True) # **جديد**: وقت العملية
+    project_name = db.Column(db.String(100), nullable=True) # **جديد**: اسم المشروع وقت العملية
+    city = db.Column(db.String(100), nullable=True) # **جديد**: اسم المدينة وقت العملية
+    
+    # --- 2. معلومات السيارة المنسوخة (Snapshot) ---
+    # يبقى الربط فقط لسهولة الوصول للسيارة الحالية، ولكن بيانات التقرير تأتي من الحقول أدناه    
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
-    handover_type = db.Column(db.String(20), nullable=False)  # النوع: تسليم، استلام
-    handover_date = db.Column(db.Date, nullable=False)  # تاريخ التسليم/الاستلام
-    person_name = db.Column(db.String(100), nullable=False)  # اسم الشخص المستلم/المسلم
-    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)  # معرف الموظف المستلم/المسلم
-    supervisor_name = db.Column(db.String(100))  # اسم المشرف
-    vehicle_condition = db.Column(db.Text, nullable=False)  # حالة السيارة عند التسليم/الاستلام
-    fuel_level = db.Column(db.String(20), nullable=False)  # مستوى الوقود
-    mileage = db.Column(db.Integer, nullable=False)  # عداد الكيلومترات
-    has_spare_tire = db.Column(db.Boolean, default=True)  # وجود إطار احتياطي
-    has_fire_extinguisher = db.Column(db.Boolean, default=True)  # وجود طفاية حريق
-    has_first_aid_kit = db.Column(db.Boolean, default=True)  # وجود حقيبة إسعافات أولية
-    has_warning_triangle = db.Column(db.Boolean, default=True)  # وجود مثلث تحذيري
-    has_tools = db.Column(db.Boolean, default=True)  # وجود أدوات
-    form_link = db.Column(db.String(255))  # رابط فورم التسليم/الاستلام
-    notes = db.Column(db.Text)  # ملاحظات إضافية
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', name='fk_handover_driver_employee_id'), nullable=True)
+    supervisor_employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', name='fk_handover_supervisor_employee_id'), nullable=True)
+
+    # **جديد**: حقول لحفظ نسخة من بيانات السيارة وقت التسليم
+    vehicle_car_type = db.Column(db.String(100), nullable=True) # مثال: "Nissan urvan"
+    vehicle_plate_number = db.Column(db.String(20), nullable=True)
+    vehicle_model_year = db.Column(db.String(10), nullable=True) # مثال: "2021"
+
+    # --- 3. بيانات السائق/المستلم (Recipient) المنسوخة ---
+    # تم الإبقاء على الحقل القديم `person_name` ليمثل اسم السائق الرئيسي
+    person_name = db.Column(db.String(100), nullable=False) # سابقاً: اسم الشخص المستلم/المسلم. الآن: اسم السائق/المستلم
+
+    # **جديد**: حقول إضافية لبيانات السائق المنسوخة
+    driver_company_id = db.Column(db.String(50), nullable=True) # رقم شركة السائق
+    driver_phone_number = db.Column(db.String(20), nullable=True) # رقم جوال السائق
+    driver_residency_number = db.Column(db.String(50), nullable=True) # رقم إقامة السائق
+    driver_contract_status = db.Column(db.String(50), nullable=True) # حالة عقد السائق
+    driver_license_status = db.Column(db.String(50), nullable=True) # حالة رخصة السائق
+    driver_signature_path = db.Column(db.String(255), nullable=True) # مسار توقيع السائق (موجود بالفعل)
+
+    # --- 4. بيانات المشرف/المسلِّم (Deliverer) المنسوخة ---
+    # تم الإبقاء على الحقل القديم `supervisor_name` ليمثل اسم المشرف الرئيسي
+    supervisor_name = db.Column(db.String(100))
+    
+    # **جديد**: حقول إضافية لبيانات المشرف المنسوخة
+    supervisor_company_id = db.Column(db.String(50), nullable=True) # رقم شركة المشرف
+    supervisor_phone_number = db.Column(db.String(20), nullable=True) # رقم جوال المشرف
+    supervisor_residency_number = db.Column(db.String(50), nullable=True) # رقم إقامة المشرف
+    supervisor_contract_status = db.Column(db.String(50), nullable=True) # حالة عقد المشرف
+    supervisor_license_status = db.Column(db.String(50), nullable=True) # حالة رخصة المشرف
+    supervisor_signature_path = db.Column(db.String(255), nullable=True) # مسار توقيع المشرف (موجود بالفعل)
+    
+    # --- 5. بيانات الفحص والملاحظات والتفويض ---
+    # تم استبدال `vehicle_condition` بالحقول الأكثر تفصيلاً أدناه
+    # vehicle_condition = db.Column(db.Text, nullable=False) # -> تم استبداله
+
+    # **جديد**: حقول جديدة للملاحظات التفصيلية حسب التصميم
+    reason_for_change = db.Column(db.Text, nullable=True) # سبب تغيير المركبة (النص الكبير في الجدول)
+    vehicle_status_summary = db.Column(db.String(255), nullable=True) # ملخص الحالة (مثال: "يوجد ملاحظات")
+    notes = db.Column(db.Text) # ملاحظات إضافية (موجود بالفعل)
+    reason_for_authorization = db.Column(db.Text, nullable=True) # سبب التفويض
+    authorization_details = db.Column(db.String(255), nullable=True) # تفاصيل التفويض (مثل "تفويض واصل")
+
+    # حقول الـ Checklist (موجودة بالفعل ولا تحتاج تغيير)
+    fuel_level = db.Column(db.String(20), nullable=False)
+    has_spare_tire = db.Column(db.Boolean, default=True)
+    has_fire_extinguisher = db.Column(db.Boolean, default=True)
+    has_first_aid_kit = db.Column(db.Boolean, default=True)
+    has_warning_triangle = db.Column(db.Boolean, default=True)
+    has_tools = db.Column(db.Boolean, default=True)
+    has_oil_leaks = db.Column(db.Boolean, nullable=False, default=False)
+    has_gear_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_clutch_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_engine_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_windows_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_tires_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_body_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_electricity_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_lights_issue = db.Column(db.Boolean, nullable=False, default=False)
+    has_ac_issue = db.Column(db.Boolean, nullable=False, default=False)
+    
+    # --- 6. بيانات إضافية متنوعة ---
+    # **جديد**: معلومات مسؤول الحركة
+    movement_officer_name = db.Column(db.String(100), nullable=True)
+    movement_officer_signature_path = db.Column(db.String(255), nullable=True)
+
+    # الحقول التالية موجودة بالفعل
+    damage_diagram_path = db.Column(db.String(255), nullable=True)
+    form_link = db.Column(db.String(255), nullable=True)
+    custom_company_name = db.Column(db.String(100), nullable=True)
+    custom_logo_path = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # العلاقات
-    vehicle = db.relationship('Vehicle', back_populates='handover_records')
-    employee_rel = db.relationship('Employee', foreign_keys=[employee_id], back_populates='vehicle_handovers')
+
+    # --- حقول وعلاقات تم حذفها أو تعديلها ---
+    # employee_id: تم حذفه لأنه لم نعد نربط الموظف مباشرةً.
+    # employee_rel: تم حذف هذه العلاقة.
+
+    # --- العلاقات المتبقية ---
+    # نعدل علاقة المركبة لتكون أبسط
     images = db.relationship('VehicleHandoverImage', back_populates='handover_record', cascade='all, delete-orphan')
+    vehicle = db.relationship('Vehicle', back_populates='handover_records')
+
+    driver_employee = db.relationship(
+        'Employee', 
+        foreign_keys=[employee_id], 
+        back_populates='handovers_as_driver'
+    )
     
+    supervisor_employee = db.relationship(
+        'Employee', 
+        foreign_keys=[supervisor_employee_id], 
+        back_populates='handovers_as_supervisor'
+    )
+
+
     def __repr__(self):
-        return f'<VehicleHandover {self.vehicle_id} {self.handover_type} {self.handover_date}>'
+        # استخدام البيانات المنسوخة في الـ repr لضمان عدم حدوث خطأ إذا حُذفت المركبة
+        return f'<VehicleHandover {self.id} for vehicle {self.vehicle_plate_number} on {self.handover_date}>'
+
+
+
+# class VehicleHandover(db.Model):
+#     """نموذج تسليم واستلام السيارة"""
+#     id = db.Column(db.Integer, primary_key=True)
+#     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+#     handover_type = db.Column(db.String(20), nullable=False)  # النوع: تسليم، استلام
+#     handover_date = db.Column(db.Date, nullable=False)  # تاريخ التسليم/الاستلام
+#     person_name = db.Column(db.String(100), nullable=False)  # اسم الشخص المستلم/المسلم
+#     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)  # معرف الموظف المستلم/المسلم
+#     supervisor_name = db.Column(db.String(100))  # اسم المشرف
+#     vehicle_condition = db.Column(db.Text, nullable=False)  # حالة السيارة عند التسليم/الاستلام
+#     fuel_level = db.Column(db.String(20), nullable=False)  # مستوى الوقود
+#     mileage = db.Column(db.Integer, nullable=False)  # عداد الكيلومترات
+#     has_spare_tire = db.Column(db.Boolean, default=True)  # وجود إطار احتياطي
+#     has_fire_extinguisher = db.Column(db.Boolean, default=True)  # وجود طفاية حريق
+#     has_first_aid_kit = db.Column(db.Boolean, default=True)  # وجود حقيبة إسعافات أولية
+#     has_warning_triangle = db.Column(db.Boolean, default=True)  # وجود مثلث تحذيري
+#     has_tools = db.Column(db.Boolean, default=True)  # وجود أدوات
+#     form_link = db.Column(db.String(255))  # رابط فورم التسليم/الاستلام
+#     notes = db.Column(db.Text)  # ملاحظات إضافية
+#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+#     damage_diagram_path = db.Column(db.String(255), nullable=True)
+#     has_oil_leaks = db.Column(db.Boolean, nullable=False, default=False)
+#     has_gear_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_clutch_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_engine_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_windows_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_tires_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_body_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_electricity_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_lights_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     has_ac_issue = db.Column(db.Boolean, nullable=False, default=False)
+#     supervisor_signature_path = db.Column(db.String(255), nullable=True)
+#     driver_signature_path = db.Column(db.String(255), nullable=True)
+#     custom_company_name = db.Column(db.String(100), nullable=True)
+#     custom_logo_path = db.Column(db.String(255), nullable=True)
+
+
+#     # العلاقات
+#     vehicle = db.relationship('Vehicle', back_populates='handover_records')
+#     employee_rel = db.relationship('Employee', foreign_keys=[employee_id], back_populates='vehicle_handovers')
+#     images = db.relationship('VehicleHandoverImage', back_populates='handover_record', cascade='all, delete-orphan')
+#     def __repr__(self):
+#         return f'<VehicleHandover {self.vehicle_id} {self.handover_type} {self.handover_date}>'
 
 
 class VehicleHandoverImage(db.Model):
@@ -571,7 +798,6 @@ class VehicleHandoverImage(db.Model):
         """التحقق مما إذا كان الملف PDF"""
         file_path = self.get_path()
         return self.get_type() == 'pdf' or (file_path and file_path.lower().endswith('.pdf'))
-
 
 class VehicleChecklist(db.Model):
     """تشيك لست فحص السيارة"""

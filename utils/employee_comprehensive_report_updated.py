@@ -23,7 +23,7 @@ class EmployeeComprehensivePDF(FPDF):
         self.add_font('Amiri', '', os.path.join(FONT_PATH, 'Amiri-Regular.ttf'), uni=True)
         self.add_font('Amiri', 'B', os.path.join(FONT_PATH, 'Amiri-Bold.ttf'), uni=True)
         
-    def header(self):
+    def header(self):   
         """ترويسة الصفحة - تظهر في كل صفحة"""
         # إضافة الشعار
         logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'images', 'logo.png')

@@ -8,7 +8,14 @@ from app import db
 from models import Salary, Employee, Department, SystemAudit
 from utils.audit_logger import log_activity
 from utils.excel import parse_salary_excel, generate_salary_excel, generate_comprehensive_employee_report, generate_employee_salary_simple_excel
-from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_salary_report_pdf
+# from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_salary_report_pdf
+# from utils.reports import generate_salary_report_pdf
+# from utils.salary_pdf_generator import
+
+from utils.ultra_safe_pdf import create_ultra_safe_salary_pdf
+from utils.salary_pdf_generator import generate_salary_summary_pdf
+from utils.salary_report_pdf import generate_salary_report_pdf
+
 from utils.salary_notification import generate_salary_notification_pdf, generate_batch_salary_notifications
 from utils.whatsapp_notification import (
     send_salary_notification_whatsapp, 
@@ -703,7 +710,8 @@ def report_pdf():
         # Get filter parameters
         month = request.args.get('month')
         year = request.args.get('year')
-        
+        department_id = request.args.get('department_id')
+
         if not month or not month.isdigit() or not year or not year.isdigit():
             flash('يرجى اختيار شهر وسنة صالحين', 'danger')
             return redirect(url_for('salaries.index'))
@@ -711,16 +719,18 @@ def report_pdf():
         month = int(month)
         year = int(year)
         
+  
+
         # Get salary records for the selected month and year
         salaries = Salary.query.filter_by(month=month, year=year).all()
-        
+
         if not salaries:
             flash('لا توجد سجلات رواتب للشهر والسنة المحددين', 'warning')
             return redirect(url_for('salaries.index'))
-        
         # Generate PDF report
-        pdf_bytes = generate_salary_report_pdf(salaries, month, year)
-        
+        # pdf_bytes = generate_salary_report_pdf(salaries, month, year)
+
+        pdf_bytes = generate_salary_summary_pdf(salaries, month, year)
         # Log the export
         audit = SystemAudit(
             action='export_pdf',
@@ -740,6 +750,7 @@ def report_pdf():
     except Exception as e:
         flash(f'حدث خطأ أثناء إنشاء تقرير PDF: {str(e)}', 'danger')
         return redirect(url_for('salaries.index'))
+
 
 @salaries_bp.route('/notification/<int:id>/pdf')
 def salary_notification_pdf(id):
@@ -793,25 +804,25 @@ def share_salary_via_whatsapp(id):
         
         # إعداد نص الرسالة مع رابط التحميل
         message_text = f"""
-*إشعار راتب - نُظم*
+        *إشعار راتب - نُظم*
 
-السلام عليكم ورحمة الله وبركاته،
+        السلام عليكم ورحمة الله وبركاته،
 
-تحية طيبة،
+        تحية طيبة،
 
-نود إشعاركم بإيداع راتب شهر {month_name} {salary.year}.
+        نود إشعاركم بإيداع راتب شهر {month_name} {salary.year}.
 
-الموظف: {employee.name}
-الشهر: {month_name} {salary.year}
+        الموظف: {employee.name}
+        الشهر: {month_name} {salary.year}
 
-صافي الراتب: *{salary.net_salary:.2f}*
+        صافي الراتب: *{salary.net_salary:.2f}*
 
-للاطلاع على تفاصيل الراتب، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
-{pdf_url}
+        للاطلاع على تفاصيل الراتب، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
+        {pdf_url}
 
-مع تحيات إدارة الموارد البشرية
-نُظم - نظام إدارة متكامل
-"""
+        مع تحيات إدارة الموارد البشرية
+        نُظم - نظام إدارة متكامل
+        """
         
         # تسجيل العملية
         audit = SystemAudit(
@@ -878,27 +889,27 @@ def share_deduction_via_whatsapp(id):
         
         # إعداد نص الرسالة مع رابط التحميل
         message_text = f"""
-*إشعار خصم على الراتب - نُظم*
+        *إشعار خصم على الراتب - نُظم*
 
-السلام عليكم ورحمة الله وبركاته،
+        السلام عليكم ورحمة الله وبركاته،
 
-تحية طيبة،
+        تحية طيبة،
 
-نود إبلاغكم عن وجود خصم على راتب شهر {month_name} {salary.year}.
+        نود إبلاغكم عن وجود خصم على راتب شهر {month_name} {salary.year}.
 
-الموظف: {employee.name}
-الشهر: {month_name} {salary.year}
+        الموظف: {employee.name}
+        الشهر: {month_name} {salary.year}     
 
-مبلغ الخصم: *{salary.deductions:.2f}*
+        مبلغ الخصم: *{salary.deductions:.2f}*
 
-الراتب بعد الخصم: {salary.net_salary:.2f}
+        الراتب بعد الخصم: {salary.net_salary:.2f}
 
-للاطلاع على تفاصيل الراتب والخصم، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
-{pdf_url}
+        للاطلاع على تفاصيل الراتب والخصم، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
+        {pdf_url}  
 
-مع تحيات إدارة الموارد البشرية
-نُظم - نظام إدارة متكامل
-"""
+        مع تحيات إدارة الموارد البشرية
+        نُظم - نظام إدارة متكامل
+        """
         
         # تسجيل العملية
         audit = SystemAudit(

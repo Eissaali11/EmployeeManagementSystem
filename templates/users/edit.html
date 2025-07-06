@@ -13,34 +13,34 @@
                         تعديل المستخدم: {{ user.name }}
                     </h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="color: white !important;">
                     <form method="POST" action="{{ url_for('users.edit', user_id=user.id) }}">
                         {{ csrf_token() }}
                         
-                        <div class="row mb-3">
+                        <div class="row mb-3" style="color: white !important;">
                             <div class="col-md-6">
-                                <label for="name" class="form-label">الاسم الكامل <span class="text-danger">*</span></label>
+                                <label for="name" class="form-label" style="color: white !important;">الاسم الكامل <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="email" class="form-label">البريد الإلكتروني <span class="text-danger">*</span></label>
+                                <label for="email" class="form-label" style="color: white !important;">البريد الإلكتروني <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
                             </div>
                         </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="password" class="form-label">كلمة المرور الجديدة</label>
+                                <label for="password" class="form-label" style="color: white !important;">كلمة المرور الجديدة</label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="password" name="password" minlength="6">
                                     <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
-                                <div class="form-text">اتركها فارغة إذا كنت لا تريد تغيير كلمة المرور</div>
+                                <div class="form-text" style="color: rgb(117, 113, 113) !important;">اتركها فارغة إذا كنت لا تريد تغيير كلمة المرور</div>
                             </div>
                             <div class="col-md-6">
-                                <label for="role" class="form-label">الدور</label>
+                                <label for="role" class="form-label" style="color: white !important;">الدور</label>
                                 <select class="form-select" id="role" name="role">
                                     <option value="user" {% if user.role.value == 'user' %}selected{% endif %}>مستخدم</option>
                                     <option value="manager" {% if user.role.value == 'manager' %}selected{% endif %}>مشرف</option>
@@ -52,9 +52,35 @@
                             </div>
                         </div>
                         
+                    
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="department_id" class="form-label">القسم المخصص</label>
+                            <!-- الجزء الجديد لاختيار عدة أقسام -->
+<!-- في ملف edit.html -->
+<div class="col-12"> <!-- جعله يأخذ العرض الكامل ليكون أوضح -->
+    <label class="form-label mb-2" style="color: white !important;">الأقسام المخصصة</label>
+    <div class="department-pills-container p-2 rounded" style="border: 1px solid #495057;">
+        {% set assigned_dept_ids = user.departments|map(attribute='id')|list %}
+        
+        {% if departments %}
+            {% for dept in departments %}
+            <div class="form-check form-check-inline d-none">
+                <!-- مربع الاختيار الفعلي سيكون مخفياً، ونتحكم به عبر JavaScript -->
+                <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ dept.id }}" id="dept-edit-{{ dept.id }}"
+                       {% if dept.id in assigned_dept_ids %}checked{% endif %}>
+            </div>
+            <!-- الشارة التفاعلية التي يراها المستخدم وينقر عليها -->
+            <span class="badge department-pill {% if dept.id in assigned_dept_ids %}active{% endif %}" data-target-id="dept-edit-{{ dept.id }}">
+                <i class="fas fa-check-circle me-1"></i> {{ dept.name }}
+            </span>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted small m-1">لا توجد أقسام معرفة في النظام.</p>
+        {% endif %}
+    </div>
+    <div class="form-text mt-2" style="color: rgb(160, 160, 160) !important;">انقر على اسم القسم لتحديده أو إلغاء تحديده.</div>
+</div>
+                            <!-- <div class="col-md-6">
+                                <label for="department_id" class="form-label" style="color: white !important;">القسم المخصص</label>
                                 <select class="form-select" id="department_id" name="department_id">
                                     <option value="">-- غير محدد --</option>
                                     {% for dept in departments %}
@@ -63,11 +89,11 @@
                                     </option>
                                     {% endfor %}
                                 </select>
-                                <div class="form-text">تحديد القسم يحدد أي موظفين يمكن للمستخدم إدارة حضورهم</div>
-                            </div>
+                                <div class="form-text" style="color: rgb(160, 160, 160) !important;">تحديد القسم يحدد أي موظفين يمكن للمستخدم إدارة حضورهم</div>
+                            </div> -->
                             <div class="col-md-6">
-                                <label class="form-label">معلومات إضافية</label>
-                                <div class="p-3 bg-light rounded">
+                                <label class="form-label" style="color: white !important;">معلومات إضافية</label>
+                                <div class="p-3 rounded" style="border: 1px solid #e3dddd;">
                                     <div class="small">
                                         <strong>رقم المستخدم:</strong> {{ user.id }}<br>
                                         <strong>تاريخ التسجيل:</strong> {{ user.created_at.strftime('%Y/%m/%d %H:%M') if user.created_at else 'غير محدد' }}<br>
@@ -122,6 +148,54 @@
     </div>
 </div>
 
+<style>
+    /* ... أي ستايلات أخرى ... */
+
+    .department-pills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem; /* مسافات بين الشارات */
+    }
+
+    .department-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5em 0.9em;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border-radius: 50rem; /* يجعل الحواف دائرية تماماً */
+        transition: all 0.2s ease-in-out;
+        
+        /* الحالة الافتراضية (غير محدد) */
+        background-color: #495057; /* لون رمادي داكن */
+        color: #ced4da;
+        border: 1px solid #495057;
+    }
+
+    .department-pill .fa-check-circle {
+        display: none; /* إخفاء أيقونة الصح افتراضياً */
+    }
+
+    /* الحالة النشطة (عند التحديد) */
+    .department-pill.active {
+        background-color: #0d6efd; /* لون أزرق أساسي */
+        color: white;
+        border-color: #0a58ca;
+        font-weight: 500;
+    }
+
+    .department-pill.active .fa-check-circle {
+        display: inline-block; /* إظهار أيقونة الصح عند التحديد */
+    }
+
+    /* تأثير عند مرور الماوس */
+    .department-pill:not(.active):hover {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // إظهار/إخفاء كلمة المرور
@@ -136,6 +210,28 @@ document.addEventListener('DOMContentLoaded', function() {
         icon.classList.toggle('fa-eye');
         icon.classList.toggle('fa-eye-slash');
     });
+
+    // في document.addEventListener('DOMContentLoaded', ...)
+
+// --- بداية منطق شارات الأقسام التفاعلية ---
+const departmentPills = document.querySelectorAll('.department-pill');
+
+departmentPills.forEach(pill => {
+    pill.addEventListener('click', function() {
+        // تبديل حالة "النشاط" البصرية للشارة
+        this.classList.toggle('active');
+
+        // الحصول على معرف مربع الاختيار المخفي المرتبط
+        const targetCheckboxId = this.dataset.targetId;
+        const targetCheckbox = document.getElementById(targetCheckboxId);
+
+        if (targetCheckbox) {
+            // عكس حالة مربع الاختيار المخفي
+            targetCheckbox.checked = !targetCheckbox.checked;
+        }
+    });
+});
+// --- نهاية منطق شارات الأقسام التفاعلية ---
 });
 </script>
 {% endblock %}

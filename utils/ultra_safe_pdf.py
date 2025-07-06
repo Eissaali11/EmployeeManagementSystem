@@ -79,7 +79,7 @@ def create_ultra_safe_salary_pdf(salary):
         # شعار الشركة
         try:
             # محاولة إضافة صورة الشعار
-            logo_path = 'attached_assets/ChatGPT Image Jun 8, 2025, 05_34_10 PM_1749393284624.png'
+            logo_path = 'static\images\logo\logo_new.png'
             pdf.image(logo_path, x=15, y=8, w=20, h=20)
         except Exception:
             # في حالة عدم وجود الصورة، استخدام مربع أزرق مع نص
@@ -90,16 +90,16 @@ def create_ultra_safe_salary_pdf(salary):
             pdf.set_text_color(255, 255, 255)
             pdf.set_font('Arial', 'B', 12)
             pdf.set_xy(18, 15)
-            pdf.ultra_safe_cell(14, 6, 'NUZUM', 0, 0, 'C')
+            pdf.ultra_safe_cell(14, 6, 'M', 0, 0, 'C')
         
-        # اسم الشركة
-        pdf.set_font('Arial', 'B', 16)
-        pdf.set_xy(40, 12)
-        pdf.ultra_safe_cell(100, 8, 'NUZUM COMPANY LTD', 0, 1, 'L')
+        # # اسم الشركة
+        # pdf.set_font('Arial', 'B', 16)
+        # pdf.set_xy(40, 12)
+        # pdf.ultra_safe_cell(100, 8, 'NUZUM COMPANY LTD', 0, 1, 'L')
         
         # وصف الشركة
-        pdf.set_font('Arial', '', 12)
-        pdf.set_xy(40, 20)
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_xy(40, 12)
         pdf.ultra_safe_cell(100, 6, 'Employee Management System', 0, 1, 'L')
         
         # عنوان التقرير

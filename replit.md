@@ -154,6 +154,12 @@
 - Environment variable protection
 
 ## Changelog
+- July 6, 2025: **استبدلت جميع ملفات المشروع بالنسخة الجديدة car_care-main.zip:**
+  • نسخت جميع الملفات من car_care-main.zip واستبدلت المشروع بالكامل
+  • تم تثبيت جميع الحزم المطلوبة بنجاح (arabic-reshaper, fpdf2, reportlab, weasyprint)
+  • النظام يعمل الآن بالنسخة الجديدة مع تحسينات شاملة
+  • تم إنشاء قاعدة البيانات بنجاح وتشغيل التطبيق بدون أخطاء
+  • يحتوي على جميع الوحدات: employees, vehicles, attendance, salaries, departments
 - July 4, 2025: **استبدلت جميع ملفات المشروع بالنسخة الاحتياطية cloudpanel_20250609_213427.rar:**
   • استبدلت app.py وmodels.py بالنسخة الكاملة من النسخة الاحتياطية
   • نسخت جميع مجلدات routes/ وtemplates/ وstatic/ وutils/ وservices/ وforms/

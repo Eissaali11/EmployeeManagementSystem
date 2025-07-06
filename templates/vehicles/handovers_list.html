@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends 'layout.html' %}
 
 {% block title %}السيارات المخصصة حالياً{% endblock %}
 
@@ -113,7 +113,7 @@
                                                    title="عرض تفاصيل السيارة">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ url_for('vehicles.add_handover', vehicle_id=data.vehicle.id) }}" 
+                                                <a href="{{ url_for('vehicles.create_handover', id=data.vehicle.id) }}" 
                                                    class="btn btn-outline-primary btn-sm" 
                                                    title="إضافة تسليم/استلام">
                                                     <i class="fas fa-plus"></i>

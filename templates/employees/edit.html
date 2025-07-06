@@ -35,12 +35,19 @@
                             <input type="text" class="form-control" id="national_id" name="national_id" value="{{ employee.national_id }}" required>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <div class="form-group mb-3">
-                            <label for="mobile" class="form-label required-field">رقم الجوال</label>
+                            <label for="mobile" class="form-label required-field">جوال العمل</label>
                             <input type="text" class="form-control" id="mobile" name="mobile" value="{{ employee.mobile }}" required>
                         </div>
                     </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="mobilePersonal" class="form-label">الجوال الشخصي</label>
+                            <input type="text" class="form-control" id="mobilePersonal" name="mobilePersonal" value="{{ employee.mobilePersonal or '' }}">
+                        </div>
+                    </div>
+
                     <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label for="email" class="form-label">البريد الإلكتروني</label>
@@ -54,6 +61,48 @@
                         </div>
                     </div>
 
+                                        <!-- عمود الجنسية (قائمة منسدلة جديدة) -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="nationality_id" class="form-label">الجنسية</label>
+                            <select class="form-select" id="nationality_id" name="nationality_id">
+                                <option value="">- اختر الجنسية -</option>
+                                {% for nat in nationalities %}
+                                <option value="{{ nat.id }}" {% if employee.nationality_id == nat.id %}selected{% endif %}>
+                                    {{ nat.name_ar }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+<div class="col-md-6">
+    <div class="form-group mb-3">
+        <label for="contract_status" class="form-label">حالة العقد</label>
+        <select class="form-select" id="contract_status" name="contract_status">
+            <option value="">- غير محدد -</option>
+            <option value="Active" {% if employee.contract_status == 'Active' %}selected{% endif %}>ساري</option>
+            <option value="Expired" {% if employee.contract_status == 'Expired' %}selected{% endif %}>منتهي</option>
+            <option value="Probation" {% if employee.contract_status == 'Probation' %}selected{% endif %}>فترة تجربة</option>
+            <option value="Terminated" {% if employee.contract_status == 'Terminated' %}selected{% endif %}>منهى</option>
+        </select>
+    </div>
+</div>
+
+                    <!-- عمود حالة الرخصة (جديد) -->
+                    <div class="col-md-6">
+    <div class="form-group mb-3">
+        <label for="license_status" class="form-label">حالة الرخصة</label>
+        <select class="form-select" id="license_status" name="license_status">
+            <option value="">- غير محدد -</option>
+            <option value="Valid" {% if employee.license_status == 'Valid' %}selected{% endif %}>سارية</option>
+            <option value="Expired" {% if employee.license_status == 'Expired' %}selected{% endif %}>منتهية</option>
+            <option value="Suspended" {% if employee.license_status == 'Suspended' %}selected{% endif %}>موقوفة</option>
+            <option value="Not-Applicable" {% if employee.license_status == 'Not-Applicable' %}selected{% endif %}>لا تنطبق</option>
+        </select>
+    </div>
+</div>
+
                     <!-- معلومات العمل -->
                     <div class="col-md-6">
                         <div class="form-group mb-3">
@@ -66,7 +115,38 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <!-- في ملف employees/edit.html -->
+
+<!-- ابحث عن الحقل الخاص بـ department_id وقم باستبداله بهذا الكود -->
+<!-- في ملف employees/edit.html -->
+
+<!-- القسم الجديد لاختيار عدة أقسام -->
+<div class="mb-3"> <!-- تم إزالته من row/col لجعله أبسط -->
+    <label class="form-label fw-bold">الأقسام المرتبط بها الموظف</label>
+    <div class="department-pills-container p-2 rounded" style="border: 1px solid var(--bs-border-color-translucent);">
+        <!-- التحقق من وجود أقسام لعرضها -->
+        {% if departments %}
+            {% set assigned_dept_ids = employee.departments|map(attribute='id')|list %}
+            
+            {% for dept in departments %}
+            <!-- مربع اختيار مخفي فعليًا، لإرسال البيانات فقط -->
+            <div class="d-none">
+                <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ dept.id }}" id="dept-edit-{{ employee.id }}-{{ dept.id }}"
+                       {% if dept.id in assigned_dept_ids %}checked{% endif %}>
+            </div>
+            <!-- الشارة التفاعلية التي يراها المستخدم وينقر عليها -->
+            <span class="badge department-pill {% if dept.id in assigned_dept_ids %}active{% endif %}" data-target-id="dept-edit-{{ employee.id }}-{{ dept.id }}">
+                <i class="fas fa-check-circle me-1"></i>
+                {{ dept.name }}
+            </span>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted small m-1">لا توجد أقسام معرفة في النظام لتعيينها.</p>
+        {% endif %}
+    </div>
+    <div class="form-text mt-2">انقر على اسم القسم لتحديده أو إلغاء تحديده.</div>
+</div>
+                    <!-- <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label for="department_id" class="form-label">القسم</label>
                             <select class="form-select" id="department_id" name="department_id">
@@ -78,7 +158,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label for="location" class="form-label required-field">الموقع</label>
@@ -116,4 +196,71 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* ... أي ستايلات أخرى ... */
+    .department-pills-container {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .department-pill {
+        display: inline-flex; align-items: center; padding: 0.5em 0.9em;
+        font-size: 0.9rem; cursor: pointer; border-radius: 50rem;
+        transition: all 0.2s ease-in-out;
+        /* ستايل السمة الداكنة الافتراضي */
+        background-color: #495057; color: #ced4da; border: 1px solid #495057;
+    }
+    .department-pill .fa-check-circle { display: none; }
+    .department-pill.active {
+        background-color: #0d6efd; color: white; border-color: #0a58ca; font-weight: 500;
+    }
+    .department-pill.active .fa-check-circle { display: inline-block; }
+    .department-pill:not(.active):hover { background-color: #6c757d; }
+</style>
+
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM is ready. Initializing employee edit scripts...");
+
+    // --- بداية منطق شارات الأقسام التفاعلية ---
+    const departmentPills = document.querySelectorAll('.department-pill');
+    
+    // التحقق مما إذا تم العثور على أي شارات
+    console.log(`Found ${departmentPills.length} department pills.`);
+
+    departmentPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            // 1. تبديل المظهر البصري للشارة
+            this.classList.toggle('active');
+
+            // 2. العثور على معرف مربع الاختيار المرتبط
+            const targetCheckboxId = this.dataset.targetId;
+            const targetCheckbox = document.getElementById(targetCheckboxId);
+
+            if (targetCheckbox) {
+                // 3. عكس حالة مربع الاختيار المخفي
+                targetCheckbox.checked = !targetCheckbox.checked;
+                console.log(`Checkbox #${targetCheckboxId} is now ${targetCheckbox.checked ? 'checked' : 'unchecked'}`);
+            } else {
+                console.error(`Could not find checkbox with ID: ${targetCheckboxId}`);
+            }
+        });
+    });
+    // --- نهاية منطق شارات الأقسام التفاعلية ---
+
+
+    // --- كود إضافي آخر (مثل إظهار/إخفاء كلمة المرور) يمكن أن يكون هنا ---
+    const togglePassword = document.getElementById('togglePassword');
+    if (togglePassword) {
+        // ... (منطق زر كلمة المرور)
+    }
+
+});
+</script>
+
 {% endblock %}

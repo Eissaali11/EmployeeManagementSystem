@@ -357,7 +357,7 @@
                                 <a href="{{ url_for('mobile.view_handover', handover_id=record.id) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ url_for('mobile.handover_pdf', handover_id=record.id) }}" class="btn btn-outline-danger">
+                                <a href="{{ url_for('vehicles.handover_pdf_public', id=record.id) }}" class="btn btn-outline-danger">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                             </div>
@@ -378,6 +378,7 @@
         {% endif %}
     </div>
 </div>
+
 
 <!-- الإجراءات والروابط السريعة -->
 <div class="action-buttons-container mb-4 mx-3">

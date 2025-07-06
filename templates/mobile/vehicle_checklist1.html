@@ -1,0 +1,1929 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تشيك لست السيارة - نظام إدارة الموظفين{% endblock %}
+
+{% block header_title %}تشيك لست السيارة{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="العودة" onclick="location.href='{{ url_for('mobile.vehicles') }}'">
+    <i class="fas fa-arrow-right"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- نموذج اختيار السيارة والتاريخ -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-car"></i> اختيار السيارة
+    </div>
+    
+    <div class="mobile-card-content">
+        <form id="vehicle-select-form" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>السيارة</label>
+                <!-- استخدام قائمة منسدلة مباشرة بدلاً من آلية البحث المخصصة -->
+                <select id="vehicle-select" class="mobile-form-select" required>
+                    <option value="">اختر السيارة</option>
+                    {% for vehicle in vehicles %}
+                    <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>تاريخ الفحص</label>
+                <input type="date" id="inspection-date" class="mobile-form-control" value="{{ now.strftime('%Y-%m-%d') if now else '' }}" required>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>القائم بالفحص</label>
+                <input type="text" id="inspector-name" class="mobile-form-control" placeholder="اسم الفاحص" required>
+            </div>
+            
+            <div class="mobile-form-group">
+                <label>نوع الفحص</label>
+                <select id="inspection-type" class="mobile-form-select" required>
+                    <option value="daily">فحص يومي</option>
+                    <option value="weekly">فحص أسبوعي</option>
+                    <option value="monthly">فحص شهري</option>
+                    <option value="quarterly">فحص ربع سنوي</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- شريط ثابت للحفظ في أعلى الصفحة بعد التمرير للأسفل -->
+<div class="mobile-card my-2 sticky-top" style="top: 60px; z-index: 99;">
+    <div class="mobile-card-content p-2">
+        <button type="button" id="save-checklist-top" class="btn btn-primary btn-lg w-100">
+            <i class="fas fa-save"></i> حفظ الفحص
+        </button>
+    </div>
+</div>
+
+<!-- شريط التقدم -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-tasks"></i> تقدم الفحص
+        <span id="progress-percentage" class="progress-text">0%</span>
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        
+        <div class="section-nav">
+            <h5>الأقسام</h5>
+            <div class="section-nav-items">
+                <a href="#engine-section" class="section-nav-item">
+                    <i class="fas fa-oil-can"></i> المحرك
+                </a>
+                <a href="#tires-section" class="section-nav-item">
+                    <i class="fas fa-tire"></i> الإطارات
+                </a>
+                <a href="#lights-section" class="section-nav-item">
+                    <i class="fas fa-lightbulb"></i> الإضاءة
+                </a>
+                <a href="#components-section" class="section-nav-item">
+                    <i class="fas fa-car-side"></i> المكونات
+                </a>
+                <a href="#safety-section" class="section-nav-item">
+                    <i class="fas fa-shield-alt"></i> السلامة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قائمة الفحص -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-clipboard-check"></i> قائمة الفحص
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <!-- قسم المحرك -->
+        <div id="engine-section" class="checklist-section">
+            <h4 class="section-title">
+                <i class="fas fa-oil-can"></i> المحرك
+            </h4>
+            
+            <div class="checklist-items">
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">مستوى زيت المحرك</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="engine_oil_level" id="engine_oil_good" value="good">
+                                <label class="form-check-label" for="engine_oil_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="engine_oil_level" id="engine_oil_bad" value="bad">
+                                <label class="form-check-label" for="engine_oil_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">مستوى سائل التبريد</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="coolant_level" id="coolant_good" value="good">
+                                <label class="form-check-label" for="coolant_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="coolant_level" id="coolant_bad" value="bad">
+                                <label class="form-check-label" for="coolant_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قسم الإطارات -->
+        <div id="tires-section" class="checklist-section">
+            <h4 class="section-title">
+                <i class="fas fa-tire"></i> الإطارات
+            </h4>
+            
+            <div class="checklist-items">
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">ضغط الإطارات</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tire_pressure" id="tire_pressure_good" value="good">
+                                <label class="form-check-label" for="tire_pressure_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tire_pressure" id="tire_pressure_bad" value="bad">
+                                <label class="form-check-label" for="tire_pressure_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">حالة الإطارات</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tire_condition" id="tire_condition_good" value="good">
+                                <label class="form-check-label" for="tire_condition_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tire_condition" id="tire_condition_bad" value="bad">
+                                <label class="form-check-label" for="tire_condition_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قسم الإضاءة -->
+        <div id="lights-section" class="checklist-section">
+            <h4 class="section-title">
+                <i class="fas fa-lightbulb"></i> الإضاءة
+            </h4>
+            
+            <div class="checklist-items">
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">المصابيح الأمامية</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="headlights" id="headlights_good" value="good">
+                                <label class="form-check-label" for="headlights_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="headlights" id="headlights_bad" value="bad">
+                                <label class="form-check-label" for="headlights_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">المصابيح الخلفية</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="taillights" id="taillights_good" value="good">
+                                <label class="form-check-label" for="taillights_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="taillights" id="taillights_bad" value="bad">
+                                <label class="form-check-label" for="taillights_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قسم المكونات -->
+        <div id="components-section" class="checklist-section">
+            <h4 class="section-title">
+                <i class="fas fa-car-side"></i> المكونات
+            </h4>
+            
+            <div class="checklist-items">
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">نظام المكابح</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="brakes" id="brakes_good" value="good">
+                                <label class="form-check-label" for="brakes_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="brakes" id="brakes_bad" value="bad">
+                                <label class="form-check-label" for="brakes_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">نظام التعليق</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="suspension" id="suspension_good" value="good">
+                                <label class="form-check-label" for="suspension_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="suspension" id="suspension_bad" value="bad">
+                                <label class="form-check-label" for="suspension_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قسم السلامة -->
+        <div id="safety-section" class="checklist-section">
+            <h4 class="section-title">
+                <i class="fas fa-shield-alt"></i> السلامة
+            </h4>
+            
+            <div class="checklist-items">
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">حزام الأمان</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="seatbelt" id="seatbelt_good" value="good">
+                                <label class="form-check-label" for="seatbelt_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="seatbelt" id="seatbelt_bad" value="bad">
+                                <label class="form-check-label" for="seatbelt_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="item-header">
+                        <label class="form-check-label">طفاية الحريق</label>
+                        <div class="item-status">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="fire_extinguisher" id="fire_extinguisher_good" value="good">
+                                <label class="form-check-label" for="fire_extinguisher_good">جيد</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="fire_extinguisher" id="fire_extinguisher_bad" value="bad">
+                                <label class="form-check-label" for="fire_extinguisher_bad">سيء</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item-notes mt-2">
+                        <input type="text" class="mobile-form-control" placeholder="ملاحظات (اختياري)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قسم ملاحظات التلف -->
+        <div id="damage-section" class="checklist-section">
+            <h4 class="section-title">
+                <i class="fas fa-car-crash"></i> ملاحظات التلف
+            </h4>
+            
+            <div class="checklist-items">
+                <div class="checklist-item full-width">
+                    <label class="form-check-label">قم بتحديد مواقع التلفيات على مخطط السيارة</label>
+                    <div class="vehicle-damage-editor my-3">
+                        <div class="vehicle-diagram-container position-relative">
+                            <!-- رسم مخطط الشاحنة باستخدام HTML/CSS -->
+                            <div class="van-diagram" style="position: relative; width: 100%; height: 300px; background-color: #fff; border: 1px solid #ccc; overflow: hidden;">
+                                <!-- الإطار الخارجي للشاحنة -->
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; height: 60%; border: 2px solid #333; background-color: #f8f9fa; border-radius: 10px;"></div>
+                                
+                                <!-- المقدمة -->
+                                <div style="position: absolute; top: 50%; left: 20%; transform: translate(0%, -50%); width: 20%; height: 60%; border: 2px solid #333; background-color: #f8f9fa; border-top-left-radius: 15px; border-bottom-left-radius: 15px;"></div>
+                                
+                                <!-- الزجاج الأمامي -->
+                                <div style="position: absolute; top: 40%; left: 25%; transform: translate(0%, -50%); width: 15%; height: 25%; border: 2px solid #333; background-color: #e6f0ff;"></div>
+                                
+                                <!-- العجلات -->
+                                <div style="position: absolute; top: 80%; left: 25%; width: 12%; height: 15%; border: 2px solid #333; background-color: #333; border-radius: 50%;"></div>
+                                <div style="position: absolute; top: 80%; left: 75%; width: 12%; height: 15%; border: 2px solid #333; background-color: #333; border-radius: 50%;"></div>
+                                
+                                <!-- الأبواب -->
+                                <div style="position: absolute; top: 50%; left: 70%; transform: translate(0%, -50%); height: 60%; border-left: 2px solid #333;"></div>
+                                <div style="position: absolute; top: 50%; left: 40%; transform: translate(0%, -50%); height: 60%; border-left: 2px solid #333;"></div>
+                                
+                                <!-- مقابض الأبواب -->
+                                <div style="position: absolute; top: 50%; left: 42%; width: 3%; height: 1%; background-color: #333;"></div>
+                                <div style="position: absolute; top: 50%; left: 72%; width: 3%; height: 1%; background-color: #333;"></div>
+                            </div>
+                            <div id="vehicle-markers-container" class="position-absolute top-0 start-0 w-100 h-100"></div>
+                        </div>
+                        
+                        <div class="control-buttons mt-3">
+                            <div class="row gx-2">
+                                <div class="col-4">
+                                    <button type="button" id="add-damage-marker" class="btn btn-danger btn-sm w-100">
+                                        <i class="fas fa-plus-circle"></i> تلف
+                                    </button>
+                                </div>
+                                <div class="col-4">
+                                    <button type="button" id="add-scratch-marker" class="btn btn-warning btn-sm w-100">
+                                        <i class="fas fa-paint-brush"></i> خدش
+                                    </button>
+                                </div>
+                                <div class="col-4">
+                                    <button type="button" id="clear-markers" class="btn btn-secondary btn-sm w-100">
+                                        <i class="fas fa-trash"></i> مسح
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="marker-note-container" class="mt-3" style="display: none;">
+                                <input type="text" id="marker-note" class="mobile-form-control" placeholder="أدخل ملاحظة حول التلف">
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button type="button" id="save-marker-note" class="btn btn-primary btn-sm">حفظ</button>
+                                    <button type="button" id="cancel-marker-note" class="btn btn-secondary btn-sm">إلغاء</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- صور الفحص -->
+        <div class="checklist-section">
+            <h4 class="section-title">
+                <i class="fas fa-camera"></i> صور الفحص
+            </h4>
+            
+            <div class="checklist-items">
+                <div class="checklist-item full-width">
+                    <label class="form-check-label">إضافة صور للفحص</label>
+                    <div class="row gx-2 mb-3">
+                        <div class="col-6">
+                            <button type="button" id="camera-btn" class="btn btn-outline-primary w-100" onclick="document.getElementById('image-capture-input').click()">
+                                <i class="fas fa-camera"></i> التقاط صورة
+                            </button>
+                            <input type="file" id="image-capture-input" accept="image/*" capture="environment" style="display:none;">
+                        </div>
+                        <div class="col-6">
+                            <button type="button" id="gallery-btn" class="btn btn-outline-secondary w-100" onclick="document.getElementById('image-file-input').click()">
+                                <i class="fas fa-image"></i> من الاستوديو
+                            </button>
+                            <input type="file" id="image-file-input" accept="image/*" multiple style="display:none;">
+                        </div>
+                    </div>
+                    
+                    <!-- عرض الصور المختارة -->
+                    <div class="selected-images-container">
+                        <h6 class="text-muted mb-2">الصور المضافة: <span id="images-count">0</span></h6>
+                        <div id="image-preview-container" class="row g-2">
+                            <!-- سيتم إضافة الصور هنا بواسطة JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تم إزالة المساحة المكررة -->
+
+<div class="submit-section" style="position: fixed; bottom: 0; left: 0; right: 0; background-color: white; padding: 10px 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000;">
+    <button type="button" id="save-checklist" class="btn btn-primary btn-lg w-100">
+        <i class="fas fa-save"></i> حفظ الفحص
+    </button>
+</div>
+<!-- مساحة إضافية لمنع تداخل الزر الثابت مع المحتوى -->
+<div style="height: 70px;"></div>
+
+<!-- إشعارات النظام -->
+<div id="notification-container"></div>
+
+<!-- معاينة الصور -->
+<div id="image-preview-modal" class="image-preview-modal">
+    <div class="preview-content">
+        <img id="preview-image" class="preview-image" src="" alt="معاينة الصورة">
+        <button id="close-preview" class="close-preview">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block styles %}
+<style>
+.checklist-section {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-left: 8px;
+    color: #0d6efd;
+}
+
+.checklist-items {
+    padding: 5px 0;
+}
+
+.checklist-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.checklist-item:last-child {
+    border-bottom: none;
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-check-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.item-status {
+    display: flex;
+    flex-direction: row;
+}
+
+.full-width .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.form-check-input.good:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.form-check-input.bad:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.progress-container {
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #0d6efd;
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #666;
+    margin-right: 10px;
+}
+
+.section-nav {
+    margin-top: 15px;
+}
+
+.section-nav h5 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.section-nav-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.section-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    color: #555;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.section-nav-item:hover {
+    background-color: #e9ecef;
+    color: #0d6efd;
+}
+
+.section-nav-item i {
+    margin-left: 5px;
+    font-size: 0.8rem;
+}
+
+.submit-section {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    padding: 15px;
+    border-top: 1px solid #e9ecef;
+    z-index: 9999;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+/* تحديد هامش سفلي للمحتوى لمنع تداخله مع زر الحفظ الثابت */
+.mobile-card:last-of-type {
+    margin-bottom: 80px;
+}
+
+/* تأكيد ظهور زر الحفظ فوق أي عناصر أخرى */
+#save-checklist, #save-checklist-top {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.vehicle-damage-editor {
+    width: 100%;
+}
+
+.vehicle-marker {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+}
+
+.vehicle-marker.damage {
+    background-color: rgba(220, 53, 69, 0.7);
+    border: 2px solid #dc3545;
+}
+
+.vehicle-marker.scratch {
+    background-color: rgba(255, 193, 7, 0.7);
+    border: 2px solid #ffc107;
+}
+
+.vehicle-marker.selected {
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #000;
+}
+
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 300px;
+}
+
+.notification {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    color: #fff;
+    display: flex;
+    align-items: center;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification.success {
+    background-color: #28a745;
+}
+
+.notification.error {
+    background-color: #dc3545;
+}
+
+.notification.info {
+    background-color: #17a2b8;
+}
+
+.notification i {
+    margin-left: 10px;
+    font-size: 1.2rem;
+}
+
+.image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.selected-images {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.image-preview-item {
+    position: relative;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #f8f9fa;
+}
+
+.image-preview-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.image-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    z-index: 1100;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 80%;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.close-preview {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    font-size: 28px;
+    background: none;
+    border: none;
+    z-index: 1101;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة تشيك لست السيارة');
+
+    // تهيئة البحث عن السيارات - إصلاح وتحسين
+    function initializeVehicleSearch() {
+        console.log('بدء تهيئة البحث عن السيارات');
+        
+        const vehicleSelect = document.getElementById('vehicle-select');
+        const vehicleSearch = document.getElementById('vehicle-search');
+        const searchResults = document.getElementById('search-results');
+        
+        if (!vehicleSelect || !vehicleSearch || !searchResults) {
+            console.error('عناصر البحث غير موجودة:', {
+                'vehicleSelect': !!vehicleSelect,
+                'vehicleSearch': !!vehicleSearch,
+                'searchResults': !!searchResults
+            });
+            return;
+        }
+        
+        console.log('تم العثور على كافة عناصر البحث');
+        
+        // إنشاء قائمة السيارات للبحث
+        const vehicles = [];
+        
+        // جمع بيانات السيارات من القائمة المنسدلة المخفية
+        if (vehicleSelect.options && vehicleSelect.options.length > 0) {
+            console.log('جاري جمع بيانات السيارات، عدد الخيارات:', vehicleSelect.options.length);
+            
+            Array.from(vehicleSelect.options).forEach((option, index) => {
+                if (option.value) {
+                    const optionText = option.textContent || option.innerText;
+                    const nameParts = optionText.split(' - ');
+                    
+                    vehicles.push({
+                        id: option.value,
+                        text: optionText,
+                        name: nameParts[0],
+                        plate: nameParts[1] || ''
+                    });
+                }
+            });
+            
+            console.log('تم جمع بيانات السيارات، العدد:', vehicles.length);
+        } else {
+            console.warn('لا توجد خيارات في قائمة السيارات');
+        }
+        
+        // ضبط مؤشر z لنتائج البحث
+        searchResults.style.zIndex = 1000;
+        
+        // التعامل مع إدخال البحث
+        vehicleSearch.addEventListener('input', function() {
+            console.log('تم إدخال نص في حقل البحث:', this.value);
+            const searchTerm = this.value.trim().toLowerCase();
+            
+            // إذا كان البحث فارغًا، أخفِ النتائج
+            if (!searchTerm) {
+                console.log('البحث فارغ، إخفاء النتائج');
+                searchResults.style.display = 'none';
+                searchResults.innerHTML = '';
+                return;
+            }
+            
+            // تصفية السيارات المتطابقة مع البحث
+            const matchedVehicles = vehicles.filter(vehicle => {
+                const textLower = (vehicle.text || '').toLowerCase();
+                const nameLower = (vehicle.name || '').toLowerCase();
+                const plateLower = (vehicle.plate || '').toLowerCase();
+                
+                return textLower.includes(searchTerm) || 
+                       nameLower.includes(searchTerm) || 
+                       plateLower.includes(searchTerm);
+            });
+            
+            console.log('السيارات المطابقة:', matchedVehicles.length);
+            
+            // إظهار نتائج البحث
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'block'; // تأكيد الظهور
+            
+            if (matchedVehicles.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'p-2 text-center text-muted';
+                noResults.textContent = 'لا توجد نتائج مطابقة';
+                searchResults.appendChild(noResults);
+            } else {
+                matchedVehicles.forEach(vehicle => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'p-2 border-bottom result-item';
+                    resultItem.style.cursor = 'pointer';
+                    resultItem.style.backgroundColor = '#fff';
+                    
+                    // اختيار السيارة عند النقر على النتيجة
+                    resultItem.addEventListener('click', function() {
+                        console.log('تم اختيار سيارة:', vehicle.id, vehicle.text);
+                        vehicleSelect.value = vehicle.id;
+                        vehicleSearch.value = vehicle.text;
+                        searchResults.style.display = 'none';
+                    });
+                    
+                    // إضافة تمييز لعبارة البحث
+                    const highlightedText = vehicle.text.replace(
+                        new RegExp(searchTerm, 'gi'),
+                        match => `<span class="bg-warning">${match}</span>`
+                    );
+                    resultItem.innerHTML = highlightedText;
+                    
+                    searchResults.appendChild(resultItem);
+                });
+            }
+        });
+        
+        // إغلاق نتائج البحث عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            if (vehicleSearch && searchResults && 
+                !vehicleSearch.contains(e.target) && 
+                !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+        
+        // إعادة فتح نتائج البحث عند النقر على مربع البحث
+        vehicleSearch.addEventListener('click', function() {
+            console.log('تم النقر على حقل البحث');
+            const searchTerm = this.value.trim();
+            
+            if (searchTerm && searchResults.innerHTML !== '') {
+                searchResults.style.display = 'block';
+            }
+        });
+    }
+    
+    // استدعاء تهيئة البحث
+    initializeVehicleSearch();
+    
+    // تأثيرات تحريك القسم عند التمرير
+    const sections = document.querySelectorAll('.checklist-section');
+    
+    // تحريك الأقسام عند التمرير
+    function animateSectionsOnScroll() {
+        sections.forEach(section => {
+            const sectionTop = section.getBoundingClientRect().top;
+            const sectionBottom = section.getBoundingClientRect().bottom;
+            const windowHeight = window.innerHeight;
+            
+            // إذا كان القسم ظاهر في الشاشة
+            if (sectionTop < windowHeight - 100 && sectionBottom > 0) {
+                section.style.opacity = '1';
+                section.style.transform = 'translateY(0)';
+            } else {
+                section.style.opacity = '0.5';
+                section.style.transform = 'translateY(20px)';
+            }
+        });
+    }
+    
+    // تحديث مؤشر التقدم
+    function updateProgressIndicator() {
+        const items = document.querySelectorAll('.checklist-item');
+        const checkedItems = document.querySelectorAll('.checklist-item input[type="radio"]:checked');
+        
+        const totalItems = items.length;
+        const completedItems = checkedItems.length;
+        
+        let percentage = 0;
+        if (totalItems > 0) {
+            percentage = Math.round((completedItems / totalItems) * 100);
+        }
+        
+        document.getElementById('progress-bar').style.width = `${percentage}%`;
+        document.getElementById('progress-percentage').textContent = `${percentage}%`;
+    }
+    
+    // تنفيذ التحديث الأولي لمؤشر التقدم
+    updateProgressIndicator();
+    
+    // إضافة الاستماع للتغييرات في حالة العناصر
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', updateProgressIndicator);
+    });
+    
+    // إضافة أحداث التمرير
+    window.addEventListener('scroll', animateSectionsOnScroll);
+    animateSectionsOnScroll(); // التطبيق الأولي
+    
+    // دالة إظهار الإشعارات
+    window.showNotification = function(message, type = 'info') {
+        const notificationContainer = document.getElementById('notification-container');
+        
+        // إنشاء عنصر الإشعار
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        // أيقونة الإشعار
+        let icon = '';
+        switch (type) {
+            case 'success':
+                icon = 'check-circle';
+                break;
+            case 'error':
+                icon = 'exclamation-circle';
+                break;
+            default:
+                icon = 'info-circle';
+        }
+        
+        notification.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        `;
+        
+        // إضافة الإشعار إلى الحاوية
+        notificationContainer.appendChild(notification);
+        
+        // إظهار الإشعار بعد فترة قصيرة
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // إخفاء الإشعار بعد 3 ثوان
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    };
+
+    function initializeDamageMarkers() {
+        console.log('تهيئة نظام تحديد التلفيات');
+        
+        // إعداد متغيرات مخطط التلف ونظام التأشير
+        const vehicleDiagram = document.querySelector('.van-diagram');
+        
+        // إعداد متغيرات العلامات
+        window.currentMarkerType = 'damage'; // نوع العلامة الافتراضي
+        window.damageMarkers = []; // قائمة العلامات
+        window.selectedMarker = null; // العلامة المحددة حالياً
+        
+        const addDamageBtn = document.getElementById('add-damage-marker');
+        const addScratchBtn = document.getElementById('add-scratch-marker');
+        const clearMarkersBtn = document.getElementById('clear-markers');
+        const saveMarkerNoteBtn = document.getElementById('save-marker-note');
+        const cancelMarkerNoteBtn = document.getElementById('cancel-marker-note');
+        
+        if (addDamageBtn) {
+            console.log('تم العثور على زر إضافة التلف');
+            // أزرار إضافة علامات التلف
+            addDamageBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر إضافة التلف');
+                window.currentMarkerType = 'damage';
+                this.classList.add('active');
+                if (addScratchBtn) addScratchBtn.classList.remove('active');
+            });
+        } else {
+            console.error('لم يتم العثور على زر إضافة التلف!');
+        }
+        
+        if (addScratchBtn) {
+            addScratchBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر إضافة الخدش');
+                window.currentMarkerType = 'scratch';
+                this.classList.add('active');
+                if (addDamageBtn) addDamageBtn.classList.remove('active');
+            });
+        }
+        
+        // زر مسح العلامات
+        if (clearMarkersBtn) {
+            clearMarkersBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر مسح العلامات');
+                clearAllMarkers();
+            });
+        }
+        
+        // زر حفظ ملاحظة العلامة
+        if (saveMarkerNoteBtn) {
+            saveMarkerNoteBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر حفظ الملاحظة');
+                saveMarkerNote();
+            });
+        }
+        
+        // زر إلغاء إضافة ملاحظة للعلامة
+        if (cancelMarkerNoteBtn) {
+            cancelMarkerNoteBtn.addEventListener('click', function() {
+                console.log('تم النقر على زر إلغاء الملاحظة');
+                cancelMarkerNote();
+            });
+        }
+        
+        // حدث النقر على مخطط السيارة
+        if (vehicleDiagram) {
+            console.log('تم العثور على مخطط السيارة');
+            vehicleDiagram.addEventListener('click', function(event) {
+                console.log('تم النقر على مخطط السيارة');
+                addMarkerOnClick(event);
+            });
+        } else {
+            console.error('لم يتم العثور على مخطط السيارة!');
+        }
+    }
+    
+    // استدعاء تهيئة النظام
+    initializeDamageMarkers();
+
+    // دالة إضافة علامة عند النقر على مخطط السيارة
+    function addMarkerOnClick(event) {
+        console.log('تنفيذ إضافة علامة على مخطط السيارة');
+        const markersContainer = document.getElementById('vehicle-markers-container');
+        const vehicleDiagram = document.querySelector('.van-diagram');
+        
+        if (!vehicleDiagram || !markersContainer) {
+            console.error('عناصر مخطط السيارة أو حاوية العلامات غير موجودة');
+            return;
+        }
+        
+        if (!window.currentMarkerType) {
+            console.error('نوع العلامة غير محدد');
+            window.currentMarkerType = 'damage';
+        }
+        
+        // حساب الموقع النسبي للنقر
+        const rect = vehicleDiagram.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        
+        console.log('موقع العلامة:', { x, y });
+        
+        // إنشاء علامة جديدة
+        const marker = {
+            id: Date.now(),
+            type: window.currentMarkerType,
+            x: x,
+            y: y,
+            notes: ''
+        };
+        
+        console.log('تم إنشاء علامة جديدة:', marker);
+        
+        // إضافة العلامة إلى القائمة
+        window.damageMarkers.push(marker);
+        
+        // إضافة العلامة على الصورة
+        renderMarker(marker);
+        
+        // اختيار العلامة الجديدة للإضافة ملاحظة
+        selectMarker(marker);
+    }
+
+    // دالة رسم علامة على مخطط السيارة
+    function renderMarker(marker) {
+        const markersContainer = document.getElementById('vehicle-markers-container');
+        
+        // إنشاء عنصر div للعلامة
+        const markerElement = document.createElement('div');
+        markerElement.className = `vehicle-marker ${marker.type}`;
+        markerElement.dataset.id = marker.id;
+        markerElement.style.left = `${marker.x}%`;
+        markerElement.style.top = `${marker.y}%`;
+        
+        // إضافة حدث النقر على العلامة
+        markerElement.addEventListener('click', function(event) {
+            event.stopPropagation();
+            selectMarker(marker);
+        });
+        
+        // إضافة العلامة إلى الحاوية
+        markersContainer.appendChild(markerElement);
+    }
+
+    // دالة اختيار علامة
+    function selectMarker(marker) {
+        console.log('اختيار العلامة:', marker);
+        
+        // إزالة الاختيار من جميع العلامات
+        document.querySelectorAll('.vehicle-marker').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // اختيار العلامة الحالية
+        const markerElement = document.querySelector(`.vehicle-marker[data-id="${marker.id}"]`);
+        if (markerElement) {
+            markerElement.classList.add('selected');
+            console.log('تم تحديد العلامة في الواجهة');
+        } else {
+            console.error('لم يتم العثور على عنصر العلامة في الواجهة');
+        }
+        
+        // تعيين العلامة المحددة
+        window.selectedMarker = marker;
+        
+        // إظهار حقل إدخال الملاحظة
+        const noteContainer = document.getElementById('marker-note-container');
+        const noteInput = document.getElementById('marker-note');
+        
+        if (noteContainer && noteInput) {
+            noteInput.value = marker.notes || '';
+            noteContainer.style.display = 'block';
+            noteInput.focus();
+            console.log('تم إظهار حقل إدخال الملاحظة');
+        } else {
+            console.error('لم يتم العثور على عناصر إدخال الملاحظة');
+        }
+    }
+
+    // دالة حفظ ملاحظة العلامة
+    function saveMarkerNote() {
+        if (!selectedMarker) return;
+        
+        // حفظ الملاحظة
+        selectedMarker.notes = document.getElementById('marker-note').value;
+        
+        // إخفاء حقل إدخال الملاحظة
+        document.getElementById('marker-note-container').style.display = 'none';
+        
+        // إلغاء اختيار العلامة
+        document.querySelectorAll('.vehicle-marker').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        selectedMarker = null;
+    }
+
+    // دالة إلغاء إضافة ملاحظة للعلامة
+    function cancelMarkerNote() {
+        // إخفاء حقل إدخال الملاحظة
+        document.getElementById('marker-note-container').style.display = 'none';
+        
+        // إلغاء اختيار العلامة
+        document.querySelectorAll('.vehicle-marker').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        selectedMarker = null;
+    }
+
+    // دالة مسح جميع العلامات
+    function clearAllMarkers() {
+        const markersContainer = document.getElementById('vehicle-markers-container');
+        
+        if (markersContainer) {
+            if (damageMarkers.length > 0) {
+                // مسح جميع العلامات من الواجهة
+                markersContainer.innerHTML = '';
+                
+                // مسح قائمة العلامات
+                damageMarkers = [];
+                
+                // إعادة تعيين العلامة المحددة
+                selectedMarker = null;
+                
+                // إخفاء حقل إضافة الملاحظة
+                const noteContainer = document.getElementById('marker-note-container');
+                if (noteContainer) {
+                    noteContainer.style.display = 'none';
+                }
+                
+                console.log('تم مسح جميع علامات التلف');
+                showNotification('تم مسح جميع علامات التلف', 'info');
+            }
+        } else {
+            showNotification('لا توجد علامات تلف للمسح', 'info');
+        }
+    }
+
+    // إضافة أحداث لأزرار تحميل الصور - تحسين التعامل مع الصور
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('تهيئة أزرار تحميل الصور...');
+        
+        const captureImageBtn = document.getElementById('capture-image-btn');
+        const selectImageBtn = document.getElementById('select-image-btn');
+        const imageCaptureInput = document.getElementById('image-capture-input');
+        const imageFileInput = document.getElementById('image-file-input');
+        
+        console.log('أزرار التقاط الصور:', captureImageBtn ? 'موجود' : 'غير موجود');
+        console.log('أزرار اختيار الصور:', selectImageBtn ? 'موجود' : 'غير موجود');
+        console.log('حقل التقاط الصور:', imageCaptureInput ? 'موجود' : 'غير موجود');
+        console.log('حقل ملف الصور:', imageFileInput ? 'موجود' : 'غير موجود');
+        
+        if (captureImageBtn && imageCaptureInput) {
+            captureImageBtn.onclick = function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر التقاط الصورة');
+                imageCaptureInput.click();
+            };
+        }
+        
+        if (selectImageBtn && imageFileInput) {
+            selectImageBtn.onclick = function(e) {
+                e.preventDefault();
+                console.log('تم النقر على زر اختيار الصور من الاستوديو');
+                imageFileInput.click();
+            };
+        }
+        
+        // معالجة الصور بعد اختيارها
+        if (imageCaptureInput) {
+            imageCaptureInput.onchange = function() {
+                console.log('تم اختيار صورة من الكاميرا', this.files);
+                handleSelectedImages(this.files);
+            };
+        }
+        
+        if (imageFileInput) {
+            imageFileInput.onchange = function() {
+                console.log('تم اختيار صور من المعرض', this.files);
+                handleSelectedImages(this.files);
+            };
+        }
+    });
+    
+    // نسخة جديدة ومبسطة جدًا لمعالجة الصور
+    
+    // متغير عام لتخزين الصور المختارة
+    var selectedImages = [];
+    
+    // تهيئة معالجات أحداث التقاط الصور
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('تهيئة معالجات أحداث التقاط الصور');
+        
+        // معالج حدث التقاط الصور من الكاميرا
+        document.getElementById('image-capture-input').addEventListener('change', function(event) {
+            console.log('تم التقاط صورة من الكاميرا');
+            handleImageSelection(event.target.files);
+        });
+        
+        // معالج حدث اختيار الصور من الاستوديو
+        document.getElementById('image-file-input').addEventListener('change', function(event) {
+            console.log('تم اختيار صور من الاستوديو');
+            handleImageSelection(event.target.files);
+        });
+    });
+    
+    // دالة معالجة الصور المختارة (مبسطة)
+    function handleImageSelection(files) {
+        if (!files || files.length === 0) {
+            console.warn('لم يتم تحديد أي ملفات');
+            return;
+        }
+        
+        console.log('معالجة ' + files.length + ' صورة');
+        
+        const container = document.getElementById('image-preview-container');
+        const counter = document.getElementById('images-count');
+        
+        if (!container) {
+            console.error('لم يتم العثور على حاوية الصور');
+            return;
+        }
+        
+        // معالجة كل ملف
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // التحقق من نوع الملف
+            if (!file.type.startsWith('image/')) {
+                console.warn('تم تجاهل ملف ليس بصورة: ' + file.name);
+                continue;
+            }
+            
+            // إنشاء معرف فريد للصورة
+            const imageId = 'img_' + Date.now() + '_' + i;
+            
+            // إضافة الصورة إلى المصفوفة
+            selectedImages.push({
+                id: imageId,
+                file: file
+            });
+            
+            // قراءة الصورة وعرضها
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // إنشاء عناصر الصورة
+                const col = document.createElement('div');
+                col.className = 'col-6 mb-2';
+                col.id = imageId;
+                
+                col.innerHTML = `
+                    <div class="card">
+                        <img src="${e.target.result}" class="card-img-top" alt="صورة الفحص">
+                        <div class="card-body p-2 text-center">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeImage('${imageId}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // إضافة العنصر إلى الحاوية
+                container.appendChild(col);
+                
+                // تحديث العداد
+                if (counter) {
+                    counter.textContent = selectedImages.length;
+                }
+            };
+            
+            reader.onerror = function() {
+                console.error('حدث خطأ أثناء قراءة الملف: ' + file.name);
+            };
+            
+            // بدء قراءة الملف
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // دالة حذف صورة
+    function removeImage(imageId) {
+        console.log('حذف الصورة: ' + imageId);
+        
+        // حذف عنصر الصورة من العرض
+        const element = document.getElementById(imageId);
+        if (element) {
+            element.remove();
+        }
+        
+        // حذف الصورة من المصفوفة
+        const index = selectedImages.findIndex(img => img.id === imageId);
+        if (index !== -1) {
+            selectedImages.splice(index, 1);
+            
+            // تحديث العداد
+            const counter = document.getElementById('images-count');
+            if (counter) {
+                counter.textContent = selectedImages.length;
+            }
+        }
+    }
+
+    // دالة إظهار حقل وصف الصورة
+    function showImageDescriptionField(imageId) {
+        const imageItem = document.querySelector(`.image-preview-item [data-id="${imageId}"]`).closest('.image-preview-item');
+        const descriptionContainer = imageItem.querySelector('.image-description-container');
+        const descriptionInput = descriptionContainer.querySelector('.image-description');
+        
+        // البحث عن الصورة في القائمة
+        const image = selectedImages.find(img => img.id === imageId);
+        if (image) {
+            descriptionInput.value = image.description;
+        }
+        
+        // إظهار حقل الوصف
+        descriptionContainer.style.display = 'block';
+        descriptionInput.focus();
+    }
+
+    // دالة إخفاء حقل وصف الصورة
+    function hideImageDescriptionField(imageId) {
+        const imageItem = document.querySelector(`.image-preview-item [data-id="${imageId}"]`).closest('.image-preview-item');
+        const descriptionContainer = imageItem.querySelector('.image-description-container');
+        
+        // إخفاء حقل الوصف
+        descriptionContainer.style.display = 'none';
+    }
+
+    // دالة حفظ وصف الصورة
+    function saveImageDescription(imageId) {
+        const imageItem = document.querySelector(`.image-preview-item [data-id="${imageId}"]`).closest('.image-preview-item');
+        const descriptionContainer = imageItem.querySelector('.image-description-container');
+        const descriptionInput = descriptionContainer.querySelector('.image-description');
+        
+        // البحث عن الصورة في القائمة
+        const imageIndex = selectedImages.findIndex(img => img.id === imageId);
+        if (imageIndex !== -1) {
+            selectedImages[imageIndex].description = descriptionInput.value;
+        }
+        
+        // إخفاء حقل الوصف
+        descriptionContainer.style.display = 'none';
+    }
+
+    // دالة إزالة صورة
+    function removeImage(imageId) {
+        // إزالة الصورة من القائمة
+        const imageIndex = selectedImages.findIndex(img => img.id === imageId);
+        if (imageIndex !== -1) {
+            selectedImages.splice(imageIndex, 1);
+        }
+        
+        // إزالة عنصر عرض الصورة
+        const imageCol = document.querySelector(`.col-6[data-id="${imageId}"]`);
+        if (imageCol) {
+            imageCol.remove();
+        }
+        
+        // تحديث عدد الصور
+        document.getElementById('images-count').textContent = selectedImages.length;
+    }
+    
+    // إعداد زر حفظ نموذج الفحص
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('إعداد زر الحفظ');
+        const saveChecklistBtn = document.getElementById('save-checklist');
+        
+        if (saveChecklistBtn) {
+            saveChecklistBtn.addEventListener('click', saveChecklist);
+            console.log('تم إعداد زر الحفظ بنجاح');
+        } else {
+            console.error('لم يتم العثور على زر الحفظ في الصفحة!');
+        }
+    });
+    
+    // دالة حفظ تشيك لست الفحص - نسخة مبسطة
+    function saveChecklist() {
+        console.log('تنفيذ عملية الحفظ');
+        
+        try {
+            // الحصول على عناصر النموذج
+            const vehicleSelect = document.getElementById('vehicle-select');
+            const inspectionDate = document.getElementById('inspection-date');
+            const inspectorName = document.getElementById('inspector-name');
+            const inspectionType = document.getElementById('inspection-type');
+        
+            // تعطيل زر الحفظ أثناء العملية
+            const saveChecklistBtn = document.getElementById('save-checklist');
+            if (saveChecklistBtn) saveChecklistBtn.disabled = true;
+            
+            // التحقق من إدخال البيانات الأساسية
+            if (!vehicleSelect.value) {
+                showNotification('الرجاء اختيار السيارة أولاً', 'error');
+                vehicleSelect.focus();
+                // إعادة تفعيل الزر
+                if (saveChecklistBtn) saveChecklistBtn.disabled = false;
+                return;
+            }
+        
+        if (!inspectionDate.value) {
+            showNotification('الرجاء إدخال تاريخ الفحص', 'error');
+            inspectionDate.focus();
+            return;
+        }
+        
+        if (!inspectorName.value) {
+            showNotification('الرجاء إدخال اسم الفاحص', 'error');
+            inspectorName.focus();
+            return;
+        }
+        
+        // جمع البيانات من النموذج
+        const checklistData = {
+            vehicle_id: vehicleSelect.value,
+            inspection_date: inspectionDate.value,
+            inspector_name: inspectorName.value,
+            inspection_type: inspectionType.value,
+            general_notes: '',
+            items: []
+        };
+        
+        // جمع بيانات العناصر
+        const sections = document.querySelectorAll('.checklist-section');
+        sections.forEach(section => {
+            const sectionName = section.querySelector('.section-title').textContent.trim();
+            const items = section.querySelectorAll('.checklist-item');
+            
+            items.forEach(item => {
+                const itemLabel = item.querySelector('.form-check-label').textContent.trim();
+                const checkedRadio = item.querySelector('input[type="radio"]:checked');
+                const notesInput = item.querySelector('input[type="text"]');
+                
+                if (checkedRadio) {
+                    checklistData.items.push({
+                        category: sectionName,
+                        item_name: itemLabel,
+                        status: checkedRadio.value,
+                        notes: notesInput ? notesInput.value : ''
+                    });
+                }
+            });
+        });
+        
+        // جمع علامات التلف
+        if (damageMarkers && damageMarkers.length > 0) {
+            checklistData.damage_markers = damageMarkers;
+        }
+        
+        // عرض رسالة تحميل
+        showNotification('جاري حفظ البيانات...', 'info');
+        
+        // إنشاء كائن FormData لإرسال البيانات والصور
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(checklistData));
+        
+        // إضافة الصور المحددة إلى FormData
+        if (selectedImages.length > 0) {
+            selectedImages.forEach((image, index) => {
+                if (image && image.file) {
+                    formData.append('images', image.file);
+                    formData.append(`image_description_${index}`, image.description || '');
+                }
+            });
+            console.log(`تم إضافة ${selectedImages.length} صورة إلى البيانات المرسلة`);
+        }
+        
+        // إرسال البيانات للخادم
+        fetch('{{ url_for("mobile.add_vehicle_checklist") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+                // لا نحدد Content-Type هنا لأن FormData سيقوم بضبطه تلقائيًا
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+                // التوجيه إلى صفحة تفاصيل الفحص
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("mobile.vehicle_checklist_list") }}';
+                }, 1500);
+            } else {
+                showNotification(data.message || 'حدث خطأ أثناء الحفظ', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('حدث خطأ أثناء الاتصال بالخادم', 'error');
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+{% block scripts %}
+    {{ super() }} <!-- يحافظ على أي سكربتات من القالب الأساسي -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // --- التهيئة العامة ---
+            const mainForm = document.getElementById('main-handover-form');
+            // إذا لم يكن النموذج موجوداً في الصفحة، أوقف تنفيذ الكود
+            if (!mainForm) {
+                console.error("نموذج التسليم والاستلام غير موجود.");
+                return;
+            }
+
+            // ضبط التاريخ الافتراضي ليكون تاريخ اليوم
+            const dateInput = document.getElementById('handover_date');
+            if (dateInput) {
+                // استخدام setUTCHours(0,0,0,0) لتجنب مشاكل المنطقة الزمنية
+                const today = new Date();
+                today.setUTCHours(0, 0, 0, 0);
+                dateInput.valueAsDate = today;
+            }
+            
+            console.log("النموذج جاهز والسكربتات بدأت بالعمل.");
+
+
+
+
+
+            // --- 3. منطق الرسم على مخطط الضرر ---
+            const damageCanvasEl = document.getElementById('damage-canvas');
+            if (damageCanvasEl) {
+                const damageCanvasContainer = damageCanvasEl.parentElement;
+                
+                // تهيئة لوحة الرسم
+                const damageCanvas = new fabric.Canvas('damage-canvas', {
+                    isDrawingMode: true, // تفعيل وضع الرسم افتراضياً
+                    backgroundColor: '#fff',
+                });
+                
+                // تعيين خصائص الفرشاة الافتراضية
+                damageCanvas.freeDrawingBrush.color = "#E53935"; // لون أحمر
+                damageCanvas.freeDrawingBrush.width = 4;
+                // const imageUrl = "{{ url_for('static', filename='images/vehicle_diagram.png') }}";
+
+                // تحميل الصورة الخلفية وتكييف حجم اللوحة معها
+                const imageUrl = "{{ url_for('static', filename='images/vehicle_diagram.png') }}";
+                fabric.Image.fromURL(imageUrl, (img) => {
+                    // حساب الأبعاد الجديدة للحفاظ على نسبة العرض إلى الارتفاع
+                    // نجعل عرض اللوحة يساوي عرض حاويتها (مع بعض الهامش)
+                    const containerWidth = damageCanvasContainer.offsetWidth - 2; 
+                    const scale = containerWidth / img.width;
+                    const canvasHeight = img.height * scale;
+
+                    damageCanvas.setWidth(containerWidth);
+                    damageCanvas.setHeight(canvasHeight);
+                    damageCanvas.setBackgroundImage(img, damageCanvas.renderAll.bind(damageCanvas), {
+                        scaleX: scale,
+                        scaleY: scale
+                    });
+                }, { crossOrigin: 'anonymous' });
+            
+                // ربط أدوات التحكم
+                const drawModeBtn = document.getElementById('draw-mode-btn');
+                const selectModeBtn = document.getElementById('select-mode-btn');
+                const colorPicker = document.getElementById('draw-color-picker');
+                const lineWidth = document.getElementById('draw-line-width');
+                const clearBtn = document.getElementById('clear-canvas-btn');
+            
+                // وظيفة تبديل الأزرار
+                function setActiveButton(activeBtn, inactiveBtn) {
+                    activeBtn.classList.add('active', 'btn-primary');
+                    activeBtn.classList.remove('btn-outline-primary', 'btn-outline-secondary');
+                    inactiveBtn.classList.remove('active', 'btn-primary');
+                    inactiveBtn.classList.add('btn-outline-secondary');
+                }
+
+                drawModeBtn.addEventListener('click', () => {
+                    damageCanvas.isDrawingMode = true;
+                    setActiveButton(drawModeBtn, selectModeBtn);
+                });
+
+                selectModeBtn.addEventListener('click', () => {
+                    damageCanvas.isDrawingMode = false;
+                    setActiveButton(selectModeBtn, drawModeBtn);
+                });
+
+                colorPicker.addEventListener('input', (e) => {
+                    damageCanvas.freeDrawingBrush.color = e.target.value;
+                });
+                
+                lineWidth.addEventListener('input', (e) => {
+                    damageCanvas.freeDrawingBrush.width = parseInt(e.target.value, 10) || 1;
+                });
+                
+                clearBtn.addEventListener('click', () => {
+                    // استخدام confirm قبل المسح
+                    if (confirm("هل أنت متأكد من رغبتك في مسح كل الرسوم؟")) {
+                        damageCanvas.getObjects().forEach(obj => damageCanvas.remove(obj));
+                    }
+                });
+
+            } // نهاية if (damageCanvasEl)
+
+                        // --- 4. منطق التواقيع ---
+            const signaturePads = {}; // كائن لتخزين لوحات التوقيع المهيأة (supervisor & driver)
+
+            function initializeSignaturePad(canvasId) {
+                const canvasEl = document.getElementById(canvasId);
+                if (!canvasEl) return;
+                
+                // إذا كانت اللوحة موجودة بالفعل, فقط حدث أبعادها.
+                // هذا مهم عند التبديل بين التبويبات
+                if (signaturePads[canvasId]) {
+                    const container = canvasEl.parentElement;
+                    const pad = signaturePads[canvasId];
+                    if (pad.width !== (container.offsetWidth - 2)) {
+                         pad.setWidth(container.offsetWidth - 2);
+                         pad.setHeight(container.offsetHeight - 2);
+                         pad.renderAll();
+                    }
+                    return;
+                }
+            
+                // التهيئة لأول مرة
+                const container = canvasEl.parentElement;
+                const pad = new fabric.Canvas(canvasEl, {
+                    isDrawingMode: true,
+                    backgroundColor: 'rgba(0, 0, 0, 0)', // خلفية شفافة
+                });
+                pad.freeDrawingBrush.color = "#000000"; // قلم أسود
+                pad.freeDrawingBrush.width = 2; // قلم رفيع
+                pad.setWidth(container.offsetWidth - 2);
+                pad.setHeight(container.offsetHeight - 2);
+                signaturePads[canvasId] = pad;
+            }
+
+            // تهيئة اللوحات عند تحميل الصفحة
+            initializeSignaturePad('supervisor-signature-canvas');
+            initializeSignaturePad('driver-signature-canvas');
+
+            // معالجة مسح التوقيع المرسوم
+            document.querySelectorAll('.clear-signature').forEach(button => {
+                button.addEventListener('click', function() {
+                    const canvasId = this.dataset.canvasId;
+                    const pad = signaturePads[canvasId];
+                    if (pad) {
+                        pad.clear();
+                        const targetInputId = canvasId.replace('-canvas', '-data');
+                        document.getElementById(targetInputId).value = '';
+                    }
+                });
+            });
+
+            // معالجة رفع صورة توقيع
+            document.querySelectorAll('.signature-upload').forEach(input => {
+                input.addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    const previewEl = this.parentElement.querySelector('.signature-preview');
+                    const targetInputId = this.dataset.targetInputId;
+                    
+                    if (file && previewEl && targetInputId) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            previewEl.src = e.target.result;
+                            previewEl.classList.remove('d-none');
+                            document.getElementById(targetInputId).value = e.target.result; // حفظ Base64
+
+                            // مسح لوحة الرسم المقابلة لضمان عدم وجود توقيعين
+                            const canvasId = targetInputId.replace('-data', '-canvas');
+                            const pad = signaturePads[canvasId];
+                            if (pad) pad.clear();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+
+            // معالجة التبديل بين التبويبات (رسم / رفع)
+            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function(event) {
+                    const targetPaneId = event.target.getAttribute('data-bs-target');
+                    if (!targetPaneId) return;
+
+                    const signatureType = targetPaneId.includes('supervisor') ? 'supervisor' : 'driver';
+                    const hiddenInput = document.getElementById(`${signatureType}-signature-data`);
+                    
+                    if (targetPaneId.includes('-draw-tab')) {
+                        // عند التبديل إلى "الرسم"
+                        const canvasId = `${signatureType}-signature-canvas`;
+                        initializeSignaturePad(canvasId); // حدث أبعاد اللوحة
+
+                        // مسح أي صورة تم رفعها
+                        const uploadInput = document.querySelector(`.signature-upload[data-target-input-id="${signatureType}-signature-data"]`);
+                        if (uploadInput) uploadInput.value = '';
+                        const previewEl = document.querySelector(`#${signatureType}-upload-tab .signature-preview`);
+                        if (previewEl) previewEl.classList.add('d-none');
+                        hiddenInput.value = ''; // مسح الحقل المخفي
+
+                    } else if (targetPaneId.includes('-upload-tab')) {
+                        // عند التبديل إلى "الرفع"
+                        const pad = signaturePads[`${signatureType}-signature-canvas`];
+                        if (pad) pad.clear(); // مسح أي رسم
+                        hiddenInput.value = ''; // مسح الحقل المخفي
+                    }
+                });
+            });
+
+                        // --- 5. منطق رفع الملفات المتعددة للتوثيق ---
+            const filesInput = document.getElementById('files');
+            const filePreviewsContainer = document.getElementById('file-previews');
+            
+            // كائن لتخزين قائمة الملفات النهائية التي سيتم إرسالها
+            let finalFiles = new DataTransfer();
+
+            if (filesInput && filePreviewsContainer) {
+                
+                filesInput.addEventListener('change', function(event) {
+                    // المرور على كل ملف تم اختياره حديثاً
+                    Array.from(this.files).forEach(file => {
+                        // التحقق من عدم إضافة نفس الملف مرتين
+                        let alreadyExists = Array.from(finalFiles.files).some(
+                            f => f.name === file.name && f.size === file.size
+                        );
+
+                        if (!alreadyExists) {
+                            finalFiles.items.add(file); // إضافة الملف إلى القائمة النهائية
+                            createFilePreview(file);    // إنشاء المعاينة في الواجهة
+                        }
+                    });
+                    
+                    // تحديث حقل الإدخال الأصلي بقائمة الملفات المجمعة
+                    this.files = finalFiles.files;
+                });
+            }
+
+            function createFilePreview(file) {
+                const col = document.createElement('div');
+                col.className = 'col-6 col-sm-4 col-md-3'; // تخطيط متجاوب
+                col.dataset.fileName = file.name; // للرجوع إليه عند الحذف
+
+                const card = document.createElement('div');
+                card.className = 'card h-100 shadow-sm position-relative';
+                
+                // زر الحذف
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn-close position-absolute top-0 end-0 m-1 bg-white p-2 rounded-circle shadow-sm';
+                removeBtn.onclick = () => {
+                    const newDt = new DataTransfer();
+                    Array.from(finalFiles.files).forEach(f => {
+                        if (f.name !== file.name || f.size !== file.size) {
+                            newDt.items.add(f);
+                        }
+                    });
+                    
+                    finalFiles = newDt; // تحديث القائمة العالمية
+                    filesInput.files = finalFiles.files; // تحديث حقل الإدخال
+                    col.remove(); // إزالة بطاقة المعاينة
+                };
+
+                // إنشاء محتوى البطاقة بناءً على نوع الملف
+                if (file.type === 'application/pdf') {
+                    card.innerHTML = `
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center p-2">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
+                            <p class="card-text small text-truncate" style="max-width: 100%;" title="${file.name}">${file.name}</p>
+                        </div>`;
+                } else { // صورة
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        card.innerHTML = `
+                            <img src="${e.target.result}" class="card-img-top" style="height: 100px; object-fit: cover;">
+                            <div class="card-body p-2 text-center">
+                                <p class="card-text small text-truncate mb-0" title="${file.name}">${file.name}</p>
+                            </div>`;
+                        card.appendChild(removeBtn); // أضف زر الحذف بعد تحميل الصورة
+                    }
+                    reader.readAsDataURL(file);
+                }
+                
+                if (file.type === 'application/pdf') {
+                    card.appendChild(removeBtn);
+                }
+
+                col.appendChild(card);
+                filePreviewsContainer.appendChild(col);
+            }
+            //
+
+        });
+    </script>
+
+    <script>
+ 
+ 
+document.addEventListener('DOMContentLoaded', function () {
+
+    
+            
+
+ 
+
+});
+
+    </script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+ <div class="row row-cols-1 row-cols-sm-2 g-2">
+
+    </div>
+</div>

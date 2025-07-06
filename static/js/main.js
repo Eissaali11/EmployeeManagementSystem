@@ -4,6 +4,67 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
+
+    // أضف هذا التعريف في أعلى ملف main.js أو قبل استدعائه
+
+/**
+ * Initializes all elements with the class 'select2-employee-dropdown'
+ * as a Select2 dropdown with a custom template.
+ */
+function initializeSelect2EmployeeDropdowns() {
+    // ابحث عن كل القوائم المنسدلة التي لها هذا الكلاس
+    $('.select2-employee-dropdown').each(function() {
+        // تأكد من عدم تهيئته أكثر من مرة
+        if ($(this).data('select2')) {
+            return;
+        }
+
+        $(this).select2({
+            theme: 'bootstrap-5', // استخدام سمة Bootstrap 5
+            placeholder: 'اختر موظف...',
+            allowClear: true,
+            language: "ar", // للرسائل العربية
+            dir: "rtl", // لدعم الاتجاه من اليمين لليسار
+            templateResult: formatEmployeeForDropdown, // دالة لتنسيق الخيارات في القائمة
+            templateSelection: formatEmployeeForDropdown // دالة لتنسيق الخيار المحدد
+        });
+    });
+}
+
+/**
+ * Custom formatter for Select2 to display employee names and IDs.
+ * هذه هي نفس الدالة التي أرسلتها سابقاً، ولكن تم تغيير اسمها ليكون أوضح.
+ */
+function formatEmployeeForDropdown(employee) {
+    if (!employee.id) {
+        return employee.text; // هذا للخيار الافتراضي "placeholder"
+    }
+
+    // `employee.text` هو النص الذي يتم تمريره من خيار <option>
+    // نفترض أنه يحتوي على الاسم والرقم الوظيفي
+    let employeeName = employee.text;
+    let employeeId = '';
+    
+    // محاولة استخراج الرقم الوظيفي إذا كان موجوداً بين قوسين
+    const matches = employee.text.match(/\(([^)]+)\)/);
+    if (matches && matches.length > 1) {
+        employeeId = matches[1];
+        employeeName = employee.text.replace(/\([^)]+\)/, '').trim();
+    }
+    
+    // إنشاء كود HTML للعرض المنسق
+    const $container = $(
+        '<div class="d-flex align-items-center">' +
+            '<div class="me-2"><i class="fas fa-user text-primary"></i></div>' +
+            '<div>' +
+                '<div class="fw-medium">' + employeeName + '</div>' +
+                (employeeId ? '<div class="small text-muted">' + employeeId + '</div>' : '') +
+            '</div>' +
+        '</div>'
+    );
+
+    return $container;
+}
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -541,4 +602,4 @@ function formatEmployeeSelection(employee) {
             (employeeId ? '<span class="ms-2 small text-muted">(' + employeeId + ')</span>' : '') +
         '</span>'
     );
-}
+}};

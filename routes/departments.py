@@ -3,23 +3,109 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from flask_wtf.csrf import validate_csrf
 from app import db
-from models import Department, Employee, SystemAudit, Module, Permission
+from models import Department, Employee, SystemAudit, Module, Permission,employee_departments 
 from utils.excel import parse_employee_excel, export_employees_to_excel
 from utils.user_helpers import require_module_access
 import io
 from io import BytesIO
 import os
 from datetime import datetime
+from sqlalchemy import func
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm import joinedload
 
 departments_bp = Blueprint('departments', __name__)
+
+# @departments_bp.route('/')
+# @login_required
+# @require_module_access(Module.DEPARTMENTS, Permission.VIEW)
+# def index():
+#     """List all departments"""
+#     departments = Department.query.all()
+#     return render_template('departments/index.html', departments=departments)
+
+# @departments_bp.route('/')
+# @login_required
+# @require_module_access(Module.DEPARTMENTS, Permission.VIEW)
+# def index():
+#     """
+#     يعرض قائمة بكل الأقسام مع عدد الموظفين المحسوب مسبقاً في استعلام واحد فعال.
+#     """
+#     try:
+#         # 1. إنشاء "استعلام فرعي" (subquery) لحساب عدد الموظفين في كل قسم.
+#         # سنحتاج إلى الوصول لجدول الربط مباشرة.
+
+#         # إنشاء الاستعلام الذي يعد الموظفين لكل قسم
+#         employee_count_subquery = db.session.query(
+#             employee_departments.c.department_id,
+#             func.count(employee_departments.c.employee_id).label('employee_count')
+#         ).group_by(employee_departments.c.department_id).subquery()
+        
+#         # 2. الاستعلام الرئيسي الذي يربط (JOIN) الأقسام مع نتائج العد
+#         # نستخدم outerjoin لضمان ظهور الأقسام التي لا تحتوي على موظفين أيضاً.
+#         departments_with_counts = db.session.query(
+#             Department,
+#             employee_count_subquery.c.employee_count
+#         ).outerjoin(
+#             employee_count_subquery, 
+#             Department.id == employee_count_subquery.c.department_id
+#         ).order_by(Department.name).all()
+
+#         # 3. تجهيز البيانات للعرض في القالب
+#         # النتيجة ستكون قائمة من الصفوف، كل صف يحتوي على (كائن القسم, عدد الموظفين)
+#         # سنجعلها أكثر سهولة في الاستخدام في القالب
+#         departments_list = []
+#         for department, count in departments_with_counts:
+#             department.employee_count = count or 0 # نضيف خاصية جديدة مؤقتة لكائن القسم
+#             departments_list.append(department)
+            
+#     except Exception as e:
+#         flash('حدث خطأ أثناء جلب بيانات الأقسام.', 'danger')
+#         print(f"Error fetching departments list: {e}")
+#         departments_list = []
+
+#     return render_template('departments/index.html', departments=departments_list)
+
+
+# ... تعريف البلوبرنت ...
 
 @departments_bp.route('/')
 @login_required
 @require_module_access(Module.DEPARTMENTS, Permission.VIEW)
 def index():
-    """List all departments"""
-    departments = Department.query.all()
-    return render_template('departments/index.html', departments=departments)
+    """
+    يعرض قائمة بكل الأقسام مع عدد الموظفين المحسوب بشكل صحيح وفعال.
+    """
+    try:
+        # 1. الاستعلام المباشر والمبسط
+        # سيقوم بجلب كل قسم، وبجانبه عدد الموظفين المرتبطين به.
+        departments_with_counts = db.session.query(
+            Department, 
+            func.count(employee_departments.c.employee_id).label('employee_count')
+        ).outerjoin(
+            employee_departments, # اربط جدول الأقسام مع جدول الربط
+            Department.id == employee_departments.c.department_id
+        ).group_by(
+            Department.id # قم بالتجميع حسب معرف القسم
+        ).order_by(
+            Department.name
+        ).all()
+
+        # 2. تجهيز البيانات للعرض في القالب
+        departments_list = []
+        for department, count in departments_with_counts:
+            # نضيف خاصية جديدة مؤقتة لكائن القسم في الذاكرة
+            department.employee_count = count
+            departments_list.append(department)
+            
+    except Exception as e:
+        flash('حدث خطأ أثناء جلب بيانات الأقسام.', 'danger')
+        print(f"Error fetching departments list: {e}")
+        departments_list = []
+
+    return render_template('departments/index.html', departments=departments_list)
+
+
 
 @departments_bp.route('/create', methods=['GET', 'POST'])
 @login_required

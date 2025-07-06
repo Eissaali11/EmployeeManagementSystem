@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
@@ -70,6 +70,11 @@ def create():
             email = request.form.get('email', '')
             department_id = request.form.get('department_id', None)
             join_date = parse_date(request.form.get('join_date', ''))
+            mobilePersonal = request.form.get('mobilePersonal')
+            nationality_id = request.form.get('nationality_id')
+            contract_status = request.form.get('contract_status')
+            license_status = request.form.get('license_status')
+            selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
             
             # Convert empty department_id to None
             if department_id == '':
@@ -87,8 +92,17 @@ def create():
                 project=project,
                 email=email,
                 department_id=department_id,
-                join_date=join_date
+                join_date=join_date,
+                mobilePersonal=mobilePersonal,
+                nationality_id=int(nationality_id) if nationality_id else None,
+                contract_status=contract_status,
+                license_status=license_status,
+
+
             )
+            if selected_dept_ids:
+                departments_to_assign = Department.query.filter(Department.id.in_(selected_dept_ids)).all()
+                employee.departments.extend(departments_to_assign)
             
             db.session.add(employee)
             db.session.commit()
@@ -114,58 +128,182 @@ def create():
     
     # Get all departments for the dropdown
     departments = Department.query.all()
-    return render_template('employees/create.html', departments=departments)
+    nationalities = Nationality.query.order_by(Nationality.name_ar).all() 
+    return render_template('employees/create.html', departments=departments,nationalities=nationalities)
+
+
 
 @employees_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.EDIT)
 def edit(id):
-    """Edit an existing employee"""
+    """
+    تعديل بيانات موظف موجود وأقسامه، مع التحقق من البيانات الفريدة،
+    والتعامل الآمن مع تحديث العلاقات، ومزامنة المستخدم المرتبط.
+    """
     employee = Employee.query.get_or_404(id)
     
     if request.method == 'POST':
         try:
-            # Update employee data
-            employee.name = request.form['name']
-            employee.employee_id = request.form['employee_id']
-            employee.national_id = request.form['national_id']
-            employee.mobile = request.form['mobile']
-            employee.status = request.form['status']
-            employee.job_title = request.form['job_title']
-            employee.location = request.form['location']
-            employee.project = request.form['project']
+            # 1. استخراج البيانات الجديدة من النموذج
+            new_name = request.form.get('name', '').strip()
+            new_employee_id = request.form.get('employee_id', '').strip()
+            new_national_id = request.form.get('national_id', '').strip()
+
+            # 2. التحقق من صحة البيانات الفريدة قبل أي تعديل
+            # التحقق من الرقم الوظيفي
+            existing_employee = Employee.query.filter(Employee.employee_id == new_employee_id, Employee.id != id).first()
+            if existing_employee:
+                flash(f"رقم الموظف '{new_employee_id}' مستخدم بالفعل.", "danger")
+                return redirect(url_for('employees.edit', id=id))
+
+            # التحقق من الرقم الوطني
+            existing_national = Employee.query.filter(Employee.national_id == new_national_id, Employee.id != id).first()
+            if existing_national:
+                flash(f"الرقم الوطني '{new_national_id}' مستخدم بالفعل.", "danger")
+                return redirect(url_for('employees.edit', id=id))
+
+            # 3. تحديث البيانات الأساسية للموظف
+            employee.name = new_name
+            employee.employee_id = new_employee_id
+            employee.national_id = new_national_id
+            employee.mobile = request.form.get('mobile', '')
+            employee.status = request.form.get('status', 'active')
+            employee.job_title = request.form.get('job_title', '')
+            employee.location = request.form.get('location', '')
+            employee.project = request.form.get('project', '')
             employee.email = request.form.get('email', '')
+            employee.mobilePersonal = request.form.get('mobilePersonal', '')
+            employee.contract_status = request.form.get('contract_status', '')
+            employee.license_status = request.form.get('license_status', '')
+            nationality_id = request.form.get('nationality_id')
+            employee.nationality_id = int(nationality_id) if nationality_id else None
             
-            department_id = request.form.get('department_id', None)
-            employee.department_id = None if department_id == '' else department_id
+            join_date_str = request.form.get('join_date')
+            employee.join_date = parse_date(join_date_str) if join_date_str else None
+
+            selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
+            current_dept_ids = {dept.id for dept in employee.departments}
+
+            depts_to_add_ids = selected_dept_ids - current_dept_ids
+
+            if depts_to_add_ids:
+                    depts_to_add = Department.query.filter(Department.id.in_(depts_to_add_ids)).all()
+                    for dept in depts_to_add:
+                        employee.departments.append(dept)
+                
+            depts_to_remove_ids = current_dept_ids - selected_dept_ids
+
+
+            if depts_to_remove_ids:
+                    depts_to_remove = Department.query.filter(Department.id.in_(depts_to_remove_ids)).all()
+                    for dept in depts_to_remove:
+                        employee.departments.remove(dept)
+
+            user_linked = User.query.filter_by(employee_id=employee.id).first()
+
+            if user_linked:
+                    # الطريقة الأسهل هنا هي فقط تعيين القائمة النهائية بعد تعديلها
+                    # بما أننا داخل no_autoflush، يمكننا تعيينها مباشرة
+                    # سيقوم SQLAlchemy بحساب الفرق بنفسه عند الـ commit
+                    final_departments = Department.query.filter(Department.id.in_(selected_dept_ids)).all()
+                    user_linked.departments = final_departments
             
-            join_date = request.form.get('join_date', '')
-            if join_date:
-                employee.join_date = parse_date(join_date)
-            
+
+           
+            # 7. حفظ كل التغييرات للموظف والمستخدم دفعة واحدة
             db.session.commit()
             
-            # Log the action
             log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الموظف: {employee.name}')
-            
-            flash('تم تحديث بيانات الموظف بنجاح', 'success')
+            flash('تم تحديث بيانات الموظف وأقسامه بنجاح.', 'success')
             return redirect(url_for('employees.index'))
         
-        except IntegrityError as e:
-            db.session.rollback()
-            error_message = str(e)
-            if "employee_id" in error_message.lower():
-                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الموظف موجود بالفعل في النظام", "danger")
-            elif "national_id" in error_message.lower():
-                flash(f"هذه المعلومات مسجلة مسبقاً: رقم الهوية موجود بالفعل في النظام", "danger")
-            else:
-                flash("هذه المعلومات مسجلة مسبقاً، لا يمكن تكرار بيانات الموظفين", "danger")
         except Exception as e:
-            db.session.rollback()
-            flash(f'حدث خطأ: {str(e)}', 'danger')
+            # تسجيل الخطأ للمطورين
+            flash(f'حدث خطأ غير متوقع أثناء عملية التحديث. يرجى المحاولة مرة أخرى. Error updating employee (ID: {id}): {e}', 'danger')
+
+
+    # في حالة GET request (عند فتح الصفحة لأول مرة)
+    all_departments = Department.query.order_by(Department.name).all()
+    all_nationalities = Nationality.query.order_by(Nationality.name_ar).all() # جلب كل الجنسيات
+    print(f"Passing {len(all_nationalities)} nationalities to the template.")
+    return render_template('employees/edit.html', employee=employee, nationalities=all_nationalities, departments=all_departments)
+
+
+
+
+
+# @employees_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+# @login_required
+# @require_module_access(Module.EMPLOYEES, Permission.EDIT)
+# def edit(id):
+#     """
+#     تعديل بيانات موظف موجود وأقسامه المرتبطة بها، مع مزامنة المستخدم المرتبط.
+#     """
+#     employee = Employee.query.get_or_404(id)
     
-    departments = Department.query.all()
-    return render_template('employees/edit.html', employee=employee, departments=departments)
+#     if request.method == 'POST':
+#         try:
+#             # 1. تحديث البيانات الأساسية للموظف
+#             employee.name = request.form['name']
+#             employee.employee_id = request.form['employee_id']
+#             employee.national_id = request.form['national_id']
+#             employee.mobile = request.form['mobile']
+#             employee.status = request.form['status']
+#             employee.job_title = request.form['job_title']
+#             employee.location = request.form.get('location', '')
+#             employee.project = request.form.get('project', '')
+#             employee.email = request.form.get('email', '')
+            
+#             join_date_str = request.form.get('join_date', '')
+#             if join_date_str:
+#                 employee.join_date = parse_date(join_date_str) # افترض وجود دالة parse_date
+
+#             # 2. *** تحديث الأقسام المرتبطة (منطق متعدد إلى متعدد) ***
+#             # استلام قائمة معرفات الأقسام المحددة من مربعات الاختيار
+#             selected_dept_ids = [int(dept_id) for dept_id in request.form.getlist('department_ids')]
+            
+#             # جلب كائنات الأقسام الفعلية من قاعدة البيانات
+#             selected_departments = Department.query.filter(Department.id.in_(selected_dept_ids)).all()
+            
+#             # تعيين القائمة الجديدة للموظف، وSQLAlchemy سيتولى تحديث جدول الربط
+#             employee.departments = selected_departments
+            
+#             # 3. *** المزامنة التلقائية للمستخدم المرتبط (مهم جداً) ***
+#             # ابحث عن المستخدم المرتبط بهذا الموظف (إن وجد)
+#             user_linked_to_employee = User.query.filter_by(employee_id=employee.id).first()
+#             if user_linked_to_employee:
+#                 # إذا وجد مستخدم، قم بمزامنة قائمة أقسامه لتكون مطابقة
+#                 user_linked_to_employee.departments = selected_departments
+#                 print(f"INFO: Synced departments for linked user: {user_linked_to_employee.name}")
+            
+#             # 4. حفظ كل التغييرات للموظف والمستخدم في قاعدة البيانات
+#             db.session.commit()
+            
+#             # 5. تسجيل الإجراء والعودة
+#             log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الموظف: {employee.name}')
+#             flash('تم تحديث بيانات الموظف وأقسامه بنجاح.', 'success')
+#             return redirect(url_for('employees.index'))
+        
+#         except  Exception as e:
+#             db.session.rollback()
+#             flash(f"خطأ في التكامل: رقم الموظف أو الرقم الوطني قد يكون مستخدماً بالفعل.{str(e)}", "danger")
+#         except Exception as e:
+#             db.session.rollback()
+#             flash(f'حدث خطأ غير متوقع أثناء التحديث: {str(e)}', 'danger')
+#             # من الجيد تسجيل الخطأ الكامل في السجلات للمطورين
+#             # current_app.logger.error(f"Error editing employee {id}: {e}")
+            
+#     # في حالة GET request، جهز البيانات للعرض
+#     all_departments = Department.query.order_by(Department.name).all()
+#     return render_template('employees/edit.html', employee=employee, departments=all_departments)
+
+
+
+
+
+
+
 
 @employees_bp.route('/<int:id>/view')
 @login_required
@@ -220,7 +358,7 @@ def view(id):
     
     # Get vehicle handover records
     vehicle_handovers = VehicleHandover.query.filter_by(employee_id=id).order_by(VehicleHandover.handover_date.desc()).all()
-    
+    all_departments = Department.query.order_by(Department.name).all()
     return render_template('employees/view.html', 
                           employee=employee, 
                           documents=documents,
@@ -228,7 +366,9 @@ def view(id):
                           document_types_map=document_types_map,
                           attendances=attendances,
                           salaries=salaries,
-                          vehicle_handovers=vehicle_handovers)
+                          vehicle_handovers=vehicle_handovers,
+                          departments=all_departments
+                          )
 
 @employees_bp.route('/<int:id>/confirm_delete')
 @login_required
@@ -604,7 +744,22 @@ def upload_image(id):
 def basic_report(id):
     """تقرير المعلومات الأساسية للموظف"""
     try:
+                # طباعة رسالة تشخيصية
+        print("بدء إنشاء التقرير الشامل للموظف")
+        
+        # التحقق من وجود الموظف
+        employee = Employee.query.get_or_404(id)
+        print(f"تم العثور على الموظف: {employee.name}")
+        
+        # إنشاء ملف PDF
+        print("استدعاء دالة إنشاء PDF")
         pdf_buffer = generate_employee_basic_pdf(id)
+        print("تم استلام ناتج ملف PDF")
+        
+        if not pdf_buffer:
+            flash('لم يتم العثور على بيانات كافية لإنشاء التقرير', 'warning')
+            return redirect(url_for('employees.view', id=id))
+        
         if pdf_buffer:
             employee = Employee.query.get_or_404(id)
             current_date = datetime.now().strftime('%Y%m%d')

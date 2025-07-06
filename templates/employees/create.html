@@ -35,10 +35,16 @@
                             <input type="text" class="form-control" id="national_id" name="national_id" required>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <div class="form-group mb-3">
-                            <label for="mobile" class="form-label required-field">رقم الجوال</label>
+                            <label for="mobile" class="form-label required-field">جوال العمل</label>
                             <input type="text" class="form-control" id="mobile" name="mobile" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-3">
+                            <label for="mobilePersonal" class="form-label">الجوال الشخصي</label>
+                            <input type="text" class="form-control" id="mobilePersonal" name="mobilePersonal">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -51,6 +57,47 @@
                         <div class="form-group mb-3">
                             <label for="job_title" class="form-label required-field">المسمى الوظيفي</label>
                             <input type="text" class="form-control" id="job_title" name="job_title" required>
+                        </div>
+                    </div>
+
+                    <!-- قائمة الجنسيات -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="nationality_id" class="form-label">الجنسية</label>
+                            <select class="form-select" id="nationality_id" name="nationality_id">
+                                <option value="" selected>- اختر الجنسية -</option>
+                                {% for nat in nationalities %}
+                                <option value="{{ nat.id }}">{{ nat.name_ar }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- قائمة حالة العقد -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="contract_status" class="form-label">حالة العقد</label>
+                            <select class="form-select" id="contract_status" name="contract_status">
+                                <option value="" selected>- غير محدد -</option>
+                                <option value="Active">ساري</option>
+                                <option value="Expired">منتهي</option>
+                                <option value="Probation">فترة تجربة</option>
+                                <option value="Terminated">منهى</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- قائمة حالة الرخصة -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="license_status" class="form-label">حالة الرخصة</label>
+                            <select class="form-select" id="license_status" name="license_status">
+                                <option value="" selected>- غير محدد -</option>
+                                <option value="Valid">سارية</option>
+                                <option value="Expired">منتهية</option>
+                                <option value="Suspended">موقوفة</option>
+                                <option value="Not-Applicable">لا تنطبق</option>
+                            </select>
                         </div>
                     </div>
 

@@ -8,18 +8,28 @@ import json
 import uuid
 from datetime import datetime, timedelta, date
 from sqlalchemy import extract, func, cast, Date
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session, current_app, send_file
+
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
-
-from models import db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker
+from markupsafe import Markup
+import base64
+from models import VehicleProject, VehicleWorkshop, db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker
 from app import app
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
+from utils.audit_logger import log_activity
+
+# from flask import render_template, request, redirect, url_for, flash
+# from flask_login import login_required
+# from . import mobile_bp  <-- أو اسم البلوبرنت الخاص بك
+# from ..models import Vehicle, Employee, Department, VehicleHandover
+# from .. import db
+# from datetime import datetime
 
 # إنشاء مخطط المسارات
 mobile_bp = Blueprint('mobile', __name__)
@@ -30,6 +40,54 @@ class LoginForm(FlaskForm):
     password = PasswordField('كلمة المرور', validators=[DataRequired('كلمة المرور مطلوبة')])
     remember = BooleanField('تذكرني')
     submit = SubmitField('تسجيل الدخول')
+
+
+
+def update_vehicle_driver(vehicle_id):
+	"""تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
+	try:
+		# الحصول على جميع سجلات التسليم (delivery) للسيارة مرتبة حسب التاريخ
+		delivery_records = VehicleHandover.query.filter_by(
+			vehicle_id=vehicle_id, 
+			handover_type='delivery'
+		).order_by(VehicleHandover.handover_date.desc()).all()
+		
+		if delivery_records:
+			# أخذ أحدث سجل تسليم (delivery)
+			latest_delivery = delivery_records[0]
+			
+			# تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
+			driver_name = None
+			if latest_delivery.employee_id:
+				employee = Employee.query.get(latest_delivery.employee_id)
+				if employee:
+					driver_name = employee.name
+			
+			# إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
+			if not driver_name and latest_delivery.person_name:
+				driver_name = latest_delivery.person_name
+			
+			# تحديث اسم السائق في جدول السيارات
+			vehicle = Vehicle.query.get(vehicle_id)
+			if vehicle:
+				vehicle.driver_name = driver_name
+				db.session.commit()
+		else:
+			# إذا لم يكن هناك سجلات تسليم، امسح اسم السائق
+			vehicle = Vehicle.query.get(vehicle_id)
+			if vehicle:
+				vehicle.driver_name = None
+				db.session.commit()
+				
+	except Exception as e:
+		print(f"خطأ في تحديث اسم السائق: {e}")
+		# لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
+		pass
+
+
+def log_audit(action, entity_type, entity_id, details=None):
+	"""تسجيل الإجراء في سجل النظام - تم الانتقال للنظام الجديد"""
+	log_activity(action, entity_type, entity_id, details)
 
 # صفحة الـ Splash Screen
 @mobile_bp.route('/splash')
@@ -1185,28 +1243,33 @@ def vehicles():
                           stats=stats,
                           makes=makes,
                           pagination=pagination)
-    
+
 # تفاصيل السيارة - النسخة المحمولة
 @mobile_bp.route('/vehicles/<int:vehicle_id>')
 @login_required
 def vehicle_details(vehicle_id):
     """تفاصيل السيارة للنسخة المحمولة"""
-    # الحصول على بيانات السيارة من قاعدة البيانات
-    vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
+
     # الحصول على سجلات مختلفة للسيارة
     try:
-        # الحصول على سجل الصيانة الخاص بالسيارة
+            # الحصول على بيانات السيارة من قاعدة البيانات
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+
         maintenance_records = VehicleMaintenance.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleMaintenance.date.desc()).limit(5).all()
         
-        # الحصول على سجلات الورشة
+            # الحصول على سجلات الورشة
         workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleWorkshop.entry_date.desc()).limit(5).all()
         
-        # الحصول على تعيينات المشاريع
+            # الحصول على تعيينات المشاريع
         project_assignments = VehicleProject.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleProject.start_date.desc()).limit(5).all()
-        
-        # الحصول على سجلات التسليم والاستلام
-        handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).limit(5).all()
+            
+            # الحصول على سجلات التسليم والاستلام
+        handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).all()
+    
+        # الحصول على سجل الصيانة الخاص بالسيارة
+       
+        # handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+
         
         # الحصول على سجلات الفحص الدوري
         periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle_id).order_by(VehiclePeriodicInspection.inspection_date.desc()).limit(3).all()
@@ -1589,28 +1652,488 @@ def vehicle_documents():
     # يمكن تنفيذ هذه الوظيفة لاحقًا
     return render_template('mobile/vehicle_documents.html')
 
-# مصروفات السيارات - النسخة المحمولة - تم تحديثها
-# انظر إلى التنفيذ الجديد في نهاية الملف
 
-# تشيك لست السيارة (إضافة فحص جديد) - النسخة المحمولة
-@mobile_bp.route('/vehicles/checklist')
+def save_base64_image(base64_string, subfolder):
+    """
+    تستقبل سلسلة Base64، تفك تشفيرها، تحفظها كملف PNG فريد،
+    وتُرجع المسار النسبي للملف.
+    """
+    if not base64_string or not base64_string.startswith('data:image/'):
+        return None
+
+    try:
+        # إعداد مسار الحفظ
+        upload_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads', subfolder)
+        os.makedirs(upload_folder, exist_ok=True)
+
+        # فك التشفير
+        header, encoded_data = base64_string.split(',', 1)
+        image_data = base64.b64decode(encoded_data)
+
+        # إنشاء اسم ملف فريد وحفظه
+        filename = f"{uuid.uuid4().hex}.png"
+        file_path = os.path.join(upload_folder, filename)
+        with open(file_path, 'wb') as f:
+            f.write(image_data)
+        
+        # إرجاع المسار النسبي (مهم لقاعدة البيانات و HTML)
+        return os.path.join(subfolder, filename)
+        
+    except Exception as e:
+        print(f"Error saving Base64 image: {e}")
+        return None
+
+# في ملف routes.py
+
+def save_uploaded_file(file, subfolder):
+    """
+    تحفظ ملف مرفوع (من request.files) في مجلد فرعي داخل uploads،
+    وتُرجع المسار النسبي.
+    """
+    if not file or not file.filename:
+        return None
+
+    try:
+        # إعداد مسار الحفظ
+        upload_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads', subfolder)
+        os.makedirs(upload_folder, exist_ok=True)
+
+        # الحصول على اسم آمن للملف وإنشاء اسم فريد
+        from werkzeug.utils import secure_filename
+        filename_secure = secure_filename(file.filename)
+        # فصل الاسم والامتداد
+        name, ext = os.path.splitext(filename_secure)
+        # إنشاء اسم فريد لمنع الكتابة فوق الملفات
+        unique_filename = f"{name}_{uuid.uuid4().hex[:8]}{ext}"
+        
+        file_path = os.path.join(upload_folder, unique_filename)
+        file.save(file_path)
+        
+        # إرجاع المسار النسبي
+        return os.path.join(subfolder, unique_filename)
+
+    except Exception as e:
+        print(f"Error saving uploaded file: {e}")
+        return None
+
+def save_file(file, folder):
+    """حفظ الملف (صورة أو PDF) في المجلد المحدد وإرجاع المسار ونوع الملف"""
+    if not file:
+        return None, None
+    if not file.filename:
+        folder='vehicles'
+    
+    # إنشاء اسم فريد للملف
+    filename = secure_filename(file.filename)
+    unique_filename = f"{uuid.uuid4()}_{filename}"
+    
+    # التأكد من وجود المجلد
+    upload_folder = os.path.join(current_app.static_folder, 'uploads', folder)
+    os.makedirs(upload_folder, exist_ok=True)
+    
+    # حفظ الملف
+    file_path = os.path.join(upload_folder, unique_filename)
+    file.save(file_path)
+    
+    # تحديد نوع الملف (صورة أو PDF)
+    file_type = 'pdf' if filename.lower().endswith('.pdf') else 'image'
+    
+    # إرجاع المسار النسبي للملف ونوعه
+    return f"uploads/{folder}/{unique_filename}", file_type
+
+
+
+
+# قائمة بأنواع عمليات التسليم والاستلام
+HANDOVER_TYPE_CHOICES = [
+	'delivery',  # تسليم
+	'return',  # استلام
+    'inspection',  # تفتيش
+	'weekly_inspection',  # تفتيش اسبةعي
+    'monthly_inspection'  # تفتيش شهري
+]
+
+
+# في أعلى ملف الـ routes الخاص بالموبايل
+from datetime import datetime, date
+
+# --- دالة الموبايل الجديدة والمحدثة بالكامل ---
+
+@mobile_bp.route('/vehicles/checklist', methods=['GET', 'POST'])
 @login_required
-def vehicle_checklist():
-    """تشيك لست فحص أجزاء السيارة للنسخة المحمولة"""
-    # قائمة السيارات للاختيار
-    vehicles_data = Vehicle.query.all()
-    vehicles = [
-        {
-            'id': vehicle.id,
-            'name': f"{vehicle.make} {vehicle.model}",
-            'plate_number': vehicle.plate_number,
-        } for vehicle in vehicles_data
-    ]
+def create_handover_mobile():
+    """
+    عرض ومعالجة نموذج تسليم/استلام السيارة (نسخة الهواتف المحمولة).
+    هذه النسخة مطابقة للمنطق الشامل الموجود في نسخة الويب.
+    """
+    # === معالجة طلب POST (عند إرسال النموذج) ===
+    if request.method == 'POST':
+        # يجب اختيار المركبة أولاً في نسخة الموبايل
+        vehicle_id_str = request.form.get('vehicle_id')
+        if not vehicle_id_str:
+            flash('يجب اختيار مركبة أولاً.', 'danger')
+            return redirect(url_for('mobile.create_handover_mobile')) # أعد توجيه المستخدم لنفس الصفحة
+            
+        vehicle = Vehicle.query.get_or_404(int(vehicle_id_str))
+
+        try:
+            # === 1. استخراج كل البيانات من النموذج (نفس منطق الويب) ===
+
+            # --- البيانات الأساسية للعملية ---
+            handover_type = request.form.get('handover_type')
+            handover_date_str = request.form.get('handover_date')
+            handover_time_str = request.form.get('handover_time')
+            
+            # --- معرفات الموظفين (السائق والمشرف) ---
+            employee_id_str = request.form.get('employee_id')
+            supervisor_employee_id_str = request.form.get('supervisor_employee_id')
+
+            # --- البيانات النصية والمتغيرة الأخرى ---
+            person_name_from_form = request.form.get('person_name', '').strip()
+            supervisor_name_from_form = request.form.get('supervisor_name', '').strip()
+            mileage = int(request.form.get('mileage', 0))
+            fuel_level = request.form.get('fuel_level')
+            project_name = request.form.get('project_name')
+            city = request.form.get('city')
+            reason_for_change = request.form.get('reason_for_change')
+            vehicle_status_summary = request.form.get('vehicle_status_summary')
+            notes = request.form.get('notes')
+            reason_for_authorization = request.form.get('reason_for_authorization')
+            authorization_details = request.form.get('authorization_details')
+            movement_officer_name = request.form.get('movement_officer_name')
+            form_link = request.form.get('form_link')
+            custom_company_name = request.form.get('custom_company_name', '').strip() or None
+
+            # --- بيانات قائمة الفحص (Checklist) ---
+            has_spare_tire = 'has_spare_tire' in request.form
+            has_fire_extinguisher = 'has_fire_extinguisher' in request.form
+            has_first_aid_kit = 'has_first_aid_kit' in request.form
+            has_warning_triangle = 'has_warning_triangle' in request.form
+            has_tools = 'has_tools' in request.form
+            has_oil_leaks = 'has_oil_leaks' in request.form
+            has_gear_issue = 'has_gear_issue' in request.form
+            has_clutch_issue = 'has_clutch_issue' in request.form
+            has_engine_issue = 'has_engine_issue' in request.form
+            has_windows_issue = 'has_windows_issue' in request.form
+            has_tires_issue = 'has_tires_issue' in request.form
+            has_body_issue = 'has_body_issue' in request.form
+            has_electricity_issue = 'has_electricity_issue' in request.form
+            has_lights_issue = 'has_lights_issue' in request.form
+            has_ac_issue = 'has_ac_issue' in request.form
+
+            # --- معالجة التواريخ والأوقات ---
+            handover_date = datetime.strptime(handover_date_str, '%Y-%m-%d').date() if handover_date_str else date.today()
+            handover_time = datetime.strptime(handover_time_str, '%H:%M').time() if handover_time_str else None
+
+            # --- معالجة الصور والتواقيع (Base64) والملفات ---
+            saved_diagram_path = save_base64_image(request.form.get('damage_diagram_data'), 'diagrams')
+            saved_supervisor_sig_path = save_base64_image(request.form.get('supervisor_signature_data'), 'signatures')
+            saved_driver_sig_path = save_base64_image(request.form.get('driver_signature_data'), 'signatures')
+            movement_officer_signature_path = save_base64_image(request.form.get('movement_officer_signature'), 'signatures')
+            
+            custom_logo_file = request.files.get('custom_logo_file')
+            saved_custom_logo_path = save_uploaded_file(custom_logo_file, 'logos')
+
+            # === 2. جلب الكائنات الكاملة من قاعدة البيانات ===
+            driver = Employee.query.get(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
+            supervisor = Employee.query.get(supervisor_employee_id_str) if supervisor_employee_id_str and supervisor_employee_id_str.isdigit() else None
+            
+            # === 3. إنشاء كائن VehicleHandover وتعبئته بالبيانات المنسوخة (الأهم) ===
+            handover = VehicleHandover(
+                vehicle_id=vehicle.id,
+                handover_type=handover_type,
+                handover_date=handover_date,
+                handover_time=handover_time,
+                mileage=mileage,
+                project_name=project_name,
+                city=city,
+                
+                # نسخ بيانات المركبة "وقت التسليم"
+                vehicle_car_type=f"{vehicle.make} {vehicle.model}",
+                vehicle_plate_number=vehicle.plate_number,
+                vehicle_model_year=str(vehicle.year),
+
+                # نسخ بيانات السائق "وقت التسليم"
+                employee_id=driver.id if driver else None,
+                person_name=driver.name if driver else person_name_from_form,
+                driver_company_id=driver.employee_id if driver else None,
+                driver_phone_number=driver.mobile if driver else None,
+                driver_residency_number=driver.national_id if driver else None,
+                driver_contract_status=driver.contract_status if driver else None,
+                driver_license_status=driver.license_status if driver else None,
+                driver_signature_path=saved_driver_sig_path,
+
+                # نسخ بيانات المشرف "وقت التسليم"
+                supervisor_employee_id=supervisor.id if supervisor else None,
+                supervisor_name=supervisor.name if supervisor else supervisor_name_from_form,
+                supervisor_company_id=supervisor.employee_id if supervisor else None,
+                supervisor_phone_number=supervisor.mobile if supervisor else None,
+                supervisor_residency_number=supervisor.national_id if supervisor else None,
+                supervisor_contract_status=supervisor.contract_status if supervisor else None,
+                supervisor_license_status=supervisor.license_status if supervisor else None,
+                supervisor_signature_path=saved_supervisor_sig_path,
+                
+                # باقي الحقول التفصيلية
+                reason_for_change=reason_for_change,
+                vehicle_status_summary=vehicle_status_summary,
+                notes=notes,
+                reason_for_authorization=reason_for_authorization,
+                authorization_details=authorization_details,
+                fuel_level=fuel_level,
+                
+                # قائمة الفحص
+                has_spare_tire=has_spare_tire, has_fire_extinguisher=has_fire_extinguisher,
+                has_first_aid_kit=has_first_aid_kit, has_warning_triangle=has_warning_triangle,
+                has_tools=has_tools, has_oil_leaks=has_oil_leaks, has_gear_issue=has_gear_issue,
+                has_clutch_issue=has_clutch_issue, has_engine_issue=has_engine_issue,
+                has_windows_issue=has_windows_issue, has_tires_issue=has_tires_issue,
+                has_body_issue=has_body_issue, has_electricity_issue=has_electricity_issue,
+                has_lights_issue=has_lights_issue, has_ac_issue=has_ac_issue,
+                
+                # حقول إضافية
+                movement_officer_name=movement_officer_name,
+                movement_officer_signature_path=movement_officer_signature_path,
+                damage_diagram_path=saved_diagram_path,
+                form_link=form_link,
+                custom_company_name=custom_company_name,
+                custom_logo_path=saved_custom_logo_path
+            )
+            
+            db.session.add(handover)
+            db.session.commit()
+            
+            # === 4. حفظ المرفقات الإضافية وتحديث حالة السائق ===
+            # (استخدام نفس منطق الويب المنظم)
+            update_vehicle_driver(vehicle.id) # دالة مساعدة لتحديث السائق المرتبط بالمركبة
+            
+            files = request.files.getlist('files')
+            for file in files:
+                if file and file.filename:
+                    file_path, file_type = save_file(file, 'handover')
+                    if file_path:
+                        file_description = request.form.get(f'description_{file.filename}', '')
+                        file_record = VehicleHandoverImage(
+                            handover_record_id=handover.id,
+                            file_path=file_path, file_type=file_type, file_description=file_description,
+                            image_path=file_path, image_description=file_description # للتوافق
+                        )
+                        db.session.add(file_record)
+            db.session.commit()
+            
+            action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
+            log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
+            
+            flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
+            return redirect(url_for('mobile.vehicle_checklist_list')) # توجيه المستخدم لقائمة التقارير
+
+        except Exception as e:
+            db.session.rollback()
+            import traceback
+            traceback.print_exc()
+            flash(f'حدث خطأ غير متوقع أثناء الحفظ: {str(e)}', 'danger')
+            # لا حاجة لإعادة عرض الصفحة مع البيانات، الأفضل إعادة التوجيه مع رسالة خطأ
+            return redirect(url_for('mobile.create_handover_mobile'))
+
+    # === معالجة طلب GET (عند عرض الصفحة لأول مرة) ===
+    # جلب القوائم اللازمة لعرضها في النموذج
+    vehicles = Vehicle.query.order_by(Vehicle.plate_number).all()
+    employees = Employee.query.order_by(Employee.name).all()
+    departments = Department.query.order_by(Department.name).all()
+
+    # تحويل بيانات الموظفين إلى JSON لاستخدامها في JavaScript
+    employees_as_dicts = [e.to_dict() for e in employees]
+
+    return render_template(
+        'mobile/vehicle_checklist.html', 
+        vehicles=vehicles,
+        employees=employees,
+        departments=departments,
+        handover_types=HANDOVER_TYPE_CHOICES, # استخدام نفس قائمة الويب
+        employeeData=employees_as_dicts 
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# @mobile_bp.route('/vehicles/checklist', methods=['GET', 'POST'])
+# @login_required
+# def create_handover_mobile():
+#     """
+#     عرض ومعالجة نموذج تسليم/استلام السيارة (نسخة الهواتف المحمولة).
+#     """
+#      # 1. جلب البيانات الأساسية
+#     vehicles = Vehicle.query.order_by(Vehicle.plate_number).all()
+
+#     # 1. معالجة إرسال النموذج (POST request)
+#     if request.method == 'POST':
+#         try:
+#             vehicle_id = request.form.get('vehicle_id')
+#             if not vehicle_id:
+#                 flash('يجب اختيار مركبة أولاً.', 'danger')
+            
+#                 # إعادة تحميل الصفحة مع البيانات القديمة (سنتعامل مع هذا لاحقاً إذا لزم الأمر)
+                
+#             # --- استخراج البيانات من النموذج ---
+#             # القسم 1: معلومات أساسية
+#             handover_type = request.form.get('handover_type')
+#             handover_date = datetime.strptime(request.form.get('handover_date'), '%Y-%m-%d').date()
+#             mileage = int(request.form.get('mileage'))
+#             fuel_level = request.form.get('fuel_level')
+#             person_name = request.form.get('person_name')
+#             employee_id = request.form.get('employee_id')
+            
+#             # القسم 2: فحص وتجهيزات
+#             # التجهيزات
+#             has_spare_tire = 'has_spare_tire' in request.form
+#             has_fire_extinguisher = 'has_fire_extinguisher' in request.form
+#             has_first_aid_kit = 'has_first_aid_kit' in request.form
+#             has_warning_triangle = 'has_warning_triangle' in request.form
+#             has_tools = 'has_tools' in request.form
+#             # فحص المشاكل
+#             has_oil_leaks = 'has_oil_leaks' in request.form
+#             has_gear_issue = 'has_gear_issue' in request.form
+#             has_clutch_issue = 'has_clutch_issue' in request.form
+#             has_engine_issue = 'has_engine_issue' in request.form
+#             has_ac_issue = 'has_ac_issue' in request.form
+#             has_windows_issue = 'has_windows_issue' in request.form
+#             has_tires_issue = 'has_tires_issue' in request.form
+#             has_body_issue = 'has_body_issue' in request.form
+#             has_electricity_issue = 'has_electricity_issue' in request.form
+#             has_lights_issue = 'has_lights_issue' in request.form
+            
+#             # القسم 4: ملاحظات وتوثيق
+#             vehicle_condition = request.form.get('vehicle_condition')
+#             notes = request.form.get('notes')
+#             form_link = request.form.get('form_link')
+
+#             # القسم 5: تخصيص التقرير
+#             custom_company_name = request.form.get('custom_company_name', '').strip() or None
+            
+#             # --- معالجة الملفات المرفوعة والتواقيع المرسومة ---
+#             # (سنستخدم نفس الدوال المساعدة التي أنشأناها سابقاً)
+#             custom_logo_file = request.files.get('custom_logo_file')
+#             damage_diagram_base64 = request.form.get('damage_diagram_data')
+#             supervisor_sig_base64 = request.form.get('supervisor_signature_data')
+#             driver_sig_base64 = request.form.get('driver_signature_data')
+            
+#             saved_custom_logo_path = save_uploaded_file(custom_logo_file, 'logos')
+#             saved_diagram_path = save_base64_image(damage_diagram_base64, 'diagrams')
+#             saved_supervisor_sig_path = save_base64_image(supervisor_sig_base64, 'signatures')
+#             saved_driver_sig_path = save_base64_image(driver_sig_base64, 'signatures')
+
+#             # --- إنشاء السجل في قاعدة البيانات ---
+#             new_handover = VehicleHandover(
+#                 vehicle_id=int(vehicle_id),
+#                 handover_type=handover_type,
+#                 handover_date=handover_date,
+#                 mileage=mileage,
+#                 fuel_level=fuel_level,
+#                 person_name=person_name,
+#                 employee_id=int(employee_id) if employee_id else None,
+#                 # التجهيزات
+#                 has_spare_tire=has_spare_tire,
+#                 has_fire_extinguisher=has_fire_extinguisher,
+#                 has_first_aid_kit=has_first_aid_kit,
+#                 has_warning_triangle=has_warning_triangle,
+#                 has_tools=has_tools,
+#                 # فحص المشاكل
+#                 has_oil_leaks=has_oil_leaks, has_gear_issue=has_gear_issue, has_clutch_issue=has_clutch_issue,
+#                 has_engine_issue=has_engine_issue, has_ac_issue=has_ac_issue, has_windows_issue=has_windows_issue,
+#                 has_tires_issue=has_tires_issue, has_body_issue=has_body_issue, has_electricity_issue=has_electricity_issue,
+#                 has_lights_issue=has_lights_issue,
+#                 # التوثيق
+#                 vehicle_condition=vehicle_condition, notes=notes, form_link=form_link,
+#                 # التخصيص
+#                 custom_company_name=custom_company_name,
+#                 custom_logo_path=saved_custom_logo_path,
+#                 # الصور المحفوظة
+#                 damage_diagram_path=saved_diagram_path,
+#                 supervisor_signature_path=saved_supervisor_sig_path,
+#                 driver_signature_path=saved_driver_sig_path
+#             )
+            
+#             db.session.add(new_handover)
+#             db.session.commit()
+            
+#             # معالجة رفع الملفات المتعددة
+#             files = request.files.getlist('files')
+#             for file in files:
+#                 # استخدم دالة حفظ الملفات التي لديك
+#                 saved_path, file_type = save_file(file, 'handover_docs')
+#                 if saved_path:
+#                     # احفظ المسار في جدول الملفات المرتبط
+#                     pass # أضف هنا منطق حفظ الملفات في جدول VehicleHandoverImage
+
+#             # تحديث حالة السيارة إذا لزم الأمر
+#             vehicle = Vehicle.query.get_or_404(vehicle_id)
+#             if handover_type == 'return': vehicle.status = 'available'
+#             elif handover_type == 'delivery': vehicle.status = 'in_project'
+#             db.session.commit()
+
+#             flash('تم حفظ النموذج بنجاح!', 'success')
+#             return redirect(url_for('mobile.vehicle_checklist_list', id=id))
+
+#         except Exception as e:
+#             db.session.rollback()
+#             flash(f'حدث خطأ أثناء حفظ النموذج: {e}', 'danger')
+
+
+
+   
+#     # 2. جلب القوائم اللازمة للنموذج (الموظفين، الأقسام)
+#     # من الأفضل جلبها دائماً لتعمل واجهة البحث بشكل صحيح
+#     employees = Employee.query.order_by(Employee.name).all()
+#     departments = Department.query.order_by(Department.name).all()
+
+#     # 3. تعريف أنواع العمليات كنص удобочитаемый
+#     handover_types = {
+#         'delivery': 'تسليم سيارة جديدة',
+#         'return': 'استلام سيارة عائدة'
+#     }
+
+#     # 3. تحديد نوع العملية الافتراضي (إذا تم تمريره كمعلمة)
+#     # هذا مفيد إذا أتيت من زر "تسليم" أو "استلام" محدد
     
-    # تاريخ اليوم
-    now = datetime.now()
-    
-    return render_template('mobile/vehicle_checklist.html', vehicles=vehicles, now=now)
+#     # تعريف أنواع العمليات كنص удобочитаемый
+#     handover_types = {
+#         'delivery': 'تسليم السيارة',
+#         'return': 'استلام السيارة'
+#         # يمكنك إضافة أنواع أخرى هنا مثل 'receive_from_workshop'
+#     }
+
+#     # في أعلى ملف الـ routes
+
+#       # داخل دالة create_handover_mobile، عند استدعاء render_template
+#     # الكود الجديد والأبسط في route
+#     employees_as_dicts = [e.to_dict() for e in employees]
+ 
+#    # 4. عرض القالب وتمرير قائمة المركبات إليه
+
+#     # 5. عرض القالب للـ GET request
+#     return render_template(
+#         'mobile/vehicle_checklist.html',
+#         vehicles=vehicles, # <<-- المتغير الجديد والمهم
+#         employees=employees,
+#         departments=departments,
+#         handover_types=handover_types,
+#         employeeData=employees_as_dicts # إرسال البيانات كقائمة من القواميس
+#     )
+
+
+
+
 
 
 # قائمة فحوصات السيارة - النسخة المحمولة
@@ -1686,6 +2209,18 @@ def vehicle_checklist_list():
                           selected_type=inspection_type,
                           from_date=from_date,
                           to_date=to_date)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # تفاصيل فحص السيارة - النسخة المحمولة

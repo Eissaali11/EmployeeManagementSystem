@@ -144,7 +144,7 @@
                         <a href="{{ url_for('salaries.report', month=selected_month, year=selected_year) }}" class="btn btn-info">
                             <i class="fas fa-file-alt me-1"></i> عرض تقرير مفصل
                         </a>
-                        <a href="{{ url_for('salaries.report_pdf', month=selected_month, year=selected_year) }}" class="btn btn-danger">
+                        <a href="{{ url_for('salaries.report_pdf', month=selected_month, year=selected_year, department_id=selected_department) }}" class="btn btn-danger">
                             <i class="fas fa-file-pdf me-1"></i> تصدير PDF
                         </a>
                         <div class="btn-group">

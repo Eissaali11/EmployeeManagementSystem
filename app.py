@@ -8,10 +8,14 @@ from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager, current_user, login_required
 from flask_wtf.csrf import CSRFProtect
+from flask_migrate import Migrate  # أضف هذا الاستيراد في الأعلى
 
 # استيراد مكتبة dotenv لقراءة ملف .env
 from dotenv import load_dotenv
 load_dotenv()  # تحميل المتغيرات البيئية من ملف .env
+
+# في ملف manage.py أو app.py
+  
 
 # إعدادات اللغة العربية
 ARABIC_CONFIG = {
@@ -40,6 +44,9 @@ db = SQLAlchemy(model_class=Base)
 # Initialize Flask-Login
 login_manager = LoginManager()
 
+
+
+
 # Initialize CSRF Protection
 csrf = CSRFProtect()
 
@@ -54,6 +61,8 @@ app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # تعطيل التحقق التل
 
 # Configure database connection with flexible support for different databases
 database_url = os.environ.get("DATABASE_URL")
+
+
 
 # If no DATABASE_URL is provided, use SQLite as fallback
 if not database_url:
@@ -140,6 +149,9 @@ def unauthorized_handler():
 
 # Initialize CSRF Protection
 csrf.init_app(app)
+
+# ... بعد تعريف db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # إعداد Firebase
 app.config['FIREBASE_API_KEY'] = os.environ.get('FIREBASE_API_KEY')
@@ -235,7 +247,7 @@ def inject_csrf_token():
 @app.route('/')
 def root():
     from flask import request
-    from models import Module, UserRole
+    from models import Module, UserRole 
     
     user_agent = request.headers.get('User-Agent', '').lower()
     mobile_devices = ['android', 'iphone', 'ipad', 'mobile']
@@ -248,7 +260,7 @@ def root():
         if current_user.is_authenticated:
             return redirect(url_for('mobile.index'))
         else:
-            return redirect(url_for('mobile.login'))
+            return redirect(url_for('mobil e.login'))
     
     # إذا كان المستخدم يستخدم جهاز كمبيوتر
     if current_user.is_authenticated:
@@ -306,7 +318,7 @@ with app.app_context():
     from routes.users import users_bp
     from routes.mass_attendance import mass_attendance_bp
     from routes.attendance_dashboard import attendance_dashboard_bp
-    
+
     # تعطيل تقارير الورشة مؤقتاً حتى يتم حل مشكلة WeasyPrint
     # from routes.workshop_reports import workshop_reports_bp
     
@@ -382,3 +394,74 @@ def before_request():
     g.language = 'ar'
     g.rtl = True
     g.arabic_config = ARABIC_CONFIG
+
+
+
+
+
+
+
+
+# في ملف manage.py أو app.py
+
+from models import User, UserRole # استيراد النماذج اللازمة
+import click
+
+@app.cli.command("make-all-admins")
+def make_all_users_admins_command():
+    """
+    يقوم بتحويل دور كل المستخدمين المسجلين في النظام إلى مدير (ADMIN).
+    """
+    try:
+        # 1. جلب كل المستخدمين من قاعدة البيانات
+        users_to_update = User.query.all()
+        
+        if not users_to_update:
+            print("لا يوجد مستخدمين في قاعدة البيانات لتحديثهم.")
+            return
+            
+        count = 0
+        # 2. المرور على كل مستخدم وتغيير دوره
+        for user in users_to_update:
+            if user.role != UserRole.ADMIN:
+                user.role = UserRole.ADMIN
+                count += 1
+        
+        # 3. حفظ كل التغييرات في قاعدة البيانات دفعة واحدة
+        db.session.commit()
+        
+        print(f"نجاح! تم تحديث دور {count} مستخدم إلى 'admin'.")
+        print(f"إجمالي عدد المستخدمين الآن: {len(users_to_update)}.")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"حدث خطأ أثناء تحديث الأدوار: {e}")
+        print("تم التراجع عن كل التغييرات.")
+    """
+    يقوم بتحويل دور كل المستخدمين المسجلين في النظام إلى مدير (ADMIN).
+    """
+    try:
+        # 1. جلب كل المستخدمين من قاعدة البيانات
+        users_to_update = User.query.all()
+        
+        if not users_to_update:
+            print("لا يوجد مستخدمين في قاعدة البيانات لتحديثهم.")
+            return
+            
+        count = 0
+        # 2. المرور على كل مستخدم وتغيير دوره
+        for user in users_to_update:
+            if user.role != UserRole.ADMIN:
+                user.role = UserRole.ADMIN
+                count += 1
+        
+        # 3. حفظ كل التغييرات في قاعدة البيانات دفعة واحدة
+        db.session.commit()
+        
+        print(f"نجاح! تم تحديث دور {count} مستخدم إلى 'admin'.")
+        print(f"إجمالي عدد المستخدمين الآن: {len(users_to_update)}.")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"حدث خطأ أثناء تحديث الأدوار: {e}")
+        print("تم التراجع عن كل التغييرات.")

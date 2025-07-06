@@ -40,9 +40,32 @@
         opacity: 1 !important;
     }
 </style>
+
+<style>
+    /* ... أي ستايلات أخرى ... */
+    .department-pills-container {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .department-pill {
+        display: inline-flex; align-items: center; padding: 0.5em 0.9em;
+        font-size: 0.9rem; cursor: pointer; border-radius: 50rem;
+        transition: all 0.2s ease-in-out;
+        /* ستايل السمة الداكنة الافتراضي */
+        background-color: #495057; color: #ced4da; border: 1px solid #495057;
+    }
+    .department-pill .fa-check-circle { display: none; }
+    .department-pill.active {
+        background-color: #0d6efd; color: white; border-color: #0a58ca; font-weight: 500;
+    }
+    .department-pill.active .fa-check-circle { display: inline-block; }
+    .department-pill:not(.active):hover { background-color: #6c757d; }
+</style>
+
 {% endblock %}
 
+
 {% block scripts %}
+{{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -133,6 +156,47 @@
         }
     });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM is ready. Initializing employee edit scripts...");
+
+    // --- بداية منطق شارات الأقسام التفاعلية ---
+    const departmentPills = document.querySelectorAll('.department-pill');
+    
+    // التحقق مما إذا تم العثور على أي شارات
+    console.log(`Found ${departmentPills.length} department pills.`);
+
+    departmentPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            // 1. تبديل المظهر البصري للشارة
+            this.classList.toggle('active');
+
+            // 2. العثور على معرف مربع الاختيار المرتبط
+            const targetCheckboxId = this.dataset.targetId;
+            const targetCheckbox = document.getElementById(targetCheckboxId);
+
+            if (targetCheckbox) {
+                // 3. عكس حالة مربع الاختيار المخفي
+                targetCheckbox.checked = !targetCheckbox.checked;
+                console.log(`Checkbox #${targetCheckboxId} is now ${targetCheckbox.checked ? 'checked' : 'unchecked'}`);
+            } else {
+                console.error(`Could not find checkbox with ID: ${targetCheckboxId}`);
+            }
+        });
+    });
+    // --- نهاية منطق شارات الأقسام التفاعلية ---
+
+
+    // --- كود إضافي آخر (مثل إظهار/إخفاء كلمة المرور) يمكن أن يكون هنا ---
+    const togglePassword = document.getElementById('togglePassword');
+    if (togglePassword) {
+        // ... (منطق زر كلمة المرور)
+    }
+
+});
+</script>
+
 {% endblock %}
 
 {% block content %}
@@ -489,10 +553,39 @@
                             <p class="mb-1 text-muted">المسمى الوظيفي</p>
                             <p class="fs-5 fw-bold">{{ employee.job_title }}</p>
                         </div>
-                        <div class="col-md-6">
+
+                        <div class="mb-3"> <!-- تم إزالته من row/col لجعله أبسط -->
+    <label class="form-label fw-bold">الأقسام المرتبط بها الموظف</label>
+    <div class="department-pills-container p-2 rounded" style="border: 1px solid var(--bs-border-color-translucent);">
+        <!-- التحقق من وجود أقسام لعرضها -->
+        {% if departments %}
+            {% set assigned_dept_ids = employee.departments|map(attribute='id')|list %}
+            
+            {% for dept in departments %}
+            <!-- مربع اختيار مخفي فعليًا، لإرسال البيانات فقط -->
+            <div class="d-none">
+                <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ dept.id }}" id="dept-edit-{{ employee.id }}-{{ dept.id }}"
+                       {% if dept.id in assigned_dept_ids %}checked{% endif %}>
+            </div>
+            <!-- الشارة التفاعلية التي يراها المستخدم وينقر عليها -->
+            <span class="badge department-pill {% if dept.id in assigned_dept_ids %}active{% endif %}" data-target-id="dept-edit-{{ employee.id }}-{{ dept.id }}">
+                <i class="fas fa-check-circle me-1"></i>
+                {{ dept.name }}
+            </span>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted small m-1">لا توجد أقسام معرفة في النظام لتعيينها.</p>
+        {% endif %}
+    </div>
+    <div class="form-text mt-2">انقر على اسم القسم لتحديده أو إلغاء تحديده.</div>
+</div>
+
+                        <!-- <div class="col-md-6">
                             <p class="mb-1 text-muted">القسم</p>
                             <p class="fs-5 fw-bold">{{ employee.department.name if employee.department else '-' }}</p>
-                        </div>
+                        </div> -->
+
+
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">الحالة</p>
                             <p class="fs-5">
@@ -779,4 +872,6 @@
         </div>
     </div>
 </div>
+
+
 {% endblock %}

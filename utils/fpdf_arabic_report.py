@@ -344,7 +344,6 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         
         # إذا فشلت الطريقة الأولى، نستخدم ملفًا مؤقتًا
         import tempfile
-        import os
         
         fd, temp_path = tempfile.mkstemp(suffix='.pdf')
         os.close(fd)

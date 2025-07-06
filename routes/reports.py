@@ -23,6 +23,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import pandas as pd
+from utils.salary_report_pdf import generate_salary_report_pdf
+
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -1237,6 +1239,72 @@ def salaries_pdf():
         download_name=f"salaries_report_{month}_{year}.pdf",
         mimetype='application/pdf'
     )
+
+@reports_bp.route('/salaries/pdf')
+def salaries_report_pdf():
+    """
+    إنشاء تقرير PDF شامل للرواتب بناءً على الفلاتر.
+    الفلاتر الممكنة: year, month, department_id
+    """
+    try:
+        year = request.args.get('year', type=int)
+        month = request.args.get('month', type=int)
+        department_id = request.args.get('department_id')
+
+        query = Salary.query.join(Employee, Salary.employee_id == Employee.id)\
+                            .outerjoin(Department, Employee.department_id == Department.id)
+
+        report_params = {}
+        department_name = None
+
+        if year:
+            query = query.filter(Salary.year == year)
+            report_params["year"] = year
+        if month:
+            query = query.filter(Salary.month == month)
+            report_params["month"] = month
+        
+        if department_id:
+            if department_id.isdigit():
+                dept_id_int = int(department_id)
+                query = query.filter(Employee.department_id == dept_id_int)
+                department = Department.query.get(dept_id_int)
+                if department:
+                    department_name = department.name
+                    report_params["department_name"] = department_name
+            elif department_id == "all": #  إذا كان المستخدم يريد جميع الأقسام
+                pass # لا تقم بتطبيق فلتر القسم
+
+        salaries = query.order_by(Department.name, Employee.name, Salary.year, Salary.month).all()
+
+        if not salaries:
+            flash('لا توجد بيانات رواتب تطابق معايير البحث لإنشاء التقرير.', 'warning')
+            # يمكنك توجيهه إلى صفحة التقارير الرئيسية أو صفحة أخرى مناسبة
+            return redirect(request.referrer or url_for('dashboard.index'))
+
+        pdf_buffer = generate_salary_report_pdf(salaries, report_params)
+        
+        filename_parts = ["salary_report"]
+        if department_name:
+            filename_parts.append(department_name.replace(" ", "_"))
+        if month:
+            filename_parts.append(str(month))
+        if year:
+            filename_parts.append(str(year))
+        filename_parts.append(datetime.now().strftime("%Y%m%d"))
+        
+        filename = "_".join(filename_parts) + ".pdf"
+
+        return send_file(pdf_buffer, as_attachment=True, download_name=filename, mimetype='application/pdf') # تأكد من استخدام pdf_buffer هنا
+
+    except Exception as e:
+        current_app.logger.error(f"خطأ في إنشاء تقرير PDF للرواتب: {e}", exc_info=True)
+        flash(f'حدث خطأ أثناء إنشاء تقرير PDF: {str(e)}', 'danger')
+        return redirect(request.referrer or url_for('dashboard.index'))
+
+# يمكنك إضافة مسارات أخرى للتقارير هنا (مثل تقارير Excel أو HTML)
+
+
 
 @reports_bp.route('/salaries/excel')
 def salaries_excel():

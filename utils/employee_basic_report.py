@@ -350,7 +350,7 @@ def generate_employee_basic_pdf(employee_id):
         
         # حفظ PDF في الذاكرة
         output = BytesIO()
-        pdf_content = pdf.output(dest='S').encode('latin-1')
+        pdf_content = pdf.output(dest='S')
         output.write(pdf_content)
         output.seek(0)
         
