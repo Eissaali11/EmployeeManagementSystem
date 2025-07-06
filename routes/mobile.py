@@ -3654,7 +3654,7 @@ def handover_pdf(handover_id):
     import io
     import os
     from datetime import datetime
-    from utils.arabic_handover_pdf import handover_pdf_public
+    from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
     
     try:
         # الحصول على بيانات التسليم/الاستلام
@@ -3688,8 +3688,8 @@ def handover_pdf(handover_id):
             'image_paths': [image.image_path for image in images] if images else []
         }
         
-        # إنشاء ملف PDF باستخدام خط beIN-Normal
-        pdf_buffer = handover_pdf_public(handover_id)
+        # إنشاء ملف PDF باستخدام WeasyPrint مع خط beIN-Normal
+        pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
         
         if not pdf_buffer:
             flash('حدث خطأ أثناء إنشاء ملف PDF', 'danger')

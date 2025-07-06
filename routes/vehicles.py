@@ -2592,7 +2592,7 @@ def handover_view_public(id):
 
 
 # في ملف views الخاص بالمركبات (vehicles/views.py أو ما شابه)
-from utils.arabic_handover_pdf import handover_pdf_public
+from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
 
 # ... (باقي imports)
 # تأكد من استيراد الدالة الجديدة
@@ -2605,11 +2605,11 @@ def handover_pdf_public(id):
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
         
-        # استخدام مولد PDF الجديد مع خط beIN-Normal
-        from utils.arabic_handover_pdf import handover_pdf_public as generate_pdf_bein
+        # استخدام مولد PDF الأصلي مع تحديث خط beIN-Normal
+        from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
         
-        # إنشاء PDF باستخدام خط beIN-Normal
-        pdf_buffer = generate_pdf_bein(id)
+        # إنشاء PDF باستخدام WeasyPrint مع خط beIN-Normal
+        pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
         
         # تحضير اسم الملف
         plate_clean = handover.vehicle.plate_number if handover.vehicle else f"record_{handover.id}"
