@@ -50,13 +50,28 @@ def generate_handover_report_pdf_weasyprint(handover):
         # المسار إلى مجلد static العام
         static_folder = os.path.join(current_app.root_path, 'static')
         
-        # إنشاء ورقة أنماط CSS كسلسلة نصية
-        # WeasyPrint ستقوم بتحميل الخط تلقائيًا من هذه القاعدة
-        # ونمررها في قائمة stylesheets
+        # إنشاء ورقة أنماط CSS مع خط beIN-Normal
+        # تأكد من أن beIN-Normal.ttf موجود في static/fonts/
         font_css = CSS(string=f'''
             @font-face {{
-                font-family: beIN-Normal;
-                src: url(file://{os.path.join(static_folder, 'fonts', 'beIN-Normal.ttf')});
+                font-family: 'beIN-Normal';
+                src: url('file://{os.path.join(static_folder, 'fonts', 'beIN-Normal.ttf')}');
+                font-weight: normal;
+                font-style: normal;
+            }}
+            
+            * {{
+                font-family: 'beIN-Normal', 'Arial', sans-serif !important;
+            }}
+            
+            body, p, h1, h2, h3, h4, h5, h6, td, th, div, span {{
+                font-family: 'beIN-Normal', 'Arial', sans-serif !important;
+            }}
+            
+            .arabic-text {{
+                font-family: 'beIN-Normal', 'Arial', sans-serif !important;
+                direction: rtl;
+                text-align: right;
             }}
         ''')
 

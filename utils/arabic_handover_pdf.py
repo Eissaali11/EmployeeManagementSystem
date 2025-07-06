@@ -198,26 +198,39 @@ def generate_handover_pdf_with_bein(handover_data):
 def handover_pdf_public(handover_id):
     """دالة عامة لإنشاء PDF لتسليم/استلام مركبة"""
     try:
-        from models import VehicleHandover
+        # استيراد محلي لتجنب الاستيراد الدائري
+        import sys
+        sys.path.append('/home/runner/workspace')
+        
+        from sqlalchemy import text
         from app import db
         
-        # جلب بيانات التسليم/الاستلام
-        handover = VehicleHandover.query.get_or_404(handover_id)
+        # جلب بيانات التسليم/الاستلام باستخدام SQL مباشر لتجنب مشاكل الاستيراد
+        result = db.session.execute(text("""
+            SELECT vh.*, v.plate_number, v.make, v.model, v.year, v.color
+            FROM vehicle_handover vh
+            LEFT JOIN vehicle v ON vh.vehicle_id = v.id
+            WHERE vh.id = :handover_id
+        """), {'handover_id': handover_id}).fetchone()
         
-        # تحضير البيانات
+        if not result:
+            print(f"سجل التسليم/الاستلام برقم {handover_id} غير موجود")
+            return None
+        
+        # تحضير البيانات من النتيجة
         handover_data = {
-            'handover_type': handover.handover_type_ar or 'تسليم',
-            'handover_date': handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else '',
-            'person_name': handover.person_name or '',
-            'mileage': handover.mileage or 0,
-            'fuel_level': handover.fuel_level or '',
-            'notes': handover.notes or '',
+            'handover_type': result.handover_type_ar or 'تسليم',
+            'handover_date': result.handover_date.strftime('%Y-%m-%d') if result.handover_date else '',
+            'person_name': result.person_name or '',
+            'mileage': result.mileage or 0,
+            'fuel_level': result.fuel_level or '',
+            'notes': result.notes or '',
             'vehicle': {
-                'plate_number': handover.vehicle.plate_number if handover.vehicle else '',
-                'make': handover.vehicle.make if handover.vehicle else '',
-                'model': handover.vehicle.model if handover.vehicle else '',
-                'year': handover.vehicle.year if handover.vehicle else '',
-                'color': handover.vehicle.color if handover.vehicle else ''
+                'plate_number': result.plate_number or '',
+                'make': result.make or '',
+                'model': result.model or '',
+                'year': result.year or '',
+                'color': result.color or ''
             }
         }
         
@@ -226,4 +239,6 @@ def handover_pdf_public(handover_id):
         
     except Exception as e:
         print(f"خطأ في إنشاء PDF: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
