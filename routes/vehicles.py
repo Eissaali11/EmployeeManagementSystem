@@ -2597,58 +2597,24 @@ from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
 
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
-    """إنشاء ملف PDF لنموذج تسليم/استلام - نسخة آمنة"""
+    """إنشاء ملف PDF لنموذج تسليم/استلام - نسخة متقدمة"""
     try:
         # الحصول على سجل التسليم/الاستلام
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
         
-        # إنشاء PDF بسيط باستخدام FPDF
-        from fpdf import FPDF
-        import arabic_reshaper
-        from bidi.algorithm import get_display
+        # استخدام مولد PDF العربي الجديد
+        from utils.vehicle_checklist_pdf import create_vehicle_handover_pdf
         
-        class ArabicPDF(FPDF):
-            def header(self):
-                self.set_font('Arial', 'B', 16)
-                self.cell(0, 10, 'Vehicle Handover Report', 0, 1, 'C')
-                self.ln(10)
+        # إنشاء PDF باستخدام ReportLab
+        pdf_buffer = create_vehicle_handover_pdf(handover)
         
-        pdf = ArabicPDF()
-        pdf.add_page()
-        pdf.set_font('Arial', '', 12)
-        
-        # إضافة معلومات أساسية (بدون أحرف عربية)
-        pdf.cell(0, 10, f'Vehicle ID: {vehicle.id}', 0, 1)
-        
-        # تنظيف رقم اللوحة من الأحرف العربية
-        plate_clean = ''.join(c for c in str(handover.vehicle_plate_number or "N/A") if ord(c) < 128)
-        pdf.cell(0, 10, f'Plate Number: {plate_clean}', 0, 1)
-        
-        # تنظيف اسم الشخص من الأحرف العربية
-        person_clean = ''.join(c for c in str(handover.person_name or "N/A") if ord(c) < 128)
-        pdf.cell(0, 10, f'Person Name: {person_clean or "Arabic Name"}', 0, 1)
-        
-        pdf.cell(0, 10, f'Date: {handover.handover_date}', 0, 1)
-        # تنظيف نوع التسليم من الأحرف العربية
-        type_clean = ''.join(c for c in str(handover.handover_type or "N/A") if ord(c) < 128)
-        pdf.cell(0, 10, f'Type: {type_clean or "Handover"}', 0, 1)
-        pdf.cell(0, 10, f'Mileage: {handover.mileage or "N/A"} km', 0, 1)
-        
-        # تنظيف مستوى الوقود من الأحرف العربية
-        fuel_clean = ''.join(c for c in str(handover.fuel_level or "N/A") if ord(c) < 128)
-        pdf.cell(0, 10, f'Fuel Level: {fuel_clean or "N/A"}', 0, 1)
-        
-        # إنشاء buffer وإرجاع الملف
-        pdf_output = io.BytesIO()
-        pdf_content = pdf.output()
-        pdf_output.write(pdf_content)
-        pdf_output.seek(0)
-        
-        filename = f"handover_{handover.id}_{handover.handover_date}.pdf"
+        # تحضير اسم الملف
+        plate_clean = handover.vehicle.plate_number if handover.vehicle else f"record_{handover.id}"
+        filename = f"handover_{plate_clean}_{handover.handover_date}.pdf"
         
         return send_file(
-            pdf_output,
+            pdf_buffer,
             download_name=filename,
             as_attachment=False,
             mimetype='application/pdf'

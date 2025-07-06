@@ -1,555 +1,295 @@
-"""   
-مكتبة لإنشاء تقارير PDF لفحص المركبات مع دعم للنصوص العربية وعرض صورة المركبة مع علامات التلف
 """
+مولد PDF عربي لتسليم المركبات باستخدام Cairo والخط العربي
+"""
+
 import os
-import datetime
 from io import BytesIO
-from reportlab.lib import colors
-from reportlab.lib.units import mm, cm
+from datetime import datetime
+from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, Flowable
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import arabic_reshaper
 from bidi.algorithm import get_display
 
-# تسجيل الخطوط العربية
-def register_arabic_fonts():
-    """تسجيل الخطوط العربية لمكتبة ReportLab"""
+def setup_arabic_font():
+    """إعداد الخط العربي"""
     try:
-        # استخدام خط Tajawal للنص العادي
-        font_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Tajawal-Regular.ttf')
-        if os.path.exists(font_path) and os.path.getsize(font_path) > 0:
-            pdfmetrics.registerFont(TTFont('Amiri', font_path))
+        font_path = os.path.join(os.path.dirname(__file__), '..', 'Cairo.ttf')
+        if os.path.exists(font_path):
+            pdfmetrics.registerFont(TTFont('Cairo', font_path))
+            return 'Cairo'
         else:
-            print(f"خطأ: ملف الخط {font_path} غير موجود أو فارغ!")
-            # استخدام Amiri كبديل إذا كان موجودًا
-            alt_font_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Amiri-Regular.ttf')
-            if os.path.exists(alt_font_path) and os.path.getsize(alt_font_path) > 0:
-                pdfmetrics.registerFont(TTFont('Amiri', alt_font_path))
-            else:
-                # استخدام Arial كخيار أخير
-                arial_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'arial.ttf')
-                pdfmetrics.registerFont(TTFont('Amiri', arial_path))
-        
-        # استخدام خط Tajawal للنص العريض
-        font_path_bold = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'Tajawal-Bold.ttf')
-        if os.path.exists(font_path_bold) and os.path.getsize(font_path_bold) > 0:
-            pdfmetrics.registerFont(TTFont('Amiri-Bold', font_path_bold))
-        else:
-            print(f"خطأ: ملف الخط {font_path_bold} غير موجود أو فارغ!")
-            # استخدام arialbd كبديل
-            alt_bold_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'arialbd.ttf')
-            pdfmetrics.registerFont(TTFont('Amiri-Bold', alt_bold_path))
-    except Exception as e:
-        print(f"خطأ في تسجيل الخطوط: {str(e)}")
-        # استخدام خط Arial الافتراضي إذا فشلت جميع المحاولات
-        try:
-            arial_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'fonts', 'arial.ttf')
-            pdfmetrics.registerFont(TTFont('Amiri', arial_path))
-            pdfmetrics.registerFont(TTFont('Amiri-Bold', arial_path))
-        except Exception as e2:
-            print(f"فشل في تسجيل الخط البديل: {str(e2)}")
+            # استخدام خط احتياطي
+            return 'Helvetica'
+    except:
+        return 'Helvetica'
 
-# معالجة النص العربي ليعرض بشكل صحيح
-def arabic_text(text):
-    """معالجة النصوص العربية للعرض الصحيح في PDF"""
-    if text is None:
+def process_arabic_text(text):
+    """معالجة النص العربي للعرض الصحيح"""
+    if not text:
         return ""
     
-    # تحويل النص إلى سلسلة إذا لم يكن كذلك
-    if not isinstance(text, str):
-        text = str(text)
-    
-    # إعادة تشكيل النص العربي وضبط الاتجاه
     try:
-        reshaped_text = arabic_reshaper.reshape(text)
+        # تشكيل النص العربي
+        reshaped_text = arabic_reshaper.reshape(str(text))
+        # ترتيب النص من اليمين لليسار
         bidi_text = get_display(reshaped_text)
         return bidi_text
-    except Exception:
-        # في حالة فشل معالجة النص، إرجاع النص الأصلي
-        return text
+    except:
+        return str(text)
 
-# مكون مخصص لعرض المركبة مع علامات التلف
-class VehicleDiagramWithMarkers(Flowable):
-    """عنصر مخصص لعرض مخطط المركبة مع علامات الضرر"""
-    
-    def __init__(self, vehicle_diagram_path, damage_markers=None, width=500, height=300):
-        """
-        تهيئة مكون مخطط المركبة
-        
-        Args:
-            vehicle_diagram_path: مسار صورة مخطط المركبة (لم يعد يستخدم - نرسم بدلاً منها)
-            damage_markers: قائمة بعلامات التلف، كل علامة تتكون من (x, y, notes)
-            width: عرض المخطط
-            height: ارتفاع المخطط
-        """
-        Flowable.__init__(self)
-        self.vehicle_diagram_path = vehicle_diagram_path
-        self.damage_markers = damage_markers or []
-        self.width = width
-        self.height = height
-    
-    def draw(self):
-        """رسم المركبة مع علامات الضرر"""
-        # استدعاء canvas لرسم المكونات
-        canvas = self.canv
-        
-        # حفظ الحالة الحالية للـ canvas
-        canvas.saveState()
-        
-        # رسم مخطط السيارة بدلاً من تحميل صورة
-        # رسم هيكل السيارة
-        canvas.setStrokeColor(colors.black)
-        canvas.setFillColor(colors.white)
-        canvas.setLineWidth(2)
-        
-        # مستطيل الهيكل الرئيسي
-        canvas.roundRect(50, 50, self.width - 100, self.height - 100, 20, stroke=1, fill=1)
-        
-        # الزجاج الأمامي باستخدام مسار بدلاً من المضلع
-        canvas.setFillColor(colors.lightblue)
-        canvas.setStrokeColor(colors.black)
-        # رسم المستطيل بشكل يدوي باستخدام خطوط
-        x1, y1 = 100, self.height - 100  # أعلى يسار
-        x2, y2 = self.width - 100, self.height - 100  # أعلى يمين
-        x3, y3 = self.width - 120, self.height - 140  # أسفل يمين
-        x4, y4 = 120, self.height - 140  # أسفل يسار
-        
-        # رسم المسار
-        p = canvas.beginPath()
-        p.moveTo(x1, y1)
-        p.lineTo(x2, y2)
-        p.lineTo(x3, y3)
-        p.lineTo(x4, y4)
-        p.close()
-        canvas.drawPath(p, stroke=1, fill=1)
-        
-        # الزجاج الخلفي باستخدام مسار
-        x1, y1 = 120, 140  # أعلى يسار
-        x2, y2 = self.width - 120, 140  # أعلى يمين
-        x3, y3 = self.width - 100, 100  # أسفل يمين
-        x4, y4 = 100, 100  # أسفل يسار
-        
-        # رسم المسار
-        p = canvas.beginPath()
-        p.moveTo(x1, y1)
-        p.lineTo(x2, y2)
-        p.lineTo(x3, y3)
-        p.lineTo(x4, y4)
-        p.close()
-        canvas.drawPath(p, stroke=1, fill=1)
-        
-        # العجلات
-        canvas.setFillColor(colors.black)
-        canvas.circle(120, 80, 30, stroke=1, fill=1)
-        canvas.circle(self.width - 120, 80, 30, stroke=1, fill=1)
-        
-        # داخل العجلات (الجنوط)
-        canvas.setFillColor(colors.grey)
-        canvas.circle(120, 80, 15, stroke=1, fill=1)
-        canvas.circle(self.width - 120, 80, 15, stroke=1, fill=1)
-        
-        # المصابيح الأمامية
-        canvas.setFillColor(colors.yellow)
-        canvas.circle(80, self.height - 120, 12, stroke=1, fill=1)
-        canvas.circle(self.width - 80, self.height - 120, 12, stroke=1, fill=1)
-        
-        # المصابيح الخلفية
-        canvas.setFillColor(colors.red)
-        canvas.circle(80, 120, 12, stroke=1, fill=1)
-        canvas.circle(self.width - 80, 120, 12, stroke=1, fill=1)
-        
-        # رسم علامات التلف
-        for marker in self.damage_markers:
-            # تحويل الإحداثيات من النسبة المئوية إلى إحداثيات فعلية
-            x = float(getattr(marker, 'x_position', 0)) * self.width / 100
-            y = float(getattr(marker, 'y_position', 0)) * self.height / 100
-            note = getattr(marker, 'description', '')
-            
-            # رسم دائرة حمراء عند نقطة التلف (مع التحقق من القيم غير الصالحة)
-            if x > 0 and y > 0 and x < self.width and y < self.height:
-                canvas.setStrokeColor(colors.red)
-                canvas.setFillColor(colors.red)
-                canvas.circle(x, y, 10, fill=1)
-                
-                # إضافة رقم داخل الدائرة
-                canvas.setFillColor(colors.white)
-                canvas.setFont('Amiri-Bold', 10)
-                try:
-                    marker_index = self.damage_markers.index(marker) + 1
-                    # تعديل موضع النص حسب عدد الأرقام
-                    canvas.drawCentredString(x, y - 3, str(marker_index))
-                except Exception as e:
-                    print(f"خطأ في رسم رقم علامة التلف: {str(e)}")
-        
-        # استعادة حالة الـ canvas
-        canvas.restoreState()
-
-# دالة إنشاء ملف PDF لتقرير فحص المركبة
-def create_vehicle_checklist_pdf(checklist, vehicle, checklist_items, damage_markers=None, checklist_images=None):
+def create_vehicle_handover_pdf(handover_data):
     """
-    إنشاء ملف PDF لفحص المركبة
-    
-    Args:
-        checklist: كائن فحص المركبة
-        vehicle: كائن المركبة
-        checklist_items: عناصر الفحص مصنفة حسب الفئة
-        damage_markers: علامات التلف (اختياري)
-        checklist_images: صور الفحص (اختياري)
-        
-    Returns:
-        BytesIO: كائن BytesIO يحتوي على ملف PDF
+    إنشاء PDF عربي لتسليم المركبة
     """
-    # طباعة قيم للتصحيح
-    print(f"Vehicle: {vars(vehicle)}")
-    print(f"Checklist: {vars(checklist)}")
-    # تسجيل الخطوط العربية
-    register_arabic_fonts()
-    
-    # تحضير ملف PDF
-    buffer = BytesIO()
-    
-    # ألوان الهوية المرئية للتقرير - ألوان متناسقة بدرجات الأزرق
-    primary_color = colors.HexColor('#1A4D80')  # أزرق داكن للعناوين الرئيسية
-    secondary_color = colors.HexColor('#3373B0')  # أزرق متوسط للعناوين الفرعية
-    accent_color = colors.HexColor('#ECF2FA')  # أزرق فاتح للخلفيات
-    border_color = colors.HexColor('#8C9CB8')  # لون الإطارات
-    header_bg_color = colors.HexColor('#F2F7FF')  # لون خلفية الترويسة
-    
-    # تعيين أنماط الخطوط
-    styles = getSampleStyleSheet()
-    
-    # إضافة نمط للنصوص العربية - تحسين التنسيق والألوان
-    styles.add(ParagraphStyle(name='Arabic',
-                              fontName='Amiri',
-                              fontSize=12,
-                              leading=16,
-                              rightIndent=5,
-                              leftIndent=5,
-                              spaceBefore=2,
-                              spaceAfter=2,
-                              alignment=2))  # محاذاة لليمين للنص العربي
-    
-    # إضافة نمط للعناوين العربية - زيادة حجم الخط وإضافة لون مميز
-    styles.add(ParagraphStyle(name='ArabicHeading',
-                              fontName='Amiri-Bold',
-                              fontSize=18,
-                              leading=22,
-                              alignment=1,  # وسط النص
-                              spaceBefore=6,
-                              spaceAfter=10,
-                              textColor=primary_color))  # لون أزرق داكن للعناوين
-    
-    # إضافة نمط للعناوين الفرعية - لون ثانوي مميز
-    styles.add(ParagraphStyle(name='ArabicSubHeading',
-                              fontName='Amiri-Bold',
-                              fontSize=14,
-                              leading=18,
-                              alignment=2,  # محاذاة لليمين للنص العربي
-                              spaceBefore=4,
-                              spaceAfter=8,
-                              textColor=secondary_color))  # لون أزرق متوسط
-    
-    # إضافة نمط للجداول - تحسين قراءة البيانات
-    styles.add(ParagraphStyle(name='ArabicTable',
-                              fontName='Amiri',
-                              fontSize=11,
-                              leading=14,
-                              rightIndent=3,
-                              leftIndent=3,
-                              alignment=2,  # محاذاة لليمين للنص العربي
-                              textColor=colors.black))
-                              
-    # إضافة نمط للعناوين في الجداول
-    styles.add(ParagraphStyle(name='ArabicTableHeader',
-                              fontName='Amiri-Bold',
-                              fontSize=11,
-                              leading=14,
-                              rightIndent=3,
-                              leftIndent=3,
-                              alignment=2,  # محاذاة لليمين للنص العربي
-                              textColor=primary_color,  # لون أزرق داكن للعناوين
-                              backColor=accent_color))  # خلفية فاتحة للعناوين
-                              
-    # إضافة نمط للتذييل
-    styles.add(ParagraphStyle(name='ArabicFooter',
-                              fontName='Amiri',
-                              fontSize=9,
-                              leading=12,
-                              alignment=1,  # وسط النص
-                              textColor=colors.darkgrey))
-    
-    # إنشاء مستند PDF
-    doc = SimpleDocTemplate(buffer,
-                            pagesize=A4,
-                            rightMargin=2*cm,
-                            leftMargin=2*cm,
-                            topMargin=2*cm,
-                            bottomMargin=2*cm)
-    
-    # إنشاء قائمة العناصر للمستند
-    elements = []
-    
-    # دالة لإضافة الشعار وعنوان الصفحة
-    def add_logo_to_page(canvas, doc):
-        # حفظ حالة الـ canvas
-        canvas.saveState()
+    try:
+        print("Starting Arabic handover PDF generation...")
         
-        # إضافة الشعار في أعلى الصفحة
-        logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'images', 'logo.png')
-        if os.path.exists(logo_path):
-            canvas.drawImage(logo_path, 2*cm, A4[1] - 4*cm, width=4*cm, height=2*cm)
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
         
-        # إضافة عنوان التقرير
-        canvas.setFont('Amiri-Bold', 20)
-        canvas.drawCentredString(A4[0]/2, A4[1] - 3*cm, arabic_text("تقرير فحص المركبة"))
+        # إعداد الخط العربي
+        arabic_font = setup_arabic_font()
         
-        # إضافة تاريخ الفحص والوقت
-        canvas.setFont('Amiri', 10)
-        date_str = ""
-        if hasattr(checklist, 'check_date') and checklist.check_date:
-            date_str = checklist.check_date.strftime("%Y-%m-%d")
-        elif hasattr(checklist, 'inspection_date') and checklist.inspection_date:
-            date_str = checklist.inspection_date.strftime("%Y-%m-%d")
-        canvas.drawString(A4[0] - 5*cm, A4[1] - 3.5*cm, arabic_text(f"تاريخ الفحص: {date_str}"))
+        # الألوان
+        primary_color = colors.HexColor('#2E86AB')
+        secondary_color = colors.HexColor('#A23B72')
+        accent_color = colors.HexColor('#F18F01')
         
-        # إضافة رقم الصفحة في أسفل الصفحة
-        canvas.setFont('Amiri', 9)
-        page_num = canvas.getPageNumber()
-        canvas.drawCentredString(A4[0]/2, 1*cm, arabic_text(f"صفحة {page_num}"))
+        # إضافة شعار الشركة
+        try:
+            logo_path = os.path.join(os.path.dirname(__file__), '..', 'attached_assets', 'logo.png')
+            if os.path.exists(logo_path):
+                c.drawImage(logo_path, 50, height - 80, width=60, height=40, preserveAspectRatio=True)
+        except:
+            pass
         
-        # استعادة حالة الـ canvas
-        canvas.restoreState()
-    
-    # إضافة معلومات المركبة
-    elements.append(Paragraph(arabic_text("معلومات المركبة"), styles['ArabicHeading']))
-    elements.append(Spacer(1, 10 * mm))
-    
-    # جدول معلومات المركبة
-    vehicle_data = [
-        [Paragraph(arabic_text("رقم اللوحة"), styles['ArabicTable']), 
-         Paragraph(arabic_text(getattr(vehicle, 'plate_number', '') or "غير محدد"), styles['ArabicTable'])],
-        [Paragraph(arabic_text("نوع المركبة"), styles['ArabicTable']), 
-         Paragraph(arabic_text(getattr(vehicle, 'vehicle_type', '') or "غير محدد"), styles['ArabicTable'])],
-        [Paragraph(arabic_text("الماركة"), styles['ArabicTable']), 
-         Paragraph(arabic_text(getattr(vehicle, 'make', '') or "غير محدد"), styles['ArabicTable'])],
-        [Paragraph(arabic_text("الموديل"), styles['ArabicTable']), 
-         Paragraph(arabic_text(getattr(vehicle, 'model', '') or "غير محدد"), styles['ArabicTable'])],
-        [Paragraph(arabic_text("سنة الصنع"), styles['ArabicTable']), 
-         Paragraph(arabic_text(str(getattr(vehicle, 'year', '')) if getattr(vehicle, 'year', None) else "غير محدد"), styles['ArabicTable'])],
-        [Paragraph(arabic_text("عداد المسافة (كم)"), styles['ArabicTable']), 
-         Paragraph(arabic_text(str(getattr(checklist, 'odometer_reading', '')) if getattr(checklist, 'odometer_reading', None) else "غير محدد"), styles['ArabicTable'])]
-    ]
-    
-    # تنسيق جدول معلومات المركبة
-    table_style = TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ])
-    
-    vehicle_table = Table(vehicle_data, colWidths=[5*cm, 10*cm])
-    vehicle_table.setStyle(table_style)
-    elements.append(vehicle_table)
-    elements.append(Spacer(1, 10 * mm))
-    
-    # إضافة مخطط المركبة مع علامات التلف - بتصميم محسّن
-    elements.append(Paragraph(arabic_text("مخطط المركبة مع علامات التلف"), styles['ArabicHeading']))
-    elements.append(Spacer(1, 6 * mm))
-    
-    # إضافة نص توضيحي للمخطط
-    elements.append(Paragraph(arabic_text("التوضيح: النقاط الحمراء تشير إلى مواقع التلف في المركبة"), styles['ArabicFooter']))
-    elements.append(Spacer(1, 8 * mm))
-    
-    # نستخدم القماش مباشرة لرسم مخطط المركبة
-    diagram_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'images', 'vehicles', 'vehicle_diagram.svg')
-    
-    # إضافة مخطط المركبة مع علامات التلف
-    diagram = VehicleDiagramWithMarkers(diagram_path, damage_markers, width=450, height=250)
-    elements.append(diagram)
-    elements.append(Spacer(1, 10 * mm))
-    
-    # إضافة شرح علامات التلف إذا كانت موجودة
-    if damage_markers and len(damage_markers) > 0:
-        elements.append(Paragraph(arabic_text("ملاحظات التلف"), styles['ArabicSubHeading']))
-        elements.append(Spacer(1, 5 * mm))
+        # العنوان الرئيسي
+        c.setFont(arabic_font, 18)
+        c.setFillColor(primary_color)
+        title = process_arabic_text("وثيقة تسليم واستلام المركبة")
+        title_width = c.stringWidth(title, arabic_font, 18)
+        c.drawString((width - title_width)/2, height - 60, title)
         
-        # إنشاء جدول ملاحظات التلف
-        damage_data = []
-        for i, marker in enumerate(damage_markers):
-            description = getattr(marker, 'description', '') or ""
-            damage_data.append([
-                Paragraph(arabic_text(str(i+1)), styles['ArabicTable']),
-                Paragraph(arabic_text(description), styles['ArabicTable'])
-            ])
+        # معلومات الوثيقة
+        y_position = height - 100
+        c.setFont(arabic_font, 10)
+        c.setFillColor(colors.black)
         
-        # تنسيق جدول ملاحظات التلف
-        damage_table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), accent_color),  # خلفية فاتحة للعمود الأول
-            ('BACKGROUND', (0, 0), (-1, 0), header_bg_color),  # خلفية للعناوين
-            ('TEXTCOLOR', (0, 0), (0, -1), primary_color),  # لون النص للعمود الأول
-            ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # توسيط الأرقام
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),  # محاذاة الوصف لليمين
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة عمودية للوسط
-            ('GRID', (0, 0), (-1, -1), 0.5, border_color),  # حدود الجدول
-            ('FONTNAME', (0, 0), (0, -1), 'Amiri-Bold'),  # خط غامق للأرقام
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),  # تباعد أسفل الخلايا
-            ('TOPPADDING', (0, 0), (-1, -1), 5),  # تباعد أعلى الخلايا
-        ])
+        # رقم الوثيقة
+        doc_id = process_arabic_text(f"رقم الوثيقة: {handover_data.id}")
+        c.drawString(width - 150, y_position, doc_id)
+        y_position -= 15
         
-        # إضافة صف العناوين
-        damage_data.insert(0, [
-            Paragraph(arabic_text("الرقم"), styles['ArabicTableHeader']),
-            Paragraph(arabic_text("الوصف"), styles['ArabicTableHeader'])
-        ])
+        # تاريخ الإنشاء
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M')
+        date_text = process_arabic_text(f"تاريخ الإنشاء: {current_date}")
+        c.drawString(width - 150, y_position, date_text)
+        y_position -= 15
         
-        damage_table = Table(damage_data, colWidths=[2*cm, 13*cm])
-        damage_table.setStyle(damage_table_style)
-        elements.append(damage_table)
-        elements.append(Spacer(1, 10 * mm))
-    
-    # إضافة عناصر الفحص
-    elements.append(Paragraph(arabic_text("عناصر الفحص"), styles['ArabicHeading']))
-    elements.append(Spacer(1, 10 * mm))
-    
-    # جدول عناصر الفحص مصنفة حسب الفئة
-    for category, items in checklist_items.items():
-        elements.append(Paragraph(arabic_text(category), styles['ArabicSubHeading']))
-        elements.append(Spacer(1, 5 * mm))
+        # نوع العملية
+        operation_type = "تسليم" if str(handover_data.handover_type) == "delivery" else "استلام"
+        type_text = process_arabic_text(f"نوع العملية: {operation_type}")
+        c.drawString(width - 150, y_position, type_text)
         
-        # إنشاء جدول عناصر الفحص للفئة الحالية
-        items_data = []
-        items_data.append([
-            Paragraph(arabic_text("العنصر"), styles['ArabicTable']),
-            Paragraph(arabic_text("الحالة"), styles['ArabicTable']),
-            Paragraph(arabic_text("الملاحظات"), styles['ArabicTable'])
-        ])
+        # خط فاصل
+        y_position = height - 160
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(2)
+        c.line(50, y_position, width - 50, y_position)
         
-        for item in items:
-            # تحديد حالة العنصر (جيد/سيء)
-            status = ""
-            status_color = colors.black
+        # معلومات المركبة
+        y_position -= 40
+        c.setFont(arabic_font, 14)
+        c.setFillColor(secondary_color)
+        vehicle_title = process_arabic_text("معلومات المركبة")
+        c.drawString(width - 120, y_position, vehicle_title)
+        
+        # جدول معلومات المركبة
+        if hasattr(handover_data, 'vehicle_rel') and handover_data.vehicle_rel:
+            vehicle = handover_data.vehicle_rel
             
-            if hasattr(item, 'status'):
-                if item.status == 'good':
-                    status = "جيد"
-                    status_color = colors.green
-                elif item.status == 'fair':
-                    status = "متوسط"
-                    status_color = colors.orange
-                elif item.status == 'poor':
-                    status = "سيء"
-                    status_color = colors.red
-                else:
-                    status = "غير محدد"
-                    status_color = colors.black
-            
-            # التعامل مع الملاحظات المفقودة
-            item_name = getattr(item, 'item_name', '') or ""
-            item_notes = getattr(item, 'notes', '') or ""
-            
-            # إضافة الصف إلى جدول البيانات
-            items_data.append([
-                Paragraph(arabic_text(item_name), styles['ArabicTable']),
-                Paragraph(f'<font color="{status_color}">{arabic_text(status)}</font>', styles['ArabicTable']),
-                Paragraph(arabic_text(item_notes), styles['ArabicTable'])
-            ])
+            vehicle_data = [
+                [process_arabic_text("رقم اللوحة"), process_arabic_text(str(vehicle.plate_number) if vehicle.plate_number else "غير محدد")],
+                [process_arabic_text("الصنع"), process_arabic_text(str(vehicle.make) if vehicle.make else "غير محدد")],
+                [process_arabic_text("الموديل"), process_arabic_text(str(vehicle.model) if vehicle.model else "غير محدد")],
+                [process_arabic_text("السنة"), process_arabic_text(str(vehicle.year) if hasattr(vehicle, 'year') and vehicle.year else "غير محدد")],
+                [process_arabic_text("اللون"), process_arabic_text(str(vehicle.color) if hasattr(vehicle, 'color') and vehicle.color else "غير محدد")]
+            ]
+        else:
+            vehicle_data = [
+                [process_arabic_text("معلومات المركبة"), process_arabic_text("غير متوفرة")]
+            ]
         
-        # تنسيق جدول عناصر الفحص
-        items_table_style = TableStyle([
+        # إنشاء جدول المركبة
+        vehicle_table = Table(vehicle_data, colWidths=[2*inch, 3*inch])
+        vehicle_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ])
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), arabic_font),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
         
-        items_table = Table(items_data, colWidths=[5*cm, 3*cm, 7*cm])
-        items_table.setStyle(items_table_style)
-        elements.append(items_table)
-        elements.append(Spacer(1, 10 * mm))
-    
-    # إضافة الصور المرفقة إذا كانت موجودة
-    if checklist_images and len(checklist_images) > 0:
-        elements.append(Paragraph(arabic_text("الصور المرفقة"), styles['ArabicHeading']))
-        elements.append(Spacer(1, 10 * mm))
+        table_width, table_height = vehicle_table.wrap(width, height)
+        y_position -= table_height + 20
+        vehicle_table.drawOn(c, width - table_width - 50, y_position)
         
-        # تعريف دالة مساعدة لمعالجة الصور
-        def process_image(image_obj):
-            # القيمة الافتراضية إذا كانت الصورة غير متوفرة
-            default_cell = [Paragraph(arabic_text("(الصورة غير متوفرة)"), styles['ArabicTable'])]
-            
-            # التحقق من وجود سمة image_path
-            image_path = getattr(image_obj, 'image_path', '')
-            if not image_path:
-                return default_cell
-                
-            img_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', image_path)
-            if not os.path.exists(img_path):
-                return default_cell
-                
-            cell_content = []
-            try:
-                img = Image(img_path, width=7*cm, height=7*cm)
-                cell_content.append(img)
-            except Exception as e:
-                print(f"خطأ في تحميل الصورة: {str(e)}")
-                return default_cell
-                
-            description = getattr(image_obj, 'description', '') or ""
-            cell_content.append(Paragraph(arabic_text(description), styles['ArabicTable']))
-            return cell_content
+        # تفاصيل التسليم
+        y_position -= 40
+        c.setFont(arabic_font, 14)
+        c.setFillColor(secondary_color)
+        handover_title = process_arabic_text("تفاصيل التسليم")
+        c.drawString(width - 120, y_position, handover_title)
         
-        # عرض الصور في صفوف من صورتين
-        images_data = []
-        for i in range(0, len(checklist_images), 2):
-            row = []
+        # جدول تفاصيل التسليم
+        handover_details = [
+            [process_arabic_text("التاريخ"), process_arabic_text(handover_data.handover_date.strftime('%Y-%m-%d') if handover_data.handover_date else "غير محدد")],
+            [process_arabic_text("الوقت"), process_arabic_text(handover_data.handover_date.strftime('%H:%M') if handover_data.handover_date else "غير محدد")],
+            [process_arabic_text("اسم الشخص"), process_arabic_text(str(handover_data.person_name) if handover_data.person_name else "غير محدد")],
+            [process_arabic_text("رقم الهاتف"), process_arabic_text("غير محدد")],
+            [process_arabic_text("قراءة العداد"), process_arabic_text(f"{handover_data.mileage} كم" if handover_data.mileage else "غير محدد")],
+            [process_arabic_text("مستوى الوقود"), process_arabic_text(f"{handover_data.fuel_level}%" if handover_data.fuel_level else "غير محدد")]
+        ]
+        
+        handover_table = Table(handover_details, colWidths=[2*inch, 3*inch])
+        handover_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), arabic_font),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.lightcyan),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        table_width, table_height = handover_table.wrap(width, height)
+        y_position -= table_height + 20
+        handover_table.drawOn(c, width - table_width - 50, y_position)
+        
+        # قائمة تحقق المعدات
+        y_position -= 50
+        c.setFont(arabic_font, 14)
+        c.setFillColor(secondary_color)
+        equipment_title = process_arabic_text("معدات المركبة")
+        c.drawString(width - 120, y_position, equipment_title)
+        
+        # قائمة المعدات
+        equipment_items = [
+            process_arabic_text("الإطار الاحتياطي"),
+            process_arabic_text("طفاية الحريق"),
+            process_arabic_text("حقيبة الإسعافات الأولية"),
+            process_arabic_text("مثلث التحذير"),
+            process_arabic_text("عدة الأدوات")
+        ]
+        
+        y_position -= 30
+        c.setFont(arabic_font, 10)
+        c.setFillColor(colors.black)
+        
+        for item in equipment_items:
+            # مربع التحقق
+            c.setStrokeColor(colors.black)
+            c.setLineWidth(1)
+            c.rect(width - 50, y_position - 5, 10, 10)
             
-            # الصورة الأولى
-            row.append(process_image(checklist_images[i]))
-            
-            # الصورة الثانية (إن وجدت)
-            if i + 1 < len(checklist_images):
-                row.append(process_image(checklist_images[i + 1]))
-            else:
-                # إضافة خلية فارغة
-                row.append([])
-                
-            images_data.append(row)
-            
-            # تنسيق جدول الصور
-            images_table_style = TableStyle([
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ])
-            
-            images_table = Table(images_data, colWidths=[8*cm, 8*cm])
-            images_table.setStyle(images_table_style)
-            elements.append(images_table)
-            elements.append(Spacer(1, 10 * mm))
-    
-    # إضافة معلومات المفتش
-    elements.append(Paragraph(arabic_text("معلومات المفتش"), styles['ArabicHeading']))
-    elements.append(Spacer(1, 10 * mm))
-    
-    # جدول توقيع المفتش
-    inspector_data = [
-        [Paragraph(arabic_text("اسم المفتش"), styles['ArabicTable']), 
-         Paragraph(arabic_text(checklist.inspector_name or ""), styles['ArabicTable'])],
-        [Paragraph(arabic_text("التوقيع"), styles['ArabicTable']), 
-         Paragraph(arabic_text("________________________"), styles['ArabicTable'])]
-    ]
-    
-    # تنسيق جدول توقيع المفتش
-    inspector_table = Table(inspector_data, colWidths=[5*cm, 10*cm])
-    inspector_table.setStyle(table_style)
-    elements.append(inspector_table)
-    
-    # إنشاء المستند النهائي
-    doc.build(elements, onFirstPage=add_logo_to_page, onLaterPages=add_logo_to_page)
-    
-    # إعادة مؤشر القراءة إلى بداية الملف
-    buffer.seek(0)
-    return buffer
+            # نص المعدات
+            c.drawString(width - 80, y_position, item)
+            y_position -= 20
+        
+        # قسم الملاحظات
+        y_position -= 30
+        c.setFont(arabic_font, 14)
+        c.setFillColor(secondary_color)
+        notes_title = process_arabic_text("ملاحظات إضافية")
+        c.drawString(width - 120, y_position, notes_title)
+        
+        # مربع الملاحظات
+        y_position -= 30
+        c.setStrokeColor(colors.grey)
+        c.setLineWidth(1)
+        c.rect(50, y_position - 80, width - 100, 70)
+        
+        # نص الملاحظات
+        if handover_data.notes:
+            c.setFont(arabic_font, 10)
+            c.setFillColor(colors.black)
+            notes_text = process_arabic_text(str(handover_data.notes))
+            c.drawString(60, y_position - 20, notes_text)
+        
+        # قسم التوقيعات
+        y_position -= 100
+        c.setFont(arabic_font, 12)
+        c.setFillColor(colors.black)
+        
+        # توقيع المسلم
+        deliverer_text = process_arabic_text("توقيع المسلم:")
+        c.drawString(width - 150, y_position, deliverer_text)
+        c.line(width - 300, y_position - 5, width - 160, y_position - 5)
+        
+        # توقيع المستلم
+        receiver_text = process_arabic_text("توقيع المستلم:")
+        c.drawString(150, y_position, receiver_text)
+        c.line(50, y_position - 5, 140, y_position - 5)
+        
+        # تاريخ التوقيع
+        y_position -= 30
+        date_signature = process_arabic_text("التاريخ:")
+        c.drawString(width - 150, y_position, date_signature)
+        c.line(width - 300, y_position - 5, width - 160, y_position - 5)
+        
+        c.drawString(150, y_position, date_signature)
+        c.line(50, y_position - 5, 140, y_position - 5)
+        
+        # تذييل الصفحة
+        c.setFont(arabic_font, 8)
+        c.setFillColor(colors.grey)
+        footer_text = process_arabic_text(f"تم الإنشاء بواسطة نظام نُظم لإدارة المركبات - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        footer_width = c.stringWidth(footer_text, arabic_font, 8)
+        c.drawString((width - footer_width)/2, 30, footer_text)
+        
+        # إطار الصفحة
+        c.setStrokeColor(primary_color)
+        c.setLineWidth(2)
+        c.rect(30, 20, width - 60, height - 40)
+        
+        c.save()
+        buffer.seek(0)
+        
+        print("Arabic handover PDF generated successfully!")
+        return buffer
+        
+    except Exception as e:
+        print(f"Error generating Arabic handover PDF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # إنشاء PDF بديل في حالة الخطأ
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        
+        c.setFont('Helvetica', 16)
+        c.drawString(100, height - 100, "Vehicle Handover Report")
+        c.drawString(100, height - 130, f"Vehicle: {handover_data.vehicle.plate_number}")
+        c.drawString(100, height - 160, f"Person: {handover_data.person_name or 'N/A'}")
+        c.drawString(100, height - 190, f"Date: {handover_data.handover_date}")
+        c.drawString(100, height - 220, f"Type: {handover_data.handover_type}")
+        
+        c.save()
+        buffer.seek(0)
+        return buffer
+
+# دالة للتوافق مع النظام القديم
+def create_vehicle_checklist_pdf(handover_data, vehicle_data=None):
+    """دالة للتوافق مع النظام القديم"""
+    return create_vehicle_handover_pdf(handover_data)
