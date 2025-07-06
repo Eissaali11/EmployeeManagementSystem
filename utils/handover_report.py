@@ -22,13 +22,20 @@ def register_fonts():
     """تسجيل الخطوط العربية"""
     font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'fonts')
     
-    # التحقق من وجود الخطوط وتسجيلها
+    # التحقق من وجود خط beIN-Normal وتسجيله
+    bein_path = os.path.join(font_path, 'beIN-Normal.ttf')
     amiri_path = os.path.join(font_path, 'Amiri-Regular.ttf')
     amiri_bold_path = os.path.join(font_path, 'Amiri-Bold.ttf')
     
     if not os.path.exists(font_path):
         os.makedirs(font_path)
     
+    # تسجيل خط beIN-Normal أولاً
+    if os.path.exists(bein_path):
+        pdfmetrics.registerFont(TTFont('beIN-Normal', bein_path))
+        print("تم تسجيل خط beIN-Normal للنصوص العربية بنجاح")
+    
+    # تسجيل خطوط Amiri كخطوط احتياطية
     if os.path.exists(amiri_path) and os.path.exists(amiri_bold_path):
         pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
         pdfmetrics.registerFont(TTFont('Amiri-Bold', amiri_bold_path))
@@ -37,8 +44,13 @@ def register_fonts():
         # محاولة البحث عن المسارات البديلة
         try:
             static_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+            bein_path = os.path.join(static_folder, 'fonts', 'beIN-Normal.ttf')
             amiri_path = os.path.join(static_folder, 'fonts', 'Amiri-Regular.ttf')
             amiri_bold_path = os.path.join(static_folder, 'fonts', 'Amiri-Bold.ttf')
+            
+            if os.path.exists(bein_path):
+                pdfmetrics.registerFont(TTFont('beIN-Normal', bein_path))
+                print("تم تسجيل خط beIN-Normal من المسار البديل بنجاح")
             
             if os.path.exists(amiri_path) and os.path.exists(amiri_bold_path):
                 pdfmetrics.registerFont(TTFont('Amiri', amiri_path))
@@ -47,7 +59,7 @@ def register_fonts():
             else:
                 print("لم يتم العثور على ملفات الخط العربي، سيتم استخدام الخط الافتراضي")
                 # استخدام خط افتراضي إذا لم تكن الخطوط العربية متوفرة
-                pdfmetrics.registerFont(TTFont('Amiri', 'Helvetica'))
+                pdfmetrics.registerFont(TTFont('beIN-Normal', 'Helvetica'))
                 pdfmetrics.registerFont(TTFont('Amiri-Bold', 'Helvetica-Bold'))
         except Exception as e:
             print(f"خطأ في تسجيل الخطوط: {str(e)}")
@@ -93,11 +105,11 @@ def generate_vehicle_handover_pdf(handover_data):
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=60, bottomMargin=18)
     styles = getSampleStyleSheet()
     
-    # إنشاء أنماط للنص العربي
-    styles.add(ParagraphStyle(name='Arabic', fontName='Amiri', fontSize=12, alignment=1))  # للنص العربي
-    styles.add(ParagraphStyle(name='ArabicTitle', fontName='Amiri-Bold', fontSize=16, alignment=1))  # للعناوين
-    styles.add(ParagraphStyle(name='ArabicSubtitle', fontName='Amiri-Bold', fontSize=14, alignment=1))  # للعناوين الفرعية
-    styles.add(ParagraphStyle(name='ArabicSmall', fontName='Amiri', fontSize=10, alignment=1))  # للنص الصغير
+    # إنشاء أنماط للنص العربي باستخدام خط beIN-Normal
+    styles.add(ParagraphStyle(name='Arabic', fontName='beIN-Normal', fontSize=12, alignment=1))  # للنص العربي
+    styles.add(ParagraphStyle(name='ArabicTitle', fontName='beIN-Normal', fontSize=16, alignment=1))  # للعناوين
+    styles.add(ParagraphStyle(name='ArabicSubtitle', fontName='beIN-Normal', fontSize=14, alignment=1))  # للعناوين الفرعية
+    styles.add(ParagraphStyle(name='ArabicSmall', fontName='beIN-Normal', fontSize=10, alignment=1))  # للنص الصغير
     
     # إنشاء دالة للرسم في رأس الصفحة مع شعار
     def add_header_footer(canvas, doc):
@@ -118,10 +130,10 @@ def generate_vehicle_handover_pdf(handover_data):
             # في حالة الخطأ، لا نرسم شيئاً
         
         # إضافة معلومات في التذييل إذا لزم الأمر
-        canvas.setFont('Amiri', 8)
-        canvas.setFillColor(Color(0.5, 0.5, 0.5)) # رمادي
+        canvas.setFont('beIN-Normal', 8)
+        canvas.setFillColor(colors.Color(0.5, 0.5, 0.5)) # رمادي
         footer_text = arabic_text(f"تم إنشاء هذا التقرير بواسطة نُظم في {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'Amiri', 8)/2, 30, footer_text)
+        canvas.drawString(A4[0]/2 - canvas.stringWidth(footer_text, 'beIN-Normal', 8)/2, 30, footer_text)
         
         canvas.restoreState()
     
@@ -153,7 +165,7 @@ def generate_vehicle_handover_pdf(handover_data):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
         ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Amiri'),
+        ('FONTNAME', (0, 0), (-1, -1), 'beIN-Normal'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
     ]))
@@ -262,11 +274,11 @@ def generate_vehicle_handover_pdf(handover_data):
         ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
         ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة رأسية وسطية
-        # تطبيق خط Amiri على جميع الخلايا ما عدا التي تحتوي على جداول داخلية أو نصوص خاصة
+        # تطبيق خط beIN-Normal على جميع الخلايا ما عدا التي تحتوي على جداول داخلية أو نصوص خاصة
         # تطبيق الخط على كل صف على حدة
-        ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # عناوين الصفوف
-        ('FONTNAME', (1, 0), (1, 0), 'Amiri'),    # التاريخ
-        ('FONTNAME', (1, 1), (1, 1), 'Amiri'),    # اسم الشخص
+        ('FONTNAME', (0, 0), (0, -1), 'beIN-Normal'),  # عناوين الصفوف
+        ('FONTNAME', (1, 0), (1, 0), 'beIN-Normal'),    # التاريخ
+        ('FONTNAME', (1, 1), (1, 1), 'beIN-Normal'),    # اسم الشخص
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
     ]))
@@ -324,8 +336,8 @@ def generate_vehicle_handover_pdf(handover_data):
         ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
         ('ALIGN', (1, 0), (1, 0), 'CENTER'),  # توسيط عنوان العمود الثاني فقط
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # محاذاة رأسية وسطية للجميع
-        ('FONTNAME', (0, 0), (0, -1), 'Amiri'),  # تطبيق خط Amiri على العمود الأول فقط
-        ('FONTNAME', (0, 0), (1, 0), 'Amiri'),  # تطبيق خط Amiri على العناوين
+        ('FONTNAME', (0, 0), (0, -1), 'beIN-Normal'),  # تطبيق خط beIN-Normal على العمود الأول فقط
+        ('FONTNAME', (0, 0), (1, 0), 'beIN-Normal'),  # تطبيق خط beIN-Normal على العناوين
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
     ]))

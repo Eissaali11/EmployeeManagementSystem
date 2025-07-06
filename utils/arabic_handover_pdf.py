@@ -1,275 +1,229 @@
 """
-مولد PDF عربي لتسليم المركبات باستخدام Cairo والخط العربي
+مولد تقارير تسليم/استلام المركبات باستخدام ReportLab مع خط beIN-Normal
 """
 
 import os
-from io import BytesIO
+import io
 from datetime import datetime
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import arabic_reshaper
 from bidi.algorithm import get_display
 
-def setup_arabic_font():
-    """إعداد الخط العربي"""
+def register_arabic_fonts():
+    """تسجيل الخطوط العربية مع التركيز على خط beIN-Normal"""
     try:
-        font_path = os.path.join(os.path.dirname(__file__), '..', 'Cairo.ttf')
-        if os.path.exists(font_path):
-            pdfmetrics.registerFont(TTFont('Cairo', font_path))
-            return 'Cairo'
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        fonts_dir = os.path.join(base_dir, 'static', 'fonts')
+        
+        # تسجيل خط beIN-Normal
+        bein_font_path = os.path.join(fonts_dir, 'beIN-Normal.ttf')
+        if os.path.exists(bein_font_path):
+            pdfmetrics.registerFont(TTFont('beIN-Normal', bein_font_path))
+            print("تم تسجيل خط beIN-Normal بنجاح")
+            return True
         else:
-            # استخدام خط احتياطي
-            return 'Helvetica'
-    except:
-        return 'Helvetica'
+            print(f"خط beIN-Normal غير موجود في المسار: {bein_font_path}")
+            return False
+    except Exception as e:
+        print(f"خطأ في تسجيل الخطوط: {e}")
+        return False
 
-def process_arabic_text(text):
-    """معالجة النص العربي للعرض الصحيح"""
+def format_arabic_text(text):
+    """تنسيق النص العربي للعرض الصحيح في PDF"""
     if not text:
         return ""
-    
     try:
-        # تشكيل النص العربي
         reshaped_text = arabic_reshaper.reshape(str(text))
-        # ترتيب النص من اليمين لليسار
-        bidi_text = get_display(reshaped_text)
-        return bidi_text
+        return get_display(reshaped_text)
     except:
         return str(text)
 
-def create_vehicle_handover_pdf(handover_data):
+def generate_handover_pdf_with_bein(handover_data):
     """
-    إنشاء PDF عربي لتسليم المركبة
+    إنشاء تقرير تسليم/استلام باستخدام خط beIN-Normal
+    
+    Args:
+        handover_data: بيانات التسليم/الاستلام
+    
+    Returns:
+        BytesIO: ملف PDF
     """
+    # تسجيل الخطوط
+    font_registered = register_arabic_fonts()
+    if not font_registered:
+        raise Exception("فشل في تسجيل خط beIN-Normal")
+    
+    # إنشاء buffer لـ PDF
+    buffer = io.BytesIO()
+    
+    # إنشاء المستند
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=30,
+        leftMargin=30,
+        topMargin=60,
+        bottomMargin=30
+    )
+    
+    # إعداد الأنماط
+    styles = getSampleStyleSheet()
+    
+    # إضافة أنماط عربية جديدة
+    styles.add(ParagraphStyle(
+        name='ArabicTitle',
+        fontName='beIN-Normal',
+        fontSize=18,
+        alignment=1,  # وسط
+        spaceAfter=20
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='ArabicSubtitle',
+        fontName='beIN-Normal',
+        fontSize=14,
+        alignment=1,
+        spaceAfter=15
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='ArabicNormal',
+        fontName='beIN-Normal',
+        fontSize=12,
+        alignment=2,  # يمين
+        spaceAfter=10
+    ))
+    
+    # محتوى PDF
+    content = []
+    
+    # العنوان الرئيسي
+    title = handover_data.get('handover_type', 'تسليم')
+    content.append(Paragraph(format_arabic_text(f"نموذج {title} مركبة"), styles['ArabicTitle']))
+    content.append(Spacer(1, 20))
+    
+    # معلومات المركبة
+    vehicle = handover_data.get('vehicle', {})
+    vehicle_info = [
+        [format_arabic_text("رقم اللوحة"), format_arabic_text(vehicle.get('plate_number', ''))],
+        [format_arabic_text("الماركة"), format_arabic_text(vehicle.get('make', ''))],
+        [format_arabic_text("الموديل"), format_arabic_text(vehicle.get('model', ''))],
+        [format_arabic_text("السنة"), str(vehicle.get('year', ''))],
+        [format_arabic_text("اللون"), format_arabic_text(vehicle.get('color', ''))]
+    ]
+    
+    vehicle_table = Table(vehicle_info, colWidths=[100, 200])
+    vehicle_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('FONTNAME', (0, 0), (-1, -1), 'beIN-Normal'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    
+    content.append(Paragraph(format_arabic_text("معلومات المركبة"), styles['ArabicSubtitle']))
+    content.append(vehicle_table)
+    content.append(Spacer(1, 20))
+    
+    # معلومات التسليم/الاستلام
+    handover_info = [
+        [format_arabic_text("التاريخ"), format_arabic_text(handover_data.get('handover_date', ''))],
+        [format_arabic_text("النوع"), format_arabic_text(handover_data.get('handover_type', ''))],
+        [format_arabic_text("الاسم"), format_arabic_text(handover_data.get('person_name', ''))],
+        [format_arabic_text("عداد الكيلومترات"), str(handover_data.get('mileage', ''))],
+        [format_arabic_text("مستوى الوقود"), format_arabic_text(handover_data.get('fuel_level', ''))]
+    ]
+    
+    handover_table = Table(handover_info, colWidths=[100, 200])
+    handover_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('FONTNAME', (0, 0), (-1, -1), 'beIN-Normal'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    
+    content.append(Paragraph(format_arabic_text(f"بيانات {title}"), styles['ArabicSubtitle']))
+    content.append(handover_table)
+    content.append(Spacer(1, 20))
+    
+    # الملاحظات
+    notes = handover_data.get('notes', '')
+    if notes:
+        content.append(Paragraph(format_arabic_text("ملاحظات"), styles['ArabicSubtitle']))
+        content.append(Paragraph(format_arabic_text(notes), styles['ArabicNormal']))
+        content.append(Spacer(1, 20))
+    
+    # التوقيعات
+    signatures_data = [
+        [format_arabic_text("توقيع المُسلم"), format_arabic_text("توقيع المُستلم")],
+        ["", ""],
+        ["", ""],
+        [format_arabic_text("التاريخ: ___________"), format_arabic_text("التاريخ: ___________")]
+    ]
+    
+    signatures_table = Table(signatures_data, colWidths=[150, 150])
+    signatures_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('FONTNAME', (0, 0), (-1, -1), 'beIN-Normal'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.lightgrey]),
+        ('TOPPADDING', (0, 0), (-1, -1), 15),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+    ]))
+    
+    content.append(Paragraph(format_arabic_text("التوقيعات"), styles['ArabicSubtitle']))
+    content.append(signatures_table)
+    
+    # بناء PDF
+    doc.build(content)
+    
+    # إرجاع buffer
+    buffer.seek(0)
+    return buffer
+
+def handover_pdf_public(handover_id):
+    """دالة عامة لإنشاء PDF لتسليم/استلام مركبة"""
     try:
-        print("Starting Arabic handover PDF generation...")
+        from models import VehicleHandover
+        from app import db
         
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=A4)
-        width, height = A4
+        # جلب بيانات التسليم/الاستلام
+        handover = VehicleHandover.query.get_or_404(handover_id)
         
-        # إعداد الخط العربي
-        arabic_font = setup_arabic_font()
+        # تحضير البيانات
+        handover_data = {
+            'handover_type': handover.handover_type_ar or 'تسليم',
+            'handover_date': handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else '',
+            'person_name': handover.person_name or '',
+            'mileage': handover.mileage or 0,
+            'fuel_level': handover.fuel_level or '',
+            'notes': handover.notes or '',
+            'vehicle': {
+                'plate_number': handover.vehicle.plate_number if handover.vehicle else '',
+                'make': handover.vehicle.make if handover.vehicle else '',
+                'model': handover.vehicle.model if handover.vehicle else '',
+                'year': handover.vehicle.year if handover.vehicle else '',
+                'color': handover.vehicle.color if handover.vehicle else ''
+            }
+        }
         
-        # الألوان
-        primary_color = colors.HexColor('#2E86AB')
-        secondary_color = colors.HexColor('#A23B72')
-        accent_color = colors.HexColor('#F18F01')
-        
-        # إضافة شعار الشركة
-        try:
-            logo_path = os.path.join(os.path.dirname(__file__), '..', 'attached_assets', 'logo.png')
-            if os.path.exists(logo_path):
-                c.drawImage(logo_path, 50, height - 80, width=60, height=40, preserveAspectRatio=True)
-        except:
-            pass
-        
-        # العنوان الرئيسي
-        c.setFont(arabic_font, 18)
-        c.setFillColor(primary_color)
-        title = process_arabic_text("وثيقة تسليم واستلام المركبة")
-        title_width = c.stringWidth(title, arabic_font, 18)
-        c.drawString((width - title_width)/2, height - 60, title)
-        
-        # معلومات الوثيقة
-        y_position = height - 100
-        c.setFont(arabic_font, 10)
-        c.setFillColor(colors.black)
-        
-        # رقم الوثيقة
-        doc_id = process_arabic_text(f"رقم الوثيقة: {handover_data.id}")
-        c.drawString(width - 150, y_position, doc_id)
-        y_position -= 15
-        
-        # تاريخ الإنشاء
-        current_date = datetime.now().strftime('%Y-%m-%d %H:%M')
-        date_text = process_arabic_text(f"تاريخ الإنشاء: {current_date}")
-        c.drawString(width - 150, y_position, date_text)
-        y_position -= 15
-        
-        # نوع العملية
-        operation_type = "تسليم" if str(handover_data.handover_type) == "delivery" else "استلام"
-        type_text = process_arabic_text(f"نوع العملية: {operation_type}")
-        c.drawString(width - 150, y_position, type_text)
-        
-        # خط فاصل
-        y_position = height - 160
-        c.setStrokeColor(primary_color)
-        c.setLineWidth(2)
-        c.line(50, y_position, width - 50, y_position)
-        
-        # معلومات المركبة
-        y_position -= 40
-        c.setFont(arabic_font, 14)
-        c.setFillColor(secondary_color)
-        vehicle_title = process_arabic_text("معلومات المركبة")
-        c.drawString(width - 120, y_position, vehicle_title)
-        
-        # جدول معلومات المركبة
-        if hasattr(handover_data, 'vehicle_rel') and handover_data.vehicle_rel:
-            vehicle = handover_data.vehicle_rel
-            
-            vehicle_data = [
-                [process_arabic_text("رقم اللوحة"), process_arabic_text(str(vehicle.plate_number) if vehicle.plate_number else "غير محدد")],
-                [process_arabic_text("الصنع"), process_arabic_text(str(vehicle.make) if vehicle.make else "غير محدد")],
-                [process_arabic_text("الموديل"), process_arabic_text(str(vehicle.model) if vehicle.model else "غير محدد")],
-                [process_arabic_text("السنة"), process_arabic_text(str(vehicle.year) if hasattr(vehicle, 'year') and vehicle.year else "غير محدد")],
-                [process_arabic_text("اللون"), process_arabic_text(str(vehicle.color) if hasattr(vehicle, 'color') and vehicle.color else "غير محدد")]
-            ]
-        else:
-            vehicle_data = [
-                [process_arabic_text("معلومات المركبة"), process_arabic_text("غير متوفرة")]
-            ]
-        
-        # إنشاء جدول المركبة
-        vehicle_table = Table(vehicle_data, colWidths=[2*inch, 3*inch])
-        vehicle_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), arabic_font),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
-        table_width, table_height = vehicle_table.wrap(width, height)
-        y_position -= table_height + 20
-        vehicle_table.drawOn(c, width - table_width - 50, y_position)
-        
-        # تفاصيل التسليم
-        y_position -= 40
-        c.setFont(arabic_font, 14)
-        c.setFillColor(secondary_color)
-        handover_title = process_arabic_text("تفاصيل التسليم")
-        c.drawString(width - 120, y_position, handover_title)
-        
-        # جدول تفاصيل التسليم
-        handover_details = [
-            [process_arabic_text("التاريخ"), process_arabic_text(handover_data.handover_date.strftime('%Y-%m-%d') if handover_data.handover_date else "غير محدد")],
-            [process_arabic_text("الوقت"), process_arabic_text(handover_data.handover_date.strftime('%H:%M') if handover_data.handover_date else "غير محدد")],
-            [process_arabic_text("اسم الشخص"), process_arabic_text(str(handover_data.person_name) if handover_data.person_name else "غير محدد")],
-            [process_arabic_text("رقم الهاتف"), process_arabic_text("غير محدد")],
-            [process_arabic_text("قراءة العداد"), process_arabic_text(f"{handover_data.mileage} كم" if handover_data.mileage else "غير محدد")],
-            [process_arabic_text("مستوى الوقود"), process_arabic_text(f"{handover_data.fuel_level}%" if handover_data.fuel_level else "غير محدد")]
-        ]
-        
-        handover_table = Table(handover_details, colWidths=[2*inch, 3*inch])
-        handover_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), arabic_font),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.lightcyan),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
-        
-        table_width, table_height = handover_table.wrap(width, height)
-        y_position -= table_height + 20
-        handover_table.drawOn(c, width - table_width - 50, y_position)
-        
-        # قائمة تحقق المعدات
-        y_position -= 50
-        c.setFont(arabic_font, 14)
-        c.setFillColor(secondary_color)
-        equipment_title = process_arabic_text("معدات المركبة")
-        c.drawString(width - 120, y_position, equipment_title)
-        
-        # قائمة المعدات
-        equipment_items = [
-            process_arabic_text("الإطار الاحتياطي"),
-            process_arabic_text("طفاية الحريق"),
-            process_arabic_text("حقيبة الإسعافات الأولية"),
-            process_arabic_text("مثلث التحذير"),
-            process_arabic_text("عدة الأدوات")
-        ]
-        
-        y_position -= 30
-        c.setFont(arabic_font, 10)
-        c.setFillColor(colors.black)
-        
-        for item in equipment_items:
-            # مربع التحقق
-            c.setStrokeColor(colors.black)
-            c.setLineWidth(1)
-            c.rect(width - 50, y_position - 5, 10, 10)
-            
-            # نص المعدات
-            c.drawString(width - 80, y_position, item)
-            y_position -= 20
-        
-        # قسم الملاحظات
-        y_position -= 30
-        c.setFont(arabic_font, 14)
-        c.setFillColor(secondary_color)
-        notes_title = process_arabic_text("ملاحظات إضافية")
-        c.drawString(width - 120, y_position, notes_title)
-        
-        # مربع الملاحظات
-        y_position -= 30
-        c.setStrokeColor(colors.grey)
-        c.setLineWidth(1)
-        c.rect(50, y_position - 80, width - 100, 70)
-        
-        # نص الملاحظات
-        if handover_data.notes:
-            c.setFont(arabic_font, 10)
-            c.setFillColor(colors.black)
-            notes_text = process_arabic_text(str(handover_data.notes))
-            c.drawString(60, y_position - 20, notes_text)
-        
-        # قسم التوقيعات
-        y_position -= 100
-        c.setFont(arabic_font, 12)
-        c.setFillColor(colors.black)
-        
-        # توقيع المسلم
-        deliverer_text = process_arabic_text("توقيع المسلم:")
-        c.drawString(width - 150, y_position, deliverer_text)
-        c.line(width - 300, y_position - 5, width - 160, y_position - 5)
-        
-        # توقيع المستلم
-        receiver_text = process_arabic_text("توقيع المستلم:")
-        c.drawString(150, y_position, receiver_text)
-        c.line(50, y_position - 5, 140, y_position - 5)
-        
-        # تاريخ التوقيع
-        y_position -= 30
-        date_signature = process_arabic_text("التاريخ:")
-        c.drawString(width - 150, y_position, date_signature)
-        c.line(width - 300, y_position - 5, width - 160, y_position - 5)
-        
-        c.drawString(150, y_position, date_signature)
-        c.line(50, y_position - 5, 140, y_position - 5)
-        
-        # تذييل الصفحة
-        c.setFont(arabic_font, 8)
-        c.setFillColor(colors.grey)
-        footer_text = process_arabic_text(f"تم الإنشاء بواسطة نظام نُظم لإدارة المركبات - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        footer_width = c.stringWidth(footer_text, arabic_font, 8)
-        c.drawString((width - footer_width)/2, 30, footer_text)
-        
-        # إطار الصفحة
-        c.setStrokeColor(primary_color)
-        c.setLineWidth(2)
-        c.rect(30, 20, width - 60, height - 40)
-        
-        c.save()
-        buffer.seek(0)
-        
-        print("Arabic handover PDF generated successfully!")
-        return buffer
+        # إنشاء PDF
+        return generate_handover_pdf_with_bein(handover_data)
         
     except Exception as e:
-        print(f"Error generating Arabic handover PDF: {str(e)}")
-        # في حالة فشل PDF العربي، استخدم النسخة الإنجليزية
-        from utils.professional_handover_pdf import create_vehicle_handover_pdf as create_english_pdf
-        return create_english_pdf(handover_data)
+        print(f"خطأ في إنشاء PDF: {str(e)}")
+        return None

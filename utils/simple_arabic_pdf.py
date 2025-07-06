@@ -19,8 +19,9 @@ from bidi.algorithm import get_display
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FONTS_DIR = os.path.join(BASE_DIR, 'static', 'fonts')
 
-# تسجيل خطوط Amiri و Tajawal
+# تسجيل خط beIN-Normal والخطوط الاحتياطية
 try:
+    pdfmetrics.registerFont(TTFont('beIN-Normal', os.path.join(FONTS_DIR, 'beIN-Normal.ttf')))
     pdfmetrics.registerFont(TTFont('Amiri', os.path.join(FONTS_DIR, 'Amiri-Regular.ttf')))
     pdfmetrics.registerFont(TTFont('Amiri-Bold', os.path.join(FONTS_DIR, 'Amiri-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('Tajawal', os.path.join(FONTS_DIR, 'Tajawal-Regular.ttf')))
@@ -82,25 +83,25 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
         name='RightAlign',
-        fontName='Tajawal-Bold',
+        fontName='beIN-Normal',
         fontSize=14,
         alignment=2  # محاذاة لليمين
     ))
     styles.add(ParagraphStyle(
         name='RightAlignNormal',
-        fontName='Amiri',
+        fontName='beIN-Normal',
         fontSize=12,
         alignment=2
     ))
     styles.add(ParagraphStyle(
         name='CenterAlign',
-        fontName='Tajawal-Bold',
+        fontName='beIN-Normal',
         fontSize=16,
         alignment=1
     ))
     styles.add(ParagraphStyle(
         name='Footer',
-        fontName='Amiri',
+        fontName='beIN-Normal',
         fontSize=8,
         alignment=1
     ))
@@ -127,8 +128,8 @@ def generate_workshop_report_pdf(vehicle, workshop_records):
     
     vehicle_table = Table(vehicle_info, colWidths=[120, 300])
     vehicle_table.setStyle(TableStyle([
-        ('FONT', (0, 0), (-1, -1), 'Amiri'),
-        ('FONT', (0, 0), (0, 0), 'Tajawal-Bold'),
+        ('FONT', (0, 0), (-1, -1), 'beIN-Normal'),
+        ('FONT', (0, 0), (0, 0), 'beIN-Normal'),
         ('BACKGROUND', (0, 0), (1, 0), colors.lightgrey),
         ('TEXTCOLOR', (0, 0), (1, 0), colors.darkblue),
         ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),

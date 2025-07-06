@@ -3654,7 +3654,7 @@ def handover_pdf(handover_id):
     import io
     import os
     from datetime import datetime
-    from utils.pdf_generator_fixed import generate_vehicle_handover_pdf
+    from utils.arabic_handover_pdf import handover_pdf_public
     
     try:
         # الحصول على بيانات التسليم/الاستلام
@@ -3688,10 +3688,10 @@ def handover_pdf(handover_id):
             'image_paths': [image.image_path for image in images] if images else []
         }
         
-        # إنشاء ملف PDF
-        pdf_bytes = generate_vehicle_handover_pdf(handover_data)
+        # إنشاء ملف PDF باستخدام خط beIN-Normal
+        pdf_buffer = handover_pdf_public(handover_id)
         
-        if not pdf_bytes:
+        if not pdf_buffer:
             flash('حدث خطأ أثناء إنشاء ملف PDF', 'danger')
             return redirect(url_for('mobile.view_handover', handover_id=handover_id))
         
@@ -3700,7 +3700,7 @@ def handover_pdf(handover_id):
         
         # إرسال الملف للمستخدم
         return send_file(
-            io.BytesIO(pdf_bytes),
+            pdf_buffer,
             download_name=filename,
             as_attachment=True,
             mimetype='application/pdf'
