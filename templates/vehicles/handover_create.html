@@ -193,8 +193,26 @@
                                                         <thead><tr><th>الاسم</th><th>الرقم الوظيفي</th><th>القسم</th><th>الإجراء</th></tr></thead>
                                                         <tbody id="employeesTableBody">
                                                         {% for employee in employees %}
-                                                            <tr class="employee-row" data-name="{{ employee.name }}" data-employee-id="{{ employee.employee_id or '' }}" data-national-id="{{ employee.national_id or '' }}" data-department="{{ employee.department.name if employee.department else 'N/A' }}" data-department-id="{{ employee.department.id if employee.department else '' }}" data-id="{{ employee.id }}">
-                                                                <td>{{ employee.name }}</td><td>{{ employee.employee_id or '-' }}</td><td>{{ employee.department.name if employee.department else '-' }}</td>
+                                                            {% set dept_names = employee.departments|map(attribute='name')|join(', ') if employee.departments else 'غير محدد' %}
+                                                            {% set dept_ids = employee.departments|map(attribute='id')|join(',') if employee.departments else '' %}
+                                                            <tr class="employee-row" 
+                                                                data-name="{{ employee.name }}" 
+                                                                data-employee-id="{{ employee.employee_id or '' }}" 
+                                                                data-national-id="{{ employee.national_id or '' }}" 
+                                                                data-department="{{ dept_names }}" 
+                                                                data-department-id="{{ dept_ids }}" 
+                                                                data-id="{{ employee.id }}">
+                                                                <td>{{ employee.name }}</td>
+                                                                <td>{{ employee.employee_id or '-' }}</td>
+                                                                <td>
+                                                                    {% if employee.departments %}
+                                                                        {% for dept in employee.departments %}
+                                                                            <span class="badge bg-secondary me-1">{{ dept.name }}</span>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                        <span class="text-muted">غير محدد</span>
+                                                                    {% endif %}
+                                                                </td>
                                                                 <td><button type="button" class="btn btn-sm btn-success select-employee-btn" data-name="{{ employee.name }}"><i class="fas fa-check"></i></button></td>
                                                             </tr>
                                                         {% endfor %}
@@ -247,7 +265,12 @@
                                 <thead><tr><th>الاسم</th><th>الرقم الوظيفي</th><th>الإجراء</th></tr></thead>
                                 <tbody id="supervisorsTableBody">
                                 {% for employee in employees %}
-                                    <tr class="supervisor-row" data-name="{{ employee.name }}" data-employee-id="{{ employee.employee_id or '' }}" data-department-id="{{ employee.department.id if employee.department else '' }}" data-id="{{ employee.id }}">
+                                    {% set dept_ids = employee.departments|map(attribute='id')|join(',') if employee.departments else '' %}
+                                    <tr class="supervisor-row" 
+                                        data-name="{{ employee.name }}" 
+                                        data-employee-id="{{ employee.employee_id or '' }}" 
+                                        data-department-id="{{ dept_ids }}" 
+                                        data-id="{{ employee.id }}">
                                         <td>{{ employee.name }}</td>
                                         <td>{{ employee.employee_id or '-' }}</td>
                                         <td><button type="button" class="btn btn-sm btn-success select-supervisor-btn"><i class="fas fa-check"></i></button></td>
@@ -917,18 +940,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     rowDepartmentId = String(rowDepartmentId);
                 }
                 
-                // تطابق القسم - إذا لم يتم اختيار قسم أو القسم المختار يطابق قسم الموظف
+                // تطابق القسم - التعامل مع أقسام متعددة
                 var departmentMatch = true; // افتراضي: عرض جميع الموظفين
                 if (departmentId && departmentId !== '') {
-                    departmentMatch = (String(departmentId) === String(rowDepartmentId));
+                    // تحويل معرفات الأقسام إلى مصفوفة
+                    var employeeDeptIds = rowDepartmentId ? rowDepartmentId.split(',') : [];
+                    departmentMatch = employeeDeptIds.includes(String(departmentId));
                 }
                 
                 // سجل معلومات تشخيصية حول مطابقة القسم
                 if (index < 3) {
-                    console.log('تطابق القسم:', {
-                        departmentId: departmentId,
-                        rowDepartmentId: rowDepartmentId,
-                        match: departmentMatch
+                    console.log('تطابق القسم للموظف:', {
+                        employeeName: name,
+                        searchDepartmentId: departmentId,
+                        employeeDepartmentIds: rowDepartmentId,
+                        departmentMatch: departmentMatch
                     });
                 }
                 
@@ -1369,10 +1395,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const rowDeptId = row.dataset.departmentId || '';
                 const rowText = row.textContent.toLowerCase();
 
-                // تطابق القسم - مبسط
+                // تطابق القسم - التعامل مع أقسام متعددة
                 let departmentMatch = true;
                 if (departmentId && departmentId !== '') {
-                    departmentMatch = (String(departmentId) === String(rowDeptId));
+                    // تحويل معرفات الأقسام إلى مصفوفة
+                    const employeeDeptIds = rowDeptId ? rowDeptId.split(',') : [];
+                    departmentMatch = employeeDeptIds.includes(String(departmentId));
                 }
                 
                 const searchMatch = !searchTerm || rowText.includes(searchTerm);

@@ -1909,8 +1909,10 @@ def create_handover(id):
     else:
         default_handover_type = 'delivery' # أو أي قيمة افتراضية أخرى
 
-    # جلب قائمة الموظفين والأقسام للاختيار منهم
-    employees = Employee.query.order_by(Employee.name).all()
+    # جلب قائمة الموظفين مع أقسامهم والأقسام للاختيار منهم
+    employees = Employee.query.options(
+        db.joinedload(Employee.departments)
+    ).order_by(Employee.name).all()
     departments = Department.query.order_by(Department.name).all()
 
     return render_template(
