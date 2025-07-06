@@ -471,32 +471,55 @@
             async function addFilePreview(file) {
                 for (let f of filesTransferList.files) { if (f.name === file.name && f.size === file.size) return; }
                 
-                let processedFile = file;
-                // ضغط الصور التي حجمها أكبر من 500KB
-                if (file.type.startsWith('image/') && file.size > 500000) {
-                    try {
-                        processedFile = await compressImage(file, 0.6, 1200);
-                        console.log(`تم ضغط ${file.name} من ${(file.size/1024).toFixed(1)}KB إلى ${(processedFile.size/1024).toFixed(1)}KB`);
-                    } catch (error) {
-                        console.log('فشل ضغط الصورة، سيتم استخدام الملف الأصلي:', error);
+                // إنشاء العرض أولاً بالملف الأصلي
+                const tplId = file.name.toLowerCase().endsWith('.pdf') ? 'pdf-preview-template' : 'image-preview-template';
+                const clone = document.getElementById(tplId).firstElementChild.cloneNode(true);
+                clone.querySelector('.file-description').name = `description_${file.name}`;
+                
+                let processedFile = file; // إعلان المتغير في البداية
+                
+                if (tplId.includes('image')) {
+                    // عرض الصورة مباشرة (الأصلية أولاً)
+                    const img = clone.querySelector('img');
+                    const reader = new FileReader();
+                    reader.onload = e => img.src = e.target.result;
+                    reader.readAsDataURL(file);
+                    
+                    // ضغط الصورة في الخلفية إذا كانت كبيرة
+                    if (file.type.startsWith('image/') && file.size > 500000) {
+                        // إضافة مؤشر الضغط
+                        const sizeIndicator = clone.querySelector('.file-description');
+                        const originalText = sizeIndicator.placeholder;
+                        sizeIndicator.placeholder = 'جاري ضغط الصورة...';
+                        
+                        try {
+                            processedFile = await compressImage(file, 0.7, 1200);
+                            console.log(`تم ضغط ${file.name} من ${(file.size/1024).toFixed(1)}KB إلى ${(processedFile.size/1024).toFixed(1)}KB`);
+                            
+                            // تحديث عرض الصورة بالنسخة المضغوطة
+                            const compressedReader = new FileReader();
+                            compressedReader.onload = e => img.src = e.target.result;
+                            compressedReader.readAsDataURL(processedFile);
+                            
+                            sizeIndicator.placeholder = `مضغوطة: ${(processedFile.size/1024).toFixed(0)}KB`;
+                        } catch (error) {
+                            console.log('فشل ضغط الصورة، سيتم استخدام الملف الأصلي:', error);
+                            processedFile = file;
+                            sizeIndicator.placeholder = originalText;
+                        }
                     }
+                } else {
+                    clone.querySelector('.pdf-filename').textContent = file.name;
                 }
                 
+                filePreviews.appendChild(clone);
+                
+                // إضافة الملف للقائمة (مضغوط أو أصلي)
                 filesTransferList.items.add(processedFile);
                 filesInput.files = filesTransferList.files;
-
-                const tplId = processedFile.name.toLowerCase().endsWith('.pdf') ? 'pdf-preview-template' : 'image-preview-template';
-                const clone = document.getElementById(tplId).firstElementChild.cloneNode(true);
+                
+                // ربط زر الحذف
                 clone.querySelector('.remove-file').onclick = () => removeFilePreview(clone, processedFile);
-                clone.querySelector('.file-description').name = `description_${processedFile.name}`;
-                if (tplId.includes('image')) {
-                    const reader = new FileReader();
-                    reader.onload = e => clone.querySelector('img').src = e.target.result;
-                    reader.readAsDataURL(processedFile);
-                } else {
-                    clone.querySelector('.pdf-filename').textContent = processedFile.name;
-                }
-                filePreviews.appendChild(clone);
             }
             
             // دالة ضغط الصور
