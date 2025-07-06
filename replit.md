@@ -154,14 +154,16 @@
 - Environment variable protection
 
 ## Changelog
-- July 6, 2025: **إصلاح شامل لنظام الخطوط في مولدات PDF:**
+- July 6, 2025: **إصلاح شامل لنظام الخطوط ومعالجة الطلبات الكبيرة:**
   • أصلحت مشاكل ربط خط beIN-Normal في دالة generate_handover_report_pdf_weasyprint
   • أضفت نظام اختيار تلقائي للخطوط المتوفرة بترتيب الأولوية (beIN Normal، Tajawal، Cairo، Amiri)
   • تحسين مسارات الخطوط للعمل مع WeasyPrint وإضافة فحص وجود الملفات
-  • إضافة logging لتتبع الخط المستخدم في كل تقرير PDF
+  • إضافة logging لتتبع الخط المستخدم في كل تقرير PDF وحجم PDF المُنشأ
   • استعادة استخدام المولد الأصلي fpdf_handover_pdf.py مع تحديثات الخط
-  • إصلاح مشاكل الاستيراد والـ AttributeError في arabic_handover_pdf.py
-  • النظام الآن يختار أفضل خط متوفر تلقائياً ويعمل بدون أخطاء
+  • حل مشكلة "Request Entity Too Large" بزيادة MAX_CONTENT_LENGTH إلى 100MB
+  • إضافة معالج خطأ 413 مع رسائل مناسبة للجوال والويب
+  • إضافة فحص حجم البيانات في mobile checklist قبل المعالجة (حد أقصى 50MB)
+  • النظام الآن يختار خط beIN Normal تلقائياً ويعالج الطلبات الكبيرة بأمان
 - July 6, 2025: **استبدلت جميع ملفات المشروع بالنسخة الجديدة car_care-main.zip:**
   • نسخت جميع الملفات من car_care-main.zip واستبدلت المشروع بالكامل
   • تم تثبيت جميع الحزم المطلوبة بنجاح (arabic-reshaper, fpdf2, reportlab, weasyprint)

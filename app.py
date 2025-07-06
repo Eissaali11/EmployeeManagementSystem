@@ -119,6 +119,10 @@ else:
     }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# إعدادات لحجم الطلبات والملفات المرفوعة
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
 # Add execution options only for PostgreSQL/MySQL
 if not database_url.startswith("sqlite"):
     if "execution_options" not in app.config["SQLALCHEMY_ENGINE_OPTIONS"]:
@@ -292,6 +296,21 @@ def root():
             return render_template('restricted.html')
     else:
         return redirect(url_for('auth.login'))
+
+# معالج أخطاء الطلبات الكبيرة
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    """معالجة خطأ الطلب الكبير"""
+    if request.endpoint and 'mobile' in request.endpoint:
+        # للجوال: عرض رسالة خطأ مناسبة
+        from flask import flash, redirect, url_for
+        flash('حجم البيانات المرسلة كبير جداً. يرجى تقليل عدد الصور أو حجمها.', 'danger')
+        return redirect(url_for('mobile.index'))
+    else:
+        # للويب: عرض صفحة خطأ
+        return render_template('error.html', 
+                             error_code=413,
+                             error_message='حجم الطلب كبير جداً. يرجى تقليل حجم البيانات المرسلة.'), 413
 
 # تعطيل استخدام WeasyPrint مؤقتاً
 WEASYPRINT_ENABLED = False

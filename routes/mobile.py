@@ -1769,6 +1769,12 @@ def create_handover_mobile():
     """
     # === معالجة طلب POST (عند إرسال النموذج) ===
     if request.method == 'POST':
+        # فحص حجم البيانات المرسلة
+        content_length = request.content_length
+        if content_length and content_length > 50 * 1024 * 1024:  # 50 MB
+            flash('حجم البيانات كبير جداً. يرجى تقليل عدد الصور أو ضغطها.', 'danger')
+            return redirect(url_for('mobile.create_handover_mobile'))
+        
         # يجب اختيار المركبة أولاً في نسخة الموبايل
         vehicle_id_str = request.form.get('vehicle_id')
         if not vehicle_id_str:
