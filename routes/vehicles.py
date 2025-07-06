@@ -2318,7 +2318,13 @@ def view_handover(id):
         # تنسيق التاريخ
         handover.formatted_handover_date = format_date_arabic(handover.handover_date)
         
-        handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
+        # تحديد نوع التسليم بالعربية
+        if handover.handover_type in ['delivery', 'تسليم', 'handover']:
+            handover_type_name = 'تسليم'
+        elif handover.handover_type in ['return', 'استلام']:
+            handover_type_name = 'استلام'
+        else:
+            handover_type_name = handover.handover_type
         
         return render_template(
                 'vehicles/handover_view.html',
