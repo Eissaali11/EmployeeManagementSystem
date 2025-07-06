@@ -50,30 +50,71 @@ def generate_handover_report_pdf_weasyprint(handover):
         # المسار إلى مجلد static العام
         static_folder = os.path.join(current_app.root_path, 'static')
         
-        # إنشاء ورقة أنماط CSS مع خط beIN-Normal
-        # تأكد من أن beIN-Normal.ttf موجود في static/fonts/
-        font_css = CSS(string=f'''
-            @font-face {{
-                font-family: 'beIN-Normal';
-                src: url('file://{os.path.join(static_folder, 'fonts', 'beIN-Normal.ttf')}');
-                font-weight: normal;
-                font-style: normal;
-            }}
-            
-            * {{
-                font-family: 'beIN-Normal', 'Arial', sans-serif !important;
-            }}
-            
-            body, p, h1, h2, h3, h4, h5, h6, td, th, div, span {{
-                font-family: 'beIN-Normal', 'Arial', sans-serif !important;
-            }}
-            
-            .arabic-text {{
-                font-family: 'beIN-Normal', 'Arial', sans-serif !important;
-                direction: rtl;
-                text-align: right;
-            }}
-        ''')
+        # تجربة الخطوط المتوفرة بترتيب الأولوية
+        font_options = [
+            ('beIN Normal ', 'beIN Normal .ttf'),
+            ('beIN-Normal', 'beIN-Normal.ttf'),
+            ('Tajawal', 'Tajawal-Regular.ttf'),
+            ('Cairo', 'Cairo.ttf'),
+            ('Cairo', 'Cairo-Regular.ttf'),
+            ('Amiri', 'Amiri-Regular.ttf')
+        ]
+        
+        selected_font_family = 'Arial'
+        selected_font_path = None
+        
+        for font_family, font_file in font_options:
+            test_path = os.path.join(static_folder, 'fonts', font_file)
+            if os.path.exists(test_path):
+                selected_font_family = font_family
+                selected_font_path = test_path
+                break
+        
+        print(f"Selected font: {selected_font_family}")
+        print(f"Font path: {selected_font_path}")
+        print(f"Font exists: {os.path.exists(selected_font_path) if selected_font_path else False}")
+        
+        # إنشاء CSS للخط المختار
+        if selected_font_path:
+            font_css = CSS(string=f'''
+                @font-face {{
+                    font-family: '{selected_font_family}';
+                    src: url('file://{selected_font_path}');
+                    font-weight: normal;
+                    font-style: normal;
+                }}
+                
+                * {{
+                    font-family: '{selected_font_family}', 'Arial', sans-serif !important;
+                }}
+                
+                body, p, h1, h2, h3, h4, h5, h6, td, th, div, span {{
+                    font-family: '{selected_font_family}', 'Arial', sans-serif !important;
+                }}
+                
+                .arabic-text {{
+                    font-family: '{selected_font_family}', 'Arial', sans-serif !important;
+                    direction: rtl;
+                    text-align: right;
+                }}
+            ''')
+        else:
+            # Fallback إلى Arial إذا لم نجد أي خط
+            font_css = CSS(string='''
+                * {
+                    font-family: 'Arial', sans-serif !important;
+                }
+                
+                body, p, h1, h2, h3, h4, h5, h6, td, th, div, span {
+                    font-family: 'Arial', sans-serif !important;
+                }
+                
+                .arabic-text {
+                    font-family: 'Arial', sans-serif !important;
+                    direction: rtl;
+                    text-align: right;
+                }
+            ''')
 
         # --- 3. Create an HTML object ---
         # base_url مهم جدًا لكي تجد WeasyPrint الصور (مثل logo.png)
