@@ -189,10 +189,19 @@
                 {% for image in images %}
                 <div class="col-md-6 mb-3">
                     <div class="image-preview">
-                        <img src="{{ url_for('static', filename='uploads/' + image.image_path) }}" alt="صورة {{ loop.index }}">
-                        {% if image.description %}
+                        {% if image.file_path %}
+                        <img src="{{ url_for('static', filename=image.file_path) }}" alt="صورة {{ loop.index }}">
+                        {% elif image.image_path %}
+                        <img src="{{ url_for('static', filename=image.image_path) }}" alt="صورة {{ loop.index }}">
+                        {% else %}
+                        <div class="no-image-placeholder">
+                            <i class="fas fa-image"></i>
+                            <p>لا توجد صورة</p>
+                        </div>
+                        {% endif %}
+                        {% if image.file_description or image.image_description %}
                         <div class="image-description">
-                            {{ image.description }}
+                            {{ image.file_description or image.image_description or 'لا يوجد وصف' }}
                         </div>
                         {% endif %}
                     </div>
@@ -227,6 +236,28 @@
     height: auto;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.no-image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    color: #6c757d;
+}
+
+.no-image-placeholder i {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.no-image-placeholder p {
+    margin: 0;
+    font-size: 14px;
 }
 
 .image-description {
