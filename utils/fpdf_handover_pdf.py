@@ -15,14 +15,17 @@ def generate_handover_report_pdf_weasyprint(handover):
     Generates a PDF report using WeasyPrint (Modern API).
     """
     try:
-
-        handover.damage_diagram_path = handover.damage_diagram_path.replace("\\", "/")
-        handover.driver_signature_path = handover.driver_signature_path.replace("\\", "/")
-        handover.supervisor_signature_path = handover.supervisor_signature_path.replace("\\", "/")
+        # معالجة آمنة للمسارات
+        if handover.damage_diagram_path:
+            handover.damage_diagram_path = handover.damage_diagram_path.replace("\\", "/")
+        if handover.driver_signature_path:
+            handover.driver_signature_path = handover.driver_signature_path.replace("\\", "/")
+        if handover.supervisor_signature_path:
+            handover.supervisor_signature_path = handover.supervisor_signature_path.replace("\\", "/")
         if handover.custom_logo_path:
             handover.custom_logo_path = handover.custom_logo_path.replace("\\", "/")
-        # if handover.custom_logo_path:
-        #     handover.movement_officer_signature_path = handover.movement_officer_signature_path.replace("\\", "/")
+        if hasattr(handover, 'movement_officer_signature_path') and handover.movement_officer_signature_path:
+            handover.movement_officer_signature_path = handover.movement_officer_signature_path.replace("\\", "/")
 
         # print(handover.custom_company_nam)
         print(f"Error generating PDF: {handover.custom_company_name}")

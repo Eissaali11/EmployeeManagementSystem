@@ -2590,10 +2590,10 @@ def handover_view_public(id):
 
 
 # في ملف views الخاص بالمركبات (vehicles/views.py أو ما شابه)
+from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
 
 # ... (باقي imports)
 # تأكد من استيراد الدالة الجديدة
-from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
 
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
@@ -2603,11 +2603,11 @@ def handover_pdf_public(id):
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
         
-        # استخدام مولد PDF العربي الجديد
-        from utils.vehicle_checklist_pdf import create_vehicle_handover_pdf
+        # استخدام مولد PDF العربي المحدث
+        from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
         
-        # إنشاء PDF باستخدام ReportLab
-        pdf_buffer = create_vehicle_handover_pdf(handover)
+        # إنشاء PDF باستخدام WeasyPrint مع معالجة النصوص العربية
+        pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
         
         # تحضير اسم الملف
         plate_clean = handover.vehicle.plate_number if handover.vehicle else f"record_{handover.id}"

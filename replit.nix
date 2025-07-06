@@ -1,5 +1,8 @@
 {pkgs}: {
   deps = [
+    pkgs.libffi
+    pkgs.gdk-pixbuf
+    pkgs.cairo
     pkgs.unrar
     pkgs.pango
     pkgs.harfbuzz
