@@ -887,17 +887,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             var searchTerm = searchInput.value.trim().toLowerCase();
-            var departmentId = departmentSelect.value; // يجب أن يكون String
+            var departmentId = departmentSelect.value.trim(); // إزالة أي مسافات إضافية
             
-            // تحويل رقم القسم إلى سلسلة نصية
-            if (departmentId !== null && departmentId !== undefined && departmentId !== '') {
-                departmentId = String(departmentId);
-            }
-            
-            console.log('القيمة المختارة من قائمة الأقسام:', {
-                originalValue: departmentSelect.value,
-                convertedValue: departmentId,
-                typeOf: typeof departmentId
+            console.log('قيم البحث:', {
+                searchTerm: searchTerm,
+                departmentId: departmentId,
+                employeeRowsCount: currentEmployeeRows.length
             });
             
             var resultsFound = false;
@@ -923,10 +918,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // تطابق القسم - إذا لم يتم اختيار قسم أو القسم المختار يطابق قسم الموظف
-                var departmentMatch = !departmentId || 
-                                     departmentId === '' || 
-                                     parseInt(departmentId) === parseInt(rowDepartmentId) ||
-                                     departmentId === rowDepartmentId;
+                var departmentMatch = true; // افتراضي: عرض جميع الموظفين
+                if (departmentId && departmentId !== '') {
+                    departmentMatch = (String(departmentId) === String(rowDepartmentId));
+                }
                 
                 // سجل معلومات تشخيصية حول مطابقة القسم
                 if (index < 3) {
@@ -1048,11 +1043,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // دالة لإعادة تحديث العناصر والتأكد من عملها
+    function refreshElements() {
+        searchInput = document.getElementById('employeeSearchInput');
+        departmentSelect = document.getElementById('departmentSelect');
+        personNameInput = document.getElementById('person_name');
+        
+        console.log('تحديث العناصر:', {
+            searchInput: !!searchInput,
+            departmentSelect: !!departmentSelect,
+            personNameInput: !!personNameInput
+        });
+        
+        if (searchInput && departmentSelect) {
+            filterEmployees();
+        }
+    }
+    
     // تشغيل البحث الأولي بعد تحميل الصفحة
-    setTimeout(function() {
-        console.log('تنفيذ البحث الأولي...');
-        filterEmployees();
-    }, 200);
+    setTimeout(refreshElements, 200);
+    
+    // إعادة تشغيل البحث عند تحديث DOM
+    document.addEventListener('DOMSubtreeModified', function() {
+        setTimeout(refreshElements, 100);
+    });
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1348,15 +1362,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // دالة التصفية الخاصة بالمشرفين فقط
         function filterSupervisors() {
-            const departmentId = supervisorDepartmentSelect.value;
+            const departmentId = supervisorDepartmentSelect.value.trim();
             const searchTerm = supervisorSearchInput.value.toLowerCase().trim();
 
             allSupervisorRows.forEach(row => {
-                const rowDeptId = row.dataset.departmentId;
+                const rowDeptId = row.dataset.departmentId || '';
                 const rowText = row.textContent.toLowerCase();
 
-                const departmentMatch = !departmentId || departmentId === rowDeptId;
-                const searchMatch = rowText.includes(searchTerm);
+                // تطابق القسم - مبسط
+                let departmentMatch = true;
+                if (departmentId && departmentId !== '') {
+                    departmentMatch = (String(departmentId) === String(rowDeptId));
+                }
+                
+                const searchMatch = !searchTerm || rowText.includes(searchTerm);
 
                 if (departmentMatch && searchMatch) {
                     row.style.display = '';
