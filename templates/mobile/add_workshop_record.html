@@ -1,0 +1,194 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}إضافة سجل ورشة - {{ vehicle.plate_number }}{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-tools ms-2"></i>
+إضافة سجل ورشة
+{% endblock %}
+
+{% block content %}
+<!-- معلومات السيارة -->
+<div class="card mx-3 mb-3">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0">
+            <i class="fas fa-car ms-2"></i>
+            معلومات السيارة
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-6">
+                <strong>رقم اللوحة</strong>
+                <div class="text-primary fw-bold">{{ vehicle.plate_number }}</div>
+            </div>
+            <div class="col-6">
+                <strong>النوع</strong>
+                <div>{{ vehicle.make }} {{ vehicle.model }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج إضافة سجل الورشة -->
+<div class="card mx-3 mb-3">
+    <div class="card-header bg-white">
+        <h6 class="mb-0">
+            <i class="fas fa-plus ms-2"></i>
+            بيانات سجل الورشة
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <!-- تاريخ الدخول -->
+            <div class="mb-3">
+                <label for="entry_date" class="form-label required">
+                    <i class="fas fa-calendar-alt ms-1"></i>
+                    تاريخ دخول الورشة
+                </label>
+                <input type="date" class="form-control" id="entry_date" name="entry_date" 
+                       value="{{ now.strftime('%Y-%m-%d') }}" required>
+            </div>
+            
+            <!-- تاريخ الخروج -->
+            <div class="mb-3">
+                <label for="exit_date" class="form-label">
+                    <i class="fas fa-calendar-check ms-1"></i>
+                    تاريخ الخروج من الورشة
+                </label>
+                <input type="date" class="form-control" id="exit_date" name="exit_date">
+                <div class="form-text">اتركه فارغًا إذا كانت السيارة ما زالت في الورشة</div>
+            </div>
+            
+            <!-- سبب الدخول -->
+            <div class="mb-3">
+                <label for="reason" class="form-label required">
+                    <i class="fas fa-question-circle ms-1"></i>
+                    سبب دخول الورشة
+                </label>
+                <select class="form-select" id="reason" name="reason" required>
+                    <option value="">اختر السبب</option>
+                    {% for value, label in workshop_reasons %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- وصف المشكلة -->
+            <div class="mb-3">
+                <label for="description" class="form-label required">
+                    <i class="fas fa-file-alt ms-1"></i>
+                    وصف المشكلة أو الصيانة
+                </label>
+                <textarea class="form-control" id="description" name="description" rows="3" 
+                          placeholder="اكتب وصفاً تفصيلياً للمشكلة أو نوع الصيانة المطلوبة" required></textarea>
+            </div>
+            
+            <!-- حالة الإصلاح -->
+            <div class="mb-3">
+                <label for="repair_status" class="form-label required">
+                    <i class="fas fa-cogs ms-1"></i>
+                    حالة الإصلاح
+                </label>
+                <select class="form-select" id="repair_status" name="repair_status" required>
+                    <option value="">اختر الحالة</option>
+                    {% for value, label in repair_statuses %}
+                    <option value="{{ value }}" {% if value == 'in_progress' %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- التكلفة -->
+            <div class="mb-3">
+                <label for="cost" class="form-label">
+                    <i class="fas fa-money-bill-wave ms-1"></i>
+                    التكلفة المقدرة (ريال)
+                </label>
+                <input type="number" class="form-control" id="cost" name="cost" 
+                       step="0.01" min="0" placeholder="0.00">
+            </div>
+            
+            <!-- اسم الورشة -->
+            <div class="mb-3">
+                <label for="workshop_name" class="form-label">
+                    <i class="fas fa-store ms-1"></i>
+                    اسم الورشة
+                </label>
+                <input type="text" class="form-control" id="workshop_name" name="workshop_name" 
+                       placeholder="اسم الورشة أو مقدم الخدمة">
+            </div>
+            
+            <!-- اسم الفني -->
+            <div class="mb-3">
+                <label for="technician_name" class="form-label">
+                    <i class="fas fa-user-cog ms-1"></i>
+                    اسم الفني المسؤول
+                </label>
+                <input type="text" class="form-control" id="technician_name" name="technician_name" 
+                       placeholder="اسم الفني أو المسؤول عن الإصلاح">
+            </div>
+            
+            <!-- ملاحظات -->
+            <div class="mb-3">
+                <label for="notes" class="form-label">
+                    <i class="fas fa-sticky-note ms-1"></i>
+                    ملاحظات إضافية
+                </label>
+                <textarea class="form-control" id="notes" name="notes" rows="2" 
+                          placeholder="أي ملاحظات أو تفاصيل إضافية"></textarea>
+            </div>
+            
+            <!-- أزرار التحكم -->
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save ms-1"></i>
+                    حفظ سجل الورشة
+                </button>
+                <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" 
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    الغاء والعودة
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- تنبيه -->
+<div class="alert alert-info mx-3">
+    <i class="fas fa-info-circle ms-2"></i>
+    <strong>ملاحظة:</strong> إذا لم تحدد تاريخ الخروج، سيتم تغيير حالة السيارة تلقائياً إلى "في الورشة"
+</div>
+
+<style>
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0a58ca 0%, #084298 100%);
+    transform: translateY(-1px);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.125);
+}
+</style>
+{% endblock %}

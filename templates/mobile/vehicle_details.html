@@ -241,6 +241,97 @@
     </div>
 </div>
 
+<!-- سجلات الورشة -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-tools ms-2"></i>
+            سجلات الورشة
+            <span class="badge bg-secondary">{{ workshop_records|length }}</span>
+        </h6>
+        <div>
+            <a href="{{ url_for('mobile.add_workshop_record', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة سجل
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if workshop_records %}
+        <div class="workshop-list">
+            {% for record in workshop_records %}
+            <div class="workshop-item border-bottom p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="workshop-date">
+                        <small class="text-muted">تاريخ الدخول</small>
+                        <div class="fw-bold">{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else 'غير محدد' }}</div>
+                    </div>
+                    <div class="workshop-status">
+                        {% if record.repair_status == 'in_progress' %}
+                        <span class="badge bg-warning text-dark">قيد التنفيذ</span>
+                        {% elif record.repair_status == 'completed' %}
+                        <span class="badge bg-success">مكتمل</span>
+                        {% elif record.repair_status == 'pending_approval' %}
+                        <span class="badge bg-info">بانتظار الموافقة</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ record.repair_status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="workshop-reason mb-2">
+                    {% if record.reason == 'maintenance' %}
+                    <span class="badge bg-info me-2">صيانة دورية</span>
+                    {% elif record.reason == 'breakdown' %}
+                    <span class="badge bg-warning text-dark me-2">عطل</span>
+                    {% elif record.reason == 'accident' %}
+                    <span class="badge bg-danger me-2">حادث</span>
+                    {% else %}
+                    <span class="badge bg-secondary me-2">{{ record.reason }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="workshop-description mb-2">
+                    <strong>الوصف:</strong> {{ record.description if record.description else 'لا يوجد وصف' }}
+                </div>
+                
+                {% if record.workshop_name %}
+                <div class="workshop-name mb-2">
+                    <small class="text-muted">الورشة:</small>
+                    <span class="fw-bold">{{ record.workshop_name }}</span>
+                </div>
+                {% endif %}
+                
+                {% if record.cost and record.cost > 0 %}
+                <div class="workshop-cost mb-2">
+                    <small class="text-muted">التكلفة:</small>
+                    <span class="fw-bold text-success">{{ '{:,.2f}'.format(record.cost) }} ريال</span>
+                </div>
+                {% endif %}
+                
+                {% if record.exit_date %}
+                <div class="workshop-exit-date">
+                    <small class="text-muted">تاريخ الخروج:</small>
+                    <span class="fw-bold">{{ record.exit_date.strftime('%Y-%m-%d') }}</span>
+                </div>
+                {% else %}
+                <div class="workshop-exit-date">
+                    <small class="text-warning">لا يزال في الورشة</small>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+            <h6>لا توجد سجلات ورشة</h6>
+            <p class="text-muted small px-3">يمكنك إضافة سجل ورشة جديد من خلال النقر على زر "إضافة سجل"</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <!-- مرفقات السيارة -->
 <div class="card mb-3 mx-3">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">

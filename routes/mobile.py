@@ -44,50 +44,50 @@ class LoginForm(FlaskForm):
 
 
 def update_vehicle_driver(vehicle_id):
-	"""تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
-	try:
-		# الحصول على جميع سجلات التسليم (delivery) للسيارة مرتبة حسب التاريخ
-		delivery_records = VehicleHandover.query.filter_by(
-			vehicle_id=vehicle_id, 
-			handover_type='delivery'
-		).order_by(VehicleHandover.handover_date.desc()).all()
-		
-		if delivery_records:
-			# أخذ أحدث سجل تسليم (delivery)
-			latest_delivery = delivery_records[0]
-			
-			# تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
-			driver_name = None
-			if latest_delivery.employee_id:
-				employee = Employee.query.get(latest_delivery.employee_id)
-				if employee:
-					driver_name = employee.name
-			
-			# إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
-			if not driver_name and latest_delivery.person_name:
-				driver_name = latest_delivery.person_name
-			
-			# تحديث اسم السائق في جدول السيارات
-			vehicle = Vehicle.query.get(vehicle_id)
-			if vehicle:
-				vehicle.driver_name = driver_name
-				db.session.commit()
-		else:
-			# إذا لم يكن هناك سجلات تسليم، امسح اسم السائق
-			vehicle = Vehicle.query.get(vehicle_id)
-			if vehicle:
-				vehicle.driver_name = None
-				db.session.commit()
-				
-	except Exception as e:
-		print(f"خطأ في تحديث اسم السائق: {e}")
-		# لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
-		pass
+        """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
+        try:
+                # الحصول على جميع سجلات التسليم (delivery) للسيارة مرتبة حسب التاريخ
+                delivery_records = VehicleHandover.query.filter_by(
+                        vehicle_id=vehicle_id, 
+                        handover_type='delivery'
+                ).order_by(VehicleHandover.handover_date.desc()).all()
+                
+                if delivery_records:
+                        # أخذ أحدث سجل تسليم (delivery)
+                        latest_delivery = delivery_records[0]
+                        
+                        # تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
+                        driver_name = None
+                        if latest_delivery.employee_id:
+                                employee = Employee.query.get(latest_delivery.employee_id)
+                                if employee:
+                                        driver_name = employee.name
+                        
+                        # إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
+                        if not driver_name and latest_delivery.person_name:
+                                driver_name = latest_delivery.person_name
+                        
+                        # تحديث اسم السائق في جدول السيارات
+                        vehicle = Vehicle.query.get(vehicle_id)
+                        if vehicle:
+                                vehicle.driver_name = driver_name
+                                db.session.commit()
+                else:
+                        # إذا لم يكن هناك سجلات تسليم، امسح اسم السائق
+                        vehicle = Vehicle.query.get(vehicle_id)
+                        if vehicle:
+                                vehicle.driver_name = None
+                                db.session.commit()
+                                
+        except Exception as e:
+                print(f"خطأ في تحديث اسم السائق: {e}")
+                # لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
+                pass
 
 
 def log_audit(action, entity_type, entity_id, details=None):
-	"""تسجيل الإجراء في سجل النظام - تم الانتقال للنظام الجديد"""
-	log_activity(action, entity_type, entity_id, details)
+        """تسجيل الإجراء في سجل النظام - تم الانتقال للنظام الجديد"""
+        log_activity(action, entity_type, entity_id, details)
 
 # صفحة الـ Splash Screen
 @mobile_bp.route('/splash')
@@ -1746,10 +1746,10 @@ def save_file(file, folder):
 
 # قائمة بأنواع عمليات التسليم والاستلام
 HANDOVER_TYPE_CHOICES = [
-	'delivery',  # تسليم
-	'return',  # استلام
+        'delivery',  # تسليم
+        'return',  # استلام
     'inspection',  # تفتيش
-	'weekly_inspection',  # تفتيش اسبةعي
+        'weekly_inspection',  # تفتيش اسبةعي
     'monthly_inspection'  # تفتيش شهري
 ]
 
@@ -3820,5 +3820,79 @@ def create_safety_check(vehicle_id):
                            drivers=drivers,
                            supervisors=supervisors,
                            now=datetime.now())
+
+# إضافة سجل ورشة جديد - النسخة المحمولة
+@mobile_bp.route('/vehicles/<int:vehicle_id>/workshop/add', methods=['GET', 'POST'])
+@login_required
+def add_workshop_record(vehicle_id):
+    """إضافة سجل ورشة جديد للسيارة من النسخة المحمولة"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        try:
+            # استخراج البيانات من النموذج
+            entry_date = datetime.strptime(request.form.get('entry_date'), '%Y-%m-%d').date()
+            exit_date_str = request.form.get('exit_date')
+            exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
+            reason = request.form.get('reason')
+            description = request.form.get('description')
+            repair_status = request.form.get('repair_status')
+            cost = float(request.form.get('cost') or 0)
+            workshop_name = request.form.get('workshop_name')
+            technician_name = request.form.get('technician_name')
+            notes = request.form.get('notes')
+            
+            # إنشاء سجل ورشة جديد
+            workshop_record = VehicleWorkshop(
+                vehicle_id=vehicle_id,
+                entry_date=entry_date,
+                exit_date=exit_date,
+                reason=reason,
+                description=description,
+                repair_status=repair_status,
+                cost=cost,
+                workshop_name=workshop_name,
+                technician_name=technician_name,
+                notes=notes
+            )
+            
+            db.session.add(workshop_record)
+            
+            # تحديث حالة السيارة
+            if not exit_date:
+                vehicle.status = 'in_workshop'
+            vehicle.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            
+            # تسجيل الإجراء
+            log_activity('create', 'vehicle_workshop', workshop_record.id, 
+                       f'تم إضافة سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال')
+            
+            flash('تم إضافة سجل الورشة بنجاح!', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء إضافة سجل الورشة: {str(e)}', 'danger')
+    
+    # قوائم الخيارات
+    workshop_reasons = [
+        ('maintenance', 'صيانة دورية'),
+        ('breakdown', 'عطل'),
+        ('accident', 'حادث')
+    ]
+    
+    repair_statuses = [
+        ('in_progress', 'قيد التنفيذ'),
+        ('completed', 'تم الإصلاح'),
+        ('pending_approval', 'بانتظار الموافقة')
+    ]
+    
+    return render_template('mobile/add_workshop_record.html',
+                         vehicle=vehicle,
+                         workshop_reasons=workshop_reasons,
+                         repair_statuses=repair_statuses,
+                         now=datetime.now())
 
 
