@@ -210,7 +210,7 @@
                     <!-- نظام رفع الملفات الجديد -->
                     <label for="files" class="form-label">ملفات توثيقية (صور/PDF)</label>
                     <div class="alert alert-info py-2 mb-2">
-                        <small><i class="fas fa-info-circle me-1"></i>الحد الأقصى: 20 ميجابايت. لتجنب الأخطاء، استخدم صور مضغوطة أو قلل العدد.</small>
+                        <small><i class="fas fa-info-circle me-1"></i>الحد الأقصى: 20 ميجابايت. الصور الكبيرة (أكبر من 500KB) سيتم ضغطها تلقائياً.</small>
                     </div>
                     <input type="file" id="files" name="files" multiple class="d-none">
                     <button class="btn btn-outline-secondary w-100" type="button" id="trigger-file-select"><i class="fas fa-file-upload me-2"></i>اختر ملفات...</button>
@@ -468,23 +468,74 @@
                 tempInput.click();
             };
 
-            function addFilePreview(file) {
+            async function addFilePreview(file) {
                 for (let f of filesTransferList.files) { if (f.name === file.name && f.size === file.size) return; }
-                filesTransferList.items.add(file);
+                
+                let processedFile = file;
+                // ضغط الصور التي حجمها أكبر من 500KB
+                if (file.type.startsWith('image/') && file.size > 500000) {
+                    try {
+                        processedFile = await compressImage(file, 0.6, 1200);
+                        console.log(`تم ضغط ${file.name} من ${(file.size/1024).toFixed(1)}KB إلى ${(processedFile.size/1024).toFixed(1)}KB`);
+                    } catch (error) {
+                        console.log('فشل ضغط الصورة، سيتم استخدام الملف الأصلي:', error);
+                    }
+                }
+                
+                filesTransferList.items.add(processedFile);
                 filesInput.files = filesTransferList.files;
 
-                const tplId = file.name.toLowerCase().endsWith('.pdf') ? 'pdf-preview-template' : 'image-preview-template';
+                const tplId = processedFile.name.toLowerCase().endsWith('.pdf') ? 'pdf-preview-template' : 'image-preview-template';
                 const clone = document.getElementById(tplId).firstElementChild.cloneNode(true);
-                clone.querySelector('.remove-file').onclick = () => removeFilePreview(clone, file);
-                clone.querySelector('.file-description').name = `description_${file.name}`;
+                clone.querySelector('.remove-file').onclick = () => removeFilePreview(clone, processedFile);
+                clone.querySelector('.file-description').name = `description_${processedFile.name}`;
                 if (tplId.includes('image')) {
                     const reader = new FileReader();
                     reader.onload = e => clone.querySelector('img').src = e.target.result;
-                    reader.readAsDataURL(file);
+                    reader.readAsDataURL(processedFile);
                 } else {
-                    clone.querySelector('.pdf-filename').textContent = file.name;
+                    clone.querySelector('.pdf-filename').textContent = processedFile.name;
                 }
                 filePreviews.appendChild(clone);
+            }
+            
+            // دالة ضغط الصور
+            function compressImage(file, quality = 0.6, maxWidth = 1200) {
+                return new Promise((resolve, reject) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        let { width, height } = img;
+                        
+                        // تصغير الأبعاد إذا كانت كبيرة
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                // إنشاء ملف جديد بنفس الاسم
+                                const compressedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                resolve(compressedFile);
+                            } else {
+                                reject(new Error('فشل في ضغط الصورة'));
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    
+                    img.onerror = () => reject(new Error('فشل في تحميل الصورة'));
+                    img.src = URL.createObjectURL(file);
+                });
             }
 
             function removeFilePreview(item, fileToRemove) {
