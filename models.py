@@ -896,6 +896,69 @@ class VehicleDamageMarker(db.Model):
         return f'<VehicleDamageMarker {self.id} for checklist {self.checklist_id} at ({self.position_x}, {self.position_y})>'
 
 
+class Project(db.Model):
+    """نموذج المشاريع"""
+    __tablename__ = 'projects'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    location = db.Column(db.String(100))
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    status = db.Column(db.String(20), default='active')  # active, completed, suspended
+    manager_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    manager = db.relationship('Employee', foreign_keys=[manager_id], uselist=False)
+    external_authorizations = db.relationship('ExternalAuthorization', back_populates='project', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Project {self.name}>'
+
+
+class ExternalAuthorization(db.Model):
+    """نموذج التفويضات الخارجية للموظفين"""
+    __tablename__ = 'external_authorizations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    authorization_type = db.Column(db.String(50), default='external_project')  # نوع التفويض
+    description = db.Column(db.Text)  # وصف التفويض
+    file_path = db.Column(db.String(255))  # مسار الملف المرفق
+    external_link = db.Column(db.String(500))  # الرابط الخارجي
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    notes = db.Column(db.Text)  # ملاحظات إضافية
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    approved_date = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    employee = db.relationship('Employee', foreign_keys=[employee_id], backref=db.backref('external_authorizations', cascade='all, delete-orphan'))
+    project = db.relationship('Project', back_populates='external_authorizations')
+    creator = db.relationship('User', foreign_keys=[created_by], uselist=False)
+    approver = db.relationship('User', foreign_keys=[approved_by], uselist=False)
+    
+    def __repr__(self):
+        return f'<ExternalAuthorization {self.id} for employee {self.employee_id}>'
+    
+    @property
+    def file_type(self):
+        """تحديد نوع الملف"""
+        if self.file_path:
+            ext = self.file_path.lower().split('.')[-1]
+            if ext in ['pdf']:
+                return 'pdf'
+            elif ext in ['jpg', 'jpeg', 'png', 'gif']:
+                return 'image'
+        return 'unknown'
+
+
 class VehicleMaintenance(db.Model):
     """سجل صيانة المركبات"""
     id = db.Column(db.Integer, primary_key=True)

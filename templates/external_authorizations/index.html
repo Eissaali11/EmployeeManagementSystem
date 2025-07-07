@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة التفويضات الخارجية{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+<style>
+.stats-cards {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.filter-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.authorization-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.authorization-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background-color: #d1edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.employee-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.employee-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    margin-left: 15px;
+}
+
+.create-btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+
+.create-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header و الإحصائيات -->
+    <div class="stats-cards">
+        <div class="row">
+            <div class="col-md-8">
+                <h2 class="mb-0">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    إدارة التفويضات الخارجية
+                </h2>
+                <p class="mb-0 mt-2">نظام إدارة تفويضات الموظفين للمشاريع الخارجية</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{{ url_for('external_authorizations.create') }}" class="btn create-btn">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة تفويض خارجي
+                </a>
+            </div>
+        </div>
+        
+        <!-- الإحصائيات -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.total }}</span>
+                    <span class="stat-label">إجمالي التفويضات</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.pending }}</span>
+                    <span class="stat-label">في الانتظار</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.approved }}</span>
+                    <span class="stat-label">معتمدة</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <span class="stat-number">{{ stats.rejected }}</span>
+                    <span class="stat-label">مرفوضة</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم الفلاتر -->
+    <div class="filter-section">
+        <form method="GET" id="filterForm">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">البحث</label>
+                    <input type="text" class="form-control" name="search" 
+                           value="{{ filters.search }}" placeholder="اسم الموظف أو رقم الهوية...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">القسم</label>
+                    <select class="form-select" name="department">
+                        <option value="">جميع الأقسام</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" 
+                                {% if filters.department == dept.id|string %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">المشروع</label>
+                    <select class="form-select" name="project">
+                        <option value="">جميع المشاريع</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}" 
+                                {% if filters.project == project.id|string %}selected{% endif %}>
+                            {{ project.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">الحالة</label>
+                    <select class="form-select" name="status">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>
+                            في الانتظار
+                        </option>
+                        <option value="approved" {% if filters.status == 'approved' %}selected{% endif %}>
+                            معتمدة
+                        </option>
+                        <option value="rejected" {% if filters.status == 'rejected' %}selected{% endif %}>
+                            مرفوضة
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search ms-1"></i> بحث
+                    </button>
+                    <a href="{{ url_for('external_authorizations.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times ms-1"></i> مسح الفلاتر
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- قائمة التفويضات -->
+    <div class="row">
+        {% if authorizations %}
+            {% for auth in authorizations %}
+            <div class="col-12">
+                <div class="authorization-card">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="employee-info">
+                                <div class="employee-avatar">
+                                    {{ auth.employee.name[:2] }}
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ auth.employee.name }}</h5>
+                                    <small class="text-muted">
+                                        رقم الموظف: {{ auth.employee.employee_id }} |
+                                        {% if auth.employee.departments %}
+                                            القسم: {{ auth.employee.departments[0].name }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>المشروع:</strong> {{ auth.project.name }}<br>
+                                    {% if auth.description %}
+                                    <strong>الوصف:</strong> {{ auth.description[:100] }}{% if auth.description|length > 100 %}...{% endif %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>تاريخ الإنشاء:</strong> {{ auth.created_at.strftime('%Y-%m-%d %H:%M') }}<br>
+                                    {% if auth.file_path %}
+                                    <i class="fas fa-paperclip text-info"></i> ملف مرفق
+                                    {% endif %}
+                                    {% if auth.external_link %}
+                                    <i class="fas fa-link text-success"></i> رابط خارجي
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 text-end">
+                            <div class="mb-3">
+                                <span class="status-badge status-{{ auth.status }}">
+                                    {% if auth.status == 'pending' %}في الانتظار
+                                    {% elif auth.status == 'approved' %}معتمد
+                                    {% elif auth.status == 'rejected' %}مرفوض
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <a href="{{ url_for('external_authorizations.view', auth_id=auth.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i> عرض
+                                </a>
+                                {% if current_user.role.value in ['ADMIN', 'SYSTEM_ADMIN'] %}
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                            type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% if auth.status == 'pending' %}
+                                        <li>
+                                            <form method="POST" 
+                                                  action="{{ url_for('external_authorizations.approve', auth_id=auth.id) }}"
+                                                  style="display: inline;">
+                                                <button type="submit" class="dropdown-item text-success"
+                                                        onclick="return confirm('هل تريد اعتماد هذا التفويض؟')">
+                                                    <i class="fas fa-check ms-1"></i> اعتماد
+                                                </button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-warning" href="#" 
+                                               onclick="showRejectModal({{ auth.id }})">
+                                                <i class="fas fa-times ms-1"></i> رفض
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        {% endif %}
+                                        <li>
+                                            <form method="POST" 
+                                                  action="{{ url_for('external_authorizations.delete', auth_id=auth.id) }}"
+                                                  style="display: inline;">
+                                                <button type="submit" class="dropdown-item text-danger"
+                                                        onclick="return confirm('هل تريد حذف هذا التفويض نهائياً؟')">
+                                                    <i class="fas fa-trash ms-1"></i> حذف
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-file-signature fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">لا توجد تفويضات خارجية</h4>
+                    <p class="text-muted">ابدأ بإضافة تفويض خارجي جديد</p>
+                    <a href="{{ url_for('external_authorizations.create') }}" class="btn create-btn">
+                        <i class="fas fa-plus ms-1"></i>
+                        إضافة تفويض خارجي
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- نافذة رفض التفويض -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">رفض التفويض</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="rejectForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">سبب الرفض *</label>
+                        <textarea class="form-control" name="notes" rows="4" 
+                                  placeholder="يرجى توضيح سبب رفض التفويض..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">رفض التفويض</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showRejectModal(authId) {
+    const form = document.getElementById('rejectForm');
+    form.action = `/external-authorizations/${authId}/reject`;
+    const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    modal.show();
+}
+
+// تحديث الفلاتر تلقائياً
+document.addEventListener('DOMContentLoaded', function() {
+    const filterInputs = document.querySelectorAll('#filterForm select, #filterForm input[name="search"]');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (input.name !== 'search') {
+                document.getElementById('filterForm').submit();
+            }
+        });
+    });
+    
+    // البحث عند الضغط على Enter
+    document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('filterForm').submit();
+        }
+    });
+});
+</script>
+{% endblock %}

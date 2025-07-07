@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+
+{% block title %}عرض التفويض الخارجي{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+<style>
+.authorization-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background-color: #d1edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.detail-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+}
+
+.detail-section {
+    margin-bottom: 30px;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #555;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.info-value {
+    color: #333;
+    flex: 1;
+}
+
+.employee-card {
+    background: linear-gradient(45deg, #f8f9ff, #fff);
+    border: 1px solid #e3f2fd;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.employee-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-left: 20px;
+}
+
+.file-preview {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.file-icon {
+    font-size: 2rem;
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.action-buttons {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+}
+
+.approval-section {
+    background: #fff9c4;
+    border: 1px solid #ffd600;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.notes-section {
+    background: #f0f8ff;
+    border-left: 4px solid #2196f3;
+    padding: 15px;
+    margin-top: 15px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="authorization-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    تفويض خارجي رقم #{{ authorization.id }}
+                </h2>
+                <p class="mb-0">تاريخ الإنشاء: {{ authorization.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="status-badge status-{{ authorization.status }}">
+                    {% if authorization.status == 'pending' %}في الانتظار
+                    {% elif authorization.status == 'approved' %}معتمد
+                    {% elif authorization.status == 'rejected' %}مرفوض
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- بيانات الموظف -->
+            <div class="detail-card">
+                <h4 class="section-title">
+                    <i class="fas fa-user ms-2"></i>
+                    بيانات الموظف
+                </h4>
+                
+                <div class="employee-card">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="employee-avatar">
+                                {{ authorization.employee.name[:2] }}
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h5 class="mb-1">{{ authorization.employee.name }}</h5>
+                            <div class="info-row">
+                                <span class="info-label">رقم الموظف:</span>
+                                <span class="info-value">{{ authorization.employee.employee_id }}</span>
+                            </div>
+                            {% if authorization.employee.departments %}
+                            <div class="info-row">
+                                <span class="info-label">القسم/الأقسام:</span>
+                                <span class="info-value">
+                                    {% for dept in authorization.employee.departments %}
+                                        <span class="badge bg-primary me-1">{{ dept.name }}</span>
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if authorization.employee.job_title %}
+                            <div class="info-row">
+                                <span class="info-label">المسمى الوظيفي:</span>
+                                <span class="info-value">{{ authorization.employee.job_title }}</span>
+                            </div>
+                            {% endif %}
+                            {% if authorization.employee.mobile %}
+                            <div class="info-row">
+                                <span class="info-label">رقم الجوال:</span>
+                                <span class="info-value">{{ authorization.employee.mobile }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تفاصيل التفويض -->
+            <div class="detail-card">
+                <h4 class="section-title">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    تفاصيل التفويض
+                </h4>
+                
+                <div class="detail-section">
+                    <div class="info-row">
+                        <span class="info-label">المشروع:</span>
+                        <span class="info-value">
+                            <strong>{{ authorization.project.name }}</strong>
+                            {% if authorization.project.location %}
+                            <br><small class="text-muted">الموقع: {{ authorization.project.location }}</small>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if authorization.description %}
+                    <div class="info-row">
+                        <span class="info-label">الوصف:</span>
+                        <span class="info-value">{{ authorization.description }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="info-row">
+                        <span class="info-label">نوع التفويض:</span>
+                        <span class="info-value">
+                            <span class="badge bg-info">{{ authorization.authorization_type }}</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- المرفقات -->
+                {% if authorization.file_path or authorization.external_link %}
+                <div class="detail-section">
+                    <h5 class="mb-3">المرفقات والروابط</h5>
+                    
+                    {% if authorization.file_path %}
+                    <div class="file-preview">
+                        <div class="file-icon">
+                            {% if authorization.file_type == 'pdf' %}
+                            <i class="fas fa-file-pdf text-danger"></i>
+                            {% else %}
+                            <i class="fas fa-file-image text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <h6>ملف مرفق</h6>
+                        <a href="{{ url_for('static', filename=authorization.file_path) }}" 
+                           target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-download ms-1"></i>
+                            تحميل الملف
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if authorization.external_link %}
+                    <div class="mt-3">
+                        <div class="info-row">
+                            <span class="info-label">الرابط الخارجي:</span>
+                            <span class="info-value">
+                                <a href="{{ authorization.external_link }}" target="_blank" 
+                                   class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-external-link-alt ms-1"></i>
+                                    فتح الرابط
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- معلومات النظام -->
+            <div class="detail-card">
+                <h4 class="section-title">
+                    <i class="fas fa-cog ms-2"></i>
+                    معلومات النظام
+                </h4>
+                
+                <div class="info-row">
+                    <span class="info-label">تم الإنشاء بواسطة:</span>
+                    <span class="info-value">
+                        {% if authorization.creator %}
+                        {{ authorization.creator.name }}
+                        {% else %}
+                        غير محدد
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">تاريخ الإنشاء:</span>
+                    <span class="info-value">{{ authorization.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                
+                {% if authorization.approved_by %}
+                <div class="info-row">
+                    <span class="info-label">تم المراجعة بواسطة:</span>
+                    <span class="info-value">{{ authorization.approver.name }}</span>
+                </div>
+                {% endif %}
+                
+                {% if authorization.approved_date %}
+                <div class="info-row">
+                    <span class="info-label">تاريخ المراجعة:</span>
+                    <span class="info-value">{{ authorization.approved_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- أزرار التحكم -->
+            {% if current_user.role.value in ['ADMIN', 'SYSTEM_ADMIN'] %}
+            <div class="action-buttons">
+                <h5 class="mb-3">إجراءات إدارية</h5>
+                
+                {% if authorization.status == 'pending' %}
+                <div class="approval-section">
+                    <h6 class="mb-3">مراجعة التفويض</h6>
+                    
+                    <!-- نموذج الموافقة -->
+                    <form method="POST" action="{{ url_for('external_authorizations.approve', auth_id=authorization.id) }}" 
+                          class="mb-3">
+                        <div class="mb-2">
+                            <textarea class="form-control" name="notes" rows="2" 
+                                      placeholder="ملاحظات الموافقة (اختياري)"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success me-2"
+                                onclick="return confirm('هل تريد اعتماد هذا التفويض؟')">
+                            <i class="fas fa-check ms-1"></i>
+                            اعتماد التفويض
+                        </button>
+                    </form>
+                    
+                    <!-- نموذج الرفض -->
+                    <button type="button" class="btn btn-warning" 
+                            onclick="showRejectModal()">
+                        <i class="fas fa-times ms-1"></i>
+                        رفض التفويض
+                    </button>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <form method="POST" action="{{ url_for('external_authorizations.delete', auth_id=authorization.id) }}" 
+                          style="display: inline;">
+                        <button type="submit" class="btn btn-outline-danger"
+                                onclick="return confirm('هل تريد حذف هذا التفويض نهائياً؟')">
+                            <i class="fas fa-trash ms-1"></i>
+                            حذف التفويض
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- الملاحظات -->
+            {% if authorization.notes %}
+            <div class="notes-section">
+                <h6><i class="fas fa-sticky-note ms-1"></i> ملاحظات</h6>
+                <p class="mb-0">{{ authorization.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- زر العودة -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('external_authorizations.index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-right ms-1"></i>
+            العودة إلى قائمة التفويضات
+        </a>
+    </div>
+</div>
+
+<!-- نافذة رفض التفويض -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">رفض التفويض</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('external_authorizations.reject', auth_id=authorization.id) }}">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle ms-1"></i>
+                        سيتم رفض التفويض نهائياً ولن يمكن التراجع عن هذا الإجراء.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">سبب الرفض *</label>
+                        <textarea class="form-control" name="notes" rows="4" 
+                                  placeholder="يرجى توضيح سبب رفض التفويض..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-times ms-1"></i>
+                        رفض التفويض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showRejectModal() {
+    const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
