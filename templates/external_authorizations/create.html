@@ -3,7 +3,7 @@
 {% block title %}إضافة تفويض خارجي جديد{% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/external_auth_custom.css') }}?v={{ range(1000, 9999) | random }}">
 <style>
     * {
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;

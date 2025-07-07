@@ -1,0 +1,326 @@
+/* تصميم مخصص لصفحة التفويضات الخارجية */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+* {
+    font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+}
+
+body {
+    background: linear-gradient(45deg, #667eea, #764ba2, #f093fb) !important;
+    min-height: 100vh !important;
+    color: #2c3e50 !important;
+}
+
+.main-container {
+    background: transparent !important;
+    padding: 30px 20px !important;
+}
+
+.auth-header {
+    background: linear-gradient(135deg, #e74c3c, #f39c12) !important;
+    border-radius: 20px !important;
+    color: white !important;
+    padding: 40px !important;
+    margin-bottom: 30px !important;
+    box-shadow: 0 15px 35px rgba(231, 76, 60, 0.4) !important;
+}
+
+.auth-info h1 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    margin: 0 0 10px 0 !important;
+    color: #ffffff !important;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+}
+
+.auth-info p {
+    font-size: 16px !important;
+    margin: 0 !important;
+    color: #f1f3f4 !important;
+    font-weight: 400 !important;
+    opacity: 0.9 !important;
+}
+
+.vehicle-card {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    text-align: center !important;
+    min-width: 250px !important;
+}
+
+.vehicle-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 8px !important;
+    color: #e8eaf6 !important;
+}
+
+.vehicle-details {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+.form-container {
+    background: white !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden !important;
+}
+
+.form-header {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    padding: 25px 35px !important;
+    color: white !important;
+}
+
+.form-header h3 {
+    margin: 0 !important;
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.form-body {
+    padding: 35px !important;
+    background: #fafafa !important;
+}
+
+.section {
+    margin-bottom: 30px !important;
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 25px !important;
+    border: 1px solid #e0e0e0 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+}
+
+.section:hover {
+    box-shadow: 0 8px 25px rgba(92, 107, 192, 0.15) !important;
+    transform: translateY(-2px) !important;
+}
+
+.section-title {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #8e44ad !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 3px solid #e8abe8 !important;
+}
+
+.form-label {
+    font-weight: 700 !important;
+    color: #e67e22 !important;
+    margin-bottom: 10px !important;
+    font-size: 16px !important;
+}
+
+.form-control, .form-select {
+    border: 2px solid #bdc3c7 !important;
+    border-radius: 10px !important;
+    padding: 15px 18px !important;
+    font-size: 16px !important;
+    transition: all 0.3s ease !important;
+    background: white !important;
+    color: #c0392b !important;
+    font-weight: 600 !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #9b59b6 !important;
+    box-shadow: 0 0 0 0.25rem rgba(155, 89, 182, 0.3) !important;
+    background: white !important;
+    color: #8e44ad !important;
+}
+
+.form-control::placeholder {
+    color: #9e9e9e !important;
+    font-style: normal !important;
+    font-weight: 400 !important;
+}
+
+.input-group {
+    position: relative !important;
+}
+
+.input-icon {
+    position: absolute !important;
+    left: 18px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #e74c3c !important;
+    z-index: 5 !important;
+    font-size: 18px !important;
+}
+
+.input-with-icon {
+    padding-left: 45px !important;
+    color: #c0392b !important;
+    font-weight: 600 !important;
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 16px 35px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5) !important;
+}
+
+.btn-modern:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.7) !important;
+    color: white !important;
+    background: linear-gradient(135deg, #c0392b, #a93226) !important;
+}
+
+.btn-secondary {
+    background: #757575 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 14px 25px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-secondary:hover {
+    background: #616161 !important;
+    transform: translateY(-2px) !important;
+    color: white !important;
+}
+
+.file-upload-area {
+    border: 2px dashed #5c6bc0 !important;
+    border-radius: 12px !important;
+    padding: 40px !important;
+    text-align: center !important;
+    background: #f3f4f6 !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+.file-upload-area:hover {
+    border-color: #3f51b5 !important;
+    background: #e8eaf6 !important;
+}
+
+.file-upload-area.dragover {
+    border-color: #283593 !important;
+    background: #c5cae9 !important;
+    transform: scale(1.02) !important;
+}
+
+.upload-icon {
+    font-size: 50px !important;
+    color: #f39c12 !important;
+    margin-bottom: 18px !important;
+}
+
+.upload-text {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #d35400 !important;
+    margin-bottom: 10px !important;
+}
+
+.upload-hint {
+    color: #757575 !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+}
+
+.file-info {
+    background: #e3f2fd !important;
+    border: 1px solid #90caf9 !important;
+    border-radius: 8px !important;
+    padding: 15px !important;
+    margin-top: 15px !important;
+    color: #1565c0 !important;
+}
+
+.actions-bar {
+    background: #f5f5f5 !important;
+    padding: 25px 35px !important;
+    border-top: 1px solid #e0e0e0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.text-muted {
+    color: #757575 !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+}
+
+/* تحسينات للجوال */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 15px 10px !important;
+    }
+    
+    .auth-header {
+        padding: 25px 20px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .auth-content {
+        flex-direction: column !important;
+        gap: 15px !important;
+        text-align: center !important;
+    }
+    
+    .auth-info h1 {
+        font-size: 24px !important;
+    }
+    
+    .auth-info p {
+        font-size: 14px !important;
+    }
+    
+    .vehicle-card {
+        min-width: auto !important;
+        width: 100% !important;
+    }
+    
+    .form-body {
+        padding: 20px !important;
+    }
+    
+    .section {
+        padding: 20px !important;
+    }
+    
+    .section-title {
+        font-size: 16px !important;
+    }
+    
+    .actions-bar {
+        padding: 20px !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+    
+    .btn-modern, .btn-secondary {
+        width: 100% !important;
+    }
+}
