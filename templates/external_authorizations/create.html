@@ -3,14 +3,15 @@
 {% block title %}إضافة تفويض خارجي جديد{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/external_auth_custom.css') }}?v={{ range(1000, 9999) | random }}">
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    
     * {
         font-family: 'Cairo', 'Segoe UI', sans-serif !important;
     }
     
     body {
-        background: linear-gradient(45deg, #667eea, #764ba2, #f093fb) !important;
+        background: linear-gradient(45deg, #e74c3c, #f39c12, #9b59b6) !important;
         min-height: 100vh !important;
         color: #2c3e50 !important;
     }
@@ -21,12 +22,12 @@
     }
     
     .auth-header {
-        background: linear-gradient(135deg, #e74c3c, #f39c12) !important;
+        background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
         border-radius: 20px !important;
         color: white !important;
         padding: 40px !important;
         margin-bottom: 30px !important;
-        box-shadow: 0 15px 35px rgba(231, 76, 60, 0.4) !important;
+        box-shadow: 0 15px 35px rgba(46, 204, 113, 0.5) !important;
     }
     
     .auth-header::before {
@@ -97,7 +98,7 @@
     }
     
     .form-header {
-        background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+        background: linear-gradient(135deg, #3498db, #2980b9) !important;
         padding: 25px 35px !important;
         color: white !important;
     }
@@ -133,40 +134,43 @@
     }
     
     .section-title {
-        font-size: 20px !important;
-        font-weight: 700 !important;
-        color: #8e44ad !important;
-        margin-bottom: 20px !important;
+        font-size: 22px !important;
+        font-weight: 800 !important;
+        color: #e74c3c !important;
+        margin-bottom: 25px !important;
         display: flex !important;
         align-items: center !important;
-        gap: 12px !important;
-        padding-bottom: 12px !important;
-        border-bottom: 3px solid #e8abe8 !important;
+        gap: 15px !important;
+        padding-bottom: 15px !important;
+        border-bottom: 4px solid #fadbd8 !important;
     }
     
     .form-label {
-        font-weight: 700 !important;
-        color: #e67e22 !important;
-        margin-bottom: 10px !important;
-        font-size: 16px !important;
+        font-weight: 800 !important;
+        color: #8e44ad !important;
+        margin-bottom: 12px !important;
+        font-size: 17px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
     }
     
     .form-control, .form-select {
-        border: 2px solid #bdc3c7 !important;
-        border-radius: 10px !important;
-        padding: 15px 18px !important;
-        font-size: 16px !important;
+        border: 3px solid #ecf0f1 !important;
+        border-radius: 12px !important;
+        padding: 18px 22px !important;
+        font-size: 17px !important;
         transition: all 0.3s ease !important;
         background: white !important;
-        color: #c0392b !important;
-        font-weight: 600 !important;
+        color: #2c3e50 !important;
+        font-weight: 700 !important;
     }
     
     .form-control:focus, .form-select:focus {
-        border-color: #9b59b6 !important;
-        box-shadow: 0 0 0 0.25rem rgba(155, 89, 182, 0.3) !important;
-        background: white !important;
-        color: #8e44ad !important;
+        border-color: #e74c3c !important;
+        box-shadow: 0 0 0 0.3rem rgba(231, 76, 60, 0.4) !important;
+        background: #ffffff !important;
+        color: #c0392b !important;
+        transform: translateY(-2px) !important;
     }
     
     .form-control::placeholder {
@@ -181,18 +185,18 @@
     
     .input-icon {
         position: absolute !important;
-        left: 18px !important;
+        left: 20px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
-        color: #e74c3c !important;
-        z-index: 5 !important;
-        font-size: 18px !important;
+        color: #f39c12 !important;
+        z-index: 10 !important;
+        font-size: 20px !important;
     }
     
     .input-with-icon {
-        padding-left: 45px !important;
-        color: #c0392b !important;
-        font-weight: 600 !important;
+        padding-left: 55px !important;
+        color: #2c3e50 !important;
+        font-weight: 700 !important;
     }
     
     .input-icon {
