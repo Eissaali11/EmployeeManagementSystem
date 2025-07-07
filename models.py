@@ -86,14 +86,26 @@ class Employee(db.Model):
         """
         تقوم بتحويل كائن الموظف إلى قاموس (dictionary) يمكن تحويله بسهولة إلى JSON.
         """
+        # جلب معلومات الأقسام
+        departments_list = []
+        if self.departments:
+            departments_list = [{'id': dept.id, 'name': dept.name} for dept in self.departments]
+        
+        # إضافة department_id للتوافق مع النظام القديم (أول قسم)
+        department_id = None
+        department = None
+        if self.departments:
+            department_id = self.departments[0].id
+            department = {'id': self.departments[0].id, 'name': self.departments[0].name}
+        
         return {
             'id': self.id,
             'name': self.name,
             'employee_id': self.employee_id,
-            'national_id': self.national_id
-            # ,
-            # # نقوم بمعالجة العلاقة مع القسم لمنع الأخطاء إذا كان القسم غير موجود
-            # 'departments': [{'id': dept.id, 'name': dept.name} for dept in self.departments] if self.department else None 
+            'national_id': self.national_id,
+            'department_id': department_id,  # للتوافق مع الفلترة الحالية
+            'department': department,  # معلومات القسم الأساسي
+            'departments': departments_list  # جميع الأقسام
         }
     
     # Relationships

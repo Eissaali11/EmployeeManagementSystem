@@ -353,7 +353,16 @@
                 employees.forEach(emp => {
                     const a = document.createElement('a');
                     a.href = '#'; a.className = 'list-group-item list-group-item-action';
-                    a.innerHTML = `<div class="d-flex w-100 justify-content-between"><h6 class="mb-1">${emp.name}</h6><small class="text-muted">${emp.employee_id||''}</small></div><small>${emp.department?emp.department.name:'-'}</small>`;
+                    
+                    // عرض أسماء الأقسام
+                    let departmentNames = '-';
+                    if (emp.departments && emp.departments.length > 0) {
+                        departmentNames = emp.departments.map(dept => dept.name).join(', ');
+                    } else if (emp.department && emp.department.name) {
+                        departmentNames = emp.department.name;
+                    }
+                    
+                    a.innerHTML = `<div class="d-flex w-100 justify-content-between"><h6 class="mb-1">${emp.name}</h6><small class="text-muted">${emp.employee_id||''}</small></div><small>${departmentNames}</small>`;
                     a.onclick = (e) => {
                         e.preventDefault();
                         nameInput.value = emp.name; idInput.value = emp.id;
@@ -367,10 +376,27 @@
             function filter() {
                 const deptId = departmentSelect.value;
                 const term = searchInput.value.toLowerCase().trim();
-                const filtered = employeeData.filter(emp => 
-                    (!deptId || String(emp.department_id) === deptId) &&
-                    ((emp.name || '').toLowerCase().includes(term) || (emp.employee_id || '').toLowerCase().includes(term))
-                );
+                const filtered = employeeData.filter(emp => {
+                    // فلترة حسب القسم - التحقق من القسم الأساسي أو جميع الأقسام
+                    let deptMatch = !deptId;
+                    if (deptId) {
+                        // التحقق من القسم الأساسي
+                        if (emp.department_id && String(emp.department_id) === deptId) {
+                            deptMatch = true;
+                        }
+                        // التحقق من جميع الأقسام
+                        if (emp.departments && emp.departments.length > 0) {
+                            deptMatch = emp.departments.some(dept => String(dept.id) === deptId);
+                        }
+                    }
+                    
+                    // فلترة حسب النص المدخل
+                    const textMatch = !term || 
+                        (emp.name || '').toLowerCase().includes(term) || 
+                        (emp.employee_id || '').toLowerCase().includes(term);
+                    
+                    return deptMatch && textMatch;
+                });
                 renderList(filtered);
             }
             searchInput.oninput = filter;
@@ -618,4 +644,25 @@
 
     }); // نهاية DOMContentLoaded
     </script>
+
+<!-- Template للبحث عن الموظفين -->
+<script type="text/html" id="search-template">
+    <div class="mb-3">
+        <label class="form-label">فلترة حسب القسم:</label>
+        <select class="form-select department-select">
+            <option value="">كل الأقسام</option>
+            {% for dept in departments %}
+            <option value="{{ dept.id }}">{{ dept.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">البحث بالاسم أو رقم الموظف:</label>
+        <input type="text" class="form-control search-input" placeholder="اكتب للبحث...">
+    </div>
+    <div class="list-group list-container" style="max-height: 300px; overflow-y: auto;"></div>
+    <div class="alert alert-info text-center d-none no-results-alert">
+        <i class="fas fa-search"></i> لا توجد نتائج للبحث
+    </div>
+</script>
 {% endblock %}

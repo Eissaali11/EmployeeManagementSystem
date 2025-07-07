@@ -1945,7 +1945,10 @@ def create_handover_mobile():
     # === معالجة طلب GET (عند عرض الصفحة لأول مرة) ===
     # جلب القوائم اللازمة لعرضها في النموذج
     vehicles = Vehicle.query.order_by(Vehicle.plate_number).all()
-    employees = Employee.query.order_by(Employee.name).all()
+    
+    # جلب الموظفين مع تحميل علاقة الأقسام
+    from sqlalchemy.orm import joinedload
+    employees = Employee.query.options(joinedload(Employee.departments)).order_by(Employee.name).all()
     departments = Department.query.order_by(Department.name).all()
 
     # تحويل بيانات الموظفين إلى JSON لاستخدامها في JavaScript
