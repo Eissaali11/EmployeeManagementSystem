@@ -1,0 +1,213 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}تعديل سجل الورشة - {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-4">
+    <!-- رأس الصفحة -->
+    <div class="page-header mb-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h5 class="mb-1">تعديل سجل الورشة</h5>
+                <p class="text-muted mb-0">السيارة: {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</p>
+            </div>
+            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- نموذج تعديل سجل الورشة -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-edit ms-2"></i>
+                تعديل بيانات سجل الورشة
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {{ csrf_token() }}
+                
+                <div class="row">
+                    <!-- تاريخ الدخول -->
+                    <div class="col-md-6 mb-3">
+                        <label for="entry_date" class="form-label">تاريخ دخول الورشة *</label>
+                        <input type="date" class="form-control" id="entry_date" name="entry_date" 
+                               value="{{ workshop_record.entry_date.strftime('%Y-%m-%d') if workshop_record.entry_date else '' }}" required>
+                    </div>
+
+                    <!-- تاريخ الخروج -->
+                    <div class="col-md-6 mb-3">
+                        <label for="exit_date" class="form-label">تاريخ خروج الورشة</label>
+                        <input type="date" class="form-control" id="exit_date" name="exit_date" 
+                               value="{{ workshop_record.exit_date.strftime('%Y-%m-%d') if workshop_record.exit_date else '' }}">
+                        <div class="form-text">اتركه فارغاً إذا كانت السيارة لا تزال في الورشة</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- السبب -->
+                    <div class="col-md-6 mb-3">
+                        <label for="reason" class="form-label">سبب دخول الورشة *</label>
+                        <select class="form-select" id="reason" name="reason" required>
+                            <option value="">اختر السبب</option>
+                            {% for value, label in workshop_reasons %}
+                            <option value="{{ value }}" {{ 'selected' if workshop_record.reason == value else '' }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- حالة الإصلاح -->
+                    <div class="col-md-6 mb-3">
+                        <label for="repair_status" class="form-label">حالة الإصلاح *</label>
+                        <select class="form-select" id="repair_status" name="repair_status" required>
+                            <option value="">اختر الحالة</option>
+                            {% for value, label in repair_statuses %}
+                            <option value="{{ value }}" {{ 'selected' if workshop_record.repair_status == value else '' }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- وصف العطل أو الصيانة -->
+                <div class="mb-3">
+                    <label for="description" class="form-label">وصف العطل أو الصيانة *</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ workshop_record.description or '' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <!-- اسم الورشة -->
+                    <div class="col-md-6 mb-3">
+                        <label for="workshop_name" class="form-label">اسم الورشة</label>
+                        <input type="text" class="form-control" id="workshop_name" name="workshop_name" 
+                               value="{{ workshop_record.workshop_name or '' }}">
+                    </div>
+
+                    <!-- اسم الفني -->
+                    <div class="col-md-6 mb-3">
+                        <label for="technician_name" class="form-label">اسم الفني المسؤول</label>
+                        <input type="text" class="form-control" id="technician_name" name="technician_name" 
+                               value="{{ workshop_record.technician_name or '' }}">
+                    </div>
+                </div>
+
+                <!-- التكلفة -->
+                <div class="mb-3">
+                    <label for="cost" class="form-label">تكلفة الإصلاح (ريال)</label>
+                    <input type="number" class="form-control" id="cost" name="cost" step="0.01" min="0" 
+                           value="{{ workshop_record.cost or 0 }}">
+                </div>
+
+                <div class="row">
+                    <!-- رابط تسليم الورشة -->
+                    <div class="col-md-6 mb-3">
+                        <label for="delivery_form_link" class="form-label">رابط تسليم الورشة</label>
+                        <input type="url" class="form-control" id="delivery_form_link" name="delivery_form_link" 
+                               value="{{ workshop_record.delivery_link or '' }}" placeholder="https://example.com">
+                    </div>
+
+                    <!-- رابط استلام من الورشة -->
+                    <div class="col-md-6 mb-3">
+                        <label for="pickup_form_link" class="form-label">رابط استلام من الورشة</label>
+                        <input type="url" class="form-control" id="pickup_form_link" name="pickup_form_link" 
+                               value="{{ workshop_record.reception_link or '' }}" placeholder="https://example.com">
+                    </div>
+                </div>
+
+                <!-- ملاحظات إضافية -->
+                <div class="mb-4">
+                    <label for="notes" class="form-label">ملاحظات إضافية</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ workshop_record.notes or '' }}</textarea>
+                </div>
+
+                <!-- أزرار التحكم -->
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success flex-fill">
+                        <i class="fas fa-save ms-1"></i>
+                        تحديث السجل
+                    </button>
+                    <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-secondary flex-fill">
+                        <i class="fas fa-times ms-1"></i>
+                        إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- معلومات الصور الموجودة -->
+    {% if workshop_record.images %}
+    <div class="card mt-3">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="fas fa-images ms-2"></i>
+                الصور المرفقة ({{ workshop_record.images|length }})
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for image in workshop_record.images %}
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="card">
+                        <img src="{{ url_for('static', filename=image.image_path) }}" class="card-img-top" alt="صورة الورشة" style="height: 120px; object-fit: cover;">
+                        <div class="card-body p-2">
+                            <small class="text-muted">{{ image.image_type }}</small>
+                            <br>
+                            <small>{{ image.notes or 'بدون وصف' }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.page-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20692e 100%);
+    border: none;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+}
+</style>
+{% endblock %}

@@ -3991,4 +3991,96 @@ def add_workshop_record(vehicle_id):
                          repair_statuses=repair_statuses,
                          now=datetime.now())
 
+# تعديل سجل الورشة - النسخة المحمولة
+@mobile_bp.route('/vehicles/workshop/<int:workshop_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_workshop_record(workshop_id):
+    """تعديل سجل ورشة موجود للنسخة المحمولة"""
+    workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
+    vehicle = workshop_record.vehicle
+    
+    if request.method == 'POST':
+        try:
+            # تحديث البيانات
+            workshop_record.entry_date = datetime.strptime(request.form.get('entry_date'), '%Y-%m-%d').date()
+            exit_date_str = request.form.get('exit_date')
+            workshop_record.exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
+            workshop_record.reason = request.form.get('reason')
+            workshop_record.description = request.form.get('description')
+            workshop_record.repair_status = request.form.get('repair_status')
+            workshop_record.cost = float(request.form.get('cost') or 0)
+            workshop_record.workshop_name = request.form.get('workshop_name')
+            workshop_record.technician_name = request.form.get('technician_name')
+            workshop_record.delivery_link = request.form.get('delivery_form_link')
+            workshop_record.reception_link = request.form.get('pickup_form_link')
+            workshop_record.notes = request.form.get('notes')
+            workshop_record.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_activity(
+                action='update',
+                entity_type='vehicle_workshop',
+                details=f'تم تعديل سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال'
+            )
+            
+            flash('تم تحديث سجل الورشة بنجاح!', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطأ في تعديل سجل الورشة {workshop_id}: {str(e)}")
+            flash(f'حدث خطأ أثناء تحديث سجل الورشة: {str(e)}', 'danger')
+    
+    # خيارات النموذج
+    workshop_reasons = [
+        ('maintenance', 'صيانة دورية'),
+        ('breakdown', 'عطل'),
+        ('accident', 'حادث'),
+        ('periodic_inspection', 'فحص دوري'),
+        ('other', 'أخرى')
+    ]
+    
+    repair_statuses = [
+        ('in_progress', 'قيد التنفيذ'),
+        ('completed', 'مكتمل'),
+        ('pending_approval', 'بانتظار الموافقة')
+    ]
+    
+    return render_template('mobile/edit_workshop_record.html',
+                           workshop_record=workshop_record,
+                           vehicle=vehicle,
+                           workshop_reasons=workshop_reasons,
+                           repair_statuses=repair_statuses,
+                           now=datetime.now())
+
+# حذف سجل الورشة - النسخة المحمولة
+@mobile_bp.route('/vehicles/workshop/<int:workshop_id>/delete', methods=['POST'])
+@login_required
+def delete_workshop_record(workshop_id):
+    """حذف سجل ورشة للنسخة المحمولة"""
+    try:
+        workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
+        vehicle = workshop_record.vehicle
+        
+        # تسجيل العملية قبل الحذف
+        log_activity(
+            action='delete',
+            entity_type='vehicle_workshop',
+            details=f'تم حذف سجل دخول الورشة للسيارة: {vehicle.plate_number} - الوصف: {workshop_record.description[:50]} من الجوال'
+        )
+        
+        db.session.delete(workshop_record)
+        db.session.commit()
+        
+        flash('تم حذف سجل الورشة بنجاح!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في حذف سجل الورشة {workshop_id}: {str(e)}")
+        flash(f'حدث خطأ أثناء حذف سجل الورشة: {str(e)}', 'danger')
+    
+    return redirect(url_for('mobile.vehicle_details', vehicle_id=workshop_record.vehicle.id))
+
 
