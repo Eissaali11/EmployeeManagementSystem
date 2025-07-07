@@ -41,6 +41,64 @@ def create_authorization(vehicle_id):
 def store_authorization():
     """حفظ التفويض الخارجي الجديد"""
     try:
+        from models import ExternalAuthorization
+        from flask import request, current_app, flash, redirect, url_for
+        import os
+        from datetime import datetime
+        
+        # بيانات النموذج
+        vehicle_id = request.form.get('vehicle_id')
+        driver_name = request.form.get('driver_name')
+        driver_phone = request.form.get('driver_phone')
+        project_name = request.form.get('project_name')
+        city = request.form.get('city')
+        authorization_type = request.form.get('authorization_type')
+        duration = request.form.get('duration')
+        authorization_form_link = request.form.get('authorization_form_link')
+        external_reference = request.form.get('external_reference')
+        notes = request.form.get('notes', '')
+        
+        # إنشاء التفويض الجديد
+        authorization = ExternalAuthorization(
+            vehicle_id=vehicle_id,
+            driver_name=driver_name,
+            driver_phone=driver_phone,
+            project_name=project_name,
+            city=city,
+            authorization_type=authorization_type,
+            duration=duration,
+            notes=notes,
+            status='pending'
+        )
+        
+        # معالجة رفع الملف إذا وجد
+        uploaded_file = request.files.get('authorization_file')
+        if uploaded_file and uploaded_file.filename:
+            # إنشاء مجلد للتفويضات إذا لم يكن موجوداً
+            upload_dir = os.path.join('static', 'uploads', 'authorizations')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # حفظ الملف
+            filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uploaded_file.filename}"
+            file_path = os.path.join(upload_dir, filename)
+            uploaded_file.save(file_path)
+            authorization.file_path = file_path
+        
+        # حفظ في قاعدة البيانات
+        db.session.add(authorization)
+        db.session.commit()
+        
+        flash('تم إنشاء التفويض الخارجي بنجاح!', 'success')
+        return redirect(url_for('vehicles.view', id=vehicle_id))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ أثناء حفظ التفويض: {str(e)}")
+        flash(f'حدث خطأ أثناء حفظ التفويض: {str(e)}', 'danger')
+        return redirect(url_for('external_authorizations.create_authorization', vehicle_id=vehicle_id))
+def store_authorization():
+    """حفظ التفويض الخارجي الجديد"""
+    try:
         # الحصول على البيانات
         vehicle_id = request.form.get('vehicle_id')
         driver_name = request.form.get('driver_name')
