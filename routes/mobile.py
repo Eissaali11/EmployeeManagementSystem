@@ -3852,6 +3852,8 @@ def add_workshop_record(vehicle_id):
             workshop_name = request.form.get('workshop_name')
             technician_name = request.form.get('technician_name')
             notes = request.form.get('notes')
+            delivery_form_link = request.form.get('delivery_form_link')
+            pickup_form_link = request.form.get('pickup_form_link')
             
             # إنشاء سجل ورشة جديد
             workshop_record = VehicleWorkshop(
@@ -3864,10 +3866,55 @@ def add_workshop_record(vehicle_id):
                 cost=cost,
                 workshop_name=workshop_name,
                 technician_name=technician_name,
-                notes=notes
+                notes=notes,
+                delivery_form_link=delivery_form_link,
+                pickup_form_link=pickup_form_link
             )
             
             db.session.add(workshop_record)
+            db.session.flush()  # للحصول على معرف سجل الورشة
+            
+            # معالجة الصور قبل الإصلاح
+            before_images = request.files.getlist('before_images')
+            for image in before_images:
+                if image and image.filename:
+                    # حفظ الصورة
+                    filename = secure_filename(image.filename)
+                    unique_filename = f"{uuid.uuid4()}_{filename}"
+                    folder_path = os.path.join(current_app.static_folder, 'uploads', 'workshop')
+                    os.makedirs(folder_path, exist_ok=True)
+                    image_path = os.path.join(folder_path, unique_filename)
+                    image.save(image_path)
+                    
+                    # إنشاء سجل الصورة
+                    workshop_image = VehicleWorkshopImage(
+                        workshop_id=workshop_record.id,
+                        image_path=f'uploads/workshop/{unique_filename}',
+                        image_type='before',
+                        description='صورة قبل الإصلاح'
+                    )
+                    db.session.add(workshop_image)
+            
+            # معالجة الصور بعد الإصلاح
+            after_images = request.files.getlist('after_images')
+            for image in after_images:
+                if image and image.filename:
+                    # حفظ الصورة
+                    filename = secure_filename(image.filename)
+                    unique_filename = f"{uuid.uuid4()}_{filename}"
+                    folder_path = os.path.join(current_app.static_folder, 'uploads', 'workshop')
+                    os.makedirs(folder_path, exist_ok=True)
+                    image_path = os.path.join(folder_path, unique_filename)
+                    image.save(image_path)
+                    
+                    # إنشاء سجل الصورة
+                    workshop_image = VehicleWorkshopImage(
+                        workshop_id=workshop_record.id,
+                        image_path=f'uploads/workshop/{unique_filename}',
+                        image_type='after',
+                        description='صورة بعد الإصلاح'
+                    )
+                    db.session.add(workshop_image)
             
             # تحديث حالة السيارة
             if not exit_date:
