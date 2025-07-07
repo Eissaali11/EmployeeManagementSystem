@@ -2,7 +2,7 @@
 مسارات إدارة التفويضات الخارجية للموظفين
 """
 
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app
 from sqlalchemy import or_
 from models import db, Employee, Department, Project, ExternalAuthorization
 from functools import wraps
@@ -19,7 +19,8 @@ def index():
     from models import ExternalAuthorization, Vehicle, Employee, Department
     
     # جلب جميع التفويضات مع بيانات المركبات والموظفين
-    authorizations = ExternalAuthorization.query.join(Vehicle).all()
+    authorizations = ExternalAuthorization.query.all()
+    current_app.logger.info(f"عدد التفويضات الموجودة: {len(authorizations)}")
     
     return render_template('external_authorizations/index.html', authorizations=authorizations)
 
