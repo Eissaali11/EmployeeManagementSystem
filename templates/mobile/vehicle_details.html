@@ -337,7 +337,7 @@
                         </div>
                         <div class="col-6">
                             <div class="btn-group btn-group-sm w-100">
-                                <button type="button" class="btn btn-outline-success flex-fill" onclick="shareWorkshopSummary({{ record.id }}, '{{ record.description|e }}', '{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '' }}', '{{ record.repair_status }}', {{ record.images|length if record.images else 0 }}, '{{ record.images|map(attribute='file_path')|list|join(',') if record.images else '' }}')">
+                                <button type="button" class="btn btn-outline-success flex-fill" data-workshop-id="{{ record.id }}" data-description="{{ record.description|e }}" data-entry-date="{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '' }}" data-status="{{ record.repair_status }}" data-images-count="{{ record.images|length if record.images else 0 }}" data-image-paths="{{ record.images|map(attribute='file_path')|list|join(',') if record.images else '' }}" onclick="shareWorkshopSummaryFromData(this)">
                                     <i class="fas fa-share-alt"></i>
                                     مشاركة
                                 </button>
@@ -722,6 +722,17 @@ function confirmDeleteWorkshop(workshopId, description) {
         document.body.appendChild(form);
         form.submit();
     }
+}
+
+function shareWorkshopSummaryFromData(button) {
+    const workshopId = button.getAttribute('data-workshop-id');
+    const description = button.getAttribute('data-description');
+    const entryDate = button.getAttribute('data-entry-date');
+    const status = button.getAttribute('data-status');
+    const imagesCount = parseInt(button.getAttribute('data-images-count')) || 0;
+    const imagePaths = button.getAttribute('data-image-paths');
+    
+    shareWorkshopSummary(workshopId, description, entryDate, status, imagesCount, imagePaths);
 }
 
 function shareWorkshopSummary(workshopId, description, entryDate, status, imagesCount, imagePaths) {
