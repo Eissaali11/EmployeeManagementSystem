@@ -1244,6 +1244,43 @@
     </div>
 </div>
 
+<!-- قسم التفويضات الخارجية -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    التفويضات الخارجية للموظفين
+                    <span class="badge bg-secondary" id="authorizationsCount">0</span>
+                </h5>
+                <button type="button" class="btn btn-sm btn-primary" onclick="openExternalAuthModal()">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة تفويض خارجي
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="authorizationsContainer">
+                    <div class="text-center py-4" id="emptyState">
+                        <div class="mb-3">
+                            <i class="fas fa-clipboard-list fa-4x text-muted"></i>
+                        </div>
+                        <h5>لا توجد تفويضات خارجية</h5>
+                        <p class="text-muted">يمكنك إضافة تفويض خارجي جديد للموظفين المرتبطين بهذه السيارة</p>
+                        <button type="button" class="btn btn-primary mt-2" onclick="openExternalAuthModal()">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة أول تفويض
+                        </button>
+                    </div>
+                    <div id="authorizationsList" class="d-none">
+                        <!-- ستتم إضافة التفويضات هنا ديناميكياً -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- قسم بيانات الحوادث المرورية -->
 <div class="row mb-4">
     <div class="col-12">
@@ -1375,42 +1412,7 @@
     </div>
 </div>
 
-<!-- قسم التفويضات الخارجية -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-file-signature ms-2"></i>
-                    التفويضات الخارجية للموظفين
-                    <span class="badge bg-secondary" id="authorizationsCount">0</span>
-                </h5>
-                <button type="button" class="btn btn-sm btn-primary" onclick="openExternalAuthModal()">
-                    <i class="fas fa-plus ms-1"></i>
-                    إضافة تفويض خارجي
-                </button>
-            </div>
-            <div class="card-body">
-                <div id="authorizationsContainer">
-                    <div class="text-center py-4" id="emptyState">
-                        <div class="mb-3">
-                            <i class="fas fa-clipboard-list fa-4x text-muted"></i>
-                        </div>
-                        <h5>لا توجد تفويضات خارجية</h5>
-                        <p class="text-muted">يمكنك إضافة تفويض خارجي جديد للموظفين المرتبطين بهذه السيارة</p>
-                        <button type="button" class="btn btn-primary mt-2" onclick="openExternalAuthModal()">
-                            <i class="fas fa-plus ms-1"></i>
-                            إضافة أول تفويض
-                        </button>
-                    </div>
-                    <div id="authorizationsList" class="d-none">
-                        <!-- ستتم إضافة التفويضات هنا ديناميكياً -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- نافذة إضافة تفويض خارجي -->
 <div class="modal fade" id="externalAuthModal" tabindex="-1" aria-labelledby="externalAuthModalLabel" aria-hidden="true">
