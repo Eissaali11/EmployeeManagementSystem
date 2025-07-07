@@ -2576,30 +2576,16 @@ def handover_pdf(id):
 
 @vehicles_bp.route('/handover/<int:id>/view/public')
 def handover_view_public(id):
-        """عرض نموذج تسليم/استلام - وصول مفتوح بدون تسجيل دخول"""
-        handover = VehicleHandover.query.get_or_404(id)
-        vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
-        images = VehicleHandoverImage.query.filter_by(handover_record_id=id).all()
-        
-        # تنسيق التاريخ
-        handover.formatted_handover_date = format_date_arabic(handover.handover_date)
-        
-        handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
-        
-        return render_template(
-                'vehicles/handover_view_public.html',
-                handover=handover,
-                vehicle=vehicle,
-                images=images,
-                handover_type_name=handover_type_name
-        )
-
-
-# في ملف views الخاص بالمركبات (vehicles/views.py أو ما شابه)
-from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
-
-# ... (باقي imports)
-# تأكد من استيراد الدالة الجديدة
+    """عرض صفحة PDF العامة مع زر الرجوع للمستخدمين المسجلي الدخول"""
+    handover = VehicleHandover.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
+    
+    return render_template(
+        'vehicles/handover_pdf_public.html',
+        handover=handover,
+        vehicle=vehicle,
+        pdf_url=url_for('vehicles.handover_pdf_public', id=id)
+    )
 
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
