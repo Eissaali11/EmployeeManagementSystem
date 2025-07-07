@@ -897,7 +897,7 @@ function shareHandoverRecord(button) {
     let operationType = handoverType === 'delivery' ? 'تسليم' : 'استلام';
     
     const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
-    const detailsUrl = `${window.location.origin}/mobile/handover/${handoverId}/view`;
+    const detailsUrl = `${window.location.origin}/mobile/vehicles/handover/${handoverId}`;
     
     const currentDate = new Date();
     const formattedDateTime = currentDate.toLocaleString('ar-SA', {
