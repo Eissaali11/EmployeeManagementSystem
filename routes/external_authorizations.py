@@ -18,6 +18,78 @@ def index():
     """الصفحة الرئيسية لإدارة التفويضات الخارجية"""
     return render_template('external_authorizations/index.html')
 
+@external_authorizations_bp.route('/add/<int:vehicle_id>')
+def create_authorization(vehicle_id):
+    """صفحة إضافة تفويض خارجي جديد"""
+    from models import Vehicle
+    from flask_wtf import FlaskForm
+    
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    form = FlaskForm()  # نموذج بسيط للحماية من CSRF
+    
+    return render_template('external_authorizations/create.html', 
+                         vehicle=vehicle, form=form)
+
+@external_authorizations_bp.route('/store', methods=['POST'])
+def store_authorization():
+    """حفظ التفويض الخارجي الجديد"""
+    try:
+        # الحصول على البيانات
+        vehicle_id = request.form.get('vehicle_id')
+        driver_name = request.form.get('driver_name')
+        driver_phone = request.form.get('driver_phone', '')
+        project_name = request.form.get('project_name')
+        city = request.form.get('city')
+        authorization_type = request.form.get('authorization_type')
+        duration = request.form.get('duration', '')
+        notes = request.form.get('notes', '')
+        
+        # التحقق من البيانات الأساسية
+        if not all([vehicle_id, driver_name, project_name, city, authorization_type]):
+            flash('جميع الحقول المطلوبة يجب أن تكون مملوءة', 'error')
+            return redirect(request.referrer)
+        
+        # التأكد من وجود مجلد الرفع
+        ensure_upload_dir()
+        
+        # معالجة رفع الملف
+        file_path = None
+        if 'authorization_file' in request.files:
+            file = request.files['authorization_file']
+            if file and file.filename != '' and allowed_file(file.filename):
+                # إنشاء اسم ملف آمن
+                filename = secure_filename(file.filename)
+                file_extension = filename.rsplit('.', 1)[1].lower()
+                unique_filename = f"{uuid.uuid4()}.{file_extension}"
+                file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                file.save(file_path)
+        
+        # إنشاء سجل التفويض الجديد
+        authorization = ExternalAuthorization(
+            vehicle_id=vehicle_id,
+            driver_name=driver_name,
+            driver_phone=driver_phone,
+            project_name=project_name,
+            city=city,
+            authorization_type=authorization_type,
+            duration=duration,
+            notes=notes,
+            file_path=file_path,
+            status='pending',
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(authorization)
+        db.session.commit()
+        
+        flash('تم حفظ التفويض الخارجي بنجاح', 'success')
+        return redirect(url_for('vehicles.view', id=vehicle_id))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حفظ التفويض: {str(e)}', 'error')
+        return redirect(request.referrer)
+
 # إعدادات رفع الملفات
 UPLOAD_FOLDER = 'static/uploads/authorizations'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
@@ -96,9 +168,9 @@ def api_projects():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@external_authorizations_bp.route('/create', methods=['POST'])
-def create_authorization():
-    """إنشاء تفويض خارجي جديد"""
+@external_authorizations_bp.route('/old-create', methods=['POST'])
+def old_create_authorization():
+    """إنشاء تفويض خارجي جديد - المسار القديم"""
     try:
         ensure_upload_dir()
         

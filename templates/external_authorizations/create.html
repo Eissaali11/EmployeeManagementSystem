@@ -1,473 +1,242 @@
 {% extends "layout.html" %}
 
-{% block title %}إضافة تفويض خارجي{% endblock %}
-
-{% block extra_css %}
-<link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-<style>
-.create-form-container {
-    background: white;
-    border-radius: 15px;
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    margin-top: 20px;
-}
-
-.form-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
-    padding: 20px;
-    color: white;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.employee-search-container {
-    position: relative;
-}
-
-.employee-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 1000;
-    display: none;
-}
-
-.employee-item {
-    padding: 12px 15px;
-    cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background-color 0.2s;
-}
-
-.employee-item:hover {
-    background-color: #f8f9fa;
-}
-
-.employee-item:last-child {
-    border-bottom: none;
-}
-
-.employee-name {
-    font-weight: bold;
-    color: #333;
-}
-
-.employee-details {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 3px;
-}
-
-.selected-employee {
-    background: #e3f2fd;
-    border: 2px solid #2196f3;
-    border-radius: 8px;
-    padding: 15px;
-    margin-top: 10px;
-    display: none;
-}
-
-.file-upload-area {
-    border: 2px dashed #ddd;
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    background: #fafafa;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.file-upload-area:hover {
-    border-color: #667eea;
-    background: #f0f4ff;
-}
-
-.file-upload-area.dragover {
-    border-color: #667eea;
-    background: #e3f2fd;
-}
-
-.file-info {
-    background: #e8f5e8;
-    border: 1px solid #4caf50;
-    border-radius: 8px;
-    padding: 10px;
-    margin-top: 10px;
-    display: none;
-}
-
-.submit-btn {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    border: none;
-    padding: 12px 30px;
-    border-radius: 25px;
-    color: white;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    transition: all 0.3s ease;
-}
-
-.submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
-
-.form-floating label {
-    font-weight: 500;
-    color: #555;
-}
-
-.loading-spinner {
-    display: none;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #667eea;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.no-results {
-    padding: 20px;
-    text-align: center;
-    color: #999;
-    font-style: italic;
-}
-</style>
-{% endblock %}
+{% block title %}إضافة تفويض خارجي جديد{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="create-form-container">
-                <!-- Header -->
-                <div class="form-header">
-                    <h2 class="mb-0">
-                        <i class="fas fa-file-signature ms-2"></i>
+<div class="container-fluid py-4">
+    <!-- العنوان الرئيسي -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-signature text-primary me-2"></i>
                         إضافة تفويض خارجي جديد
                     </h2>
-                    <p class="mb-0 mt-2">قم بملء البيانات المطلوبة لإنشاء تفويض خارجي للموظف</p>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-car me-1"></i>
+                        المركبة: <strong>{{ vehicle.plate_number }}</strong> - {{ vehicle.make }} {{ vehicle.model }}
+                    </p>
                 </div>
+                <div>
+                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-1"></i>
+                        العودة للمركبة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- النموذج -->
-                <form method="POST" enctype="multipart/form-data" id="authorizationForm">
-                    <!-- فلترة القسم -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <select class="form-select" id="departmentFilter">
-                                    <option value="">جميع الأقسام</option>
-                                    {% for dept in departments %}
-                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <label for="departmentFilter">فلترة حسب القسم</label>
+    <!-- نموذج إضافة التفويض -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        بيانات التفويض الخارجي
+                    </h5>
+                </div>
+                
+                <form id="externalAuthForm" action="{{ url_for('external_authorizations.store_authorization') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="card-body">
+                        <!-- معلومات السائق -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-user me-2"></i>
+                                    معلومات السائق
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="driver_name" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i>اسم السائق *
+                                </label>
+                                <input type="text" class="form-control" id="driver_name" name="driver_name" 
+                                       placeholder="أدخل اسم السائق" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="driver_phone" class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i>رقم الهاتف
+                                </label>
+                                <input type="tel" class="form-control" id="driver_phone" name="driver_phone" 
+                                       placeholder="مثال: 966501234567">
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <select class="form-select" name="project_id" id="projectSelect" required>
+
+                        <!-- معلومات المشروع -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-project-diagram me-2"></i>
+                                    معلومات المشروع
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="project_name" class="form-label fw-bold">
+                                    <i class="fas fa-building me-1"></i>اسم المشروع *
+                                </label>
+                                <select class="form-select" id="project_name" name="project_name" required>
                                     <option value="">اختر المشروع</option>
-                                    {% for project in projects %}
-                                    <option value="{{ project.id }}">{{ project.name }}</option>
-                                    {% endfor %}
+                                    <option value="مشروع الرياض">مشروع الرياض</option>
+                                    <option value="مشروع جدة">مشروع جدة</option>
+                                    <option value="مشروع الدمام">مشروع الدمام</option>
+                                    <option value="مشروع المدينة المنورة">مشروع المدينة المنورة</option>
+                                    <option value="مشروع تبوك">مشروع تبوك</option>
+                                    <option value="مشروع أبها">مشروع أبها</option>
+                                    <option value="مشروع نيوم">مشروع نيوم</option>
+                                    <option value="مشروع القدية">مشروع القدية</option>
                                 </select>
-                                <label for="projectSelect">المشروع *</label>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label fw-bold">
+                                    <i class="fas fa-map-marker-alt me-1"></i>المدينة *
+                                </label>
+                                <select class="form-select" id="city" name="city" required>
+                                    <option value="">اختر المدينة</option>
+                                    <option value="الرياض">الرياض</option>
+                                    <option value="جدة">جدة</option>
+                                    <option value="الدمام">الدمام</option>
+                                    <option value="المدينة المنورة">المدينة المنورة</option>
+                                    <option value="تبوك">تبوك</option>
+                                    <option value="أبها">أبها</option>
+                                    <option value="الخبر">الخبر</option>
+                                    <option value="الطائف">الطائف</option>
+                                    <option value="بريدة">بريدة</option>
+                                    <option value="خميس مشيط">خميس مشيط</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- بحث الموظف -->
-                    <div class="mb-4">
-                        <label class="form-label">اختيار الموظف *</label>
-                        <div class="employee-search-container">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="employeeSearch" 
-                                       placeholder="ابحث عن الموظف بالاسم أو رقم الهوية...">
-                                <span class="input-group-text">
-                                    <div class="loading-spinner" id="searchSpinner"></div>
-                                    <i class="fas fa-search" id="searchIcon"></i>
-                                </span>
+                        <!-- معلومات إضافية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    معلومات إضافية
+                                </h6>
                             </div>
-                            <div class="employee-dropdown" id="employeeDropdown"></div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="authorization_type" class="form-label fw-bold">
+                                    <i class="fas fa-exchange-alt me-1"></i>نوع التفويض *
+                                </label>
+                                <select class="form-select" id="authorization_type" name="authorization_type" required>
+                                    <option value="">اختر نوع التفويض</option>
+                                    <option value="تسليم">تسليم المركبة</option>
+                                    <option value="استلام">استلام المركبة</option>
+                                    <option value="صيانة">صيانة المركبة</option>
+                                    <option value="مهمة">مهمة خاصة</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="duration" class="form-label fw-bold">
+                                    <i class="fas fa-clock me-1"></i>مدة التفويض
+                                </label>
+                                <input type="text" class="form-control" id="duration" name="duration" 
+                                       placeholder="مثال: 3 أيام، أسبوع، شهر">
+                            </div>
                         </div>
-                        
-                        <!-- عرض الموظف المختار -->
-                        <div class="selected-employee" id="selectedEmployee">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h6 class="mb-1" id="selectedEmployeeName"></h6>
-                                    <small class="text-muted" id="selectedEmployeeDetails"></small>
+
+                        <!-- رفع الملفات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-paperclip me-2"></i>
+                                    المرفقات (اختياري)
+                                </h6>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="authorization_file" class="form-label fw-bold">
+                                    <i class="fas fa-upload me-1"></i>رفع ملف PDF أو صورة
+                                </label>
+                                <input type="file" class="form-control" id="authorization_file" name="authorization_file" 
+                                       accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="showFileInfo(this)">
+                                <small class="text-muted">
+                                    أنواع الملفات المدعومة: PDF, JPG, PNG, GIF - الحد الأقصى 10MB
+                                </small>
+                                
+                                <!-- معلومات الملف المحدد -->
+                                <div id="fileInfo" class="mt-2 p-3 bg-light rounded d-none">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-file text-primary me-2"></i>
+                                        <div>
+                                            <div class="fw-bold" id="fileName"></div>
+                                            <small class="text-muted" id="fileSize"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearFile()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <button type="button" class="btn btn-outline-danger btn-sm" 
-                                            onclick="clearSelectedEmployee()">
-                                        <i class="fas fa-times"></i> إلغاء الاختيار
-                                    </button>
-                                </div>
                             </div>
                         </div>
-                        
-                        <!-- حقل مخفي لمعرف الموظف -->
-                        <input type="hidden" name="employee_id" id="employeeId" required>
-                    </div>
 
-                    <!-- وصف التفويض -->
-                    <div class="mb-4">
-                        <div class="form-floating">
-                            <textarea class="form-control" name="description" id="description" 
-                                      style="height: 120px" placeholder="وصف التفويض"></textarea>
-                            <label for="description">وصف التفويض</label>
-                        </div>
-                    </div>
-
-                    <!-- رفع الملف -->
-                    <div class="mb-4">
-                        <label class="form-label">رفع ملف (PDF أو صورة)</label>
-                        <div class="file-upload-area" id="fileUploadArea">
-                            <i class="fas fa-cloud-upload-alt fa-2x mb-3 text-primary"></i>
-                            <h5>اسحب الملف هنا أو انقر للاختيار</h5>
-                            <p class="text-muted">PDF, JPG, PNG (حد أقصى 10MB)</p>
-                            <input type="file" name="authorization_file" id="authorizationFile" 
-                                   accept=".pdf,.jpg,.jpeg,.png,.gif" style="display: none;">
-                        </div>
-                        <div class="file-info" id="fileInfo">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-file me-2"></i>
-                                    <span id="fileName"></span>
-                                    <small class="text-muted d-block" id="fileSize"></small>
-                                </div>
-                                <button type="button" class="btn btn-outline-danger btn-sm" 
-                                        onclick="clearFile()">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                        <!-- الملاحظات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="notes" class="form-label fw-bold">
+                                    <i class="fas fa-sticky-note me-1"></i>ملاحظات إضافية
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                          placeholder="أي ملاحظات أو تفاصيل إضافية حول التفويض..."></textarea>
                             </div>
                         </div>
                     </div>
-
-                    <!-- الرابط الخارجي -->
-                    <div class="mb-4">
-                        <div class="form-floating">
-                            <input type="url" class="form-control" name="external_link" id="externalLink" 
-                                   placeholder="https://example.com">
-                            <label for="externalLink">رابط خارجي (اختياري)</label>
+                    
+                    <!-- أزرار الحفظ -->
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                حفظ التفويض
+                            </button>
                         </div>
-                        <small class="text-muted">مثل رابط Google Form أو مستند على Drive</small>
-                    </div>
-
-                    <!-- أزرار التحكم -->
-                    <div class="text-center">
-                        <button type="submit" class="submit-btn me-3">
-                            <i class="fas fa-save ms-1"></i>
-                            حفظ التفويض
-                        </button>
-                        <a href="{{ url_for('external_authorizations.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-right ms-1"></i>
-                            إلغاء
-                        </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-let selectedEmployeeId = null;
-let searchTimeout = null;
-
-// بحث الموظفين
-document.getElementById('employeeSearch').addEventListener('input', function(e) {
-    const query = e.target.value.trim();
-    const departmentId = document.getElementById('departmentFilter').value;
+// عرض معلومات الملف المحدد
+function showFileInfo(input) {
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
     
-    clearTimeout(searchTimeout);
-    
-    if (query.length < 2) {
-        hideEmployeeDropdown();
-        return;
-    }
-    
-    showSpinner();
-    
-    searchTimeout = setTimeout(() => {
-        searchEmployees(query, departmentId);
-    }, 300);
-});
-
-// فلترة حسب القسم
-document.getElementById('departmentFilter').addEventListener('change', function() {
-    const query = document.getElementById('employeeSearch').value.trim();
-    const departmentId = this.value;
-    
-    if (query.length >= 2) {
-        showSpinner();
-        searchEmployees(query, departmentId);
-    }
-});
-
-async function searchEmployees(query, departmentId = '') {
-    try {
-        const params = new URLSearchParams({
-            search: query
-        });
-        
-        if (departmentId) {
-            params.append('department_id', departmentId);
-        }
-        
-        const response = await fetch(`/external-authorizations/api/employees?${params}`);
-        const employees = await response.json();
-        
-        displayEmployees(employees);
-    } catch (error) {
-        console.error('Error searching employees:', error);
-    } finally {
-        hideSpinner();
-    }
-}
-
-function displayEmployees(employees) {
-    const dropdown = document.getElementById('employeeDropdown');
-    dropdown.innerHTML = '';
-    
-    if (employees.length === 0) {
-        dropdown.innerHTML = '<div class="no-results">لا توجد نتائج</div>';
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.classList.remove('d-none');
     } else {
-        employees.forEach(employee => {
-            const item = document.createElement('div');
-            item.className = 'employee-item';
-            item.innerHTML = `
-                <div class="employee-name">${employee.name}</div>
-                <div class="employee-details">
-                    رقم الموظف: ${employee.employee_id} | 
-                    الأقسام: ${employee.departments_str || 'غير محدد'}
-                </div>
-            `;
-            
-            item.addEventListener('click', () => selectEmployee(employee));
-            dropdown.appendChild(item);
-        });
+        fileInfo.classList.add('d-none');
     }
-    
-    showEmployeeDropdown();
 }
 
-function selectEmployee(employee) {
-    selectedEmployeeId = employee.id;
-    
-    // تحديث الحقول
-    document.getElementById('employeeId').value = employee.id;
-    document.getElementById('employeeSearch').value = employee.name;
-    
-    // عرض معلومات الموظف المختار
-    document.getElementById('selectedEmployeeName').textContent = employee.name;
-    document.getElementById('selectedEmployeeDetails').textContent = 
-        `رقم الموظف: ${employee.employee_id} | الأقسام: ${employee.departments_str || 'غير محدد'}`;
-    
-    document.getElementById('selectedEmployee').style.display = 'block';
-    hideEmployeeDropdown();
-}
-
-function clearSelectedEmployee() {
-    selectedEmployeeId = null;
-    document.getElementById('employeeId').value = '';
-    document.getElementById('employeeSearch').value = '';
-    document.getElementById('selectedEmployee').style.display = 'none';
-}
-
-function showEmployeeDropdown() {
-    document.getElementById('employeeDropdown').style.display = 'block';
-}
-
-function hideEmployeeDropdown() {
-    document.getElementById('employeeDropdown').style.display = 'none';
-}
-
-function showSpinner() {
-    document.getElementById('searchSpinner').style.display = 'inline-block';
-    document.getElementById('searchIcon').style.display = 'none';
-}
-
-function hideSpinner() {
-    document.getElementById('searchSpinner').style.display = 'none';
-    document.getElementById('searchIcon').style.display = 'inline-block';
-}
-
-// رفع الملفات
-const fileUploadArea = document.getElementById('fileUploadArea');
-const fileInput = document.getElementById('authorizationFile');
-
-fileUploadArea.addEventListener('click', () => fileInput.click());
-
-fileUploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    fileUploadArea.classList.add('dragover');
-});
-
-fileUploadArea.addEventListener('dragleave', () => {
-    fileUploadArea.classList.remove('dragover');
-});
-
-fileUploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    fileUploadArea.classList.remove('dragover');
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        handleFile(files[0]);
-    }
-});
-
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
-    }
-});
-
-function handleFile(file) {
-    // فحص نوع الملف
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-        alert('نوع الملف غير مدعوم. يرجى اختيار PDF أو صورة.');
-        return;
-    }
-    
-    // فحص حجم الملف (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-        alert('حجم الملف كبير جداً. الحد الأقصى 10MB.');
-        return;
-    }
-    
-    // عرض معلومات الملف
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileSize').textContent = formatFileSize(file.size);
-    document.getElementById('fileInfo').style.display = 'block';
-}
-
+// مسح الملف المحدد
 function clearFile() {
-    document.getElementById('authorizationFile').value = '';
-    document.getElementById('fileInfo').style.display = 'none';
+    document.getElementById('authorization_file').value = '';
+    document.getElementById('fileInfo').classList.add('d-none');
 }
 
+// تنسيق حجم الملف
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -476,26 +245,21 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// إخفاء القائمة عند النقر خارجها
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.employee-search-container')) {
-        hideEmployeeDropdown();
-    }
-});
-
-// التحقق من صحة النموذج
-document.getElementById('authorizationForm').addEventListener('submit', function(e) {
-    if (!selectedEmployeeId) {
-        e.preventDefault();
-        alert('يرجى اختيار موظف');
-        return;
-    }
+// تحديث المدينة تلقائياً عند اختيار المشروع
+document.getElementById('project_name').addEventListener('change', function() {
+    const citySelect = document.getElementById('city');
+    const projectCityMap = {
+        'مشروع الرياض': 'الرياض',
+        'مشروع جدة': 'جدة',
+        'مشروع الدمام': 'الدمام',
+        'مشروع المدينة المنورة': 'المدينة المنورة',
+        'مشروع تبوك': 'تبوك',
+        'مشروع أبها': 'أبها',
+        'مشروع نيوم': 'تبوك'
+    };
     
-    const projectId = document.getElementById('projectSelect').value;
-    if (!projectId) {
-        e.preventDefault();
-        alert('يرجى اختيار المشروع');
-        return;
+    if (projectCityMap[this.value]) {
+        citySelect.value = projectCityMap[this.value];
     }
 });
 </script>

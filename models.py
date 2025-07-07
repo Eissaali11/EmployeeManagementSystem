@@ -913,7 +913,6 @@ class Project(db.Model):
     
     # العلاقات
     manager = db.relationship('Employee', foreign_keys=[manager_id], uselist=False)
-    external_authorizations = db.relationship('ExternalAuthorization', back_populates='project', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Project {self.name}>'
@@ -924,14 +923,16 @@ class ExternalAuthorization(db.Model):
     __tablename__ = 'external_authorizations'
     
     id = db.Column(db.Integer, primary_key=True)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    authorization_type = db.Column(db.String(50), default='external_project')  # نوع التفويض
-    description = db.Column(db.Text)  # وصف التفويض
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    driver_name = db.Column(db.String(100), nullable=False)  # اسم السائق
+    driver_phone = db.Column(db.String(20))  # رقم هاتف السائق
+    project_name = db.Column(db.String(200), nullable=False)  # اسم المشروع
+    city = db.Column(db.String(100), nullable=False)  # المدينة
+    authorization_type = db.Column(db.String(50), nullable=False)  # نوع التفويض
+    duration = db.Column(db.String(100))  # مدة التفويض
     file_path = db.Column(db.String(255))  # مسار الملف المرفق
-    external_link = db.Column(db.String(500))  # الرابط الخارجي
-    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     notes = db.Column(db.Text)  # ملاحظات إضافية
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     created_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
     approved_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
     approved_date = db.Column(db.DateTime)
@@ -939,8 +940,7 @@ class ExternalAuthorization(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # العلاقات
-    employee = db.relationship('Employee', foreign_keys=[employee_id], backref=db.backref('external_authorizations', cascade='all, delete-orphan'))
-    project = db.relationship('Project', back_populates='external_authorizations')
+    vehicle = db.relationship('Vehicle', foreign_keys=[vehicle_id])
     creator = db.relationship('User', foreign_keys=[created_by], uselist=False)
     approver = db.relationship('User', foreign_keys=[approved_by], uselist=False)
     
