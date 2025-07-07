@@ -1272,6 +1272,7 @@
                                 <th>المدينة</th>
                                 <th>نوع التفويض</th>
                                 <th>المدة</th>
+                                <th>رابط النموذج</th>
                                 <th>الحالة</th>
                                 <th>تاريخ الإنشاء</th>
                                 <th>إجراءات</th>
@@ -1300,6 +1301,16 @@
                                 </td>
                                 <td>{{ auth.duration or '-' }} يوم</td>
                                 <td>
+                                    {% if auth.authorization_form_link %}
+                                        <a href="{{ auth.authorization_form_link }}" target="_blank" 
+                                           class="btn btn-sm btn-success" title="فتح رابط النموذج">
+                                            <i class="fas fa-external-link-alt me-1"></i>عرض النموذج
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">غير متوفر</span>
+                                    {% endif %}
+                                </td>
+                                <td>
                                     {% if auth.status == 'pending' %}
                                         <span class="badge bg-warning">قيد المراجعة</span>
                                     {% elif auth.status == 'approved' %}
@@ -1327,12 +1338,7 @@
                                             <i class="fas fa-file-alt"></i>
                                         </a>
                                         {% endif %}
-                                        {% if auth.authorization_form_link %}
-                                        <a href="{{ auth.authorization_form_link }}" target="_blank" 
-                                           class="btn btn-sm btn-outline-secondary" title="فتح الرابط">
-                                            <i class="fas fa-external-link-alt"></i>
-                                        </a>
-                                        {% endif %}
+
                                         <a href="{{ url_for('external_authorizations.approve_authorization', id=auth.id) }}" 
                                            class="btn btn-sm btn-outline-success" title="موافقة" 
                                            onclick="return confirm('هل تريد الموافقة على هذا التفويض؟')">
