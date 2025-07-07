@@ -478,6 +478,17 @@
                                 <a href="{{ url_for('mobile.view_handover', handover_id=record.id) }}" class="btn btn-outline-primary">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                <button type="button" class="btn btn-outline-success" 
+                                    data-handover-id="{{ record.id }}"
+                                    data-handover-type="{{ record.handover_type }}"
+                                    data-person-name="{{ record.person_name|e }}"
+                                    data-person-phone="{{ record.person_phone|e }}"
+                                    data-person-national-id="{{ record.person_national_id|e }}"
+                                    data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
+                                    data-notes="{{ record.notes|e if record.notes else '' }}"
+                                    onclick="shareHandoverRecord(this)">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
                                 <a href="{{ url_for('vehicles.handover_pdf_public', id=record.id) }}" class="btn btn-outline-danger">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
@@ -870,6 +881,129 @@ function showToast(message) {
             document.body.removeChild(toast);
         }
     }, 4000);
+}
+
+// دالة مشاركة سجل التسليم والاستلام
+function shareHandoverRecord(button) {
+    const handoverId = button.getAttribute('data-handover-id');
+    const handoverType = button.getAttribute('data-handover-type');
+    const personName = button.getAttribute('data-person-name');
+    const personPhone = button.getAttribute('data-person-phone');
+    const personNationalId = button.getAttribute('data-person-national-id');
+    const handoverDate = button.getAttribute('data-handover-date');
+    const notes = button.getAttribute('data-notes');
+    
+    // ترجمة نوع العملية
+    let operationType = handoverType === 'delivery' ? 'تسليم' : 'استلام';
+    
+    const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
+    const detailsUrl = `${window.location.origin}/mobile/handover/${handoverId}/view`;
+    
+    const currentDate = new Date();
+    const formattedDateTime = currentDate.toLocaleString('ar-SA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    
+    let shareText = `مرحباً 👋\n\n` +
+                   `إليك تفاصيل عملية ${operationType} المركبة:\n\n` +
+                   `🚙 رقم السيارة: ${vehicleInfo}\n` +
+                   `📅 تاريخ وقت الإرسال: ${formattedDateTime}\n\n` +
+                   `═══════════════════════════\n` +
+                   `👤 بيانات الشخص:\n` +
+                   `═══════════════════════════\n\n` +
+                   `🏷️ الاسم: ${personName}\n`;
+    
+    if (personPhone) {
+        shareText += `📱 رقم الهاتف: ${personPhone}\n`;
+    }
+    
+    if (personNationalId) {
+        shareText += `🆔 رقم الهوية: ${personNationalId}\n`;
+    }
+    
+    shareText += `\n═══════════════════════════\n` +
+                `📋 تفاصيل العملية:\n` +
+                `═══════════════════════════\n\n` +
+                `📅 تاريخ العملية: ${handoverDate || 'غير محدد'}\n` +
+                `🔄 نوع العملية: ${operationType}\n`;
+    
+    if (notes) {
+        shareText += `📝 ملاحظات: ${notes}\n`;
+    }
+    
+    shareText += `\n🌐 للاطلاع على التفاصيل الكاملة:\n${detailsUrl}\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `📱 نظام نُظم لإدارة المركبات\n` +
+                `🕐 تم إنشاء الملخص: ${formattedDateTime}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `${operationType} مركبة - ${vehicleInfo}`,
+            text: shareText,
+            url: detailsUrl
+        }).catch(() => {
+            fallbackShareHandover(shareText);
+        });
+    } else {
+        fallbackShareHandover(shareText);
+    }
+}
+
+function fallbackShareHandover(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('تم نسخ بيانات التسليم والاستلام إلى الحافظة');
+        }).catch(() => {
+            showHandoverShareModal(text);
+        });
+    } else {
+        showHandoverShareModal(text);
+    }
+}
+
+function showHandoverShareModal(text) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">مشاركة سجل التسليم والاستلام</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" rows="15" readonly>${text}</textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="copyHandoverText('${text.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-copy"></i> نسخ النص
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+    
+    modal.addEventListener('hidden.bs.modal', function () {
+        document.body.removeChild(modal);
+    });
+}
+
+function copyHandoverText(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('تم نسخ النص إلى الحافظة');
+        });
+    }
 }
 </script>
 
