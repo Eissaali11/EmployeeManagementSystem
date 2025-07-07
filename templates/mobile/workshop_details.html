@@ -420,7 +420,15 @@ function shareWorkshopDetails() {
         
         if (workshopData.imagesCount > 0) {
             shareText += `📸 الصور المرفقة (${workshopData.imagesCount} صورة):\n`;
-            shareText += `🔗 عرض جميع الصور: ${workshopData.detailsUrl}\n\n`;
+            
+            // إضافة روابط الصور المباشرة
+            {% if workshop_record.images %}
+            {% for image in workshop_record.images %}
+            shareText += `🖼️ صورة {{ loop.index }}: ${window.location.origin}{{ url_for('static', filename='uploads/workshop/' + image.file_path) }}\n`;
+            {% endfor %}
+            {% endif %}
+            
+            shareText += `🔗 عرض جميع الصور في صفحة واحدة: ${workshopData.detailsUrl}\n\n`;
         }
     }
     

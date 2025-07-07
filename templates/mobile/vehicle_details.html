@@ -337,7 +337,7 @@
                         </div>
                         <div class="col-6">
                             <div class="btn-group btn-group-sm w-100">
-                                <button type="button" class="btn btn-outline-success flex-fill" onclick="shareWorkshopSummary({{ record.id }}, '{{ record.description|e }}', '{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '' }}', '{{ record.repair_status }}')">
+                                <button type="button" class="btn btn-outline-success flex-fill" onclick="shareWorkshopSummary({{ record.id }}, '{{ record.description|e }}', '{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '' }}', '{{ record.repair_status }}', {{ record.images|length if record.images else 0 }}, '{{ record.images|map(attribute='file_path')|list|join(',') if record.images else '' }}')">
                                     <i class="fas fa-share-alt"></i>
                                     مشاركة
                                 </button>
@@ -724,7 +724,7 @@ function confirmDeleteWorkshop(workshopId, description) {
     }
 }
 
-function shareWorkshopSummary(workshopId, description, entryDate, status) {
+function shareWorkshopSummary(workshopId, description, entryDate, status, imagesCount, imagePaths) {
     // ترجمة حالة الإصلاح
     let statusText = status;
     if (status === 'in_progress') statusText = 'قيد التنفيذ';
@@ -753,8 +753,21 @@ function shareWorkshopSummary(workshopId, description, entryDate, status) {
                      `═══════════════════════════\n\n` +
                      `📅 تاريخ دخول الورشة: ${entryDate || 'غير محدد'}\n` +
                      `🛠️ حالة الإصلاح: ${statusText}\n` +
-                     `📝 وصف العملية: ${description}\n\n` +
-                     `🌐 للاطلاع على التفاصيل الكاملة والصور:\n${detailsUrl}\n\n` +
+                     `📝 وصف العملية: ${description}\n\n`;
+    
+    // إضافة الصور إن وجدت
+    if (imagesCount > 0 && imagePaths) {
+        shareText += `📸 الصور المرفقة (${imagesCount} صورة):\n`;
+        const imageArray = imagePaths.split(',');
+        imageArray.forEach((imagePath, index) => {
+            if (imagePath.trim()) {
+                shareText += `🖼️ صورة ${index + 1}: ${window.location.origin}/static/uploads/workshop/${imagePath.trim()}\n`;
+            }
+        });
+        shareText += `\n`;
+    }
+    
+    shareText += `🌐 للاطلاع على التفاصيل الكاملة:\n${detailsUrl}\n\n` +
                      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
                      `📱 نظام نُظم لإدارة المركبات\n` +
                      `🕐 تم إنشاء الملخص: ${formattedDateTime}`;
