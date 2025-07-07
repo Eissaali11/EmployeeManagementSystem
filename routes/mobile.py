@@ -4107,4 +4107,51 @@ def view_workshop_details(workshop_id):
                            workshop_record=workshop_record,
                            vehicle=vehicle)
 
+# تعديل سجل التسليم والاستلام - النسخة المحمولة
+@mobile_bp.route('/vehicles/handover/<int:handover_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_handover_mobile(handover_id):
+    """تعديل سجل التسليم والاستلام للنسخة المحمولة"""
+    handover = VehicleHandover.query.get_or_404(handover_id)
+    vehicle = handover.vehicle
+    
+    if request.method == 'POST':
+        try:
+            # تحديث البيانات
+            handover.handover_type = request.form.get('handover_type')
+            handover.person_name = request.form.get('person_name')
+            handover.person_phone = request.form.get('person_phone')
+            handover.person_national_id = request.form.get('person_national_id')
+            handover.notes = request.form.get('notes')
+            
+            # تحديث التاريخ إذا تم تقديمه
+            handover_date = request.form.get('handover_date')
+            if handover_date:
+                handover.handover_date = datetime.strptime(handover_date, '%Y-%m-%d').date()
+            
+            # تحديث الحقول الاختيارية
+            handover.mileage = request.form.get('mileage', type=int)
+            handover.vehicle_condition = request.form.get('vehicle_condition')
+            handover.fuel_level = request.form.get('fuel_level')
+            
+            # تسجيل النشاط
+            log_activity(
+                action='update',
+                entity_type='vehicle_handover',
+                details=f'تم تعديل سجل {handover.handover_type} للسيارة: {vehicle.plate_number} - الشخص: {handover.person_name} من الجوال'
+            )
+            
+            db.session.commit()
+            flash('تم تحديث سجل التسليم والاستلام بنجاح!', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطأ في تعديل سجل التسليم والاستلام {handover_id}: {str(e)}")
+            flash(f'حدث خطأ أثناء تحديث السجل: {str(e)}', 'danger')
+    
+    return render_template('mobile/edit_handover.html',
+                           handover=handover,
+                           vehicle=vehicle)
+
 

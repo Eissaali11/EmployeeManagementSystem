@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعديل التسليم والاستلام - نُظم</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .main-header {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .form-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 16px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            color: #fff;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .btn-save {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-save:hover {
+            background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-cancel {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-cancel:hover {
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
+        }
+        
+        .vehicle-info {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .vehicle-info h5 {
+            color: #3498db;
+            margin: 0;
+            font-weight: 700;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: rgba(39, 174, 96, 0.2);
+            color: #2ecc71;
+            border: 1px solid rgba(39, 174, 96, 0.3);
+        }
+        
+        .alert-danger {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-2">
+                    <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="col-8 text-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit ms-2"></i>
+                        تعديل التسليم والاستلام
+                    </h5>
+                </div>
+                <div class="col-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- محتوى الصفحة -->
+    <div class="container-fluid">
+        <!-- عرض الرسائل -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show mx-3">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- معلومات المركبة -->
+        <div class="vehicle-info mx-3">
+            <h5>
+                <i class="fas fa-car ms-2"></i>
+                {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}
+            </h5>
+        </div>
+
+        <!-- نموذج التعديل -->
+        <div class="form-container">
+            <form method="POST">
+                {{ csrf_token() }}
+                
+                <!-- نوع العملية -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-exchange-alt ms-2"></i>
+                        نوع العملية
+                    </label>
+                    <select class="form-select" name="handover_type" required>
+                        <option value="delivery" {{ 'selected' if handover.handover_type == 'delivery' else '' }}>تسليم</option>
+                        <option value="return" {{ 'selected' if handover.handover_type == 'return' else '' }}>استلام</option>
+                    </select>
+                </div>
+
+                <!-- اسم الشخص -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-user ms-2"></i>
+                        اسم الشخص
+                    </label>
+                    <input type="text" class="form-control" name="person_name" 
+                           value="{{ handover.person_name or '' }}" 
+                           placeholder="أدخل اسم الشخص" required>
+                </div>
+
+                <!-- رقم الهاتف -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-phone ms-2"></i>
+                        رقم الهاتف
+                    </label>
+                    <input type="tel" class="form-control" name="person_phone" 
+                           value="{{ handover.person_phone or '' }}" 
+                           placeholder="أدخل رقم الهاتف">
+                </div>
+
+                <!-- رقم الهوية/الإقامة -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-id-card ms-2"></i>
+                        رقم الهوية/الإقامة
+                    </label>
+                    <input type="text" class="form-control" name="person_national_id" 
+                           value="{{ handover.person_national_id or '' }}" 
+                           placeholder="أدخل رقم الهوية أو الإقامة">
+                </div>
+
+                <!-- تاريخ العملية -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-calendar ms-2"></i>
+                        تاريخ العملية
+                    </label>
+                    <input type="date" class="form-control" name="handover_date" 
+                           value="{{ handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else '' }}">
+                </div>
+
+                <!-- عداد الكيلومترات -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-tachometer-alt ms-2"></i>
+                        عداد الكيلومترات
+                    </label>
+                    <input type="number" class="form-control" name="mileage" 
+                           value="{{ handover.mileage or '' }}" 
+                           placeholder="أدخل قراءة العداد">
+                </div>
+
+                <!-- حالة المركبة -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-car-side ms-2"></i>
+                        حالة المركبة
+                    </label>
+                    <select class="form-select" name="vehicle_condition">
+                        <option value="">اختر حالة المركبة</option>
+                        <option value="ممتازة" {{ 'selected' if handover.vehicle_condition == 'ممتازة' else '' }}>ممتازة</option>
+                        <option value="جيدة" {{ 'selected' if handover.vehicle_condition == 'جيدة' else '' }}>جيدة</option>
+                        <option value="متوسطة" {{ 'selected' if handover.vehicle_condition == 'متوسطة' else '' }}>متوسطة</option>
+                        <option value="تحتاج صيانة" {{ 'selected' if handover.vehicle_condition == 'تحتاج صيانة' else '' }}>تحتاج صيانة</option>
+                    </select>
+                </div>
+
+                <!-- مستوى الوقود -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-gas-pump ms-2"></i>
+                        مستوى الوقود
+                    </label>
+                    <select class="form-select" name="fuel_level">
+                        <option value="">اختر مستوى الوقود</option>
+                        <option value="ممتلئ" {{ 'selected' if handover.fuel_level == 'ممتلئ' else '' }}>ممتلئ</option>
+                        <option value="3/4" {{ 'selected' if handover.fuel_level == '3/4' else '' }}>3/4</option>
+                        <option value="1/2" {{ 'selected' if handover.fuel_level == '1/2' else '' }}>1/2</option>
+                        <option value="1/4" {{ 'selected' if handover.fuel_level == '1/4' else '' }}>1/4</option>
+                        <option value="فارغ" {{ 'selected' if handover.fuel_level == 'فارغ' else '' }}>فارغ</option>
+                    </select>
+                </div>
+
+                <!-- الملاحظات -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-sticky-note ms-2"></i>
+                        الملاحظات
+                    </label>
+                    <textarea class="form-control" name="notes" rows="3" 
+                              placeholder="أدخل أي ملاحظات إضافية">{{ handover.notes or '' }}</textarea>
+                </div>
+
+                <!-- أزرار الحفظ والإلغاء -->
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <button type="submit" class="btn-save">
+                            <i class="fas fa-save ms-2"></i>
+                            حفظ التغييرات
+                        </button>
+                    </div>
+                    <div class="col-12">
+                        <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn-cancel">
+                            <i class="fas fa-times ms-2"></i>
+                            إلغاء
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
