@@ -13,6 +13,11 @@ from datetime import datetime
 
 external_authorizations_bp = Blueprint('external_authorizations', __name__, url_prefix='/external-authorizations')
 
+@external_authorizations_bp.route('/')
+def index():
+    """الصفحة الرئيسية لإدارة التفويضات الخارجية"""
+    return render_template('external_authorizations/index.html')
+
 # إعدادات رفع الملفات
 UPLOAD_FOLDER = 'static/uploads/authorizations'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
