@@ -1377,8 +1377,517 @@
 </div>
 {% endblock %}
 
+<!-- قسم التفويضات الخارجية -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    التفويضات الخارجية للموظفين
+                </h5>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#externalAuthModal">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة تفويض خارجي
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="authorizationsContainer">
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-file-signature fa-4x text-muted"></i>
+                        </div>
+                        <h5>لا توجد تفويضات خارجية لهذه السيارة</h5>
+                        <p class="text-muted">يمكنك إضافة تفويض خارجي جديد من خلال النقر على زر "إضافة تفويض خارجي"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة إضافة تفويض خارجي -->
+<div class="modal fade" id="externalAuthModal" tabindex="-1" aria-labelledby="externalAuthModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="externalAuthModalLabel">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    إضافة تفويض خارجي للموظف
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="externalAuthForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <!-- فلترة القسم -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="departmentFilter" class="form-label">فلترة حسب القسم</label>
+                            <select class="form-select" id="departmentFilter">
+                                <option value="">جميع الأقسام</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="projectSelect" class="form-label">المشروع *</label>
+                            <select class="form-select" id="projectSelect" name="project_id" required>
+                                <option value="">اختر المشروع</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- بحث الموظف -->
+                    <div class="mb-3">
+                        <label class="form-label">اختيار الموظف *</label>
+                        <div class="employee-search-container position-relative">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="employeeSearch" 
+                                       placeholder="ابحث عن الموظف بالاسم أو رقم الهوية...">
+                                <span class="input-group-text">
+                                    <div class="loading-spinner d-none" id="searchSpinner"></div>
+                                    <i class="fas fa-search" id="searchIcon"></i>
+                                </span>
+                            </div>
+                            <div class="employee-dropdown position-absolute w-100" id="employeeDropdown" style="z-index: 1050; display: none;"></div>
+                        </div>
+                        
+                        <!-- عرض الموظف المختار -->
+                        <div class="selected-employee d-none" id="selectedEmployee">
+                            <div class="card mt-2 border-primary">
+                                <div class="card-body p-2">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-1" id="selectedEmployeeName"></h6>
+                                            <small class="text-muted" id="selectedEmployeeDetails"></small>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="clearSelectedEmployee()">
+                                                <i class="fas fa-times"></i> إلغاء
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" name="employee_id" id="employeeId" required>
+                    </div>
+
+                    <!-- وصف التفويض -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">وصف التفويض</label>
+                        <textarea class="form-control" name="description" id="description" 
+                                  rows="3" placeholder="وصف مختصر للتفويض..."></textarea>
+                    </div>
+
+                    <!-- رفع الملف -->
+                    <div class="mb-3">
+                        <label class="form-label">رفع ملف (PDF أو صورة)</label>
+                        <div class="file-upload-area border-2 border-dashed rounded p-4 text-center" 
+                             style="cursor: pointer; transition: all 0.3s ease;" id="fileUploadArea">
+                            <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-primary"></i>
+                            <h6>اسحب الملف هنا أو انقر للاختيار</h6>
+                            <p class="text-muted mb-0">PDF, JPG, PNG (حد أقصى 10MB)</p>
+                            <input type="file" name="authorization_file" id="authorizationFile" 
+                                   accept=".pdf,.jpg,.jpeg,.png,.gif" style="display: none;">
+                        </div>
+                        <div class="file-info d-none mt-2" id="fileInfo">
+                            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-file me-2"></i>
+                                    <span id="fileName"></span>
+                                    <small class="text-muted d-block" id="fileSize"></small>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearFile()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الرابط الخارجي -->
+                    <div class="mb-3">
+                        <label for="externalLink" class="form-label">رابط خارجي (اختياري)</label>
+                        <input type="url" class="form-control" name="external_link" id="externalLink" 
+                               placeholder="https://example.com">
+                        <small class="text-muted">مثل رابط Google Form أو مستند على Drive</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save ms-1"></i>
+                        حفظ التفويض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.employee-dropdown {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.employee-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.employee-item:hover {
+    background-color: #f8f9fa;
+}
+
+.employee-item:last-child {
+    border-bottom: none;
+}
+
+.employee-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.employee-details {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 3px;
+}
+
+.file-upload-area:hover {
+    border-color: #667eea !important;
+    background-color: #f0f4ff;
+}
+
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.no-results {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-style: italic;
+}
+</style>
+
 {% block scripts %}
 {{ super() }}
+<script>
+// متغيرات عامة
+let selectedEmployeeId = null;
+let searchTimeout = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // تحميل البيانات الأولية
+    loadDepartments();
+    loadProjects();
+    
+    // إعداد أحداث البحث
+    setupEmployeeSearch();
+    setupFileUpload();
+    setupFormSubmission();
+});
+
+// تحميل الأقسام
+async function loadDepartments() {
+    try {
+        const response = await fetch('/external-authorizations/api/employees');
+        // سنحتاج إلى إضافة API للأقسام هنا
+    } catch (error) {
+        console.error('Error loading departments:', error);
+    }
+}
+
+// تحميل المشاريع
+async function loadProjects() {
+    try {
+        // سنحتاج إلى إضافة API للمشاريع هنا أو استخدام البيانات الموجودة
+        const projects = [
+            {id: 1, name: 'مشروع الرياض'},
+            {id: 2, name: 'مشروع جدة'},
+            {id: 3, name: 'مشروع الشرقية'},
+            {id: 4, name: 'مشروع نيوم'},
+            {id: 5, name: 'مشروع القصيم'}
+        ];
+        
+        const projectSelect = document.getElementById('projectSelect');
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.id;
+            option.textContent = project.name;
+            projectSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+}
+
+// إعداد بحث الموظفين
+function setupEmployeeSearch() {
+    const employeeSearch = document.getElementById('employeeSearch');
+    const departmentFilter = document.getElementById('departmentFilter');
+    
+    employeeSearch.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        const departmentId = departmentFilter.value;
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            hideEmployeeDropdown();
+            return;
+        }
+        
+        showSpinner();
+        
+        searchTimeout = setTimeout(() => {
+            searchEmployees(query, departmentId);
+        }, 300);
+    });
+    
+    departmentFilter.addEventListener('change', function() {
+        const query = employeeSearch.value.trim();
+        const departmentId = this.value;
+        
+        if (query.length >= 2) {
+            showSpinner();
+            searchEmployees(query, departmentId);
+        }
+    });
+}
+
+// بحث الموظفين
+async function searchEmployees(query, departmentId = '') {
+    try {
+        const params = new URLSearchParams({ search: query });
+        if (departmentId) {
+            params.append('department_id', departmentId);
+        }
+        
+        const response = await fetch(`/external-authorizations/api/employees?${params}`);
+        const employees = await response.json();
+        
+        displayEmployees(employees);
+    } catch (error) {
+        console.error('Error searching employees:', error);
+    } finally {
+        hideSpinner();
+    }
+}
+
+// عرض الموظفين
+function displayEmployees(employees) {
+    const dropdown = document.getElementById('employeeDropdown');
+    dropdown.innerHTML = '';
+    
+    if (employees.length === 0) {
+        dropdown.innerHTML = '<div class="no-results">لا توجد نتائج</div>';
+    } else {
+        employees.forEach(employee => {
+            const item = document.createElement('div');
+            item.className = 'employee-item';
+            item.innerHTML = `
+                <div class="employee-name">${employee.name}</div>
+                <div class="employee-details">
+                    رقم الموظف: ${employee.employee_id} | 
+                    الأقسام: ${employee.departments_str || 'غير محدد'}
+                </div>
+            `;
+            
+            item.addEventListener('click', () => selectEmployee(employee));
+            dropdown.appendChild(item);
+        });
+    }
+    
+    showEmployeeDropdown();
+}
+
+// اختيار موظف
+function selectEmployee(employee) {
+    selectedEmployeeId = employee.id;
+    
+    document.getElementById('employeeId').value = employee.id;
+    document.getElementById('employeeSearch').value = employee.name;
+    
+    document.getElementById('selectedEmployeeName').textContent = employee.name;
+    document.getElementById('selectedEmployeeDetails').textContent = 
+        `رقم الموظف: ${employee.employee_id} | الأقسام: ${employee.departments_str || 'غير محدد'}`;
+    
+    document.getElementById('selectedEmployee').classList.remove('d-none');
+    hideEmployeeDropdown();
+}
+
+// مسح اختيار الموظف
+function clearSelectedEmployee() {
+    selectedEmployeeId = null;
+    document.getElementById('employeeId').value = '';
+    document.getElementById('employeeSearch').value = '';
+    document.getElementById('selectedEmployee').classList.add('d-none');
+}
+
+// إظهار/إخفاء القائمة المنسدلة
+function showEmployeeDropdown() {
+    document.getElementById('employeeDropdown').style.display = 'block';
+}
+
+function hideEmployeeDropdown() {
+    document.getElementById('employeeDropdown').style.display = 'none';
+}
+
+// إظهار/إخفاء رمز التحميل
+function showSpinner() {
+    document.getElementById('searchSpinner').classList.remove('d-none');
+    document.getElementById('searchIcon').classList.add('d-none');
+}
+
+function hideSpinner() {
+    document.getElementById('searchSpinner').classList.add('d-none');
+    document.getElementById('searchIcon').classList.remove('d-none');
+}
+
+// إعداد رفع الملفات
+function setupFileUpload() {
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('authorizationFile');
+    
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#667eea';
+        fileUploadArea.style.backgroundColor = '#e3f2fd';
+    });
+    
+    fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.style.borderColor = '#ddd';
+        fileUploadArea.style.backgroundColor = '';
+    });
+    
+    fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#ddd';
+        fileUploadArea.style.backgroundColor = '';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+}
+
+// معالجة الملف
+function handleFile(file) {
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('نوع الملف غير مدعوم. يرجى اختيار PDF أو صورة.');
+        return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+        alert('حجم الملف كبير جداً. الحد الأقصى 10MB.');
+        return;
+    }
+    
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    document.getElementById('fileInfo').classList.remove('d-none');
+}
+
+// مسح الملف
+function clearFile() {
+    document.getElementById('authorizationFile').value = '';
+    document.getElementById('fileInfo').classList.add('d-none');
+}
+
+// تنسيق حجم الملف
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// إعداد إرسال النموذج
+function setupFormSubmission() {
+    const form = document.getElementById('externalAuthForm');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!selectedEmployeeId) {
+            alert('يرجى اختيار موظف');
+            return;
+        }
+        
+        const projectId = document.getElementById('projectSelect').value;
+        if (!projectId) {
+            alert('يرجى اختيار المشروع');
+            return;
+        }
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/external-authorizations/create', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                // إغلاق النافذة وإعادة تحميل القسم
+                const modal = bootstrap.Modal.getInstance(document.getElementById('externalAuthModal'));
+                modal.hide();
+                
+                // إعادة تعيين النموذج
+                form.reset();
+                clearSelectedEmployee();
+                clearFile();
+                
+                alert('تم إنشاء التفويض بنجاح');
+                
+                // يمكن إضافة تحديث للقائمة هنا
+            } else {
+                alert('حدث خطأ أثناء إنشاء التفويض');
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('حدث خطأ أثناء إرسال البيانات');
+        }
+    });
+}
+
+// إخفاء القائمة عند النقر خارجها
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.employee-search-container')) {
+        hideEmployeeDropdown();
+    }
+});
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // تحديد العناصر
