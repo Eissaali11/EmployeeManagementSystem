@@ -1,0 +1,192 @@
+<!-- نافذة إضافة تفويض خارجي -->
+<div class="modal fade" id="externalAuthModal" tabindex="-1" aria-labelledby="externalAuthModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="externalAuthModalLabel">
+                    <i class="fas fa-file-signature me-2"></i>إضافة تفويض خارجي جديد
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            
+            <form id="externalAuthForm" action="/external-authorizations/create" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <!-- فلترة القسم والمشروع -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="departmentFilter" class="form-label fw-bold">
+                                <i class="fas fa-building me-1"></i>فلترة حسب القسم
+                            </label>
+                            <select class="form-select" id="departmentFilter" onchange="filterEmployeesByDepartment()">
+                                <option value="">جميع الأقسام</option>
+                                <option value="1">الإدارة العامة</option>
+                                <option value="2">الموارد البشرية</option>
+                                <option value="3">التقنية</option>
+                                <option value="4">المالية</option>
+                                <option value="5">العمليات</option>
+                                <option value="6">المبيعات</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="projectSelect" class="form-label fw-bold">
+                                <i class="fas fa-project-diagram me-1"></i>المشروع *
+                            </label>
+                            <select class="form-select" id="projectSelect" name="project_id" required>
+                                <option value="">اختر المشروع</option>
+                                <option value="1">مشروع الرياض</option>
+                                <option value="2">مشروع جدة</option>
+                                <option value="3">مشروع الشرقية</option>
+                                <option value="4">مشروع نيوم</option>
+                                <option value="5">مشروع القصيم</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="authorizationType" class="form-label fw-bold">
+                                <i class="fas fa-exchange-alt me-1"></i>نوع الإحالة *
+                            </label>
+                            <select class="form-select" name="authorization_type" id="authorizationType" required>
+                                <option value="تسليم">تسليم</option>
+                                <option value="استلام">استلام</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- اختيار الموظف -->
+                    <div class="mb-3">
+                        <label for="employeeSelect" class="form-label fw-bold">
+                            <i class="fas fa-user me-1"></i>اختيار الموظف *
+                        </label>
+                        <select class="form-select" id="employeeSelect" name="employee_id" required>
+                            <option value="">اختر الموظف</option>
+                            <option value="178" data-dept="1">أحمد محمد - الإدارة العامة</option>
+                            <option value="179" data-dept="2">سارة أحمد - الموارد البشرية</option>
+                            <option value="180" data-dept="3">محمد علي - التقنية</option>
+                            <option value="181" data-dept="4">فاطمة خالد - المالية</option>
+                            <option value="182" data-dept="5">عبدالله سعد - العمليات</option>
+                            <option value="183" data-dept="6">نورا عبدالرحمن - المبيعات</option>
+                        </select>
+                        <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                    </div>
+
+                    <!-- رفع الملف -->
+                    <div class="mb-3">
+                        <label for="authorizationFile" class="form-label fw-bold">
+                            <i class="fas fa-paperclip me-1"></i>رفع ملف (PDF أو صورة)
+                        </label>
+                        <input type="file" class="form-control" id="authorizationFile" name="file" 
+                               accept=".pdf,.jpg,.jpeg,.png,.gif">
+                        <small class="text-muted">أنواع الملفات المدعومة: PDF, JPG, PNG, GIF - الحد الأقصى 10MB</small>
+                    </div>
+
+                    <!-- الوصف -->
+                    <div class="mb-3">
+                        <label for="authorizationDescription" class="form-label fw-bold">
+                            <i class="fas fa-align-right me-1"></i>الوصف أو الملاحظات
+                        </label>
+                        <textarea class="form-control" id="authorizationDescription" name="description" 
+                                  rows="3" placeholder="وصف مختصر للتفويض أو أي ملاحظات إضافية..."></textarea>
+                    </div>
+
+                    <!-- الرابط الخارجي -->
+                    <div class="mb-3">
+                        <label for="externalLink" class="form-label fw-bold">
+                            <i class="fas fa-link me-1"></i>رابط خارجي (اختياري)
+                        </label>
+                        <input type="url" class="form-control" id="externalLink" name="external_link" 
+                               placeholder="https://example.com">
+                        <small class="text-muted">مثل رابط Google Form أو مستند على Drive</small>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times ms-1"></i>إلغاء
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save ms-1"></i>
+                        حفظ التفويض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// دالة فلترة الموظفين حسب القسم
+function filterEmployeesByDepartment() {
+    const departmentFilter = document.getElementById('departmentFilter');
+    const employeeSelect = document.getElementById('employeeSelect');
+    const selectedDept = departmentFilter.value;
+    
+    // خيارات الموظفين مع أقسامهم
+    const allEmployees = [
+        { value: "178", text: "أحمد محمد - الإدارة العامة", dept: "1" },
+        { value: "179", text: "سارة أحمد - الموارد البشرية", dept: "2" },
+        { value: "180", text: "محمد علي - التقنية", dept: "3" },
+        { value: "181", text: "فاطمة خالد - المالية", dept: "4" },
+        { value: "182", text: "عبدالله سعد - العمليات", dept: "5" },
+        { value: "183", text: "نورا عبدالرحمن - المبيعات", dept: "6" }
+    ];
+    
+    // مسح الخيارات الحالية
+    employeeSelect.innerHTML = '<option value="">اختر الموظف</option>';
+    
+    // إضافة الموظفين المفلترين
+    allEmployees.forEach(emp => {
+        if (!selectedDept || emp.dept === selectedDept) {
+            const option = document.createElement('option');
+            option.value = emp.value;
+            option.textContent = emp.text;
+            option.setAttribute('data-dept', emp.dept);
+            employeeSelect.appendChild(option);
+        }
+    });
+}
+
+// دالة إرسال النموذج
+document.getElementById('externalAuthForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // التحقق من الحقول المطلوبة
+    if (!formData.get('employee_id')) {
+        alert('يرجى اختيار الموظف');
+        return;
+    }
+    
+    if (!formData.get('project_id')) {
+        alert('يرجى اختيار المشروع');
+        return;
+    }
+    
+    // إرسال البيانات
+    fetch('/external-authorizations/create', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            // إغلاق النافذة
+            const modal = bootstrap.Modal.getInstance(document.getElementById('externalAuthModal'));
+            modal.hide();
+            
+            // إعادة تعيين النموذج
+            this.reset();
+            
+            // عرض رسالة نجاح
+            alert('تم حفظ التفويض بنجاح');
+            
+            // إعادة تحميل الصفحة
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء الحفظ');
+    });
+});
+</script>

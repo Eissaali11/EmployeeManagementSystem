@@ -1252,29 +1252,24 @@
                 <h5 class="mb-0">
                     <i class="fas fa-file-signature ms-2"></i>
                     التفويضات الخارجية للموظفين
-                    <span class="badge bg-secondary" id="authorizationsCount">0</span>
+                    <span class="badge bg-secondary">0</span>
                 </h5>
-                <button type="button" class="btn btn-sm btn-primary" onclick="openExternalAuthModal()">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#externalAuthModal">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة تفويض خارجي
                 </button>
             </div>
             <div class="card-body">
-                <div id="authorizationsContainer">
-                    <div class="text-center py-4" id="emptyState">
-                        <div class="mb-3">
-                            <i class="fas fa-clipboard-list fa-4x text-muted"></i>
-                        </div>
-                        <h5>لا توجد تفويضات خارجية</h5>
-                        <p class="text-muted">يمكنك إضافة تفويض خارجي جديد للموظفين المرتبطين بهذه السيارة</p>
-                        <button type="button" class="btn btn-primary mt-2" onclick="openExternalAuthModal()">
-                            <i class="fas fa-plus ms-1"></i>
-                            إضافة أول تفويض
-                        </button>
+                <div class="text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-list fa-4x text-muted"></i>
                     </div>
-                    <div id="authorizationsList" class="d-none">
-                        <!-- ستتم إضافة التفويضات هنا ديناميكياً -->
-                    </div>
+                    <h5>لا توجد تفويضات خارجية</h5>
+                    <p class="text-muted">يمكنك إضافة تفويض خارجي جديد للموظفين المرتبطين بهذه السيارة</p>
+                    <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#externalAuthModal">
+                        <i class="fas fa-plus ms-1"></i>
+                        إضافة أول تفويض
+                    </button>
                 </div>
             </div>
         </div>
@@ -1412,9 +1407,8 @@
     </div>
 </div>
 
-
-
-<!-- نافذة إضافة تفويض خارجي -->
+<!-- تضمين النافذة المنبثقة للتفويضات الخارجية -->
+{% include 'vehicles/external_auth_modal.html' %}
 <div class="modal fade" id="externalAuthModal" tabindex="-1" aria-labelledby="externalAuthModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1450,6 +1444,12 @@
                             </label>
                             <select class="form-select" id="departmentFilter">
                                 <option value="">جميع الأقسام</option>
+                                <option value="1">الإدارة العامة</option>
+                                <option value="2">الموارد البشرية</option>
+                                <option value="3">التقنية</option>
+                                <option value="4">المالية</option>
+                                <option value="5">العمليات</option>
+                                <option value="6">المبيعات</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -1458,6 +1458,11 @@
                             </label>
                             <select class="form-select" id="projectSelect" name="project_id" required>
                                 <option value="">اختر المشروع</option>
+                                <option value="1">مشروع الرياض</option>
+                                <option value="2">مشروع جدة</option>
+                                <option value="3">مشروع الشرقية</option>
+                                <option value="4">مشروع نيوم</option>
+                                <option value="5">مشروع القصيم</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -1471,50 +1476,20 @@
                         </div>
                     </div>
 
-                    <!-- بحث الموظف -->
+                    <!-- اختيار الموظف -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">
+                        <label for="employeeSelect" class="form-label fw-bold">
                             <i class="fas fa-user me-1"></i>اختيار الموظف *
                         </label>
-                        <div class="employee-search-container position-relative">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="employeeSearch" 
-                                       placeholder="ابحث عن الموظف بالاسم أو رقم الهوية...">
-                                <span class="input-group-text">
-                                    <div class="loading-spinner d-none" id="searchSpinner"></div>
-                                    <i class="fas fa-search" id="searchIcon"></i>
-                                </span>
-                            </div>
-                            <div class="employee-dropdown position-absolute w-100" id="employeeDropdown" style="z-index: 1050; display: none;"></div>
-                        </div>
-                        
-                        <!-- عرض الموظف المختار -->
-                        <div class="selected-employee d-none" id="selectedEmployee">
-                            <div class="card mt-2 border-success bg-light">
-                                <div class="card-body p-3">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" 
-                                                 style="width: 40px; height: 40px;">
-                                                <i class="fas fa-user text-white"></i>
-                                            </div>
-                                        </div>
-                                        <div class="col">
-                                            <h6 class="mb-1 text-success fw-bold" id="selectedEmployeeName"></h6>
-                                            <small class="text-muted" id="selectedEmployeeDetails"></small>
-                                        </div>
-                                        <div class="col-auto">
-                                            <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                    onclick="clearSelectedEmployee()" title="إلغاء الاختيار">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <input type="hidden" name="employee_id" id="employeeId" required>
+                        <select class="form-select" id="employeeSelect" name="employee_id" required>
+                            <option value="">اختر الموظف</option>
+                            <option value="178">أحمد محمد - الإدارة العامة</option>
+                            <option value="179">سارة أحمد - الموارد البشرية</option>
+                            <option value="180">محمد علي - التقنية</option>
+                            <option value="181">فاطمة خالد - المالية</option>
+                            <option value="182">عبدالله سعد - العمليات</option>
+                            <option value="183">نورا عبدالرحمن - المبيعات</option>
+                        </select>
                         <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
                     </div>
 
@@ -1568,7 +1543,7 @@
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times ms-1"></i>إلغاء
                     </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" onclick="submitExternalAuth()">
                         <i class="fas fa-save ms-1"></i>
                         حفظ التفويض
                     </button>
@@ -1658,206 +1633,94 @@ function animateCounters() {
     console.log('animateCounters called but not implemented');
 }
 
-// متغيرات عامة للتفويضات الخارجية
-let selectedEmployeeId = null;
-let searchTimeout = null;
-
-// فتح نافذة إضافة تفويض خارجي
-function openExternalAuthModal() {
-    console.log('Opening external authorization modal...');
-    const modal = new bootstrap.Modal(document.getElementById('externalAuthModal'));
-    modal.show();
+// دالة إرسال التفويض الخارجي
+function submitExternalAuth() {
+    event.preventDefault();
     
-    // إعادة تعيين النموذج
-    document.getElementById('externalAuthForm').reset();
-    clearSelectedEmployee();
-    clearFile();
-}
-
-// مسح الموظف المختار
-function clearSelectedEmployee() {
-    selectedEmployeeId = null;
-    document.getElementById('employeeId').value = '';
-    document.getElementById('selectedEmployee').classList.add('d-none');
-    document.getElementById('employeeSearch').value = '';
-    hideEmployeeDropdown();
-}
-
-// مسح الملف المختار
-function clearFile() {
-    document.getElementById('authorizationFile').value = '';
-    document.getElementById('fileInfo').classList.add('d-none');
-    document.getElementById('fileUploadArea').style.borderColor = '#dee2e6';
-    document.getElementById('fileUploadArea').style.backgroundColor = '#f8f9fa';
-}
-
-// إظهار spinner
-function showSpinner() {
-    const spinner = document.getElementById('searchSpinner');
-    const icon = document.getElementById('searchIcon');
-    if (spinner) spinner.classList.remove('d-none');
-    if (icon) icon.classList.add('d-none');
-}
-
-// إخفاء spinner  
-function hideSpinner() {
-    const spinner = document.getElementById('searchSpinner');
-    const icon = document.getElementById('searchIcon');
-    if (spinner) spinner.classList.add('d-none');
-    if (icon) icon.classList.remove('d-none');
-}
-
-// إخفاء قائمة الموظفين
-function hideEmployeeDropdown() {
-    const dropdown = document.getElementById('employeeDropdown');
-    if (dropdown) {
-        dropdown.style.display = 'none';
+    const form = document.getElementById('externalAuthForm');
+    const formData = new FormData(form);
+    
+    // التحقق من الحقول المطلوبة
+    if (!formData.get('employee_id')) {
+        alert('يرجى اختيار الموظف');
+        return;
     }
+    
+    if (!formData.get('project_id')) {
+        alert('يرجى اختيار المشروع');
+        return;
+    }
+    
+    // إرسال البيانات
+    fetch('/external-authorizations/create', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            // إغلاق النافذة
+            const modal = bootstrap.Modal.getInstance(document.getElementById('externalAuthModal'));
+            modal.hide();
+            
+            // إعادة تعيين النموذج
+            form.reset();
+            
+            // عرض رسالة نجاح
+            alert('تم حفظ التفويض بنجاح');
+            
+            // إعادة تحميل الصفحة
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء الحفظ');
+    });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('External Authorization System Loading...');
+// دالة فلترة الموظفين حسب القسم
+function filterEmployeesByDepartment() {
+    const departmentFilter = document.getElementById('departmentFilter');
+    const employeeSelect = document.getElementById('employeeSelect');
+    const selectedDept = departmentFilter.value;
     
-    // تحميل البيانات الأولية
-    loadDepartments();
-    loadProjects();
-    loadExistingAuthorizations();
+    // خيارات الموظفين مع أقسامهم
+    const allEmployees = [
+        { value: "178", text: "أحمد محمد - الإدارة العامة", dept: "1" },
+        { value: "179", text: "سارة أحمد - الموارد البشرية", dept: "2" },
+        { value: "180", text: "محمد علي - التقنية", dept: "3" },
+        { value: "181", text: "فاطمة خالد - المالية", dept: "4" },
+        { value: "182", text: "عبدالله سعد - العمليات", dept: "5" },
+        { value: "183", text: "نورا عبدالرحمن - المبيعات", dept: "6" }
+    ];
     
-    // إعداد أحداث البحث (تأخير للتأكد من تحميل DOM)
-    setTimeout(() => {
-        setupEmployeeSearch();
-        setupFileUpload();
-        setupFormSubmission();
-        
-        // إضافة مستمع لتغيير القسم
-        const departmentFilter = document.getElementById('departmentFilter');
-        if (departmentFilter) {
-            departmentFilter.addEventListener('change', function() {
-                const searchInput = document.getElementById('employeeSearch');
-                if (searchInput && searchInput.value.trim()) {
-                    searchEmployees(searchInput.value.trim(), this.value);
-                }
-            });
+    // مسح الخيارات الحالية
+    employeeSelect.innerHTML = '<option value="">اختر الموظف</option>';
+    
+    // إضافة الموظفين المفلترين
+    allEmployees.forEach(emp => {
+        if (!selectedDept || emp.dept === selectedDept) {
+            const option = document.createElement('option');
+            option.value = emp.value;
+            option.textContent = emp.text;
+            employeeSelect.appendChild(option);
         }
-    }, 500);
-    
-    console.log('External Authorization System Loaded');
+    });
+}
+
+// إعداد أحداث الفلترة
+document.addEventListener('DOMContentLoaded', function() {
+    const departmentFilter = document.getElementById('departmentFilter');
+    if (departmentFilter) {
+        departmentFilter.addEventListener('change', filterEmployeesByDepartment);
+    }
 });
 
-// تحميل الأقسام
-async function loadDepartments() {
-    try {
-        console.log('Loading departments...');
-        const response = await fetch('/external-authorizations/api/departments');
-        const departments = await response.json();
-        
-        const departmentFilter = document.getElementById('departmentFilter');
-        if (departmentFilter) {
-            departments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept.id;
-                option.textContent = dept.name;
-                departmentFilter.appendChild(option);
-            });
-            console.log('Departments loaded successfully');
-        }
-    } catch (error) {
-        console.error('Error loading departments:', error);
-    }
-}
+// النظام المبسط بدون تحميل خارجي
 
-// تحميل المشاريع
-async function loadProjects() {
-    try {
-        console.log('Loading projects...');
-        const response = await fetch('/external-authorizations/api/projects');
-        const projects = await response.json();
-        
-        const projectSelect = document.getElementById('projectSelect');
-        if (projectSelect) {
-            projects.forEach(project => {
-                const option = document.createElement('option');
-                option.value = project.id;
-                option.textContent = project.name;
-                projectSelect.appendChild(option);
-            });
-            console.log('Projects loaded successfully');
-        } else {
-            console.error('Project select element not found');
-        }
-    } catch (error) {
-        console.error('Error loading projects:', error);
-    }
-}
-
-// تحميل التفويضات الموجودة
-async function loadExistingAuthorizations() {
-    try {
-        const response = await fetch(`/external-authorizations/vehicle/{{ vehicle.id }}`);
-        const authorizations = await response.json();
-        
-        displayAuthorizations(authorizations);
-    } catch (error) {
-        console.error('Error loading authorizations:', error);
-        // عرض قائمة فارغة في حالة الخطأ
-        displayAuthorizations([]);
-    }
-}
-
-// عرض التفويضات
-function displayAuthorizations(authorizations) {
-    const count = authorizations.length;
-    document.getElementById('authorizationsCount').textContent = count;
-    
-    if (count === 0) {
-        document.getElementById('emptyState').classList.remove('d-none');
-        document.getElementById('authorizationsList').classList.add('d-none');
-    } else {
-        document.getElementById('emptyState').classList.add('d-none');
-        document.getElementById('authorizationsList').classList.remove('d-none');
-        
-        const listHTML = authorizations.map(auth => `
-            <div class="card mb-3 border-start border-primary border-4">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
-                                 style="width: 45px; height: 45px;">
-                                <i class="fas fa-user-tie text-white"></i>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <h6 class="mb-1 fw-bold">${auth.employee_name}</h6>
-                            <p class="text-muted mb-1 small">${auth.project_name}</p>
-                            <small class="text-muted">
-                                <i class="fas fa-calendar me-1"></i>${auth.created_at}
-                                ${auth.status ? `<span class="badge bg-${auth.status === 'approved' ? 'success' : auth.status === 'pending' ? 'warning' : 'danger'} ms-2">${auth.status_text}</span>` : ''}
-                            </small>
-                        </div>
-                        <div class="col-auto">
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewAuthorization(${auth.id})" title="عرض التفاصيل">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                ${auth.file_path ? `<a href="${auth.file_path}" class="btn btn-sm btn-outline-success" target="_blank" title="تحميل الملف">
-                                    <i class="fas fa-download"></i>
-                                </a>` : ''}
-                                ${auth.external_link ? `<a href="${auth.external_link}" class="btn btn-sm btn-outline-info" target="_blank" title="الرابط الخارجي">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </a>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                    ${auth.description ? `<div class="mt-2 pt-2 border-top">
-                        <small class="text-muted">${auth.description}</small>
-                    </div>` : ''}
-                </div>
-            </div>
-        `).join('');
-        
-        document.getElementById('authorizationsList').innerHTML = listHTML;
-    }
-}
+// حذف النظام القديم
 
 // إعداد بحث الموظفين
 function setupEmployeeSearch() {
