@@ -16,7 +16,12 @@ external_authorizations_bp = Blueprint('external_authorizations', __name__, url_
 @external_authorizations_bp.route('/')
 def index():
     """الصفحة الرئيسية لإدارة التفويضات الخارجية"""
-    return render_template('external_authorizations/index.html')
+    from models import ExternalAuthorization, Vehicle, Employee, Department
+    
+    # جلب جميع التفويضات مع بيانات المركبات والموظفين
+    authorizations = ExternalAuthorization.query.join(Vehicle).all()
+    
+    return render_template('external_authorizations/index.html', authorizations=authorizations)
 
 @external_authorizations_bp.route('/add/')
 @external_authorizations_bp.route('/add/<int:vehicle_id>')
