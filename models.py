@@ -930,6 +930,8 @@ class ExternalAuthorization(db.Model):
     city = db.Column(db.String(100), nullable=False)  # المدينة
     authorization_type = db.Column(db.String(50), nullable=False)  # نوع التفويض
     duration = db.Column(db.String(100))  # مدة التفويض
+    authorization_form_link = db.Column(db.String(500))  # رابط نموذج التفويض
+    external_reference = db.Column(db.String(100))  # مرجع خارجي
     file_path = db.Column(db.String(255))  # مسار الملف المرفق
     notes = db.Column(db.Text)  # ملاحظات إضافية
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected

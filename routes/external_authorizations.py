@@ -93,7 +93,7 @@ def create_authorization(vehicle_id=None):
         authorization = ExternalAuthorization.query.get_or_404(edit_id)
         edit_mode = True
         vehicle_id = authorization.vehicle_id
-        current_app.logger.info(f"Edit mode: Loading authorization {edit_id} with link: {authorization.authorization_form_link}")
+
     
     # إذا لم يتم تحديد مركبة، استخدم أول مركبة متاحة
     if vehicle_id is None:
