@@ -3925,10 +3925,10 @@ def add_workshop_record(vehicle_id):
                     
                     # إنشاء سجل الصورة
                     workshop_image = VehicleWorkshopImage(
-                        workshop_id=workshop_record.id,
+                        workshop_record_id=workshop_record.id,
                         image_path=f'uploads/workshop/{unique_filename}',
                         image_type='before',
-                        description='صورة قبل الإصلاح'
+                        notes='صورة قبل الإصلاح'
                     )
                     db.session.add(workshop_image)
             
@@ -3946,10 +3946,10 @@ def add_workshop_record(vehicle_id):
                     
                     # إنشاء سجل الصورة
                     workshop_image = VehicleWorkshopImage(
-                        workshop_id=workshop_record.id,
+                        workshop_record_id=workshop_record.id,
                         image_path=f'uploads/workshop/{unique_filename}',
                         image_type='after',
-                        description='صورة بعد الإصلاح'
+                        notes='صورة بعد الإصلاح'
                     )
                     db.session.add(workshop_image)
             
