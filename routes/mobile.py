@@ -3999,6 +3999,18 @@ def edit_workshop_record(workshop_id):
     workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
     vehicle = workshop_record.vehicle
     
+    # تسجيل debug للبيانات الحالية
+    current_app.logger.debug(f"تحرير سجل الورشة {workshop_id} - البيانات الحالية:")
+    current_app.logger.debug(f"السبب: {workshop_record.reason}")
+    current_app.logger.debug(f"الحالة: {workshop_record.repair_status}")
+    current_app.logger.debug(f"الوصف: {workshop_record.description}")
+    current_app.logger.debug(f"اسم الورشة: {workshop_record.workshop_name}")
+    current_app.logger.debug(f"اسم الفني: {workshop_record.technician_name}")
+    current_app.logger.debug(f"التكلفة: {workshop_record.cost}")
+    current_app.logger.debug(f"رابط التسليم: {workshop_record.delivery_link}")
+    current_app.logger.debug(f"رابط الاستلام: {workshop_record.reception_link}")
+    current_app.logger.debug(f"الملاحظات: {workshop_record.notes}")
+    
     if request.method == 'POST':
         try:
             # تحديث البيانات
@@ -4044,7 +4056,7 @@ def edit_workshop_record(workshop_id):
     
     repair_statuses = [
         ('in_progress', 'قيد التنفيذ'),
-        ('completed', 'مكتمل'),
+        ('completed', 'تم الإصلاح'),
         ('pending_approval', 'بانتظار الموافقة')
     ]
     

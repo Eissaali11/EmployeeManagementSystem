@@ -34,14 +34,14 @@
                     <div class="col-md-6 mb-3">
                         <label for="entry_date" class="form-label">تاريخ دخول الورشة *</label>
                         <input type="date" class="form-control" id="entry_date" name="entry_date" 
-                               value="{{ workshop_record.entry_date.strftime('%Y-%m-%d') if workshop_record.entry_date else '' }}" required>
+                               value="{% if workshop_record.entry_date %}{{ workshop_record.entry_date.strftime('%Y-%m-%d') }}{% endif %}" required>
                     </div>
 
                     <!-- تاريخ الخروج -->
                     <div class="col-md-6 mb-3">
                         <label for="exit_date" class="form-label">تاريخ خروج الورشة</label>
                         <input type="date" class="form-control" id="exit_date" name="exit_date" 
-                               value="{{ workshop_record.exit_date.strftime('%Y-%m-%d') if workshop_record.exit_date else '' }}">
+                               value="{% if workshop_record.exit_date %}{{ workshop_record.exit_date.strftime('%Y-%m-%d') }}{% endif %}">
                         <div class="form-text">اتركه فارغاً إذا كانت السيارة لا تزال في الورشة</div>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                 <!-- وصف العطل أو الصيانة -->
                 <div class="mb-3">
                     <label for="description" class="form-label">وصف العطل أو الصيانة *</label>
-                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ workshop_record.description or '' }}</textarea>
+                    <textarea class="form-control" id="description" name="description" rows="3" required>{% if workshop_record.description %}{{ workshop_record.description }}{% endif %}</textarea>
                 </div>
 
                 <div class="row">
@@ -81,14 +81,14 @@
                     <div class="col-md-6 mb-3">
                         <label for="workshop_name" class="form-label">اسم الورشة</label>
                         <input type="text" class="form-control" id="workshop_name" name="workshop_name" 
-                               value="{{ workshop_record.workshop_name or '' }}">
+                               value="{% if workshop_record.workshop_name %}{{ workshop_record.workshop_name }}{% endif %}">
                     </div>
 
                     <!-- اسم الفني -->
                     <div class="col-md-6 mb-3">
                         <label for="technician_name" class="form-label">اسم الفني المسؤول</label>
                         <input type="text" class="form-control" id="technician_name" name="technician_name" 
-                               value="{{ workshop_record.technician_name or '' }}">
+                               value="{% if workshop_record.technician_name %}{{ workshop_record.technician_name }}{% endif %}">
                     </div>
                 </div>
 
@@ -96,7 +96,7 @@
                 <div class="mb-3">
                     <label for="cost" class="form-label">تكلفة الإصلاح (ريال)</label>
                     <input type="number" class="form-control" id="cost" name="cost" step="0.01" min="0" 
-                           value="{{ workshop_record.cost or 0 }}">
+                           value="{% if workshop_record.cost %}{{ workshop_record.cost }}{% else %}0{% endif %}">
                 </div>
 
                 <div class="row">
@@ -104,21 +104,21 @@
                     <div class="col-md-6 mb-3">
                         <label for="delivery_form_link" class="form-label">رابط تسليم الورشة</label>
                         <input type="url" class="form-control" id="delivery_form_link" name="delivery_form_link" 
-                               value="{{ workshop_record.delivery_link or '' }}" placeholder="https://example.com">
+                               value="{% if workshop_record.delivery_link %}{{ workshop_record.delivery_link }}{% endif %}" placeholder="https://example.com">
                     </div>
 
                     <!-- رابط استلام من الورشة -->
                     <div class="col-md-6 mb-3">
                         <label for="pickup_form_link" class="form-label">رابط استلام من الورشة</label>
                         <input type="url" class="form-control" id="pickup_form_link" name="pickup_form_link" 
-                               value="{{ workshop_record.reception_link or '' }}" placeholder="https://example.com">
+                               value="{% if workshop_record.reception_link %}{{ workshop_record.reception_link }}{% endif %}" placeholder="https://example.com">
                     </div>
                 </div>
 
                 <!-- ملاحظات إضافية -->
                 <div class="mb-4">
                     <label for="notes" class="form-label">ملاحظات إضافية</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ workshop_record.notes or '' }}</textarea>
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{% if workshop_record.notes %}{{ workshop_record.notes }}{% endif %}</textarea>
                 </div>
 
                 <!-- أزرار التحكم -->
