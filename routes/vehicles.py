@@ -749,6 +749,10 @@ def view(id):
         safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
         accidents = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
         
+        # جلب التفويضات الخارجية للمركبة
+        from models import ExternalAuthorization
+        external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=id).order_by(ExternalAuthorization.created_at.desc()).all()
+        
         # تاريخ اليوم للاستخدام في حسابات الفرق بين التواريخ
         today = datetime.now().date()
         
@@ -864,6 +868,7 @@ def view(id):
                 periodic_inspections=periodic_inspections,
                 safety_checks=safety_checks,
                 accidents=accidents,
+                external_authorizations=external_authorizations,
                 total_maintenance_cost=total_maintenance_cost,
                 days_in_workshop=days_in_workshop,
                 inspection_warnings=inspection_warnings,

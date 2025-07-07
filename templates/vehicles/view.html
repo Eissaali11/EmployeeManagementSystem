@@ -1252,7 +1252,7 @@
                 <h5 class="mb-0">
                     <i class="fas fa-file-signature ms-2"></i>
                     التفويضات الخارجية للموظفين
-                    <span class="badge bg-secondary">0</span>
+                    <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
                 </h5>
                 <a href="{{ url_for('external_authorizations.create_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
                     <i class="fas fa-plus ms-1"></i>
@@ -1260,6 +1260,79 @@
                 </a>
             </div>
             <div class="card-body">
+                {% if external_authorizations %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>اسم السائق</th>
+                                <th>رقم الهاتف</th>
+                                <th>المشروع</th>
+                                <th>المدينة</th>
+                                <th>نوع التفويض</th>
+                                <th>المدة</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auth in external_authorizations %}
+                            <tr>
+                                <td>{{ auth.id }}</td>
+                                <td>{{ auth.driver_name or '-' }}</td>
+                                <td>{{ auth.driver_phone or '-' }}</td>
+                                <td>{{ auth.project_name or '-' }}</td>
+                                <td>{{ auth.city or '-' }}</td>
+                                <td>
+                                    {% if auth.authorization_type == 'handover_to_delegate' %}
+                                        <span class="badge bg-info">تفويض تسليم</span>
+                                    {% elif auth.authorization_type == 'receive_from_delegate' %}
+                                        <span class="badge bg-warning">استلام من مندوب</span>
+                                    {% elif auth.authorization_type == 'temporary_authorization' %}
+                                        <span class="badge bg-secondary">تفويض مؤقت</span>
+                                    {% elif auth.authorization_type == 'vehicle_transfer' %}
+                                        <span class="badge bg-primary">نقل سيارة</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ auth.authorization_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ auth.duration or '-' }} يوم</td>
+                                <td>
+                                    {% if auth.status == 'pending' %}
+                                        <span class="badge bg-warning">قيد المراجعة</span>
+                                    {% elif auth.status == 'approved' %}
+                                        <span class="badge bg-success">موافق عليه</span>
+                                    {% elif auth.status == 'rejected' %}
+                                        <span class="badge bg-danger">مرفوض</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">{{ auth.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ auth.created_at.strftime('%Y-%m-%d %H:%M') if auth.created_at else '-' }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        {% if auth.file_path %}
+                                        <a href="{{ url_for('static', filename=auth.file_path.replace('static/', '')) }}" target="_blank" 
+                                           class="btn btn-sm btn-outline-primary" title="عرض الملف">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-outline-success" title="موافقة" onclick="updateAuthorizationStatus({{ auth.id }}, 'approved')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" title="رفض" onclick="updateAuthorizationStatus({{ auth.id }}, 'rejected')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
                 <div class="text-center py-4">
                     <div class="mb-3">
                         <i class="fas fa-clipboard-list fa-4x text-muted"></i>
@@ -1271,6 +1344,7 @@
                         إضافة أول تفويض
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
