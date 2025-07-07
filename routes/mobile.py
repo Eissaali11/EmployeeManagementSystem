@@ -3841,6 +3841,8 @@ def add_workshop_record(vehicle_id):
     
     if request.method == 'POST':
         try:
+            current_app.logger.debug(f"تجهيز بيانات النموذج لسجل الورشة للسيارة {vehicle_id}")
+            
             # استخراج البيانات من النموذج
             entry_date = datetime.strptime(request.form.get('entry_date'), '%Y-%m-%d').date()
             exit_date_str = request.form.get('exit_date')
@@ -3854,6 +3856,8 @@ def add_workshop_record(vehicle_id):
             notes = request.form.get('notes')
             delivery_form_link = request.form.get('delivery_form_link')
             pickup_form_link = request.form.get('pickup_form_link')
+            
+            current_app.logger.debug(f"البيانات المستخرجة: {reason}, {description}, {repair_status}")
             
             # إنشاء سجل ورشة جديد
             workshop_record = VehicleWorkshop(
@@ -3932,6 +3936,7 @@ def add_workshop_record(vehicle_id):
             
         except Exception as e:
             db.session.rollback()
+            current_app.logger.error(f"خطأ في إضافة سجل الورشة للسيارة {vehicle_id}: {str(e)}")
             flash(f'حدث خطأ أثناء إضافة سجل الورشة: {str(e)}', 'danger')
     
     # قوائم الخيارات

@@ -39,7 +39,8 @@
         </h6>
     </div>
     <div class="card-body">
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
+            {{ csrf_token() }}
             <!-- تاريخ الدخول -->
             <div class="mb-3">
                 <label for="entry_date" class="form-label required">
