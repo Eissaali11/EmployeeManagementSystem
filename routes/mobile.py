@@ -4095,4 +4095,16 @@ def delete_workshop_record(workshop_id):
     
     return redirect(url_for('mobile.vehicle_details', vehicle_id=workshop_record.vehicle.id))
 
+# عرض تفاصيل سجل الورشة - النسخة المحمولة
+@mobile_bp.route('/vehicles/workshop/<int:workshop_id>/details')
+@login_required
+def view_workshop_details(workshop_id):
+    """عرض تفاصيل سجل ورشة للنسخة المحمولة"""
+    workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
+    vehicle = workshop_record.vehicle
+    
+    return render_template('mobile/workshop_details.html',
+                           workshop_record=workshop_record,
+                           vehicle=vehicle)
+
 

@@ -1,0 +1,338 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}تفاصيل سجل الورشة - {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-4">
+    <!-- رأس الصفحة -->
+    <div class="page-header mb-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h5 class="mb-1">تفاصيل سجل الورشة</h5>
+                <p class="text-muted mb-0">السيارة: {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</p>
+            </div>
+            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- معلومات أساسية -->
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-info-circle ms-2"></i>
+                المعلومات الأساسية
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">تاريخ دخول الورشة</label>
+                        <div class="fw-bold">{{ workshop_record.entry_date.strftime('%Y-%m-%d') if workshop_record.entry_date else 'غير محدد' }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">تاريخ خروج الورشة</label>
+                        {% if workshop_record.exit_date %}
+                        <div class="fw-bold">{{ workshop_record.exit_date.strftime('%Y-%m-%d') }}</div>
+                        {% else %}
+                        <div class="badge bg-warning text-dark">لا يزال في الورشة</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">سبب دخول الورشة</label>
+                        <div>
+                            {% if workshop_record.reason == 'maintenance' %}
+                            <span class="badge bg-info">صيانة دورية</span>
+                            {% elif workshop_record.reason == 'breakdown' %}
+                            <span class="badge bg-warning text-dark">عطل</span>
+                            {% elif workshop_record.reason == 'accident' %}
+                            <span class="badge bg-danger">حادث</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ workshop_record.reason }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">حالة الإصلاح</label>
+                        <div>
+                            {% if workshop_record.repair_status == 'in_progress' %}
+                            <span class="badge bg-warning text-dark">قيد التنفيذ</span>
+                            {% elif workshop_record.repair_status == 'completed' %}
+                            <span class="badge bg-success">تم الإصلاح</span>
+                            {% elif workshop_record.repair_status == 'pending_approval' %}
+                            <span class="badge bg-info">بانتظار الموافقة</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ workshop_record.repair_status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if workshop_record.cost and workshop_record.cost > 0 %}
+            <div class="info-item mb-3">
+                <label class="text-muted small">تكلفة الإصلاح</label>
+                <div class="fw-bold text-success h5">{{ '{:,.2f}'.format(workshop_record.cost) }} ريال سعودي</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- وصف العطل والصيانة -->
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-clipboard-list ms-2"></i>
+                وصف العطل والصيانة
+            </h6>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ workshop_record.description if workshop_record.description else 'لا يوجد وصف' }}</p>
+        </div>
+    </div>
+
+    <!-- معلومات الورشة والفني -->
+    {% if workshop_record.workshop_name or workshop_record.technician_name %}
+    <div class="card mb-3">
+        <div class="card-header bg-secondary text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-tools ms-2"></i>
+                معلومات الورشة والفني
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% if workshop_record.workshop_name %}
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">اسم الورشة</label>
+                        <div class="fw-bold">{{ workshop_record.workshop_name }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if workshop_record.technician_name %}
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">اسم الفني المسؤول</label>
+                        <div class="fw-bold">{{ workshop_record.technician_name }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- الروابط -->
+    {% if workshop_record.delivery_link or workshop_record.reception_link %}
+    <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-link ms-2"></i>
+                الروابط والنماذج
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% if workshop_record.delivery_link %}
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">رابط تسليم الورشة</label>
+                    <div>
+                        <a href="{{ workshop_record.delivery_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-external-link-alt ms-1"></i>
+                            فتح رابط التسليم
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% if workshop_record.reception_link %}
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">رابط استلام من الورشة</label>
+                    <div>
+                        <a href="{{ workshop_record.reception_link }}" target="_blank" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-external-link-alt ms-1"></i>
+                            فتح رابط الاستلام
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- الملاحظات -->
+    {% if workshop_record.notes %}
+    <div class="card mb-3">
+        <div class="card-header bg-warning text-dark">
+            <h6 class="mb-0">
+                <i class="fas fa-sticky-note ms-2"></i>
+                الملاحظات الإضافية
+            </h6>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ workshop_record.notes }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- الصور المرفقة -->
+    {% if workshop_record.images %}
+    <div class="card mb-3">
+        <div class="card-header bg-dark text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-images ms-2"></i>
+                الصور المرفقة ({{ workshop_record.images|length }})
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for image in workshop_record.images %}
+                <div class="col-6 col-md-4 col-lg-3 mb-3">
+                    <div class="image-card">
+                        <img src="{{ url_for('static', filename=image.image_path) }}" 
+                             class="img-fluid rounded shadow-sm" 
+                             alt="صورة الورشة" 
+                             onclick="showImageModal('{{ url_for('static', filename=image.image_path) }}', '{{ image.notes or 'صورة الورشة' }}')">
+                        <div class="mt-2">
+                            <small class="badge bg-secondary">{{ image.image_type }}</small>
+                            {% if image.notes %}
+                            <small class="d-block text-muted mt-1">{{ image.notes }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- معلومات التسجيل -->
+    <div class="card mb-3">
+        <div class="card-header bg-light">
+            <h6 class="mb-0 text-muted">
+                <i class="fas fa-clock ms-2"></i>
+                معلومات التسجيل
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">تاريخ الإنشاء:</small>
+                    <div class="small">{{ workshop_record.created_at.strftime('%Y-%m-%d %H:%M') if workshop_record.created_at else 'غير محدد' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">آخر تحديث:</small>
+                    <div class="small">{{ workshop_record.updated_at.strftime('%Y-%m-%d %H:%M') if workshop_record.updated_at else 'غير محدد' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار العمليات -->
+    <div class="action-buttons-container">
+        <div class="row gx-2">
+            <div class="col-6">
+                <a href="{{ url_for('mobile.edit_workshop_record', workshop_id=workshop_record.id) }}" class="btn btn-primary w-100">
+                    <i class="fas fa-edit ms-1"></i>
+                    تعديل السجل
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-secondary w-100">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    العودة للسيارة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لعرض الصور -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">صورة الورشة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="صورة الورشة">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0;
+    font-weight: 600;
+}
+
+.info-item label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.image-card img {
+    cursor: pointer;
+    transition: transform 0.2s;
+    border-radius: 8px;
+    height: 120px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.image-card img:hover {
+    transform: scale(1.05);
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.action-buttons-container {
+    margin-top: 20px;
+}
+
+.badge {
+    font-size: 0.8rem;
+}
+</style>
+
+<script>
+function showImageModal(imageSrc, title) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModalTitle').textContent = title;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+</script>
+{% endblock %}
