@@ -18,13 +18,22 @@ def index():
     """الصفحة الرئيسية لإدارة التفويضات الخارجية"""
     return render_template('external_authorizations/index.html')
 
+@external_authorizations_bp.route('/add/')
 @external_authorizations_bp.route('/add/<int:vehicle_id>')
-def create_authorization(vehicle_id):
+def create_authorization(vehicle_id=None):
     """صفحة إضافة تفويض خارجي جديد"""
     from models import Vehicle, Employee
     from flask_wtf import FlaskForm
     
-    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    # إذا لم يتم تحديد مركبة، استخدم أول مركبة متاحة
+    if vehicle_id is None:
+        vehicle = Vehicle.query.first()
+        if not vehicle:
+            flash('لا توجد مركبات متاحة', 'error')
+            return redirect(url_for('vehicles.index'))
+    else:
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
     form = FlaskForm()  # نموذج بسيط للحماية من CSRF
     
     # جلب جميع الموظفين مع أقسامهم
