@@ -77,16 +77,25 @@ def index():
     authorizations = query.order_by(ExternalAuthorization.created_at.desc()).all()
     
     # جلب بيانات الفلاتر
-    departments = Department.query.order_by(Department.name).all()
-    projects = Project.query.filter(Project.status == 'active').order_by(Project.name).all()
+    try:
+        departments = Department.query.order_by(Department.name).all()
+        projects = Project.query.filter(Project.status == 'active').order_by(Project.name).all()
+    except Exception as e:
+        current_app.logger.error(f"Database error in external_authorizations.index: {str(e)}")
+        departments = []
+        projects = []
     
     # إحصائيات سريعة
-    stats = {
-        'total': ExternalAuthorization.query.count(),
-        'pending': ExternalAuthorization.query.filter_by(status='pending').count(),
-        'approved': ExternalAuthorization.query.filter_by(status='approved').count(),
-        'rejected': ExternalAuthorization.query.filter_by(status='rejected').count()
-    }
+    try:
+        stats = {
+            'total': ExternalAuthorization.query.count(),
+            'pending': ExternalAuthorization.query.filter_by(status='pending').count(),
+            'approved': ExternalAuthorization.query.filter_by(status='approved').count(),
+            'rejected': ExternalAuthorization.query.filter_by(status='rejected').count()
+        }
+    except Exception as e:
+        current_app.logger.error(f"Database error getting stats: {str(e)}")
+        stats = {'total': 0, 'pending': 0, 'approved': 0, 'rejected': 0}
     
     return render_template('external_authorizations/index.html',
                          authorizations=authorizations,
