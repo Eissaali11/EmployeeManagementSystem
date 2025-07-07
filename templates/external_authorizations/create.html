@@ -395,11 +395,9 @@
                                     <label for="project_id" class="form-label">📋 اختيار المشروع *</label>
                                     <select class="form-select" id="project_id" name="project_id" required>
                                         <option value="">اختر المشروع</option>
-                                        <option value="1">مشروع الرياض</option>
-                                        <option value="2">مشروع جدة</option>
-                                        <option value="3">مشروع المنطقة الشرقية</option>
-                                        <option value="4">مشروع نيوم</option>
-                                        <option value="5">مشروع القصيم</option>
+                                        {% for dept in departments %}
+                                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                                 
