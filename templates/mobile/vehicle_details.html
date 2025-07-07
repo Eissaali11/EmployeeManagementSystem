@@ -321,20 +321,32 @@
                 {% endif %}
                 
                 <!-- أزرار العمليات -->
-                <div class="workshop-actions mt-3 d-flex justify-content-end">
-                    <div class="btn-group btn-group-sm">
-                        <a href="{{ url_for('mobile.view_workshop_details', workshop_id=record.id) }}" class="btn btn-outline-info">
-                            <i class="fas fa-eye"></i>
-                            عرض التفاصيل
-                        </a>
-                        <a href="{{ url_for('mobile.edit_workshop_record', workshop_id=record.id) }}" class="btn btn-outline-primary">
-                            <i class="fas fa-edit"></i>
-                            تعديل
-                        </a>
-                        <button type="button" class="btn btn-outline-danger" onclick="confirmDeleteWorkshop({{ record.id }}, '{{ record.description[:30] }}...')">
-                            <i class="fas fa-trash"></i>
-                            حذف
-                        </button>
+                <div class="workshop-actions mt-3">
+                    <div class="row gx-2">
+                        <div class="col-6">
+                            <div class="btn-group btn-group-sm w-100">
+                                <a href="{{ url_for('mobile.view_workshop_details', workshop_id=record.id) }}" class="btn btn-outline-info flex-fill">
+                                    <i class="fas fa-eye"></i>
+                                    تفاصيل
+                                </a>
+                                <a href="{{ url_for('mobile.edit_workshop_record', workshop_id=record.id) }}" class="btn btn-outline-primary flex-fill">
+                                    <i class="fas fa-edit"></i>
+                                    تعديل
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="btn-group btn-group-sm w-100">
+                                <button type="button" class="btn btn-outline-success flex-fill" onclick="shareWorkshopSummary({{ record.id }}, '{{ record.description|e }}', '{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '' }}', '{{ record.repair_status }}')">
+                                    <i class="fas fa-share-alt"></i>
+                                    مشاركة
+                                </button>
+                                <button type="button" class="btn btn-outline-danger flex-fill" onclick="confirmDeleteWorkshop({{ record.id }}, '{{ record.description[:30] }}...')">
+                                    <i class="fas fa-trash"></i>
+                                    حذف
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -710,6 +722,114 @@ function confirmDeleteWorkshop(workshopId, description) {
         document.body.appendChild(form);
         form.submit();
     }
+}
+
+function shareWorkshopSummary(workshopId, description, entryDate, status) {
+    // ترجمة حالة الإصلاح
+    let statusText = status;
+    if (status === 'in_progress') statusText = 'قيد التنفيذ';
+    else if (status === 'completed') statusText = 'تم الإصلاح';
+    else if (status === 'pending_approval') statusText = 'بانتظار الموافقة';
+    
+    const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
+    const detailsUrl = `${window.location.origin}/mobile/vehicles/workshop/${workshopId}/details`;
+    
+    const shareText = `🚗 سجل ورشة - نُظم\n` +
+                     `═══════════════════════════\n\n` +
+                     `📋 السيارة: ${vehicleInfo}\n` +
+                     `📅 تاريخ الدخول: ${entryDate || 'غير محدد'}\n` +
+                     `🔧 الحالة: ${statusText}\n` +
+                     `📝 الوصف: ${description}\n\n` +
+                     `🌐 عرض التفاصيل الكاملة والصور:\n${detailsUrl}\n\n` +
+                     `📱 نظام نُظم لإدارة المركبات`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `سجل ورشة - ${vehicleInfo}`,
+            text: shareText,
+            url: detailsUrl
+        }).catch(() => {
+            fallbackShareSummary(shareText);
+        });
+    } else {
+        fallbackShareSummary(shareText);
+    }
+}
+
+function fallbackShareSummary(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('تم نسخ ملخص السجل إلى الحافظة');
+        }).catch(() => {
+            showShareModal(text);
+        });
+    } else {
+        showShareModal(text);
+    }
+}
+
+function showShareModal(text) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">مشاركة سجل الورشة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" rows="10" readonly style="direction: rtl;">${text}</textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="copyText('${text.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-copy ms-1"></i>
+                        نسخ النص
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+function copyText(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showToast('تم نسخ النص بنجاح!');
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed top-0 end-0 p-3';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle ms-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            document.body.removeChild(toast);
+        }
+    }, 4000);
 }
 </script>
 

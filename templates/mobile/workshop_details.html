@@ -243,7 +243,7 @@
 
     <!-- أزرار العمليات -->
     <div class="action-buttons-container">
-        <div class="row gx-2">
+        <div class="row gx-2 mb-3">
             <div class="col-6">
                 <a href="{{ url_for('mobile.edit_workshop_record', workshop_id=workshop_record.id) }}" class="btn btn-primary w-100">
                     <i class="fas fa-edit ms-1"></i>
@@ -251,6 +251,14 @@
                 </a>
             </div>
             <div class="col-6">
+                <button type="button" class="btn btn-success w-100" onclick="shareWorkshopDetails()">
+                    <i class="fas fa-share-alt ms-1"></i>
+                    مشاركة التفاصيل
+                </button>
+            </div>
+        </div>
+        <div class="row gx-2">
+            <div class="col-12">
                 <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-secondary w-100">
                     <i class="fas fa-arrow-right ms-1"></i>
                     العودة للسيارة
@@ -333,6 +341,193 @@ function showImageModal(imageSrc, title) {
     document.getElementById('modalImage').src = imageSrc;
     document.getElementById('imageModalTitle').textContent = title;
     new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+
+function shareWorkshopDetails() {
+    // إنشاء النص التفصيلي للمشاركة
+    const workshopData = {
+        vehicle: "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}",
+        entryDate: "{{ workshop_record.entry_date.strftime('%Y-%m-%d') if workshop_record.entry_date else 'غير محدد' }}",
+        exitDate: "{% if workshop_record.exit_date %}{{ workshop_record.exit_date.strftime('%Y-%m-%d') }}{% else %}لا يزال في الورشة{% endif %}",
+        reason: "{% if workshop_record.reason == 'maintenance' %}صيانة دورية{% elif workshop_record.reason == 'breakdown' %}عطل{% elif workshop_record.reason == 'accident' %}حادث{% else %}{{ workshop_record.reason }}{% endif %}",
+        status: "{% if workshop_record.repair_status == 'in_progress' %}قيد التنفيذ{% elif workshop_record.repair_status == 'completed' %}تم الإصلاح{% elif workshop_record.repair_status == 'pending_approval' %}بانتظار الموافقة{% else %}{{ workshop_record.repair_status }}{% endif %}",
+        description: "{{ workshop_record.description or 'لا يوجد وصف' }}",
+        workshopName: "{{ workshop_record.workshop_name or 'غير محدد' }}",
+        technicianName: "{{ workshop_record.technician_name or 'غير محدد' }}",
+        cost: "{% if workshop_record.cost and workshop_record.cost > 0 %}{{ '{:,.2f}'.format(workshop_record.cost) }} ريال{% else %}غير محدد{% endif %}",
+        deliveryLink: "{{ workshop_record.delivery_link or '' }}",
+        receptionLink: "{{ workshop_record.reception_link or '' }}",
+        notes: "{{ workshop_record.notes or 'لا توجد ملاحظات' }}",
+        detailsUrl: window.location.href,
+        imagesCount: {{ workshop_record.images|length if workshop_record.images else 0 }}
+    };
+    
+    // تكوين النص للمشاركة
+    let shareText = `🚗 تقرير سجل الورشة - نُظم\n`;
+    shareText += `═══════════════════════════\n\n`;
+    shareText += `📋 معلومات السيارة:\n`;
+    shareText += `• السيارة: ${workshopData.vehicle}\n\n`;
+    
+    shareText += `📅 التواريخ:\n`;
+    shareText += `• دخول الورشة: ${workshopData.entryDate}\n`;
+    shareText += `• خروج الورشة: ${workshopData.exitDate}\n\n`;
+    
+    shareText += `🔧 تفاصيل العملية:\n`;
+    shareText += `• السبب: ${workshopData.reason}\n`;
+    shareText += `• الحالة: ${workshopData.status}\n`;
+    shareText += `• الوصف: ${workshopData.description}\n\n`;
+    
+    if (workshopData.workshopName !== 'غير محدد' || workshopData.technicianName !== 'غير محدد') {
+        shareText += `🏪 معلومات الورشة:\n`;
+        if (workshopData.workshopName !== 'غير محدد') {
+            shareText += `• اسم الورشة: ${workshopData.workshopName}\n`;
+        }
+        if (workshopData.technicianName !== 'غير محدد') {
+            shareText += `• الفني المسؤول: ${workshopData.technicianName}\n`;
+        }
+        shareText += `\n`;
+    }
+    
+    if (workshopData.cost !== 'غير محدد') {
+        shareText += `💰 التكلفة: ${workshopData.cost}\n\n`;
+    }
+    
+    if (workshopData.imagesCount > 0) {
+        shareText += `📸 الصور المرفقة: ${workshopData.imagesCount} صورة\n\n`;
+    }
+    
+    // إضافة الروابط
+    if (workshopData.deliveryLink || workshopData.receptionLink) {
+        shareText += `🔗 الروابط المتاحة:\n`;
+        if (workshopData.deliveryLink) {
+            shareText += `• رابط تسليم الورشة: ${workshopData.deliveryLink}\n`;
+        }
+        if (workshopData.receptionLink) {
+            shareText += `• رابط استلام من الورشة: ${workshopData.receptionLink}\n`;
+        }
+        shareText += `\n`;
+    }
+    
+    if (workshopData.notes !== 'لا توجد ملاحظات') {
+        shareText += `📝 ملاحظات إضافية:\n${workshopData.notes}\n\n`;
+    }
+    
+    shareText += `🌐 عرض التفاصيل الكاملة والصور:\n${workshopData.detailsUrl}\n\n`;
+    shareText += `📱 تم إنشاء هذا التقرير بواسطة نظام نُظم`;
+    
+    // استخدام Web Share API إذا كان متاحاً
+    if (navigator.share) {
+        navigator.share({
+            title: `سجل ورشة - ${workshopData.vehicle}`,
+            text: shareText,
+            url: workshopData.detailsUrl
+        }).then(() => {
+            console.log('تم مشاركة التفاصيل بنجاح');
+        }).catch((error) => {
+            console.log('فشلت المشاركة:', error);
+            fallbackShare(shareText);
+        });
+    } else {
+        // استخدام الطريقة البديلة
+        fallbackShare(shareText);
+    }
+}
+
+function fallbackShare(text) {
+    // نسخ النص إلى الحافظة
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showShareSuccess('تم نسخ التفاصيل إلى الحافظة. يمكنك لصقها في أي تطبيق للمشاركة.');
+        }).catch(() => {
+            showShareFallback(text);
+        });
+    } else {
+        showShareFallback(text);
+    }
+}
+
+function showShareFallback(text) {
+    // إنشاء modal لعرض النص
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">مشاركة تفاصيل سجل الورشة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">انسخ النص أدناه وشاركه في التطبيق المطلوب:</p>
+                    <textarea class="form-control" rows="15" readonly style="font-family: monospace; direction: rtl;">${text}</textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="copyToClipboard('${text.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-copy ms-1"></i>
+                        نسخ النص
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // إزالة Modal بعد الإغلاق
+    modal.addEventListener('hidden.bs.modal', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+function copyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showShareSuccess('تم نسخ النص بنجاح!');
+}
+
+function showShareSuccess(message) {
+    // إنشاء toast notification
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle ms-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // إضافة styles للtoast
+    if (!document.getElementById('toast-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'toast-styles';
+        styles.textContent = `
+            .toast-notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                max-width: 350px;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(toast);
+    
+    // إزالة Toast بعد 5 ثوان
+    setTimeout(() => {
+        if (toast.parentNode) {
+            document.body.removeChild(toast);
+        }
+    }, 5000);
 }
 </script>
 {% endblock %}
