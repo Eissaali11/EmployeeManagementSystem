@@ -57,15 +57,22 @@ def store_authorization():
         
         # بيانات النموذج
         vehicle_id = request.form.get('vehicle_id')
-        driver_name = request.form.get('driver_name')
-        driver_phone = request.form.get('driver_phone')
-        project_name = request.form.get('project_name')
+        employee_id = request.form.get('employee_id')
+        project_id = request.form.get('project_id')
         city = request.form.get('city')
         authorization_type = request.form.get('authorization_type')
         duration = request.form.get('duration')
         authorization_form_link = request.form.get('authorization_form_link')
         external_reference = request.form.get('external_reference')
         notes = request.form.get('notes', '')
+        
+        # جلب بيانات الموظف والمشروع
+        employee = Employee.query.get(employee_id) if employee_id else None
+        department = Department.query.get(project_id) if project_id else None
+        
+        driver_name = employee.full_name if employee else None
+        driver_phone = employee.phone if employee else None
+        project_name = department.name if department else None
         
         # إنشاء التفويض الجديد
         authorization = ExternalAuthorization(
