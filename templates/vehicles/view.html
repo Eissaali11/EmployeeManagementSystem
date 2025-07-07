@@ -1385,7 +1385,7 @@
                     التفويضات الخارجية للموظفين
                     <span class="badge bg-secondary" id="authorizationsCount">0</span>
                 </h5>
-                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#externalAuthModal" onclick="console.log('Button clicked!')">
+                <button type="button" class="btn btn-sm btn-primary" onclick="openExternalAuthModal()">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة تفويض خارجي
                 </button>
@@ -1398,7 +1398,7 @@
                         </div>
                         <h5>لا توجد تفويضات خارجية</h5>
                         <p class="text-muted">يمكنك إضافة تفويض خارجي جديد للموظفين المرتبطين بهذه السيارة</p>
-                        <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#externalAuthModal" onclick="console.log('First auth button clicked!')">
+                        <button type="button" class="btn btn-primary mt-2" onclick="openExternalAuthModal()">
                             <i class="fas fa-plus ms-1"></i>
                             إضافة أول تفويض
                         </button>
@@ -1411,9 +1411,6 @@
         </div>
     </div>
 </div>
-</div>
-
-{% endblock %}
 
 <!-- نافذة إضافة تفويض خارجي -->
 <div class="modal fade" id="externalAuthModal" tabindex="-1" aria-labelledby="externalAuthModalLabel" aria-hidden="true">
@@ -1569,6 +1566,9 @@
         </div>
     </div>
 </div>
+</div>
+
+{% endblock %}
 
 <style>
 .employee-dropdown {
@@ -1642,6 +1642,11 @@
 {% block scripts %}
 {{ super() }}
 <script>
+// دالة مؤقتة لحل مشكلة animateCounters
+function animateCounters() {
+    console.log('animateCounters called but not implemented');
+}
+
 // متغيرات عامة للتفويضات الخارجية
 let selectedEmployeeId = null;
 let searchTimeout = null;
@@ -1654,10 +1659,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadProjects();
     loadExistingAuthorizations();
     
-    // إعداد أحداث البحث
-    setupEmployeeSearch();
-    setupFileUpload();
-    setupFormSubmission();
+    // إعداد أحداث البحث (تأخير للتأكد من تحميل DOM)
+    setTimeout(() => {
+        setupEmployeeSearch();
+        setupFileUpload();
+        setupFormSubmission();
+    }, 500);
     
     console.log('External Authorization System Loaded');
 });
@@ -2069,6 +2076,21 @@ function showErrorAlert(message) {
 function viewAuthorization(authId) {
     // سيتم إضافة نافذة عرض التفاصيل لاحقاً
     console.log('View authorization:', authId);
+}
+
+// فتح نافذة التفويض الخارجي
+function openExternalAuthModal() {
+    console.log('Opening external auth modal...');
+    
+    // التحقق من وجود النافذة
+    const modal = document.getElementById('externalAuthModal');
+    if (modal) {
+        console.log('Modal found, showing...');
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    } else {
+        console.error('Modal not found!');
+    }
 }
 
 // JavaScript الخاص بصفحة السيارة الأساسية
