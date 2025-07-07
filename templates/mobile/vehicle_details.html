@@ -772,7 +772,7 @@ function shareWorkshopSummary(workshopId, description, entryDate, status, images
         const imageArray = imagePaths.split(',');
         imageArray.forEach((imagePath, index) => {
             if (imagePath.trim()) {
-                shareText += `🖼️ صورة ${index + 1}: ${window.location.origin}/static/uploads/workshop/${imagePath.trim()}\n`;
+                shareText += `🖼️ صورة ${index + 1}: ${window.location.origin}/static/${imagePath.trim()}\n`;
             }
         });
         shareText += `\n`;
