@@ -72,8 +72,11 @@
                                 <select class="form-select" id="driver_name" name="driver_name" required>
                                     <option value="">اختر الموظف/السائق</option>
                                     {% for employee in employees %}
-                                    <option value="{{ employee.name }}" data-dept="{{ employee.departments[0].id if employee.departments else '' }}" data-phone="{{ employee.mobilePersonal or employee.mobile or '' }}">
-                                        {{ employee.name }} - {{ employee.employee_id }}
+                                    <option value="{{ employee.name }}" 
+                                            data-dept="{% if employee.departments %}{{ employee.departments[0].id }}{% endif %}" 
+                                            data-phone="{{ employee.mobilePersonal or employee.mobile or '' }}"
+                                            data-dept-name="{% if employee.departments %}{{ employee.departments[0].name }}{% endif %}">
+                                        {{ employee.name }} - {{ employee.employee_id }}{% if employee.departments %} ({{ employee.departments[0].name }}){% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -289,19 +292,29 @@ function filterEmployeesByDepartment() {
     const driverSelect = document.getElementById('driver_name');
     const selectedDept = departmentFilter.value;
     
+    console.log('فلترة القسم:', selectedDept);
+    
+    let visibleCount = 0;
+    
     // عرض/إخفاء الموظفين حسب القسم
     Array.from(driverSelect.options).forEach(option => {
         if (option.value === '') {
             option.style.display = 'block'; // خيار "اختر الموظف"
         } else {
             const empDept = option.getAttribute('data-dept');
+            const empDeptName = option.getAttribute('data-dept-name');
+            console.log(`الموظف: ${option.text}, القسم: ${empDept} (${empDeptName})`);
+            
             if (!selectedDept || empDept === selectedDept) {
                 option.style.display = 'block';
+                visibleCount++;
             } else {
                 option.style.display = 'none';
             }
         }
     });
+    
+    console.log(`عدد الموظفين المعروضين: ${visibleCount}`);
     
     // إعادة تعيين الاختيار إذا كان الموظف المحدد لا ينتمي للقسم المفلتر
     if (selectedDept && driverSelect.value) {
@@ -318,9 +331,27 @@ function filterEmployeesByDepartment() {
 document.getElementById('driver_name').addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];
     const phone = selectedOption.getAttribute('data-phone') || '';
+    const deptName = selectedOption.getAttribute('data-dept-name') || '';
+    
+    console.log(`اختيار الموظف: ${this.value}, الهاتف: ${phone}, القسم: ${deptName}`);
     
     document.getElementById('driver_phone_display').value = phone;
     document.getElementById('driver_phone').value = phone;
+});
+
+// عرض معلومات تشخيصية عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const driverSelect = document.getElementById('driver_name');
+    console.log(`عدد الموظفين المحملين: ${driverSelect.options.length - 1}`);
+    
+    // عرض معلومات كل موظف
+    Array.from(driverSelect.options).forEach((option, index) => {
+        if (option.value !== '') {
+            const dept = option.getAttribute('data-dept');
+            const deptName = option.getAttribute('data-dept-name');
+            console.log(`${index}: ${option.text} - القسم: ${dept} (${deptName})`);
+        }
+    });
 });
 </script>
 {% endblock %}
