@@ -21,14 +21,20 @@ def index():
 @external_authorizations_bp.route('/add/<int:vehicle_id>')
 def create_authorization(vehicle_id):
     """صفحة إضافة تفويض خارجي جديد"""
-    from models import Vehicle
+    from models import Vehicle, Employee
     from flask_wtf import FlaskForm
     
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     form = FlaskForm()  # نموذج بسيط للحماية من CSRF
     
+    # جلب جميع الموظفين مع أقسامهم
+    employees = Employee.query.options(db.joinedload(Employee.departments)).all()
+    
+    # جلب جميع الأقسام للفلترة
+    departments = Department.query.all()
+    
     return render_template('external_authorizations/create.html', 
-                         vehicle=vehicle, form=form)
+                         vehicle=vehicle, form=form, employees=employees, departments=departments)
 
 @external_authorizations_bp.route('/store', methods=['POST'])
 def store_authorization():

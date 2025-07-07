@@ -54,19 +54,39 @@
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label for="driver_name" class="form-label fw-bold">
-                                    <i class="fas fa-user me-1"></i>اسم السائق *
+                                <label for="department_filter" class="form-label fw-bold">
+                                    <i class="fas fa-building me-1"></i>فلترة حسب القسم
                                 </label>
-                                <input type="text" class="form-control" id="driver_name" name="driver_name" 
-                                       placeholder="أدخل اسم السائق" required>
+                                <select class="form-select" id="department_filter" onchange="filterEmployeesByDepartment()">
+                                    <option value="">جميع الأقسام</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label for="driver_phone" class="form-label fw-bold">
-                                    <i class="fas fa-phone me-1"></i>رقم الهاتف
+                                <label for="driver_name" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i>اختيار السائق *
                                 </label>
-                                <input type="tel" class="form-control" id="driver_phone" name="driver_phone" 
-                                       placeholder="مثال: 966501234567">
+                                <select class="form-select" id="driver_name" name="driver_name" required>
+                                    <option value="">اختر الموظف/السائق</option>
+                                    {% for employee in employees %}
+                                    <option value="{{ employee.name }}" data-dept="{{ employee.departments[0].id if employee.departments else '' }}" data-phone="{{ employee.mobilePersonal or employee.mobile or '' }}">
+                                        {{ employee.name }} - {{ employee.employee_id }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" id="driver_phone" name="driver_phone">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i>رقم هاتف السائق
+                                </label>
+                                <input type="tel" class="form-control" id="driver_phone_display" readonly 
+                                       placeholder="سيتم ملؤه تلقائياً عند اختيار الموظف">
+                                <small class="text-muted">يتم جلب رقم الهاتف تلقائياً من بيانات الموظف</small>
                             </div>
                         </div>
 
@@ -261,6 +281,46 @@ document.getElementById('project_name').addEventListener('change', function() {
     if (projectCityMap[this.value]) {
         citySelect.value = projectCityMap[this.value];
     }
+});
+
+// فلترة الموظفين حسب القسم
+function filterEmployeesByDepartment() {
+    const departmentFilter = document.getElementById('department_filter');
+    const driverSelect = document.getElementById('driver_name');
+    const selectedDept = departmentFilter.value;
+    
+    // عرض/إخفاء الموظفين حسب القسم
+    Array.from(driverSelect.options).forEach(option => {
+        if (option.value === '') {
+            option.style.display = 'block'; // خيار "اختر الموظف"
+        } else {
+            const empDept = option.getAttribute('data-dept');
+            if (!selectedDept || empDept === selectedDept) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    });
+    
+    // إعادة تعيين الاختيار إذا كان الموظف المحدد لا ينتمي للقسم المفلتر
+    if (selectedDept && driverSelect.value) {
+        const selectedOption = driverSelect.querySelector(`option[value="${driverSelect.value}"]`);
+        if (selectedOption && selectedOption.getAttribute('data-dept') !== selectedDept) {
+            driverSelect.value = '';
+            document.getElementById('driver_phone_display').value = '';
+            document.getElementById('driver_phone').value = '';
+        }
+    }
+}
+
+// تحديث رقم الهاتف عند اختيار الموظف
+document.getElementById('driver_name').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const phone = selectedOption.getAttribute('data-phone') || '';
+    
+    document.getElementById('driver_phone_display').value = phone;
+    document.getElementById('driver_phone').value = phone;
 });
 </script>
 {% endblock %}
