@@ -4,367 +4,586 @@
 
 {% block extra_css %}
 <style>
-    /* تصميم نظيف وبسيط */
-    .page-header {
-        background: #2c3e50;
+    /* تصميم متطور ومعاصر */
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+    
+    .main-container {
+        background: transparent;
+        padding: 40px 20px;
+    }
+    
+    .auth-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
         color: white;
-        padding: 24px 30px;
-        margin-bottom: 30px;
-        border-radius: 8px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
     }
     
-    .page-title {
-        font-size: 24px;
-        font-weight: 600;
-        margin: 0 0 8px 0;
+    .auth-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
     }
     
-    .vehicle-info {
-        color: #bdc3c7;
-        font-size: 16px;
-        margin: 0;
+    .auth-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
-    .form-card {
-        background: white;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    .auth-info h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     
-    .form-card-header {
-        background: #f8f9fa;
-        padding: 20px 25px;
-        border-bottom: 1px solid #e9ecef;
-        border-radius: 8px 8px 0 0;
-    }
-    
-    .form-card-header h5 {
-        margin: 0;
+    .auth-info p {
         font-size: 18px;
-        font-weight: 600;
-        color: #495057;
+        margin: 0;
+        opacity: 0.9;
     }
     
-    .form-card-body {
+    .vehicle-card {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
         padding: 25px;
+        text-align: center;
+        min-width: 280px;
     }
     
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group:last-child {
-        margin-bottom: 0;
-    }
-    
-    .section-header {
-        color: #495057;
-        font-size: 16px;
+    .vehicle-label {
+        font-size: 14px;
         font-weight: 600;
-        margin-bottom: 15px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #e9ecef;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        opacity: 0.8;
+    }
+    
+    .vehicle-details {
+        font-size: 20px;
+        font-weight: 700;
+    }
+    
+    .form-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 30px 40px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .form-header h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: #495057;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
+    }
+    
+    .form-body {
+        padding: 40px;
+    }
+    
+    .section {
+        margin-bottom: 35px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 30px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .section:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 3px solid #dee2e6;
     }
     
     .form-label {
-        font-weight: 500;
+        font-weight: 600;
         color: #495057;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
+        font-size: 15px;
     }
     
     .form-control, .form-select {
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        padding: 10px 12px;
-        font-size: 14px;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 15px 18px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: white;
     }
     
     .form-control:focus, .form-select:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.3rem rgba(102, 126, 234, 0.25);
+        background: white;
+        transform: translateY(-1px);
     }
     
-    .btn-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-        padding: 10px 20px;
-        font-weight: 500;
+    .form-control::placeholder {
+        color: #adb5bd;
+        font-style: italic;
     }
     
-    .btn-primary:hover {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
+    .input-group {
+        position: relative;
     }
     
-    .btn-outline-secondary {
-        padding: 10px 20px;
-        font-weight: 500;
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        z-index: 5;
     }
     
-    .form-actions {
-        padding-top: 20px;
-        border-top: 1px solid #e9ecef;
-        margin-top: 20px;
+    .input-with-icon {
+        padding-left: 45px;
     }
     
+    .btn-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 15px 40px;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-modern:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        border-radius: 12px;
+        padding: 15px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .file-upload-area {
+        border: 3px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .file-upload-area:hover {
+        border-color: #667eea;
+        background: #f0f2ff;
+    }
+    
+    .file-upload-area.dragover {
+        border-color: #667eea;
+        background: #e6f0ff;
+        transform: scale(1.02);
+    }
+    
+    .upload-icon {
+        font-size: 48px;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .upload-text {
+        font-size: 18px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 10px;
+    }
+    
+    .upload-hint {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
+    .file-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border: 1px solid #2196f3;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 15px;
+    }
+    
+    .actions-bar {
+        background: #f8f9fa;
+        padding: 30px 40px;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* تحسينات للجوال */
     @media (max-width: 768px) {
-        .page-header {
+        .main-container {
+            padding: 20px 10px;
+        }
+        
+        .auth-header {
+            padding: 30px 20px;
+            margin-bottom: 30px;
+        }
+        
+        .auth-content {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .auth-info h1 {
+            font-size: 26px;
+        }
+        
+        .auth-info p {
+            font-size: 16px;
+        }
+        
+        .vehicle-card {
+            min-width: auto;
+            width: 100%;
+        }
+        
+        .form-body {
+            padding: 25px 20px;
+        }
+        
+        .section {
             padding: 20px;
-            margin-bottom: 20px;
         }
         
-        .page-title {
-            font-size: 20px;
+        .section-title {
+            font-size: 18px;
         }
         
-        .vehicle-info {
-            font-size: 14px;
-        }
-        
-        .form-card-body {
+        .actions-bar {
             padding: 20px;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .btn-modern, .btn-secondary {
+            width: 100%;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    {% if session.messages %}
-        {% for category, message in session.messages %}
-            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-        {% set _ = session.pop('messages', None) %}
-    {% endif %}
-
-    <!-- رسائل الفلاش -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
+<div class="main-container">
+    <div class="container">
+        {% if session.messages %}
+            {% for category, message in session.messages %}
                 <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
+            {% set _ = session.pop('messages', None) %}
         {% endif %}
-    {% endwith %}
 
-    <!-- عنوان الصفحة -->
-    <div class="page-header">
-        <h1 class="page-title">
-            <i class="fas fa-file-signature me-2"></i>
-            إضافة تفويض خارجي جديد
-        </h1>
-        <p class="vehicle-info">المركبة: {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</p>
-    </div>
+        <!-- رسائل الفلاش -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-    <!-- النموذج -->
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="form-card">
-                <div class="form-card-header">
-                    <h5>
-                        <i class="fas fa-clipboard-list me-2"></i>
-                        بيانات التفويض الخارجي
-                    </h5>
+        <!-- العنوان الرئيسي -->
+        <div class="auth-header">
+            <div class="auth-content">
+                <div class="auth-info">
+                    <h1>
+                        <i class="fas fa-file-signature me-3"></i>
+                        إضافة تفويض خارجي جديد
+                    </h1>
+                    <p>قم بإنشاء تفويض خارجي للمركبة مع جميع التفاصيل المطلوبة</p>
                 </div>
+                <div class="vehicle-card">
+                    <div class="vehicle-label">المركبة المحددة</div>
+                    <div class="vehicle-details">{{ vehicle.plate_number }}</div>
+                    <div class="vehicle-details">{{ vehicle.make }} {{ vehicle.model }}</div>
+                </div>
+            </div>
+        </div>
 
-                <form id="externalAuthForm" action="{{ url_for('external_authorizations.store_authorization') }}" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="form-card-body">
-                        <!-- معلومات السائق -->
-                        <div class="form-group">
-                            <h6 class="section-header">
-                                <i class="fas fa-user text-primary"></i>
-                                معلومات السائق
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="department_filter" class="form-label">
-                                        <i class="fas fa-building me-1"></i>فلترة حسب القسم
-                                    </label>
-                                    <select class="form-select" id="department_filter" onchange="filterEmployeesByDepartment()">
-                                        <option value="">جميع الأقسام</option>
-                                        {% for dept in departments %}
-                                        <option value="{{ dept.id }}">{{ dept.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="driver_name" class="form-label">
-                                        <i class="fas fa-user me-1"></i>اختيار السائق *
-                                    </label>
-                                    <select class="form-select" id="driver_name" name="driver_name" required>
-                                        <option value="">اختر السائق</option>
-                                    </select>
-                                    <small class="text-muted">سيتم جلب رقم الهاتف تلقائياً عند اختيار السائق</small>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="driver_phone" class="form-label">
-                                        <i class="fas fa-phone me-1"></i>رقم هاتف السائق
-                                    </label>
-                                    <input type="tel" class="form-control" id="driver_phone" name="driver_phone" readonly>
-                                    <small class="text-muted">يتم جلب رقم الهاتف تلقائياً من بيانات الموظف</small>
-                                </div>
-                            </div>
-                        </div>
+        <!-- النموذج الرئيسي -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h3>
+                            <i class="fas fa-clipboard-list text-primary"></i>
+                            بيانات التفويض الخارجي
+                        </h3>
+                    </div>
 
-                        <!-- معلومات المشروع -->
-                        <div class="form-group">
-                            <h6 class="section-header">
-                                <i class="fas fa-project-diagram text-success"></i>
-                                معلومات المشروع
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="project_name" class="form-label">
-                                        <i class="fas fa-building me-1"></i>اسم القسم/المشروع *
-                                    </label>
-                                    <select class="form-select" id="project_name" name="project_name" required>
-                                        <option value="">اختر المشروع</option>
-                                        <option value="مشروع الرياض">مشروع الرياض</option>
-                                        <option value="مشروع جدة">مشروع جدة</option>
-                                        <option value="مشروع المنطقة الشرقية">مشروع المنطقة الشرقية</option>
-                                        <option value="مشروع نيوم">مشروع نيوم</option>
-                                        <option value="مشروع القصيم">مشروع القصيم</option>
-                                        <option value="Aramex Coruer">Aramex Coruer</option>
-                                        <option value="Suleiman Al Habib">Suleiman Al Habib</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="city" class="form-label">
-                                        <i class="fas fa-map-marker-alt me-1"></i>المدينة *
-                                    </label>
-                                    <input type="text" class="form-control" id="city" name="city" required 
-                                           placeholder="اسم المدينة">
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="authorization_type" class="form-label">
-                                        <i class="fas fa-tag me-1"></i>نوع التفويض *
-                                    </label>
-                                    <select class="form-select" id="authorization_type" name="authorization_type" required>
-                                        <option value="">اختر نوع التفويض</option>
-                                        <option value="تسليم">تسليم المركبة</option>
-                                        <option value="استلام">استلام المركبة</option>
-                                        <option value="صيانة">صيانة المركبة</option>
-                                        <option value="مهمة">مهمة خاصة</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="duration" class="form-label">
-                                        <i class="fas fa-clock me-1"></i>مدة التفويض
-                                    </label>
-                                    <input type="text" class="form-control" id="duration" name="duration" 
-                                           placeholder="مثال: 3 أيام، أسبوع، شهر">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- الروابط والمراجع -->
-                        <div class="form-group">
-                            <h6 class="section-header">
-                                <i class="fas fa-link text-info"></i>
-                                الروابط والمراجع
-                            </h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="authorization_form_link" class="form-label">
-                                        <i class="fas fa-external-link-alt me-1"></i>رابط نموذج التفويض
-                                    </label>
-                                    <input type="url" class="form-control" id="authorization_form_link" name="authorization_form_link" 
-                                           placeholder="https://example.com/authorization-form">
-                                    <small class="text-muted">مثال: رابط Google Form أو نموذج إلكتروني آخر</small>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="external_reference" class="form-label">
-                                        <i class="fas fa-bookmark me-1"></i>مرجع خارجي (اختياري)
-                                    </label>
-                                    <input type="text" class="form-control" id="external_reference" name="external_reference" 
-                                           placeholder="رقم المرجع أو كود التفويض">
-                                    <small class="text-muted">أي مرجع أو كود يساعد في تتبع التفويض</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- رفع الملفات -->
-                        <div class="form-group">
-                            <h6 class="section-header">
-                                <i class="fas fa-paperclip text-secondary"></i>
-                                المرفقات (اختياري)
-                            </h6>
-                            <div class="row">
-                                <div class="col-12 mb-3">
-                                    <label for="authorization_file" class="form-label">
-                                        <i class="fas fa-upload me-1"></i>رفع ملف PDF أو صورة
-                                    </label>
-                                    <input type="file" class="form-control" id="authorization_file" name="authorization_file" 
-                                           accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="showFileInfo(this)">
-                                    <small class="text-muted">
-                                        أنواع الملفات المدعومة: PDF, JPG, PNG, GIF - الحد الأقصى 10MB
-                                    </small>
+                    <form id="externalAuthForm" action="{{ url_for('external_authorizations.store_authorization') }}" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="form-body">
+                            <!-- قسم معلومات السائق -->
+                            <div class="section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-user text-primary"></i>
+                                    معلومات السائق
+                                </h4>
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label for="department_filter" class="form-label">فلترة حسب القسم</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-building input-icon"></i>
+                                            <select class="form-select input-with-icon" id="department_filter" onchange="filterEmployeesByDepartment()">
+                                                <option value="">جميع الأقسام</option>
+                                                {% for dept in departments %}
+                                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
                                     
-                                    <!-- معلومات الملف المحدد -->
-                                    <div id="fileInfo" class="mt-2 p-3 bg-light rounded d-none">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-file text-primary me-2"></i>
-                                            <div>
-                                                <div class="fw-bold" id="fileName"></div>
-                                                <small class="text-muted" id="fileSize"></small>
-                                            </div>
-                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearFile()">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                    <div class="col-md-6 mb-4">
+                                        <label for="driver_name" class="form-label">اختيار السائق *</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-user-tie input-icon"></i>
+                                            <select class="form-select input-with-icon" id="driver_name" name="driver_name" required>
+                                                <option value="">اختر السائق</option>
+                                            </select>
+                                        </div>
+                                        <small class="text-muted">سيتم جلب رقم الهاتف تلقائياً عند اختيار السائق</small>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-4">
+                                        <label for="driver_phone" class="form-label">رقم هاتف السائق</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-phone input-icon"></i>
+                                            <input type="tel" class="form-control input-with-icon" id="driver_phone" name="driver_phone" readonly>
+                                        </div>
+                                        <small class="text-muted">يتم جلب رقم الهاتف تلقائياً من بيانات الموظف</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- قسم معلومات المشروع -->
+                            <div class="section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-project-diagram text-success"></i>
+                                    معلومات المشروع والتفويض
+                                </h4>
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label for="project_name" class="form-label">اسم القسم/المشروع *</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-building input-icon"></i>
+                                            <select class="form-select input-with-icon" id="project_name" name="project_name" required>
+                                                <option value="">اختر المشروع</option>
+                                                <option value="مشروع الرياض">مشروع الرياض</option>
+                                                <option value="مشروع جدة">مشروع جدة</option>
+                                                <option value="مشروع المنطقة الشرقية">مشروع المنطقة الشرقية</option>
+                                                <option value="مشروع نيوم">مشروع نيوم</option>
+                                                <option value="مشروع القصيم">مشروع القصيم</option>
+                                                <option value="Aramex Coruer">Aramex Coruer</option>
+                                                <option value="Suleiman Al Habib">Suleiman Al Habib</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-4">
+                                        <label for="city" class="form-label">المدينة *</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-map-marker-alt input-icon"></i>
+                                            <input type="text" class="form-control input-with-icon" id="city" name="city" required 
+                                                   placeholder="أدخل اسم المدينة">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-4">
+                                        <label for="authorization_type" class="form-label">نوع التفويض *</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-tag input-icon"></i>
+                                            <select class="form-select input-with-icon" id="authorization_type" name="authorization_type" required>
+                                                <option value="">اختر نوع التفويض</option>
+                                                <option value="تسليم">تسليم المركبة</option>
+                                                <option value="استلام">استلام المركبة</option>
+                                                <option value="صيانة">صيانة المركبة</option>
+                                                <option value="مهمة">مهمة خاصة</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-4">
+                                        <label for="duration" class="form-label">مدة التفويض</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-clock input-icon"></i>
+                                            <input type="text" class="form-control input-with-icon" id="duration" name="duration" 
+                                                   placeholder="مثال: 3 أيام، أسبوع، شهر">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- ملاحظات إضافية -->
-                        <div class="form-group">
-                            <h6 class="section-header">
-                                <i class="fas fa-sticky-note text-warning"></i>
-                                ملاحظات إضافية
-                            </h6>
-                            <div class="row">
-                                <div class="col-12">
-                                    <textarea class="form-control" id="notes" name="notes" rows="4" 
-                                              placeholder="أي ملاحظات أو تفاصيل إضافية حول التفويض..."
-                                              style="resize: vertical; min-height: 120px;"></textarea>
-                                    <small class="text-muted">يمكنك إضافة أي تفاصيل مهمة أو تعليمات خاصة للتفويض</small>
+                            <!-- قسم الروابط والمراجع -->
+                            <div class="section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-link text-info"></i>
+                                    الروابط والمراجع الخارجية
+                                </h4>
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label for="authorization_form_link" class="form-label">رابط نموذج التفويض</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-external-link-alt input-icon"></i>
+                                            <input type="url" class="form-control input-with-icon" id="authorization_form_link" name="authorization_form_link" 
+                                                   placeholder="https://example.com/authorization-form">
+                                        </div>
+                                        <small class="text-muted">مثال: رابط Google Form أو نموذج إلكتروني آخر</small>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-4">
+                                        <label for="external_reference" class="form-label">مرجع خارجي (اختياري)</label>
+                                        <div class="input-group">
+                                            <i class="fas fa-bookmark input-icon"></i>
+                                            <input type="text" class="form-control input-with-icon" id="external_reference" name="external_reference" 
+                                                   placeholder="رقم المرجع أو كود التفويض">
+                                        </div>
+                                        <small class="text-muted">أي مرجع أو كود يساعد في تتبع التفويض</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- قسم رفع الملفات -->
+                            <div class="section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-paperclip text-secondary"></i>
+                                    المرفقات والوثائق (اختياري)
+                                </h4>
+                                <div class="file-upload-area" onclick="document.getElementById('authorization_file').click()">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="upload-text">اضغط هنا لرفع الملفات</div>
+                                    <div class="upload-hint">أو اسحب الملفات وأفلتها هنا</div>
+                                    <div class="upload-hint mt-2">أنواع الملفات المدعومة: PDF, JPG, PNG, GIF - الحد الأقصى 10MB</div>
+                                    <input type="file" class="d-none" id="authorization_file" name="authorization_file" 
+                                           accept=".pdf,.jpg,.jpeg,.png,.gif" onchange="showFileInfo(this)">
+                                </div>
+                                
+                                <!-- معلومات الملف المحدد -->
+                                <div id="fileInfo" class="file-info d-none">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-file text-primary me-3" style="font-size: 24px;"></i>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold" id="fileName"></div>
+                                            <small class="text-muted" id="fileSize"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                            <i class="fas fa-trash-alt"></i> حذف
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- قسم الملاحظات -->
+                            <div class="section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-sticky-note text-warning"></i>
+                                    ملاحظات وتعليمات إضافية
+                                </h4>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <textarea class="form-control" id="notes" name="notes" rows="5" 
+                                                  placeholder="أضف أي ملاحظات أو تفاصيل مهمة حول التفويض..."
+                                                  style="resize: vertical; min-height: 140px;"></textarea>
+                                        <small class="text-muted">يمكنك إضافة أي تفاصيل مهمة أو تعليمات خاصة للتفويض</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- أزرار الحفظ -->
-                        <div class="form-actions d-flex justify-content-between">
-                            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary">
+                        <!-- شريط الأزرار -->
+                        <div class="actions-bar">
+                            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-right me-2"></i>
                                 العودة للمركبة
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>
-                                حفظ التفويض
+                            <button type="submit" class="btn btn-modern">
+                                <i class="fas fa-check me-2"></i>
+                                حفظ التفويض الخارجي
                             </button>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
