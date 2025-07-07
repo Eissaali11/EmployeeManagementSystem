@@ -71,7 +71,7 @@ def store_authorization():
         department = Department.query.get(project_id) if project_id else None
         
         driver_name = employee.name if employee else None
-        driver_phone = employee.phone if employee else None
+        driver_phone = employee.mobile if employee else None
         project_name = department.name if department else None
         
         # إنشاء التفويض الجديد
