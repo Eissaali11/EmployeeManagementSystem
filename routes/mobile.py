@@ -3854,8 +3854,8 @@ def add_workshop_record(vehicle_id):
             workshop_name = request.form.get('workshop_name')
             technician_name = request.form.get('technician_name')
             notes = request.form.get('notes')
-            delivery_form_link = request.form.get('delivery_form_link')
-            pickup_form_link = request.form.get('pickup_form_link')
+            delivery_link = request.form.get('delivery_form_link')
+            reception_link = request.form.get('pickup_form_link')
             
             current_app.logger.debug(f"البيانات المستخرجة: {reason}, {description}, {repair_status}")
             
@@ -3871,8 +3871,8 @@ def add_workshop_record(vehicle_id):
                 workshop_name=workshop_name,
                 technician_name=technician_name,
                 notes=notes,
-                delivery_form_link=delivery_form_link,
-                pickup_form_link=pickup_form_link
+                delivery_link=delivery_link,
+                reception_link=reception_link
             )
             
             db.session.add(workshop_record)
