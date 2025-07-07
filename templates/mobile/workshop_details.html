@@ -363,42 +363,68 @@ function shareWorkshopDetails() {
     };
     
     // تكوين النص للمشاركة
-    let shareText = `🚗 سجل ورشة السيارة - نُظم\n`;
+    const currentDate = new Date();
+    const formattedDateTime = currentDate.toLocaleString('ar-SA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    
+    let shareText = `مرحباً 👋\n\n`;
+    shareText += `إليك تفاصيل تسليم/استلام الورشة للسيارة:\n\n`;
+    shareText += `🚙 رقم السيارة: ${workshopData.vehicle}\n`;
+    shareText += `📅 تاريخ وقت الإرسال: ${formattedDateTime}\n\n`;
+    shareText += `═══════════════════════════\n`;
+    shareText += `🔧 تفاصيل العملية:\n`;
     shareText += `═══════════════════════════\n\n`;
     
-    shareText += `🚙 رقم السيارة: ${workshopData.vehicle}\n`;
     shareText += `📅 تاريخ دخول الورشة: ${workshopData.entryDate}\n`;
     shareText += `📅 تاريخ خروج الورشة: ${workshopData.exitDate}\n`;
-    shareText += `🔧 حالة الإصلاح: ${workshopData.status}\n`;
+    shareText += `🛠️ حالة الإصلاح: ${workshopData.status}\n`;
     shareText += `📝 سبب الدخول: ${workshopData.reason}\n\n`;
     
-    shareText += `📖 وصف العملية:\n${workshopData.description}\n\n`;
+    shareText += `📖 وصف تفصيلي للعملية:\n`;
+    shareText += `${workshopData.description}\n\n`;
     
-    if (workshopData.workshopName !== 'غير محدد') {
-        shareText += `🏪 اسم الورشة: ${workshopData.workshopName}\n`;
-    }
-    if (workshopData.technicianName !== 'غير محدد') {
-        shareText += `👨‍🔧 الفني المسؤول: ${workshopData.technicianName}\n`;
-    }
-    if (workshopData.cost !== 'غير محدد') {
-        shareText += `💰 التكلفة: ${workshopData.cost}\n`;
-    }
-    shareText += `\n`;
-    
-    if (workshopData.imagesCount > 0) {
-        shareText += `📸 عدد الصور المرفقة: ${workshopData.imagesCount} صورة\n`;
-        shareText += `🖼️ لعرض جميع الصور: ${workshopData.detailsUrl}\n\n`;
+    if (workshopData.workshopName !== 'غير محدد' || workshopData.technicianName !== 'غير محدد' || workshopData.cost !== 'غير محدد') {
+        shareText += `🏪 معلومات الورشة:\n`;
+        if (workshopData.workshopName !== 'غير محدد') {
+            shareText += `• اسم الورشة: ${workshopData.workshopName}\n`;
+        }
+        if (workshopData.technicianName !== 'غير محدد') {
+            shareText += `• الفني المسؤول: ${workshopData.technicianName}\n`;
+        }
+        if (workshopData.cost !== 'غير محدد') {
+            shareText += `• التكلفة: ${workshopData.cost}\n`;
+        }
+        shareText += `\n`;
     }
     
-    // إضافة النماذج والروابط
-    shareText += `🔗 الروابط والنماذج:\n`;
-    if (workshopData.deliveryLink) {
-        shareText += `📋 نموذج تسليم الورشة:\n${workshopData.deliveryLink}\n\n`;
+    // قسم النماذج والوثائق
+    if (workshopData.deliveryLink || workshopData.receptionLink || workshopData.imagesCount > 0) {
+        shareText += `📋 النماذج والوثائق المتاحة:\n`;
+        shareText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+        
+        if (workshopData.deliveryLink && workshopData.receptionLink) {
+            shareText += `تتضمن العملية تسليم واستلام:\n\n`;
+            shareText += `📝 بيانات التسليم:\n${workshopData.deliveryLink}\n\n`;
+            shareText += `📝 بيانات الاستلام:\n${workshopData.receptionLink}\n\n`;
+        } else if (workshopData.deliveryLink) {
+            shareText += `📝 رابط نموذج تسليم الورشة:\n${workshopData.deliveryLink}\n\n`;
+        } else if (workshopData.receptionLink) {
+            shareText += `📝 رابط نموذج استلام من الورشة:\n${workshopData.receptionLink}\n\n`;
+        }
+        
+        if (workshopData.imagesCount > 0) {
+            shareText += `📸 الصور المرفقة (${workshopData.imagesCount} صورة):\n`;
+            shareText += `🔗 عرض جميع الصور: ${workshopData.detailsUrl}\n\n`;
+        }
     }
-    if (workshopData.receptionLink) {
-        shareText += `📋 نموذج استلام من الورشة:\n${workshopData.receptionLink}\n\n`;
-    }
-    shareText += `🌐 رابط التفاصيل الكاملة مع الصور:\n${workshopData.detailsUrl}\n\n`;
+    
+    shareText += `🌐 للاطلاع على التفاصيل الكاملة:\n${workshopData.detailsUrl}\n\n`;
     
     if (workshopData.notes !== 'لا توجد ملاحظات') {
         shareText += `📝 ملاحظات إضافية:\n${workshopData.notes}\n\n`;
@@ -406,7 +432,7 @@ function shareWorkshopDetails() {
     
     shareText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     shareText += `📱 نظام نُظم لإدارة المركبات\n`;
-    shareText += `⚡ تقرير تلقائي مُنشأ بالنظام`;
+    shareText += `🕐 تم إنشاء التقرير: ${formattedDateTime}`;
     
     // استخدام Web Share API إذا كان متاحاً
     if (navigator.share) {

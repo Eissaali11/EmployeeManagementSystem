@@ -734,16 +734,30 @@ function shareWorkshopSummary(workshopId, description, entryDate, status) {
     const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
     const detailsUrl = `${window.location.origin}/mobile/vehicles/workshop/${workshopId}/details`;
     
-    const shareText = `🚗 سجل ورشة السيارة - نُظم\n` +
-                     `═══════════════════════════\n\n` +
+    const currentDate = new Date();
+    const formattedDateTime = currentDate.toLocaleString('ar-SA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    
+    const shareText = `مرحباً 👋\n\n` +
+                     `إليك ملخص سجل الورشة للسيارة:\n\n` +
                      `🚙 رقم السيارة: ${vehicleInfo}\n` +
+                     `📅 تاريخ وقت الإرسال: ${formattedDateTime}\n\n` +
+                     `═══════════════════════════\n` +
+                     `🔧 ملخص العملية:\n` +
+                     `═══════════════════════════\n\n` +
                      `📅 تاريخ دخول الورشة: ${entryDate || 'غير محدد'}\n` +
-                     `🔧 حالة الإصلاح: ${statusText}\n` +
+                     `🛠️ حالة الإصلاح: ${statusText}\n` +
                      `📝 وصف العملية: ${description}\n\n` +
-                     `🔗 الروابط:\n` +
-                     `🌐 التفاصيل الكاملة مع الصور:\n${detailsUrl}\n\n` +
+                     `🌐 للاطلاع على التفاصيل الكاملة والصور:\n${detailsUrl}\n\n` +
                      `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                     `📱 نظام نُظم لإدارة المركبات`;
+                     `📱 نظام نُظم لإدارة المركبات\n` +
+                     `🕐 تم إنشاء الملخص: ${formattedDateTime}`;
     
     if (navigator.share) {
         navigator.share({
