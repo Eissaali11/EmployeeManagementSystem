@@ -1440,9 +1440,9 @@
                         </div>
                     </div>
 
-                    <!-- فلترة القسم -->
+                    <!-- فلترة القسم والمشروع -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="departmentFilter" class="form-label fw-bold">
                                 <i class="fas fa-building me-1"></i>فلترة حسب القسم
                             </label>
@@ -1450,12 +1450,21 @@
                                 <option value="">جميع الأقسام</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="projectSelect" class="form-label fw-bold">
                                 <i class="fas fa-project-diagram me-1"></i>المشروع *
                             </label>
                             <select class="form-select" id="projectSelect" name="project_id" required>
                                 <option value="">اختر المشروع</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="authorizationType" class="form-label fw-bold">
+                                <i class="fas fa-exchange-alt me-1"></i>نوع الإحالة *
+                            </label>
+                            <select class="form-select" name="authorization_type" id="authorizationType" required>
+                                <option value="تسليم">تسليم</option>
+                                <option value="استلام">استلام</option>
                             </select>
                         </div>
                     </div>
@@ -1673,8 +1682,19 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadDepartments() {
     try {
         console.log('Loading departments...');
-        // سنضيف API للأقسام لاحقاً
-        console.log('Departments loaded');
+        const response = await fetch('/external-authorizations/api/departments');
+        const departments = await response.json();
+        
+        const departmentFilter = document.getElementById('departmentFilter');
+        if (departmentFilter) {
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = dept.name;
+                departmentFilter.appendChild(option);
+            });
+            console.log('Departments loaded successfully');
+        }
     } catch (error) {
         console.error('Error loading departments:', error);
     }
@@ -1684,13 +1704,8 @@ async function loadDepartments() {
 async function loadProjects() {
     try {
         console.log('Loading projects...');
-        const projects = [
-            {id: 1, name: 'مشروع الرياض'},
-            {id: 2, name: 'مشروع جدة'},
-            {id: 3, name: 'مشروع الشرقية'},
-            {id: 4, name: 'مشروع نيوم'},
-            {id: 5, name: 'مشروع القصيم'}
-        ];
+        const response = await fetch('/external-authorizations/api/projects');
+        const projects = await response.json();
         
         const projectSelect = document.getElementById('projectSelect');
         if (projectSelect) {
@@ -1712,16 +1727,14 @@ async function loadProjects() {
 // تحميل التفويضات الموجودة
 async function loadExistingAuthorizations() {
     try {
-        // سنضيف هنا استدعاء API لجلب التفويضات الموجودة للسيارة
-        // const response = await fetch(`/external-authorizations/vehicle/{{ vehicle.id }}`);
-        // const authorizations = await response.json();
-        
-        // مؤقتاً سنستخدم قائمة فارغة
-        const authorizations = [];
+        const response = await fetch(`/external-authorizations/vehicle/{{ vehicle.id }}`);
+        const authorizations = await response.json();
         
         displayAuthorizations(authorizations);
     } catch (error) {
         console.error('Error loading authorizations:', error);
+        // عرض قائمة فارغة في حالة الخطأ
+        displayAuthorizations([]);
     }
 }
 
@@ -1823,11 +1836,16 @@ async function searchEmployees(query, departmentId = '') {
         }
         
         const response = await fetch(`/external-authorizations/api/employees?${params}`);
-        const employees = await response.json();
         
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const employees = await response.json();
         displayEmployees(employees);
     } catch (error) {
         console.error('Error searching employees:', error);
+        displayEmployees([]);
     } finally {
         hideSpinner();
     }
@@ -1839,18 +1857,53 @@ function displayEmployees(employees) {
     dropdown.innerHTML = '';
     
     if (employees.length === 0) {
-        dropdown.innerHTML = '<div class="no-results">لا توجد نتائج</div>';
+        dropdown.innerHTML = `
+            <div class="no-results p-3 text-center text-muted">
+                <i class="fas fa-search fa-2x mb-2"></i>
+                <p class="mb-0">لا توجد نتائج</p>
+                <small>جرب البحث بطريقة أخرى</small>
+            </div>
+        `;
     } else {
         employees.forEach(employee => {
             const item = document.createElement('div');
-            item.className = 'employee-item';
+            item.className = 'employee-item p-3 border-bottom';
+            item.style.cursor = 'pointer';
             item.innerHTML = `
-                <div class="employee-name">${employee.name}</div>
-                <div class="employee-details">
-                    رقم الموظف: ${employee.employee_id} | 
-                    الأقسام: ${employee.departments_str || 'غير محدد'}
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 fw-bold employee-name">${employee.name}</h6>
+                        <div class="employee-details">
+                            <small class="text-muted">
+                                <i class="fas fa-id-card me-1"></i>
+                                ${employee.employee_id}
+                            </small>
+                            <br>
+                            <small class="text-primary">
+                                <i class="fas fa-building me-1"></i>
+                                ${employee.departments_str || 'غير محدد'}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-chevron-left text-muted"></i>
+                    </div>
                 </div>
             `;
+            
+            // إضافة تأثير hover
+            item.addEventListener('mouseenter', () => {
+                item.style.backgroundColor = '#f8f9fa';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.backgroundColor = 'white';
+            });
             
             item.addEventListener('click', () => selectEmployee(employee));
             dropdown.appendChild(item);
@@ -1998,6 +2051,8 @@ function setupFormSubmission() {
             });
             
             if (response.ok) {
+                const responseData = await response.json();
+                
                 // إغلاق النافذة وإعادة تحميل القسم
                 const modal = bootstrap.Modal.getInstance(document.getElementById('externalAuthModal'));
                 modal.hide();
@@ -2008,13 +2063,13 @@ function setupFormSubmission() {
                 clearFile();
                 
                 // عرض رسالة نجاح بتصميم Bootstrap
-                showSuccessAlert('تم إنشاء التفويض بنجاح');
+                showSuccessAlert(responseData.message || 'تم إنشاء التفويض بنجاح');
                 
                 // إعادة تحميل قائمة التفويضات
                 loadExistingAuthorizations();
             } else {
                 const errorData = await response.json();
-                showErrorAlert(errorData.message || 'حدث خطأ أثناء إنشاء التفويض');
+                showErrorAlert(errorData.error || 'حدث خطأ أثناء إنشاء التفويض');
             }
         } catch (error) {
             console.error('Error submitting form:', error);

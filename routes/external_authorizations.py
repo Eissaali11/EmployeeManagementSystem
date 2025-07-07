@@ -1,345 +1,175 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
-from flask_login import login_required, current_user
+"""
+مسارات إدارة التفويضات الخارجية للموظفين
+"""
+
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash
+from sqlalchemy import or_
+from models import db, Employee, Department, Project, ExternalAuthorization
+from functools import wraps
 import os
+from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
-from sqlalchemy.orm import joinedload
-from sqlalchemy import or_, and_
-
-from app import db
-from models import ExternalAuthorization, Employee, Department, Project, User
-from functools import wraps
-from flask import abort
-
-# دالة admin_required محلية
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            abort(401)
-        if not hasattr(current_user, 'role') or current_user.role.value not in ['ADMIN', 'SYSTEM_ADMIN']:
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
-from utils.audit_logger import log_activity
-from werkzeug.utils import secure_filename
 
 external_authorizations_bp = Blueprint('external_authorizations', __name__, url_prefix='/external-authorizations')
 
-# تحديد أنواع الملفات المسموحة
+# إعدادات رفع الملفات
+UPLOAD_FOLDER = 'static/uploads/authorizations'
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@external_authorizations_bp.route('/')
-@login_required
-def index():
-    """صفحة عرض جميع التفويضات الخارجية"""
-    
-    # جلب الفلاتر من الطلب
-    department_filter = request.args.get('department', '')
-    project_filter = request.args.get('project', '')
-    status_filter = request.args.get('status', '')
-    search_query = request.args.get('search', '')
-    
-    # بناء الاستعلام الأساسي
-    query = db.session.query(ExternalAuthorization)\
-        .options(
-            joinedload(ExternalAuthorization.employee)\
-                .joinedload(Employee.departments),
-            joinedload(ExternalAuthorization.project),
-            joinedload(ExternalAuthorization.creator),
-            joinedload(ExternalAuthorization.approver)
-        )
-    
-    # تطبيق الفلاتر
-    if department_filter:
-        query = query.join(Employee).join(Employee.departments)\
-            .filter(Department.id == department_filter)
-    
-    if project_filter:
-        query = query.filter(ExternalAuthorization.project_id == project_filter)
-    
-    if status_filter:
-        query = query.filter(ExternalAuthorization.status == status_filter)
-    
-    if search_query:
-        query = query.join(Employee).filter(
-            or_(
-                Employee.name.ilike(f'%{search_query}%'),
-                Employee.employee_id.ilike(f'%{search_query}%'),
-                ExternalAuthorization.description.ilike(f'%{search_query}%')
-            )
-        )
-    
-    # ترتيب النتائج
-    authorizations = query.order_by(ExternalAuthorization.created_at.desc()).all()
-    
-    # جلب بيانات الفلاتر
-    try:
-        departments = Department.query.order_by(Department.name).all()
-        projects = Project.query.filter(Project.status == 'active').order_by(Project.name).all()
-    except Exception as e:
-        current_app.logger.error(f"Database error in external_authorizations.index: {str(e)}")
-        departments = []
-        projects = []
-    
-    # إحصائيات سريعة
-    try:
-        stats = {
-            'total': ExternalAuthorization.query.count(),
-            'pending': ExternalAuthorization.query.filter_by(status='pending').count(),
-            'approved': ExternalAuthorization.query.filter_by(status='approved').count(),
-            'rejected': ExternalAuthorization.query.filter_by(status='rejected').count()
-        }
-    except Exception as e:
-        current_app.logger.error(f"Database error getting stats: {str(e)}")
-        stats = {'total': 0, 'pending': 0, 'approved': 0, 'rejected': 0}
-    
-    return render_template('external_authorizations/index.html',
-                         authorizations=authorizations,
-                         departments=departments,
-                         projects=projects,
-                         stats=stats,
-                         filters={
-                             'department': department_filter,
-                             'project': project_filter,
-                             'status': status_filter,
-                             'search': search_query
-                         })
+def ensure_upload_dir():
+    """التأكد من وجود مجلد الرفع"""
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
 
-@external_authorizations_bp.route('/create', methods=['GET', 'POST'])
-@login_required
-def create():
-    """إنشاء تفويض خارجي جديد"""
+@external_authorizations_bp.route('/api/employees')
+def api_employees():
+    """API للبحث في الموظفين مع الفلترة"""
+    try:
+        search = request.args.get('search', '').strip()
+        department_id = request.args.get('department_id', '')
+        
+        # بناء الاستعلام الأساسي
+        query = Employee.query
+        
+        # فلترة حسب القسم إذا تم تحديده
+        if department_id:
+            query = query.filter(Employee.departments.any(Department.id == department_id))
+        
+        # البحث في الاسم أو رقم الموظف
+        if search:
+            query = query.filter(
+                or_(
+                    Employee.name.ilike(f'%{search}%'),
+                    Employee.employee_id.ilike(f'%{search}%'),
+                    Employee.national_id.ilike(f'%{search}%')
+                )
+            )
+        
+        # تحديد النتائج
+        employees = query.limit(20).all()
+        
+        # تنسيق البيانات للإرسال
+        result = []
+        for emp in employees:
+            departments_list = [dept.name for dept in emp.departments]
+            result.append({
+                'id': emp.id,
+                'name': emp.name,
+                'employee_id': emp.employee_id,
+                'national_id': emp.national_id,
+                'departments_str': ', '.join(departments_list) if departments_list else 'غير محدد'
+            })
+        
+        return jsonify(result)
     
-    if request.method == 'POST':
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@external_authorizations_bp.route('/api/departments')
+def api_departments():
+    """API لجلب جميع الأقسام"""
+    try:
+        departments = Department.query.all()
+        result = [{'id': dept.id, 'name': dept.name} for dept in departments]
+        return jsonify(result)
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@external_authorizations_bp.route('/api/projects')
+def api_projects():
+    """API لجلب جميع المشاريع"""
+    try:
+        projects = Project.query.all()
+        result = [{'id': proj.id, 'name': proj.name} for proj in projects]
+        return jsonify(result)
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@external_authorizations_bp.route('/create', methods=['POST'])
+def create_authorization():
+    """إنشاء تفويض خارجي جديد"""
+    try:
+        ensure_upload_dir()
+        
+        # جلب البيانات من النموذج
         employee_id = request.form.get('employee_id')
+        vehicle_id = request.form.get('vehicle_id')
         project_id = request.form.get('project_id')
-        description = request.form.get('description', '').strip()
-        external_link = request.form.get('external_link', '').strip()
+        authorization_type = request.form.get('authorization_type', 'تسليم')
+        description = request.form.get('description', '')
+        external_link = request.form.get('external_link', '')
         
-        # التحقق من صحة البيانات
-        if not employee_id or not project_id:
-            flash('يجب اختيار الموظف والمشروع', 'error')
-            return redirect(url_for('external_authorizations.create'))
-        
-        # التحقق من وجود الموظف والمشروع
-        employee = Employee.query.get(employee_id)
-        project = Project.query.get(project_id)
-        
-        if not employee or not project:
-            flash('الموظف أو المشروع غير موجود', 'error')
-            return redirect(url_for('external_authorizations.create'))
+        # التحقق من البيانات المطلوبة
+        if not employee_id or not vehicle_id or not project_id:
+            return jsonify({'error': 'البيانات المطلوبة مفقودة'}), 400
         
         # معالجة رفع الملف
         file_path = None
         if 'authorization_file' in request.files:
             file = request.files['authorization_file']
             if file and file.filename and allowed_file(file.filename):
-                # إنشاء اسم ملف آمن
+                # إنشاء اسم ملف فريد
                 filename = secure_filename(file.filename)
                 unique_filename = f"{uuid.uuid4()}_{filename}"
-                
-                # إنشاء مجلد التخزين إذا لم يكن موجوداً
-                upload_folder = os.path.join(current_app.static_folder, 'uploads', 'authorizations')
-                os.makedirs(upload_folder, exist_ok=True)
-                
-                # حفظ الملف
-                file_path = os.path.join('uploads', 'authorizations', unique_filename)
-                full_path = os.path.join(current_app.static_folder, 'uploads', 'authorizations', unique_filename)
-                file.save(full_path)
+                file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                file.save(file_path)
+                # حفظ المسار النسبي
+                file_path = f"uploads/authorizations/{unique_filename}"
         
-        # إنشاء التفويض الجديد
+        # إنشاء سجل التفويض
         authorization = ExternalAuthorization(
             employee_id=employee_id,
+            vehicle_id=vehicle_id,
             project_id=project_id,
+            authorization_type=authorization_type,
             description=description,
-            file_path=file_path,
             external_link=external_link if external_link else None,
-            created_by=current_user.id,
-            status='pending'
+            file_path=file_path,
+            status='pending',
+            created_at=datetime.utcnow()
         )
         
-        try:
-            db.session.add(authorization)
-            db.session.commit()
-            
-            # تسجيل العملية
-            log_activity('create', 'external_authorization', 
-                        f'تم إنشاء تفويض خارجي للموظف: {employee.name} في المشروع: {project.name}')
-            
-            flash('تم إنشاء التفويض الخارجي بنجاح', 'success')
-            return redirect(url_for('external_authorizations.index'))
-            
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error creating external authorization: {str(e)}")
-            flash('حدث خطأ أثناء إنشاء التفويض', 'error')
-    
-    # جلب البيانات للنموذج
-    departments = Department.query.order_by(Department.name).all()
-    projects = Project.query.filter(Project.status == 'active').order_by(Project.name).all()
-    
-    return render_template('external_authorizations/create.html',
-                         departments=departments,
-                         projects=projects)
-
-@external_authorizations_bp.route('/api/employees')
-@login_required
-def api_employees():
-    """API لجلب الموظفين مع إمكانية الفلترة"""
-    
-    department_id = request.args.get('department_id')
-    search_query = request.args.get('search', '').strip()
-    
-    # بناء الاستعلام
-    query = db.session.query(Employee)\
-        .options(joinedload(Employee.departments))\
-        .filter(Employee.status == 'active')
-    
-    # فلترة حسب القسم
-    if department_id:
-        query = query.join(Employee.departments)\
-            .filter(Department.id == department_id)
-    
-    # فلترة حسب البحث
-    if search_query:
-        query = query.filter(
-            or_(
-                Employee.name.ilike(f'%{search_query}%'),
-                Employee.employee_id.ilike(f'%{search_query}%')
-            )
-        )
-    
-    employees = query.order_by(Employee.name).limit(50).all()
-    
-    # تحويل البيانات للتنسيق المطلوب
-    result = []
-    for employee in employees:
-        departments_list = [dept.name for dept in employee.departments]
-        result.append({
-            'id': employee.id,
-            'name': employee.name,
-            'employee_id': employee.employee_id,
-            'departments': departments_list,
-            'departments_str': ', '.join(departments_list)
-        })
-    
-    return jsonify(result)
-
-@external_authorizations_bp.route('/<int:auth_id>')
-@login_required
-def view(auth_id):
-    """عرض تفاصيل التفويض"""
-    
-    authorization = ExternalAuthorization.query\
-        .options(
-            joinedload(ExternalAuthorization.employee)\
-                .joinedload(Employee.departments),
-            joinedload(ExternalAuthorization.project),
-            joinedload(ExternalAuthorization.creator),
-            joinedload(ExternalAuthorization.approver)
-        )\
-        .get_or_404(auth_id)
-    
-    return render_template('external_authorizations/view.html',
-                         authorization=authorization)
-
-@external_authorizations_bp.route('/<int:auth_id>/approve', methods=['POST'])
-@login_required
-@admin_required
-def approve(auth_id):
-    """الموافقة على التفويض"""
-    
-    authorization = ExternalAuthorization.query.get_or_404(auth_id)
-    notes = request.form.get('notes', '').strip()
-    
-    authorization.status = 'approved'
-    authorization.approved_by = current_user.id
-    authorization.approved_date = datetime.utcnow()
-    if notes:
-        authorization.notes = notes
-    
-    try:
+        db.session.add(authorization)
         db.session.commit()
         
-        # تسجيل العملية
-        log_activity('approve', 'external_authorization', 
-                    f'تم اعتماد التفويض الخارجي للموظف: {authorization.employee.name}')
-        
-        flash('تم اعتماد التفويض بنجاح', 'success')
+        return jsonify({'message': 'تم إنشاء التفويض بنجاح', 'id': authorization.id}), 201
+    
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error approving authorization: {str(e)}")
-        flash('حدث خطأ أثناء اعتماد التفويض', 'error')
-    
-    return redirect(url_for('external_authorizations.view', auth_id=auth_id))
+        return jsonify({'error': f'حدث خطأ: {str(e)}'}), 500
 
-@external_authorizations_bp.route('/<int:auth_id>/reject', methods=['POST'])
-@login_required
-@admin_required
-def reject(auth_id):
-    """رفض التفويض"""
-    
-    authorization = ExternalAuthorization.query.get_or_404(auth_id)
-    notes = request.form.get('notes', '').strip()
-    
-    if not notes:
-        flash('يجب إدخال سبب الرفض', 'error')
-        return redirect(url_for('external_authorizations.view', auth_id=auth_id))
-    
-    authorization.status = 'rejected'
-    authorization.approved_by = current_user.id
-    authorization.approved_date = datetime.utcnow()
-    authorization.notes = notes
-    
+@external_authorizations_bp.route('/vehicle/<int:vehicle_id>')
+def get_vehicle_authorizations(vehicle_id):
+    """جلب تفويضات سيارة معينة"""
     try:
-        db.session.commit()
+        authorizations = ExternalAuthorization.query.filter_by(vehicle_id=vehicle_id).all()
         
-        # تسجيل العملية
-        log_activity('reject', 'external_authorization', 
-                    f'تم رفض التفويض الخارجي للموظف: {authorization.employee.name}')
+        result = []
+        for auth in authorizations:
+            result.append({
+                'id': auth.id,
+                'employee_name': auth.employee.name if auth.employee else 'غير محدد',
+                'project_name': auth.project.name if auth.project else 'غير محدد',
+                'authorization_type': auth.authorization_type,
+                'description': auth.description,
+                'external_link': auth.external_link,
+                'file_path': auth.file_path,
+                'status': auth.status,
+                'status_text': {
+                    'pending': 'في الانتظار',
+                    'approved': 'موافق عليه',
+                    'rejected': 'مرفوض'
+                }.get(auth.status, 'غير محدد'),
+                'created_at': auth.created_at.strftime('%Y-%m-%d %H:%M') if auth.created_at else ''
+            })
         
-        flash('تم رفض التفويض', 'info')
+        return jsonify(result)
+    
     except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error rejecting authorization: {str(e)}")
-        flash('حدث خطأ أثناء رفض التفويض', 'error')
-    
-    return redirect(url_for('external_authorizations.view', auth_id=auth_id))
-
-@external_authorizations_bp.route('/<int:auth_id>/delete', methods=['POST'])
-@login_required
-@admin_required
-def delete(auth_id):
-    """حذف التفويض"""
-    
-    authorization = ExternalAuthorization.query.get_or_404(auth_id)
-    employee_name = authorization.employee.name
-    
-    # حذف الملف المرفق إذا كان موجوداً
-    if authorization.file_path:
-        file_full_path = os.path.join(current_app.static_folder, authorization.file_path)
-        if os.path.exists(file_full_path):
-            try:
-                os.remove(file_full_path)
-            except Exception as e:
-                current_app.logger.warning(f"Could not delete file {file_full_path}: {str(e)}")
-    
-    try:
-        db.session.delete(authorization)
-        db.session.commit()
-        
-        # تسجيل العملية
-        log_activity('delete', 'external_authorization', 
-                    f'تم حذف التفويض الخارجي للموظف: {employee_name}')
-        
-        flash('تم حذف التفويض بنجاح', 'success')
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error deleting authorization: {str(e)}")
-        flash('حدث خطأ أثناء حذف التفويض', 'error')
-    
-    return redirect(url_for('external_authorizations.index'))
+        return jsonify({'error': str(e)}), 500
