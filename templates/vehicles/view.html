@@ -1660,6 +1660,59 @@ function animateCounters() {
 let selectedEmployeeId = null;
 let searchTimeout = null;
 
+// فتح نافذة إضافة تفويض خارجي
+function openExternalAuthModal() {
+    console.log('Opening external authorization modal...');
+    const modal = new bootstrap.Modal(document.getElementById('externalAuthModal'));
+    modal.show();
+    
+    // إعادة تعيين النموذج
+    document.getElementById('externalAuthForm').reset();
+    clearSelectedEmployee();
+    clearFile();
+}
+
+// مسح الموظف المختار
+function clearSelectedEmployee() {
+    selectedEmployeeId = null;
+    document.getElementById('employeeId').value = '';
+    document.getElementById('selectedEmployee').classList.add('d-none');
+    document.getElementById('employeeSearch').value = '';
+    hideEmployeeDropdown();
+}
+
+// مسح الملف المختار
+function clearFile() {
+    document.getElementById('authorizationFile').value = '';
+    document.getElementById('fileInfo').classList.add('d-none');
+    document.getElementById('fileUploadArea').style.borderColor = '#dee2e6';
+    document.getElementById('fileUploadArea').style.backgroundColor = '#f8f9fa';
+}
+
+// إظهار spinner
+function showSpinner() {
+    const spinner = document.getElementById('searchSpinner');
+    const icon = document.getElementById('searchIcon');
+    if (spinner) spinner.classList.remove('d-none');
+    if (icon) icon.classList.add('d-none');
+}
+
+// إخفاء spinner  
+function hideSpinner() {
+    const spinner = document.getElementById('searchSpinner');
+    const icon = document.getElementById('searchIcon');
+    if (spinner) spinner.classList.add('d-none');
+    if (icon) icon.classList.remove('d-none');
+}
+
+// إخفاء قائمة الموظفين
+function hideEmployeeDropdown() {
+    const dropdown = document.getElementById('employeeDropdown');
+    if (dropdown) {
+        dropdown.style.display = 'none';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('External Authorization System Loading...');
     
@@ -1921,7 +1974,15 @@ function displayEmployees(employees) {
         });
     }
     
-    showEmployeeDropdown();
+    showEmployeeDropdown(employees);
+}
+
+// إظهار قائمة الموظفين
+function showEmployeeDropdown(employees) {
+    const dropdown = document.getElementById('employeeDropdown');
+    if (dropdown) {
+        dropdown.style.display = 'block';
+    }
 }
 
 // اختيار موظف
