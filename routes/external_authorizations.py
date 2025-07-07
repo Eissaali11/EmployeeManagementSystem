@@ -31,6 +31,7 @@ def create_authorization(vehicle_id):
     employees = Employee.query.options(db.joinedload(Employee.departments)).all()
     
     # جلب جميع الأقسام للفلترة
+    from models import Department
     departments = Department.query.all()
     
     return render_template('external_authorizations/create.html', 
