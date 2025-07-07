@@ -3,13 +3,16 @@
 {% block title %}إضافة تفويض خارجي جديد{% endblock %}
 
 {% block extra_css %}
-<!-- إصدار محدث 2025 -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-    /* تصميم متناسق وأنيق مع ألوان متوازنة - إصدار محدث */
+    * {
+        font-family: 'Cairo', 'Segoe UI', sans-serif !important;
+    }
+    
     body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
-        min-height: 100vh;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(45deg, #667eea, #764ba2, #f093fb) !important;
+        min-height: 100vh !important;
+        color: #2c3e50 !important;
     }
     
     .main-container {
@@ -18,14 +21,12 @@
     }
     
     .auth-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 18px;
-        color: white;
-        padding: 40px;
-        margin-bottom: 30px;
-        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, #e74c3c, #f39c12) !important;
+        border-radius: 20px !important;
+        color: white !important;
+        padding: 40px !important;
+        margin-bottom: 30px !important;
+        box-shadow: 0 15px 35px rgba(231, 76, 60, 0.4) !important;
     }
     
     .auth-header::before {
@@ -96,9 +97,9 @@
     }
     
     .form-header {
-        background: linear-gradient(135deg, #5c6bc0 0%, #3f51b5 100%);
-        padding: 25px 35px;
-        color: white;
+        background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+        padding: 25px 35px !important;
+        color: white !important;
     }
     
     .form-header h3 {
@@ -132,40 +133,40 @@
     }
     
     .section-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #ff5722 !important;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #ffccbc;
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        color: #8e44ad !important;
+        margin-bottom: 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding-bottom: 12px !important;
+        border-bottom: 3px solid #e8abe8 !important;
     }
     
     .form-label {
-        font-weight: 600;
-        color: #e91e63 !important;
-        margin-bottom: 8px;
-        font-size: 14px;
+        font-weight: 700 !important;
+        color: #e67e22 !important;
+        margin-bottom: 10px !important;
+        font-size: 16px !important;
     }
     
     .form-control, .form-select {
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 14px;
-        transition: all 0.3s ease;
-        background: white;
-        color: #1976d2 !important;
-        font-weight: 600;
+        border: 2px solid #bdc3c7 !important;
+        border-radius: 10px !important;
+        padding: 15px 18px !important;
+        font-size: 16px !important;
+        transition: all 0.3s ease !important;
+        background: white !important;
+        color: #c0392b !important;
+        font-weight: 600 !important;
     }
     
     .form-control:focus, .form-select:focus {
-        border-color: #5c6bc0;
-        box-shadow: 0 0 0 0.2rem rgba(92, 107, 192, 0.25);
-        background: white;
-        color: #2c387e;
+        border-color: #9b59b6 !important;
+        box-shadow: 0 0 0 0.25rem rgba(155, 89, 182, 0.3) !important;
+        background: white !important;
+        color: #8e44ad !important;
     }
     
     .form-control::placeholder {
@@ -175,7 +176,23 @@
     }
     
     .input-group {
-        position: relative;
+        position: relative !important;
+    }
+    
+    .input-icon {
+        position: absolute !important;
+        left: 18px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #e74c3c !important;
+        z-index: 5 !important;
+        font-size: 18px !important;
+    }
+    
+    .input-with-icon {
+        padding-left: 45px !important;
+        color: #c0392b !important;
+        font-weight: 600 !important;
     }
     
     .input-icon {
@@ -193,22 +210,22 @@
     }
     
     .btn-modern {
-        background: linear-gradient(135deg, #5c6bc0 0%, #3f51b5 100%);
-        border: none;
-        border-radius: 8px;
-        padding: 14px 30px;
-        font-size: 15px;
-        font-weight: 600;
-        color: white;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(92, 107, 192, 0.4);
+        background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 16px 35px !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: white !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5) !important;
     }
     
     .btn-modern:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(92, 107, 192, 0.6);
-        color: white;
-        background: linear-gradient(135deg, #4527a0 0%, #283593 100%);
+        transform: translateY(-3px) !important;
+        box-shadow: 0 10px 30px rgba(231, 76, 60, 0.7) !important;
+        color: white !important;
+        background: linear-gradient(135deg, #c0392b, #a93226) !important;
     }
     
     .btn-secondary {
@@ -250,16 +267,16 @@
     }
     
     .upload-icon {
-        font-size: 48px;
-        color: #5c6bc0;
-        margin-bottom: 15px;
+        font-size: 50px !important;
+        color: #f39c12 !important;
+        margin-bottom: 18px !important;
     }
     
     .upload-text {
-        font-size: 16px;
-        font-weight: 600;
-        color: #3f51b5;
-        margin-bottom: 8px;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        color: #d35400 !important;
+        margin-bottom: 10px !important;
     }
     
     .upload-hint {
