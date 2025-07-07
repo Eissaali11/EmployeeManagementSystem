@@ -363,57 +363,50 @@ function shareWorkshopDetails() {
     };
     
     // تكوين النص للمشاركة
-    let shareText = `🚗 تقرير سجل الورشة - نُظم\n`;
+    let shareText = `🚗 سجل ورشة السيارة - نُظم\n`;
     shareText += `═══════════════════════════\n\n`;
-    shareText += `📋 معلومات السيارة:\n`;
-    shareText += `• السيارة: ${workshopData.vehicle}\n\n`;
     
-    shareText += `📅 التواريخ:\n`;
-    shareText += `• دخول الورشة: ${workshopData.entryDate}\n`;
-    shareText += `• خروج الورشة: ${workshopData.exitDate}\n\n`;
+    shareText += `🚙 رقم السيارة: ${workshopData.vehicle}\n`;
+    shareText += `📅 تاريخ دخول الورشة: ${workshopData.entryDate}\n`;
+    shareText += `📅 تاريخ خروج الورشة: ${workshopData.exitDate}\n`;
+    shareText += `🔧 حالة الإصلاح: ${workshopData.status}\n`;
+    shareText += `📝 سبب الدخول: ${workshopData.reason}\n\n`;
     
-    shareText += `🔧 تفاصيل العملية:\n`;
-    shareText += `• السبب: ${workshopData.reason}\n`;
-    shareText += `• الحالة: ${workshopData.status}\n`;
-    shareText += `• الوصف: ${workshopData.description}\n\n`;
+    shareText += `📖 وصف العملية:\n${workshopData.description}\n\n`;
     
-    if (workshopData.workshopName !== 'غير محدد' || workshopData.technicianName !== 'غير محدد') {
-        shareText += `🏪 معلومات الورشة:\n`;
-        if (workshopData.workshopName !== 'غير محدد') {
-            shareText += `• اسم الورشة: ${workshopData.workshopName}\n`;
-        }
-        if (workshopData.technicianName !== 'غير محدد') {
-            shareText += `• الفني المسؤول: ${workshopData.technicianName}\n`;
-        }
-        shareText += `\n`;
+    if (workshopData.workshopName !== 'غير محدد') {
+        shareText += `🏪 اسم الورشة: ${workshopData.workshopName}\n`;
     }
-    
+    if (workshopData.technicianName !== 'غير محدد') {
+        shareText += `👨‍🔧 الفني المسؤول: ${workshopData.technicianName}\n`;
+    }
     if (workshopData.cost !== 'غير محدد') {
-        shareText += `💰 التكلفة: ${workshopData.cost}\n\n`;
+        shareText += `💰 التكلفة: ${workshopData.cost}\n`;
     }
+    shareText += `\n`;
     
     if (workshopData.imagesCount > 0) {
-        shareText += `📸 الصور المرفقة: ${workshopData.imagesCount} صورة\n\n`;
+        shareText += `📸 عدد الصور المرفقة: ${workshopData.imagesCount} صورة\n`;
+        shareText += `🖼️ لعرض جميع الصور: ${workshopData.detailsUrl}\n\n`;
     }
     
-    // إضافة الروابط
-    if (workshopData.deliveryLink || workshopData.receptionLink) {
-        shareText += `🔗 الروابط المتاحة:\n`;
-        if (workshopData.deliveryLink) {
-            shareText += `• رابط تسليم الورشة: ${workshopData.deliveryLink}\n`;
-        }
-        if (workshopData.receptionLink) {
-            shareText += `• رابط استلام من الورشة: ${workshopData.receptionLink}\n`;
-        }
-        shareText += `\n`;
+    // إضافة النماذج والروابط
+    shareText += `🔗 الروابط والنماذج:\n`;
+    if (workshopData.deliveryLink) {
+        shareText += `📋 نموذج تسليم الورشة:\n${workshopData.deliveryLink}\n\n`;
     }
+    if (workshopData.receptionLink) {
+        shareText += `📋 نموذج استلام من الورشة:\n${workshopData.receptionLink}\n\n`;
+    }
+    shareText += `🌐 رابط التفاصيل الكاملة مع الصور:\n${workshopData.detailsUrl}\n\n`;
     
     if (workshopData.notes !== 'لا توجد ملاحظات') {
         shareText += `📝 ملاحظات إضافية:\n${workshopData.notes}\n\n`;
     }
     
-    shareText += `🌐 عرض التفاصيل الكاملة والصور:\n${workshopData.detailsUrl}\n\n`;
-    shareText += `📱 تم إنشاء هذا التقرير بواسطة نظام نُظم`;
+    shareText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    shareText += `📱 نظام نُظم لإدارة المركبات\n`;
+    shareText += `⚡ تقرير تلقائي مُنشأ بالنظام`;
     
     // استخدام Web Share API إذا كان متاحاً
     if (navigator.share) {

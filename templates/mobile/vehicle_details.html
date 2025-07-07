@@ -734,13 +734,15 @@ function shareWorkshopSummary(workshopId, description, entryDate, status) {
     const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
     const detailsUrl = `${window.location.origin}/mobile/vehicles/workshop/${workshopId}/details`;
     
-    const shareText = `🚗 سجل ورشة - نُظم\n` +
+    const shareText = `🚗 سجل ورشة السيارة - نُظم\n` +
                      `═══════════════════════════\n\n` +
-                     `📋 السيارة: ${vehicleInfo}\n` +
-                     `📅 تاريخ الدخول: ${entryDate || 'غير محدد'}\n` +
-                     `🔧 الحالة: ${statusText}\n` +
-                     `📝 الوصف: ${description}\n\n` +
-                     `🌐 عرض التفاصيل الكاملة والصور:\n${detailsUrl}\n\n` +
+                     `🚙 رقم السيارة: ${vehicleInfo}\n` +
+                     `📅 تاريخ دخول الورشة: ${entryDate || 'غير محدد'}\n` +
+                     `🔧 حالة الإصلاح: ${statusText}\n` +
+                     `📝 وصف العملية: ${description}\n\n` +
+                     `🔗 الروابط:\n` +
+                     `🌐 التفاصيل الكاملة مع الصور:\n${detailsUrl}\n\n` +
+                     `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
                      `📱 نظام نُظم لإدارة المركبات`;
     
     if (navigator.share) {
