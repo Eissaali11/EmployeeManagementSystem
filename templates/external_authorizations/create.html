@@ -2,6 +2,119 @@
 
 {% block title %}إضافة تفويض خارجي جديد{% endblock %}
 
+{% block extra_css %}
+<style>
+    .authorization-banner {
+        background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+        border-radius: 15px;
+        padding: 20px 30px;
+        margin: 20px 0;
+        box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .authorization-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+    
+    .banner-content {
+        display: flex;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .banner-icon {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 20px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .banner-icon i {
+        font-size: 28px;
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .banner-text h3 {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 24px;
+        margin: 0 0 5px 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        letter-spacing: 0.5px;
+    }
+    
+    .vehicle-info {
+        color: #e8f4fd;
+        font-size: 16px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 18px;
+        border-radius: 25px;
+        display: inline-block;
+        margin-top: 8px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        letter-spacing: 0.3px;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.1; }
+        50% { transform: scale(1.1); opacity: 0.2; }
+    }
+    
+    .card-header {
+        border-bottom: 3px solid #4a90e2;
+    }
+    
+    @media (max-width: 768px) {
+        .authorization-banner {
+            padding: 15px 20px;
+        }
+        
+        .banner-content {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .banner-icon {
+            margin: 0 0 15px 0;
+            width: 60px;
+            height: 60px;
+        }
+        
+        .banner-icon i {
+            font-size: 24px;
+        }
+        
+        .banner-text h3 {
+            font-size: 20px;
+        }
+        
+        .vehicle-info {
+            font-size: 14px;
+            padding: 6px 15px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
     <!-- العنوان الرئيسي -->
@@ -28,14 +141,27 @@
         </div>
     </div>
 
+    <!-- بنر إضافة تفويض خارجي -->
+    <div class="authorization-banner mb-4">
+        <div class="banner-content">
+            <div class="banner-icon">
+                <i class="fas fa-file-signature"></i>
+            </div>
+            <div class="banner-text">
+                <h3>إضافة تفويض خارجي جديد</h3>
+                <span class="vehicle-info">{{ vehicle.plate_number }} المركبة - {{ vehicle.make }} {{ vehicle.model }}</span>
+            </div>
+        </div>
+    </div>
+
     <!-- نموذج إضافة التفويض -->
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-plus-circle me-2"></i>
-                        بيانات التفويض الخارجي
+                <div class="card-header bg-light text-dark">
+                    <h5 class="mb-0 text-primary">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        نموذج بيانات التفويض
                     </h5>
                 </div>
                 
