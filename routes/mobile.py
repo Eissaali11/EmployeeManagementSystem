@@ -18,7 +18,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Selec
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 from markupsafe import Markup
 import base64
-from models import VehicleProject, VehicleWorkshop, db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker
+from models import VehicleProject, VehicleWorkshop, VehicleWorkshopImage, db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker
 from app import app
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
@@ -3831,6 +3831,39 @@ def create_safety_check(vehicle_id):
                            drivers=drivers,
                            supervisors=supervisors,
                            now=datetime.now())
+
+# اختبار حفظ سجل الورشة تجريبياً - النسخة المحمولة
+@mobile_bp.route('/vehicles/<int:vehicle_id>/workshop/test', methods=['GET'])
+@login_required
+def test_workshop_save(vehicle_id):
+    """اختبار حفظ سجل الورشة تجريبياً"""
+    try:
+        # إنشاء سجل ورشة تجريبي
+        workshop_record = VehicleWorkshop(
+            vehicle_id=vehicle_id,
+            entry_date=datetime.now().date(),
+            reason='maintenance',
+            description='اختبار تجريبي من النظام',
+            repair_status='in_progress',
+            cost=500.0,
+            workshop_name='ورشة الاختبار',
+            technician_name='فني الاختبار',
+            delivery_link='https://example.com/delivery',
+            reception_link='https://example.com/pickup',
+            notes='سجل تجريبي للاختبار - تم إنشاؤه تلقائياً'
+        )
+        
+        db.session.add(workshop_record)
+        db.session.commit()
+        
+        flash(f'تم إضافة سجل الورشة التجريبي رقم {workshop_record.id} بنجاح!', 'success')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في الاختبار التجريبي للسيارة {vehicle_id}: {str(e)}")
+        flash(f'فشل الاختبار التجريبي: {str(e)}', 'danger')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
 
 # إضافة سجل ورشة جديد - النسخة المحمولة
 @mobile_bp.route('/vehicles/<int:vehicle_id>/workshop/add', methods=['GET', 'POST'])
