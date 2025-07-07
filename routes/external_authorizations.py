@@ -24,6 +24,59 @@ def index():
     
     return render_template('external_authorizations/index.html', authorizations=authorizations)
 
+@external_authorizations_bp.route('/view/<int:id>')
+def view_authorization(id):
+    """عرض تفاصيل التفويض الخارجي"""
+    from models import ExternalAuthorization
+    authorization = ExternalAuthorization.query.get_or_404(id)
+    return render_template('external_authorizations/view.html', authorization=authorization)
+
+@external_authorizations_bp.route('/edit/<int:id>')
+def edit_authorization(id):
+    """تعديل التفويض الخارجي"""
+    from models import ExternalAuthorization
+    authorization = ExternalAuthorization.query.get_or_404(id)
+    return redirect(url_for('external_authorizations.create_authorization', vehicle_id=authorization.vehicle_id, edit_id=id))
+
+@external_authorizations_bp.route('/approve/<int:id>')
+def approve_authorization(id):
+    """الموافقة على التفويض الخارجي"""
+    from models import ExternalAuthorization
+    authorization = ExternalAuthorization.query.get_or_404(id)
+    authorization.status = 'approved'
+    db.session.commit()
+    flash('تم الموافقة على التفويض بنجاح', 'success')
+    return redirect(url_for('vehicles.view', id=authorization.vehicle_id))
+
+@external_authorizations_bp.route('/reject/<int:id>')
+def reject_authorization(id):
+    """رفض التفويض الخارجي"""
+    from models import ExternalAuthorization
+    authorization = ExternalAuthorization.query.get_or_404(id)
+    authorization.status = 'rejected'
+    db.session.commit()
+    flash('تم رفض التفويض', 'warning')
+    return redirect(url_for('vehicles.view', id=authorization.vehicle_id))
+
+@external_authorizations_bp.route('/delete/<int:id>')
+def delete_authorization(id):
+    """حذف التفويض الخارجي"""
+    from models import ExternalAuthorization
+    authorization = ExternalAuthorization.query.get_or_404(id)
+    vehicle_id = authorization.vehicle_id
+    
+    # حذف الملف المرفق إذا كان موجوداً
+    if authorization.file_path and os.path.exists(authorization.file_path):
+        try:
+            os.remove(authorization.file_path)
+        except:
+            pass
+    
+    db.session.delete(authorization)
+    db.session.commit()
+    flash('تم حذف التفويض بنجاح', 'success')
+    return redirect(url_for('vehicles.view', id=vehicle_id))
+
 @external_authorizations_bp.route('/add/')
 @external_authorizations_bp.route('/add/<int:vehicle_id>')
 def create_authorization(vehicle_id=None):
