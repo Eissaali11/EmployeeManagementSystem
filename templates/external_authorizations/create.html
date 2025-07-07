@@ -320,15 +320,15 @@
     <!-- العنوان الرئيسي -->
     <div class="main-header">
         <h1 class="main-title">🚗 إدارة التفويضات الخارجية</h1>
-        <p class="main-subtitle">قم بإنشاء تفويض خارجي جديد للمركبة بسهولة</p>
+        <p class="main-subtitle" style="color: #000000 !important;">قم بإنشاء تفويض خارجي جديد للمركبة بسهولة</p>
     </div>
 
     <!-- معلومات المركبة -->
     <div class="vehicle-info">
-        <div class="vehicle-badge">
+        <div class="vehicle-badge" style="color: #000000 !important;">
             المركبة: {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}
         </div>
-        <p class="text-muted">المركبة المحددة لإنشاء التفويض الخارجي</p>
+        <p class="text-muted" style="color: #000000 !important;">المركبة المحددة لإنشاء التفويض الخارجي</p>
     </div>
 
     <!-- النموذج الرئيسي -->
@@ -336,7 +336,7 @@
         <div class="col-lg-10">
             <div class="form-card">
                 <div class="form-header">
-                    <h2 class="form-title">نموذج التفويض الخارجي</h2>
+                    <h2 class="form-title" style="color: #000000 !important;">نموذج التفويض الخارجي</h2>
                 </div>
 
                 <form id="externalAuthForm" action="{{ url_for('external_authorizations.store_authorization') }}" method="POST" enctype="multipart/form-data">
