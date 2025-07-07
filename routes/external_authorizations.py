@@ -113,6 +113,11 @@ def create_authorization(vehicle_id=None):
     from models import Department
     departments = Department.query.all()
     
+    # إضافة تشخيص للتأكد من البيانات
+    if edit_mode and authorization:
+        current_app.logger.info(f"Edit mode active for authorization {authorization.id}")
+        current_app.logger.info(f"Authorization form link: {authorization.authorization_form_link}")
+    
     return render_template('external_authorizations/create.html', 
                          vehicle=vehicle, form=form, employees=employees, departments=departments,
                          authorization=authorization, edit_mode=edit_mode)
