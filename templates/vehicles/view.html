@@ -1673,6 +1673,17 @@ document.addEventListener('DOMContentLoaded', function() {
         setupEmployeeSearch();
         setupFileUpload();
         setupFormSubmission();
+        
+        // إضافة مستمع لتغيير القسم
+        const departmentFilter = document.getElementById('departmentFilter');
+        if (departmentFilter) {
+            departmentFilter.addEventListener('change', function() {
+                const searchInput = document.getElementById('employeeSearch');
+                if (searchInput && searchInput.value.trim()) {
+                    searchEmployees(searchInput.value.trim(), this.value);
+                }
+            });
+        }
     }, 500);
     
     console.log('External Authorization System Loaded');
