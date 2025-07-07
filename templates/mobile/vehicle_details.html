@@ -337,7 +337,7 @@
                         </div>
                         <div class="col-6">
                             <div class="btn-group btn-group-sm w-100">
-                                <button type="button" class="btn btn-outline-success flex-fill" data-workshop-id="{{ record.id }}" data-description="{{ record.description|e }}" data-entry-date="{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '' }}" data-status="{{ record.repair_status }}" data-images-count="{{ record.images|length if record.images else 0 }}" data-image-paths="{{ record.images|map(attribute='file_path')|list|join(',') if record.images else '' }}" onclick="shareWorkshopSummaryFromData(this)">
+                                <button type="button" class="btn btn-outline-success flex-fill" data-workshop-id="{{ record.id }}" data-description="{{ record.description|e }}" data-entry-date="{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '' }}" data-status="{{ record.repair_status }}" data-images-count="{{ record.images|length if record.images else 0 }}" data-image-paths="{{ record.images|map(attribute='image_path')|list|join(',') if record.images else '' }}" onclick="shareWorkshopSummaryFromData(this)">
                                     <i class="fas fa-share-alt"></i>
                                     مشاركة
                                 </button>

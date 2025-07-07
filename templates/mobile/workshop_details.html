@@ -424,7 +424,7 @@ function shareWorkshopDetails() {
             // إضافة روابط الصور المباشرة
             {% if workshop_record.images %}
             {% for image in workshop_record.images %}
-            shareText += `🖼️ صورة {{ loop.index }}: ${window.location.origin}{{ url_for('static', filename='uploads/workshop/' + image.file_path) }}\n`;
+            shareText += `🖼️ صورة {{ loop.index }}: ${window.location.origin}{{ url_for('static', filename='uploads/workshop/' + image.image_path) }}\n`;
             {% endfor %}
             {% endif %}
             
