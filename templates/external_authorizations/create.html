@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}إضافة تفويض خارجي جديد{% endblock %}
+{% block title %}{% if edit_mode %}تعديل التفويض الخارجي{% else %}إضافة تفويض خارجي جديد{% endif %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -318,8 +318,8 @@
 <div class="container-fluid">
     <!-- العنوان الرئيسي -->
     <div class="main-header">
-        <h1 class="main-title">🚗 إدارة التفويضات الخارجية</h1>
-        <p class="main-subtitle" style="color: #000000 !important;">قم بإنشاء تفويض خارجي جديد للمركبة بسهولة</p>
+        <h1 class="main-title">🚗 {% if edit_mode %}تعديل التفويض الخارجي{% else %}إدارة التفويضات الخارجية{% endif %}</h1>
+        <p class="main-subtitle" style="color: #000000 !important;">{% if edit_mode %}قم بتعديل بيانات التفويض الخارجي{% else %}قم بإنشاء تفويض خارجي جديد للمركبة بسهولة{% endif %}</p>
     </div>
 
     <!-- معلومات المركبة -->
@@ -335,12 +335,15 @@
         <div class="col-lg-10">
             <div class="form-card">
                 <div class="form-header">
-                    <h2 class="form-title" style="color: #000000 !important;">نموذج التفويض الخارجي</h2>
+                    <h2 class="form-title" style="color: #000000 !important;">{% if edit_mode %}تعديل التفويض الخارجي #{{ authorization.id }}{% else %}نموذج التفويض الخارجي{% endif %}</h2>
                 </div>
 
                 <form id="externalAuthForm" action="{{ url_for('external_authorizations.store_authorization') }}" method="POST" enctype="multipart/form-data">
                     {{ form.hidden_tag() }}
                     <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                    {% if edit_mode %}
+                    <input type="hidden" name="edit_id" value="{{ authorization.id }}">
+                    {% endif %}
 
                     <div class="form-body">
                         <!-- قسم الموظف -->
@@ -375,7 +378,8 @@
                                 <select class="form-select" id="employee_id" name="employee_id" required>
                                     <option value="">اختر الموظف</option>
                                     {% for emp in employees %}
-                                    <option value="{{ emp.id }}" data-departments="{{ emp.departments|map(attribute='id')|join(',') }}">
+                                    <option value="{{ emp.id }}" data-departments="{{ emp.departments|map(attribute='id')|join(',') }}"
+                                    {% if edit_mode and authorization.driver_name and emp.name == authorization.driver_name %}selected{% endif %}>
                                         {{ emp.name }} - {{ emp.departments|map(attribute='name')|join(', ') if emp.departments else 'غير محدد' }}
                                     </option>
                                     {% endfor %}
@@ -395,7 +399,10 @@
                                     <select class="form-select" id="project_id" name="project_id" required>
                                         <option value="">اختر المشروع</option>
                                         {% for dept in departments %}
-                                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                        <option value="{{ dept.id }}"
+                                        {% if edit_mode and authorization.project_name and dept.name == authorization.project_name %}selected{% endif %}>
+                                            {{ dept.name }}
+                                        </option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -403,7 +410,8 @@
                                 <div class="col-md-6 mb-4">
                                     <label for="city" class="form-label">🏙️ المدينة *</label>
                                     <input type="text" class="form-control" id="city" name="city" 
-                                           placeholder="اكتب اسم المدينة..." required>
+                                           placeholder="اكتب اسم المدينة..." required
+                                           value="{% if edit_mode and authorization.city %}{{ authorization.city }}{% endif %}">
                                 </div>
                             </div>
                             
@@ -412,24 +420,25 @@
                                     <label for="authorization_type" class="form-label">📝 نوع التفويض *</label>
                                     <select class="form-select" id="authorization_type" name="authorization_type" required>
                                         <option value="">اختر نوع التفويض</option>
-                                        <option value="handover_to_delegate">تفويض تسليم</option>
-                                        <option value="receive_from_delegate">استلام السيارة من مندوب</option>
-                                        <option value="temporary_authorization">تفويض مؤقت</option>
-                                        <option value="vehicle_transfer">نقل سيارة</option>
+                                        <option value="handover_to_delegate" {% if edit_mode and authorization.authorization_type == 'handover_to_delegate' %}selected{% endif %}>تفويض تسليم</option>
+                                        <option value="receive_from_delegate" {% if edit_mode and authorization.authorization_type == 'receive_from_delegate' %}selected{% endif %}>استلام السيارة من مندوب</option>
+                                        <option value="temporary_authorization" {% if edit_mode and authorization.authorization_type == 'temporary_authorization' %}selected{% endif %}>تفويض مؤقت</option>
+                                        <option value="vehicle_transfer" {% if edit_mode and authorization.authorization_type == 'vehicle_transfer' %}selected{% endif %}>نقل سيارة</option>
                                     </select>
                                 </div>
                                 
                                 <div class="col-md-6 mb-4">
                                     <label for="duration" class="form-label">⏰ مدة التفويض</label>
                                     <input type="text" class="form-control" id="duration" name="duration" 
-                                           placeholder="مثال: 3 أيام، أسبوع، شهر...">
+                                           placeholder="مثال: 3 أيام، أسبوع، شهر..."
+                                           value="{% if edit_mode and authorization.duration %}{{ authorization.duration }}{% endif %}">
                                 </div>
                             </div>
                             
                             <div class="mb-4">
                                 <label for="description" class="form-label">📄 وصف التفويض *</label>
                                 <textarea class="form-control" id="description" name="description" rows="4" 
-                                         placeholder="اكتب وصفاً مفصلاً للتفويض والغرض منه..." required></textarea>
+                                         placeholder="اكتب وصفاً مفصلاً للتفويض والغرض منه..." required>{% if edit_mode and authorization.notes %}{{ authorization.notes }}{% endif %}</textarea>
                             </div>
                         </div>
 
@@ -445,9 +454,17 @@
                                     <div class="input-group">
                                         <i class="fas fa-link input-icon"></i>
                                         <input type="url" class="form-control input-with-icon" id="authorization_form_link" 
-                                               name="authorization_form_link" placeholder="https://example.com/form">
+                                               name="authorization_form_link" placeholder="https://example.com/form"
+                                               value="{% if edit_mode and authorization.authorization_form_link %}{{ authorization.authorization_form_link }}{% endif %}">
                                     </div>
                                     <small class="text-muted">مثال: رابط Google Form أو نموذج إلكتروني</small>
+                                    {% if edit_mode and authorization.authorization_form_link %}
+                                    <div class="mt-2">
+                                        <a href="{{ authorization.authorization_form_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i>فتح الرابط الحالي
+                                        </a>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="col-md-6 mb-4">
@@ -455,7 +472,8 @@
                                     <div class="input-group">
                                         <i class="fas fa-bookmark input-icon"></i>
                                         <input type="text" class="form-control input-with-icon" id="external_reference" 
-                                               name="external_reference" placeholder="رقم المرجع أو كود التفويض">
+                                               name="external_reference" placeholder="رقم المرجع أو كود التفويض"
+                                               value="{% if edit_mode and authorization.external_reference %}{{ authorization.external_reference }}{% endif %}">
                                     </div>
                                 </div>
                             </div>

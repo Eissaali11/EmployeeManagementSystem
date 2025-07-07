@@ -81,8 +81,18 @@ def delete_authorization(id):
 @external_authorizations_bp.route('/add/<int:vehicle_id>')
 def create_authorization(vehicle_id=None):
     """صفحة إضافة تفويض خارجي جديد"""
-    from models import Vehicle, Employee
+    from models import Vehicle, Employee, ExternalAuthorization
     from flask_wtf import FlaskForm
+    
+    # التحقق من وجود معرف تعديل
+    edit_id = request.args.get('edit_id')
+    authorization = None
+    edit_mode = False
+    
+    if edit_id:
+        authorization = ExternalAuthorization.query.get_or_404(edit_id)
+        edit_mode = True
+        vehicle_id = authorization.vehicle_id
     
     # إذا لم يتم تحديد مركبة، استخدم أول مركبة متاحة
     if vehicle_id is None:
@@ -103,16 +113,21 @@ def create_authorization(vehicle_id=None):
     departments = Department.query.all()
     
     return render_template('external_authorizations/create.html', 
-                         vehicle=vehicle, form=form, employees=employees, departments=departments)
+                         vehicle=vehicle, form=form, employees=employees, departments=departments,
+                         authorization=authorization, edit_mode=edit_mode)
 
 @external_authorizations_bp.route('/store', methods=['POST'])
 def store_authorization():
-    """حفظ التفويض الخارجي الجديد"""
+    """حفظ التفويض الخارجي الجديد أو تحديث الموجود"""
     try:
         from models import ExternalAuthorization
         from flask import request, current_app, flash, redirect, url_for
         import os
         from datetime import datetime
+        
+        # التحقق من وضع التعديل
+        edit_id = request.form.get('edit_id')
+        edit_mode = bool(edit_id)
         
         # بيانات النموذج
         vehicle_id = request.form.get('vehicle_id')
@@ -133,18 +148,34 @@ def store_authorization():
         driver_phone = employee.mobile if employee else None
         project_name = department.name if department else None
         
-        # إنشاء التفويض الجديد
-        authorization = ExternalAuthorization(
-            vehicle_id=vehicle_id,
-            driver_name=driver_name,
-            driver_phone=driver_phone,
-            project_name=project_name,
-            city=city,
-            authorization_type=authorization_type,
-            duration=duration,
-            notes=notes,
-            status='pending'
-        )
+        # إنشاء أو تحديث التفويض
+        if edit_mode:
+            authorization = ExternalAuthorization.query.get_or_404(edit_id)
+            authorization.vehicle_id = vehicle_id
+            authorization.driver_name = driver_name or authorization.driver_name
+            authorization.driver_phone = driver_phone or authorization.driver_phone
+            authorization.project_name = project_name or authorization.project_name
+            authorization.city = city
+            authorization.authorization_type = authorization_type
+            authorization.duration = duration
+            authorization.authorization_form_link = authorization_form_link
+            authorization.external_reference = external_reference
+            authorization.notes = notes
+        else:
+            authorization = ExternalAuthorization(
+                vehicle_id=vehicle_id,
+                driver_name=driver_name,
+                driver_phone=driver_phone,
+                project_name=project_name,
+                city=city,
+                authorization_type=authorization_type,
+                duration=duration,
+                authorization_form_link=authorization_form_link,
+                external_reference=external_reference,
+                notes=notes,
+                status='pending'
+            )
+            db.session.add(authorization)
         
         # معالجة رفع الملف إذا وجد
         uploaded_file = request.files.get('file_upload')
@@ -160,10 +191,10 @@ def store_authorization():
             authorization.file_path = file_path
         
         # حفظ في قاعدة البيانات
-        db.session.add(authorization)
         db.session.commit()
         
-        flash('تم إنشاء التفويض الخارجي بنجاح!', 'success')
+        message = 'تم تحديث التفويض الخارجي بنجاح!' if edit_mode else 'تم إنشاء التفويض الخارجي بنجاح!'
+        flash(message, 'success')
         return redirect(url_for('vehicles.view', id=vehicle_id))
         
     except Exception as e:
