@@ -514,6 +514,89 @@
     </div>
 </div>
 
+<!-- التفويضات الخارجية -->
+<div class="card mb-3 mx-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-file-signature ms-2"></i>
+            التفويضات الخارجية
+            {% if external_authorizations %}
+            <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
+            {% endif %}
+        </h6>
+        <div>
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#externalAuthModal">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة تفويض
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if external_authorizations %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>الموظف</th>
+                        <th>المشروع</th>
+                        <th>النوع</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for auth in external_authorizations %}
+                    <tr>
+                        <td>{{ auth.employee.arabic_name }}</td>
+                        <td>{{ auth.project.name if auth.project else 'غير محدد' }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ auth.authorization_type }}</span>
+                        </td>
+                        <td>
+                            {% if auth.status == 'pending' %}
+                                <span class="badge bg-warning">قيد المراجعة</span>
+                            {% elif auth.status == 'approved' %}
+                                <span class="badge bg-success">مُوافق عليه</span>
+                            {% elif auth.status == 'rejected' %}
+                                <span class="badge bg-danger">مرفوض</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('vehicles.view_authorization', id=auth.id) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('vehicles.edit_authorization', id=auth.id) }}" class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if auth.file_path %}
+                                <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
+                                {% if auth.external_link %}
+                                <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <div class="mb-3">
+                <i class="fas fa-file-signature fa-3x text-muted"></i>
+            </div>
+            <h6>لا توجد تفويضات خارجية</h6>
+            <p class="text-muted small px-3">يمكنك إضافة تفويض خارجي جديد للموظفين للعمل في المشاريع الخارجية</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
 <!-- الإجراءات والروابط السريعة -->
 <div class="action-buttons-container mb-4 mx-3">
@@ -1010,4 +1093,124 @@ function copyHandoverText(text) {
 </script>
 
 {% endif %}
+
+<!-- Modal للتفويضات الخارجية -->
+<div class="modal fade" id="externalAuthModal" tabindex="-1" aria-labelledby="externalAuthModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background-color: #1a1a1a; color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid #333;">
+                <h5 class="modal-title" id="externalAuthModalLabel" style="color: #fff;">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    إضافة تفويض خارجي
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="externalAuthForm" method="POST" action="{{ url_for('vehicles.add_external_authorization') }}" enctype="multipart/form-data">
+                    {{ csrf_token() }}
+                    <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                    
+                    <!-- اختيار القسم -->
+                    <div class="mb-3">
+                        <label for="department_filter" class="form-label" style="color: #fff;">القسم</label>
+                        <select class="form-select" id="department_filter" name="department_id" style="background-color: #333; color: #fff; border: 1px solid #555;">
+                            <option value="">جميع الأقسام</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- اختيار الموظف -->
+                    <div class="mb-3">
+                        <label for="employee_id" class="form-label" style="color: #fff;">الموظف</label>
+                        <select class="form-select" id="employee_id" name="employee_id" required style="background-color: #333; color: #fff; border: 1px solid #555;">
+                            <option value="">اختر الموظف</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}" data-departments="{{ emp.departments|map(attribute='id')|join(',') }}">
+                                {{ emp.arabic_name }} - {{ emp.job_title or 'بدون منصب' }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- نوع التفويض -->
+                    <div class="mb-3">
+                        <label for="authorization_type" class="form-label" style="color: #fff;">نوع التفويض</label>
+                        <select class="form-select" id="authorization_type" name="authorization_type" required style="background-color: #333; color: #fff; border: 1px solid #555;">
+                            <option value="">اختر نوع التفويض</option>
+                            <option value="تفويض تسليم">تفويض تسليم</option>
+                            <option value="استلام السيارة من مندوب">استلام السيارة من مندوب</option>
+                            <option value="تفويض مؤقت">تفويض مؤقت</option>
+                            <option value="نقل سيارة">نقل سيارة</option>
+                        </select>
+                    </div>
+                    
+                    <!-- اختيار المشروع -->
+                    <div class="mb-3">
+                        <label for="project_id" class="form-label" style="color: #fff;">المشروع</label>
+                        <select class="form-select" id="project_id" name="project_id" style="background-color: #333; color: #fff; border: 1px solid #555;">
+                            <option value="">اختر المشروع</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- رفع الملف -->
+                    <div class="mb-3">
+                        <label for="authorization_file" class="form-label" style="color: #fff;">رفع ملف التفويض (PDF أو صورة)</label>
+                        <input type="file" class="form-control" id="authorization_file" name="authorization_file" 
+                               accept=".pdf,.jpg,.jpeg,.png" style="background-color: #333; color: #fff; border: 1px solid #555;">
+                    </div>
+                    
+                    <!-- رابط خارجي -->
+                    <div class="mb-3">
+                        <label for="external_link" class="form-label" style="color: #fff;">رابط خارجي (اختياري)</label>
+                        <input type="url" class="form-control" id="external_link" name="external_link" 
+                               placeholder="https://forms.google.com/..." style="background-color: #333; color: #fff; border: 1px solid #555;">
+                    </div>
+                    
+                    <!-- ملاحظات -->
+                    <div class="mb-3">
+                        <label for="notes" class="form-label" style="color: #fff;">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="أدخل أي ملاحظات إضافية..." style="background-color: #333; color: #fff; border: 1px solid #555;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #333;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #6c757d;">
+                    <i class="fas fa-times ms-2"></i>
+                    إلغاء
+                </button>
+                <button type="submit" form="externalAuthForm" class="btn btn-primary" style="background-color: #0d6efd;">
+                    <i class="fas fa-save ms-2"></i>
+                    حفظ التفويض
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// فلترة الموظفين حسب القسم
+document.getElementById('department_filter').addEventListener('change', function() {
+    const selectedDepartment = this.value;
+    const employeeSelect = document.getElementById('employee_id');
+    const options = employeeSelect.querySelectorAll('option[data-departments]');
+    
+    options.forEach(option => {
+        if (!selectedDepartment || option.dataset.departments.split(',').includes(selectedDepartment)) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+    
+    // إعادة تعيين الموظف المختار
+    employeeSelect.value = '';
+});
+</script>
+
 {% endblock %}

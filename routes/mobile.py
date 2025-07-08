@@ -1266,6 +1266,13 @@ def vehicle_details(vehicle_id):
             
             # الحصول على سجلات التسليم والاستلام
         handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).all()
+        
+        # الحصول على التفويضات الخارجية
+        external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=vehicle_id).order_by(ExternalAuthorization.created_at.desc()).all()
+        
+        # الحصول على الأقسام والموظفين للنموذج
+        departments = Department.query.all()
+        employees = Employee.query.all()
     
         # الحصول على سجل الصيانة الخاص بالسيارة
        
@@ -1308,6 +1315,9 @@ def vehicle_details(vehicle_id):
         workshop_records = []
         project_assignments = []
         handover_records = []
+        external_authorizations = []
+        departments = []
+        employees = []
         periodic_inspections = []
         safety_checks = []
         total_maintenance_cost = 0
@@ -1328,6 +1338,9 @@ def vehicle_details(vehicle_id):
                          workshop_records=workshop_records,
                          project_assignments=project_assignments,
                          handover_records=handover_records,
+                         external_authorizations=external_authorizations,
+                         departments=departments,
+                         employees=employees,
                          periodic_inspections=periodic_inspections,
                          safety_checks=safety_checks,
                          documents=documents,
