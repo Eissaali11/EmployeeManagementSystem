@@ -255,7 +255,12 @@ async function shareFullAuthorization() {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔗 الروابط والمرفقات:
-رابط النموذج الخارجي: https://acrobat.adobe.com/id/urn:aaid:sc:AP:4243d4fc-2215-41e9-9666-572412c4e2d3
+{% if authorization.authorization_form_link %}
+رابط النموذج الخارجي: {{ authorization.authorization_form_link }}
+{% endif %}
+{% if authorization.external_link %}
+الرابط الخارجي: {{ authorization.external_link }}
+{% endif %}
 تفاصيل التفويض الكاملة: ${currentUrl}
 
 {% if authorization.notes %}
@@ -273,8 +278,10 @@ async function shareFullAuthorization() {
 🚗 نظام نُظم - حلول ذكية لإدارة المركبات والموظفين
 تقنية متطورة • إدارة فعالة • خدمة احترافية`;
 
-    // تحديد الرابط الأساسي للمشاركة
-    const primaryUrl = 'https://acrobat.adobe.com/id/urn:aaid:sc:AP:4243d4fc-2215-41e9-9666-572412c4e2d3';
+    // تحديد الرابط الأساسي للمشاركة (الرابط الخارجي له الأولوية)
+    const externalLink = '{{ authorization.external_link if authorization.external_link else "" }}';
+    const formLink = '{{ authorization.authorization_form_link if authorization.authorization_form_link else "" }}';
+    const primaryUrl = externalLink || formLink || currentUrl;
 
     if (navigator.share) {
         try {
