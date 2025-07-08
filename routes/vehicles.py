@@ -3911,6 +3911,132 @@ def create_external_authorization(vehicle_id):
                          departments=departments,
                          employees=employees)
 
+@vehicles_bp.route('/<int:vehicle_id>/external-authorization/<int:auth_id>/view')
+@login_required
+def view_external_authorization(vehicle_id, auth_id):
+    """عرض تفاصيل التفويض الخارجي"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    auth = ExternalAuthorization.query.get_or_404(auth_id)
+    
+    return render_template('vehicles/view_external_authorization.html',
+                         vehicle=vehicle,
+                         authorization=auth)
+
+@vehicles_bp.route('/<int:vehicle_id>/external-authorization/<int:auth_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_external_authorization(vehicle_id, auth_id):
+    """تعديل التفويض الخارجي"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    auth = ExternalAuthorization.query.get_or_404(auth_id)
+    
+    if request.method == 'POST':
+        try:
+            # تحديث البيانات
+            auth.employee_id = request.form.get('employee_id')
+            auth.project_name = request.form.get('project_name')
+            auth.authorization_type = request.form.get('authorization_type')
+            auth.city = request.form.get('city')
+            auth.external_link = request.form.get('form_link')
+            auth.notes = request.form.get('notes')
+            
+            # معالجة رفع الملف الجديد
+            if 'file' in request.files and request.files['file'].filename:
+                file = request.files['file']
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
+                    
+                    # إنشاء مجلد الرفع إذا لم يكن موجوداً
+                    upload_dir = os.path.join(current_app.static_folder, 'uploads', 'authorizations')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    file_path = os.path.join(upload_dir, filename)
+                    file.save(file_path)
+                    
+                    # حذف الملف القديم إذا كان موجوداً
+                    if auth.file_path:
+                        old_file_path = os.path.join(current_app.static_folder, 'uploads', 'authorizations', auth.file_path.split('/')[-1])
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                    
+                    auth.file_path = f"uploads/authorizations/{filename}"
+            
+            db.session.commit()
+            flash('تم تحديث التفويض بنجاح', 'success')
+            return redirect(url_for('vehicles.view', id=vehicle_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تحديث التفويض: {str(e)}', 'error')
+    
+    # الحصول على البيانات للنموذج
+    departments = Department.query.all()
+    employees = Employee.query.all()
+    
+    return render_template('vehicles/edit_external_authorization.html',
+                         vehicle=vehicle,
+                         authorization=auth,
+                         departments=departments,
+                         employees=employees)
+
+@vehicles_bp.route('/<int:vehicle_id>/external-authorization/<int:auth_id>/approve')
+@login_required
+def approve_external_authorization(vehicle_id, auth_id):
+    """الموافقة على التفويض الخارجي"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    auth = ExternalAuthorization.query.get_or_404(auth_id)
+    
+    try:
+        auth.status = 'approved'
+        db.session.commit()
+        flash('تم الموافقة على التفويض بنجاح', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء الموافقة على التفويض: {str(e)}', 'error')
+    
+    return redirect(url_for('vehicles.view', id=vehicle_id))
+
+@vehicles_bp.route('/<int:vehicle_id>/external-authorization/<int:auth_id>/reject')
+@login_required
+def reject_external_authorization(vehicle_id, auth_id):
+    """رفض التفويض الخارجي"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    auth = ExternalAuthorization.query.get_or_404(auth_id)
+    
+    try:
+        auth.status = 'rejected'
+        db.session.commit()
+        flash('تم رفض التفويض', 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء رفض التفويض: {str(e)}', 'error')
+    
+    return redirect(url_for('vehicles.view', id=vehicle_id))
+
+@vehicles_bp.route('/<int:vehicle_id>/external-authorization/<int:auth_id>/delete')
+@login_required
+def delete_external_authorization(vehicle_id, auth_id):
+    """حذف التفويض الخارجي"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    auth = ExternalAuthorization.query.get_or_404(auth_id)
+    
+    try:
+        # حذف الملف المرفق إذا كان موجوداً
+        if auth.file_path:
+            file_path = os.path.join(current_app.static_folder, 'uploads', 'authorizations', auth.file_path.split('/')[-1])
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        
+        db.session.delete(auth)
+        db.session.commit()
+        flash('تم حذف التفويض بنجاح', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حذف التفويض: {str(e)}', 'error')
+    
+    return redirect(url_for('vehicles.view', id=vehicle_id))
+
 @vehicles_bp.route('/vehicle-report/<int:id>')
 @login_required
 def generate_vehicle_report(id):

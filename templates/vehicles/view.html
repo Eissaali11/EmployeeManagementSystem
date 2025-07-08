@@ -1469,12 +1469,14 @@
                                 <td>{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary" onclick="viewAuthDetails({{ auth.id }})" title="عرض التفاصيل">
+                                        <a href="{{ url_for('vehicles.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-primary" title="عرض التفاصيل">
                                             <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn btn-outline-warning" onclick="editAuthDetails({{ auth.id }})" title="تعديل">
+                                        </a>
+                                        <a href="{{ url_for('vehicles.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-warning" title="تعديل">
                                             <i class="fas fa-edit"></i>
-                                        </button>
+                                        </a>
                                         {% if auth.file_path %}
                                         <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info" title="عرض الملف">
                                             <i class="fas fa-file-alt"></i>
@@ -1486,12 +1488,16 @@
                                         </a>
                                         {% endif %}
                                         {% if auth.status == 'pending' %}
-                                        <button class="btn btn-outline-success" onclick="approveAuth({{ auth.id }})" title="موافقة">
+                                        <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-success" 
+                                           onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" title="موافقة">
                                             <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger" onclick="rejectAuth({{ auth.id }})" title="رفض">
+                                        </a>
+                                        <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-danger" 
+                                           onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" title="رفض">
                                             <i class="fas fa-times"></i>
-                                        </button>
+                                        </a>
                                         {% endif %}
                                     </div>
                                 </td>
