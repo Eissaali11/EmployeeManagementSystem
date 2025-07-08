@@ -1107,8 +1107,10 @@ class ExternalAuthorization(db.Model):
     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)
+    project_name = db.Column(db.String(200), nullable=True)  # اسم المشروع/القسم
     authorization_type = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    city = db.Column(db.String(100), nullable=True)  # المدينة
     file_path = db.Column(db.String(255))
     external_link = db.Column(db.String(500))
     notes = db.Column(db.Text)
