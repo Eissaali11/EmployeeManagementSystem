@@ -421,8 +421,7 @@ function shareWorkshopDetails() {
     if (navigator.share) {
         navigator.share({
             title: `سجل ورشة - ${workshopData.vehicle}`,
-            text: shareText,
-            url: workshopData.detailsUrl
+            text: shareText
         }).then(() => {
             console.log('تم مشاركة التفاصيل بنجاح');
         }).catch((error) => {
