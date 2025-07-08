@@ -5,6 +5,12 @@
 {% block header_title %}تفاصيل التفويض الخارجي{% endblock %}
 
 {% block content %}
+<style>
+.mobile-content-wrapper {
+    padding-bottom: 120px; /* إضافة padding سفلي للقائمة السفلية */
+}
+</style>
+
 <!-- معلومات السيارة -->
 <div class="card mb-3 mx-3">
     <div class="card-header bg-primary text-white">
@@ -150,7 +156,7 @@
 </div>
 
 <!-- أزرار الإجراءات -->
-<div class="action-buttons-container mb-4 mx-3">
+<div class="action-buttons-container mb-5 mx-3">
     <a href="{{ url_for('mobile.edit_external_authorization', vehicle_id=vehicle.id, auth_id=authorization.id) }}" 
        class="btn btn-warning w-100 mb-2">
         <i class="fas fa-edit ms-1"></i>
