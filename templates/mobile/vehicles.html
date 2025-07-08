@@ -572,6 +572,13 @@
 }
 
 /* تحسينات إضافية للجوال */
+/* حل مشكلة المحتوى المختفي خلف الهيدر والقائمة السفلية */
+.container-fluid {
+    padding-top: 70px !important;
+    padding-bottom: 120px !important;
+}
+
+/* تحسينات للجوال */
 @media (max-width: 768px) {
     .stats-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -590,6 +597,12 @@
     
     .hero-stats {
         gap: 15px;
+    }
+    
+    /* ضمان عدم اختفاء المحتوى في الجوال */
+    .container-fluid {
+        padding-top: 80px !important;
+        padding-bottom: 140px !important;
     }
 }
 </style>
@@ -836,17 +849,7 @@
     <i class="fas fa-plus"></i>
 </a>
 
-<!-- حل مشكلة المحتوى المختفي خلف الهيدر والفوتر -->
-<script>
-// إضافة padding للمحتوى لمنع اختفائه خلف الهيدر والفوتر
-document.addEventListener('DOMContentLoaded', function() {
-    const content = document.querySelector('.container-fluid');
-    if (content) {
-        content.style.paddingTop = '70px';
-        content.style.paddingBottom = '120px';
-    }
-});
-</script>
+
 
 {% endblock %}
 
