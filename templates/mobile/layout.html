@@ -8,10 +8,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <!-- أيقونة التطبيق -->
-  <link rel="icon" href="{{ url_for('static', filename='mobile/img/logo.png') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='mobile/img/logo.png') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='mobile/img/app-icon.svg') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='mobile/img/logo.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='mobile/img/app-icon.svg') }}">
+  <link rel="mask-icon" href="{{ url_for('static', filename='mobile/img/app-icon.svg') }}" color="#2962ff">
   
-  <title>{% block title %}نظام إدارة الموظفين{% endblock %}</title>
+  <title>{% block title %}نُظم - نظام إدارة الموظفين{% endblock %}</title>
   
   <!-- خطوط Tajawal و Font Awesome -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
