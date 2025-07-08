@@ -50,7 +50,7 @@
                                     <i class="fas fa-building ms-1"></i>
                                     فلترة حسب القسم
                                 </label>
-                                <select class="form-select" id="department_filter" name="department_filter">
+                                <select class="form-select" id="department_filter" name="department_filter" onchange="filterEmployeesByDepartment()">
                                     <option value="">عرض جميع الموظفين</option>
                                     {% for dept in departments %}
                                     <option value="{{ dept.id }}">{{ dept.name }}</option>
@@ -60,24 +60,67 @@
                             </div>
                         </div>
 
-                        <!-- اختيار السائق/الموظف -->
+                        <!-- اختيار السائق/الموظف مع البحث -->
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <label for="employee_id" class="form-label">
+                                <label for="employee_search" class="form-label">
                                     <i class="fas fa-user ms-1"></i>
                                     اسم السائق/الموظف <span class="text-danger">*</span>
                                 </label>
-                                <select class="form-select" id="employee_id" name="employee_id" required>
-                                    <option value="">اختر السائق/الموظف</option>
-                                    {% for emp in employees %}
-                                    <option value="{{ emp.id }}" 
-                                            data-departments="{{ emp.departments|map(attribute='id')|join(',') }}"
-                                            data-phone="{{ emp.mobile or 'غير محدد' }}"
-                                            data-position="{{ emp.job_title or 'غير محدد' }}">
-                                        {{ emp.name }} - {{ emp.job_title or 'بدون منصب' }} ({{ emp.departments|map(attribute='name')|join(', ') }})
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                                
+                                <!-- صندوق البحث -->
+                                <div class="position-relative">
+                                    <input type="text" class="form-control" id="employee_search" 
+                                           placeholder="ابحث عن الموظف بالاسم أو المنصب..." 
+                                           autocomplete="off">
+                                    <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- القائمة المنسدلة للموظفين -->
+                                <div class="dropdown mt-2">
+                                    <div class="dropdown-menu w-100 p-0" id="employee_dropdown" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                        {% for emp in employees %}
+                                        <div class="dropdown-item employee-item" style="cursor: pointer;" 
+                                             data-employee-id="{{ emp.id }}"
+                                             data-departments="{{ emp.departments|map(attribute='id')|join(',') }}"
+                                             data-phone="{{ emp.mobile or 'غير محدد' }}"
+                                             data-position="{{ emp.job_title or 'غير محدد' }}"
+                                             data-name="{{ emp.name }}"
+                                             data-search-text="{{ emp.name|lower }} {{ emp.job_title|lower if emp.job_title }} {{ emp.departments|map(attribute='name')|join(' ')|lower }}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ emp.name }}</strong>
+                                                    <small class="text-muted d-block">{{ emp.job_title or 'بدون منصب' }}</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <small class="text-primary">{{ emp.departments|map(attribute='name')|join(', ') }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <!-- الحقل المخفي للموظف المختار -->
+                                <input type="hidden" id="employee_id" name="employee_id" required>
+                                
+                                <!-- عرض الموظف المختار -->
+                                <div id="selected_employee" class="mt-2" style="display: none;">
+                                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-check-circle ms-1"></i>
+                                            <strong id="selected_employee_name"></strong>
+                                            <small class="text-muted d-block" id="selected_employee_details"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearSelectedEmployee()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- معلومات الموظف المختار -->
                                 <div id="employee_info" class="mt-2 text-muted small" style="display: none;">
                                     <i class="fas fa-info-circle ms-1"></i>
                                     <span id="employee_details"></span>
@@ -221,47 +264,123 @@
 </div>
 
 <script>
+// متغيرات عامة
+let allEmployees = [];
+let filteredEmployees = [];
+
+// تحميل قائمة الموظفين عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const employeeItems = document.querySelectorAll('.employee-item');
+    allEmployees = Array.from(employeeItems).map(item => ({
+        id: item.dataset.employeeId,
+        name: item.dataset.name,
+        departments: item.dataset.departments ? item.dataset.departments.split(',') : [],
+        phone: item.dataset.phone,
+        position: item.dataset.position,
+        searchText: item.dataset.searchText,
+        element: item
+    }));
+    filteredEmployees = [...allEmployees];
+});
+
 // فلترة الموظفين حسب القسم
 document.getElementById('department_filter').addEventListener('change', function() {
     const departmentId = this.value;
-    const employeeSelect = document.getElementById('employee_id');
-    const options = employeeSelect.querySelectorAll('option');
     
-    options.forEach(option => {
-        if (option.value === '') {
-            option.style.display = 'block';
-            return;
-        }
-        
-        const employeeDepartments = option.dataset.departments ? option.dataset.departments.split(',') : [];
-        
-        if (!departmentId || employeeDepartments.includes(departmentId)) {
-            option.style.display = 'block';
-        } else {
-            option.style.display = 'none';
-        }
+    filteredEmployees = allEmployees.filter(emp => {
+        if (!departmentId) return true;
+        return emp.departments.includes(departmentId);
     });
     
-    // إعادة تعيين الموظف المختار
-    employeeSelect.value = '';
-    document.getElementById('employee_info').style.display = 'none';
+    updateEmployeeDropdown();
+    clearSelectedEmployee();
 });
 
-// عرض معلومات الموظف المختار
-document.getElementById('employee_id').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const infoDiv = document.getElementById('employee_info');
-    const detailsSpan = document.getElementById('employee_details');
+// البحث في الموظفين
+document.getElementById('employee_search').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const dropdown = document.getElementById('employee_dropdown');
     
-    if (this.value && selectedOption.dataset.phone) {
-        const phone = selectedOption.dataset.phone;
-        const position = selectedOption.dataset.position;
-        detailsSpan.textContent = `الهاتف: ${phone} | المنصب: ${position}`;
-        infoDiv.style.display = 'block';
-    } else {
-        infoDiv.style.display = 'none';
+    if (searchTerm.length === 0) {
+        dropdown.classList.remove('show');
+        return;
+    }
+    
+    const searchResults = filteredEmployees.filter(emp => 
+        emp.searchText.includes(searchTerm)
+    );
+    
+    displaySearchResults(searchResults);
+    dropdown.classList.add('show');
+});
+
+// إخفاء القائمة عند النقر خارجها
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('employee_dropdown');
+    const searchInput = document.getElementById('employee_search');
+    
+    if (!dropdown.contains(e.target) && e.target !== searchInput) {
+        dropdown.classList.remove('show');
     }
 });
+
+// عرض نتائج البحث
+function displaySearchResults(results) {
+    const dropdown = document.getElementById('employee_dropdown');
+    dropdown.innerHTML = '';
+    
+    if (results.length === 0) {
+        dropdown.innerHTML = '<div class="dropdown-item text-muted">لا توجد نتائج</div>';
+        return;
+    }
+    
+    results.forEach(emp => {
+        const item = emp.element.cloneNode(true);
+        item.addEventListener('click', () => selectEmployee(emp));
+        dropdown.appendChild(item);
+    });
+}
+
+// تحديث قائمة الموظفين
+function updateEmployeeDropdown() {
+    const dropdown = document.getElementById('employee_dropdown');
+    dropdown.innerHTML = '';
+    
+    filteredEmployees.forEach(emp => {
+        const item = emp.element.cloneNode(true);
+        item.addEventListener('click', () => selectEmployee(emp));
+        dropdown.appendChild(item);
+    });
+}
+
+// اختيار موظف
+function selectEmployee(employee) {
+    document.getElementById('employee_id').value = employee.id;
+    document.getElementById('employee_search').value = employee.name;
+    
+    // عرض معلومات الموظف المختار
+    document.getElementById('selected_employee_name').textContent = employee.name;
+    document.getElementById('selected_employee_details').textContent = 
+        `${employee.position} | الهاتف: ${employee.phone}`;
+    
+    document.getElementById('selected_employee').style.display = 'block';
+    document.getElementById('employee_dropdown').classList.remove('show');
+    
+    // عرض معلومات إضافية
+    const infoDiv = document.getElementById('employee_info');
+    const detailsSpan = document.getElementById('employee_details');
+    detailsSpan.textContent = `الهاتف: ${employee.phone} | المنصب: ${employee.position}`;
+    infoDiv.style.display = 'block';
+}
+
+// مسح الموظف المختار
+function clearSelectedEmployee() {
+    document.getElementById('employee_id').value = '';
+    document.getElementById('employee_search').value = '';
+    document.getElementById('selected_employee').style.display = 'none';
+    document.getElementById('employee_info').style.display = 'none';
+    document.getElementById('employee_dropdown').classList.remove('show');
+}
 
 // معاينة الملف المرفوع
 document.getElementById('file').addEventListener('change', function() {
