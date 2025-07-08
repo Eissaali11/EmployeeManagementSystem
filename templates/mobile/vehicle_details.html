@@ -5,6 +5,14 @@
 {% block header_title %}تفاصيل السيارة{% endblock %}
 
 {% block content %}
+<style>
+.mobile-content-wrapper {
+    padding-top: 70px;
+    margin-top: 0;
+}
+</style>
+
+<div class="mobile-content-wrapper">
 <!-- التحقق من وجود بيانات السيارة -->
 {% if not vehicle %}
 <div class="alert alert-warning mx-3 mt-3">
@@ -1624,4 +1632,5 @@ function toggleOlderRecords() {
 }
 </script>
 
+</div> <!-- إغلاق mobile-content-wrapper -->
 {% endblock %}
