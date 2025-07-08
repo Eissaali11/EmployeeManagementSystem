@@ -214,16 +214,10 @@
             <span class="badge bg-light text-dark ms-2">{{ workshop_records|length }}</span>
             {% endif %}
         </h6>
-        <div class="dropdown">
-            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('mobile.add_workshop_record', vehicle_id=vehicle.id) }}">
-                    <i class="fas fa-plus ms-1"></i> إضافة سجل
-                </a></li>
-            </ul>
-        </div>
+        <a href="{{ url_for('mobile.add_workshop_record', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-success">
+            <i class="fas fa-plus ms-1"></i>
+            إضافة سجل
+        </a>
     </div>
     <div class="card-body p-0">
         {% if workshop_records %}
@@ -473,16 +467,10 @@
             <span class="badge bg-light text-dark ms-2">{{ external_authorizations|length }}</span>
             {% endif %}
         </h6>
-        <div class="dropdown">
-            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}">
-                    <i class="fas fa-plus ms-1"></i> إضافة تفويض
-                </a></li>
-            </ul>
-        </div>
+        <a href="{{ url_for('mobile.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-success">
+            <i class="fas fa-plus ms-1"></i>
+            إضافة تفويض
+        </a>
     </div>
     <div class="card-body p-0">
         {% if external_authorizations %}
