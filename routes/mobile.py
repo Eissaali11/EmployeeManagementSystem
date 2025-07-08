@@ -1267,8 +1267,12 @@ def vehicle_details(vehicle_id):
             # الحصول على سجلات التسليم والاستلام
         handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).all()
         
-        # الحصول على التفويضات الخارجية
-        external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=vehicle_id).order_by(ExternalAuthorization.created_at.desc()).all()
+        # الحصول على التفويضات الخارجية مع معالجة القيم الفارغة
+        external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=vehicle_id).all()
+        # ترتيب آمن للتفويضات (القيم الفارغة في النهاية)
+        external_authorizations = sorted(external_authorizations, 
+                                       key=lambda x: x.created_at or datetime.min, 
+                                       reverse=True)
         
         # الحصول على الأقسام والموظفين للنموذج
         departments = Department.query.all()

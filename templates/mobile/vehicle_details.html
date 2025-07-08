@@ -507,7 +507,7 @@
                     <span>اسحب يميناً ويساراً للتفاصيل</span>
                 </div>
                 <div class="count-indicator">
-                    <span class="badge bg-primary">{{ external_authorizations[:3]|length }} من {{ external_authorizations|length }}</span>
+                    <span class="badge bg-primary">3 من {{ external_authorizations|length }}</span>
                 </div>
             </div>
 
@@ -527,7 +527,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for auth in (external_authorizations|sort(attribute='created_at', reverse=true))[:3] %}
+                            {% for auth in external_authorizations[:3] %}
                             <tr class="auth-row">
                                 <td class="date-cell">
                                     <div class="date-display">
@@ -626,7 +626,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for auth in (external_authorizations|sort(attribute='created_at', reverse=true)) %}
+                                {% for auth in external_authorizations %}
                                 <tr class="auth-row">
                                     <td class="date-cell">
                                         <div class="date-display">
