@@ -527,7 +527,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for auth in external_authorizations|sort(attribute='created_at', reverse=true)[:3] %}
+                            {% for auth in (external_authorizations|sort(attribute='created_at', reverse=true))[:3] %}
                             <tr class="auth-row">
                                 <td class="date-cell">
                                     <div class="date-display">
@@ -626,7 +626,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for auth in external_authorizations|sort(attribute='created_at', reverse=true) %}
+                                {% for auth in (external_authorizations|sort(attribute='created_at', reverse=true)) %}
                                 <tr class="auth-row">
                                     <td class="date-cell">
                                         <div class="date-display">
@@ -1585,7 +1585,7 @@ function toggleAllAuthorizations() {
             container.classList.add('d-none');
         }, 400);
         
-        toggleText.textContent = 'عرض جميع التفويضات ({{ external_authorizations|length }})';
+        toggleText.textContent = 'عرض جميع التفويضات (' + document.querySelectorAll('.auth-row').length + ')';
         toggleIcon.className = 'fas fa-chevron-down ms-1';
         toggleIcon.style.transform = 'rotate(0deg)';
     } else {
