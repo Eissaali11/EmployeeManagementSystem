@@ -1108,10 +1108,32 @@ def report_vehicles():
                       .distinct().order_by(Vehicle.status).all()
     vehicle_statuses = [vs[0] for vs in vehicle_statuses if vs[0]]
     
+    # إحصائيات تفصيلية للماركات
+    make_stats = db.session.query(Vehicle.make, func.count(Vehicle.id))\
+                .filter(Vehicle.make.isnot(None))\
+                .group_by(Vehicle.make)\
+                .order_by(func.count(Vehicle.id).desc()).all()
+    
+    # إحصائيات تفصيلية للألوان
+    color_stats = db.session.query(Vehicle.color, func.count(Vehicle.id))\
+                 .filter(Vehicle.color.isnot(None))\
+                 .group_by(Vehicle.color)\
+                 .order_by(func.count(Vehicle.id).desc()).all()
+    
+    # إحصائيات عامة
+    total_vehicles = len(vehicles)
+    active_vehicles = len([v for v in vehicles if v.status in ['نشط', 'متاح', 'available']])
+    maintenance_vehicles = len([v for v in vehicles if 'صيانة' in (v.status or '') or 'maintenance' in (v.status or '')])
+    
     return render_template('mobile/report_vehicles.html',
                          vehicles=vehicles,
                          vehicle_types=vehicle_types,
-                         vehicle_statuses=vehicle_statuses)
+                         vehicle_statuses=vehicle_statuses,
+                         make_stats=make_stats,
+                         color_stats=color_stats,
+                         total_vehicles=total_vehicles,
+                         active_vehicles=active_vehicles,
+                         maintenance_vehicles=maintenance_vehicles)
 
 # تقرير الرسوم - النسخة المحمولة
 @mobile_bp.route('/reports/fees')

@@ -1,31 +1,590 @@
 {% extends 'mobile/layout.html' %}
 
-{% block title %}تقرير المركبات - نظام إدارة الموظفين{% endblock %}
+{% block title %}تقارير المركبات - نظام نُظم{% endblock %}
 
-{% block header_title %}تقرير المركبات{% endblock %}
+{% block header_title %}تقارير المركبات{% endblock %}
 
 {% block content %}
-<!-- خيارات التقرير -->
-<div class="mobile-card">
-    <div class="mobile-card-title">
-        <i class="fas fa-filter"></i> خيارات التقرير
-    </div>
+<style>
+/* تصميم مميز لصفحة تقارير المركبات */
+body {
+    padding-top: 100px !important;
+    padding-bottom: 150px !important;
+}
+
+.container-fluid {
+    padding-top: 100px !important;
+    padding-bottom: 150px !important;
+}
+
+.reports-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 20px;
+    overflow: hidden;
+    position: relative;
+}
+
+.reports-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    transform: translate(30px, -30px);
+}
+
+.hero-content {
+    padding: 25px;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hero-subtitle {
+    opacity: 0.9;
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+}
+
+.filter-container {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.filter-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.filter-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.filter-input, .filter-select {
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.filter-input:focus, .filter-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.export-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.modern-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-secondary {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 2px solid #e9ecef;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
+    color: white;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+    color: white;
+}
+
+.results-container {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.results-header {
+    padding: 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.results-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.results-count {
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.vehicle-grid {
+    padding: 15px;
+}
+
+.vehicle-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.vehicle-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border-color: #667eea;
+}
+
+.vehicle-card:last-child {
+    margin-bottom: 0;
+}
+
+.vehicle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.vehicle-plate {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #333;
+    background: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.vehicle-status {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-maintenance {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.vehicle-details {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.summary-container {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.summary-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 20px 15px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.stat-card.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-card.success {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.stat-card.warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.chart-wrapper {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    height: 300px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 2rem;
+    color: #6c757d;
+}
+
+.empty-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.empty-subtitle {
+    line-height: 1.5;
+}
+
+.detailed-stats-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.stats-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.brand-stat-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.brand-stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #667eea;
+}
+
+.brand-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.brand-count {
+    color: #667eea;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+}
+
+.brand-percentage {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.color-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.color-stat-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.color-stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #667eea;
+}
+
+.color-indicator {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.color-details {
+    flex: 1;
+}
+
+.color-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 3px;
+    font-size: 0.9rem;
+}
+
+.color-count {
+    color: #667eea;
+    font-weight: 500;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.color-percentage {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
     
-    <div class="mobile-card-content">
-        <form action="{{ url_for('mobile.report_vehicles') }}" method="GET" class="mobile-form">
-            <div class="mobile-form-group">
-                <label>الشركة المصنعة</label>
-                <select name="vehicle_type" class="mobile-form-select">
-                    <option value="">جميع الشركات</option>
+    .export-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .brand-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .color-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .brand-stat-item, .color-stat-item {
+        padding: 12px;
+    }
+    
+    .brand-name, .color-name {
+        font-size: 0.85rem;
+    }
+    
+    .brand-count, .color-count {
+        font-size: 0.8rem;
+    }
+    
+    .brand-percentage, .color-percentage {
+        font-size: 0.7rem;
+    }
+    
+    body {
+        padding-top: 110px !important;
+        padding-bottom: 160px !important;
+    }
+    
+    .container-fluid {
+        padding-top: 110px !important;
+        padding-bottom: 160px !important;
+    }
+}
+</style>
+
+<!-- البطاقة الرئيسية للترحيب -->
+<div class="reports-hero">
+    <div class="hero-content">
+        <div class="hero-title">
+            <i class="fas fa-chart-line"></i>
+            تقارير المركبات
+        </div>
+        <div class="hero-subtitle">
+            تقارير شاملة ومفصلة لجميع المركبات في الأسطول
+        </div>
+    </div>
+</div>
+
+<!-- قسم الفلاتر والبحث -->
+<div class="filter-container">
+    <div class="filter-header">
+        <i class="fas fa-filter"></i>
+        <h6 class="filter-title">خيارات التقرير والفلترة</h6>
+    </div>
+    <form action="{{ url_for('mobile.report_vehicles') }}" method="GET">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label class="filter-label">الشركة المصنعة</label>
+                <select name="vehicle_type" class="filter-select">
+                    <option value="">جميع الشركات المصنعة</option>
                     {% for type in vehicle_types %}
                     <option value="{{ type }}" {% if request.args.get('vehicle_type') == type %}selected{% endif %}>{{ type }}</option>
                     {% endfor %}
                 </select>
             </div>
             
-            <div class="mobile-form-group">
-                <label>حالة المركبة</label>
-                <select name="status" class="mobile-form-select">
+            <div class="filter-group">
+                <label class="filter-label">حالة المركبة</label>
+                <select name="status" class="filter-select">
                     <option value="">جميع الحالات</option>
                     {% for status in vehicle_statuses %}
                     <option value="{{ status }}" {% if request.args.get('status') == status %}selected{% endif %}>{{ status }}</option>
@@ -33,76 +592,70 @@
                 </select>
             </div>
             
-            <div class="mobile-form-group">
-                <label>البحث</label>
-                <input type="text" name="search" class="mobile-form-control" placeholder="رقم اللوحة / الموديل / الماركة" value="{{ request.args.get('search', '') }}">
+            <div class="filter-group">
+                <label class="filter-label">البحث في المركبات</label>
+                <input type="text" name="search" class="filter-input" placeholder="رقم اللوحة، الماركة، الموديل..." value="{{ request.args.get('search', '') }}">
             </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button type="submit" class="modern-btn btn-primary">
+                <i class="fas fa-search"></i> تطبيق الفلتر
+            </button>
             
-            <div class="mobile-form-row buttons-row">
-                <button type="submit" class="mobile-btn mobile-btn-primary">
-                    <i class="fas fa-search"></i> بحث
-                </button>
-                
-                <button type="button" class="mobile-btn mobile-btn-secondary" onclick="location.href='{{ url_for('mobile.report_vehicles') }}'">
-                    <i class="fas fa-redo"></i> إعادة ضبط
-                </button>
-                
-                <div class="dropdown">
-                    <button type="button" class="mobile-btn mobile-btn-info dropdown-toggle" id="exportDropdown">
-                        <i class="fas fa-download"></i> تصدير
-                    </button>
-                    <div class="dropdown-menu export-dropdown-menu" id="exportMenu">
-                        <a href="{{ url_for('mobile.report_vehicles') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="dropdown-item">
-                            <i class="fas fa-file-pdf"></i> تصدير PDF
-                        </a>
-                        <a href="{{ url_for('mobile.report_vehicles') }}?{{ request.query_string.decode('utf-8') }}&export=excel" class="dropdown-item">
-                            <i class="fas fa-file-excel"></i> تصدير Excel
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
+            <a href="{{ url_for('mobile.report_vehicles') }}" class="modern-btn btn-secondary">
+                <i class="fas fa-redo"></i> إعادة تعيين
+            </a>
+        </div>
+        
+        <div class="export-section">
+            <a href="{{ url_for('mobile.report_vehicles') }}?{{ request.query_string.decode('utf-8') }}&export=pdf" class="modern-btn btn-success">
+                <i class="fas fa-file-pdf"></i> تصدير PDF
+            </a>
+            <a href="{{ url_for('mobile.report_vehicles') }}?{{ request.query_string.decode('utf-8') }}&export=excel" class="modern-btn btn-info">
+                <i class="fas fa-file-excel"></i> تصدير Excel
+            </a>
+        </div>
+    </form>
 </div>
 
 <!-- نتائج التقرير -->
-<div class="mobile-card">
-    <div class="mobile-card-title">
-        <i class="fas fa-list"></i> نتائج التقرير
-        <div class="mobile-card-subtitle">{{ vehicles|length }} مركبة</div>
+<div class="results-container">
+    <div class="results-header">
+        <div class="results-title">
+            <i class="fas fa-list"></i>
+            نتائج التقرير
+        </div>
+        <div class="results-count">{{ vehicles|length }} مركبة</div>
     </div>
     
-    <div class="mobile-card-content p-0">
+    <div class="vehicle-grid">
         {% if vehicles %}
-        <div class="table-responsive">
-            <table class="mobile-table">
-                <thead>
-                    <tr>
-                        <th>رقم اللوحة</th>
-                        <th>النوع</th>
-                        <th>الماركة والموديل</th>
-                        <th>الحالة</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vehicle in vehicles %}
-                    <tr onclick="location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
-                        <td>{{ vehicle.plate_number }}</td>
-                        <td>{{ vehicle.make or '-' }}</td>
-                        <td>{{ vehicle.make }} {{ vehicle.model }}</td>
-                        <td>
-                            <span class="vehicle-badge vehicle-{{ vehicle.status|lower|replace(' ', '-') }}">
-                                {{ vehicle.status or '-' }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+            {% for vehicle in vehicles %}
+            <div class="vehicle-card" onclick="location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
+                <div class="vehicle-header">
+                    <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
+                    <div class="vehicle-status {% if vehicle.status == 'نشط' or vehicle.status == 'متاح' %}status-available{% elif 'صيانة' in (vehicle.status or '') %}status-maintenance{% else %}status-inactive{% endif %}">
+                        {{ vehicle.status or 'غير محدد' }}
+                    </div>
+                </div>
+                <div class="vehicle-details">
+                    <strong>{{ vehicle.make or 'غير محدد' }} {{ vehicle.model or '' }}</strong><br>
+                    سنة الصنع: {{ vehicle.year or 'غير محدد' }}<br>
+                    اللون: {{ vehicle.color or 'غير محدد' }}
+                </div>
+            </div>
+            {% endfor %}
         {% else %}
-        <div class="text-center py-4">
-            <p class="text-muted">لا توجد بيانات متطابقة مع معايير البحث</p>
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-car"></i>
+            </div>
+            <div class="empty-title">لا توجد مركبات</div>
+            <div class="empty-subtitle">
+                لا توجد مركبات تطابق معايير البحث المحددة.<br>
+                قم بتعديل الفلاتر أو إعادة تعيينها للعرض الكامل.
+            </div>
         </div>
         {% endif %}
     </div>
@@ -110,273 +663,108 @@
 
 <!-- ملخص التقرير -->
 {% if vehicles %}
-<div class="mobile-card">
-    <div class="mobile-card-title">
-        <i class="fas fa-chart-pie"></i> ملخص التقرير
+<div class="summary-container">
+    <div class="summary-header">
+        <i class="fas fa-chart-pie"></i>
+        <h6 class="summary-title">الإحصائيات والملخص</h6>
     </div>
     
-    <div class="mobile-card-content">
-        <div class="report-summary">
-            <div class="summary-item total">
-                <div class="summary-value">{{ vehicles|length }}</div>
-                <div class="summary-label">إجمالي المركبات</div>
-            </div>
-            
-            {% for type in vehicle_types %}
-            <div class="summary-item">
-                <div class="summary-value">{{ vehicles|selectattr('make', 'equalto', type)|list|length }}</div>
-                <div class="summary-label">{{ type }}</div>
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ total_vehicles }}</div>
+            <div class="stat-label">إجمالي المركبات</div>
+        </div>
+        
+        <div class="stat-card success">
+            <div class="stat-value">{{ active_vehicles }}</div>
+            <div class="stat-label">المركبات المتاحة</div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-value">{{ maintenance_vehicles }}</div>
+            <div class="stat-label">تحت الصيانة</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">{{ vehicle_types|length }}</div>
+            <div class="stat-label">ماركات مختلفة</div>
+        </div>
+    </div>
+    
+    <!-- إحصائيات الماركات -->
+    <div class="detailed-stats-section">
+        <h6 class="stats-section-title">
+            <i class="fas fa-car"></i>
+            إحصائيات الماركات
+        </h6>
+        <div class="brand-stats-grid">
+            {% for make, count in make_stats %}
+            <div class="brand-stat-item">
+                <div class="brand-name">{{ make }}</div>
+                <div class="brand-count">{{ count }} مركبة</div>
+                <div class="brand-percentage">{{ "%.1f"|format((count * 100.0 / total_vehicles)) }}%</div>
             </div>
             {% endfor %}
         </div>
-        
-        <div class="chart-container">
-            <canvas id="vehiclesChart"></canvas>
+    </div>
+    
+    <!-- إحصائيات الألوان -->
+    <div class="detailed-stats-section">
+        <h6 class="stats-section-title">
+            <i class="fas fa-palette"></i>
+            إحصائيات الألوان
+        </h6>
+        <div class="color-stats-grid">
+            {% for color, count in color_stats %}
+            <div class="color-stat-item">
+                <div class="color-indicator" style="background-color: {% if color == 'أبيض' %}#ffffff{% elif color == 'أسود' %}#000000{% elif color == 'أزرق' %}#0066cc{% elif color == 'أحمر' %}#cc0000{% elif color == 'أخضر' %}#00cc00{% elif color == 'أصفر' %}#ffcc00{% elif color == 'رمادي' %}#808080{% elif color == 'بني' %}#8B4513{% elif color == 'فضي' %}#C0C0C0{% else %}#667eea{% endif %}; border: 2px solid #ddd;"></div>
+                <div class="color-details">
+                    <div class="color-name">{{ color }}</div>
+                    <div class="color-count">{{ count }} مركبة</div>
+                    <div class="color-percentage">{{ "%.1f"|format((count * 100.0 / total_vehicles)) }}%</div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
+    </div>
+    
+    <div class="chart-wrapper">
+        <canvas id="vehiclesChart"></canvas>
     </div>
 </div>
 {% endif %}
-
-<style>
-.mobile-form-row {
-    display: flex;
-    gap: 10px;
-}
-
-.buttons-row {
-    flex-wrap: wrap;
-}
-
-.mobile-form-row .mobile-btn {
-    flex: 1;
-    margin-bottom: 10px;
-}
-
-.dropdown {
-    position: relative;
-    flex: 1;
-}
-
-.dropdown-toggle {
-    width: 100%;
-}
-
-.dropdown-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    z-index: 1000;
-    display: none;
-    min-width: 10rem;
-    padding: 0.5rem 0;
-    margin: 0.125rem 0 0;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 0.25rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.dropdown-item {
-    display: block;
-    width: 100%;
-    padding: 0.5rem 1rem;
-    clear: both;
-    font-weight: 400;
-    text-align: inherit;
-    white-space: nowrap;
-    background-color: transparent;
-    border: 0;
-    text-decoration: none;
-    color: inherit;
-}
-
-.dropdown-item:hover {
-    background-color: #f8f9fa;
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
-.mobile-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.mobile-table th,
-.mobile-table td {
-    padding: 10px 15px;
-    text-align: right;
-    border-bottom: 1px solid #eee;
-}
-
-.mobile-table th {
-    background-color: #f9f9f9;
-    color: #757575;
-    font-weight: 500;
-}
-
-.mobile-table tbody tr {
-    cursor: pointer;
-}
-
-.mobile-table tbody tr:hover {
-    background-color: #f5f5f5;
-}
-
-.mobile-card-subtitle {
-    font-size: 0.8rem;
-    color: #777;
-    font-weight: normal;
-    margin-top: 5px;
-}
-
-.vehicle-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.vehicle-نشط, .vehicle-active {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: #28a745;
-}
-
-.vehicle-معطل, .vehicle-inactive {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
-}
-
-.vehicle-صيانة, .vehicle-maintenance {
-    background-color: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
-}
-
-.report-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.summary-item {
-    flex: 1;
-    min-width: calc(50% - 10px);
-    text-align: center;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-}
-
-.summary-item.total {
-    flex-basis: 100%;
-    background-color: rgba(13, 110, 253, 0.1);
-    color: #0d6efd;
-}
-
-.summary-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.summary-label {
-    font-size: 0.85rem;
-}
-
-.chart-container {
-    height: 250px;
-    margin: 10px 0;
-}
-</style>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // تفعيل قائمة التصدير المنسدلة
-    const dropdownToggle = document.getElementById('exportDropdown');
-    const dropdownMenu = document.getElementById('exportMenu');
-    
-    // التأكد من وجود الزر والقائمة
-    if (dropdownToggle && dropdownMenu) {
-        console.log("زر التصدير والقائمة المنسدلة موجودان");
-        
-        // ضبط موضع القائمة المنسدلة نسبة للزر
-        function positionDropdown() {
-            if (dropdownMenu.style.display === 'block') {
-                const btnRect = dropdownToggle.getBoundingClientRect();
-                dropdownMenu.style.top = (btnRect.bottom) + 'px';
-                dropdownMenu.style.left = btnRect.left + 'px';
-                dropdownMenu.style.minWidth = btnRect.width + 'px';
-            }
-        }
-        
-        // إضافة حدث النقر على الزر
-        dropdownToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log("تم النقر على زر التصدير");
-            
-            // تبديل حالة عرض القائمة
-            if (dropdownMenu.style.display === 'block') {
-                dropdownMenu.style.display = 'none';
-                console.log("تم إخفاء القائمة المنسدلة");
-            } else {
-                dropdownMenu.style.display = 'block';
-                positionDropdown();
-                console.log("تم إظهار القائمة المنسدلة");
-            }
-        });
-        
-        // إضافة النقر على روابط القائمة
-        const dropdownLinks = dropdownMenu.querySelectorAll('a.dropdown-item');
-        dropdownLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                console.log("تم النقر على عنصر من القائمة: " + this.textContent.trim());
-            });
-        });
-        
-        // إغلاق القائمة عند النقر في أي مكان آخر
-        document.addEventListener('click', function(e) {
-            if (dropdownMenu.style.display === 'block' && 
-                !dropdownToggle.contains(e.target) && 
-                !dropdownMenu.contains(e.target)) {
-                dropdownMenu.style.display = 'none';
-                console.log("تم إغلاق القائمة عند النقر خارجها");
-            }
-        });
-        
-        // إعادة ضبط موضع القائمة عند التمرير أو تغيير حجم النافذة
-        window.addEventListener('scroll', positionDropdown);
-        window.addEventListener('resize', positionDropdown);
-    } else {
-        console.error("لم يتم العثور على زر التصدير أو القائمة المنسدلة");
-    }
-    
     {% if vehicles %}
-    // إنشاء رسم بياني للمركبات
+    // إنشاء رسم بياني محسن للمركبات
     const ctx = document.getElementById('vehiclesChart').getContext('2d');
     
     // تحضير البيانات للرسم البياني
     const vehicleTypes = [{% for type in vehicle_types %}'{{ type }}',{% endfor %}];
     const vehicleCounts = [{% for type in vehicle_types %}{{ vehicles|selectattr('make', 'equalto', type)|list|length }},{% endfor %}];
     
-    // إنشاء ألوان عشوائية للرسم البياني
-    const backgroundColors = [
-        'rgba(54, 162, 235, 0.7)',
-        'rgba(255, 99, 132, 0.7)',
-        'rgba(255, 206, 86, 0.7)',
-        'rgba(75, 192, 192, 0.7)',
-        'rgba(153, 102, 255, 0.7)',
-        'rgba(255, 159, 64, 0.7)',
-        'rgba(40, 167, 69, 0.7)',
-        'rgba(220, 53, 69, 0.7)'
-    ];
+    // ألوان متدرجة احترافية
+    const gradients = vehicleTypes.map((_, index) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        const colors = [
+            ['#667eea', '#764ba2'],
+            ['#4facfe', '#00f2fe'],
+            ['#f093fb', '#f5576c'],
+            ['#43e97b', '#38f9d7'],
+            ['#fa709a', '#fee140'],
+            ['#a8edea', '#fed6e3'],
+            ['#d299c2', '#fef9d7'],
+            ['#89f7fe', '#66a6ff']
+        ];
+        const colorPair = colors[index % colors.length];
+        gradient.addColorStop(0, colorPair[0]);
+        gradient.addColorStop(1, colorPair[1]);
+        return gradient;
+    });
     
     const vehiclesChart = new Chart(ctx, {
         type: 'doughnut',
@@ -384,8 +772,11 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: vehicleTypes,
             datasets: [{
                 data: vehicleCounts,
-                backgroundColor: backgroundColors.slice(0, vehicleTypes.length),
-                borderWidth: 1
+                backgroundColor: gradients,
+                borderWidth: 3,
+                borderColor: '#ffffff',
+                hoverBorderWidth: 5,
+                hoverBorderColor: '#667eea'
             }]
         },
         options: {
@@ -396,18 +787,49 @@ document.addEventListener('DOMContentLoaded', function() {
                     position: 'bottom',
                     labels: {
                         font: {
-                            family: 'Tajawal, Arial'
-                        }
+                            family: 'Tajawal, Arial, sans-serif',
+                            size: 12,
+                            weight: '500'
+                        },
+                        color: '#333',
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
                     }
                 },
                 title: {
                     display: true,
-                    text: 'توزيع المركبات حسب النوع',
+                    text: 'توزيع المركبات حسب الشركة المصنعة',
                     font: {
-                        family: 'Tajawal, Arial',
-                        size: 14
+                        family: 'Tajawal, Arial, sans-serif',
+                        size: 16,
+                        weight: '600'
+                    },
+                    color: '#333',
+                    padding: 20
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed * 100) / total).toFixed(1);
+                            return `${context.label}: ${context.parsed} مركبة (${percentage}%)`;
+                        }
                     }
                 }
+            },
+            cutout: '60%',
+            animation: {
+                animateRotate: true,
+                duration: 2000
+            },
+            hover: {
+                animationDuration: 300
             }
         }
     });
