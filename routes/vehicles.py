@@ -3860,6 +3860,60 @@ def delete_safety_check(id):
         return redirect(url_for('vehicles.vehicle_safety_checks', id=vehicle_id))
 
 # إنشاء تقرير Excel شامل للسيارة
+@vehicles_bp.route('/<int:vehicle_id>/external-authorization/create', methods=['GET', 'POST'])
+@login_required
+def create_external_authorization(vehicle_id):
+    """إنشاء تفويض خارجي جديد"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        try:
+            # إنشاء التفويض الجديد
+            external_auth = ExternalAuthorization(
+                vehicle_id=vehicle_id,
+                employee_id=request.form.get('employee_id'),
+                project_id=request.form.get('project_id') if request.form.get('project_id') else None,
+                authorization_type=request.form.get('authorization_type'),
+                status='pending',
+                external_link=request.form.get('form_link'),
+                notes=request.form.get('notes')
+            )
+            
+            # معالجة رفع الملف
+            if 'file' in request.files:
+                file = request.files['file']
+                if file and file.filename:
+                    filename = secure_filename(file.filename)
+                    # إنشاء مجلد للتفويضات إذا لم يكن موجوداً
+                    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'authorizations')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    # حفظ الملف
+                    file_path = os.path.join(upload_dir, filename)
+                    file.save(file_path)
+                    external_auth.file_path = filename
+            
+            db.session.add(external_auth)
+            db.session.commit()
+            
+            flash('تم إنشاء التفويض الخارجي بنجاح', 'success')
+            return redirect(url_for('vehicles.view', id=vehicle_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء إنشاء التفويض: {str(e)}', 'error')
+    
+    # الحصول على البيانات للنموذج
+    departments = Department.query.all()
+    employees = Employee.query.all()
+    projects = Project.query.all()
+    
+    return render_template('vehicles/create_external_authorization.html',
+                         vehicle=vehicle,
+                         departments=departments,
+                         employees=employees,
+                         projects=projects)
+
 @vehicles_bp.route('/vehicle-report/<int:id>')
 @login_required
 def generate_vehicle_report(id):

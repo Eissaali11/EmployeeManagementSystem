@@ -1414,10 +1414,10 @@
                     التفويضات الخارجية
                     <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
                 </h5>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addExternalAuthModal">
+                <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة تفويض جديد
-                </button>
+                </a>
             </div>
             <div class="card-body">
                 {% if external_authorizations %}
@@ -1512,94 +1512,7 @@
     </div>
 </div>
 
-<!-- نافذة إضافة تفويض جديد -->
-<div class="modal fade" id="addExternalAuthModal" tabindex="-1" aria-labelledby="addExternalAuthModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addExternalAuthModalLabel">
-                    <i class="fas fa-file-signature ms-2"></i>
-                    إضافة تفويض خارجي جديد
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="externalAuthForm" method="POST" action="#" enctype="multipart/form-data">
-                    <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
-                    
-                    <!-- اختيار القسم -->
-                    <div class="mb-3">
-                        <label for="department_id" class="form-label">القسم</label>
-                        <select class="form-select" id="department_id" name="department_id">
-                            <option value="">اختر القسم</option>
-                            {% for dept in departments %}
-                            <option value="{{ dept.id }}">{{ dept.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <!-- اختيار الموظف -->
-                    <div class="mb-3">
-                        <label for="employee_id" class="form-label">الموظف</label>
-                        <select class="form-select" id="employee_id" name="employee_id" required>
-                            <option value="">اختر الموظف</option>
-                            {% for emp in employees %}
-                            <option value="{{ emp.id }}" data-departments="{{ emp.departments|map(attribute='id')|join(',') }}">
-                                {{ emp.name }} - {{ emp.job_title or 'بدون منصب' }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <!-- اختيار المشروع -->
-                    <div class="mb-3">
-                        <label for="project_id" class="form-label">المشروع</label>
-                        <select class="form-select" id="project_id" name="project_id">
-                            <option value="">اختر المشروع</option>
-                            {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <!-- نوع التفويض -->
-                    <div class="mb-3">
-                        <label for="authorization_type" class="form-label">نوع التفويض</label>
-                        <select class="form-select" id="authorization_type" name="authorization_type" required>
-                            <option value="">اختر نوع التفويض</option>
-                            <option value="تفويض تسليم">تفويض تسليم</option>
-                            <option value="استلام السيارة من مندوب">استلام السيارة من مندوب</option>
-                            <option value="تفويض مؤقت">تفويض مؤقت</option>
-                            <option value="نقل سيارة">نقل سيارة</option>
-                        </select>
-                    </div>
-                    
-                    <!-- رفع الملف -->
-                    <div class="mb-3">
-                        <label for="file" class="form-label">رفع ملف (PDF أو صورة)</label>
-                        <input type="file" class="form-control" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png">
-                    </div>
-                    
-                    <!-- رابط خارجي -->
-                    <div class="mb-3">
-                        <label for="external_link" class="form-label">رابط خارجي (اختياري)</label>
-                        <input type="url" class="form-control" id="external_link" name="external_link" placeholder="https://example.com">
-                    </div>
-                    
-                    <!-- ملاحظات -->
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">ملاحظات</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="submit" form="externalAuthForm" class="btn btn-primary">حفظ التفويض</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <script>
 // دالة لعرض/إخفاء السجلات القديمة
