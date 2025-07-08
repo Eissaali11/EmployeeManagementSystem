@@ -686,10 +686,27 @@
             </div>
             <div class="card-body">
                 {% if workshop_records %}
-                <div class="list-group">
+                <!-- إحصائيات الورشة -->
+                <div class="row mb-3">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-primary h5">{{ workshop_records|selectattr('repair_status', 'equalto', 'in_progress')|list|length }}</div>
+                        <small class="text-muted">قيد التنفيذ</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-success h5">{{ workshop_records|selectattr('repair_status', 'equalto', 'completed')|list|length }}</div>
+                        <small class="text-muted">مكتمل</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-warning h5">{{ workshop_records|selectattr('repair_status', 'equalto', 'pending_approval')|list|length }}</div>
+                        <small class="text-muted">في الانتظار</small>
+                    </div>
+                </div>
+                <hr>
+                
+                <!-- عرض آخر 4 عمليات مع إمكانية التوسع -->
+                <div class="list-group" style="max-height: 600px; overflow-y: auto;">
                     {% for record in workshop_records %}
-                    <div
-                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 {% if loop.index > 4 %}d-none older-workshop-record{% endif %}">
                         <div class="w-75">
                             <div class="fw-bold d-flex align-items-center mb-1">
                                 {% if record.reason == 'maintenance' %}
@@ -944,6 +961,16 @@
                         </div>
                     </div>
                     {% endfor %}
+                    
+                    <!-- زر عرض المزيد -->
+                    {% if workshop_records|length > 4 %}
+                    <div class="text-center py-3 border-top">
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleOlderWorkshopRecords()">
+                            <i class="fas fa-chevron-down ms-1" id="toggleWorkshopIcon"></i>
+                            <span id="toggleWorkshopText">عرض العمليات السابقة ({{ workshop_records|length - 4 }})</span>
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="d-flex justify-content-between mt-3">
                     <div>
@@ -1377,5 +1404,30 @@
     </div>
 </div>
 
+
+<script>
+// دالة لعرض/إخفاء السجلات القديمة
+function toggleOlderWorkshopRecords() {
+    const olderRecords = document.querySelectorAll('.older-workshop-record');
+    const toggleIcon = document.getElementById('toggleWorkshopIcon');
+    const toggleText = document.getElementById('toggleWorkshopText');
+    
+    if (olderRecords[0] && olderRecords[0].classList.contains('d-none')) {
+        // إظهار السجلات القديمة
+        olderRecords.forEach(record => {
+            record.classList.remove('d-none');
+        });
+        toggleIcon.className = 'fas fa-chevron-up ms-1';
+        toggleText.textContent = 'إخفاء العمليات السابقة';
+    } else {
+        // إخفاء السجلات القديمة
+        olderRecords.forEach(record => {
+            record.classList.add('d-none');
+        });
+        toggleIcon.className = 'fas fa-chevron-down ms-1';
+        toggleText.textContent = 'عرض العمليات السابقة (' + olderRecords.length + ')';
+    }
+}
+</script>
 
 {% endblock %}
