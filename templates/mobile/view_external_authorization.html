@@ -262,7 +262,7 @@ async function shareFullAuthorization() {
 الرابط الخارجي: {{ authorization.external_link }}
 {% endif %}
 {% if authorization.file_path %}
-الملف المرفق: {{ request.url_root }}{{ authorization.file_path }}
+الملف المرفق: {{ request.url_root }}static/uploads/authorizations/{{ authorization.file_path.split('/')[-1] }}
 {% endif %}
 تفاصيل التفويض الكاملة: ${currentUrl}
 

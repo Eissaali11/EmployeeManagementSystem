@@ -4290,13 +4290,10 @@ def create_external_authorization(vehicle_id):
                 authorization_type=request.form.get('authorization_type'),
                 project_name=request.form.get('project_name'),
                 city=request.form.get('city'),
-                start_date=datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date() if request.form.get('start_date') else None,
-                end_date=datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date() if request.form.get('end_date') else None,
+
                 external_link=request.form.get('external_link'),
                 notes=request.form.get('notes'),
-                status='pending',
-                created_by=current_user.id,
-                created_at=datetime.now()
+                status='pending'
             )
             
             # معالجة رفع الملف
