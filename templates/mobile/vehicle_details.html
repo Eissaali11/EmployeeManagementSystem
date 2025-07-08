@@ -154,7 +154,7 @@
                 <i class="fas fa-chevron-down scroll-indicator"></i>
             </div>
             
-            {% for record in maintenance_records|sort(attribute='date', reverse=true) %}
+            {% for record in maintenance_records|selectattr('date')|sort(attribute='date', reverse=true) + maintenance_records|rejectattr('date') %}
             <div class="timeline-item {% if loop.index > 3 %}hidden-item{% endif %}" data-index="{{ loop.index }}">
                 <div class="timeline-marker 
                     {% if record.maintenance_type == 'دورية' %}bg-info
@@ -250,7 +250,7 @@
                 <i class="fas fa-chevron-down scroll-indicator"></i>
             </div>
             
-            {% for record in workshop_records|sort(attribute='entry_date', reverse=true) %}
+            {% for record in workshop_records|selectattr('entry_date')|sort(attribute='entry_date', reverse=true) + workshop_records|rejectattr('entry_date') %}
             <div class="timeline-item {% if loop.index > 3 %}hidden-item{% endif %}" data-index="{{ loop.index }}">
                 <div class="timeline-marker 
                     {% if record.repair_status == 'in_progress' %}bg-primary
@@ -509,7 +509,7 @@
                 <i class="fas fa-chevron-down scroll-indicator"></i>
             </div>
             
-            {% for auth in external_authorizations|sort(attribute='created_at', reverse=true) %}
+            {% for auth in external_authorizations|selectattr('created_at')|sort(attribute='created_at', reverse=true) + external_authorizations|rejectattr('created_at') %}
             <div class="timeline-item {% if loop.index > 3 %}hidden-item{% endif %}" data-index="{{ loop.index }}">
                 <div class="timeline-marker 
                     {% if auth.status == 'pending' %}bg-warning
