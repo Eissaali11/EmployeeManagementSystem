@@ -278,10 +278,11 @@ async function shareFullAuthorization() {
 🚗 نظام نُظم - حلول ذكية لإدارة المركبات والموظفين
 تقنية متطورة • إدارة فعالة • خدمة احترافية`;
 
-    // تحديد الرابط الأساسي للمشاركة (الرابط الخارجي له الأولوية)
+    // تحديد الرابط الأساسي للمشاركة (رابط النموذج الخارجي فقط)
     const externalLink = '{{ authorization.external_link if authorization.external_link else "" }}';
     const formLink = '{{ authorization.authorization_form_link if authorization.authorization_form_link else "" }}';
-    const primaryUrl = externalLink || formLink || currentUrl;
+    // إعطاء الأولوية للرابط الخارجي ثم رابط النموذج، بدون رابط التفاصيل
+    const primaryUrl = externalLink || formLink;
 
     if (navigator.share) {
         try {
