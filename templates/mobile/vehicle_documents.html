@@ -22,7 +22,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-check-circle"></i>
       </div>
-      <div class="mobile-summary-value">24</div>
+      <div class="mobile-summary-value">{{ valid_docs }}</div>
       <div class="mobile-summary-label">سارية</div>
     </div>
     
@@ -30,7 +30,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-exclamation-triangle"></i>
       </div>
-      <div class="mobile-summary-value">5</div>
+      <div class="mobile-summary-value">{{ warning_docs }}</div>
       <div class="mobile-summary-label">تنتهي قريباً</div>
     </div>
     
@@ -38,7 +38,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-times-circle"></i>
       </div>
-      <div class="mobile-summary-value">2</div>
+      <div class="mobile-summary-value">{{ expired_docs }}</div>
       <div class="mobile-summary-label">منتهية</div>
     </div>
     
@@ -46,7 +46,7 @@
       <div class="mobile-summary-icon">
         <i class="fas fa-file-invoice"></i>
       </div>
-      <div class="mobile-summary-value">31</div>
+      <div class="mobile-summary-value">{{ total_docs }}</div>
       <div class="mobile-summary-label">الإجمالي</div>
     </div>
   </div>
@@ -71,9 +71,9 @@
         <label class="mobile-form-label">السيارة</label>
         <select class="mobile-form-select">
           <option value="">جميع السيارات</option>
-          <option value="1">تويوتا كامري</option>
-          <option value="2">هونداي سوناتا</option>
-          <option value="3">نيسان باترول</option>
+          {% for vehicle in vehicles %}
+            <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</option>
+          {% endfor %}
         </select>
       </div>
       
@@ -82,9 +82,8 @@
         <select class="mobile-form-select">
           <option value="">جميع الأنواع</option>
           <option value="registration">رخصة سير</option>
-          <option value="insurance">تأمين</option>
-          <option value="inspection">فحص فني</option>
-          <option value="other">أخرى</option>
+          <option value="authorization">تفويض</option>
+          <option value="inspection">فحص دوري</option>
         </select>
       </div>
       
@@ -93,7 +92,7 @@
         <select class="mobile-form-select">
           <option value="">الكل</option>
           <option value="valid">سارية</option>
-          <option value="expiring">تنتهي قريباً</option>
+          <option value="warning">تنتهي قريباً</option>
           <option value="expired">منتهية</option>
         </select>
       </div>
@@ -107,101 +106,38 @@
     </div>
     
     <div class="mobile-documents-list">
-      <!-- وثيقة -->
-      <div class="mobile-document-item">
-        <div class="mobile-document-status valid"></div>
-        <div class="mobile-document-icon">
-          <i class="fas fa-id-card"></i>
+      {% if documents %}
+        {% for doc in documents %}
+          <div class="mobile-document-item">
+            <div class="mobile-document-status {{ doc.status }}"></div>
+            <div class="mobile-document-icon">
+              <i class="fas {{ doc.icon }}"></i>
+            </div>
+            <div class="mobile-document-details">
+              <div class="mobile-document-title">{{ doc.type_name }}</div>
+              <div class="mobile-document-subtitle">{{ doc.vehicle.make }} {{ doc.vehicle.model }} - {{ doc.vehicle.plate_number }}</div>
+              <div class="mobile-document-expiry">
+                {% if doc.days_remaining >= 0 %}
+                  تنتهي في: {{ doc.expiry_date.strftime('%d %B %Y') }} ({{ doc.days_remaining }} يوم)
+                {% else %}
+                  انتهت في: {{ doc.expiry_date.strftime('%d %B %Y') }} (منذ {{ doc.days_remaining * -1 }} يوم)
+                {% endif %}
+              </div>
+            </div>
+            <button class="mobile-btn-icon mobile-document-action">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="mobile-empty-state">
+          <div class="mobile-empty-icon">
+            <i class="fas fa-file-invoice"></i>
+          </div>
+          <div class="mobile-empty-title">لا توجد وثائق</div>
+          <div class="mobile-empty-text">لم يتم العثور على أي وثائق للمركبات</div>
         </div>
-        <div class="mobile-document-details">
-          <div class="mobile-document-title">رخصة سير</div>
-          <div class="mobile-document-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
-          <div class="mobile-document-expiry">تنتهي في: ١٥ سبتمبر ٢٠٢٥ (١٥٠ يوم)</div>
-        </div>
-        <button class="mobile-btn-icon mobile-document-action">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- وثيقة -->
-      <div class="mobile-document-item">
-        <div class="mobile-document-status warning"></div>
-        <div class="mobile-document-icon">
-          <i class="fas fa-shield-alt"></i>
-        </div>
-        <div class="mobile-document-details">
-          <div class="mobile-document-title">وثيقة تأمين</div>
-          <div class="mobile-document-subtitle">تويوتا كامري - أ ب ج ١٢٣٤</div>
-          <div class="mobile-document-expiry">تنتهي في: ٥ مايو ٢٠٢٥ (١٨ يوم)</div>
-        </div>
-        <button class="mobile-btn-icon mobile-document-action">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- وثيقة -->
-      <div class="mobile-document-item">
-        <div class="mobile-document-status expired"></div>
-        <div class="mobile-document-icon">
-          <i class="fas fa-car-crash"></i>
-        </div>
-        <div class="mobile-document-details">
-          <div class="mobile-document-title">فحص فني</div>
-          <div class="mobile-document-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
-          <div class="mobile-document-expiry">انتهت في: ١٠ أبريل ٢٠٢٥ (منذ ٨ أيام)</div>
-        </div>
-        <button class="mobile-btn-icon mobile-document-action">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- وثيقة -->
-      <div class="mobile-document-item">
-        <div class="mobile-document-status valid"></div>
-        <div class="mobile-document-icon">
-          <i class="fas fa-id-card"></i>
-        </div>
-        <div class="mobile-document-details">
-          <div class="mobile-document-title">رخصة سير</div>
-          <div class="mobile-document-subtitle">هونداي سوناتا - س ع د ٥٦٧٨</div>
-          <div class="mobile-document-expiry">تنتهي في: ٢٠ نوفمبر ٢٠٢٥ (٢١٦ يوم)</div>
-        </div>
-        <button class="mobile-btn-icon mobile-document-action">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- وثيقة -->
-      <div class="mobile-document-item">
-        <div class="mobile-document-status warning"></div>
-        <div class="mobile-document-icon">
-          <i class="fas fa-shield-alt"></i>
-        </div>
-        <div class="mobile-document-details">
-          <div class="mobile-document-title">وثيقة تأمين</div>
-          <div class="mobile-document-subtitle">نيسان باترول - ك و ي ٩٨٧٦</div>
-          <div class="mobile-document-expiry">تنتهي في: ٣٠ أبريل ٢٠٢٥ (١٢ يوم)</div>
-        </div>
-        <button class="mobile-btn-icon mobile-document-action">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
-      
-      <!-- وثيقة -->
-      <div class="mobile-document-item">
-        <div class="mobile-document-status valid"></div>
-        <div class="mobile-document-icon">
-          <i class="fas fa-clipboard-check"></i>
-        </div>
-        <div class="mobile-document-details">
-          <div class="mobile-document-title">فحص فني</div>
-          <div class="mobile-document-subtitle">نيسان باترول - ك و ي ٩٨٧٦</div>
-          <div class="mobile-document-expiry">تنتهي في: ١ أغسطس ٢٠٢٥ (١٠٥ أيام)</div>
-        </div>
-        <button class="mobile-btn-icon mobile-document-action">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-      </div>
+      {% endif %}
     </div>
   </div>
   
@@ -297,8 +233,48 @@
   }
   
   function applyFilters() {
-    // تنفيذ عملية الفلترة
-    alert('تم تطبيق الفلتر');
+    const vehicleFilter = document.querySelector('.mobile-form-select:nth-child(1)');
+    const typeFilter = document.querySelectorAll('.mobile-form-select')[1];
+    const statusFilter = document.querySelectorAll('.mobile-form-select')[2];
+    
+    const documents = document.querySelectorAll('.mobile-document-item');
+    
+    documents.forEach(doc => {
+      let show = true;
+      
+      // فلتر حسب حالة الوثيقة
+      if (statusFilter && statusFilter.value) {
+        const docStatus = doc.querySelector('.mobile-document-status');
+        if (docStatus && !docStatus.classList.contains(statusFilter.value)) {
+          show = false;
+        }
+      }
+      
+      // فلتر حسب نوع الوثيقة
+      if (typeFilter && typeFilter.value) {
+        const docTitle = doc.querySelector('.mobile-document-title');
+        if (docTitle) {
+          const titleText = docTitle.textContent.trim();
+          let matchesType = false;
+          
+          if (typeFilter.value === 'registration' && titleText.includes('رخصة سير')) {
+            matchesType = true;
+          } else if (typeFilter.value === 'authorization' && titleText.includes('تفويض')) {
+            matchesType = true;
+          } else if (typeFilter.value === 'inspection' && titleText.includes('فحص دوري')) {
+            matchesType = true;
+          }
+          
+          if (!matchesType) {
+            show = false;
+          }
+        }
+      }
+      
+      doc.style.display = show ? 'flex' : 'none';
+    });
+    
+    // إخفاء الفلاتر بعد التطبيق
     toggleFilters();
   }
 </script>

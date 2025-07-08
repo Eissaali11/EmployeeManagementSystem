@@ -1497,6 +1497,86 @@ def edit_maintenance(maintenance_id):
                          now=datetime.now())
 
 
+@mobile_bp.route('/vehicles/documents')
+@login_required
+def vehicle_documents():
+    """صفحة وثائق المركبات"""
+    from datetime import datetime, timedelta
+    
+    # جلب جميع المركبات
+    vehicles = Vehicle.query.all()
+    
+    # تحديد تاريخ اليوم و30 يوم قادم
+    today = datetime.now().date()
+    thirty_days_later = today + timedelta(days=30)
+    
+    # تحليل الوثائق
+    documents = []
+    
+    for vehicle in vehicles:
+        # رخصة السير
+        if vehicle.registration_expiry_date:
+            days_remaining = (vehicle.registration_expiry_date - today).days
+            status = 'valid' if days_remaining > 30 else 'warning' if days_remaining > 0 else 'expired'
+            
+            documents.append({
+                'vehicle': vehicle,
+                'type': 'registration',
+                'type_name': 'رخصة سير',
+                'icon': 'fa-id-card',
+                'expiry_date': vehicle.registration_expiry_date,
+                'days_remaining': days_remaining,
+                'status': status
+            })
+        
+        # التفويض
+        if vehicle.authorization_expiry_date:
+            days_remaining = (vehicle.authorization_expiry_date - today).days
+            status = 'valid' if days_remaining > 30 else 'warning' if days_remaining > 0 else 'expired'
+            
+            documents.append({
+                'vehicle': vehicle,
+                'type': 'authorization',
+                'type_name': 'تفويض',
+                'icon': 'fa-shield-alt',
+                'expiry_date': vehicle.authorization_expiry_date,
+                'days_remaining': days_remaining,
+                'status': status
+            })
+        
+        # الفحص الدوري
+        if vehicle.inspection_expiry_date:
+            days_remaining = (vehicle.inspection_expiry_date - today).days
+            status = 'valid' if days_remaining > 30 else 'warning' if days_remaining > 0 else 'expired'
+            
+            documents.append({
+                'vehicle': vehicle,
+                'type': 'inspection',
+                'type_name': 'فحص دوري',
+                'icon': 'fa-clipboard-check',
+                'expiry_date': vehicle.inspection_expiry_date,
+                'days_remaining': days_remaining,
+                'status': status
+            })
+    
+    # حساب الإحصائيات
+    valid_docs = len([d for d in documents if d['status'] == 'valid'])
+    warning_docs = len([d for d in documents if d['status'] == 'warning'])
+    expired_docs = len([d for d in documents if d['status'] == 'expired'])
+    total_docs = len(documents)
+    
+    # ترتيب الوثائق حسب تاريخ الانتهاء
+    documents.sort(key=lambda x: x['expiry_date'])
+    
+    return render_template('mobile/vehicle_documents.html',
+                         documents=documents,
+                         valid_docs=valid_docs,
+                         warning_docs=warning_docs,
+                         expired_docs=expired_docs,
+                         total_docs=total_docs,
+                         vehicles=vehicles)
+
+
 # حذف سجل صيانة - النسخة المحمولة
 @mobile_bp.route('/vehicles/maintenance/delete/<int:maintenance_id>')
 @login_required
@@ -1528,13 +1608,7 @@ def delete_maintenance(maintenance_id):
     
     return redirect(url_for('mobile.vehicles'))
 
-# وثائق السيارات - النسخة المحمولة
-@mobile_bp.route('/vehicles/documents')
-@login_required
-def vehicle_documents():
-    """وثائق السيارات للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/vehicle_documents.html')
+# وثائق السيارات - تم نقل الوظيفة في نهاية الملف
 
 
 def save_base64_image(base64_string, subfolder):
