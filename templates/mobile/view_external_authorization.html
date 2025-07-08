@@ -218,31 +218,40 @@ body {
 <script>
 // دالة مشاركة تفاصيل التفويض الكاملة
 async function shareFullAuthorization() {
-    const currentUrl = window.location.href;
+    const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
     
-    // إنشاء رسالة شاملة تحتوي على جميع بيانات التفويض
-    const shareText = `🚗 تفويض خارجي - نظام نُظم
+    // إنشاء تاريخ ووقت الإنشاء
+    const currentDate = new Date();
+    const formattedDateTime = currentDate.toLocaleString('ar-SA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    
+    // إنشاء رسالة مشاركة نظيفة
+    let shareText = `مرحباً 👋
 
-مرحباً 👋
-تفاصيل التفويض الخارجي الكاملة من نظام نُظم لإدارة الموظفين والمركبات
+إليك تفاصيل التفويض الخارجي الكاملة:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚙 رقم السيارة: ${vehicleInfo}
+📅 تاريخ وقت الإرسال: ${formattedDateTime}
 
-🚙 معلومات السيارة:
-رقم اللوحة: {{ vehicle.plate_number }}
-الماركة والموديل: {{ vehicle.make }} {{ vehicle.model }}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+═══════════════════════════
 👤 معلومات الموظف:
+═══════════════════════════
+
 الاسم: {{ authorization.employee.name }}
 المنصب: {{ authorization.employee.job_title or 'غير محدد' }}
 الهاتف: {{ authorization.employee.mobile or 'غير محدد' }}
 القسم: {% for dept in authorization.employee.departments %}{{ dept.name }}{% if not loop.last %}, {% endif %}{% endfor %}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+═══════════════════════════
 📋 تفاصيل التفويض:
+═══════════════════════════
+
 نوع التفويض: {{ authorization.authorization_type }}
 المشروع: {{ authorization.project_name or 'غير محدد' }}
 المدينة: {{ authorization.city or 'غير محدد' }}
@@ -252,36 +261,44 @@ async function shareFullAuthorization() {
 {% endif %}
 الحالة: {% if authorization.status == 'pending' %}قيد المراجعة{% elif authorization.status == 'approved' %}مُوافق عليه{% elif authorization.status == 'rejected' %}مرفوض{% endif %}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
 
-🔗 الروابط والمرفقات:
-{% if authorization.authorization_form_link %}
-رابط النموذج الخارجي: {{ authorization.authorization_form_link }}
-{% endif %}
-{% if authorization.external_link %}
-الرابط الخارجي: {{ authorization.external_link }}
-{% endif %}
-{% if authorization.file_path %}
-الملف المرفق: {{ request.url_root }}static/uploads/authorizations/{{ authorization.file_path.split('/')[-1] }}
-{% endif %}
-تفاصيل التفويض الكاملة: ${currentUrl}
+    // إضافة المرفقات إذا وجدت
+    let hasAttachments = false;
+    {% if authorization.authorization_form_link %}
+    shareText += `🔗 رابط النموذج الخارجي:
+{{ authorization.authorization_form_link }}
 
-{% if authorization.notes %}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+    hasAttachments = true;
+    {% endif %}
+    {% if authorization.external_link %}
+    shareText += `🔗 الرابط الخارجي:
+{{ authorization.external_link }}
 
-📝 ملاحظات:
+`;
+    hasAttachments = true;
+    {% endif %}
+    {% if authorization.file_path %}
+    shareText += `📄 الملف المرفق:
+{{ request.url_root }}static/uploads/authorizations/{{ authorization.file_path.split('/')[-1] }}
+
+`;
+    hasAttachments = true;
+    {% endif %}
+    
+    {% if authorization.notes %}
+    shareText += `📝 ملاحظات:
 {{ authorization.notes }}
-{% endif %}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+    {% endif %}
+    
+    shareText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 نظام نُظم لإدارة المركبات
+🕐 تم إنشاء التقرير: ${formattedDateTime}`;
 
-📱 معرف التفويض: #{{ authorization.id }}
-📞 للاستفسار: يُرجى التواصل مع إدارة النظام
-
-🚗 نظام نُظم - حلول ذكية لإدارة المركبات والموظفين
-تقنية متطورة • إدارة فعالة • خدمة احترافية`;
-
-    // تحديد الرابط الأساسي للمشاركة (رابط النموذج الخارجي فقط)
+    // تحديد الرابط الأساسي للمشاركة (رابط النموذج الخارجي أو الرابط الخارجي فقط)
     const externalLink = '{{ authorization.external_link if authorization.external_link else "" }}';
     const formLink = '{{ authorization.authorization_form_link if authorization.authorization_form_link else "" }}';
     // إعطاء الأولوية للرابط الخارجي ثم رابط النموذج، بدون رابط التفاصيل
@@ -289,11 +306,17 @@ async function shareFullAuthorization() {
 
     if (navigator.share) {
         try {
-            await navigator.share({
-                title: 'تفاصيل التفويض الخارجي - نظام نُظم',
-                text: shareText,
-                url: primaryUrl
-            });
+            const shareData = {
+                title: `تفويض خارجي - ${vehicleInfo}`,
+                text: shareText
+            };
+            
+            // إضافة الرابط الخارجي فقط إذا كان متوفراً
+            if (primaryUrl && primaryUrl.trim() !== '') {
+                shareData.url = primaryUrl;
+            }
+            
+            await navigator.share(shareData);
         } catch (error) {
             console.log('مشاركة ملغاة أو خطأ:', error);
             showFallbackShare(shareText);

@@ -2454,20 +2454,30 @@ function toggleOlderRecords() {
 
 // دالة مشاركة التفويضات الخارجية
 async function shareExternalAuthorization(authId, employeeName, authType, date, project, city, vehicleId, formLink) {
-    const currentUrl = window.location.origin;
-    const authUrl = `${currentUrl}/mobile/vehicles/${vehicleId}/external-authorization/${authId}/view`;
+    const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
     
-    // إنشاء رسالة تفصيلية شاملة للمشاركة
+    // إنشاء تاريخ ووقت الإنشاء
+    const currentDate = new Date();
+    const formattedDateTime = currentDate.toLocaleString('ar-SA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    
+    // إنشاء رسالة مشاركة نظيفة
     let shareText = `مرحباً 👋
 
-نرجو الاطلاع على التفويض الخارجي الجديد المُنشأ في نظام نُظم
+إليك تفاصيل التفويض الخارجي:
 
-🏢 نظام نُظم - إدارة الموظفين والمركبات
-نظام متقدم لإدارة الأسطول والموظفين بأحدث التقنيات
+🚙 رقم السيارة: ${vehicleInfo}
+📅 تاريخ وقت الإرسال: ${formattedDateTime}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 بيانات التفويض التفصيلية:
+═══════════════════════════
+📋 بيانات التفويض:
+═══════════════════════════
 
 👤 الموظف المفوض: ${employeeName}
 📝 نوع التفويض: ${authType}
@@ -2475,41 +2485,34 @@ async function shareExternalAuthorization(authId, employeeName, authType, date, 
 🏢 المشروع/القسم: ${project}
 🌍 الموقع/المدينة: ${city}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🔗 الروابط والنماذج المطلوبة:`;
+`;
 
     // إضافة رابط النموذج الخارجي إذا كان متوفراً
     if (formLink && formLink.trim() !== '') {
-        shareText += `
+        shareText += `🔗 رابط النموذج الخارجي:
+${formLink}
 
-📝 رابط النموذج الخارجي للتعبئة:
-${formLink}`;
+`;
     }
     
-    shareText += `
+    shareText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 نظام نُظم لإدارة المركبات
+🕐 تم إنشاء التقرير: ${formattedDateTime}`;
 
-📄 تفاصيل التفويض الكاملة والمرفقات:
-${authUrl}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📱 معرف التفويض: #${authId}
-📞 للاستفسار: يُرجى التواصل مع إدارة النظام
-
-🚗 نظام نُظم - حلول ذكية لإدارة المركبات والموظفين
-تقنية متطورة • إدارة فعالة • خدمة احترافية`;
-
-    // اختيار الرابط المناسب للمشاركة (رابط النموذج الخارجي إذا توفر، وإلا رابط التفاصيل)
-    const primaryUrl = (formLink && formLink.trim() !== '') ? formLink : authUrl;
-    
+    // استخدام Web Share API مع الرابط الخارجي فقط إذا توفر
     if (navigator.share) {
         try {
-            await navigator.share({
-                title: 'تفويض خارجي - نظام نُظم',
-                text: shareText,
-                url: primaryUrl
-            });
+            const shareData = {
+                title: `تفويض خارجي - ${vehicleInfo}`,
+                text: shareText
+            };
+            
+            // إضافة الرابط الخارجي فقط إذا كان متوفراً
+            if (formLink && formLink.trim() !== '') {
+                shareData.url = formLink;
+            }
+            
+            await navigator.share(shareData);
         } catch (error) {
             console.log('مشاركة ملغاة أو خطأ:', error);
             showFallbackShare(shareText);
