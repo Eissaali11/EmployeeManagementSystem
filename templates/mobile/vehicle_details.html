@@ -1106,7 +1106,7 @@ function copyHandoverText(text) {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="externalAuthForm" method="POST" action="{{ url_for('vehicles.add_external_authorization') }}" enctype="multipart/form-data">
+                <form id="externalAuthForm" method="POST" action="#" enctype="multipart/form-data">
                     {{ csrf_token() }}
                     <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
                     

@@ -1084,6 +1084,45 @@ class VehicleAccident(db.Model):
         return f'<VehicleAccident {self.id} for vehicle {self.vehicle_id} on {self.accident_date}>'
 
 
+class Project(db.Model):
+    """نموذج المشاريع"""
+    __tablename__ = 'project'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    external_authorizations = db.relationship('ExternalAuthorization', back_populates='project', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Project {self.name}>'
+
+class ExternalAuthorization(db.Model):
+    """نموذج التفويضات الخارجية"""
+    __tablename__ = 'external_authorization'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)
+    authorization_type = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    file_path = db.Column(db.String(255))
+    external_link = db.Column(db.String(500))
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship('Vehicle', backref='external_authorizations')
+    employee = db.relationship('Employee', backref='external_authorizations')
+    project = db.relationship('Project', back_populates='external_authorizations')
+    
+    def __repr__(self):
+        return f'<ExternalAuthorization {self.authorization_type} for {self.employee.arabic_name}>'
+
 class AuditLog(db.Model):
     """نموذج سجل المراجعة لتتبع نشاط المستخدمين"""
     __tablename__ = 'audit_log'
