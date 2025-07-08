@@ -55,8 +55,8 @@
         <div class="row g-0">
             <div class="col-4 shortcut-item">
                 <a href="{{ url_for('mobile.vehicle_maintenance') }}">
-                    <i class="fas fa-tools"></i>
-                    <span>سجل الصيانة</span>
+                    <i class="fas fa-wrench"></i>
+                    <span>صيانة</span>
                 </a>
             </div>
             <div class="col-4 shortcut-item">
@@ -66,15 +66,9 @@
                 </a>
             </div>
             <div class="col-4 shortcut-item">
-                <a href="{{ url_for('mobile.vehicle_expenses') }}">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span>المصروفات</span>
-                </a>
-            </div>
-            <div class="col-4 shortcut-item">
-                <a href="{{ url_for('mobile.create_handover_mobile') }}">
-                    <i class="fas fa-clipboard-check"></i>
-                    <span>تشيك لست</span>
+                <a href="{{ url_for('mobile.add_maintenance', vehicle_id=0) }}">
+                    <i class="fas fa-plus"></i>
+                    <span>إضافة صيانة</span>
                 </a>
             </div>
             <div class="col-4 shortcut-item">
@@ -84,9 +78,9 @@
                 </a>
             </div>
             <div class="col-4 shortcut-item">
-                <a href="{{ url_for('mobile.add_maintenance', vehicle_id=0) }}">
-                    <i class="fas fa-plus"></i>
-                    <span>إضافة صيانة</span>
+                <a href="{{ url_for('mobile.create_handover_mobile') }}">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>تشيك لست</span>
                 </a>
             </div>
         </div>
