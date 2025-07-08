@@ -17,6 +17,40 @@ body {
     padding-bottom: 150px !important;
 }
 
+/* زر الرجوع */
+.back-button-container {
+    margin-bottom: 15px;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8f9fa;
+    color: #495057;
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.back-btn:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    text-decoration: none;
+}
+
+.back-btn i {
+    font-size: 0.85rem;
+}
+
 .reports-hero {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
@@ -550,6 +584,14 @@ body {
     }
 }
 </style>
+
+<!-- زر الرجوع -->
+<div class="back-button-container">
+    <a href="{{ url_for('mobile.reports') }}" class="back-btn">
+        <i class="fas fa-arrow-right"></i>
+        العودة للتقارير
+    </a>
+</div>
 
 <!-- البطاقة الرئيسية للترحيب -->
 <div class="reports-hero">
