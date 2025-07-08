@@ -498,72 +498,207 @@
             </div>
         </div>
         
-        <!-- قائمة التفويضات مع scroll -->
-        <div class="scrollable-list" data-total="{{ external_authorizations|length }}">
-            <div class="list-header">
-                <small class="text-muted">آخر 3 تفويضات - اسحب للمزيد</small>
-                <i class="fas fa-chevron-down scroll-indicator"></i>
-            </div>
-            
-            {% for auth in external_authorizations %}
-            <div class="timeline-item {% if loop.index > 3 %}hidden-item{% endif %}" data-index="{{ loop.index }}">
-                <div class="timeline-marker 
-                    {% if auth.status == 'pending' %}bg-warning
-                    {% elif auth.status == 'approved' %}bg-success
-                    {% elif auth.status == 'rejected' %}bg-danger
-                    {% else %}bg-secondary{% endif %}">
-                    <i class="fas fa-file-signature fa-xs"></i>
+        <!-- قائمة التفويضات مع scroll تفصيلي -->
+        <div class="external-auth-container">
+            <!-- رأس القائمة -->
+            <div class="auth-header-bar">
+                <div class="swipe-indicator">
+                    <i class="fas fa-arrows-alt-h"></i>
+                    <span>اسحب يميناً ويساراً للتفاصيل</span>
                 </div>
-                <div class="timeline-content">
-                    <div class="timeline-header">
-                        <div class="timeline-title">{{ auth.employee.name }} - {{ auth.authorization_type }}</div>
-                        <div class="timeline-date">{{ auth.created_at.strftime('%d/%m/%Y') if auth.created_at else 'غير محدد' }}</div>
-                    </div>
-                    <div class="timeline-details">
-                        <span class="badge badge-status 
-                            {% if auth.status == 'pending' %}bg-warning
-                            {% elif auth.status == 'approved' %}bg-success
-                            {% elif auth.status == 'rejected' %}bg-danger
-                            {% else %}bg-secondary{% endif %}">
-                            {% if auth.status == 'pending' %}قيد المراجعة
-                            {% elif auth.status == 'approved' %}مُوافق عليه
-                            {% elif auth.status == 'rejected' %}مرفوض
-                            {% else %}{{ auth.status }}{% endif %}
-                        </span>
-                        <div class="auth-actions">
-                            <a href="{{ url_for('mobile.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ url_for('mobile.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                               class="btn btn-sm btn-outline-warning">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            {% if auth.status == 'pending' %}
-                            <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                               class="btn btn-sm btn-outline-success" 
-                               onclick="return confirm('هل أنت متأكد من الموافقة؟')">
-                                <i class="fas fa-check"></i>
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if auth.project_name %}
-                    <div class="timeline-meta">
-                        <small class="text-muted">
-                            <i class="fas fa-project-diagram ms-1"></i>
-                            {{ auth.project_name }}
-                        </small>
-                    </div>
-                    {% endif %}
+                <div class="count-indicator">
+                    <span class="badge bg-primary">{{ external_authorizations[:3]|length }} من {{ external_authorizations|length }}</span>
                 </div>
             </div>
-            {% endfor %}
-            
+
+            <!-- الجدول التفصيلي مع Scroll -->
+            <div class="auth-table-wrapper">
+                <div class="auth-table-scroll">
+                    <table class="table table-bordered auth-detailed-table">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th width="120">التاريخ</th>
+                                <th width="80">النوع</th>
+                                <th width="150">الشخص</th>
+                                <th width="100">الحالة</th>
+                                <th width="120">المشروع</th>
+                                <th width="100">المدينة</th>
+                                <th width="150">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auth in external_authorizations|sort(attribute='created_at', reverse=true)[:3] %}
+                            <tr class="auth-row">
+                                <td class="date-cell">
+                                    <div class="date-display">
+                                        <span class="date-main">{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}</span>
+                                        <small class="date-time">{{ auth.created_at.strftime('%H:%M') if auth.created_at else '' }}</small>
+                                    </div>
+                                </td>
+                                <td class="type-cell">
+                                    <span class="type-badge 
+                                        {% if 'تسليم' in auth.authorization_type %}bg-info
+                                        {% elif 'استلام' in auth.authorization_type %}bg-success
+                                        {% elif 'نقل' in auth.authorization_type %}bg-warning
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ auth.authorization_type[:6] }}...
+                                    </span>
+                                </td>
+                                <td class="person-cell">
+                                    <div class="person-info">
+                                        <strong>{{ auth.employee.name }}</strong>
+                                        {% if auth.employee.phone %}
+                                        <small class="d-block">{{ auth.employee.phone }}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="status-cell">
+                                    <span class="status-badge 
+                                        {% if auth.status == 'pending' %}bg-warning
+                                        {% elif auth.status == 'approved' %}bg-success
+                                        {% elif auth.status == 'rejected' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {% if auth.status == 'pending' %}قيد المراجعة
+                                        {% elif auth.status == 'approved' %}مُوافق
+                                        {% elif auth.status == 'rejected' %}مرفوض
+                                        {% else %}{{ auth.status }}{% endif %}
+                                    </span>
+                                </td>
+                                <td class="project-cell">
+                                    <span class="project-name">{{ auth.project_name[:10] if auth.project_name else 'غير محدد' }}{% if auth.project_name and auth.project_name|length > 10 %}...{% endif %}</span>
+                                </td>
+                                <td class="city-cell">
+                                    <span class="city-name">{{ auth.city if auth.city else 'غير محدد' }}</span>
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="auth-actions-group">
+                                        <a href="{{ url_for('mobile.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="عرض">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('mobile.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if auth.file_path %}
+                                        <a href="{{ url_for('static', filename=auth.file_path) }}" 
+                                           class="btn btn-sm btn-outline-info" target="_blank" title="عرض الملف">
+                                            <i class="fas fa-file"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if auth.external_link %}
+                                        <a href="{{ auth.external_link }}" 
+                                           class="btn btn-sm btn-outline-secondary" target="_blank" title="فتح الرابط">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- زر عرض جميع التفويضات -->
             {% if external_authorizations|length > 3 %}
-            <div class="load-more-btn" onclick="toggleItems(this, 'authorization')">
-                <i class="fas fa-chevron-down"></i>
-                <span>عرض {{ external_authorizations|length - 3 }} تفويض آخر</span>
+            <div class="view-all-section">
+                <button class="btn btn-outline-primary w-100" onclick="toggleAllAuthorizations()">
+                    <i class="fas fa-list-ul ms-1"></i>
+                    <span id="toggle-text">عرض جميع التفويضات ({{ external_authorizations|length }})</span>
+                    <i class="fas fa-chevron-down ms-1" id="toggle-icon"></i>
+                </button>
+                
+                <!-- الجدول الكامل - مخفي افتراضياً -->
+                <div class="all-auth-container d-none" id="all-authorizations">
+                    <div class="auth-table-scroll">
+                        <table class="table table-bordered auth-detailed-table">
+                            <thead class="sticky-header">
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>النوع</th>
+                                    <th>الشخص</th>
+                                    <th>الحالة</th>
+                                    <th>المشروع</th>
+                                    <th>المدينة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for auth in external_authorizations|sort(attribute='created_at', reverse=true) %}
+                                <tr class="auth-row">
+                                    <td class="date-cell">
+                                        <div class="date-display">
+                                            <span class="date-main">{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}</span>
+                                            <small class="date-time">{{ auth.created_at.strftime('%H:%M') if auth.created_at else '' }}</small>
+                                        </div>
+                                    </td>
+                                    <td class="type-cell">
+                                        <span class="type-badge 
+                                            {% if 'تسليم' in auth.authorization_type %}bg-info
+                                            {% elif 'استلام' in auth.authorization_type %}bg-success
+                                            {% elif 'نقل' in auth.authorization_type %}bg-warning
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ auth.authorization_type }}
+                                        </span>
+                                    </td>
+                                    <td class="person-cell">
+                                        <div class="person-info">
+                                            <strong>{{ auth.employee.name }}</strong>
+                                            {% if auth.employee.phone %}
+                                            <small class="d-block">{{ auth.employee.phone }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="status-cell">
+                                        <span class="status-badge 
+                                            {% if auth.status == 'pending' %}bg-warning
+                                            {% elif auth.status == 'approved' %}bg-success
+                                            {% elif auth.status == 'rejected' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {% if auth.status == 'pending' %}قيد المراجعة
+                                            {% elif auth.status == 'approved' %}مُوافق عليه
+                                            {% elif auth.status == 'rejected' %}مرفوض
+                                            {% else %}{{ auth.status }}{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="project-cell">
+                                        <span class="project-name">{{ auth.project_name if auth.project_name else 'غير محدد' }}</span>
+                                    </td>
+                                    <td class="city-cell">
+                                        <span class="city-name">{{ auth.city if auth.city else 'غير محدد' }}</span>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <div class="auth-actions-group">
+                                            <a href="{{ url_for('mobile.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="عرض">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('mobile.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                               class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if auth.file_path %}
+                                            <a href="{{ url_for('static', filename=auth.file_path) }}" 
+                                               class="btn btn-sm btn-outline-info" target="_blank" title="عرض الملف">
+                                                <i class="fas fa-file"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if auth.external_link %}
+                                            <a href="{{ auth.external_link }}" 
+                                               class="btn btn-sm btn-outline-secondary" target="_blank" title="فتح الرابط">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             {% endif %}
         </div>
@@ -1081,6 +1216,256 @@
 .workshop-actions .btn i {
     font-size: 11px;
 }
+
+/* تنسيقات التفويضات الخارجية المحدثة */
+.external-auth-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.auth-header-bar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.swipe-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.swipe-indicator i {
+    font-size: 1rem;
+    animation: swipeHint 2s infinite;
+}
+
+@keyframes swipeHint {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
+}
+
+.count-indicator .badge {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+}
+
+.auth-table-wrapper {
+    position: relative;
+    background: white;
+}
+
+.auth-table-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    max-height: 300px;
+    scrollbar-width: thin;
+    scrollbar-color: #667eea #f1f1f1;
+}
+
+.auth-table-scroll::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+.auth-table-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.auth-table-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 3px;
+}
+
+.auth-detailed-table {
+    margin: 0;
+    min-width: 800px;
+    font-size: 0.85rem;
+}
+
+.sticky-header th {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border: none;
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+
+.auth-row {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #e9ecef !important;
+}
+
+.auth-row:hover {
+    background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.date-cell {
+    text-align: center;
+    padding: 12px 8px !important;
+}
+
+.date-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.date-main {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.8rem;
+}
+
+.date-time {
+    color: #6c757d;
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+.type-badge, .status-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+}
+
+.person-info {
+    text-align: center;
+}
+
+.person-info strong {
+    font-size: 0.8rem;
+    color: #495057;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.person-info small {
+    color: #6c757d;
+    font-size: 0.7rem;
+}
+
+.project-name, .city-name {
+    font-size: 0.8rem;
+    color: #495057;
+    font-weight: 500;
+    text-align: center;
+    display: block;
+}
+
+.auth-actions-group {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.auth-actions-group .btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    transition: all 0.2s ease;
+}
+
+.auth-actions-group .btn:hover {
+    transform: scale(1.1);
+}
+
+.view-all-section {
+    padding: 16px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+}
+
+.all-auth-container {
+    margin-top: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.all-auth-container .auth-table-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* تأثيرات التحميل */
+.auth-row {
+    opacity: 0;
+    animation: fadeInRow 0.5s ease forwards;
+}
+
+.auth-row:nth-child(1) { animation-delay: 0.1s; }
+.auth-row:nth-child(2) { animation-delay: 0.2s; }
+.auth-row:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* تجاوب الشاشات الصغيرة */
+@media (max-width: 576px) {
+    .auth-detailed-table {
+        min-width: 700px;
+        font-size: 0.75rem;
+    }
+    
+    .sticky-header th {
+        padding: 8px 4px;
+        font-size: 0.7rem;
+    }
+    
+    .auth-row td {
+        padding: 8px 4px !important;
+    }
+    
+    .auth-actions-group .btn {
+        width: 24px;
+        height: 24px;
+        font-size: 9px;
+    }
+    
+    .type-badge, .status-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        min-width: 50px;
+    }
+    
+    .swipe-indicator span {
+        font-size: 0.75rem;
+    }
+}
 </style>
 
 <!-- JavaScript للتفاعل مع القوائم -->
@@ -1185,6 +1570,117 @@ style.textContent = `
 .timeline-item:nth-child(3) { animation-delay: 0.3s; }
 `;
 document.head.appendChild(style);
+
+// دالة تبديل عرض جميع التفويضات
+function toggleAllAuthorizations() {
+    const container = document.getElementById('all-authorizations');
+    const toggleText = document.getElementById('toggle-text');
+    const toggleIcon = document.getElementById('toggle-icon');
+    const isVisible = !container.classList.contains('d-none');
+    
+    if (isVisible) {
+        // إخفاء القائمة الكاملة
+        container.style.animation = 'slideUp 0.4s ease forwards';
+        setTimeout(() => {
+            container.classList.add('d-none');
+        }, 400);
+        
+        toggleText.textContent = 'عرض جميع التفويضات ({{ external_authorizations|length }})';
+        toggleIcon.className = 'fas fa-chevron-down ms-1';
+        toggleIcon.style.transform = 'rotate(0deg)';
+    } else {
+        // عرض القائمة الكاملة
+        container.classList.remove('d-none');
+        container.style.animation = 'slideDown 0.4s ease forwards';
+        
+        toggleText.textContent = 'إخفاء القائمة الكاملة';
+        toggleIcon.className = 'fas fa-chevron-up ms-1';
+        toggleIcon.style.transform = 'rotate(180deg)';
+        
+        // التمرير إلى القائمة الجديدة
+        setTimeout(() => {
+            container.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }, 200);
+    }
+}
+
+// CSS animations للقوائم
+const authStyle = document.createElement('style');
+authStyle.textContent = `
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+        max-height: 0;
+    }
+}
+
+.auth-table-scroll {
+    scroll-behavior: smooth;
+}
+
+/* تحسين تأثير hover للجدول */
+.auth-row:hover .auth-actions-group .btn {
+    transform: scale(1.05);
+}
+
+/* مؤشر التمرير للجدول */
+.auth-table-wrapper::before {
+    content: '⟵ ⟶';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: rgba(102, 126, 234, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    z-index: 5;
+    opacity: 0.7;
+    animation: pulseHint 3s infinite;
+}
+
+@keyframes pulseHint {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
+/* إخفاء مؤشر التمرير عند التفاعل */
+.auth-table-scroll:hover + .auth-table-wrapper::before,
+.auth-table-scroll.scrolled::before {
+    opacity: 0;
+}
+`;
+document.head.appendChild(authStyle);
+
+// إضافة مستمع للتمرير لإخفاء مؤشر الاتجاه
+document.querySelectorAll('.auth-table-scroll').forEach(scroll => {
+    scroll.addEventListener('scroll', function() {
+        this.classList.add('scrolled');
+    });
+});
 </script>
 
 <!-- JavaScript لتأكيد الحذف -->
