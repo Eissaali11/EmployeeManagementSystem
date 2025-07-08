@@ -135,12 +135,10 @@ body {
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('mobile.vehicle_maintenance') }}">
+                <li><a class="dropdown-item" href="{{ url_for('mobile.vehicles') }}">
                     <i class="fas fa-eye ms-1"></i> عرض الكل
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('mobile.add_maintenance', vehicle_id=vehicle.id) }}">
-                    <i class="fas fa-plus ms-1"></i> صيانة جديدة
-                </a></li>
+
             </ul>
         </div>
     </div>
@@ -211,8 +209,8 @@ body {
             </div>
             <h6>لا توجد سجلات صيانة</h6>
             <p>ابدأ بإضافة أول عملية صيانة</p>
-            <a href="{{ url_for('mobile.add_maintenance', vehicle_id=vehicle.id) }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus ms-1"></i> إضافة صيانة
+            <a href="{{ url_for('mobile.vehicle_documents') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-file-alt ms-1"></i> عرض الوثائق
             </a>
         </div>
         {% endif %}
