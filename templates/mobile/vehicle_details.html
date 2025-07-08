@@ -678,6 +678,11 @@ body {
                                             <i class="fas fa-external-link-alt"></i>
                                         </a>
                                         {% endif %}
+                                        <button class="btn btn-sm btn-outline-success" 
+                                                onclick="shareExternalAuthorization({{ auth.id }}, '{{ auth.employee.name }}', '{{ auth.authorization_type }}', '{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}', '{{ auth.project_name if auth.project_name else 'غير محدد' }}', '{{ auth.city if auth.city else 'غير محدد' }}')" 
+                                                title="مشاركة">
+                                            <i class="fas fa-share-alt"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -777,6 +782,11 @@ body {
                                                 <i class="fas fa-external-link-alt"></i>
                                             </a>
                                             {% endif %}
+                                            <button class="btn btn-sm btn-outline-success" 
+                                                    onclick="shareExternalAuthorization({{ auth.id }}, '{{ auth.employee.name }}', '{{ auth.authorization_type }}', '{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}', '{{ auth.project_name if auth.project_name else 'غير محدد' }}', '{{ auth.city if auth.city else 'غير محدد' }}')" 
+                                                    title="مشاركة">
+                                                <i class="fas fa-share-alt"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -2376,6 +2386,77 @@ function toggleOlderRecords() {
         toggleIcon.className = 'fas fa-chevron-down ms-1';
         toggleText.textContent = 'عرض العمليات السابقة (' + olderRecords.length + ')';
     }
+}
+
+// دالة مشاركة التفويضات الخارجية
+async function shareExternalAuthorization(authId, employeeName, authType, date, project, city) {
+    const shareText = `🚗 تفويض خارجي - نظام نُظم
+
+👤 الموظف: ${employeeName}
+📝 نوع التفويض: ${authType}
+📅 التاريخ: ${date}
+🏢 المشروع: ${project}
+🌍 المدينة: ${city}
+
+معرف التفويض: #${authId}
+
+نظام إدارة الموظفين والمركبات
+───────────────────────`;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'تفاصيل التفويض الخارجي',
+                text: shareText
+            });
+        } catch (error) {
+            console.log('مشاركة ملغاة أو خطأ:', error);
+            showFallbackShare(shareText);
+        }
+    } else {
+        showFallbackShare(shareText);
+    }
+}
+
+// عرض نموذج احتياطي للمشاركة
+function showFallbackShare(text) {
+    // نسخ النص إلى الحافظة
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('تم نسخ تفاصيل التفويض إلى الحافظة');
+        }).catch(() => {
+            showTextModal(text);
+        });
+    } else {
+        showTextModal(text);
+    }
+}
+
+function showTextModal(text) {
+    // إنشاء نافذة منبثقة لعرض النص
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white; padding: 20px; border-radius: 8px;
+        max-width: 90%; max-height: 80%; overflow-y: auto;
+        direction: rtl; text-align: right;
+    `;
+    
+    content.innerHTML = `
+        <h5>تفاصيل التفويض</h5>
+        <textarea readonly style="width: 100%; height: 200px; margin: 10px 0;">${text}</textarea>
+        <button onclick="this.closest('.modal').remove()" class="btn btn-primary">إغلاق</button>
+    `;
+    
+    modal.appendChild(content);
+    modal.className = 'modal';
+    document.body.appendChild(modal);
 }
 </script>
 
