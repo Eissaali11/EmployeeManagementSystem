@@ -106,90 +106,209 @@
 
 
 <!-- سجل الصيانة -->
-<div class="card mb-3 mx-3">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
+<div class="card mb-3 mx-3 modern-card">
+    <div class="card-header gradient-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 text-white">
             <i class="fas fa-tools ms-2"></i>
             سجل الصيانة
+            {% if maintenance_records %}
+            <span class="badge bg-light text-dark ms-2">{{ maintenance_records|length }}</span>
+            {% endif %}
         </h6>
-        <div>
-            <a href="{{ url_for('mobile.vehicle_maintenance') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-eye ms-1"></i>
-                عرض الكل
-            </a>
-            <a href="{{ url_for('mobile.add_maintenance', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-success">
-                <i class="fas fa-plus ms-1"></i>
-                صيانة جديدة
-            </a>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('mobile.vehicle_maintenance') }}">
+                    <i class="fas fa-eye ms-1"></i> عرض الكل
+                </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('mobile.add_maintenance', vehicle_id=vehicle.id) }}">
+                    <i class="fas fa-plus ms-1"></i> صيانة جديدة
+                </a></li>
+            </ul>
         </div>
     </div>
     <div class="card-body p-0">
         {% if maintenance_records %}
-        <div class="maintenance-list">
-            {% for record in maintenance_records %}
-            <a href="#" class="maintenance-item">
-                <div class="maintenance-date">{{ record.date.strftime('%Y-%m-%d') }}</div>
-                <div class="maintenance-content">
-                    <div class="maintenance-type 
-                             {% if record.maintenance_type == 'دورية' %}badge bg-info
-                             {% elif record.maintenance_type == 'طارئة' %}badge bg-warning
-                             {% elif record.maintenance_type == 'إصلاح' %}badge bg-danger
-                             {% else %}badge bg-secondary{% endif %}">
-                        {{ record.maintenance_type }}
-                    </div>
-                    <div class="maintenance-description">{{ record.description }}</div>
+        <!-- إحصائيات سريعة -->
+        <div class="stats-row bg-light">
+            <div class="stat-item">
+                <div class="stat-number text-primary">{{ maintenance_records|length }}</div>
+                <div class="stat-label">عملية</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number text-success">{{ '{:,.0f}'.format(maintenance_records|sum(attribute='cost')) }}</div>
+                <div class="stat-label">ريال</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number text-info">{{ maintenance_records|selectattr('maintenance_type', 'equalto', 'دورية')|list|length }}</div>
+                <div class="stat-label">دورية</div>
+            </div>
+        </div>
+        
+        <!-- قائمة العمليات مع scroll -->
+        <div class="scrollable-list" data-total="{{ maintenance_records|length }}">
+            <div class="list-header">
+                <small class="text-muted">آخر 3 عمليات - اسحب للمزيد</small>
+                <i class="fas fa-chevron-down scroll-indicator"></i>
+            </div>
+            
+            {% for record in maintenance_records|sort(attribute='date', reverse=true) %}
+            <div class="timeline-item {% if loop.index > 3 %}hidden-item{% endif %}" data-index="{{ loop.index }}">
+                <div class="timeline-marker 
+                    {% if record.maintenance_type == 'دورية' %}bg-info
+                    {% elif record.maintenance_type == 'طارئة' %}bg-warning
+                    {% elif record.maintenance_type == 'إصلاح' %}bg-danger
+                    {% else %}bg-secondary{% endif %}">
+                    <i class="fas fa-tools fa-xs"></i>
                 </div>
-                <div class="maintenance-cost">{{ '{:,.2f}'.format(record.cost) }}</div>
-            </a>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <div class="timeline-title">{{ record.description[:50] }}{% if record.description|length > 50 %}...{% endif %}</div>
+                        <div class="timeline-date">{{ record.date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="timeline-details">
+                        <span class="badge badge-type 
+                            {% if record.maintenance_type == 'دورية' %}bg-info
+                            {% elif record.maintenance_type == 'طارئة' %}bg-warning
+                            {% elif record.maintenance_type == 'إصلاح' %}bg-danger
+                            {% else %}bg-secondary{% endif %}">
+                            {{ record.maintenance_type }}
+                        </span>
+                        <span class="timeline-cost">{{ '{:,.0f}'.format(record.cost) }} ريال</span>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
+            
+            {% if maintenance_records|length > 3 %}
+            <div class="load-more-btn" onclick="toggleItems(this, 'maintenance')">
+                <i class="fas fa-chevron-down"></i>
+                <span>عرض {{ maintenance_records|length - 3 }} عملية أخرى</span>
+            </div>
+            {% endif %}
         </div>
         {% else %}
-        <div class="text-center py-4">
-            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-tools"></i>
+            </div>
             <h6>لا توجد سجلات صيانة</h6>
-            <p class="text-muted small px-3">يمكنك إضافة سجل صيانة جديد من خلال النقر على زر "صيانة جديدة"</p>
+            <p>ابدأ بإضافة أول عملية صيانة</p>
+            <a href="{{ url_for('mobile.add_maintenance', vehicle_id=vehicle.id) }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus ms-1"></i> إضافة صيانة
+            </a>
         </div>
         {% endif %}
     </div>
 </div>
 
 <!-- سجلات الورشة -->
-<div class="card mb-3 mx-3">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-            <i class="fas fa-tools ms-2"></i>
+<div class="card mb-3 mx-3 modern-card">
+    <div class="card-header gradient-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 text-white">
+            <i class="fas fa-wrench ms-2"></i>
             سجلات الورشة
-            <span class="badge bg-secondary">{{ workshop_records|length }}</span>
+            {% if workshop_records %}
+            <span class="badge bg-light text-dark ms-2">{{ workshop_records|length }}</span>
+            {% endif %}
         </h6>
-        <div>
-            <a href="{{ url_for('mobile.add_workshop_record', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus ms-1"></i>
-                إضافة سجل
-            </a>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('mobile.add_workshop_record', vehicle_id=vehicle.id) }}">
+                    <i class="fas fa-plus ms-1"></i> إضافة سجل
+                </a></li>
+            </ul>
         </div>
     </div>
     <div class="card-body p-0">
         {% if workshop_records %}
         <!-- إحصائيات الورشة -->
-        <div class="d-flex justify-content-around py-3 bg-light border-bottom">
-            <div class="text-center">
-                <div class="fw-bold text-primary">{{ workshop_records|selectattr('repair_status', 'equalto', 'in_progress')|list|length }}</div>
-                <small class="text-muted">قيد التنفيذ</small>
+        <div class="stats-row bg-light">
+            <div class="stat-item">
+                <div class="stat-number text-primary">{{ workshop_records|selectattr('repair_status', 'equalto', 'in_progress')|list|length }}</div>
+                <div class="stat-label">قيد التنفيذ</div>
             </div>
-            <div class="text-center">
-                <div class="fw-bold text-success">{{ workshop_records|selectattr('repair_status', 'equalto', 'completed')|list|length }}</div>
-                <small class="text-muted">مكتمل</small>
+            <div class="stat-item">
+                <div class="stat-number text-success">{{ workshop_records|selectattr('repair_status', 'equalto', 'completed')|list|length }}</div>
+                <div class="stat-label">مكتمل</div>
             </div>
-            <div class="text-center">
-                <div class="fw-bold text-warning">{{ workshop_records|selectattr('repair_status', 'equalto', 'pending_approval')|list|length }}</div>
-                <small class="text-muted">في الانتظار</small>
+            <div class="stat-item">
+                <div class="stat-number text-warning">{{ workshop_records|selectattr('repair_status', 'equalto', 'pending_approval')|list|length }}</div>
+                <div class="stat-label">في الانتظار</div>
             </div>
         </div>
         
-        <!-- عرض آخر 4 عمليات مع التمرير -->
-        <div class="workshop-list" style="max-height: 500px; overflow-y: auto; scroll-behavior: smooth;">
-            {% for record in workshop_records %}
-            <div class="workshop-item border-bottom p-3 {% if loop.index > 4 %}d-none older-record{% endif %}">
+        <!-- قائمة العمليات مع scroll -->
+        <div class="scrollable-list" data-total="{{ workshop_records|length }}">
+            <div class="list-header">
+                <small class="text-muted">آخر 3 عمليات - اسحب للمزيد</small>
+                <i class="fas fa-chevron-down scroll-indicator"></i>
+            </div>
+            
+            {% for record in workshop_records|sort(attribute='entry_date', reverse=true) %}
+            <div class="timeline-item {% if loop.index > 3 %}hidden-item{% endif %}" data-index="{{ loop.index }}">
+                <div class="timeline-marker 
+                    {% if record.repair_status == 'in_progress' %}bg-primary
+                    {% elif record.repair_status == 'completed' %}bg-success
+                    {% elif record.repair_status == 'pending_approval' %}bg-warning
+                    {% else %}bg-secondary{% endif %}">
+                    <i class="fas fa-wrench fa-xs"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <div class="timeline-title">{{ record.description[:50] }}{% if record.description|length > 50 %}...{% endif %}</div>
+                        <div class="timeline-date">{{ record.entry_date.strftime('%d/%m/%Y') if record.entry_date else 'غير محدد' }}</div>
+                    </div>
+                    <div class="timeline-details">
+                        <span class="badge badge-status 
+                            {% if record.repair_status == 'in_progress' %}bg-primary
+                            {% elif record.repair_status == 'completed' %}bg-success
+                            {% elif record.repair_status == 'pending_approval' %}bg-warning
+                            {% else %}bg-secondary{% endif %}">
+                            {% if record.repair_status == 'in_progress' %}قيد التنفيذ
+                            {% elif record.repair_status == 'completed' %}مكتمل
+                            {% elif record.repair_status == 'pending_approval' %}في الانتظار
+                            {% else %}{{ record.repair_status }}{% endif %}
+                        </span>
+                        <div class="workshop-actions">
+                            <a href="{{ url_for('mobile.workshop_details', workshop_id=record.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('mobile.edit_workshop_record', workshop_id=record.id) }}" class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if workshop_records|length > 3 %}
+            <div class="load-more-btn" onclick="toggleItems(this, 'workshop')">
+                <i class="fas fa-chevron-down"></i>
+                <span>عرض {{ workshop_records|length - 3 }} عملية أخرى</span>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-wrench"></i>
+            </div>
+            <h6>لا توجد سجلات ورشة</h6>
+            <p>ابدأ بإضافة أول سجل ورشة</p>
+            <a href="{{ url_for('mobile.add_workshop_record', vehicle_id=vehicle.id) }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus ms-1"></i> إضافة سجل
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="workshop-date">
                         <small class="text-muted">تاريخ الدخول</small>
@@ -454,104 +573,123 @@
 </div>
 
 <!-- التفويضات الخارجية -->
-<div class="card mb-3 mx-3">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
+<div class="card mb-3 mx-3 modern-card">
+    <div class="card-header gradient-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 text-white">
             <i class="fas fa-file-signature ms-2"></i>
             التفويضات الخارجية
             {% if external_authorizations %}
-            <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
+            <span class="badge bg-light text-dark ms-2">{{ external_authorizations|length }}</span>
             {% endif %}
         </h6>
-        <div>
-            <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus ms-1"></i>
-                إضافة تفويض
-            </a>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}">
+                    <i class="fas fa-plus ms-1"></i> إضافة تفويض
+                </a></li>
+            </ul>
         </div>
     </div>
     <div class="card-body p-0">
         {% if external_authorizations %}
-        <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>الموظف</th>
-                        <th>المشروع</th>
-                        <th>النوع</th>
-                        <th>الحالة</th>
-                        <th>الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for auth in external_authorizations %}
-                    <tr>
-                        <td>{{ auth.employee.name }}</td>
-                        <td>{{ auth.project_name or 'غير محدد' }}</td>
-                        <td>
-                            <span class="badge bg-info">{{ auth.authorization_type }}</span>
-                        </td>
-                        <td>
+        <!-- إحصائيات التفويضات -->
+        <div class="stats-row bg-light">
+            <div class="stat-item">
+                <div class="stat-number text-warning">{{ external_authorizations|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                <div class="stat-label">في الانتظار</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number text-success">{{ external_authorizations|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+                <div class="stat-label">مُوافق عليه</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number text-danger">{{ external_authorizations|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
+                <div class="stat-label">مرفوض</div>
+            </div>
+        </div>
+        
+        <!-- قائمة التفويضات مع scroll -->
+        <div class="scrollable-list" data-total="{{ external_authorizations|length }}">
+            <div class="list-header">
+                <small class="text-muted">آخر 3 تفويضات - اسحب للمزيد</small>
+                <i class="fas fa-chevron-down scroll-indicator"></i>
+            </div>
+            
+            {% for auth in external_authorizations|sort(attribute='created_at', reverse=true) %}
+            <div class="timeline-item {% if loop.index > 3 %}hidden-item{% endif %}" data-index="{{ loop.index }}">
+                <div class="timeline-marker 
+                    {% if auth.status == 'pending' %}bg-warning
+                    {% elif auth.status == 'approved' %}bg-success
+                    {% elif auth.status == 'rejected' %}bg-danger
+                    {% else %}bg-secondary{% endif %}">
+                    <i class="fas fa-file-signature fa-xs"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <div class="timeline-title">{{ auth.employee.name }} - {{ auth.authorization_type }}</div>
+                        <div class="timeline-date">{{ auth.created_at.strftime('%d/%m/%Y') if auth.created_at else 'غير محدد' }}</div>
+                    </div>
+                    <div class="timeline-details">
+                        <span class="badge badge-status 
+                            {% if auth.status == 'pending' %}bg-warning
+                            {% elif auth.status == 'approved' %}bg-success
+                            {% elif auth.status == 'rejected' %}bg-danger
+                            {% else %}bg-secondary{% endif %}">
+                            {% if auth.status == 'pending' %}قيد المراجعة
+                            {% elif auth.status == 'approved' %}مُوافق عليه
+                            {% elif auth.status == 'rejected' %}مرفوض
+                            {% else %}{{ auth.status }}{% endif %}
+                        </span>
+                        <div class="auth-actions">
+                            <a href="{{ url_for('mobile.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('mobile.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                               class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
                             {% if auth.status == 'pending' %}
-                                <span class="badge bg-warning">قيد المراجعة</span>
-                            {% elif auth.status == 'approved' %}
-                                <span class="badge bg-success">مُوافق عليه</span>
-                            {% elif auth.status == 'rejected' %}
-                                <span class="badge bg-danger">مرفوض</span>
+                            <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                               class="btn btn-sm btn-outline-success" 
+                               onclick="return confirm('هل أنت متأكد من الموافقة؟')">
+                                <i class="fas fa-check"></i>
+                            </a>
                             {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('mobile.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                   class="btn btn-outline-primary btn-sm" title="عرض التفاصيل">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ url_for('mobile.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                   class="btn btn-outline-warning btn-sm" title="تعديل">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                {% if auth.file_path %}
-                                <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path.split('/')[-1]) }}" 
-                                   target="_blank" class="btn btn-outline-info btn-sm" title="عرض الملف">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                                {% endif %}
-                                {% if auth.external_link %}
-                                <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-secondary btn-sm" title="فتح الرابط">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </a>
-                                {% endif %}
-                                {% if auth.status == 'pending' %}
-                                <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                   class="btn btn-outline-success btn-sm" 
-                                   onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" title="موافقة">
-                                    <i class="fas fa-check"></i>
-                                </a>
-                                <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                   class="btn btn-outline-danger btn-sm" 
-                                   onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" title="رفض">
-                                    <i class="fas fa-times"></i>
-                                </a>
-                                {% endif %}
-                                <a href="{{ url_for('mobile.delete_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                   class="btn btn-outline-danger btn-sm" 
-                                   onclick="return confirm('هل أنت متأكد من حذف هذا التفويض؟')" title="حذف">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                    {% if auth.project_name %}
+                    <div class="timeline-meta">
+                        <small class="text-muted">
+                            <i class="fas fa-project-diagram ms-1"></i>
+                            {{ auth.project_name }}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if external_authorizations|length > 3 %}
+            <div class="load-more-btn" onclick="toggleItems(this, 'authorization')">
+                <i class="fas fa-chevron-down"></i>
+                <span>عرض {{ external_authorizations|length - 3 }} تفويض آخر</span>
+            </div>
+            {% endif %}
         </div>
         {% else %}
-        <div class="text-center py-4">
-            <div class="mb-3">
-                <i class="fas fa-file-signature fa-3x text-muted"></i>
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-file-signature"></i>
             </div>
             <h6>لا توجد تفويضات خارجية</h6>
-            <p class="text-muted small px-3">يمكنك إضافة تفويض خارجي جديد للموظفين للعمل في المشاريع الخارجية</p>
+            <p>ابدأ بإضافة أول تفويض خارجي</p>
+            <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus ms-1"></i> إضافة تفويض
+            </a>
         </div>
         {% endif %}
     </div>
@@ -563,27 +701,346 @@
 /* تنسيقات شريط الإجراءات */
 .action-bar {
     background-color: white;
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
 }
 
 .vehicle-plate-display {
-    font-family: Arial, sans-serif;
-    letter-spacing: 1px;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 2px;
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
-/* تنسيقات البطاقات */
-.card {
+/* تنسيقات البطاقات الحديثة */
+.modern-card {
     border: none;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 24px;
+}
+
+.modern-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+.gradient-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 16px 20px;
+    position: relative;
     overflow: hidden;
 }
 
-.card-header {
-    border-bottom: 1px solid #f0f0f0;
-    padding: 12px 15px;
+.gradient-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+}
+
+.card-header h6 {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* إحصائيات سريعة */
+.stats-row {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px 12px;
+    background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* قائمة قابلة للتمرير */
+.scrollable-list {
+    position: relative;
+    max-height: 400px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+.list-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.scroll-indicator {
+    margin-left: auto;
+    color: #6c757d;
+    transition: transform 0.3s ease;
+}
+
+/* عناصر الجدول الزمني */
+.timeline-item {
+    display: flex;
+    padding: 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    position: relative;
+    transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.timeline-item.hidden-item {
+    display: none;
+}
+
+.timeline-item:hover {
+    background: linear-gradient(45deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.timeline-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    position: relative;
+}
+
+.timeline-marker i {
+    color: white;
+    font-size: 12px;
+}
+
+.timeline-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.timeline-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #212529;
+    line-height: 1.3;
+    flex: 1;
+    margin-left: 8px;
+}
+
+.timeline-date {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.timeline-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.timeline-meta {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.badge-type, .badge-status {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.timeline-cost {
+    font-weight: 600;
+    color: #28a745;
+    font-size: 0.85rem;
+}
+
+/* أزرار الإجراءات */
+.workshop-actions, .auth-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.workshop-actions .btn, .auth-actions .btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: all 0.2s ease;
+}
+
+.workshop-actions .btn:hover, .auth-actions .btn:hover {
+    transform: scale(1.1);
+}
+
+/* زر عرض المزيد */
+.load-more-btn {
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-top: 1px solid #dee2e6;
+    color: #495057;
+    font-weight: 500;
+}
+
+.load-more-btn:hover {
+    background: linear-gradient(45deg, #e9ecef 0%, #dee2e6 100%);
+    color: #212529;
+}
+
+.load-more-btn i {
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+}
+
+.load-more-btn.expanded i {
+    transform: rotate(180deg);
+}
+
+/* الحالة الفارغة */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state h6 {
+    margin-bottom: 8px;
+    color: #495057;
+    font-weight: 600;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* تحسينات التمرير */
+.scrollable-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scrollable-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 2px;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
+}
+
+/* تأثيرات الحركة */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.timeline-item {
+    animation: slideIn 0.4s ease forwards;
+}
+
+/* تجاوب الشاشات الصغيرة */
+@media (max-width: 576px) {
+    .modern-card {
+        margin: 0 8px 16px 8px;
+        border-radius: 12px;
+    }
+    
+    .timeline-item {
+        padding: 12px;
+    }
+    
+    .timeline-marker {
+        width: 28px;
+        height: 28px;
+        margin-left: 8px;
+    }
+    
+    .timeline-title {
+        font-size: 0.85rem;
+    }
+    
+    .stats-row {
+        padding: 12px 8px;
+    }
+    
+    .stat-number {
+        font-size: 1.2rem;
+    }
+    
+    .workshop-actions .btn, .auth-actions .btn {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
 }
 
 /* تنسيقات معلومات السيارة */
@@ -738,6 +1195,110 @@
     font-size: 11px;
 }
 </style>
+
+<!-- JavaScript للتفاعل مع القوائم -->
+<script>
+// دالة لتبديل عرض العناصر المخفية
+function toggleItems(button, type) {
+    const container = button.closest('.scrollable-list');
+    const hiddenItems = container.querySelectorAll('.hidden-item');
+    const icon = button.querySelector('i');
+    const text = button.querySelector('span');
+    const isExpanded = button.classList.contains('expanded');
+    
+    if (isExpanded) {
+        // إخفاء العناصر الإضافية
+        hiddenItems.forEach(item => {
+            item.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => {
+                item.classList.add('hidden-item');
+                item.style.display = 'none';
+            }, 300);
+        });
+        
+        icon.style.transform = 'rotate(0deg)';
+        text.textContent = `عرض ${hiddenItems.length} عملية أخرى`;
+        button.classList.remove('expanded');
+        
+        // التمرير إلى أعلى القائمة
+        container.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    } else {
+        // عرض العناصر المخفية
+        hiddenItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.display = 'flex';
+                item.classList.remove('hidden-item');
+                item.style.animation = 'slideIn 0.4s ease forwards';
+            }, index * 100);
+        });
+        
+        icon.style.transform = 'rotate(180deg)';
+        text.textContent = 'إخفاء العناصر الإضافية';
+        button.classList.add('expanded');
+    }
+}
+
+// تأثير التمرير للمؤشر
+document.querySelectorAll('.scrollable-list').forEach(list => {
+    const indicator = list.querySelector('.scroll-indicator');
+    
+    list.addEventListener('scroll', () => {
+        const scrollPercentage = (list.scrollTop / (list.scrollHeight - list.clientHeight)) * 100;
+        if (indicator) {
+            indicator.style.transform = `rotate(${scrollPercentage * 1.8}deg)`;
+        }
+    });
+});
+
+// رسوم متحركة عند التحميل
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.modern-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150);
+    });
+});
+
+// CSS animations
+const style = document.createElement('style');
+style.textContent = `
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.timeline-item:nth-child(1) { animation-delay: 0.1s; }
+.timeline-item:nth-child(2) { animation-delay: 0.2s; }
+.timeline-item:nth-child(3) { animation-delay: 0.3s; }
+`;
+document.head.appendChild(style);
+</script>
 
 <!-- JavaScript لتأكيد الحذف -->
 <script>
