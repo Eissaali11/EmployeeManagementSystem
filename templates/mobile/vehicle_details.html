@@ -320,75 +320,7 @@ body {
 </div>
 </div>
 
-<!-- مرفقات السيارة -->
-<div class="card mb-3 mx-3">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-            <i class="fas fa-paperclip ms-2"></i>
-            الوثائق والمرفقات
-        </h6>
-        <div>
-            <button class="btn btn-sm btn-success" disabled>
-                <i class="fas fa-plus ms-1"></i>
-                إضافة وثيقة
-            </button>
-        </div>
-    </div>
-    <div class="card-body p-0">
-        <div class="document-stats">
-            <div class="doc-stat">
-                <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'valid')|list|length }}</div>
-                <div class="stat-label">سارية</div>
-            </div>
-            <div class="doc-stat warning">
-                <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'expiring')|list|length }}</div>
-                <div class="stat-label">قرب الانتهاء</div>
-            </div>
-            <div class="doc-stat danger">
-                <div class="stat-value">{{ documents|selectattr('status', 'equalto', 'expired')|list|length }}</div>
-                <div class="stat-label">منتهية</div>
-            </div>
-        </div>
-        
-        {% if documents %}
-        <div class="document-list">
-            {% for doc in documents %}
-            <div class="document-item">
-                <div class="document-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="document-content">
-                    <div class="document-name">{{ doc.name }}</div>
-                    <div class="document-expiry">
-                        <span class="{% if doc.status == 'expired' %}text-danger
-                                     {% elif doc.status == 'expiring' %}text-warning
-                                     {% else %}text-success{% endif %}">
-                            {{ doc.expiry_date.strftime('%Y-%m-%d') }}
-                        </span>
-                    </div>
-                </div>
-                <div class="document-status">
-                    <span class="badge 
-                               {% if doc.status == 'expired' %}bg-danger
-                               {% elif doc.status == 'expiring' %}bg-warning
-                               {% else %}bg-success{% endif %}">
-                        {% if doc.status == 'expired' %}منتهية
-                        {% elif doc.status == 'expiring' %}توشك على الانتهاء
-                        {% else %}سارية{% endif %}
-                    </span>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="text-center py-4">
-            <i class="fas fa-file fa-3x text-muted mb-3"></i>
-            <h6>لا توجد وثائق مسجلة</h6>
-            <p class="text-muted small px-3">يمكنك إضافة وثيقة جديدة من خلال النقر على زر "إضافة وثيقة"</p>
-        </div>
-        {% endif %}
-    </div>
-</div>
+
 
 <!-- سجلات التسليم والاستلام -->
 <div class="card mb-3 mx-3 modern-card">
