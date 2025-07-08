@@ -179,7 +179,7 @@ body {
     {% if authorization.status == 'pending' %}
     <div class="row gx-2 mb-2">
         <div class="col-6">
-            <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=authorization.id) }}" 
+            <a href="{{ url_for('mobile.approve_external_authorization', vehicle_id=vehicle.id, auth_id=authorization.id) }}" 
                class="btn btn-success w-100" 
                onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')">
                 <i class="fas fa-check ms-1"></i>
@@ -187,7 +187,7 @@ body {
             </a>
         </div>
         <div class="col-6">
-            <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=authorization.id) }}" 
+            <a href="{{ url_for('mobile.reject_external_authorization', vehicle_id=vehicle.id, auth_id=authorization.id) }}" 
                class="btn btn-danger w-100" 
                onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')">
                 <i class="fas fa-times ms-1"></i>

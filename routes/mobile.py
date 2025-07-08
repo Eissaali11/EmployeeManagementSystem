@@ -4328,3 +4328,55 @@ def create_external_authorization(vehicle_id):
         flash(f'خطأ في إنشاء التفويض: {str(e)}', 'error')
         return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
 
+@mobile_bp.route('/vehicles/<int:vehicle_id>/external-authorization/<int:auth_id>/approve', methods=['GET', 'POST'])
+@login_required
+def approve_external_authorization(vehicle_id, auth_id):
+    """موافقة على تفويض خارجي"""
+    try:
+        authorization = ExternalAuthorization.query.filter_by(
+            id=auth_id, 
+            vehicle_id=vehicle_id
+        ).first()
+        
+        if not authorization:
+            flash('التفويض غير موجود', 'error')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        
+        authorization.status = 'approved'
+        authorization.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash('تم الموافقة على التفويض بنجاح', 'success')
+        return redirect(url_for('mobile.view_external_authorization', vehicle_id=vehicle_id, auth_id=auth_id))
+        
+    except Exception as e:
+        print(f"خطأ في موافقة التفويض: {str(e)}")
+        flash(f'خطأ في موافقة التفويض: {str(e)}', 'error')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+
+@mobile_bp.route('/vehicles/<int:vehicle_id>/external-authorization/<int:auth_id>/reject', methods=['GET', 'POST'])
+@login_required
+def reject_external_authorization(vehicle_id, auth_id):
+    """رفض تفويض خارجي"""
+    try:
+        authorization = ExternalAuthorization.query.filter_by(
+            id=auth_id, 
+            vehicle_id=vehicle_id
+        ).first()
+        
+        if not authorization:
+            flash('التفويض غير موجود', 'error')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        
+        authorization.status = 'rejected'
+        authorization.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash('تم رفض التفويض', 'info')
+        return redirect(url_for('mobile.view_external_authorization', vehicle_id=vehicle_id, auth_id=auth_id))
+        
+    except Exception as e:
+        print(f"خطأ في رفض التفويض: {str(e)}")
+        flash(f'خطأ في رفض التفويض: {str(e)}', 'error')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+
