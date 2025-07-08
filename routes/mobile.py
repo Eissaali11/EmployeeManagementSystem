@@ -4262,3 +4262,68 @@ def delete_external_authorization(vehicle_id, auth_id):
     
     return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
 
+@mobile_bp.route('/vehicles/<int:vehicle_id>/external-authorization/create', methods=['GET', 'POST'])
+@login_required
+def create_external_authorization(vehicle_id):
+    """إنشاء تفويض خارجي جديد من الموبايل"""
+    from models import Vehicle, Employee, Department, ExternalAuthorization
+    from werkzeug.utils import secure_filename
+    import os
+    
+    try:
+        # الحصول على السيارة
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        
+        # الحصول على الموظفين والأقسام
+        employees = Employee.query.all()
+        departments = Department.query.all()
+        
+        if request.method == 'POST':
+            # إنشاء تفويض جديد
+            authorization = ExternalAuthorization(
+                vehicle_id=vehicle_id,
+                employee_id=request.form.get('employee_id'),
+                authorization_type=request.form.get('authorization_type'),
+                project_name=request.form.get('project_name'),
+                city=request.form.get('city'),
+                start_date=datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date() if request.form.get('start_date') else None,
+                end_date=datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date() if request.form.get('end_date') else None,
+                external_link=request.form.get('external_link'),
+                notes=request.form.get('notes'),
+                status='pending',
+                created_by=current_user.id,
+                created_at=datetime.now()
+            )
+            
+            # معالجة رفع الملف
+            if 'file' in request.files:
+                file = request.files['file']
+                if file and file.filename:
+                    # حفظ الملف
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
+                    
+                    upload_dir = os.path.join('static', 'uploads', 'authorizations')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    file_path = os.path.join(upload_dir, filename)
+                    file.save(file_path)
+                    authorization.file_path = file_path
+            
+            db.session.add(authorization)
+            db.session.commit()
+            
+            flash('تم إنشاء التفويض بنجاح', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        
+        return render_template('mobile/create_external_authorization.html',
+                             vehicle=vehicle,
+                             employees=employees,
+                             departments=departments)
+        
+    except Exception as e:
+        print(f"خطأ في إنشاء التفويض: {str(e)}")
+        flash(f'خطأ في إنشاء التفويض: {str(e)}', 'error')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+

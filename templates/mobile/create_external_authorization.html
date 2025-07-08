@@ -1,0 +1,135 @@
+{% extends 'mobile/layout.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 py-2">
+    <div class="row">
+        <div class="col-12">
+            <!-- صفحة إنشاء تفويض خارجي -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-file-signature ms-2"></i>
+                            إنشاء تفويض خارجي
+                        </h6>
+                        <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-light">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- معلومات السيارة -->
+                        <div class="mb-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-car ms-2"></i>
+                                السيارة: {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}
+                            </div>
+                        </div>
+
+                        <!-- اختيار الموظف -->
+                        <div class="mb-3">
+                            <label class="form-label">الموظف المفوض</label>
+                            <select name="employee_id" class="form-select" required>
+                                <option value="">اختر الموظف</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.id }}">{{ employee.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- نوع التفويض -->
+                        <div class="mb-3">
+                            <label class="form-label">نوع التفويض</label>
+                            <select name="authorization_type" class="form-select" required>
+                                <option value="">اختر نوع التفويض</option>
+                                <option value="تفويض تسليم">تفويض تسليم</option>
+                                <option value="استلام السيارة من مندوب">استلام السيارة من مندوب</option>
+                                <option value="تفويض مؤقت">تفويض مؤقت</option>
+                                <option value="نقل سيارة">نقل سيارة</option>
+                            </select>
+                        </div>
+
+                        <!-- اسم المشروع -->
+                        <div class="mb-3">
+                            <label class="form-label">اسم المشروع</label>
+                            <input type="text" name="project_name" class="form-control" required>
+                        </div>
+
+                        <!-- المدينة -->
+                        <div class="mb-3">
+                            <label class="form-label">المدينة</label>
+                            <select name="city" class="form-select" required>
+                                <option value="">اختر المدينة</option>
+                                <option value="الرياض">الرياض</option>
+                                <option value="جدة">جدة</option>
+                                <option value="الدمام">الدمام</option>
+                                <option value="مكة المكرمة">مكة المكرمة</option>
+                                <option value="المدينة المنورة">المدينة المنورة</option>
+                                <option value="الخبر">الخبر</option>
+                                <option value="الطائف">الطائف</option>
+                                <option value="بريدة">بريدة</option>
+                                <option value="تبوك">تبوك</option>
+                                <option value="الأحساء">الأحساء</option>
+                                <option value="نجران">نجران</option>
+                                <option value="جازان">جازان</option>
+                                <option value="ينبع">ينبع</option>
+                                <option value="الجبيل">الجبيل</option>
+                                <option value="القطيف">القطيف</option>
+                                <option value="حائل">حائل</option>
+                                <option value="عسير">عسير</option>
+                                <option value="الباحة">الباحة</option>
+                                <option value="سكاكا">سكاكا</option>
+                                <option value="عرعر">عرعر</option>
+                            </select>
+                        </div>
+
+                        <!-- تاريخ البداية -->
+                        <div class="mb-3">
+                            <label class="form-label">تاريخ البداية</label>
+                            <input type="date" name="start_date" class="form-control">
+                        </div>
+
+                        <!-- تاريخ النهاية -->
+                        <div class="mb-3">
+                            <label class="form-label">تاريخ النهاية</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+
+                        <!-- الرابط الخارجي -->
+                        <div class="mb-3">
+                            <label class="form-label">الرابط الخارجي (اختياري)</label>
+                            <input type="url" name="external_link" class="form-control" placeholder="https://example.com">
+                        </div>
+
+                        <!-- رفع الملف -->
+                        <div class="mb-3">
+                            <label class="form-label">رفع الملف</label>
+                            <input type="file" name="file" class="form-control" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                        </div>
+
+                        <!-- الملاحظات -->
+                        <div class="mb-3">
+                            <label class="form-label">الملاحظات</label>
+                            <textarea name="notes" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <!-- أزرار الحفظ والإلغاء -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success flex-fill">
+                                <i class="fas fa-save ms-1"></i>
+                                حفظ التفويض
+                            </button>
+                            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
