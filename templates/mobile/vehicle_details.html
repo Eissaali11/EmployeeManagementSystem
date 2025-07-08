@@ -258,9 +258,26 @@
     </div>
     <div class="card-body p-0">
         {% if workshop_records %}
-        <div class="workshop-list">
+        <!-- إحصائيات الورشة -->
+        <div class="d-flex justify-content-around py-3 bg-light border-bottom">
+            <div class="text-center">
+                <div class="fw-bold text-primary">{{ workshop_records|selectattr('repair_status', 'equalto', 'in_progress')|list|length }}</div>
+                <small class="text-muted">قيد التنفيذ</small>
+            </div>
+            <div class="text-center">
+                <div class="fw-bold text-success">{{ workshop_records|selectattr('repair_status', 'equalto', 'completed')|list|length }}</div>
+                <small class="text-muted">مكتمل</small>
+            </div>
+            <div class="text-center">
+                <div class="fw-bold text-warning">{{ workshop_records|selectattr('repair_status', 'equalto', 'pending_approval')|list|length }}</div>
+                <small class="text-muted">في الانتظار</small>
+            </div>
+        </div>
+        
+        <!-- عرض آخر 4 عمليات مع التمرير -->
+        <div class="workshop-list" style="max-height: 500px; overflow-y: auto; scroll-behavior: smooth;">
             {% for record in workshop_records %}
-            <div class="workshop-item border-bottom p-3">
+            <div class="workshop-item border-bottom p-3 {% if loop.index > 4 %}d-none older-record{% endif %}">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="workshop-date">
                         <small class="text-muted">تاريخ الدخول</small>
@@ -351,6 +368,16 @@
                 </div>
             </div>
             {% endfor %}
+            
+            <!-- زر عرض المزيد -->
+            {% if workshop_records|length > 4 %}
+            <div class="text-center py-3 border-top bg-light">
+                <button class="btn btn-outline-primary btn-sm" onclick="toggleOlderRecords()">
+                    <i class="fas fa-chevron-down ms-1" id="toggleIcon"></i>
+                    <span id="toggleText">عرض العمليات السابقة ({{ workshop_records|length - 4 }})</span>
+                </button>
+            </div>
+            {% endif %}
         </div>
         {% else %}
         <div class="text-center py-4">
@@ -1219,6 +1246,29 @@ function viewAuthDetails(authId) {
 
 function editAuthDetails(authId) {
     alert('تعديل التفويض رقم: ' + authId);
+}
+
+// دالة لعرض/إخفاء السجلات القديمة
+function toggleOlderRecords() {
+    const olderRecords = document.querySelectorAll('.older-record');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const toggleText = document.getElementById('toggleText');
+    
+    if (olderRecords[0] && olderRecords[0].classList.contains('d-none')) {
+        // إظهار السجلات القديمة
+        olderRecords.forEach(record => {
+            record.classList.remove('d-none');
+        });
+        toggleIcon.className = 'fas fa-chevron-up ms-1';
+        toggleText.textContent = 'إخفاء العمليات السابقة';
+    } else {
+        // إخفاء السجلات القديمة
+        olderRecords.forEach(record => {
+            record.classList.add('d-none');
+        });
+        toggleIcon.className = 'fas fa-chevron-down ms-1';
+        toggleText.textContent = 'عرض العمليات السابقة (' + olderRecords.length + ')';
+    }
 }
 </script>
 
