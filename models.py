@@ -1121,7 +1121,7 @@ class ExternalAuthorization(db.Model):
     project = db.relationship('Project', back_populates='external_authorizations')
     
     def __repr__(self):
-        return f'<ExternalAuthorization {self.authorization_type} for {self.employee.arabic_name}>'
+        return f'<ExternalAuthorization {self.authorization_type} for {self.employee.name}>'
 
 class AuditLog(db.Model):
     """نموذج سجل المراجعة لتتبع نشاط المستخدمين"""

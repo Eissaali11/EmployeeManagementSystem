@@ -547,7 +547,7 @@
                 <tbody>
                     {% for auth in external_authorizations %}
                     <tr>
-                        <td>{{ auth.employee.arabic_name }}</td>
+                        <td>{{ auth.employee.name }}</td>
                         <td>{{ auth.project.name if auth.project else 'غير محدد' }}</td>
                         <td>
                             <span class="badge bg-info">{{ auth.authorization_type }}</span>
@@ -563,12 +563,12 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('vehicles.view_authorization', id=auth.id) }}" class="btn btn-outline-primary btn-sm">
+                                <button class="btn btn-outline-primary btn-sm" onclick="viewAuthDetails({{ auth.id }})">
                                     <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ url_for('vehicles.edit_authorization', id=auth.id) }}" class="btn btn-outline-warning btn-sm">
+                                </button>
+                                <button class="btn btn-outline-warning btn-sm" onclick="editAuthDetails({{ auth.id }})">
                                     <i class="fas fa-edit"></i>
-                                </a>
+                                </button>
                                 {% if auth.file_path %}
                                 <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info btn-sm">
                                     <i class="fas fa-file-pdf"></i>
@@ -1128,7 +1128,7 @@ function copyHandoverText(text) {
                             <option value="">اختر الموظف</option>
                             {% for emp in employees %}
                             <option value="{{ emp.id }}" data-departments="{{ emp.departments|map(attribute='id')|join(',') }}">
-                                {{ emp.arabic_name }} - {{ emp.job_title or 'بدون منصب' }}
+                                {{ emp.name }} - {{ emp.job_title or 'بدون منصب' }}
                             </option>
                             {% endfor %}
                         </select>
@@ -1211,6 +1211,15 @@ document.getElementById('department_filter').addEventListener('change', function
     // إعادة تعيين الموظف المختار
     employeeSelect.value = '';
 });
+
+// دوال للتعامل مع التفويضات
+function viewAuthDetails(authId) {
+    alert('عرض تفاصيل التفويض رقم: ' + authId);
+}
+
+function editAuthDetails(authId) {
+    alert('تعديل التفويض رقم: ' + authId);
+}
 </script>
 
 {% endblock %}
