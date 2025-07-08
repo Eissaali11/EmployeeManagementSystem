@@ -88,16 +88,19 @@
                         <!-- اختيار المشروع والمدينة -->
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="project_id" class="form-label">
+                                <label for="project_name" class="form-label">
                                     <i class="fas fa-project-diagram ms-1"></i>
                                     اسم المشروع
                                 </label>
-                                <select class="form-select" id="project_id" name="project_id">
+                                <select class="form-select" id="project_name" name="project_name">
                                     <option value="">اختر المشروع</option>
-                                    {% for project in projects %}
-                                    <option value="{{ project.id }}" data-description="{{ project.description or '' }}">
-                                        {{ project.name }}
-                                    </option>
+                                    <option value="مشروع الرياض">مشروع الرياض</option>
+                                    <option value="مشروع جدة">مشروع جدة</option>
+                                    <option value="مشروع المنطقة الشرقية">مشروع المنطقة الشرقية</option>
+                                    <option value="مشروع نيوم">مشروع نيوم</option>
+                                    <option value="مشروع القصيم">مشروع القصيم</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.name }}">{{ dept.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -284,12 +287,10 @@ function removeFile() {
     document.getElementById('file_preview').style.display = 'none';
 }
 
-// عرض وصف المشروع عند الاختيار
-document.getElementById('project_id').addEventListener('change', function() {
+// عرض اسم المشروع عند الاختيار
+document.getElementById('project_name').addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];
-    if (selectedOption.dataset.description) {
-        console.log('وصف المشروع:', selectedOption.dataset.description);
-    }
+    console.log('المشروع المختار:', selectedOption.value);
 });
 </script>
 

@@ -1455,7 +1455,7 @@
                             {% for auth in external_authorizations %}
                             <tr>
                                 <td>{{ auth.employee.name }}</td>
-                                <td>{{ auth.project.name if auth.project else 'غير محدد' }}</td>
+                                <td>{{ auth.project_name or 'غير محدد' }}</td>
                                 <td><span class="badge bg-info">{{ auth.authorization_type }}</span></td>
                                 <td>
                                     {% if auth.status == 'pending' %}

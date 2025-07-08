@@ -755,7 +755,7 @@ def view(id):
         # الحصول على الأقسام والموظفين والمشاريع للنموذج
         departments = Department.query.all()
         employees = Employee.query.all()
-        projects = Project.query.all()
+
         
 
 
@@ -878,7 +878,6 @@ def view(id):
                 external_authorizations=external_authorizations,
                 departments=departments,
                 employees=employees,
-                projects=projects,
                 total_maintenance_cost=total_maintenance_cost,
                 days_in_workshop=days_in_workshop,
                 inspection_warnings=inspection_warnings,
@@ -3088,7 +3087,6 @@ def detailed_list():
                 pagination=pagination,
                 makes=makes,
                 years=years,
-                projects=projects,
                 locations=locations,
                 total_count=Vehicle.query.count(),
                 request=request
@@ -3872,11 +3870,12 @@ def create_external_authorization(vehicle_id):
             external_auth = ExternalAuthorization(
                 vehicle_id=vehicle_id,
                 employee_id=request.form.get('employee_id'),
-                project_id=request.form.get('project_id') if request.form.get('project_id') else None,
+                project_name=request.form.get('project_name'),
                 authorization_type=request.form.get('authorization_type'),
                 status='pending',
                 external_link=request.form.get('form_link'),
-                notes=request.form.get('notes')
+                notes=request.form.get('notes'),
+                city=request.form.get('city')
             )
             
             # معالجة رفع الملف
@@ -3906,13 +3905,11 @@ def create_external_authorization(vehicle_id):
     # الحصول على البيانات للنموذج
     departments = Department.query.all()
     employees = Employee.query.all()
-    projects = Project.query.all()
     
     return render_template('vehicles/create_external_authorization.html',
                          vehicle=vehicle,
                          departments=departments,
-                         employees=employees,
-                         projects=projects)
+                         employees=employees)
 
 @vehicles_bp.route('/vehicle-report/<int:id>')
 @login_required
