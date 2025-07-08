@@ -255,12 +255,7 @@ async function shareFullAuthorization() {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔗 الروابط والمرفقات:
-{% if authorization.authorization_form_link %}
-رابط النموذج الخارجي: {{ authorization.authorization_form_link }}
-{% endif %}
-{% if authorization.external_link %}
-الرابط الخارجي: {{ authorization.external_link }}
-{% endif %}
+رابط النموذج الخارجي: https://acrobat.adobe.com/id/urn:aaid:sc:AP:4243d4fc-2215-41e9-9666-572412c4e2d3
 تفاصيل التفويض الكاملة: ${currentUrl}
 
 {% if authorization.notes %}
@@ -279,7 +274,7 @@ async function shareFullAuthorization() {
 تقنية متطورة • إدارة فعالة • خدمة احترافية`;
 
     // تحديد الرابط الأساسي للمشاركة
-    const primaryUrl = '{{ authorization.authorization_form_link if authorization.authorization_form_link else "" }}' || currentUrl;
+    const primaryUrl = 'https://acrobat.adobe.com/id/urn:aaid:sc:AP:4243d4fc-2215-41e9-9666-572412c4e2d3';
 
     if (navigator.share) {
         try {
