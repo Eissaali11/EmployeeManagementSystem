@@ -164,6 +164,12 @@ body {
 
 <!-- أزرار الإجراءات -->
 <div class="action-buttons-container mb-5 mx-3">
+    <!-- زر المشاركة الشامل -->
+    <button onclick="shareFullAuthorization()" class="btn btn-success w-100 mb-2">
+        <i class="fas fa-share-alt ms-1"></i>
+        مشاركة تفاصيل التفويض الكاملة
+    </button>
+    
     <a href="{{ url_for('mobile.edit_external_authorization', vehicle_id=vehicle.id, auth_id=authorization.id) }}" 
        class="btn btn-warning w-100 mb-2">
         <i class="fas fa-edit ms-1"></i>
@@ -208,4 +214,128 @@ body {
         </div>
     </div>
 </div>
+
+<script>
+// دالة مشاركة تفاصيل التفويض الكاملة
+async function shareFullAuthorization() {
+    const currentUrl = window.location.href;
+    
+    // إنشاء رسالة شاملة تحتوي على جميع بيانات التفويض
+    const shareText = `🚗 تفويض خارجي - نظام نُظم
+
+مرحباً 👋
+تفاصيل التفويض الخارجي الكاملة من نظام نُظم لإدارة الموظفين والمركبات
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚙 معلومات السيارة:
+رقم اللوحة: {{ vehicle.plate_number }}
+الماركة والموديل: {{ vehicle.make }} {{ vehicle.model }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👤 معلومات الموظف:
+الاسم: {{ authorization.employee.name }}
+المنصب: {{ authorization.employee.job_title or 'غير محدد' }}
+الهاتف: {{ authorization.employee.mobile or 'غير محدد' }}
+القسم: {% for dept in authorization.employee.departments %}{{ dept.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 تفاصيل التفويض:
+نوع التفويض: {{ authorization.authorization_type }}
+المشروع: {{ authorization.project_name or 'غير محدد' }}
+المدينة: {{ authorization.city or 'غير محدد' }}
+تاريخ الإنشاء: {{ authorization.created_at.strftime('%Y-%m-%d') if authorization.created_at else 'غير محدد' }}
+{% if authorization.updated_at and authorization.updated_at != authorization.created_at %}
+آخر تحديث: {{ authorization.updated_at.strftime('%Y-%m-%d') }}
+{% endif %}
+الحالة: {% if authorization.status == 'pending' %}قيد المراجعة{% elif authorization.status == 'approved' %}مُوافق عليه{% elif authorization.status == 'rejected' %}مرفوض{% endif %}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔗 الروابط والمرفقات:
+{% if authorization.authorization_form_link %}
+رابط النموذج الخارجي: {{ authorization.authorization_form_link }}
+{% endif %}
+{% if authorization.external_link %}
+الرابط الخارجي: {{ authorization.external_link }}
+{% endif %}
+تفاصيل التفويض الكاملة: ${currentUrl}
+
+{% if authorization.notes %}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 ملاحظات:
+{{ authorization.notes }}
+{% endif %}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 معرف التفويض: #{{ authorization.id }}
+📞 للاستفسار: يُرجى التواصل مع إدارة النظام
+
+🚗 نظام نُظم - حلول ذكية لإدارة المركبات والموظفين
+تقنية متطورة • إدارة فعالة • خدمة احترافية`;
+
+    // تحديد الرابط الأساسي للمشاركة
+    const primaryUrl = '{{ authorization.authorization_form_link if authorization.authorization_form_link else "" }}' || currentUrl;
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'تفاصيل التفويض الخارجي - نظام نُظم',
+                text: shareText,
+                url: primaryUrl
+            });
+        } catch (error) {
+            console.log('مشاركة ملغاة أو خطأ:', error);
+            showFallbackShare(shareText);
+        }
+    } else {
+        showFallbackShare(shareText);
+    }
+}
+
+// عرض نموذج احتياطي للمشاركة
+function showFallbackShare(text) {
+    // نسخ النص إلى الحافظة
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('تم نسخ تفاصيل التفويض الكاملة إلى الحافظة');
+        }).catch(() => {
+            showTextModal(text);
+        });
+    } else {
+        showTextModal(text);
+    }
+}
+
+function showTextModal(text) {
+    // إنشاء نافذة منبثقة لعرض النص
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white; padding: 20px; border-radius: 8px;
+        max-width: 90%; max-height: 80%; overflow-y: auto;
+        direction: rtl; text-align: right;
+    `;
+    
+    content.innerHTML = `
+        <h5>تفاصيل التفويض الكاملة</h5>
+        <textarea readonly style="width: 100%; height: 300px; margin: 10px 0;">${text}</textarea>
+        <button onclick="this.closest('.modal').remove()" class="btn btn-primary">إغلاق</button>
+    `;
+    
+    modal.appendChild(content);
+    modal.className = 'modal';
+    document.body.appendChild(modal);
+}
+</script>
 {% endblock %}
