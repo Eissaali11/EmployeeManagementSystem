@@ -362,16 +362,9 @@ function shareWorkshopDetails() {
         imagesCount: {{ workshop_record.images|length if workshop_record.images else 0 }}
     };
     
-    // تكوين النص للمشاركة
+    // تكوين النص للمشاركة - تاريخ ميلادي
     const currentDate = new Date();
-    const formattedDateTime = currentDate.toLocaleString('ar-SA', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-    });
+    const formattedDateTime = currentDate.toLocaleDateString('ar-SA') + ' ' + currentDate.toLocaleTimeString('ar-SA', { hour12: false });
     
     let shareText = `مرحباً 👋\n\n`;
     shareText += `إليك تفاصيل تسليم/استلام الورشة للسيارة:\n\n`;
@@ -403,36 +396,18 @@ function shareWorkshopDetails() {
         shareText += `\n`;
     }
     
-    // قسم النماذج والوثائق
-    if (workshopData.deliveryLink || workshopData.receptionLink || workshopData.imagesCount > 0) {
-        shareText += `📋 النماذج والوثائق المتاحة:\n`;
-        shareText += `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-        
+    // قسم النماذج والوثائق - فقط رابط تسليم الورشة
+    if (workshopData.deliveryLink || workshopData.receptionLink) {
         if (workshopData.deliveryLink && workshopData.receptionLink) {
-            shareText += `تتضمن العملية تسليم واستلام:\n\n`;
-            shareText += `📝 بيانات التسليم:\n${workshopData.deliveryLink}\n\n`;
-            shareText += `📝 بيانات الاستلام:\n${workshopData.receptionLink}\n\n`;
+            shareText += `📝 روابط النماذج:\n`;
+            shareText += `• رابط تسليم الورشة: ${workshopData.deliveryLink}\n`;
+            shareText += `• رابط استلام من الورشة: ${workshopData.receptionLink}\n\n`;
         } else if (workshopData.deliveryLink) {
             shareText += `📝 رابط نموذج تسليم الورشة:\n${workshopData.deliveryLink}\n\n`;
         } else if (workshopData.receptionLink) {
             shareText += `📝 رابط نموذج استلام من الورشة:\n${workshopData.receptionLink}\n\n`;
         }
-        
-        if (workshopData.imagesCount > 0) {
-            shareText += `📸 الصور المرفقة (${workshopData.imagesCount} صورة):\n`;
-            
-            // إضافة روابط الصور المباشرة
-            {% if workshop_record.images %}
-            {% for image in workshop_record.images %}
-            shareText += `🖼️ صورة {{ loop.index }}: ${window.location.origin}/static/${image.image_path}\n`;
-            {% endfor %}
-            {% endif %}
-            
-            shareText += `🔗 عرض جميع الصور في صفحة واحدة: ${workshopData.detailsUrl}\n\n`;
-        }
     }
-    
-    shareText += `🌐 للاطلاع على التفاصيل الكاملة:\n${workshopData.detailsUrl}\n\n`;
     
     if (workshopData.notes !== 'لا توجد ملاحظات') {
         shareText += `📝 ملاحظات إضافية:\n${workshopData.notes}\n\n`;
