@@ -552,10 +552,10 @@
             {% endif %}
         </h6>
         <div>
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#externalAuthModal">
+            <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
                 <i class="fas fa-plus ms-1"></i>
                 إضافة تفويض
-            </button>
+            </a>
         </div>
     </div>
     <div class="card-body p-0">
@@ -575,7 +575,7 @@
                     {% for auth in external_authorizations %}
                     <tr>
                         <td>{{ auth.employee.name }}</td>
-                        <td>{{ auth.project.name if auth.project else 'غير محدد' }}</td>
+                        <td>{{ auth.project_name or 'غير محدد' }}</td>
                         <td>
                             <span class="badge bg-info">{{ auth.authorization_type }}</span>
                         </td>
@@ -590,22 +590,42 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary btn-sm" onclick="viewAuthDetails({{ auth.id }})">
+                                <a href="{{ url_for('vehicles.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                   class="btn btn-outline-primary btn-sm" title="عرض التفاصيل">
                                     <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-warning btn-sm" onclick="editAuthDetails({{ auth.id }})">
+                                </a>
+                                <a href="{{ url_for('vehicles.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                   class="btn btn-outline-warning btn-sm" title="تعديل">
                                     <i class="fas fa-edit"></i>
-                                </button>
+                                </a>
                                 {% if auth.file_path %}
-                                <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path.split('/')[-1]) }}" 
+                                   target="_blank" class="btn btn-outline-info btn-sm" title="عرض الملف">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                                 {% endif %}
                                 {% if auth.external_link %}
-                                <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-secondary btn-sm" title="فتح الرابط">
                                     <i class="fas fa-external-link-alt"></i>
                                 </a>
                                 {% endif %}
+                                {% if auth.status == 'pending' %}
+                                <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                   class="btn btn-outline-success btn-sm" 
+                                   onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" title="موافقة">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                   class="btn btn-outline-danger btn-sm" 
+                                   onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" title="رفض">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('vehicles.delete_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                   class="btn btn-outline-danger btn-sm" 
+                                   onclick="return confirm('هل أنت متأكد من حذف هذا التفويض؟')" title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
