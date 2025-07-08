@@ -679,7 +679,7 @@ body {
                                         </a>
                                         {% endif %}
                                         <button class="btn btn-sm btn-outline-success" 
-                                                onclick="shareExternalAuthorization({{ auth.id }}, '{{ auth.employee.name }}', '{{ auth.authorization_type }}', '{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}', '{{ auth.project_name if auth.project_name else 'غير محدد' }}', '{{ auth.city if auth.city else 'غير محدد' }}')" 
+                                                onclick="shareExternalAuthorization({{ auth.id }}, '{{ auth.employee.name }}', '{{ auth.authorization_type }}', '{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}', '{{ auth.project_name if auth.project_name else 'غير محدد' }}', '{{ auth.city if auth.city else 'غير محدد' }}', {{ vehicle.id }})" 
                                                 title="مشاركة">
                                             <i class="fas fa-share-alt"></i>
                                         </button>
@@ -783,7 +783,7 @@ body {
                                             </a>
                                             {% endif %}
                                             <button class="btn btn-sm btn-outline-success" 
-                                                    onclick="shareExternalAuthorization({{ auth.id }}, '{{ auth.employee.name }}', '{{ auth.authorization_type }}', '{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}', '{{ auth.project_name if auth.project_name else 'غير محدد' }}', '{{ auth.city if auth.city else 'غير محدد' }}')" 
+                                                    onclick="shareExternalAuthorization({{ auth.id }}, '{{ auth.employee.name }}', '{{ auth.authorization_type }}', '{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}', '{{ auth.project_name if auth.project_name else 'غير محدد' }}', '{{ auth.city if auth.city else 'غير محدد' }}', {{ vehicle.id }})" 
                                                     title="مشاركة">
                                                 <i class="fas fa-share-alt"></i>
                                             </button>
@@ -2389,25 +2389,37 @@ function toggleOlderRecords() {
 }
 
 // دالة مشاركة التفويضات الخارجية
-async function shareExternalAuthorization(authId, employeeName, authType, date, project, city) {
-    const shareText = `🚗 تفويض خارجي - نظام نُظم
+async function shareExternalAuthorization(authId, employeeName, authType, date, project, city, vehicleId) {
+    const currentUrl = window.location.origin;
+    const authUrl = `${currentUrl}/mobile/vehicles/${vehicleId}/external-authorization/${authId}/view`;
+    
+    const shareText = `مرحباً 👋
 
-👤 الموظف: ${employeeName}
+تم إنشاء تفويض خارجي جديد في نظام نُظم لإدارة الموظفين والمركبات
+
+📋 تفاصيل التفويض:
+━━━━━━━━━━━━━━━━━━━━━
+👤 اسم الموظف: ${employeeName}
 📝 نوع التفويض: ${authType}
-📅 التاريخ: ${date}
+📅 تاريخ الإنشاء: ${date}
 🏢 المشروع: ${project}
 🌍 المدينة: ${city}
 
-معرف التفويض: #${authId}
+🔗 رابط النموذج والتفاصيل الكاملة:
+${authUrl}
 
-نظام إدارة الموظفين والمركبات
-───────────────────────`;
+📱 معرف التفويض: #${authId}
+
+━━━━━━━━━━━━━━━━━━━━━
+نظام نُظم - إدارة الموظفين والمركبات
+شركة متقدمة في حلول الإدارة الرقمية`;
 
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'تفاصيل التفويض الخارجي',
-                text: shareText
+                title: 'تفويض خارجي - نظام نُظم',
+                text: shareText,
+                url: authUrl
             });
         } catch (error) {
             console.log('مشاركة ملغاة أو خطأ:', error);
