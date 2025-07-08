@@ -265,15 +265,8 @@ async function shareFullAuthorization() {
 
     // إضافة المرفقات إذا وجدت
     let hasAttachments = false;
-    {% if authorization.authorization_form_link %}
-    shareText += `🔗 رابط النموذج الخارجي:
-{{ authorization.authorization_form_link }}
-
-`;
-    hasAttachments = true;
-    {% endif %}
     {% if authorization.external_link %}
-    shareText += `🔗 الرابط الخارجي:
+    shareText += `🔗 رابط النموذج الخارجي:
 {{ authorization.external_link }}
 
 `;
@@ -298,11 +291,10 @@ async function shareFullAuthorization() {
 📱 نظام نُظم لإدارة المركبات
 🕐 تم إنشاء التقرير: ${formattedDateTime}`;
 
-    // تحديد الرابط الأساسي للمشاركة (رابط النموذج الخارجي أو الرابط الخارجي فقط)
+    // تحديد الرابط الأساسي للمشاركة (الرابط الخارجي فقط)
     const externalLink = '{{ authorization.external_link if authorization.external_link else "" }}';
-    const formLink = '{{ authorization.authorization_form_link if authorization.authorization_form_link else "" }}';
-    // إعطاء الأولوية للرابط الخارجي ثم رابط النموذج، بدون رابط التفاصيل
-    const primaryUrl = externalLink || formLink;
+    // استخدام الرابط الخارجي فقط بدون رابط التفاصيل
+    const primaryUrl = externalLink;
 
     if (navigator.share) {
         try {
