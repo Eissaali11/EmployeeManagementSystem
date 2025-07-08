@@ -384,74 +384,221 @@
 </div>
 
 <!-- سجلات التسليم والاستلام -->
-<div class="card mb-3 mx-3">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
+<div class="card mb-3 mx-3 modern-card">
+    <div class="card-header gradient-header-orange d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 text-white">
             <i class="fas fa-exchange-alt ms-2"></i>
             سجلات التسليم والاستلام
             {% if handover_records %}
-            <span class="badge bg-secondary">{{ handover_records|length }}</span>
+            <span class="badge bg-light text-dark ms-2">{{ handover_records|length }}</span>
             {% endif %}
         </h6>
-        <div>
-            <a href="{{ url_for('mobile.create_handover', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus ms-1"></i>
-                إضافة تسليم/استلام
-            </a>
-        </div>
+        <a href="{{ url_for('mobile.create_handover', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-warning">
+            <i class="fas fa-plus ms-1"></i>
+            إضافة تسليم/استلام
+        </a>
     </div>
     <div class="card-body p-0">
         {% if handover_records %}
-        <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>التاريخ</th>
-                        <th>النوع</th>
-                        <th>الشخص</th>
-                        <th>الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in handover_records %}
-                    <tr>
-                        <td>{{ record.handover_date.strftime('%Y-%m-%d') }}</td>
-                        <td>
-                            {% if record.handover_type == 'delivery' %}
-                                <span class="badge bg-success">تسليم</span>
-                            {% else %}
-                                <span class="badge bg-info">استلام</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ record.person_name }}</td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('mobile.view_handover', handover_id=record.id) }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ url_for('mobile.edit_handover_mobile', handover_id=record.id) }}" class="btn btn-outline-warning">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button" class="btn btn-outline-success" 
-                                    data-handover-id="{{ record.id }}"
-                                    data-handover-type="{{ record.handover_type }}"
-                                    data-person-name="{{ record.person_name|e }}"
-                                    data-person-phone="{{ record.person_phone|e }}"
-                                    data-person-national-id="{{ record.person_national_id|e }}"
-                                    data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
-                                    data-notes="{{ record.notes|e if record.notes else '' }}"
-                                    onclick="shareHandoverRecord(this)">
-                                    <i class="fas fa-share-alt"></i>
-                                </button>
-                                <a href="{{ url_for('vehicles.handover_pdf_public', id=record.id) }}" class="btn btn-outline-danger">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- إحصائيات التسليم والاستلام -->
+        <div class="stats-row bg-light">
+            <div class="stat-item">
+                <div class="stat-number text-success">{{ handover_records|selectattr('handover_type', 'equalto', 'delivery')|list|length }}</div>
+                <div class="stat-label">تسليم</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number text-info">{{ handover_records|selectattr('handover_type', 'equalto', 'return')|list|length }}</div>
+                <div class="stat-label">استلام</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number text-primary">{{ handover_records|length }}</div>
+                <div class="stat-label">إجمالي</div>
+            </div>
+        </div>
+        
+        <!-- الجدول التفصيلي -->
+        <div class="handover-container">
+            <!-- رأس القائمة -->
+            <div class="handover-header-bar">
+                <div class="swipe-indicator">
+                    <i class="fas fa-arrows-alt-h"></i>
+                    <span>اسحب يميناً ويساراً للتفاصيل</span>
+                </div>
+                <div class="count-indicator">
+                    <span class="badge bg-warning">3 من {{ handover_records|length }}</span>
+                </div>
+            </div>
+
+            <!-- الجدول التفصيلي مع Scroll -->
+            <div class="handover-table-wrapper">
+                <div class="handover-table-scroll">
+                    <table class="table table-bordered handover-detailed-table">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th width="120">التاريخ</th>
+                                <th width="80">النوع</th>
+                                <th width="150">الشخص</th>
+                                <th width="120">الهاتف</th>
+                                <th width="120">الهوية</th>
+                                <th width="100">الحالة</th>
+                                <th width="150">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in handover_records[:3] %}
+                            <tr class="handover-row">
+                                <td class="date-cell">
+                                    <div class="date-display">
+                                        <span class="date-main">{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else 'غير محدد' }}</span>
+                                        <small class="date-time">{{ record.handover_date.strftime('%H:%M') if record.handover_date else '' }}</small>
+                                    </div>
+                                </td>
+                                <td class="type-cell">
+                                    <span class="type-badge {% if record.handover_type == 'delivery' %}bg-success{% else %}bg-info{% endif %}">
+                                        {% if record.handover_type == 'delivery' %}تسليم{% else %}استلام{% endif %}
+                                    </span>
+                                </td>
+                                <td class="person-cell">
+                                    <div class="person-info">
+                                        <strong>{{ record.person_name or 'غير محدد' }}</strong>
+                                        {% if record.employee_number %}
+                                        <small class="d-block">{{ record.employee_number }}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="phone-cell">
+                                    <span class="phone-number">{{ record.phone or 'غير محدد' }}</span>
+                                </td>
+                                <td class="id-cell">
+                                    <span class="national-id">{{ record.national_id or 'غير محدد' }}</span>
+                                </td>
+                                <td class="status-cell">
+                                    <span class="status-badge bg-success">مكتمل</span>
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="handover-actions-group">
+                                        <a href="{{ url_for('mobile.view_handover', handover_id=record.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="عرض">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('mobile.edit_handover_mobile', handover_id=record.id) }}" 
+                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                            data-handover-id="{{ record.id }}"
+                                            data-handover-type="{{ record.handover_type }}"
+                                            data-person-name="{{ record.person_name|e }}"
+                                            data-person-phone="{{ record.person_phone|e }}"
+                                            data-person-national-id="{{ record.person_national_id|e }}"
+                                            data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
+                                            data-notes="{{ record.notes|e if record.notes else '' }}"
+                                            onclick="shareHandoverRecord(this)" title="مشاركة">
+                                            <i class="fas fa-share-alt"></i>
+                                        </button>
+                                        <a href="{{ url_for('vehicles.handover_pdf_public', id=record.id) }}" 
+                                           class="btn btn-sm btn-outline-danger" target="_blank" title="عرض PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- زر عرض جميع السجلات -->
+            {% if handover_records|length > 3 %}
+            <div class="view-all-section">
+                <button class="btn btn-outline-warning w-100" onclick="toggleAllHandovers()">
+                    <i class="fas fa-list-ul ms-1"></i>
+                    <span id="toggle-handover-text">عرض جميع السجلات ({{ handover_records|length }})</span>
+                    <i class="fas fa-chevron-down ms-1" id="toggle-handover-icon"></i>
+                </button>
+                
+                <!-- الجدول الكامل - مخفي افتراضياً -->
+                <div class="all-handover-container d-none" id="all-handovers">
+                    <div class="handover-table-scroll">
+                        <table class="table table-bordered handover-detailed-table">
+                            <thead class="sticky-header">
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>النوع</th>
+                                    <th>الشخص</th>
+                                    <th>الهاتف</th>
+                                    <th>الهوية</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in handover_records %}
+                                <tr class="handover-row">
+                                    <td class="date-cell">
+                                        <div class="date-display">
+                                            <span class="date-main">{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else 'غير محدد' }}</span>
+                                            <small class="date-time">{{ record.handover_date.strftime('%H:%M') if record.handover_date else '' }}</small>
+                                        </div>
+                                    </td>
+                                    <td class="type-cell">
+                                        <span class="type-badge {% if record.handover_type == 'delivery' %}bg-success{% else %}bg-info{% endif %}">
+                                            {% if record.handover_type == 'delivery' %}تسليم{% else %}استلام{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="person-cell">
+                                        <div class="person-info">
+                                            <strong>{{ record.person_name or 'غير محدد' }}</strong>
+                                            {% if record.employee_number %}
+                                            <small class="d-block">{{ record.employee_number }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="phone-cell">
+                                        <span class="phone-number">{{ record.phone or 'غير محدد' }}</span>
+                                    </td>
+                                    <td class="id-cell">
+                                        <span class="national-id">{{ record.national_id or 'غير محدد' }}</span>
+                                    </td>
+                                    <td class="status-cell">
+                                        <span class="status-badge bg-success">مكتمل</span>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <div class="handover-actions-group">
+                                            <a href="{{ url_for('mobile.view_handover', handover_id=record.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="عرض">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('mobile.edit_handover_mobile', handover_id=record.id) }}" 
+                                               class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-success" 
+                                                data-handover-id="{{ record.id }}"
+                                                data-handover-type="{{ record.handover_type }}"
+                                                data-person-name="{{ record.person_name|e }}"
+                                                data-person-phone="{{ record.person_phone|e }}"
+                                                data-person-national-id="{{ record.person_national_id|e }}"
+                                                data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
+                                                data-notes="{{ record.notes|e if record.notes else '' }}"
+                                                onclick="shareHandoverRecord(this)" title="مشاركة">
+                                                <i class="fas fa-share-alt"></i>
+                                            </button>
+                                            <a href="{{ url_for('vehicles.handover_pdf_public', id=record.id) }}" 
+                                               class="btn btn-sm btn-outline-danger" target="_blank" title="عرض PDF">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% else %}
         <div class="text-center py-4">
@@ -1233,6 +1380,135 @@
     align-items: center;
 }
 
+/* تدرج برتقالي للتسليم والاستلام */
+.gradient-header-orange {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%) !important;
+}
+
+/* تنسيقات سجلات التسليم والاستلام */
+.handover-container {
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.handover-header-bar {
+    background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.handover-table-wrapper {
+    position: relative;
+    background: white;
+}
+
+.handover-table-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    max-height: 300px;
+    scrollbar-width: thin;
+    scrollbar-color: #ff8c00 #f1f1f1;
+}
+
+.handover-table-scroll::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+.handover-table-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.handover-table-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #ff8c00, #ff6347);
+    border-radius: 3px;
+}
+
+.handover-detailed-table {
+    margin: 0;
+    min-width: 800px;
+    font-size: 0.85rem;
+}
+
+.handover-row {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #e9ecef !important;
+}
+
+.handover-row:hover {
+    background: linear-gradient(45deg, #fff8dc 0%, #ffe4b5 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.2);
+}
+
+.handover-actions-group {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.handover-actions-group .btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    transition: all 0.2s ease;
+}
+
+.handover-actions-group .btn:hover {
+    transform: scale(1.1);
+}
+
+.all-handover-container {
+    margin-top: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.all-handover-container .handover-table-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* مؤشر التمرير للجدول */
+.handover-table-wrapper::before {
+    content: '⟵ ⟶';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: rgba(255, 140, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    z-index: 5;
+    opacity: 0.7;
+    animation: pulseHintOrange 3s infinite;
+}
+
+@keyframes pulseHintOrange {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
+/* إخفاء مؤشر التمرير عند التفاعل */
+.handover-table-scroll:hover + .handover-table-wrapper::before,
+.handover-table-scroll.scrolled::before {
+    opacity: 0;
+}
+
 .swipe-indicator {
     display: flex;
     align-items: center;
@@ -1676,11 +1952,47 @@ authStyle.textContent = `
 document.head.appendChild(authStyle);
 
 // إضافة مستمع للتمرير لإخفاء مؤشر الاتجاه
-document.querySelectorAll('.auth-table-scroll').forEach(scroll => {
+document.querySelectorAll('.auth-table-scroll, .handover-table-scroll').forEach(scroll => {
     scroll.addEventListener('scroll', function() {
         this.classList.add('scrolled');
     });
 });
+
+// دالة تبديل عرض جميع سجلات التسليم والاستلام
+function toggleAllHandovers() {
+    const container = document.getElementById('all-handovers');
+    const toggleText = document.getElementById('toggle-handover-text');
+    const toggleIcon = document.getElementById('toggle-handover-icon');
+    const isVisible = !container.classList.contains('d-none');
+    
+    if (isVisible) {
+        // إخفاء القائمة الكاملة
+        container.style.animation = 'slideUp 0.4s ease forwards';
+        setTimeout(() => {
+            container.classList.add('d-none');
+        }, 400);
+        
+        toggleText.textContent = 'عرض جميع السجلات (' + document.querySelectorAll('.handover-row').length + ')';
+        toggleIcon.className = 'fas fa-chevron-down ms-1';
+        toggleIcon.style.transform = 'rotate(0deg)';
+    } else {
+        // عرض القائمة الكاملة
+        container.classList.remove('d-none');
+        container.style.animation = 'slideDown 0.4s ease forwards';
+        
+        toggleText.textContent = 'إخفاء القائمة الكاملة';
+        toggleIcon.className = 'fas fa-chevron-up ms-1';
+        toggleIcon.style.transform = 'rotate(180deg)';
+        
+        // التمرير إلى القائمة الجديدة
+        setTimeout(() => {
+            container.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }, 200);
+    }
+}
 </script>
 
 <!-- JavaScript لتأكيد الحذف -->
