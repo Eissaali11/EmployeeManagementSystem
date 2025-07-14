@@ -258,6 +258,16 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                
+                <!-- زر إنهاء وحفظ جميع البيانات -->
+                {% if not has_salary_data and salaries %}
+                <div class="mt-4 text-center">
+                    <button class="btn btn-lg btn-primary finish-and-save-all" id="finishAndSaveAll">
+                        <i class="fas fa-check-double me-2"></i> إنهاء وحفظ جميع البيانات المُدخلة
+                    </button>
+                    <p class="text-muted mt-2">سيتم حفظ جميع الرواتب التي تم إدخال بياناتها</p>
+                </div>
+                {% endif %}
             </div>
             {% else %}
             <div class="text-center py-4">
@@ -280,141 +290,223 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // إعادة تحميل الصفحة عند تغيير الشهر أو السنة أو الموظف أو القسم
-        const filterFields = ['month', 'year', 'employee_id', 'department_id'];
-        
-        filterFields.forEach(function(field) {
-            const element = document.getElementById(field);
-            if (element) {
-                element.addEventListener('change', function() {
-                    const form = this.closest('form');
-                    if (form) {
-                        form.submit();
-                    }
-                });
-            }
-        });
-        
-        // JavaScript لحساب صافي الراتب تلقائيًا عند إدخال البيانات في الحقول (للسجلات الجديدة)
-        const salaryInputs = document.querySelectorAll('.salary-input');
-        if (salaryInputs.length > 0) {
-            salaryInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    const employeeId = this.getAttribute('data-employee');
-                    calculateNetSalary(employeeId);
-                });
-            });
-        }
-        
-        // دالة لحساب صافي الراتب
-        function calculateNetSalary(employeeId) {
-            const basicSalary = parseFloat(document.querySelector(`.salary-input[data-field="basic_salary"][data-employee="${employeeId}"]`)?.value || 0);
-            const allowances = parseFloat(document.querySelector(`.salary-input[data-field="allowances"][data-employee="${employeeId}"]`)?.value || 0);
-            const deductions = parseFloat(document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`)?.value || 0);
-            const bonus = parseFloat(document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`)?.value || 0);
-            
-            const netSalary = basicSalary + allowances + bonus - deductions;
-            
-            // عرض صافي الراتب
-            const netSalaryDisplay = document.querySelector(`.net-salary-display[data-employee="${employeeId}"]`);
-            if (netSalaryDisplay) {
-                netSalaryDisplay.textContent = netSalary.toFixed(2);
-            }
-        }
-        
-        // تفعيل زر حفظ الراتب الذكي
-        const saveSalaryButtons = document.querySelectorAll('.save-salary-btn');
-        if (saveSalaryButtons.length > 0) {
-            saveSalaryButtons.forEach(button => {
-                button.addEventListener('click', async function() {
-                    const employeeId = this.getAttribute('data-employee');
-                    const month = this.getAttribute('data-month');
-                    const year = this.getAttribute('data-year');
-                    
-                    // جمع بيانات الراتب
-                    const basicSalary = document.querySelector(`.salary-input[data-field="basic_salary"][data-employee="${employeeId}"]`).value;
-                    const allowances = document.querySelector(`.salary-input[data-field="allowances"][data-employee="${employeeId}"]`).value;
-                    const deductions = document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`).value;
-                    const bonus = document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`).value;
-                    
-                    // التحقق أولاً من الحقول غير المكتملة
-                    try {
-                        const validateResponse = await fetch('/salaries/validate_incomplete', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                basic_salary: basicSalary,
-                                allowances: allowances,
-                                deductions: deductions,
-                                bonus: bonus
-                            })
-                        });
-                        
-                        const validation = await validateResponse.json();
-                        
-                        if (!validation.has_basic_salary) {
-                            alert('يجب إدخال الراتب الأساسي على الأقل');
-                            return;
-                        }
-                        
-                        // عرض تنبيه إذا كانت هناك حقول فارغة
-                        if (validation.empty_fields.length > 0) {
-                            const emptyFieldsList = validation.empty_fields.join('، ');
-                            const filledFieldsList = validation.filled_fields.join('، ');
-                            
-                            const confirmMsg = `سيتم حفظ الحقول التالية فقط: ${filledFieldsList}\n\nالحقول الفارغة (${emptyFieldsList}) ستبقى فارغة.\n\nهل تريد المتابعة؟`;
-                            
-                            if (!confirm(confirmMsg)) {
-                                return;
-                            }
-                        }
-                        
-                        // تعطيل الزر مؤقتاً
-                        this.disabled = true;
-                        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الحفظ...';
-                        
-                        // إرسال البيانات للحفظ الذكي
-                        const saveResponse = await fetch('/salaries/save_smart', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                employee_id: employeeId,
-                                month: month,
-                                year: year,
-                                basic_salary: basicSalary,
-                                allowances: allowances,
-                                deductions: deductions,
-                                bonus: bonus
-                            })
-                        });
-                        
-                        const result = await saveResponse.json();
-                        
-                        if (result.success) {
-                            alert(result.message);
-                            // إعادة تحميل الصفحة لعرض البيانات المحدثة
-                            window.location.reload();
-                        } else {
-                            alert('خطأ: ' + result.message);
-                            // إعادة تفعيل الزر
-                            this.disabled = false;
-                            this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
-                        }
-                        
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
-                        this.disabled = false;
-                        this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
-                    }
-                });
+document.addEventListener('DOMContentLoaded', function() {
+    // إعادة تحميل الصفحة عند تغيير الشهر أو السنة أو الموظف أو القسم
+    const filterFields = ['month', 'year', 'employee_id', 'department_id'];
+    
+    filterFields.forEach(function(field) {
+        const element = document.getElementById(field);
+        if (element) {
+            element.addEventListener('change', function() {
+                const form = this.closest('form');
+                if (form) {
+                    form.submit();
+                }
             });
         }
     });
+    
+    // JavaScript لحساب صافي الراتب تلقائيًا عند إدخال البيانات في الحقول
+    const salaryInputs = document.querySelectorAll('.salary-input');
+    if (salaryInputs.length > 0) {
+        salaryInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const employeeId = this.getAttribute('data-employee');
+                calculateNetSalary(employeeId);
+            });
+        });
+    }
+    
+    // دالة لحساب صافي الراتب
+    function calculateNetSalary(employeeId) {
+        const basicSalary = parseFloat(document.querySelector(`.salary-input[data-field="basic_salary"][data-employee="${employeeId}"]`)?.value || 0);
+        const allowances = parseFloat(document.querySelector(`.salary-input[data-field="allowances"][data-employee="${employeeId}"]`)?.value || 0);
+        const deductions = parseFloat(document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`)?.value || 0);
+        const bonus = parseFloat(document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`)?.value || 0);
+        
+        const netSalary = basicSalary + allowances + bonus - deductions;
+        
+        // عرض صافي الراتب
+        const netSalaryDisplay = document.querySelector(`.net-salary-display[data-employee="${employeeId}"]`);
+        if (netSalaryDisplay) {
+            netSalaryDisplay.textContent = netSalary.toFixed(2);
+        }
+    }
+    
+    // تفعيل زر حفظ الراتب الفردي
+    const saveSalaryButtons = document.querySelectorAll('.save-salary-btn');
+    if (saveSalaryButtons.length > 0) {
+        saveSalaryButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const employeeId = this.getAttribute('data-employee');
+                const month = this.getAttribute('data-month');
+                const year = this.getAttribute('data-year');
+                
+                // جمع بيانات الراتب
+                const basicSalary = document.querySelector(`.salary-input[data-field="basic_salary"][data-employee="${employeeId}"]`).value;
+                const allowances = document.querySelector(`.salary-input[data-field="allowances"][data-employee="${employeeId}"]`).value;
+                const deductions = document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`).value;
+                const bonus = document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`).value;
+                
+                // التحقق من الراتب الأساسي
+                if (!basicSalary || basicSalary.trim() === '') {
+                    alert('يجب إدخال الراتب الأساسي على الأقل');
+                    return;
+                }
+                
+                try {
+                    // تعطيل الزر مؤقتاً
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الحفظ...';
+                    
+                    // حفظ الراتب
+                    const response = await fetch('/salaries/save_smart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            employee_id: employeeId,
+                            month: month,
+                            year: year,
+                            basic_salary: basicSalary,
+                            allowances: allowances,
+                            deductions: deductions,
+                            bonus: bonus
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // تغيير شكل الصف ليظهر أنه تم الحفظ
+                        const row = this.closest('tr');
+                        row.style.backgroundColor = '#d4edda';
+                        this.innerHTML = '<i class="fas fa-check me-1"></i> تم الحفظ';
+                        this.className = 'btn btn-sm btn-outline-success mb-1';
+                        this.disabled = true; // الحفاظ على التعطيل بعد الحفظ
+                        
+                        // تعطيل حقول الإدخال لهذا الموظف
+                        const inputs = row.querySelectorAll('.salary-input');
+                        inputs.forEach(input => {
+                            input.disabled = true;
+                            input.style.backgroundColor = '#e9ecef';
+                        });
+                        
+                        showSuccessAlert(result.message);
+                    } else {
+                        alert('حدث خطأ: ' + result.message);
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
+                    }
+                    
+                } catch (error) {
+                    console.error('خطأ في حفظ الراتب:', error);
+                    alert('حدث خطأ في الاتصال');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
+                }
+            });
+        });
+    }
+    
+    // زر إنهاء وحفظ جميع البيانات
+    const finishAndSaveAllBtn = document.getElementById('finishAndSaveAll');
+    if (finishAndSaveAllBtn) {
+        finishAndSaveAllBtn.addEventListener('click', async function() {
+            // جمع جميع البيانات المُدخلة (غير المحفوظة)
+            const allSalaryData = [];
+            const saveBtns = document.querySelectorAll('.save-salary-btn:not(.btn-outline-success)');
+            
+            saveBtns.forEach(btn => {
+                const employeeId = btn.getAttribute('data-employee');
+                const basicSalary = document.querySelector(`.salary-input[data-field="basic_salary"][data-employee="${employeeId}"]`).value;
+                
+                // فقط إذا كان هناك راتب أساسي مُدخل
+                if (basicSalary && basicSalary.trim() !== '') {
+                    const allowances = document.querySelector(`.salary-input[data-field="allowances"][data-employee="${employeeId}"]`).value;
+                    const deductions = document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`).value;
+                    const bonus = document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`).value;
+                    const month = btn.getAttribute('data-month');
+                    const year = btn.getAttribute('data-year');
+                    
+                    allSalaryData.push({
+                        employee_id: employeeId,
+                        month: month,
+                        year: year,
+                        basic_salary: basicSalary,
+                        allowances: allowances,
+                        deductions: deductions,
+                        bonus: bonus
+                    });
+                }
+            });
+            
+            if (allSalaryData.length === 0) {
+                alert('لا توجد بيانات رواتب مُدخلة للحفظ');
+                return;
+            }
+            
+            const confirmMsg = `سيتم حفظ رواتب ${allSalaryData.length} موظف. هل تريد المتابعة؟`;
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            // تعطيل الزر وإظهار التحميل
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري حفظ جميع البيانات...';
+            
+            try {
+                const response = await fetch('/salaries/save_all_smart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        salaries: allSalaryData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccessAlert(`تم حفظ ${result.saved_count} راتب بنجاح`);
+                    // إعادة تحميل الصفحة لعرض البيانات المحفوظة
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert('حدث خطأ: ' + result.message);
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check-double me-2"></i> إنهاء وحفظ جميع البيانات المُدخلة';
+                }
+            } catch (error) {
+                console.error('خطأ في حفظ جميع البيانات:', error);
+                alert('حدث خطأ في الاتصال');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check-double me-2"></i> إنهاء وحفظ جميع البيانات المُدخلة';
+            }
+        });
+    }
+    
+    // دالة لإظهار رسائل النجاح
+    function showSuccessAlert(message) {
+        const alertHtml = `
+            <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas fa-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // إزالة التنبيه تلقائياً بعد 5 ثوان
+        setTimeout(() => {
+            const alert = document.querySelector('.alert:last-of-type');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+});
 </script>
 {% endblock %}

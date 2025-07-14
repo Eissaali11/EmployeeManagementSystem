@@ -435,6 +435,83 @@ def delete(id):
     
     return redirect(url_for('salaries.index', month=month, year=year))
 
+@salaries_bp.route('/save_all_smart', methods=['POST'])
+def save_all_smart():
+    """حفظ جميع الرواتب المُدخلة دفعة واحدة"""
+    try:
+        data = request.json
+        salaries_data = data.get('salaries', [])
+        
+        if not salaries_data:
+            return {'success': False, 'message': 'لا توجد بيانات للحفظ'}
+        
+        saved_count = 0
+        
+        for salary_data in salaries_data:
+            employee_id = salary_data.get('employee_id')
+            month = int(salary_data.get('month'))
+            year = int(salary_data.get('year'))
+            
+            # التحقق من وجود سجل سابق
+            existing_salary = Salary.query.filter_by(
+                employee_id=employee_id,
+                month=month,
+                year=year
+            ).first()
+            
+            if existing_salary:
+                continue  # تخطي إذا كان موجود
+            
+            # معالجة القيم
+            def parse_value(value):
+                if value and str(value).strip():
+                    try:
+                        return float(value)
+                    except (ValueError, TypeError):
+                        return None
+                return None
+            
+            basic_salary = parse_value(salary_data.get('basic_salary'))
+            allowances = parse_value(salary_data.get('allowances'))
+            deductions = parse_value(salary_data.get('deductions'))
+            bonus = parse_value(salary_data.get('bonus'))
+            
+            # يجب أن يكون الراتب الأساسي موجود
+            if basic_salary is None:
+                continue
+            
+            # حساب صافي الراتب
+            net_salary = basic_salary
+            if allowances is not None:
+                net_salary += allowances
+            if bonus is not None:
+                net_salary += bonus
+            if deductions is not None:
+                net_salary -= deductions
+            
+            # إنشاء سجل الراتب
+            new_salary = Salary(
+                employee_id=employee_id,
+                month=month,
+                year=year,
+                basic_salary=basic_salary,
+                allowances=allowances,
+                deductions=deductions,
+                bonus=bonus,
+                net_salary=net_salary
+            )
+            
+            db.session.add(new_salary)
+            saved_count += 1
+        
+        db.session.commit()
+        
+        return {'success': True, 'message': f'تم حفظ {saved_count} راتب بنجاح', 'saved_count': saved_count}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'حدث خطأ: {str(e)}'}
+
 @salaries_bp.route('/save_smart', methods=['POST'])
 def save_smart():
     """حفظ ذكي للراتب - يحفظ فقط الحقول التي تم إدخال بيانات فيها"""
