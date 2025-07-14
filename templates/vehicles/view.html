@@ -1565,30 +1565,41 @@ function rejectAuth(authId) {
     }
 }
 
-// فلترة الموظفين حسب القسم
-document.getElementById('department_id').addEventListener('change', function() {
-    const departmentId = this.value;
-    const employeeSelect = document.getElementById('employee_id');
-    const options = employeeSelect.querySelectorAll('option');
-    
-    options.forEach(option => {
-        if (option.value === '') {
-            option.style.display = 'block';
-            return;
-        }
+// فلترة الموظفين حسب القسم (إذا كانت العناصر موجودة)
+const departmentSelect = document.getElementById('department_id');
+if (departmentSelect) {
+    departmentSelect.addEventListener('change', function() {
+        const departmentId = this.value;
+        const employeeSelect = document.getElementById('employee_id');
+        if (!employeeSelect) return;
         
-        const employeeDepartments = option.dataset.departments ? option.dataset.departments.split(',') : [];
+        const options = employeeSelect.querySelectorAll('option');
         
-        if (!departmentId || employeeDepartments.includes(departmentId)) {
-            option.style.display = 'block';
-        } else {
-            option.style.display = 'none';
-        }
+        options.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+                return;
+            }
+            
+            const employeeDepartments = option.dataset.departments ? option.dataset.departments.split(',') : [];
+            
+            if (!departmentId || employeeDepartments.includes(departmentId)) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        // إعادة تعيين الموظف المختار
+        employeeSelect.value = '';
     });
-    
-    // إعادة تعيين الموظف المختار
-    employeeSelect.value = '';
-});
+}
+
+// دالة animateCounters المفقودة
+function animateCounters() {
+    // دالة وهمية لحل الخطأ
+    console.log('animateCounters called');
+}
 
 // إدارة أزرار حذف سجلات التسليم والاستلام
 document.addEventListener('DOMContentLoaded', function() {
