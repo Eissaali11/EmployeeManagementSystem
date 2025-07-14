@@ -225,37 +225,121 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
             for col_num, value in enumerate(rental_df.columns.values):
                 worksheet.write(0, col_num, value, header_format)
         
-        # إذا كانت سجلات الورشة متوفرة
+        # إذا كانت سجلات الورشة متوفرة - نسخة محسنة وشاملة
         if workshop_records:
             workshop_data = []
             for record in workshop_records:
+                # حساب مدة البقاء في الورشة
+                if record.exit_date and record.entry_date:
+                    duration_days = (record.exit_date - record.entry_date).days
+                    duration_text = f'{duration_days} يوم'
+                elif record.entry_date:
+                    current_duration = (datetime.now().date() - record.entry_date).days
+                    duration_text = f'{current_duration} يوم (مازال في الورشة)'
+                else:
+                    duration_text = 'غير محدد'
+                
+                # تحديد حالة العملية
+                if record.exit_date:
+                    operation_status = 'مكتملة'
+                else:
+                    operation_status = 'جارية'
+                
+                # ترجمة حالة الإصلاح للعربية
+                repair_status_ar = {
+                    'in_progress': 'قيد التنفيذ',
+                    'completed': 'تم الإصلاح',
+                    'pending_approval': 'بانتظار الموافقة',
+                    'waiting_parts': 'بانتظار قطع الغيار',
+                    'on_hold': 'متوقف مؤقتاً'
+                }.get(record.repair_status, record.repair_status or 'غير محدد')
+                
                 workshop_data.append({
-                    'تاريخ الدخول': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else '',
+                    'رقم العملية': record.id,
+                    'تاريخ الدخول': record.entry_date.strftime('%Y-%m-%d') if record.entry_date else 'غير محدد',
                     'تاريخ الخروج': record.exit_date.strftime('%Y-%m-%d') if record.exit_date else 'لا يزال في الورشة',
-                    'اسم الورشة': record.workshop_name or '',
-                    'سبب الصيانة': record.reason or '',
-                    'التكلفة': float(record.cost) if record.cost else 0,
-                    'حالة الإصلاح': record.repair_status or '',
-                    'الملاحظات': record.notes or ''
+                    'مدة البقاء': duration_text,
+                    'حالة العملية': operation_status,
+                    'اسم الورشة': record.workshop_name or 'غير محدد',
+                    'الفني المسؤول': record.technician_name or 'غير محدد',
+                    'سبب الدخول': record.reason or 'غير محدد',
+                    'وصف العطل/الصيانة': record.description or 'غير محدد',
+                    'حالة الإصلاح': repair_status_ar,
+                    'التكلفة (ريال)': float(record.cost) if record.cost else 0,
+                    'رابط تسليم الورشة': record.delivery_link or 'غير متوفر',
+                    'رابط استلام من الورشة': record.reception_link or 'غير متوفر',
+                    'ملاحظات إضافية': record.notes or 'لا توجد ملاحظات',
+                    'تاريخ الإنشاء': record.created_at.strftime('%Y-%m-%d %H:%M') if record.created_at else '',
+                    'آخر تحديث': record.updated_at.strftime('%Y-%m-%d %H:%M') if record.updated_at else ''
                 })
             
             if workshop_data:
                 workshop_df = pd.DataFrame(workshop_data)
-                workshop_df.to_excel(writer, sheet_name='سجلات الصيانة', index=False)
+                workshop_df.to_excel(writer, sheet_name='عمليات الورش', index=False)
                 
-                # تنسيق ورقة الصيانة
-                worksheet = writer.sheets['سجلات الصيانة']
+                # تنسيق ورقة عمليات الورش
+                worksheet = writer.sheets['عمليات الورش']
                 worksheet.right_to_left()
-                worksheet.set_column('A:Z', 18)
+                
+                # تحديد عرض الأعمدة حسب المحتوى
+                column_widths = {
+                    'A': 12,  # رقم العملية
+                    'B': 15,  # تاريخ الدخول
+                    'C': 15,  # تاريخ الخروج
+                    'D': 18,  # مدة البقاء
+                    'E': 12,  # حالة العملية
+                    'F': 20,  # اسم الورشة
+                    'G': 18,  # الفني المسؤول
+                    'H': 15,  # سبب الدخول
+                    'I': 30,  # وصف العطل
+                    'J': 15,  # حالة الإصلاح
+                    'K': 12,  # التكلفة
+                    'L': 25,  # رابط تسليم
+                    'M': 25,  # رابط استلام
+                    'N': 25,  # ملاحظات
+                    'O': 18,  # تاريخ الإنشاء
+                    'P': 18   # آخر تحديث
+                }
+                
+                for col, width in column_widths.items():
+                    worksheet.set_column(f'{col}:{col}', width)
                 
                 # تنسيق العناوين
                 for col_num, value in enumerate(workshop_df.columns.values):
                     worksheet.write(0, col_num, value, header_format)
                 
-                # تطبيق تنسيق على الأعمدة المناسبة
+                # تنسيق صفوف البيانات مع ألوان حسب الحالة
                 for row_num in range(1, len(workshop_data) + 1):
-                    # تنسيق عمود التكلفة
-                    worksheet.write(row_num, 4, workshop_df.iloc[row_num-1, 4], number_format)  # التكلفة
+                    # تحديد لون الصف حسب حالة العملية
+                    operation_status = workshop_data[row_num-1]['حالة العملية']
+                    repair_status = workshop_data[row_num-1]['حالة الإصلاح']
+                    
+                    if operation_status == 'مكتملة' and repair_status == 'تم الإصلاح':
+                        bg_color = '#C6E0B4'  # أخضر فاتح للمكتملة بنجاح
+                    elif operation_status == 'مكتملة':
+                        bg_color = '#FFE4B5'  # أصفر فاتح للمكتملة مع مشاكل
+                    else:
+                        bg_color = '#FFCCCB'  # أحمر فاتح للجارية
+                    
+                    for col_num in range(len(workshop_df.columns)):
+                        # تنسيق خاص لعمود التكلفة
+                        if col_num == 10:  # عمود التكلفة
+                            cost_format = workbook.add_format({
+                                'bg_color': bg_color, 
+                                'border': 1, 
+                                'align': 'center', 
+                                'num_format': '#,##0.00'
+                            })
+                            worksheet.write(row_num, col_num, workshop_df.iloc[row_num-1, col_num], cost_format)
+                        else:
+                            row_format = workbook.add_format({
+                                'bg_color': bg_color, 
+                                'border': 1, 
+                                'align': 'center',
+                                'valign': 'vcenter',
+                                'text_wrap': True
+                            })
+                            worksheet.write(row_num, col_num, workshop_df.iloc[row_num-1, col_num], row_format)
         
         # الحصول على سجلات التسليم/الاستلام
         if handovers is None:
@@ -473,8 +557,37 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
         summary_data.append(['', ''])  # فاصل
         
         summary_data.append(['الإحصائيات', ''])
-        summary_data.append(['عدد سجلات الصيانة', workshop_count])
-        summary_data.append(['إجمالي تكاليف الصيانة', f'{total_workshop_cost:.2f} ريال'])
+        summary_data.append(['عدد عمليات الورش', workshop_count])
+        summary_data.append(['إجمالي تكاليف الورش', f'{total_workshop_cost:.2f} ريال'])
+        
+        # إضافة إحصائيات تفصيلية للورش
+        if workshop_records:
+            completed_count = sum(1 for r in workshop_records if r.exit_date)
+            ongoing_count = workshop_count - completed_count
+            summary_data.append(['العمليات المكتملة', completed_count])
+            summary_data.append(['العمليات الجارية', ongoing_count])
+            
+            # متوسط مدة البقاء في الورشة
+            total_days = 0
+            completed_operations = 0
+            for record in workshop_records:
+                if record.exit_date and record.entry_date:
+                    total_days += (record.exit_date - record.entry_date).days
+                    completed_operations += 1
+            
+            if completed_operations > 0:
+                avg_duration = total_days / completed_operations
+                summary_data.append(['متوسط مدة البقاء في الورشة', f'{avg_duration:.1f} يوم'])
+            
+            # أكثر الورش استخداماً
+            workshop_usage = {}
+            for record in workshop_records:
+                workshop_name = record.workshop_name or 'غير محدد'
+                workshop_usage[workshop_name] = workshop_usage.get(workshop_name, 0) + 1
+            
+            if workshop_usage:
+                most_used_workshop = max(workshop_usage, key=workshop_usage.get)
+                summary_data.append(['أكثر الورش استخداماً', f'{most_used_workshop} ({workshop_usage[most_used_workshop]} مرة)'])
         summary_data.append(['عدد سجلات التسليم/الاستلام', handover_count])
         summary_data.append(['عدد سجلات الفحص', inspection_count])
         summary_data.append(['', ''])  # فاصل
