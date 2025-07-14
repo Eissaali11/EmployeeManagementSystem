@@ -8,6 +8,7 @@ import json
 import uuid
 from datetime import datetime, timedelta, date
 from sqlalchemy import extract, func, cast, Date
+from sqlalchemy.orm import joinedload
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session, current_app, send_file
 
 from flask_login import login_user, logout_user, login_required, current_user
@@ -612,8 +613,30 @@ def add_salary():
 @login_required
 def salary_details(salary_id):
     """تفاصيل الراتب للنسخة المحمولة"""
-    # يمكن تنفيذ هذه الوظيفة لاحقًا
-    return render_template('mobile/salary_details.html')
+    # جلب بيانات الراتب مع بيانات الموظف
+    salary = Salary.query.options(joinedload(Salary.employee)).get_or_404(salary_id)
+    
+    # تحويل الشهر إلى اسمه بالعربية
+    month_names = {
+        1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
+        5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+        9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+    }
+    month_name = month_names.get(salary.month, '')
+    
+    # حساب إحصائيات أخرى للموظف
+    employee_salaries = Salary.query.filter_by(employee_id=salary.employee_id).all()
+    employee_stats = {
+        'total_salaries': len(employee_salaries),
+        'total_paid': sum(1 for s in employee_salaries if s.is_paid),
+        'total_unpaid': sum(1 for s in employee_salaries if not s.is_paid),
+        'avg_net_salary': sum(s.net_salary for s in employee_salaries) / len(employee_salaries) if employee_salaries else 0
+    }
+    
+    return render_template('mobile/salary_details.html',
+                          salary=salary,
+                          month_name=month_name,
+                          employee_stats=employee_stats)
 
 # صفحة الوثائق - النسخة المحمولة
 @mobile_bp.route('/documents')
