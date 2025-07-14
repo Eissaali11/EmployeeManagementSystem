@@ -1375,6 +1375,92 @@ def vehicle_details(vehicle_id):
                          days_in_workshop=days_in_workshop,
                          inspection_warnings=inspection_warnings)
 
+# تعديل السيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/<int:vehicle_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_vehicle(vehicle_id):
+    """تعديل بيانات السيارة - واجهة الموبايل"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        try:
+            # تحديث البيانات الأساسية
+            vehicle.plate_number = request.form.get('plate_number', '').strip()
+            vehicle.make = request.form.get('make', '').strip()
+            vehicle.model = request.form.get('model', '').strip()
+            vehicle.year = request.form.get('year', '').strip()
+            vehicle.color = request.form.get('color', '').strip()
+            vehicle.chassis_number = request.form.get('chassis_number', '').strip()
+            vehicle.engine_number = request.form.get('engine_number', '').strip()
+            vehicle.fuel_type = request.form.get('fuel_type', '').strip()
+            vehicle.status = request.form.get('status', '').strip()
+            vehicle.notes = request.form.get('notes', '').strip()
+            
+            # تحديث تواريخ انتهاء الوثائق
+            registration_expiry = request.form.get('registration_expiry_date')
+            if registration_expiry:
+                vehicle.registration_expiry_date = datetime.strptime(registration_expiry, '%Y-%m-%d').date()
+            
+            authorization_expiry = request.form.get('authorization_expiry_date')
+            if authorization_expiry:
+                vehicle.authorization_expiry_date = datetime.strptime(authorization_expiry, '%Y-%m-%d').date()
+            
+            inspection_expiry = request.form.get('inspection_expiry_date')
+            if inspection_expiry:
+                vehicle.inspection_expiry_date = datetime.strptime(inspection_expiry, '%Y-%m-%d').date()
+            
+            # تحديث تاريخ التعديل
+            vehicle.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            
+            # تسجيل العملية في سجل النشاط
+            log_activity(
+                user_id=current_user.id,
+                action="vehicle_updated",
+                details=f"تم تحديث بيانات السيارة {vehicle.plate_number}",
+                ip_address=request.remote_addr
+            )
+            
+            flash('تم تحديث بيانات السيارة بنجاح', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء تحديث السيارة: {str(e)}', 'error')
+    
+    return render_template('mobile/edit_vehicle.html', vehicle=vehicle)
+
+# حذف السيارة - النسخة المحمولة
+@mobile_bp.route('/vehicles/<int:vehicle_id>/delete', methods=['POST'])
+@login_required
+def delete_vehicle(vehicle_id):
+    """حذف السيارة - واجهة الموبايل"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    try:
+        plate_number = vehicle.plate_number
+        
+        # حذف السيارة من قاعدة البيانات
+        db.session.delete(vehicle)
+        db.session.commit()
+        
+        # تسجيل العملية في سجل النشاط
+        log_activity(
+            user_id=current_user.id,
+            action="vehicle_deleted",
+            details=f"تم حذف السيارة {plate_number}",
+            ip_address=request.remote_addr
+        )
+        
+        flash(f'تم حذف السيارة {plate_number} بنجاح', 'success')
+        return redirect(url_for('mobile.vehicles'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حذف السيارة: {str(e)}', 'error')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
+
 # إضافة سيارة جديدة - النسخة المحمولة
 @mobile_bp.route('/vehicles/add', methods=['GET', 'POST'])
 @login_required

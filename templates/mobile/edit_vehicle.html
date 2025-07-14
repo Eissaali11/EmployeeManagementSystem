@@ -1,0 +1,262 @@
+{% extends 'mobile/layout.html' %}
+{% set page_title = 'تعديل السيارة' %}
+
+{% block content %}
+<div class="container-fluid px-0" style="padding-top: 70px; padding-bottom: 120px;">
+    <!-- رأس الصفحة -->
+    <div class="page-header bg-gradient-primary text-white p-3 mb-3">
+        <div class="d-flex align-items-center">
+            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-light btn-sm me-3">
+                <i class="fas fa-arrow-right"></i>
+            </a>
+            <div>
+                <h5 class="mb-0">تعديل السيارة</h5>
+                <small class="opacity-75">{{ vehicle.plate_number }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج التعديل -->
+    <div class="card mx-3 modern-card">
+        <div class="card-body">
+            <form method="POST" id="editVehicleForm">
+                {{ csrf_token() }}
+                
+                <!-- المعلومات الأساسية -->
+                <div class="form-section mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="fas fa-car text-primary me-2"></i>
+                        المعلومات الأساسية
+                    </h6>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label required">رقم اللوحة</label>
+                            <input type="text" name="plate_number" class="form-control" 
+                                   value="{{ vehicle.plate_number or '' }}" required>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label required">الماركة</label>
+                            <input type="text" name="make" class="form-control" 
+                                   value="{{ vehicle.make or '' }}" required>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label required">الموديل</label>
+                            <input type="text" name="model" class="form-control" 
+                                   value="{{ vehicle.model or '' }}" required>
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label">سنة الصنع</label>
+                            <input type="text" name="year" class="form-control" 
+                                   value="{{ vehicle.year or '' }}">
+                        </div>
+                        
+                        <div class="col-6">
+                            <label class="form-label">اللون</label>
+                            <input type="text" name="color" class="form-control" 
+                                   value="{{ vehicle.color or '' }}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">الحالة</label>
+                            <select name="status" class="form-select">
+                                <option value="available" {{ 'selected' if vehicle.status == 'available' else '' }}>متاحة</option>
+                                <option value="rented" {{ 'selected' if vehicle.status == 'rented' else '' }}>مؤجرة</option>
+                                <option value="in_project" {{ 'selected' if vehicle.status == 'in_project' else '' }}>في المشروع</option>
+                                <option value="in_workshop" {{ 'selected' if vehicle.status == 'in_workshop' else '' }}>في الورشة</option>
+                                <option value="accident" {{ 'selected' if vehicle.status == 'accident' else '' }}>حادث</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المعلومات الفنية -->
+                <div class="form-section mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="fas fa-cogs text-info me-2"></i>
+                        المعلومات الفنية
+                    </h6>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">رقم الهيكل</label>
+                            <input type="text" name="chassis_number" class="form-control" 
+                                   value="{{ vehicle.chassis_number or '' }}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">رقم المحرك</label>
+                            <input type="text" name="engine_number" class="form-control" 
+                                   value="{{ vehicle.engine_number or '' }}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">نوع الوقود</label>
+                            <select name="fuel_type" class="form-select">
+                                <option value="">اختر نوع الوقود</option>
+                                <option value="بنزين" {{ 'selected' if vehicle.fuel_type == 'بنزين' else '' }}>بنزين</option>
+                                <option value="ديزل" {{ 'selected' if vehicle.fuel_type == 'ديزل' else '' }}>ديزل</option>
+                                <option value="هايبرد" {{ 'selected' if vehicle.fuel_type == 'هايبرد' else '' }}>هايبرد</option>
+                                <option value="كهربائي" {{ 'selected' if vehicle.fuel_type == 'كهربائي' else '' }}>كهربائي</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تواريخ انتهاء الوثائق -->
+                <div class="form-section mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="fas fa-calendar-alt text-warning me-2"></i>
+                        تواريخ انتهاء الوثائق
+                    </h6>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">تاريخ انتهاء الاستمارة</label>
+                            <input type="date" name="registration_expiry_date" class="form-control" 
+                                   value="{{ vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else '' }}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">تاريخ انتهاء التفويض</label>
+                            <input type="date" name="authorization_expiry_date" class="form-control" 
+                                   value="{{ vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else '' }}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">تاريخ انتهاء الفحص الدوري</label>
+                            <input type="date" name="inspection_expiry_date" class="form-control" 
+                                   value="{{ vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملاحظات -->
+                <div class="form-section mb-4">
+                    <h6 class="section-title mb-3">
+                        <i class="fas fa-sticky-note text-secondary me-2"></i>
+                        ملاحظات
+                    </h6>
+                    
+                    <textarea name="notes" class="form-control" rows="3" 
+                              placeholder="أضف أي ملاحظات إضافية...">{{ vehicle.notes or '' }}</textarea>
+                </div>
+
+                <!-- أزرار الإجراءات -->
+                <div class="action-buttons mt-4">
+                    <button type="submit" class="btn btn-success btn-lg w-100 mb-2">
+                        <i class="fas fa-save me-2"></i>
+                        حفظ التغييرات
+                    </button>
+                    
+                    <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" 
+                       class="btn btn-outline-secondary btn-lg w-100">
+                        <i class="fas fa-times me-2"></i>
+                        إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid #007bff;
+}
+
+.section-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: #dc3545;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.action-buttons .btn {
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.page-header {
+    border-radius: 0 0 20px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.modern-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    
+    .form-section {
+        padding: 15px;
+    }
+    
+    .action-buttons .btn {
+        padding: 10px 20px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تأكيد قبل إرسال النموذج
+    document.getElementById('editVehicleForm').addEventListener('submit', function(e) {
+        if (!confirm('هل أنت متأكد من حفظ التغييرات؟')) {
+            e.preventDefault();
+        }
+    });
+    
+    // التحقق من صحة البيانات
+    const plateNumber = document.querySelector('input[name="plate_number"]');
+    const make = document.querySelector('input[name="make"]');
+    const model = document.querySelector('input[name="model"]');
+    
+    [plateNumber, make, model].forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

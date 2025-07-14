@@ -126,7 +126,7 @@ body {
         <div class="row g-0">
             <!-- تعديل بيانات السيارة -->
             <div class="col-6">
-                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="quick-action-btn">
+                <a href="{{ url_for('mobile.edit_vehicle', vehicle_id=vehicle.id) }}" class="quick-action-btn">
                     <div class="quick-action-icon bg-warning">
                         <i class="fas fa-edit"></i>
                     </div>
@@ -139,16 +139,20 @@ body {
             
             <!-- حذف السيارة -->
             <div class="col-6">
-                <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="quick-action-btn" 
-                   onclick="return confirm('هل أنت متأكد من حذف السيارة {{ vehicle.plate_number }}؟\n\nسيتم حذف جميع البيانات المرتبطة بها!')">
-                    <div class="quick-action-icon bg-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </div>
-                    <div class="quick-action-text">
-                        <span class="quick-action-title">حذف</span>
-                        <span class="quick-action-subtitle">السيارة</span>
-                    </div>
-                </a>
+                <form method="POST" action="{{ url_for('mobile.delete_vehicle', vehicle_id=vehicle.id) }}" 
+                      style="display: inline;" class="quick-action-btn-form">
+                    {{ csrf_token() }}
+                    <button type="submit" class="quick-action-btn border-0 bg-transparent w-100 h-100" 
+                            onclick="return confirm('هل أنت متأكد من حذف السيارة {{ vehicle.plate_number }}؟\n\nسيتم حذف جميع البيانات المرتبطة بها!')">
+                        <div class="quick-action-icon bg-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <span class="quick-action-title">حذف</span>
+                            <span class="quick-action-subtitle">السيارة</span>
+                        </div>
+                    </button>
+                </form>
             </div>
         </div>
         
@@ -1010,9 +1014,35 @@ body {
     left: 100%;
 }
 
+/* تنسيقات نموذج الحذف */
+.quick-action-btn-form {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.quick-action-btn-form .quick-action-btn {
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+    border: none;
+    background: white;
+    cursor: pointer;
+    text-align: inherit;
+}
+
+.quick-action-btn-form .quick-action-btn:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: translateY(-2px);
+}
+
 /* تجاوب للشاشات الصغيرة */
 @media (max-width: 576px) {
     .quick-action-btn {
+        padding: 12px 10px;
+    }
+    
+    .quick-action-btn-form .quick-action-btn {
         padding: 12px 10px;
     }
     
