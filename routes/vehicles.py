@@ -4553,7 +4553,7 @@ def update_drive_link(vehicle_id):
     
     return redirect(url_for('vehicles.view', id=vehicle_id))
 
-@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-files')
+@vehicles_bp.route('/<int:vehicle_id>/drive-files')
 @login_required
 def vehicle_drive_files(vehicle_id):
     """صفحة منفصلة لإدارة ملفات Google Drive"""
@@ -4562,6 +4562,7 @@ def vehicle_drive_files(vehicle_id):
                          title=f'ملفات Google Drive - {vehicle.plate_number}',
                          vehicle=vehicle)
 
+@vehicles_bp.route('/<int:vehicle_id>/drive-management', methods=['GET', 'POST'])
 @vehicles_bp.route('/<int:vehicle_id>/drive-management', methods=['GET', 'POST'])
 @login_required
 def drive_management(vehicle_id):
