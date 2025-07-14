@@ -155,7 +155,7 @@ body {
         <div class="row g-0">
             <!-- إضافة صيانة -->
             <div class="col-6">
-                <a href="{{ url_for('mobile.vehicle_documents') }}" class="quick-action-btn">
+                <a href="{{ url_for('mobile.create_handover', vehicle_id=vehicle.id) }}" class="quick-action-btn">
                     <div class="quick-action-icon bg-info">
                         <i class="fas fa-tools"></i>
                     </div>
@@ -181,28 +181,28 @@ body {
         </div>
         
         <div class="row g-0">
-            <!-- التقارير -->
+            <!-- إضافة تسليم -->
             <div class="col-6">
-                <a href="{{ url_for('mobile.vehicle_reports') }}" class="quick-action-btn">
+                <a href="{{ url_for('mobile.create_handover', vehicle_id=vehicle.id) }}" class="quick-action-btn">
                     <div class="quick-action-icon bg-purple">
-                        <i class="fas fa-chart-bar"></i>
+                        <i class="fas fa-exchange-alt"></i>
                     </div>
                     <div class="quick-action-text">
-                        <span class="quick-action-title">التقارير</span>
-                        <span class="quick-action-subtitle">تقارير السيارة</span>
+                        <span class="quick-action-title">تسليم/استلام</span>
+                        <span class="quick-action-subtitle">إضافة نموذج</span>
                     </div>
                 </a>
             </div>
             
-            <!-- تشيك لست -->
+            <!-- العودة للقائمة -->
             <div class="col-6">
                 <a href="{{ url_for('mobile.vehicles') }}" class="quick-action-btn">
                     <div class="quick-action-icon bg-teal">
-                        <i class="fas fa-list-check"></i>
+                        <i class="fas fa-list"></i>
                     </div>
                     <div class="quick-action-text">
-                        <span class="quick-action-title">تشيك لست</span>
-                        <span class="quick-action-subtitle">قائمة المراجعة</span>
+                        <span class="quick-action-title">قائمة السيارات</span>
+                        <span class="quick-action-subtitle">العودة للقائمة</span>
                     </div>
                 </a>
             </div>
