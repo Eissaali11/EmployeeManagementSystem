@@ -4510,7 +4510,7 @@ def allowed_file(filename, allowed_extensions):
 
 # ========== مسارات إدارة Google Drive ==========
 
-@vehicles_bp.route('/<int:vehicle_id>/drive-link', methods=['POST'])
+@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-link', methods=['POST'])
 @login_required
 def update_drive_link(vehicle_id):
     """تحديث أو حذف رابط Google Drive"""
@@ -4553,7 +4553,7 @@ def update_drive_link(vehicle_id):
     
     return redirect(url_for('vehicles.view', id=vehicle_id))
 
-@vehicles_bp.route('/<int:vehicle_id>/drive-files')
+@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-files')
 @login_required
 def vehicle_drive_files(vehicle_id):
     """صفحة منفصلة لإدارة ملفات Google Drive"""
