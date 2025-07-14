@@ -24,13 +24,16 @@
                                 <i class="fas fa-info-circle"></i>
                                 يرجى رفع ملف بصيغة Excel (.xlsx, .xls)
                             </div>
-                            <div class="mt-2">
-                                <a href="{{ url_for('employees.import_template') }}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-download me-1"></i> تحميل القالب الشامل للاستيراد
+                            <div class="mt-2 d-flex gap-2">
+                                <a href="{{ url_for('employees.empty_import_template') }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-download me-1"></i> تحميل النموذج الفارغ
                                 </a>
-                                <div class="small text-success mt-1">
-                                    <i class="fas fa-star"></i> قالب محسن يحتوي على 17 حقل بيانات شامل مع التعليمات
-                                </div>
+                                <a href="{{ url_for('employees.import_template') }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-download me-1"></i> نموذج مع بيانات تجريبية
+                                </a>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <i class="fas fa-info-circle"></i> النموذج الفارغ: جاهز للاستخدام المباشر | النموذج التجريبي: يحتوي على أمثلة للفهم
                             </div>
                         </div>
 
@@ -90,7 +93,10 @@
                             <strong>الحالة:</strong> active (نشط)، inactive (غير نشط)، on_leave (في إجازة)
                         </li>
                         <li class="list-group-item p-2">
-                            <strong>أفضل طريقة:</strong> <a href="{{ url_for('employees.import_template') }}" class="text-success fw-bold">حمل القالب الشامل</a> واتبع التعليمات
+                            <strong>للاستخدام المباشر:</strong> <a href="{{ url_for('employees.empty_import_template') }}" class="text-primary fw-bold">النموذج الفارغ</a> - جاهز لإدخال البيانات
+                        </li>
+                        <li class="list-group-item p-2">
+                            <strong>للفهم والتعلم:</strong> <a href="{{ url_for('employees.import_template') }}" class="text-success fw-bold">النموذج مع أمثلة</a> - يحتوي على بيانات تجريبية
                         </li>
                     </ul>
                 </div>

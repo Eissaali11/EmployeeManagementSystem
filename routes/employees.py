@@ -614,6 +614,96 @@ def import_template():
         flash(f'حدث خطأ في إنشاء القالب: {str(e)}', 'danger')
         return redirect(url_for('employees.import_excel'))
 
+@employees_bp.route('/import/empty_template')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def empty_import_template():
+    """Download empty Excel template for employee import"""
+    try:
+        import pandas as pd
+        
+        # إنشاء قالب فارغ مع جميع الحقول المطلوبة
+        empty_template_data = {
+            'الاسم الكامل': [],
+            'رقم الموظف': [],
+            'رقم الهوية الوطنية': [],
+            'رقم الجوال': [],
+            'الجوال الشخصي': [],
+            'المسمى الوظيفي': [],
+            'الحالة الوظيفية': [],
+            'الموقع': [],
+            'المشروع': [],
+            'البريد الإلكتروني': [],
+            'الأقسام': [],
+            'تاريخ الانضمام': [],
+            'تاريخ انتهاء الإقامة': [],
+            'حالة العقد': [],
+            'حالة الرخصة': [],
+            'الجنسية': [],
+            'ملاحظات': []
+        }
+        
+        # إنشاء DataFrame فارغ
+        df = pd.DataFrame(empty_template_data)
+        
+        # إنشاء ملف Excel
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # كتابة القالب الفارغ
+            df.to_excel(writer, sheet_name='استيراد الموظفين', index=False)
+            
+            # إنشاء ورقة التعليمات
+            instructions_data = {
+                'العمود': [
+                    'الاسم الكامل', 'رقم الموظف', 'رقم الهوية الوطنية', 'رقم الجوال', 
+                    'الجوال الشخصي', 'المسمى الوظيفي', 'الحالة الوظيفية', 'الموقع', 
+                    'المشروع', 'البريد الإلكتروني', 'الأقسام', 'تاريخ الانضمام', 
+                    'تاريخ انتهاء الإقامة', 'حالة العقد', 'حالة الرخصة', 'الجنسية', 'ملاحظات'
+                ],
+                'مطلوب/اختياري': [
+                    'مطلوب', 'مطلوب', 'مطلوب', 'مطلوب', 'اختياري', 'مطلوب', 
+                    'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 
+                    'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري'
+                ],
+                'التنسيق المطلوب': [
+                    'نص', 'نص فريد', 'رقم من 10 أرقام', 'رقم جوال سعودي', 
+                    'رقم جوال (اختياري)', 'نص', 'active/inactive/on_leave', 'نص', 
+                    'نص', 'بريد إلكتروني صحيح', 'اسم القسم', 'YYYY-MM-DD', 
+                    'YYYY-MM-DD', 'نص', 'نص', 'اسم الجنسية', 'نص (اختياري)'
+                ],
+                'مثال': [
+                    'محمد أحمد علي', 'EMP001', '1234567890', '0501234567',
+                    '0551234567', 'مطور برمجيات', 'active', 'الرياض',
+                    'مشروع الرياض', 'mohamed@company.com', 'تقنية المعلومات', '2024-01-15',
+                    '2025-12-31', 'محدد المدة', 'سارية', 'سعودي', 'موظف متميز'
+                ]
+            }
+            instructions_df = pd.DataFrame(instructions_data)
+            instructions_df.to_excel(writer, sheet_name='التعليمات والأمثلة', index=False)
+        
+        output.seek(0)
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='download_empty_template',
+            entity_type='employee_import',
+            entity_id=0,
+            details='تم تحميل نموذج فارغ لاستيراد الموظفين'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        return send_file(
+            output,
+            download_name='نموذج_استيراد_الموظفين_فارغ.xlsx',
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        flash(f'حدث خطأ في إنشاء النموذج الفارغ: {str(e)}', 'danger')
+        return redirect(url_for('employees.import_excel'))
+
 @employees_bp.route('/<int:id>/update_status', methods=['POST'])
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.EDIT)
