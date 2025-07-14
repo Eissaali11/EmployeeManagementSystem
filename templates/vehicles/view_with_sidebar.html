@@ -208,12 +208,12 @@
                     <a href="#" class="nav-link" data-section="inspections">
                         <i class="fas fa-clipboard-check" style="color: #9c27b0;"></i>
                         📋 فحوصات السلامة
-                        <span class="badge bg-purple">{{ safety_checks|length }}</span>
+                        <span class="badge" style="background-color: #9c27b0; color: white;">{{ safety_checks|length }}</span>
                     </a>
                     <a href="#" class="nav-link" data-section="rental">
                         <i class="fas fa-money-bill-wave" style="color: #4caf50;"></i>
                         💰 معلومات الإيجار
-                        {% if vehicle.rental_start_date %}
+                        {% if rental and rental.start_date %}
                         <span class="badge bg-success">نشط</span>
                         {% else %}
                         <span class="badge bg-secondary">غير محدد</span>
