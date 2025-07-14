@@ -1,0 +1,282 @@
+{% extends 'layout.html' %}
+
+{% block title %}تفاصيل السيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div style="background: white; padding: 20px; min-height: 100vh;">
+    <div class="container">
+        
+        <!-- رأس السيارة -->
+        <div style="background: #007bff; color: white; padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+            <h1 style="color: white; font-size: 2.5rem; margin-bottom: 10px;">🚗 {{ vehicle.plate_number }}</h1>
+            <p style="color: white; font-size: 1.2rem; margin: 0;">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.year }}</p>
+        </div>
+
+        <!-- الإحصائيات -->
+        <div style="margin-bottom: 30px;">
+            <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">📊 نظرة عامة</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="background: white; border: 2px solid #007bff; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2rem; color: #007bff; margin-bottom: 10px;">👤</div>
+                    <div style="font-size: 1.2rem; color: #000; font-weight: bold;">
+                        {% if current_employee %}
+                            {{ current_employee.name[:15] }}
+                        {% else %}
+                            غير محدد
+                        {% endif %}
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem;">السائق الحالي</div>
+                </div>
+                
+                <div style="background: white; border: 2px solid #28a745; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2rem; color: #28a745; margin-bottom: 10px;">✅</div>
+                    <div style="font-size: 1.2rem; color: #000; font-weight: bold;">{{ vehicle.status }}</div>
+                    <div style="color: #666; font-size: 0.9rem;">حالة السيارة</div>
+                </div>
+                
+                <div style="background: white; border: 2px solid #ffc107; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2rem; color: #ffc107; margin-bottom: 10px;">🔧</div>
+                    <div style="font-size: 1.2rem; color: #000; font-weight: bold;">{{ workshop_records|length }}</div>
+                    <div style="color: #666; font-size: 0.9rem;">سجلات الصيانة</div>
+                </div>
+                
+                <div style="background: white; border: 2px solid #17a2b8; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 2rem; color: #17a2b8; margin-bottom: 10px;">📄</div>
+                    <div style="font-size: 1.2rem; color: #000; font-weight: bold;">{{ attachments|length }}</div>
+                    <div style="color: #666; font-size: 0.9rem;">الوثائق</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- المعلومات الأساسية -->
+        <div style="background: white; border: 2px solid #e9ecef; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+            <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">ℹ️ المعلومات الأساسية</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="color: #000; font-weight: bold;">رقم اللوحة:</span>
+                    <span style="color: #333;">{{ vehicle.plate_number }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="color: #000; font-weight: bold;">الماركة:</span>
+                    <span style="color: #333;">{{ vehicle.make }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="color: #000; font-weight: bold;">الموديل:</span>
+                    <span style="color: #333;">{{ vehicle.model }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="color: #000; font-weight: bold;">سنة الصنع:</span>
+                    <span style="color: #333;">{{ vehicle.year }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="color: #000; font-weight: bold;">اللون:</span>
+                    <span style="color: #333;">{{ vehicle.color }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="color: #000; font-weight: bold;">الحالة:</span>
+                    <span style="background: #d4edda; color: #155724; padding: 5px 10px; border-radius: 15px; font-size: 0.9rem;">{{ vehicle.status }}</span>
+                </div>
+                {% if vehicle.mileage %}
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
+                    <span style="color: #000; font-weight: bold;">عداد المسافة:</span>
+                    <span style="color: #333;">{{ "{:,}".format(vehicle.mileage) }} كم</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- الإجراءات السريعة -->
+        <div style="background: white; border: 2px solid #e9ecef; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+            <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">⚡ إجراءات سريعة</h2>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                   style="background: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    📄 إدارة صورة الرخصة
+                </a>
+                <a href="{{ url_for('vehicles.vehicle_drive_files', vehicle_id=vehicle.id) }}" 
+                   style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    ☁️ إدارة ملفات Drive
+                </a>
+            </div>
+        </div>
+
+        <!-- سجل التسليم والاستلام -->
+        <div style="background: white; border: 2px solid #e9ecef; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+            <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">🔄 سجل التسليم والاستلام ({{ handovers|length }})</h2>
+            {% if handovers %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white;">
+                    <thead>
+                        <tr style="background: #007bff; color: white;">
+                            <th style="padding: 15px; text-align: right; color: white;">التاريخ</th>
+                            <th style="padding: 15px; text-align: right; color: white;">النوع</th>
+                            <th style="padding: 15px; text-align: right; color: white;">اسم الشخص</th>
+                            <th style="padding: 15px; text-align: right; color: white;">رقم الهاتف</th>
+                            <th style="padding: 15px; text-align: right; color: white;">عداد المسافة</th>
+                            <th style="padding: 15px; text-align: right; color: white;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for handover in handovers %}
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px; color: #000;">{{ handover.formatted_date }}</td>
+                            <td style="padding: 12px; color: #000;">
+                                {% if handover.handover_type == 'delivery' %}
+                                <span style="background: #d4edda; color: #155724; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;">تسليم</span>
+                                {% else %}
+                                <span style="background: #cce5ff; color: #004085; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;">استلام</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; color: #000;">{{ handover.person_name }}</td>
+                            <td style="padding: 12px; color: #000;">{{ handover.person_mobile or 'غير محدد' }}</td>
+                            <td style="padding: 12px; color: #000;">{{ "{:,}".format(handover.mileage) if handover.mileage else 'غير محدد' }}</td>
+                            <td style="padding: 12px;">
+                                <a href="{{ url_for('vehicles.view_handover', id=handover.id) }}" 
+                                   style="background: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; margin-left: 5px;">
+                                    👁️
+                                </a>
+                                <a href="{{ url_for('vehicles.edit_handover', id=handover.id) }}" 
+                                   style="background: #ffc107; color: #212529; padding: 6px 12px; text-decoration: none; border-radius: 4px;">
+                                    ✏️
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🔄</div>
+                <h4 style="color: #000; margin-bottom: 10px;">لا توجد سجلات تسليم واستلام</h4>
+                <p style="color: #666;">لم يتم تسجيل أي عمليات تسليم أو استلام لهذه السيارة بعد</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- سجلات الورشة -->
+        <div style="background: white; border: 2px solid #e9ecef; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+            <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">🔧 سجلات الورشة والصيانة ({{ workshop_records|length }})</h2>
+            {% if workshop_records %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white;">
+                    <thead>
+                        <tr style="background: #007bff; color: white;">
+                            <th style="padding: 15px; text-align: right; color: white;">تاريخ الدخول</th>
+                            <th style="padding: 15px; text-align: right; color: white;">المشكلة</th>
+                            <th style="padding: 15px; text-align: right; color: white;">اسم الورشة</th>
+                            <th style="padding: 15px; text-align: right; color: white;">التكلفة</th>
+                            <th style="padding: 15px; text-align: right; color: white;">الحالة</th>
+                            <th style="padding: 15px; text-align: right; color: white;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in workshop_records %}
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px; color: #000;">{{ record.formatted_entry_date }}</td>
+                            <td style="padding: 12px; color: #000;">{{ record.description[:50] }}{% if record.description|length > 50 %}...{% endif %}</td>
+                            <td style="padding: 12px; color: #000;">{{ record.workshop_name or 'غير محدد' }}</td>
+                            <td style="padding: 12px; color: #000;">{{ "{:,.2f}".format(record.cost) if record.cost else 'غير محدد' }} ريال</td>
+                            <td style="padding: 12px; color: #000;">
+                                {% if record.repair_status == 'completed' %}
+                                <span style="background: #d4edda; color: #155724; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;">مكتمل</span>
+                                {% elif record.repair_status == 'in_progress' %}
+                                <span style="background: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;">قيد التنفيذ</span>
+                                {% else %}
+                                <span style="background: #cce5ff; color: #004085; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;">{{ record.repair_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px;">
+                                <a href="{{ url_for('vehicles.workshop_details', workshop_id=record.id) }}" 
+                                   style="background: #007bff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; margin-left: 5px;">
+                                    👁️
+                                </a>
+                                <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" 
+                                   style="background: #ffc107; color: #212529; padding: 6px 12px; text-decoration: none; border-radius: 4px;">
+                                    ✏️
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🔧</div>
+                <h4 style="color: #000; margin-bottom: 10px;">لا توجد سجلات صيانة</h4>
+                <p style="color: #666;">لم يتم تسجيل أي عمليات صيانة لهذه السيارة بعد</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- صورة الرخصة -->
+        <div style="background: white; border: 2px solid #e9ecef; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+            <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">🆔 صورة رخصة السيارة</h2>
+            {% if vehicle.license_image %}
+            <div style="text-align: center;">
+                <img src="{{ url_for('static', filename='uploads/licenses/' + vehicle.license_image) }}" 
+                     style="max-height: 400px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" 
+                     alt="صورة الرخصة">
+                <div style="margin-top: 15px;">
+                    <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                       style="background: #ffc107; color: #212529; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                        ✏️ تحديث الصورة
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🆔</div>
+                <h4 style="color: #000; margin-bottom: 10px;">لا توجد صورة رخصة</h4>
+                <p style="color: #666; margin-bottom: 20px;">لم يتم رفع صورة رخصة لهذه السيارة بعد</p>
+                <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                   style="background: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    📤 رفع صورة الرخصة
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ملفات Google Drive -->
+        <div style="background: white; border: 2px solid #e9ecef; padding: 25px; border-radius: 10px; margin-bottom: 30px;">
+            <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">☁️ ملفات Google Drive</h2>
+            {% if vehicle.drive_folder_link %}
+            <div style="text-align: center;">
+                <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>✅ تم ربط هذه السيارة بمجلد Google Drive</strong>
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <a href="{{ vehicle.drive_folder_link }}" target="_blank" 
+                       style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                        ☁️ فتح المجلد
+                    </a>
+                    <a href="{{ url_for('vehicles.vehicle_drive_files', vehicle_id=vehicle.id) }}" 
+                       style="background: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                        ✏️ إدارة الرابط
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 3rem; margin-bottom: 20px;">☁️</div>
+                <h4 style="color: #000; margin-bottom: 10px;">غير مرتبط بـ Google Drive</h4>
+                <p style="color: #666; margin-bottom: 20px;">لم يتم ربط هذه السيارة بمجلد Google Drive بعد</p>
+                <a href="{{ url_for('vehicles.vehicle_drive_files', vehicle_id=vehicle.id) }}" 
+                   style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    🔗 ربط مجلد Drive
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- زر العودة -->
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{{ url_for('vehicles.index') }}" 
+               style="background: #007bff; color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem;">
+                ← العودة إلى قائمة السيارات
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

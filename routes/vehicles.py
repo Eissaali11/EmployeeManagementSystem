@@ -875,7 +875,7 @@ def view(id):
         handovers = handover_records
         
         return render_template(
-                'vehicles/view_cards.html',
+                'vehicles/view_simple.html',
                 vehicle=vehicle,
                 rental=rental,
                 workshop_records=workshop_records,
