@@ -4003,3 +4003,54 @@ def reject_external_authorization(vehicle_id, auth_id):
         flash(f'خطأ في رفض التفويض: {str(e)}', 'error')
         return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
 
+@mobile_bp.route('/handover/<int:handover_id>/delete', methods=['POST'])
+@login_required
+def delete_handover(handover_id):
+    """حذف سجل تسليم أو استلام"""
+    try:
+        # الحصول على سجل التسليم/الاستلام
+        handover = VehicleHandover.query.get_or_404(handover_id)
+        vehicle_id = handover.vehicle_id
+        handover_type = handover.handover_type
+        person_name = handover.person_name
+        
+        # حذف الصور المرتبطة أولاً
+        images = VehicleHandoverImage.query.filter_by(handover_id=handover_id).all()
+        for image in images:
+            # حذف الملف من الخادم إذا كان موجوداً
+            if image.file_path and os.path.exists(os.path.join('static', image.file_path)):
+                try:
+                    os.remove(os.path.join('static', image.file_path))
+                except:
+                    pass
+            if image.image_path and os.path.exists(os.path.join('static', image.image_path)):
+                try:
+                    os.remove(os.path.join('static', image.image_path))
+                except:
+                    pass
+            db.session.delete(image)
+        
+        # حذف سجل التسليم/الاستلام
+        db.session.delete(handover)
+        db.session.commit()
+        
+        # تسجيل العملية في السجل
+        log_activity(
+            user_id=current_user.id,
+            action='delete',
+            table_name='vehicle_handover',
+            description=f'تم حذف سجل {"تسليم" if handover_type == "delivery" else "استلام"} للسيارة - الشخص: {person_name}'
+        )
+        
+        # تحديث اسم السائق في السيارة بعد الحذف
+        update_vehicle_driver(vehicle_id)
+        
+        flash(f'تم حذف سجل {"التسليم" if handover_type == "delivery" else "الاستلام"} بنجاح', 'success')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"خطأ في حذف سجل التسليم/الاستلام: {str(e)}")
+        flash(f'خطأ في حذف السجل: {str(e)}', 'error')
+        return redirect(url_for('mobile.view_handover', handover_id=handover_id))
+

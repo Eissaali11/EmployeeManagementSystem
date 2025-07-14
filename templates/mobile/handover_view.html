@@ -14,6 +14,10 @@
                 <i class="fas fa-file-pdf"></i>
                 PDF
             </a>
+            <button type="button" class="btn btn-outline-danger me-1" onclick="confirmDelete()">
+                <i class="fas fa-trash"></i>
+                حذف
+            </button>
             <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-right ms-1"></i>
                 العودة
@@ -224,6 +228,53 @@
         </a>
     </div>
 </div>
+
+<!-- Modal تأكيد الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    تأكيد الحذف
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-trash-alt text-danger" style="font-size: 48px;"></i>
+                </div>
+                <h6>هل أنت متأكد من حذف هذا {{ handover_type_name }}؟</h6>
+                <p class="text-muted">لا يمكن التراجع عن هذا الإجراء</p>
+                <div class="alert alert-warning text-start small">
+                    <strong>تفاصيل الحذف:</strong><br>
+                    • {{ handover_type_name }}: {{ vehicle.plate_number }}<br>
+                    • التاريخ: {{ handover.formatted_handover_date }}<br>
+                    • الشخص: {{ handover.person_name }}
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    إلغاء
+                </button>
+                <form method="POST" action="{{ url_for('mobile.delete_handover', handover_id=handover.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>
+                        حذف نهائي
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
 
 <style>
 .image-preview {
