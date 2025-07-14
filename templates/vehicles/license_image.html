@@ -4,301 +4,202 @@
 
 {% block extra_css %}
 <style>
-/* تصميم حديث ومتطور لصفحة رخصة السيارة */
-:root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --dark-bg: #1a1a2e;
-    --card-bg: rgba(255, 255, 255, 0.95);
-    --text-dark: #2c3e50;
-    --border-radius: 20px;
-    --shadow-soft: 0 10px 30px rgba(0,0,0,0.1);
-    --shadow-hover: 0 20px 50px rgba(0,0,0,0.15);
-}
-
-body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 100vh;
-}
-
+/* تصميم بسيط ووضح لصفحة رخصة السيارة */
 .page-header {
-    background: var(--primary-gradient);
+    background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
     color: white;
-    padding: 40px 0;
-    margin-bottom: 40px;
-    position: relative;
-    overflow: hidden;
-}
-
-.page-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-}
-
-.header-content {
-    position: relative;
-    z-index: 2;
+    padding: 30px 0;
+    margin-bottom: 30px;
+    border-radius: 0 0 20px 20px;
 }
 
 .page-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-}
-
-.breadcrumb-nav {
-    margin-top: 15px;
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-.main-card {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-soft);
-    overflow: hidden;
-    margin-bottom: 30px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.8);
-}
-
-.card-header-modern {
-    background: var(--secondary-gradient);
-    color: white;
-    padding: 25px 30px;
-    position: relative;
-}
-
-.card-header-modern h4 {
-    margin: 0;
-    font-size: 1.4rem;
+    font-size: 2rem;
     font-weight: 600;
+    margin: 0;
+    color: white;
 }
 
-.card-body-modern {
-    padding: 40px 30px;
+.breadcrumb-text {
+    opacity: 0.9;
+    margin-top: 8px;
+    color: white;
 }
 
-.license-display-area {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.license-image-container {
-    position: relative;
-    display: inline-block;
+.license-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
     margin-bottom: 25px;
 }
 
-.license-image-display {
-    max-width: 100%;
-    max-height: 450px;
-    border-radius: 15px;
-    box-shadow: var(--shadow-soft);
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 3px solid #fff;
-}
-
-.license-image-display:hover {
-    transform: scale(1.03) rotateY(5deg);
-    box-shadow: var(--shadow-hover);
-}
-
-.image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.7);
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.license-image-container:hover .image-overlay {
-    opacity: 1;
-}
-
-.overlay-icon {
+.card-header {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     color: white;
-    font-size: 3rem;
-    animation: pulse 2s infinite;
+    padding: 20px 25px;
+    border: none;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+.card-body {
+    padding: 30px;
 }
 
-.upload-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: var(--border-radius);
-    padding: 40px;
-    margin-top: 30px;
-    border: 2px dashed #dee2e6;
-    transition: all 0.3s ease;
+.license-image-container {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.license-image {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 3px solid #f8f9fa;
+}
+
+.license-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.2);
 }
 
 .upload-area {
-    background: white;
-    border: 3px dashed #007bff;
+    background: #f8f9fa;
+    border: 3px dashed #dee2e6;
     border-radius: 15px;
-    padding: 60px 40px;
+    padding: 50px 30px;
     text-align: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.upload-area::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0,123,255,0.1), transparent);
-    transition: left 0.5s ease;
-}
-
-.upload-area:hover::before {
-    left: 100%;
+    margin: 25px 0;
 }
 
 .upload-area:hover {
-    background: rgba(0,123,255,0.05);
-    border-color: #0056b3;
-    transform: translateY(-2px);
+    background: #e9ecef;
+    border-color: #3498db;
 }
 
 .upload-area.dragover {
-    background: rgba(40,167,69,0.1);
+    background: #d4edda;
     border-color: #28a745;
-    transform: scale(1.02);
 }
 
 .upload-icon {
-    font-size: 4rem;
-    color: #007bff;
+    font-size: 3.5rem;
+    color: #6c757d;
     margin-bottom: 20px;
-    animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
 }
 
 .upload-text {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 600;
-    color: var(--text-dark);
+    color: #495057;
     margin-bottom: 10px;
 }
 
 .upload-subtext {
     color: #6c757d;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
-.modern-btn {
-    background: var(--success-gradient);
-    border: none;
-    color: white;
-    padding: 15px 30px;
+.btn-modern {
+    padding: 12px 25px;
     border-radius: 25px;
     font-weight: 600;
     text-decoration: none;
+    border: none;
+    margin: 5px;
+    transition: all 0.3s ease;
     display: inline-block;
-    margin: 8px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 5px 15px rgba(79,172,254,0.3);
-    position: relative;
-    overflow: hidden;
 }
 
-.modern-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s ease;
+.btn-primary-modern {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
 }
 
-.modern-btn:hover::before {
-    left: 100%;
-}
-
-.modern-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(79,172,254,0.4);
+.btn-primary-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
     color: white;
 }
 
-.modern-btn.secondary {
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-    box-shadow: 0 5px 15px rgba(108,117,125,0.3);
+.btn-success-modern {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
 }
 
-.modern-btn.danger {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    box-shadow: 0 5px 15px rgba(220,53,69,0.3);
+.btn-success-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+    color: white;
 }
 
-.modern-btn.warning {
-    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-    box-shadow: 0 5px 15px rgba(255,193,7,0.3);
-    color: #000;
+.btn-warning-modern {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
 }
 
-.action-buttons {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 25px;
+.btn-warning-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+    color: white;
+}
+
+.btn-danger-modern {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.btn-danger-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+
+.btn-secondary-modern {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+}
+
+.btn-secondary-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
+    color: white;
 }
 
 .empty-state {
     text-align: center;
-    padding: 60px 40px;
+    padding: 50px 30px;
     color: #6c757d;
 }
 
 .empty-icon {
-    font-size: 5rem;
+    font-size: 4rem;
     color: #dee2e6;
-    margin-bottom: 25px;
-    animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-10px); }
-    60% { transform: translateY(-5px); }
+    margin-bottom: 20px;
 }
 
 .file-input {
     display: none;
+}
+
+.action-buttons {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.text-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 15px 0;
 }
 
 .loading-overlay {
@@ -316,20 +217,20 @@ body {
 
 .loading-content {
     background: white;
-    border-radius: 20px;
-    padding: 40px;
+    border-radius: 15px;
+    padding: 30px;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
 }
 
 .spinner {
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #007bff;
+    border-top: 4px solid #3498db;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
+    margin: 0 auto 15px;
 }
 
 @keyframes spin {
@@ -337,184 +238,172 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* تصميم متجاوب محسن */
+/* التجاوب مع الجوال */
 @media (max-width: 768px) {
     .page-title {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
     
-    .card-body-modern {
-        padding: 25px 20px;
+    .card-body {
+        padding: 20px;
     }
     
     .upload-area {
-        padding: 40px 20px;
+        padding: 30px 20px;
     }
     
     .upload-icon {
-        font-size: 3rem;
+        font-size: 2.5rem;
     }
     
-    .action-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .modern-btn {
+    .btn-modern {
+        display: block;
         width: 100%;
-        max-width: 300px;
+        margin: 8px 0;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- رأس الصفحة الحديث -->
-<div class="page-header">
-    <div class="container">
-        <div class="header-content">
+<div class="container-fluid px-4">
+    <!-- رأس الصفحة -->
+    <div class="page-header">
+        <div class="container">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="page-title">
-                        <i class="fas fa-id-card me-3"></i>
+                        <i class="fas fa-id-card me-2"></i>
                         صورة رخصة السيارة
                     </h1>
-                    <div class="breadcrumb-nav">
-                        <i class="fas fa-car me-2"></i>
+                    <div class="breadcrumb-text">
                         {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}
                     </div>
                 </div>
                 <div>
-                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="modern-btn secondary">
+                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn-modern btn-secondary-modern">
                         <i class="fas fa-arrow-right me-2"></i>
-                        العودة لتفاصيل السيارة
+                        العودة للسيارة
                     </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="container">
-    <!-- البطاقة الرئيسية -->
-    <div class="main-card">
-        <div class="card-header-modern">
-            <h4>
-                <i class="fas fa-image me-2"></i>
-                إدارة صورة رخصة السيارة
-            </h4>
-        </div>
-        <div class="card-body-modern">
-            {% if vehicle.license_image %}
-            <!-- عرض الصورة الحالية -->
-            <div class="license-display-area">
-                <h5 class="mb-4 text-center" style="color: var(--text-dark);">
-                    <i class="fas fa-check-circle text-success me-2"></i>
-                    صورة الرخصة الحالية
-                </h5>
-                
+    <div class="container">
+        <!-- البطاقة الرئيسية -->
+        <div class="license-card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-image me-2"></i>
+                    إدارة صورة رخصة السيارة
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if vehicle.license_image %}
+                <!-- عرض الصورة الحالية -->
                 <div class="license-image-container">
+                    <h5 class="text-success mb-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        صورة الرخصة الحالية
+                    </h5>
+                    
                     <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
                          alt="صورة رخصة السيارة {{ vehicle.plate_number }}" 
-                         class="license-image-display"
+                         class="license-image"
                          onclick="openImageModal('{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}')">
                     
-                    <div class="image-overlay">
-                        <i class="fas fa-search-plus overlay-icon"></i>
+                    <div class="text-info">
+                        <i class="fas fa-info-circle me-1"></i>
+                        انقر على الصورة لعرضها بحجم أكبر
                     </div>
                 </div>
                 
-                <p class="text-muted mb-4">
-                    <i class="fas fa-info-circle me-1"></i>
-                    انقر على الصورة لعرضها بحجم أكبر
-                </p>
-                
                 <div class="action-buttons">
                     <button onclick="openImageModal('{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}')" 
-                            class="modern-btn">
+                            class="btn-modern btn-primary-modern">
                         <i class="fas fa-search-plus me-2"></i>
                         عرض بحجم كامل
                     </button>
                     
                     <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
-                       target="_blank" class="modern-btn warning">
+                       target="_blank" class="btn-modern btn-success-modern">
                         <i class="fas fa-download me-2"></i>
                         تحميل الصورة
                     </a>
                     
-                    <button onclick="toggleUploadSection()" class="modern-btn secondary">
+                    <button onclick="showUploadSection()" class="btn-modern btn-warning-modern">
                         <i class="fas fa-edit me-2"></i>
                         تحديث الصورة
                     </button>
                     
-                    <button onclick="confirmDeleteImage()" class="modern-btn danger">
+                    <button onclick="confirmDeleteImage()" class="btn-modern btn-danger-modern">
                         <i class="fas fa-trash me-2"></i>
                         حذف الصورة
                     </button>
                 </div>
-            </div>
-            {% else %}
-            <!-- حالة عدم وجود صورة -->
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-id-card"></i>
+                {% else %}
+                <!-- حالة عدم وجود صورة -->
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <h4 class="text-muted">لا توجد صورة رخصة</h4>
+                    <p class="text-muted">لم يتم رفع صورة رخصة لهذه السيارة بعد</p>
+                    <button onclick="showUploadSection()" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-plus me-2"></i>
+                        رفع صورة الرخصة
+                    </button>
                 </div>
-                <h4 style="color: var(--text-dark);">لا توجد صورة رخصة</h4>
-                <p>لم يتم رفع صورة رخصة لهذه السيارة بعد</p>
-                <button onclick="toggleUploadSection()" class="modern-btn">
-                    <i class="fas fa-plus me-2"></i>
-                    رفع صورة الرخصة
-                </button>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- قسم رفع الصورة -->
-    <div class="upload-section" id="uploadSection" style="{% if vehicle.license_image %}display: none;{% endif %}">
-        <h5 class="text-center mb-4" style="color: var(--text-dark);">
-            <i class="fas fa-cloud-upload-alt me-2"></i>
-            {% if vehicle.license_image %}تحديث صورة الرخصة{% else %}رفع صورة الرخصة{% endif %}
-        </h5>
-        
-        <form method="post" enctype="multipart/form-data" id="uploadForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            
-            <div class="upload-area" onclick="document.getElementById('licenseFile').click()" 
-                 ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                
-                <div class="upload-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                </div>
-                
-                <div class="upload-text">اسحب وأفلت صورة الرخصة هنا</div>
-                <div class="upload-subtext">أو انقر للاختيار من جهازك</div>
-                
-                <input type="file" id="licenseFile" name="license_image" class="file-input" 
-                       accept="image/*" onchange="handleFileSelect(event)" required>
-                
-                <div class="mt-3">
-                    <small class="text-muted">
-                        <i class="fas fa-info-circle me-1"></i>
-                        الصيغ المدعومة: JPG, PNG, WEBP (حد أقصى 10MB)
-                    </small>
-                </div>
-            </div>
-            
-            <div class="text-center mt-4">
-                <button type="submit" class="modern-btn" id="uploadBtn" disabled>
-                    <i class="fas fa-upload me-2"></i>
-                    {% if vehicle.license_image %}تحديث الصورة{% else %}رفع الصورة{% endif %}
-                </button>
-                
-                {% if vehicle.license_image %}
-                <button type="button" onclick="toggleUploadSection()" class="modern-btn secondary">
-                    <i class="fas fa-times me-2"></i>
-                    إلغاء
-                </button>
                 {% endif %}
+                
+                <!-- قسم رفع الصورة -->
+                <div id="uploadSection" style="{% if vehicle.license_image %}display: none;{% endif %}">
+                    <hr class="my-4">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                        {% if vehicle.license_image %}تحديث صورة الرخصة{% else %}رفع صورة الرخصة{% endif %}
+                    </h5>
+                    
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="upload-area" onclick="document.getElementById('licenseFile').click()" 
+                             ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                            
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            
+                            <div class="upload-text">اسحب وأفلت صورة الرخصة هنا</div>
+                            <div class="upload-subtext">أو انقر للاختيار من جهازك</div>
+                            
+                            <input type="file" id="licenseFile" name="license_image" class="file-input" 
+                                   accept="image/*" onchange="handleFileSelect(event)" required>
+                            
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                الصيغ المدعومة: JPG, PNG, WEBP (حد أقصى 10MB)
+                            </small>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="submit" class="btn-modern btn-success-modern" id="uploadBtn" disabled>
+                                <i class="fas fa-upload me-2"></i>
+                                {% if vehicle.license_image %}تحديث الصورة{% else %}رفع الصورة{% endif %}
+                            </button>
+                            
+                            {% if vehicle.license_image %}
+                            <button type="button" onclick="hideUploadSection()" class="btn-modern btn-secondary-modern">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -530,11 +419,11 @@ body {
                 <img id="modalImage" src="" class="img-fluid" style="max-height: 80vh; width: auto;">
             </div>
             <div class="modal-footer">
-                <a id="downloadLink" href="" target="_blank" class="modern-btn">
+                <a id="downloadLink" href="" target="_blank" class="btn-modern btn-success-modern">
                     <i class="fas fa-download me-2"></i>
                     تحميل الصورة
                 </a>
-                <button type="button" class="modern-btn secondary" data-bs-dismiss="modal">إغلاق</button>
+                <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">إغلاق</button>
             </div>
         </div>
     </div>
@@ -619,15 +508,15 @@ function handleDrop(event) {
     }
 }
 
-// عرض/إخفاء قسم الرفع
-function toggleUploadSection() {
-    const uploadSection = document.getElementById('uploadSection');
-    if (uploadSection.style.display === 'none') {
-        uploadSection.style.display = 'block';
-        uploadSection.scrollIntoView({ behavior: 'smooth' });
-    } else {
-        uploadSection.style.display = 'none';
-    }
+// إظهار قسم الرفع
+function showUploadSection() {
+    document.getElementById('uploadSection').style.display = 'block';
+    document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// إخفاء قسم الرفع
+function hideUploadSection() {
+    document.getElementById('uploadSection').style.display = 'none';
 }
 
 // فتح نافذة عرض الصورة
@@ -683,22 +572,6 @@ document.getElementById('uploadForm').addEventListener('submit', function(event)
         document.getElementById('loadingOverlay').style.display = 'none';
         alert('حدث خطأ أثناء رفع الصورة. يرجى المحاولة مرة أخرى.');
         console.error('Error:', error);
-    });
-});
-
-// تحسين تجربة المستخدم
-document.addEventListener('DOMContentLoaded', function() {
-    // إضافة تأثيرات الحركة
-    const elements = document.querySelectorAll('.main-card, .upload-section');
-    elements.forEach((element, index) => {
-        element.style.opacity = '0';
-        element.style.transform = 'translateY(30px)';
-        
-        setTimeout(() => {
-            element.style.transition = 'all 0.6s ease';
-            element.style.opacity = '1';
-            element.style.transform = 'translateY(0)';
-        }, index * 200);
     });
 });
 </script>
