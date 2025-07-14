@@ -503,6 +503,12 @@ class Vehicle(db.Model):
     registration_expiry_date = db.Column(db.Date)  # تاريخ انتهاء استمارة السيارة
     inspection_expiry_date = db.Column(db.Date)  # تاريخ انتهاء الفحص الدوري
     
+    # إضافة حقل صورة رخصة السيارة
+    license_image = db.Column(db.String(255), nullable=True)  # صورة رخصة السيارة
+    
+    # إضافة حقل رابط مجلد Google Drive
+    drive_folder_link = db.Column(db.String(500), nullable=True)  # رابط مجلد Google Drive
+    
     notes = db.Column(db.Text)  # ملاحظات
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -1,0 +1,459 @@
+{% extends 'layout.html' %}
+
+{% block title %}إدارة ملفات Drive: {{ vehicle.plate_number }}{% endblock %}
+
+{% block head %}
+<style>
+.drive-container {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.drive-header {
+    background: linear-gradient(145deg, #4285f4, #34a853);
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.drive-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+}
+
+.action-btn {
+    border-radius: 50px;
+    padding: 12px 30px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.feature-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.5rem;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #4285f4, #1976d2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-left: 15px;
+}
+
+.link-display {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* تصميم متجاوب */
+@media (max-width: 768px) {
+    .drive-container {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .drive-header {
+        padding: 20px 15px;
+    }
+    
+    .drive-icon {
+        font-size: 3rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- شريط التنقل العلوي -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fab fa-google-drive ms-2 text-primary"></i>
+            إدارة ملفات Drive: {{ vehicle.plate_number }}
+        </h2>
+        <div>
+            <a href="{{ url_for('vehicles.view_with_sidebar', id=vehicle.id) }}" class="btn btn-outline-secondary action-btn">
+                <i class="fas fa-arrow-right ms-1"></i>
+                العودة لتفاصيل السيارة
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <!-- الهيدر الرئيسي -->
+            <div class="drive-header">
+                <i class="fab fa-google-drive drive-icon"></i>
+                <h3 class="mb-3">نظام إدارة ملفات Google Drive</h3>
+                <p class="mb-0">
+                    ادر جميع ملفات ووثائق السيارة {{ vehicle.plate_number }} في مكان واحد منظم على Google Drive
+                </p>
+            </div>
+
+            <!-- حالة الرابط الحالية -->
+            <div class="drive-container">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4 class="mb-4">
+                            <i class="fas fa-link ms-2"></i>
+                            حالة الرابط الحالية
+                        </h4>
+                        
+                        {% if vehicle.drive_folder_link %}
+                        <div class="alert alert-success">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle fa-2x text-success ms-3"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1">مجلد مربوط بنجاح</h6>
+                                    <p class="mb-0">تم ربط مجلد Google Drive لهذه السيارة</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="link-display">
+                            <small class="text-muted">الرابط المحفوظ:</small>
+                            <div class="mt-2">
+                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="text-break">
+                                    {{ vehicle.drive_folder_link }}
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning ms-3"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1">لم يتم ربط مجلد</h6>
+                                    <p class="mb-0">لم يتم ربط أي مجلد Google Drive لهذه السيارة</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="d-grid gap-3">
+                            {% if vehicle.drive_folder_link %}
+                            <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-primary action-btn">
+                                <i class="fas fa-external-link-alt ms-1"></i>
+                                فتح المجلد
+                            </a>
+                            {% endif %}
+                            
+                            <button type="button" class="btn btn-outline-primary action-btn" data-bs-toggle="modal" data-bs-target="#driveModal">
+                                <i class="fas fa-cog ms-1"></i>
+                                {% if vehicle.drive_folder_link %}تعديل الرابط{% else %}ربط مجلد{% endif %}
+                            </button>
+                            
+                            {% if vehicle.drive_folder_link %}
+                            <form method="POST" action="{{ url_for('vehicles.update_drive_link', vehicle_id=vehicle.id) }}" style="display: inline;">
+                                <input type="hidden" name="action" value="delete">
+                                <button type="submit" class="btn btn-outline-danger action-btn w-100" onclick="return confirm('هل أنت متأكد من حذف الرابط؟')">
+                                    <i class="fas fa-unlink ms-1"></i>
+                                    إلغاء الربط
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الميزات والفوائد -->
+            <div class="drive-container">
+                <h4 class="mb-4">
+                    <i class="fas fa-star ms-2"></i>
+                    ميزات نظام Google Drive
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card feature-card">
+                            <div class="card-body text-center">
+                                <div class="feature-icon bg-primary text-white">
+                                    <i class="fas fa-cloud"></i>
+                                </div>
+                                <h6 class="card-title">تخزين سحابي آمن</h6>
+                                <p class="card-text small text-muted">
+                                    احفظ جميع ملفاتك في السحابة مع ضمان الأمان والخصوصية
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-4">
+                        <div class="card feature-card">
+                            <div class="card-body text-center">
+                                <div class="feature-icon bg-success text-white">
+                                    <i class="fas fa-share-alt"></i>
+                                </div>
+                                <h6 class="card-title">مشاركة سهلة</h6>
+                                <p class="card-text small text-muted">
+                                    شارك الملفات مع الموظفين والعملاء بسهولة وأمان
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-4">
+                        <div class="card feature-card">
+                            <div class="card-body text-center">
+                                <div class="feature-icon bg-info text-white">
+                                    <i class="fas fa-sync-alt"></i>
+                                </div>
+                                <h6 class="card-title">مزامنة تلقائية</h6>
+                                <p class="card-text small text-muted">
+                                    الملفات محدثة تلقائياً على جميع الأجهزة
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- دليل الاستخدام -->
+            <div class="drive-container">
+                <h4 class="mb-4">
+                    <i class="fas fa-book ms-2"></i>
+                    دليل الاستخدام
+                </h4>
+                
+                <!-- خطوات إنشاء المجلد -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">كيفية إنشاء مجلد Google Drive جديد</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="step-number">1</div>
+                                    <div>
+                                        <strong>فتح Google Drive</strong>
+                                        <br><small class="text-muted">اذهب إلى <a href="https://drive.google.com" target="_blank">drive.google.com</a></small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="step-number">2</div>
+                                    <div>
+                                        <strong>إنشاء مجلد جديد</strong>
+                                        <br><small class="text-muted">انقر على "جديد" ثم "مجلد"</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="step-number">3</div>
+                                    <div>
+                                        <strong>تسمية المجلد</strong>
+                                        <br><small class="text-muted">اكتب: "سيارة {{ vehicle.plate_number }}"</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="step-number">4</div>
+                                    <div>
+                                        <strong>مشاركة المجلد</strong>
+                                        <br><small class="text-muted">انقر بزر الماوس الأيمن واختر "مشاركة"</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="step-number">5</div>
+                                    <div>
+                                        <strong>تحديد صلاحيات المشاركة</strong>
+                                        <br><small class="text-muted">اختر "أي شخص لديه الرابط"</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="step-number">6</div>
+                                    <div>
+                                        <strong>نسخ الرابط</strong>
+                                        <br><small class="text-muted">انسخ الرابط والصقه في النموذج أعلاه</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أنواع الملفات المقترحة -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">أنواع الملفات المقترحة للسيارة</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6><i class="fas fa-file-image text-primary"></i> الوثائق الأساسية</h6>
+                                <ul class="small mb-0">
+                                    <li>صورة الاستمارة</li>
+                                    <li>صورة التفويض</li>
+                                    <li>صورة رخصة السائق</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6><i class="fas fa-tools text-warning"></i> الصيانة</h6>
+                                <ul class="small mb-0">
+                                    <li>فواتير الصيانة</li>
+                                    <li>تقارير الورشة</li>
+                                    <li>سجل الإصلاحات</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6><i class="fas fa-clipboard-check text-info"></i> الفحوصات</h6>
+                                <ul class="small mb-0">
+                                    <li>شهادة الفحص الدوري</li>
+                                    <li>تقارير الحوادث</li>
+                                    <li>فحوصات السلامة</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6><i class="fas fa-file-contract text-secondary"></i> المعاملات</h6>
+                                <ul class="small mb-0">
+                                    <li>عقود الإيجار</li>
+                                    <li>فواتير التأمين</li>
+                                    <li>نماذج التسليم</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إدارة رابط Google Drive -->
+<div class="modal fade" id="driveModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fab fa-google-drive ms-2"></i>
+                    {% if vehicle.drive_folder_link %}تحديث رابط Google Drive{% else %}ربط مجلد Google Drive{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('vehicles.update_drive_link', vehicle_id=vehicle.id) }}">
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label for="drive_folder_link" class="form-label">رابط مجلد Google Drive</label>
+                        <input type="url" 
+                               class="form-control form-control-lg" 
+                               id="drive_folder_link" 
+                               name="drive_folder_link" 
+                               value="{{ vehicle.drive_folder_link or '' }}"
+                               placeholder="https://drive.google.com/drive/folders/..."
+                               dir="ltr">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle ms-1"></i>
+                            الصق رابط مجلد Google Drive هنا. تأكد من أن المجلد مشارك للعامة أو للأشخاص المناسبين.
+                        </div>
+                    </div>
+                    
+                    <!-- معاينة الرابط -->
+                    <div id="linkPreview" class="alert alert-info" style="display: none;">
+                        <h6 class="alert-heading">معاينة الرابط:</h6>
+                        <small id="linkDisplay" class="text-break"></small>
+                        <div class="mt-2">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <small class="text-success">الرابط صحيح</small>
+                        </div>
+                    </div>
+                    
+                    <!-- تحذيرات الأمان -->
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-shield-alt"></i>
+                            تنبيهات أمنية مهمة
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>تأكد من أن المجلد مشارك فقط مع الأشخاص المخولين</li>
+                            <li>لا تشارك ملفات تحتوي على معلومات حساسة علناً</li>
+                            <li>راجع صلاحيات المشاركة بانتظام</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" name="action" value="save" class="btn btn-primary">
+                        <i class="fas fa-save ms-1"></i>
+                        {% if vehicle.drive_folder_link %}تحديث الرابط{% else %}حفظ الرابط{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const driveInput = document.getElementById('drive_folder_link');
+    const preview = document.getElementById('linkPreview');
+    const display = document.getElementById('linkDisplay');
+    
+    if (driveInput) {
+        driveInput.addEventListener('input', function() {
+            const link = this.value.trim();
+            
+            if (link && link.includes('drive.google.com')) {
+                display.textContent = link;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+        
+        // عرض المعاينة إذا كان هناك رابط موجود
+        if (driveInput.value && driveInput.value.includes('drive.google.com')) {
+            display.textContent = driveInput.value;
+            preview.style.display = 'block';
+        }
+    }
+});
+</script>
+{% endblock %}
