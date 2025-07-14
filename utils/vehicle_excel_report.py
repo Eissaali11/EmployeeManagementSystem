@@ -88,13 +88,20 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
         dashboard_sheet.merge_range('A4:D4', 'معلومات السيارة الأساسية', header_format)
         
         vehicle_data = [
-            ['رقم اللوحة', vehicle.plate_number],
-            ['الشركة المصنعة', vehicle.make],
-            ['الطراز', vehicle.model],
-            ['سنة الصنع', vehicle.year],
-            ['اللون', vehicle.color],
-            ['الحالة', vehicle.status],
-            ['تاريخ الإضافة', vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else ''],
+            ['رقم اللوحة', vehicle.plate_number or ''],
+            ['الشركة المصنعة', vehicle.make or ''],
+            ['الطراز', vehicle.model or ''],
+            ['سنة الصنع', vehicle.year or ''],
+            ['اللون', vehicle.color or ''],
+            ['الحالة', vehicle.status or ''],
+            ['اسم السائق', vehicle.driver_name or 'غير محدد'],
+            ['تاريخ انتهاء التفويض', vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else 'غير محدد'],
+            ['تاريخ انتهاء الاستمارة', vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else 'غير محدد'],
+            ['تاريخ انتهاء الفحص الدوري', vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else 'غير محدد'],
+            ['رابط Google Drive', vehicle.drive_folder_link or 'غير محدد'],
+            ['ملاحظات', vehicle.notes or 'لا توجد ملاحظات'],
+            ['تاريخ الإضافة', vehicle.created_at.strftime('%Y-%m-%d %H:%M') if vehicle.created_at else ''],
+            ['تاريخ آخر تحديث', vehicle.updated_at.strftime('%Y-%m-%d %H:%M') if vehicle.updated_at else ''],
         ]
         
         for i, (label, value) in enumerate(vehicle_data):
@@ -364,9 +371,44 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
                     if cost_idx < len(inspection_df.columns):
                         worksheet.write(row_num, cost_idx, inspection_df.iloc[row_num-1, cost_idx], number_format)
         
-        # إضافة بيانات الوثائق إذا كانت متوفرة
+        # إضافة بيانات الوثائق (استخدام البيانات المخزنة في السيارة مباشرة)
+        documents_data = []
+        # إضافة وثائق السيارة الأساسية من البيانات المخزنة
+        if vehicle.authorization_expiry_date:
+            days_left = (vehicle.authorization_expiry_date - datetime.now().date()).days if vehicle.authorization_expiry_date else 0
+            status = 'سارية' if days_left > 30 else 'تنتهي قريباً' if days_left > 0 else 'منتهية'
+            documents_data.append({
+                'نوع الوثيقة': 'تفويض السيارة',
+                'تاريخ الانتهاء': vehicle.authorization_expiry_date.strftime('%Y-%m-%d'),
+                'الأيام المتبقية': days_left,
+                'الحالة': status,
+                'ملاحظات': f'{"تحتاج تجديد" if days_left <= 30 else "سارية"}'
+            })
+        
+        if vehicle.registration_expiry_date:
+            days_left = (vehicle.registration_expiry_date - datetime.now().date()).days if vehicle.registration_expiry_date else 0
+            status = 'سارية' if days_left > 30 else 'تنتهي قريباً' if days_left > 0 else 'منتهية'
+            documents_data.append({
+                'نوع الوثيقة': 'استمارة السيارة',
+                'تاريخ الانتهاء': vehicle.registration_expiry_date.strftime('%Y-%m-%d'),
+                'الأيام المتبقية': days_left,
+                'الحالة': status,
+                'ملاحظات': f'{"تحتاج تجديد" if days_left <= 30 else "سارية"}'
+            })
+        
+        if vehicle.inspection_expiry_date:
+            days_left = (vehicle.inspection_expiry_date - datetime.now().date()).days if vehicle.inspection_expiry_date else 0
+            status = 'سارية' if days_left > 30 else 'تنتهي قريباً' if days_left > 0 else 'منتهية'
+            documents_data.append({
+                'نوع الوثيقة': 'الفحص الدوري',
+                'تاريخ الانتهاء': vehicle.inspection_expiry_date.strftime('%Y-%m-%d'),
+                'الأيام المتبقية': days_left,
+                'الحالة': status,
+                'ملاحظات': f'{"تحتاج تجديد" if days_left <= 30 else "سارية"}'
+            })
+        
+        # إضافة الوثائق الخارجية إذا كانت متوفرة
         if documents:
-            documents_data = []
             for doc in documents:
                 documents_data.append({
                     'نوع الوثيقة': doc.document_type or '',
@@ -376,37 +418,127 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
                     'الحالة': doc.status or '',
                     'ملاحظات': doc.notes or ''
                 })
+        
+        if documents_data:
+            documents_df = pd.DataFrame(documents_data)
+            documents_df.to_excel(writer, sheet_name='وثائق السيارة', index=False)
             
-            if documents_data:
-                documents_df = pd.DataFrame(documents_data)
-                documents_df.to_excel(writer, sheet_name='وثائق السيارة', index=False)
-                
-                # تنسيق ورقة الوثائق
-                worksheet = writer.sheets['وثائق السيارة']
-                worksheet.right_to_left()
-                worksheet.set_column('A:Z', 18)
-                
-                # تنسيق العناوين
-                for col_num, value in enumerate(documents_df.columns.values):
-                    worksheet.write(0, col_num, value, header_format)
+            # تنسيق ورقة الوثائق
+            worksheet = writer.sheets['وثائق السيارة']
+            worksheet.right_to_left()
+            worksheet.set_column('A:Z', 18)
+            
+            # تنسيق العناوين
+            for col_num, value in enumerate(documents_df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+            
+            # تنسيق صفوف البيانات مع ألوان حسب الحالة
+            for row_num in range(1, len(documents_data) + 1):
+                for col_num in range(len(documents_df.columns)):
+                    if col_num < len(documents_df.columns):
+                        # تلوين الصفوف حسب حالة الوثيقة
+                        if 'الحالة' in documents_df.columns:
+                            status_col = documents_df.columns.get_loc('الحالة')
+                            status = documents_df.iloc[row_num-1, status_col]
+                            if status == 'منتهية':
+                                row_format = workbook.add_format({'bg_color': '#FFCCCB', 'border': 1})
+                            elif status == 'تنتهي قريباً':
+                                row_format = workbook.add_format({'bg_color': '#FFE4B5', 'border': 1})
+                            else:
+                                row_format = workbook.add_format({'bg_color': '#98FB98', 'border': 1})
+                            worksheet.write(row_num, col_num, documents_df.iloc[row_num-1, col_num], row_format)
+                        else:
+                            worksheet.write(row_num, col_num, documents_df.iloc[row_num-1, col_num], cell_format)
+        
+        # إضافة ملخص شامل للسيارة في ورقة منفصلة
+        summary_data = []
+        summary_data.append(['معلومات السيارة الأساسية', ''])
+        summary_data.append(['رقم اللوحة', vehicle.plate_number or ''])
+        summary_data.append(['الشركة المصنعة والطراز', f'{vehicle.make} {vehicle.model}'])
+        summary_data.append(['سنة الصنع واللون', f'{vehicle.year} - {vehicle.color}'])
+        summary_data.append(['الحالة الحالية', vehicle.status or ''])
+        summary_data.append(['السائق المسؤول', vehicle.driver_name or 'غير محدد'])
+        summary_data.append(['', ''])  # فاصل
+        
+        summary_data.append(['حالة الوثائق', ''])
+        if vehicle.authorization_expiry_date:
+            days_left = (vehicle.authorization_expiry_date - datetime.now().date()).days
+            summary_data.append(['تفويض السيارة', f'{vehicle.authorization_expiry_date.strftime("%Y-%m-%d")} ({days_left} يوم متبقي)'])
+        if vehicle.registration_expiry_date:
+            days_left = (vehicle.registration_expiry_date - datetime.now().date()).days
+            summary_data.append(['استمارة السيارة', f'{vehicle.registration_expiry_date.strftime("%Y-%m-%d")} ({days_left} يوم متبقي)'])
+        if vehicle.inspection_expiry_date:
+            days_left = (vehicle.inspection_expiry_date - datetime.now().date()).days
+            summary_data.append(['الفحص الدوري', f'{vehicle.inspection_expiry_date.strftime("%Y-%m-%d")} ({days_left} يوم متبقي)'])
+        summary_data.append(['', ''])  # فاصل
+        
+        summary_data.append(['الإحصائيات', ''])
+        summary_data.append(['عدد سجلات الصيانة', workshop_count])
+        summary_data.append(['إجمالي تكاليف الصيانة', f'{total_workshop_cost:.2f} ريال'])
+        summary_data.append(['عدد سجلات التسليم/الاستلام', handover_count])
+        summary_data.append(['عدد سجلات الفحص', inspection_count])
+        summary_data.append(['', ''])  # فاصل
+        
+        summary_data.append(['معلومات النظام', ''])
+        summary_data.append(['رابط Google Drive', vehicle.drive_folder_link or 'غير محدد'])
+        summary_data.append(['الملاحظات', vehicle.notes or 'لا توجد ملاحظات'])
+        summary_data.append(['تاريخ الإضافة', vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else ''])
+        summary_data.append(['آخر تحديث', vehicle.updated_at.strftime('%Y-%m-%d') if vehicle.updated_at else ''])
+        
+        summary_df = pd.DataFrame(summary_data, columns=['البيان', 'القيمة'])
+        summary_df.to_excel(writer, sheet_name='الملخص الشامل', index=False)
+        
+        # تنسيق ورقة الملخص
+        worksheet = writer.sheets['الملخص الشامل']
+        worksheet.right_to_left()
+        worksheet.set_column('A:A', 30)
+        worksheet.set_column('B:B', 40)
+        
+        # تنسيق العناوين
+        for col_num, value in enumerate(summary_df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+        
+        # تنسيق صفوف البيانات
+        for row_num in range(1, len(summary_data) + 1):
+            for col_num in range(len(summary_df.columns)):
+                if summary_data[row_num-1][0] in ['معلومات السيارة الأساسية', 'حالة الوثائق', 'الإحصائيات', 'معلومات النظام']:
+                    # عناوين الأقسام
+                    worksheet.write(row_num, col_num, summary_df.iloc[row_num-1, col_num], subheader_format)
+                elif summary_data[row_num-1][0] == '':
+                    # الفواصل
+                    worksheet.write(row_num, col_num, '', cell_format)
+                else:
+                    # البيانات العادية
+                    worksheet.write(row_num, col_num, summary_df.iloc[row_num-1, col_num], cell_format)
         
         # إضافة معلومات التقرير
-        info_data = {
-            'معلومات التقرير': [''],
-            'تاريخ إنشاء التقرير': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
-            'اسم النظام': ['نُظم - نظام إدارة متكامل'],
-        }
-        info_df = pd.DataFrame(info_data)
+        info_data = []
+        info_data.append(['معلومات التقرير', ''])
+        info_data.append(['تاريخ إنشاء التقرير', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        info_data.append(['اسم النظام', 'نُظم - نظام إدارة المركبات المتكامل'])
+        info_data.append(['نوع التقرير', 'تقرير شامل للسيارة'])
+        info_data.append(['عدد الأوراق', f'{len(writer.sheets)} أوراق'])
+        
+        info_df = pd.DataFrame(info_data, columns=['البيان', 'القيمة'])
         info_df.to_excel(writer, sheet_name='معلومات التقرير', index=False)
         
         # تنسيق ورقة المعلومات
         worksheet = writer.sheets['معلومات التقرير']
         worksheet.right_to_left()
-        worksheet.set_column('A:Z', 18)
+        worksheet.set_column('A:A', 25)
+        worksheet.set_column('B:B', 35)
         
         # تنسيق العناوين
         for col_num, value in enumerate(info_df.columns.values):
             worksheet.write(0, col_num, value, header_format)
+        
+        # تنسيق صفوف البيانات
+        for row_num in range(1, len(info_data) + 1):
+            for col_num in range(len(info_df.columns)):
+                if info_data[row_num-1][0] == 'معلومات التقرير':
+                    worksheet.write(row_num, col_num, info_df.iloc[row_num-1, col_num], subheader_format)
+                else:
+                    worksheet.write(row_num, col_num, info_df.iloc[row_num-1, col_num], cell_format)
     
     # إرجاع محتوى الملف
     return output.getvalue()
