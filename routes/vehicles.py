@@ -4235,6 +4235,11 @@ def vehicle_license_image(vehicle_id):
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     
     if request.method == 'POST':
+        # طباعة معلومات debug لفهم المشكلة
+        print(f"POST request received for vehicle {vehicle_id}")
+        print(f"Form data: {request.form}")
+        print(f"Files in request: {list(request.files.keys())}")
+        
         # التحقق من نوع العملية
         action = request.form.get('action')
         
