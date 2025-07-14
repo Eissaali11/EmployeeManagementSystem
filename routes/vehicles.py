@@ -38,7 +38,7 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 # from utils.fpdf_handover_pdf import generate_handover_report_pdf
 
-vehicles_bp = Blueprint('vehicles', __name__, url_prefix='/vehicles')
+vehicles_bp = Blueprint('vehicles', __name__)
 
 def update_vehicle_driver(vehicle_id):
         """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
