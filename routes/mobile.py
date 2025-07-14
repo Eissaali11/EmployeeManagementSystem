@@ -518,8 +518,9 @@ def salaries():
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
     
-    # جلب بيانات الموظفين
+    # جلب بيانات الموظفين والأقسام
     employees = Employee.query.order_by(Employee.name).all()
+    departments = Department.query.order_by(Department.name).all()
     
     # إحصائيات الرواتب
     current_year = datetime.now().year
@@ -530,6 +531,10 @@ def salaries():
     # فلترة الموظف
     employee_id_str = request.args.get('employee_id', '')
     employee_id = int(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
+    
+    # فلترة القسم
+    department_id_str = request.args.get('department_id', '')
+    department_id = int(department_id_str) if department_id_str and department_id_str.isdigit() else None
     
     # تحويل الشهر إلى اسمه بالعربية
     month_names = {
@@ -548,6 +553,12 @@ def salaries():
     # تطبيق فلتر الموظف إذا تم تحديده
     if employee_id:
         query = query.filter(Salary.employee_id == employee_id)
+    
+    # تطبيق فلتر القسم إذا تم تحديده
+    if department_id:
+        # فلترة الموظفين في القسم المحدد
+        department_employee_ids = db.session.query(Employee.id).join(Employee.departments).filter(Department.id == department_id).subquery()
+        query = query.filter(Salary.employee_id.in_(department_employee_ids))
         
     # تطبيق فلتر حالة الدفع إذا تم تحديده
     is_paid = request.args.get('is_paid')
@@ -576,6 +587,7 @@ def salaries():
     
     return render_template('mobile/salaries.html',
                           employees=employees,
+                          departments=departments,
                           salaries=salaries,
                           current_year=current_year,
                           current_month=current_month,
@@ -583,6 +595,7 @@ def salaries():
                           selected_month=selected_month,
                           selected_month_name=selected_month_name,
                           employee_id=employee_id,
+                          department_id=department_id,
                           salary_stats=salary_stats,
                           pagination=paginator)
 
