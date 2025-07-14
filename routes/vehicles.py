@@ -4404,3 +4404,52 @@ def vehicle_drive_files(vehicle_id):
                          title=f'ملفات Google Drive - {vehicle.plate_number}',
                          vehicle=vehicle)
 
+@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-management', methods=['GET', 'POST'])
+@login_required
+def drive_management(vehicle_id):
+    """صفحة منفصلة لإدخال وإدارة بيانات Google Drive"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'delete':
+            # حذف الرابط
+            old_link = vehicle.drive_folder_link
+            vehicle.drive_folder_link = None
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_audit('delete', 'vehicle', vehicle.id, f'تم حذف رابط Google Drive للسيارة {vehicle.plate_number}')
+            flash('تم حذف رابط Google Drive بنجاح', 'success')
+            
+        elif action == 'save':
+            # حفظ أو تحديث الرابط
+            drive_link = request.form.get('drive_link', '').strip()
+            
+            if not drive_link:
+                flash('يرجى إدخال رابط Google Drive', 'danger')
+                return render_template('vehicles/drive_management.html', vehicle=vehicle)
+            
+            # التحقق من صحة الرابط
+            if not (drive_link.startswith('https://drive.google.com') or drive_link.startswith('https://docs.google.com')):
+                flash('يرجى إدخال رابط Google Drive صحيح', 'danger')
+                return render_template('vehicles/drive_management.html', vehicle=vehicle)
+            
+            # حفظ الرابط
+            old_link = vehicle.drive_folder_link
+            vehicle.drive_folder_link = drive_link
+            db.session.commit()
+            
+            # تسجيل العملية
+            if old_link:
+                log_audit('update', 'vehicle', vehicle.id, f'تم تحديث رابط Google Drive للسيارة {vehicle.plate_number}')
+                flash('تم تحديث رابط Google Drive بنجاح', 'success')
+            else:
+                log_audit('create', 'vehicle', vehicle.id, f'تم إضافة رابط Google Drive للسيارة {vehicle.plate_number}')
+                flash('تم إضافة رابط Google Drive بنجاح', 'success')
+        
+        return redirect(url_for('vehicles.drive_management', vehicle_id=vehicle_id))
+    
+    return render_template('vehicles/drive_management.html', vehicle=vehicle)
+

@@ -513,72 +513,43 @@
         </div>
     </div>
 
-    <!-- ملفات المركبة -->
+    <!-- ملفات Google Drive - مصغر -->
     <div class="row mb-4">
-        <!-- بطاقة إدارة ملفات Google Drive -->
-        <div class="col-md-12 mb-4">
-            <div class="card shadow-sm border-info">
-                <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fab fa-google-drive ms-2"></i>
-                        ملفات المركبة - Google Drive
-                    </h5>
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#driveModal">
-                            <i class="fas fa-link ms-1"></i>
-                            إدارة الرابط
-                        </button>
-                        {% if vehicle.drive_folder_link %}
-                        <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-sm btn-warning">
-                            <i class="fas fa-external-link-alt ms-1"></i>
-                            فتح المجلد
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    {% if vehicle.drive_folder_link %}
-                    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body py-3">
+                    <div class="row align-items-center">
                         <div class="col-md-8">
-                            <div class="drive-link-display p-3 bg-light rounded">
-                                <h6 class="text-success mb-2">
-                                    <i class="fas fa-check-circle ms-1"></i>
-                                    تم ربط مجلد Google Drive بنجاح
-                                </h6>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" value="{{ vehicle.drive_folder_link }}" readonly>
-                                    <button class="btn btn-outline-secondary" onclick="copyToClipboard('{{ vehicle.drive_folder_link }}')">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                </div>
-                                <small class="text-muted">يمكنك الوصول لجميع ملفات ووثائق هذه المركبة من خلال هذا الرابط</small>
-                            </div>
+                            <h6 class="mb-1">
+                                <i class="fab fa-google-drive text-info ms-2"></i>
+                                ملفات Google Drive
+                                {% if vehicle.drive_folder_link %}
+                                <span class="badge bg-success ms-2">مرتبط</span>
+                                {% else %}
+                                <span class="badge bg-warning ms-2">غير مرتبط</span>
+                                {% endif %}
+                            </h6>
+                            {% if vehicle.drive_folder_link %}
+                            <small class="text-muted">تم ربط مجلد لتنظيم ملفات المركبة</small>
+                            {% else %}
+                            <small class="text-muted">لم يتم ربط مجلد Google Drive بعد</small>
+                            {% endif %}
                         </div>
-                        <div class="col-md-4">
-                            <div class="text-center">
-                                <div class="drive-icon-large mb-3">
-                                    <i class="fab fa-google-drive fa-4x text-info"></i>
-                                </div>
-                                <a href="{{ url_for('vehicles.vehicle_drive_files', vehicle_id=vehicle.id) }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-folder-open ms-1"></i>
-                                    إدارة الملفات
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                {% if vehicle.drive_folder_link %}
+                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-success btn-sm">
+                                    <i class="fab fa-google-drive"></i>
+                                    فتح المجلد
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-cog"></i>
+                                    إدارة
                                 </a>
                             </div>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <div class="mb-3">
-                            <i class="fab fa-google-drive fa-4x text-muted"></i>
-                        </div>
-                        <h5 class="text-muted">لم يتم ربط مجلد Google Drive</h5>
-                        <p class="text-muted">يمكنك إنشاء مجلد مخصص لملفات هذه المركبة وربطه هنا</p>
-                        <button class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#driveModal">
-                            <i class="fas fa-plus ms-1"></i>
-                            إضافة رابط Google Drive
-                        </button>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -1912,74 +1883,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- نافذة إدارة Google Drive -->
-<div class="modal fade" id="driveModal" tabindex="-1" aria-labelledby="driveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="driveModalLabel">
-                    <i class="fab fa-google-drive me-2"></i>
-                    إدارة ملفات Google Drive
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" action="{{ url_for('vehicles.update_drive_link', vehicle_id=vehicle.id) }}" id="driveForm">
-                <div class="modal-body">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="driveLink" class="form-label">
-                                    <i class="fas fa-link me-1"></i>
-                                    رابط مجلد Google Drive
-                                </label>
-                                <input type="url" class="form-control" id="driveLink" name="drive_link" 
-                                       value="{{ vehicle.drive_folder_link or '' }}"
-                                       placeholder="https://drive.google.com/drive/folders/..."
-                                       dir="ltr">
-                                <div class="form-text">
-                                    قم بإنشاء مجلد في Google Drive وانسخ رابط المشاركة هنا
-                                </div>
-                            </div>
-                            
-                            <div id="previewContainer" style="display: none;" class="alert">
-                                <!-- سيتم ملؤها بواسطة JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle me-1"></i> كيفية إنشاء رابط Google Drive:</h6>
-                        <ol class="mb-0">
-                            <li>انتقل إلى <a href="https://drive.google.com" target="_blank">Google Drive</a></li>
-                            <li>انقر بزر الماوس الأيمن واختر "مجلد جديد"</li>
-                            <li>اسم المجلد باسم السيارة: "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}"</li>
-                            <li>انقر بزر الماوس الأيمن على المجلد واختر "مشاركة"</li>
-                            <li>غير الإذن إلى "أي شخص لديه الرابط يمكنه العرض"</li>
-                            <li>انسخ الرابط والصقه هنا</li>
-                        </ol>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>
-                        إلغاء
-                    </button>
-                    <button type="submit" class="btn btn-info">
-                        <i class="fas fa-save me-1"></i>
-                        حفظ الرابط
-                    </button>
-                    {% if vehicle.drive_folder_link %}
-                    <button type="submit" name="action" value="remove" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i>
-                        حذف الرابط
-                    </button>
-                    {% endif %}
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 {% endblock %}
