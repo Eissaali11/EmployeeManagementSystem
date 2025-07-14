@@ -93,6 +93,18 @@
             </div>
             {% endif %}
 
+            {% if salary.bonus > 0 %}
+            <div class="breakdown-item bonus">
+                <div class="item-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="item-details">
+                    <div class="item-label">المكافآت والحوافز</div>
+                    <div class="item-amount">+{{ '{:,.0f}'.format(salary.bonus) }} ريال</div>
+                </div>
+            </div>
+            {% endif %}
+
             {% if salary.deductions > 0 %}
             <div class="breakdown-item deductions">
                 <div class="item-icon">
@@ -151,6 +163,8 @@
         <h4 class="section-title">
             <i class="fas fa-info-circle"></i>
             معلومات إضافية
+            <i class="fas fa-info-circle"></i>
+            معلومات إضافية
         </h4>
         
         <div class="info-grid">
@@ -184,6 +198,11 @@
 
     <!-- أزرار الإجراءات -->
     <div class="action-buttons">
+        <a href="{{ url_for('mobile.edit_salary', salary_id=salary.id) }}" class="action-btn edit-btn">
+            <i class="fas fa-edit"></i>
+            تعديل الراتب
+        </a>
+        
         <a href="{{ url_for('mobile.edit_salary', salary_id=salary.id) }}" class="action-btn edit-btn">
             <i class="fas fa-edit"></i>
             تعديل الراتب
@@ -399,6 +418,11 @@
     border-color: #a855f7;
 }
 
+.breakdown-item.bonus {
+    background: #fdf4ff;
+    border-color: #a855f7;
+}
+
 .item-icon {
     width: 40px;
     height: 40px;
@@ -427,6 +451,11 @@
 .breakdown-item.overtime .item-icon {
     background: rgba(245, 158, 11, 0.2);
     color: #f59e0b;
+}
+
+.breakdown-item.bonus .item-icon {
+    background: rgba(168, 85, 247, 0.2);
+    color: #a855f7;
 }
 
 .breakdown-item.bonus .item-icon {
@@ -532,6 +561,60 @@
     color: #4f46e5;
 }
 
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-right: 3px solid #4f46e5;
+}
+
+.info-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.info-label i {
+    color: #4f46e5;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.notes-section {
+    margin-top: 20px;
+}
+
+.notes-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notes-title i {
+    color: #4f46e5;
+}
+
 .notes-content {
     background: #f8fafc;
     padding: 15px;
@@ -576,6 +659,16 @@
 .whatsapp-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+}
+
+.edit-btn {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    color: white;
+}
+
+.edit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
 }
 
 .edit-btn {
