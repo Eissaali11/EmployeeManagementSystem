@@ -6,21 +6,21 @@
 <style>
 /* تصميم حديث وجميل للصفحة */
 .vehicle-detail-container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f8f9fa;
     min-height: 100vh;
     padding: 20px 0;
 }
 
 .main-card {
-    background: rgba(255, 255, 255, 0.95);
+    background: #ffffff;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    backdrop-filter: blur(10px);
     overflow: hidden;
+    border: 1px solid #e0e0e0;
 }
 
 .vehicle-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     color: white;
     padding: 30px;
     text-align: center;
@@ -40,16 +40,17 @@
 
 /* القائمة الجانبية الجديدة */
 .sidebar {
-    background: white;
+    background: #ffffff;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     padding: 0;
     margin-bottom: 20px;
     overflow: hidden;
+    border: 1px solid #e0e0e0;
 }
 
 .sidebar-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     color: white;
     padding: 20px;
     text-align: center;
@@ -59,24 +60,26 @@
 .nav-pills .nav-link {
     border-radius: 0;
     border: none;
-    color: #495057;
+    color: #2c3e50;
     padding: 15px 20px;
     border-bottom: 1px solid #f0f0f0;
     text-align: right;
     transition: all 0.3s ease;
-    background: none;
+    background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    font-weight: 500;
 }
 
 .nav-pills .nav-link:hover {
-    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
-    color: #667eea;
+    background: #f8f9fa;
+    color: #2c3e50;
+    transform: translateX(-5px);
 }
 
 .nav-pills .nav-link.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     color: white;
     border-color: transparent;
 }
@@ -93,18 +96,26 @@
 
 /* منطقة المحتوى */
 .content-area {
-    background: white;
+    background: #ffffff;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     overflow: hidden;
+    border: 1px solid #e0e0e0;
 }
 
 .tab-content {
     padding: 30px;
+    color: #2c3e50;
 }
 
 .tab-pane {
     animation: fadeInUp 0.5s ease;
+}
+
+.tab-pane h3 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 25px;
 }
 
 @keyframes fadeInUp {
@@ -120,16 +131,16 @@
 
 /* بطاقات المعلومات */
 .info-card {
-    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    background: #f8f9fa;
     border-radius: 15px;
     padding: 25px;
     margin-bottom: 20px;
-    border: none;
+    border: 1px solid #e9ecef;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
 }
 
 .info-card h5 {
-    color: #667eea;
+    color: #2c3e50;
     font-weight: 600;
     margin-bottom: 15px;
     display: flex;
@@ -139,6 +150,7 @@
 .info-card h5 i {
     margin-left: 10px;
     font-size: 1.3rem;
+    color: #3498db;
 }
 
 /* الجداول */
@@ -146,10 +158,11 @@
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    background: #ffffff;
 }
 
 .table thead th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     color: white;
     border: none;
     padding: 15px;
@@ -160,10 +173,11 @@
     padding: 15px;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
+    color: #2c3e50;
 }
 
 .table tbody tr:hover {
-    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    background: #f8f9fa;
 }
 
 /* الأزرار */
@@ -181,17 +195,17 @@
 }
 
 .btn-primary-custom {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
 }
 
 .btn-success-custom {
-    background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
     color: white;
 }
 
 .btn-warning-custom {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
     color: white;
 }
 
@@ -199,18 +213,24 @@
 .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: #6c757d;
+    color: #7f8c8d;
 }
 
 .empty-state i {
     font-size: 4rem;
     margin-bottom: 20px;
     opacity: 0.5;
+    color: #bdc3c7;
 }
 
 .empty-state h5 {
     margin-bottom: 10px;
-    color: #495057;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: #7f8c8d;
 }
 
 /* متجاوب */
@@ -231,17 +251,19 @@
 
 /* إحصائيات جميلة */
 .stat-card {
-    background: white;
+    background: #ffffff;
     border-radius: 15px;
     padding: 25px;
     text-align: center;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     transition: transform 0.3s ease;
     margin-bottom: 20px;
+    border: 1px solid #e9ecef;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
 .stat-card .stat-icon {
@@ -250,14 +272,16 @@
 }
 
 .stat-card .stat-number {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 5px;
+    color: #2c3e50;
 }
 
 .stat-card .stat-label {
-    color: #6c757d;
+    color: #7f8c8d;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 </style>
 {% endblock %}
@@ -445,22 +469,22 @@
                                     </h5>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}
+                                            <strong style="color: #2c3e50;">رقم اللوحة:</strong> <span style="color: #34495e;">{{ vehicle.plate_number }}</span>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <strong>الماركة:</strong> {{ vehicle.make }}
+                                            <strong style="color: #2c3e50;">الماركة:</strong> <span style="color: #34495e;">{{ vehicle.make }}</span>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <strong>الموديل:</strong> {{ vehicle.model }}
+                                            <strong style="color: #2c3e50;">الموديل:</strong> <span style="color: #34495e;">{{ vehicle.model }}</span>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <strong>سنة الصنع:</strong> {{ vehicle.year }}
+                                            <strong style="color: #2c3e50;">سنة الصنع:</strong> <span style="color: #34495e;">{{ vehicle.year }}</span>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <strong>اللون:</strong> {{ vehicle.color }}
+                                            <strong style="color: #2c3e50;">اللون:</strong> <span style="color: #34495e;">{{ vehicle.color }}</span>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <strong>الحالة:</strong> 
+                                            <strong style="color: #2c3e50;">الحالة:</strong> 
                                             <span class="badge bg-success">{{ vehicle.status }}</span>
                                         </div>
                                         {% if vehicle.mileage %}
