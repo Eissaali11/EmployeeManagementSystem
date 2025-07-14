@@ -865,8 +865,11 @@ def view(id):
                         inspection_warnings.append(f"الفحص الدوري سينتهي خلال {days_remaining} يومًا")
                         break
         
-        # الحصول على المرفقات
-        attachments = VehicleWorkshopImage.query.filter_by(vehicle_id=id).all()
+        # الحصول على المرفقات (صور الورشة للسيارة)
+        attachments = []
+        for workshop_record in workshop_records:
+            workshop_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=workshop_record.id).all()
+            attachments.extend(workshop_images)
         
         # إضافة سجلات التسليم/الاستلام للقائمة الجانبية
         handovers = handover_records
