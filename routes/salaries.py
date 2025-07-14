@@ -258,12 +258,9 @@ def index():
     if show_all_months:
         # في حالة "جميع الشهور"، نعرض السجلات الفعلية مع السجلات المؤقتة للموظفين الذين ليس لهم سجلات
         display_records = list(salaries) + employee_records
-    elif not salaries and employee_records:
-        # إذا لم تكن هناك سجلات في شهر محدد، استخدم السجلات المؤقتة فقط
-        display_records = employee_records
     else:
-        # في حالة الشهر المحدد، عرض السجلات الفعلية فقط
-        display_records = salaries
+        # في حالة الشهر المحدد، عرض السجلات الفعلية مع السجلات المؤقتة للموظفين الآخرين
+        display_records = list(salaries) + employee_records
         
     return render_template('salaries/index.html',
                           salaries=display_records,
