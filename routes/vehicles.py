@@ -4352,14 +4352,14 @@ def allowed_file(filename, allowed_extensions):
 
 # ========== مسارات إدارة Google Drive ==========
 
-@vehicles_bp.route('/<int:vehicle_id>/drive-link/update', methods=['POST'])
+@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-link', methods=['POST'])
 @login_required
 def update_drive_link(vehicle_id):
     """تحديث أو حذف رابط Google Drive"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     action = request.form.get('action')
     
-    if action == 'delete':
+    if action == 'remove':
         # حذف الرابط
         vehicle.drive_folder_link = None
         db.session.commit()
@@ -4367,16 +4367,16 @@ def update_drive_link(vehicle_id):
         log_audit('delete', 'vehicle', vehicle.id, f'تم حذف رابط Google Drive للسيارة {vehicle.plate_number}')
         flash('تم حذف رابط Google Drive بنجاح', 'success')
         
-    elif action == 'save':
+    else:
         # حفظ أو تحديث الرابط
-        drive_link = request.form.get('drive_folder_link', '').strip()
+        drive_link = request.form.get('drive_link', '').strip()
         
         if not drive_link:
             flash('يرجى إدخال رابط Google Drive', 'danger')
             return redirect(url_for('vehicles.view', id=vehicle_id))
         
         # التحقق من صحة الرابط
-        if not drive_link.startswith('https://drive.google.com'):
+        if not (drive_link.startswith('https://drive.google.com') or drive_link.startswith('https://docs.google.com')):
             flash('يرجى إدخال رابط Google Drive صحيح', 'danger')
             return redirect(url_for('vehicles.view', id=vehicle_id))
         
@@ -4395,10 +4395,12 @@ def update_drive_link(vehicle_id):
     
     return redirect(url_for('vehicles.view', id=vehicle_id))
 
-@vehicles_bp.route('/<int:vehicle_id>/drive-files')
+@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-files')
 @login_required
 def vehicle_drive_files(vehicle_id):
     """صفحة منفصلة لإدارة ملفات Google Drive"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    return render_template('vehicles/drive_files.html', vehicle=vehicle)
+    return render_template('vehicles/drive_files.html', 
+                         title=f'ملفات Google Drive - {vehicle.plate_number}',
+                         vehicle=vehicle)
 
