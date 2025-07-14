@@ -137,6 +137,40 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- ملفات Google Drive داخل معلومات السيارة -->
+                    <hr class="my-3">
+                    <div class="row mb-2">
+                        <div class="col-sm-4 fw-bold">
+                            <i class="fab fa-google-drive text-info ms-1"></i>
+                            ملفات Google Drive:
+                        </div>
+                        <div class="col-sm-8">
+                            {% if vehicle.drive_folder_link %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">مرتبط</span>
+                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-sm btn-success me-2">
+                                    <i class="fab fa-google-drive me-1"></i>
+                                    فتح المجلد
+                                </a>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-cog me-1"></i>
+                                    إدارة
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">تم ربط مجلد لتنظيم ملفات المركبة</small>
+                            {% else %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-2">غير مرتبط</span>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-link me-1"></i>
+                                    ربط مجلد
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">لم يتم ربط مجلد Google Drive بعد</small>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -513,47 +547,7 @@
         </div>
     </div>
 
-    <!-- ملفات Google Drive - مصغر -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-body py-3">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="mb-1">
-                                <i class="fab fa-google-drive text-info ms-2"></i>
-                                ملفات Google Drive
-                                {% if vehicle.drive_folder_link %}
-                                <span class="badge bg-success ms-2">مرتبط</span>
-                                {% else %}
-                                <span class="badge bg-warning ms-2">غير مرتبط</span>
-                                {% endif %}
-                            </h6>
-                            {% if vehicle.drive_folder_link %}
-                            <small class="text-muted">تم ربط مجلد لتنظيم ملفات المركبة</small>
-                            {% else %}
-                            <small class="text-muted">لم يتم ربط مجلد Google Drive بعد</small>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <div class="btn-group">
-                                {% if vehicle.drive_folder_link %}
-                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-success btn-sm">
-                                    <i class="fab fa-google-drive"></i>
-                                    فتح المجلد
-                                </a>
-                                {% endif %}
-                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-cog"></i>
-                                    إدارة
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- وثائق المركبة -->
     <div class="row mb-4">
