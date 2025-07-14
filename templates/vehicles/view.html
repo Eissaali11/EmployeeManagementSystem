@@ -1589,6 +1589,67 @@ document.getElementById('department_id').addEventListener('change', function() {
     // إعادة تعيين الموظف المختار
     employeeSelect.value = '';
 });
+
+// إدارة أزرار حذف سجلات التسليم والاستلام
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all');
+    const handoverCheckboxes = document.querySelectorAll('.handover-checkbox');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const handoverDeleteForm = document.getElementById('handover-delete-form');
+
+    // تفعيل/إلغاء تفعيل زر الحذف بناءً على التحديد
+    function updateDeleteButtonState() {
+        const checkedBoxes = document.querySelectorAll('.handover-checkbox:checked');
+        if (deleteSelectedBtn) {
+            deleteSelectedBtn.disabled = checkedBoxes.length === 0;
+        }
+    }
+
+    // وظيفة تحديد الكل
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            handoverCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateDeleteButtonState();
+        });
+    }
+
+    // تحديث حالة زر الحذف عند التغيير في أي checkbox
+    handoverCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateDeleteButtonState();
+            
+            // تحديث حالة "تحديد الكل"
+            if (selectAllCheckbox) {
+                const checkedCount = document.querySelectorAll('.handover-checkbox:checked').length;
+                selectAllCheckbox.checked = checkedCount === handoverCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < handoverCheckboxes.length;
+            }
+        });
+    });
+
+    // تأكيد الحذف قبل الإرسال
+    if (handoverDeleteForm) {
+        handoverDeleteForm.addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.handover-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('يرجى تحديد السجلات المراد حذفها');
+                return false;
+            }
+            
+            const confirmMessage = `هل أنت متأكد من حذف ${checkedBoxes.length} سجل من سجلات التسليم والاستلام؟\n\nهذا الإجراء لا يمكن التراجع عنه.`;
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    // تحديث حالة الزر في البداية
+    updateDeleteButtonState();
+});
 </script>
 
 {% endblock %}
