@@ -4,6 +4,7 @@
 
 {% block head %}
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/vehicle_documents.css') }}">
 <style>
     :root {
         --primary-gradient: linear-gradient(135deg, #3a7bd5, #00d2ff);
@@ -603,13 +604,26 @@
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="stat-value">
-                        {% if current_employee %}
-                            {{ current_employee.name[:15] }}
+                        {% if current_driver %}
+                            {{ current_driver.name[:15] }}
                         {% else %}
                             غير محدد
                         {% endif %}
                     </div>
                     <div class="stat-label">السائق الحالي</div>
+                    {% if current_driver %}
+                    <div class="stat-actions">
+                        <a href="{{ url_for('vehicles.view_handover', id=current_driver.handover_id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> سجل التسليم
+                        </a>
+                        {% if current_driver.mobile %}
+                        <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك"
+                           class="btn btn-sm btn-success" target="_blank" title="إرسال رسالة واتساب">
+                            <i class="fab fa-whatsapp"></i> واتساب
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <div class="stat-card">
@@ -638,11 +652,17 @@
             </div>
             
             <div class="action-buttons">
+                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> تعديل السيارة
+                </a>
                 <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" class="btn btn-primary">
                     <i class="fas fa-id-card"></i> إدارة صورة الرخصة
                 </a>
                 <a href="{{ url_for('vehicles.vehicle_drive_files', vehicle_id=vehicle.id) }}" class="btn btn-success">
                     <i class="fab fa-google-drive"></i> إدارة ملفات Drive
+                </a>
+                <a href="{{ url_for('vehicles.generate_vehicle_report', id=vehicle.id) }}" class="btn btn-info" target="_blank">
+                    <i class="fas fa-file-excel"></i> تقرير شامل
                 </a>
             </div>
         </div>
@@ -717,6 +737,22 @@
                     <div class="info-value">{{ "{:,}".format(vehicle.mileage) }} كم</div>
                 </div>
                 {% endif %}
+                
+                <div class="info-card">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-plus"></i>
+                        تاريخ الإضافة
+                    </div>
+                    <div class="info-value">{{ vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else 'غير محدد' }}</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-check"></i>
+                        آخر تحديث
+                    </div>
+                    <div class="info-value">{{ vehicle.updated_at.strftime('%Y-%m-%d') if vehicle.updated_at else 'غير محدد' }}</div>
+                </div>
             </div>
         </div>
     </div>
@@ -846,6 +882,127 @@
                 <p class="empty-desc">لم يتم تسجيل أي عمليات صيانة لهذه السيارة بعد</p>
             </div>
             {% endif %}
+        </div>
+    </div>
+
+    <!-- وثائق السيارة -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-file-alt"></i>
+                وثائق السيارة
+            </h2>
+        </div>
+        <div class="section-body">
+            <div class="documents-grid">
+                <!-- تفويض المركبة -->
+                <div class="document-card {% if vehicle.authorization_expiry_date %}
+                    {% if (vehicle.authorization_expiry_date - moment().date()).days < 0 %}
+                        expired
+                    {% elif (vehicle.authorization_expiry_date - moment().date()).days <= 30 %}
+                        expiring-soon
+                    {% else %}
+                        active
+                    {% endif %}
+                {% else %}
+                    not-set
+                {% endif %}">
+                    <div class="document-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div class="document-info">
+                        <h4>تفويض المركبة</h4>
+                        {% if vehicle.authorization_expiry_date %}
+                            <p class="expiry-date">{{ vehicle.authorization_expiry_date.strftime('%Y-%m-%d') }}</p>
+                            {% set days_remaining = (vehicle.authorization_expiry_date - moment().date()).days %}
+                            {% if days_remaining < 0 %}
+                                <span class="status-badge expired">منتهي منذ {{ days_remaining|abs }} يوم</span>
+                            {% elif days_remaining <= 30 %}
+                                <span class="status-badge expiring-soon">يتبقى {{ days_remaining }} يوم</span>
+                            {% else %}
+                                <span class="status-badge active">يتبقى {{ days_remaining }} يوم</span>
+                            {% endif %}
+                        {% else %}
+                            <p class="not-set">لم يتم تحديد التاريخ</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- استمارة السيارة -->
+                <div class="document-card {% if vehicle.registration_expiry_date %}
+                    {% if (vehicle.registration_expiry_date - moment().date()).days < 0 %}
+                        expired
+                    {% elif (vehicle.registration_expiry_date - moment().date()).days <= 30 %}
+                        expiring-soon
+                    {% else %}
+                        active
+                    {% endif %}
+                {% else %}
+                    not-set
+                {% endif %}">
+                    <div class="document-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="document-info">
+                        <h4>استمارة السيارة</h4>
+                        {% if vehicle.registration_expiry_date %}
+                            <p class="expiry-date">{{ vehicle.registration_expiry_date.strftime('%Y-%m-%d') }}</p>
+                            {% set days_remaining = (vehicle.registration_expiry_date - moment().date()).days %}
+                            {% if days_remaining < 0 %}
+                                <span class="status-badge expired">منتهي منذ {{ days_remaining|abs }} يوم</span>
+                            {% elif days_remaining <= 30 %}
+                                <span class="status-badge expiring-soon">يتبقى {{ days_remaining }} يوم</span>
+                            {% else %}
+                                <span class="status-badge active">يتبقى {{ days_remaining }} يوم</span>
+                            {% endif %}
+                        {% else %}
+                            <p class="not-set">لم يتم تحديد التاريخ</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- الفحص الدوري -->
+                <div class="document-card {% if vehicle.inspection_expiry_date %}
+                    {% if (vehicle.inspection_expiry_date - moment().date()).days < 0 %}
+                        expired
+                    {% elif (vehicle.inspection_expiry_date - moment().date()).days <= 30 %}
+                        expiring-soon
+                    {% else %}
+                        active
+                    {% endif %}
+                {% else %}
+                    not-set
+                {% endif %}">
+                    <div class="document-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="document-info">
+                        <h4>الفحص الدوري</h4>
+                        {% if vehicle.inspection_expiry_date %}
+                            <p class="expiry-date">{{ vehicle.inspection_expiry_date.strftime('%Y-%m-%d') }}</p>
+                            {% set days_remaining = (vehicle.inspection_expiry_date - moment().date()).days %}
+                            {% if days_remaining < 0 %}
+                                <span class="status-badge expired">منتهي منذ {{ days_remaining|abs }} يوم</span>
+                            {% elif days_remaining <= 30 %}
+                                <span class="status-badge expiring-soon">يتبقى {{ days_remaining }} يوم</span>
+                            {% else %}
+                                <span class="status-badge active">يتبقى {{ days_remaining }} يوم</span>
+                            {% endif %}
+                        {% else %}
+                            <p class="not-set">لم يتم تحديد التاريخ</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="documents-actions">
+                <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> تعديل تواريخ الوثائق
+                </a>
+                <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-eye"></i> عرض التفاصيل
+                </a>
+            </div>
         </div>
     </div>
 

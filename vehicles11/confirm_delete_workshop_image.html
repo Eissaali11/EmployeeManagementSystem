@@ -1,0 +1,120 @@
+{% extends 'layout.html' %}
+
+{% block title %}تأكيد حذف صورة الورشة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0 text-danger">
+                <i class="fas fa-exclamation-triangle ms-2"></i>
+                تأكيد حذف صورة الورشة
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.edit_workshop', id=workshop.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    العودة للسجل
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-danger">
+                        <h4 class="alert-heading">
+                            <i class="fas fa-exclamation-circle ms-2"></i>
+                            تحذير هام
+                        </h4>
+                        <p>أنت على وشك حذف هذه الصورة من سجل الورشة للسيارة <strong>{{ vehicle.plate_number }}</strong>.</p>
+                        <hr>
+                        <p class="mb-0">هذا الإجراء نهائي ولا يمكن التراجع عنه.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">الصورة</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <img src="{{ url_for('static', filename=image.image_path) }}" class="img-fluid rounded mb-3" alt="صورة الورشة" style="max-height: 200px;">
+                            
+                            <p>
+                                <strong>نوع الصورة:</strong> 
+                                {% if image.image_type == 'before' %}
+                                    قبل الإصلاح
+                                {% elif image.image_type == 'after' %}
+                                    بعد الإصلاح
+                                {% else %}
+                                    {{ image.image_type }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">بيانات السيارة</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>رقم اللوحة:</th>
+                                    <td>{{ vehicle.plate_number }}</td>
+                                </tr>
+                                <tr>
+                                    <th>الشركة المصنعة:</th>
+                                    <td>{{ vehicle.make }}</td>
+                                </tr>
+                                <tr>
+                                    <th>الموديل:</th>
+                                    <td>{{ vehicle.model }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <form action="{{ url_for('vehicles.delete_workshop_image', id=image.id) }}" method="post">
+                        <div class="mb-3">
+                            <label for="confirmation" class="form-label required">تأكيد الحذف</label>
+                            <input type="text" class="form-control" id="confirmation" name="confirmation" 
+                                placeholder="اكتب 'تأكيد' للمتابعة" required>
+                            <div class="form-text text-danger">اكتب كلمة "تأكيد" بالضبط للمتابعة</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex mt-4">
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="fas fa-trash ms-1"></i>
+                                تأكيد حذف الصورة
+                            </button>
+                            <a href="{{ url_for('vehicles.edit_workshop', id=workshop.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmField = document.getElementById('confirmation');
+        const deleteButton = document.getElementById('deleteButton');
+        
+        confirmField.addEventListener('input', function() {
+            // تمكين زر الحذف فقط إذا كتب المستخدم "تأكيد" بالضبط
+            deleteButton.disabled = (this.value !== 'تأكيد');
+        });
+    });
+</script>
+{% endblock %}

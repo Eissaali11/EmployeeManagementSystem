@@ -1,0 +1,275 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل سجل ورشة للسيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header  d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <i class="fas fa-tools ms-2"></i>
+                تعديل سجل ورشة للسيارة: {{ vehicle.plate_number }}
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye ms-1"></i>
+                    عرض تفاصيل السيارة
+                </a>
+                <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    قائمة السيارات
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">معلومات السيارة</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>النوع:</strong> {{ vehicle.make }} {{ vehicle.model }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>السنة:</strong> {{ vehicle.year }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>اللون:</strong> 
+                                <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                    {{ vehicle.color }}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>الحالة:</strong>
+                                {% if vehicle.status == 'available' %}
+                                    <span class="badge bg-success">متاحة</span>
+                                {% elif vehicle.status == 'rented' %}
+                                    <span class="badge bg-primary">مؤجرة</span>
+                                {% elif vehicle.status == 'in_project' %}
+                                    <span class="badge bg-info">في المشروع</span>
+                                {% elif vehicle.status == 'in_workshop' %}
+                                    <span class="badge bg-warning text-dark">في الورشة</span>
+                                {% elif vehicle.status == 'accident' %}
+                                    <span class="badge bg-danger">حادث</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        <span>إذا حددت تاريخ الخروج من الورشة وكانت حالة الإصلاح "تم الإصلاح"، سيتم تغيير حالة السيارة تلقائيًا من "في الورشة".</span>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data" id="workshop-edit-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="entry_date" class="form-label required">تاريخ دخول الورشة</label>
+                                <input type="date" class="form-control" id="entry_date" name="entry_date" value="{{ workshop.entry_date }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="exit_date" class="form-label">تاريخ الخروج من الورشة</label>
+                                <input type="date" class="form-control" id="exit_date" name="exit_date" value="{% if workshop.exit_date %}{{ workshop.exit_date }}{% endif %}">
+                                <div class="form-text">اتركه فارغًا إذا كانت السيارة ما زالت في الورشة</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="reason" class="form-label required">سبب الدخول</label>
+                                <select class="form-select" id="reason" name="reason" required>
+                                    {% for reason in reasons %}
+                                    <option value="{{ reason }}" {% if workshop.reason == reason %}selected{% endif %}>
+                                        {% if reason == 'maintenance' %}صيانة دورية
+                                        {% elif reason == 'breakdown' %}عطل
+                                        {% elif reason == 'accident' %}حادث
+                                        {% else %}{{ reason }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="repair_status" class="form-label required">حالة الإصلاح</label>
+                                <select class="form-select" id="repair_status" name="repair_status" required>
+                                    {% for status in statuses %}
+                                    <option value="{{ status }}" {% if workshop.repair_status == status %}selected{% endif %}>
+                                        {% if status == 'in_progress' %}قيد التنفيذ
+                                        {% elif status == 'completed' %}تم الإصلاح
+                                        {% elif status == 'pending_approval' %}بانتظار الموافقة
+                                        {% else %}{{ status }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label required">وصف العطل أو الصيانة</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required>{{ workshop.description }}</textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cost" class="form-label">تكلفة الإصلاح</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="cost" name="cost" step="0.01" min="0" value="{{ workshop.cost }}">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="workshop_name" class="form-label">اسم الورشة</label>
+                                <input type="text" class="form-control" id="workshop_name" name="workshop_name" value="{{ workshop.workshop_name or '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="technician_name" class="form-label">اسم الفني المسؤول</label>
+                            <input type="text" class="form-control" id="technician_name" name="technician_name" value="{{ workshop.technician_name or '' }}">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="delivery_link" class="form-label">رابط تسليم ورشة</label>
+                                <input type="url" class="form-control" id="delivery_link" name="delivery_link" value="{{ workshop.delivery_link or '' }}" placeholder="https://example.com/delivery-form">
+                                <div class="form-text">أدخل رابط نموذج تسليم المركبة للورشة إن وجد</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="reception_link" class="form-label">رابط استلام من ورشة</label>
+                                <input type="url" class="form-control" id="reception_link" name="reception_link" value="{{ workshop.reception_link or '' }}" placeholder="https://example.com/reception-form">
+                                <div class="form-text">أدخل رابط نموذج استلام المركبة من الورشة إن وجد</div>
+                            </div>
+                        </div>
+                        
+                        {% if before_images or after_images %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">الصور الحالية</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if before_images %}
+                                <h6 class="mb-3">صور قبل الإصلاح</h6>
+                                <div class="row mb-4">
+                                    {% for image in before_images %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <img src="{{ url_for('static', filename=image.image_path) }}" class="card-img-top" alt="صورة قبل الإصلاح">
+                                            <div class="card-body p-2 text-center">
+                                                <form method="post" action="{{ url_for('vehicles.delete_workshop_image', id=image.id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الصورة؟')">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-trash-alt ms-1"></i>
+                                                        حذف
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                
+                                {% if after_images %}
+                                <h6 class="mb-3">صور بعد الإصلاح</h6>
+                                <div class="row">
+                                    {% for image in after_images %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card">
+                                            <img src="{{ url_for('static', filename=image.image_path) }}" class="card-img-top" alt="صورة بعد الإصلاح">
+                                            <div class="card-body p-2 text-center">
+                                                <form method="post" action="{{ url_for('vehicles.delete_workshop_image', id=image.id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الصورة؟')">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-trash-alt ms-1"></i>
+                                                        حذف
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="before_images" class="form-label">إضافة صور قبل الإصلاح</label>
+                                <input type="file" class="form-control" id="before_images" name="before_images" multiple accept="image/*">
+                                <div class="form-text">يمكنك اختيار أكثر من صورة</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="after_images" class="form-label">إضافة صور بعد الإصلاح</label>
+                                <input type="file" class="form-control" id="after_images" name="after_images" multiple accept="image/*">
+                                <div class="form-text">يمكنك اختيار أكثر من صورة</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات إضافية</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2">{{ workshop.notes or '' }}</textarea>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary px-5" id="save-button">
+                                <i class="fas fa-save ms-1"></i>
+                                حفظ التعديلات
+                            </button>
+                            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // التحقق من صحة التواريخ
+        const entryDateInput = document.getElementById('entry_date');
+        const exitDateInput = document.getElementById('exit_date');
+        
+        // التحقق عند تغيير تاريخ الخروج
+        exitDateInput.addEventListener('change', function() {
+            if (exitDateInput.value && exitDateInput.value < entryDateInput.value) {
+                alert('لا يمكن أن يكون تاريخ الخروج قبل تاريخ الدخول');
+                exitDateInput.value = '';
+            }
+        });
+        
+        // التحقق عند تغيير تاريخ الدخول
+        entryDateInput.addEventListener('change', function() {
+            if (exitDateInput.value && exitDateInput.value < entryDateInput.value) {
+                exitDateInput.value = '';
+            }
+        });
+        
+        // إعداد نموذج التعديل
+        const form = document.getElementById('workshop-edit-form');
+        const saveButton = document.getElementById('save-button');
+        
+        // عند تقديم النموذج
+        form.addEventListener('submit', function() {
+            // تعطيل زر الحفظ وتغيير النص
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
+        });
+    });
+</script>
+{% endblock %}

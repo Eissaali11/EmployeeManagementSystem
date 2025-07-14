@@ -1,0 +1,84 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل تواريخ وثائق المركبة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card border-primary mb-4 shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">تعديل تواريخ وثائق المركبة</h3>
+            <div>
+                <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-right ml-1"></i> العودة لتفاصيل الوثائق
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info mb-4">
+                <h4 class="alert-heading mb-2"><i class="fas fa-car ml-2"></i> {{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.plate_number }}</h4>
+                <hr>
+                <p class="mb-0">يرجى تحديث تواريخ انتهاء الوثائق المطلوبة أدناه. اترك الحقل فارغاً إذا كانت الوثيقة غير متوفرة.</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="form-group">
+                            <label for="authorization_expiry_date" class="form-label fw-bold">تاريخ انتهاء تفويض المركبة</label>
+                            {{ form.authorization_expiry_date(class="form-control", id="authorization_expiry_date", placeholder="YYYY-MM-DD") }}
+                            <div class="form-text text-muted">تاريخ انتهاء تفويض استخدام المركبة</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="form-group">
+                            <label for="registration_expiry_date" class="form-label fw-bold">تاريخ انتهاء استمارة السيارة</label>
+                            {{ form.registration_expiry_date(class="form-control", id="registration_expiry_date", placeholder="YYYY-MM-DD") }}
+                            <div class="form-text text-muted">تاريخ انتهاء استمارة السيارة (الاستمارة)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="form-group">
+                            <label for="inspection_expiry_date" class="form-label fw-bold">تاريخ انتهاء الفحص الدوري</label>
+                            {{ form.inspection_expiry_date(class="form-control", id="inspection_expiry_date", placeholder="YYYY-MM-DD") }}
+                            <div class="form-text text-muted">تاريخ انتهاء الفحص الفني الدوري</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mb-4">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle ml-2"></i> ملاحظات هامة</h5>
+                    <ul class="mb-0 pr-4">
+                        <li>سيتم عرض تنبيه عندما يتبقى 30 يوم أو أقل على انتهاء أي وثيقة</li>
+                        <li>يجب تجديد الوثائق المنتهية في أقرب وقت ممكن لتجنب المخالفات</li>
+                        <li>يتم عرض الوثائق المنتهية أو القريبة من الانتهاء في الصفحة الرئيسية للمركبات</li>
+                    </ul>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times ml-1"></i> إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save ml-1"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تنسيق حقول التاريخ
+        document.querySelectorAll('input[type="date"]').forEach(function(input) {
+            input.classList.add('text-center');
+        });
+    });
+</script>
+{% endblock %}

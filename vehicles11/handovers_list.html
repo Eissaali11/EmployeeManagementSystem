@@ -1,0 +1,221 @@
+{% extends 'layout.html' %}
+
+{% block title %}السيارات المخصصة حالياً{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-car ms-2"></i>
+                        السيارات المخصصة حالياً
+                    </h4>
+                    <div>
+                        <span class="badge bg-info">{{ vehicles_data|length }} سيارة</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if vehicles_data %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>رقم اللوحة</th>
+                                        <th>الطراز</th>
+                                        <th>الحالة الحالية</th>
+                                        <th>الموظف المخصص</th>
+                                        <th>آخر تسليم</th>
+                                        <th>آخر استلام</th>
+                                        <th>النموذج الإلكتروني</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in vehicles_data %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>
+                                            <strong>{{ data.vehicle.plate_number }}</strong>
+                                        </td>
+                                        <td>{{ data.vehicle.make }} {{ data.vehicle.model }}</td>
+                                        <td>
+                                            {% if data.current_status == 'مُسلم' %}
+                                                <span class="badge bg-warning">مُسلم</span>
+                                            {% else %}
+                                                <span class="badge bg-success">متاح</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.current_employee %}
+                                                <i class="fas fa-user ms-1"></i>
+                                                {{ data.current_employee }}
+                                            {% else %}
+                                                <span class="text-muted">غير مخصص</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.latest_delivery %}
+                                                <div class="text-sm">
+                                                    <div><strong>{{ data.latest_delivery.handover_date.strftime('%Y-%m-%d') }}</strong></div>
+                                                    <div class="text-muted">{{ data.latest_delivery.employee_name }}</div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.latest_return %}
+                                                <div class="text-sm">
+                                                    <div><strong>{{ data.latest_return.handover_date.strftime('%Y-%m-%d') }}</strong></div>
+                                                    <div class="text-muted">{{ data.latest_return.employee_name }}</div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if data.latest_delivery %}
+                                                <div class="d-flex flex-column gap-1">
+                                                    <a href="{{ url_for('employee_portal.view_handover', handover_id=data.latest_delivery.id) }}" 
+                                                       class="btn btn-light border btn-sm text-primary fw-bold" 
+                                                       target="_blank"
+                                                       style="border-radius: 20px; padding: 8px 16px;"
+                                                       title="فتح النموذج الإلكتروني للتسليم">
+                                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                                        فتح النموذج الإلكتروني
+                                                    </a>
+                                                    <small class="text-muted">تسليم</small>
+                                                </div>
+                                            {% elif data.latest_return %}
+                                                <div class="d-flex flex-column gap-1">
+                                                    <a href="{{ url_for('employee_portal.view_handover', handover_id=data.latest_return.id) }}" 
+                                                       class="btn btn-light border btn-sm text-success fw-bold" 
+                                                       target="_blank"
+                                                       style="border-radius: 20px; padding: 8px 16px;"
+                                                       title="فتح النموذج الإلكتروني للاستلام">
+                                                        <i class="fas fa-external-link-alt ms-1"></i>
+                                                        فتح النموذج الإلكتروني
+                                                    </a>
+                                                    <small class="text-muted">استلام</small>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد نموذج</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('vehicles.view', id=data.vehicle.id) }}" 
+                                                   class="btn btn-outline-info btn-sm" 
+                                                   title="عرض تفاصيل السيارة">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('vehicles.create_handover', id=data.vehicle.id) }}" 
+                                                   class="btn btn-outline-primary btn-sm" 
+                                                   title="إضافة تسليم/استلام">
+                                                    <i class="fas fa-plus"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد سيارات مسجلة</h5>
+                            <p class="text-muted">قم بإضافة سيارات جديدة لعرضها هنا</p>
+                            <a href="{{ url_for('vehicles.add') }}" class="btn btn-primary">
+                                <i class="fas fa-plus ms-2"></i>إضافة سيارة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إضافة CSS مخصص -->
+<style>
+.table th {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+    border-color: var(--bs-border-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+.text-sm {
+    font-size: 0.8rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.btn-group .btn {
+    margin: 0 1px;
+}
+
+.card {
+    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: var(--bs-dark);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.card-title {
+    color: var(--bs-light);
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin: 1px 0;
+    }
+}
+</style>
+
+<!-- JavaScript لتحسين التفاعل -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة تأثيرات hover للصفوف
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'var(--bs-light)';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+    
+    // إضافة تلميحات للأزرار
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

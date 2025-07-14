@@ -1,0 +1,99 @@
+{% extends 'layout.html' %}
+
+{% block title %}مشاركة سجلات الورشة للسيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header  d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <i class="fas fa-share-alt ms-2"></i>
+                مشاركة سجلات الورشة للسيارة: {{ vehicle.plate_number }}
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    عودة للسيارة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">معلومات السيارة</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
+                            <p><strong>نوع السيارة:</strong> {{ vehicle.make }} {{ vehicle.model }}</p>
+                            <p><strong>سنة الصنع:</strong> {{ vehicle.year }}</p>
+                            <p><strong>اللون:</strong> {{ vehicle.color }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">روابط التصدير</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-3">
+                                <a href="{{ pdf_url }}" class="btn btn-danger" target="_blank">
+                                    <i class="fas fa-file-pdf ms-1"></i>
+                                    تحميل PDF
+                                </a>
+                                <a href="{{ excel_url }}" class="btn btn-success" target="_blank">
+                                    <i class="fas fa-file-excel ms-1"></i>
+                                    تحميل Excel
+                                </a>
+                                <a href="{{ url_for('vehicles.print_workshop_records', id=vehicle.id) }}" class="btn btn-info" target="_blank">
+                                    <i class="fas fa-print ms-1"></i>
+                                    طباعة السجلات
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">مشاركة عبر WhatsApp</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>مشاركة سجلات الورشة مع الآخرين عبر WhatsApp:</p>
+                            <a href="{{ whatsapp_url }}" class="btn btn-lg btn-success w-100" target="_blank">
+                                <i class="fab fa-whatsapp ms-2"></i>
+                                مشاركة عبر WhatsApp
+                            </a>
+                            <div class="small text-muted mt-2">
+                                <p class="mb-0">سيتم إرسال رابط التنزيل مباشرة في الرسالة.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">مشاركة عبر البريد الإلكتروني</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>إرسال سجلات الورشة عبر البريد الإلكتروني:</p>
+                            <a href="{{ email_url }}" class="btn btn-lg btn-primary w-100">
+                                <i class="fas fa-envelope ms-2"></i>
+                                إرسال بريد إلكتروني
+                            </a>
+                            <div class="small text-muted mt-2">
+                                <p class="mb-0">سيتم فتح تطبيق البريد الإلكتروني الافتراضي مع الروابط في نص الرسالة.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل إيجار السيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <i class="fas fa-edit ms-2"></i>
+                تعديل إيجار السيارة: {{ vehicle.plate_number }}
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye ms-1"></i>
+                    عرض تفاصيل السيارة
+                </a>
+                <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    قائمة السيارات
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">معلومات السيارة</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>النوع:</strong> {{ vehicle.make }} {{ vehicle.model }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>السنة:</strong> {{ vehicle.year }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>اللون:</strong> 
+                                <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                    {{ vehicle.color }}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>الحالة:</strong>
+                                {% if vehicle.status == 'available' %}
+                                    <span class="badge bg-success">متاحة</span>
+                                {% elif vehicle.status == 'rented' %}
+                                    <span class="badge bg-primary">مؤجرة</span>
+                                {% elif vehicle.status == 'in_project' %}
+                                    <span class="badge bg-info">في المشروع</span>
+                                {% elif vehicle.status == 'in_workshop' %}
+                                    <span class="badge bg-warning text-dark">في الورشة</span>
+                                {% elif vehicle.status == 'accident' %}
+                                    <span class="badge bg-danger">حادث</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        <span>تعديل حالة الإيجار إلى "غير نشط" سيعيد حالة السيارة إلى "متاحة" تلقائيًا.</span>
+                    </div>
+                    
+                    <form method="post" action="{{ url_for('vehicles.edit_rental', id=rental.id) }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label required">تاريخ بداية الإيجار</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ rental.start_date.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">تاريخ نهاية الإيجار</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ rental.end_date.strftime('%Y-%m-%d') if rental.end_date else '' }}">
+                                <div class="form-text">اتركه فارغًا إذا كان الإيجار مستمرًا</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="monthly_cost" class="form-label required">قيمة الإيجار الشهري</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="monthly_cost" name="monthly_cost" step="0.01" min="0" value="{{ rental.monthly_cost }}" required>
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contract_number" class="form-label">رقم العقد</label>
+                                <input type="text" class="form-control" id="contract_number" name="contract_number" value="{{ rental.contract_number or '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="lessor_name" class="form-label">اسم المؤجر / الشركة</label>
+                                <input type="text" class="form-control" id="lessor_name" name="lessor_name" value="{{ rental.lessor_name or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="lessor_contact" class="form-label">معلومات الاتصال بالمؤجر</label>
+                                <input type="text" class="form-control" id="lessor_contact" name="lessor_contact" value="{{ rental.lessor_contact or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="city" class="form-label">المدينة / الموقع</label>
+                                <input type="text" class="form-control" id="city" name="city" value="{{ rental.city or '' }}" placeholder="أدخل المدينة التي توجد فيها السيارة">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {% if rental.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">نشط حاليًا</label>
+                            </div>
+                            <div class="form-text">إلغاء التحديد سيجعل حالة الإيجار "غير نشط"</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3">{{ rental.notes or '' }}</textarea>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="fas fa-save ms-1"></i>
+                                حفظ التغييرات
+                            </button>
+                            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

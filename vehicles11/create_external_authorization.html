@@ -1,0 +1,420 @@
+{% extends 'layout.html' %}
+
+{% block title %}إضافة تفويض خارجي - السيارة {{ vehicle.plate_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* تأكد من تحميل الأيقونات */
+.fas, .far, .fab, .fal, .fad, .fak {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 6 Brands" !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- شريط التنقل العلوي -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-file-signature ms-2" style="color: #007bff;"></i>
+            إضافة تفويض خارجي للسيارة: {{ vehicle.plate_number }}
+        </h2>
+        <div>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right ms-1" style="color: inherit;"></i>
+                العودة لتفاصيل السيارة
+            </a>
+        </div>
+    </div>
+
+    <!-- نموذج إضافة التفويض -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus ms-2"></i>
+                        بيانات التفويض الخارجي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ csrf_token() }}
+                        <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                        
+                        <!-- معلومات السيارة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">معلومات السيارة</h6>
+                                    <p class="mb-0"><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }} | <strong>النوع:</strong> {{ vehicle.make }} {{ vehicle.model }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- فلترة القسم -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="department_filter" class="form-label">
+                                    <i class="fas fa-building ms-1"></i>
+                                    فلترة حسب القسم
+                                </label>
+                                <select class="form-select" id="department_filter" name="department_filter" onchange="filterEmployeesByDepartment()">
+                                    <option value="">عرض جميع الموظفين</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">اختر قسم لفلترة الموظفين</small>
+                            </div>
+                        </div>
+
+                        <!-- اختيار السائق/الموظف مع البحث -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="employee_search" class="form-label">
+                                    <i class="fas fa-user ms-1"></i>
+                                    اسم السائق/الموظف <span class="text-danger">*</span>
+                                </label>
+                                
+                                <!-- صندوق البحث -->
+                                <div class="position-relative">
+                                    <input type="text" class="form-control" id="employee_search" 
+                                           placeholder="ابحث عن الموظف بالاسم أو المنصب..." 
+                                           autocomplete="off">
+                                    <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- القائمة المنسدلة للموظفين -->
+                                <div class="dropdown mt-2">
+                                    <div class="dropdown-menu w-100 p-0" id="employee_dropdown" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                        {% for emp in employees %}
+                                        <div class="dropdown-item employee-item" style="cursor: pointer;" 
+                                             data-employee-id="{{ emp.id }}"
+                                             data-departments="{{ emp.departments|map(attribute='id')|join(',') }}"
+                                             data-phone="{{ emp.mobile or 'غير محدد' }}"
+                                             data-position="{{ emp.job_title or 'غير محدد' }}"
+                                             data-name="{{ emp.name }}"
+                                             data-search-text="{{ emp.name|lower }} {{ emp.job_title|lower if emp.job_title }} {{ emp.departments|map(attribute='name')|join(' ')|lower }}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ emp.name }}</strong>
+                                                    <small class="text-muted d-block">{{ emp.job_title or 'بدون منصب' }}</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <small class="text-primary">{{ emp.departments|map(attribute='name')|join(', ') }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <!-- الحقل المخفي للموظف المختار -->
+                                <input type="hidden" id="employee_id" name="employee_id" required>
+                                
+                                <!-- عرض الموظف المختار -->
+                                <div id="selected_employee" class="mt-2" style="display: none;">
+                                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-check-circle ms-1"></i>
+                                            <strong id="selected_employee_name"></strong>
+                                            <small class="text-muted d-block" id="selected_employee_details"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearSelectedEmployee()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- معلومات الموظف المختار -->
+                                <div id="employee_info" class="mt-2 text-muted small" style="display: none;">
+                                    <i class="fas fa-info-circle ms-1"></i>
+                                    <span id="employee_details"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- اختيار المشروع والمدينة -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="project_name" class="form-label">
+                                    <i class="fas fa-project-diagram ms-1"></i>
+                                    اسم المشروع
+                                </label>
+                                <select class="form-select" id="project_name" name="project_name">
+                                    <option value="">اختر المشروع</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.name }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">
+                                    <i class="fas fa-map-marker-alt ms-1"></i>
+                                    المدينة
+                                </label>
+                                <select class="form-select" id="city" name="city">
+                                    <option value="">اختر المدينة</option>
+                                    <option value="الرياض">الرياض</option>
+                                    <option value="جدة">جدة</option>
+                                    <option value="الدمام">الدمام</option>
+                                    <option value="مكة المكرمة">مكة المكرمة</option>
+                                    <option value="المدينة المنورة">المدينة المنورة</option>
+                                    <option value="الطائف">الطائف</option>
+                                    <option value="بريدة">بريدة</option>
+                                    <option value="تبوك">تبوك</option>
+                                    <option value="خميس مشيط">خميس مشيط</option>
+                                    <option value="الهفوف">الهفوف</option>
+                                    <option value="حائل">حائل</option>
+                                    <option value="جيزان">جيزان</option>
+                                    <option value="نجران">نجران</option>
+                                    <option value="ينبع">ينبع</option>
+                                    <option value="الخبر">الخبر</option>
+                                    <option value="عرعر">عرعر</option>
+                                    <option value="سكاكا">سكاكا</option>
+                                    <option value="أبها">أبها</option>
+                                    <option value="القطيف">القطيف</option>
+                                    <option value="الباحة">الباحة</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- نوع التفويض -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="authorization_type" class="form-label">
+                                    <i class="fas fa-file-contract ms-1"></i>
+                                    نوع التفويض <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="authorization_type" name="authorization_type" required>
+                                    <option value="">اختر نوع التفويض</option>
+                                    <option value="تفويض تسليم">تفويض تسليم</option>
+                                    <option value="استلام السيارة من مندوب">استلام السيارة من مندوب</option>
+                                    <option value="تفويض مؤقت">تفويض مؤقت</option>
+                                    <option value="نقل سيارة">نقل سيارة</option>
+                                    <option value="تفويض صيانة">تفويض صيانة</option>
+                                    <option value="تفويض فحص دوري">تفويض فحص دوري</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- رابط النموذج -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="form_link" class="form-label">
+                                    <i class="fas fa-link ms-1"></i>
+                                    رابط النموذج/التفويض
+                                </label>
+                                <input type="url" class="form-control" id="form_link" name="form_link" 
+                                       placeholder="https://forms.google.com/... أو أي رابط آخر">
+                                <small class="text-muted">يمكنك إدخال رابط Google Forms أو أي رابط خارجي للنموذج</small>
+                            </div>
+                        </div>
+
+                        <!-- رفع الملفات -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="file" class="form-label">
+                                    <i class="fas fa-cloud-upload-alt ms-1"></i>
+                                    رفع ملف التفويض (PDF أو صورة)
+                                </label>
+                                <input type="file" class="form-control" id="file" name="file" 
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                <small class="text-muted">يمكنك رفع ملف PDF، صورة، أو مستند Word</small>
+                                
+                                <!-- معاينة الملف -->
+                                <div id="file_preview" class="mt-2" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-file ms-1"></i>
+                                        <span id="file_name"></span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeFile()">
+                                            <i class="fas fa-times"></i> إزالة
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ملاحظات إضافية -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note ms-1"></i>
+                                    ملاحظات إضافية
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                          placeholder="أدخل أي ملاحظات أو تفاصيل إضافية حول التفويض..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- أزرار الإجراءات -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary">
+                                        <i class="fas fa-times ms-1"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save ms-1"></i>
+                                        حفظ التفويض
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// متغيرات عامة
+let allEmployees = [];
+let filteredEmployees = [];
+
+// تحميل قائمة الموظفين عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const employeeItems = document.querySelectorAll('.employee-item');
+    allEmployees = Array.from(employeeItems).map(item => ({
+        id: item.dataset.employeeId,
+        name: item.dataset.name,
+        departments: item.dataset.departments ? item.dataset.departments.split(',') : [],
+        phone: item.dataset.phone,
+        position: item.dataset.position,
+        searchText: item.dataset.searchText,
+        element: item
+    }));
+    filteredEmployees = [...allEmployees];
+});
+
+// فلترة الموظفين حسب القسم
+document.getElementById('department_filter').addEventListener('change', function() {
+    const departmentId = this.value;
+    
+    filteredEmployees = allEmployees.filter(emp => {
+        if (!departmentId) return true;
+        return emp.departments.includes(departmentId);
+    });
+    
+    updateEmployeeDropdown();
+    clearSelectedEmployee();
+});
+
+// البحث في الموظفين
+document.getElementById('employee_search').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const dropdown = document.getElementById('employee_dropdown');
+    
+    if (searchTerm.length === 0) {
+        dropdown.classList.remove('show');
+        return;
+    }
+    
+    const searchResults = filteredEmployees.filter(emp => 
+        emp.searchText.includes(searchTerm)
+    );
+    
+    displaySearchResults(searchResults);
+    dropdown.classList.add('show');
+});
+
+// إخفاء القائمة عند النقر خارجها
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('employee_dropdown');
+    const searchInput = document.getElementById('employee_search');
+    
+    if (!dropdown.contains(e.target) && e.target !== searchInput) {
+        dropdown.classList.remove('show');
+    }
+});
+
+// عرض نتائج البحث
+function displaySearchResults(results) {
+    const dropdown = document.getElementById('employee_dropdown');
+    dropdown.innerHTML = '';
+    
+    if (results.length === 0) {
+        dropdown.innerHTML = '<div class="dropdown-item text-muted">لا توجد نتائج</div>';
+        return;
+    }
+    
+    results.forEach(emp => {
+        const item = emp.element.cloneNode(true);
+        item.addEventListener('click', () => selectEmployee(emp));
+        dropdown.appendChild(item);
+    });
+}
+
+// تحديث قائمة الموظفين
+function updateEmployeeDropdown() {
+    const dropdown = document.getElementById('employee_dropdown');
+    dropdown.innerHTML = '';
+    
+    filteredEmployees.forEach(emp => {
+        const item = emp.element.cloneNode(true);
+        item.addEventListener('click', () => selectEmployee(emp));
+        dropdown.appendChild(item);
+    });
+}
+
+// اختيار موظف
+function selectEmployee(employee) {
+    document.getElementById('employee_id').value = employee.id;
+    document.getElementById('employee_search').value = employee.name;
+    
+    // عرض معلومات الموظف المختار
+    document.getElementById('selected_employee_name').textContent = employee.name;
+    document.getElementById('selected_employee_details').textContent = 
+        `${employee.position} | الهاتف: ${employee.phone}`;
+    
+    document.getElementById('selected_employee').style.display = 'block';
+    document.getElementById('employee_dropdown').classList.remove('show');
+    
+    // عرض معلومات إضافية
+    const infoDiv = document.getElementById('employee_info');
+    const detailsSpan = document.getElementById('employee_details');
+    detailsSpan.textContent = `الهاتف: ${employee.phone} | المنصب: ${employee.position}`;
+    infoDiv.style.display = 'block';
+}
+
+// مسح الموظف المختار
+function clearSelectedEmployee() {
+    document.getElementById('employee_id').value = '';
+    document.getElementById('employee_search').value = '';
+    document.getElementById('selected_employee').style.display = 'none';
+    document.getElementById('employee_info').style.display = 'none';
+    document.getElementById('employee_dropdown').classList.remove('show');
+}
+
+// معاينة الملف المرفوع
+document.getElementById('file').addEventListener('change', function() {
+    const filePreview = document.getElementById('file_preview');
+    const fileName = document.getElementById('file_name');
+    
+    if (this.files && this.files[0]) {
+        fileName.textContent = this.files[0].name;
+        filePreview.style.display = 'block';
+    } else {
+        filePreview.style.display = 'none';
+    }
+});
+
+// إزالة الملف
+function removeFile() {
+    document.getElementById('file').value = '';
+    document.getElementById('file_preview').style.display = 'none';
+}
+
+// عرض اسم المشروع عند الاختيار
+document.getElementById('project_name').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    console.log('المشروع المختار:', selectedOption.value);
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,408 @@
+{% extends 'layout.html' %}
+
+{% block title %}تقارير وإحصائيات السيارات{% endblock %}
+
+{% block styles %}
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 1rem;
+    }
+    .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 fw-bold text-primary">
+            <i class="fas fa-chart-pie ms-2"></i>
+            تقارير وإحصائيات السيارات
+        </h2>
+        <div>
+            <a href="{{ url_for('vehicles.export_vehicles_excel') }}" class="btn btn-success">
+                <i class="fas fa-file-excel ms-1"></i>
+                تصدير Excel
+            </a>
+            <a href="{{ url_for('vehicles.dashboard') }}" class="btn btn-info me-2">
+                <i class="fas fa-tachometer-alt ms-1"></i>
+                لوحة المعلومات
+            </a>
+            <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-right ms-1"></i>
+                العودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <!-- الإحصائيات حسب الشركة المصنعة -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header ">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="fas fa-car ms-2"></i>
+                        توزيع السيارات حسب الشركة المصنعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="makeChart"></canvas>
+                    </div>
+                    {% if make_stats %}
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الشركة المصنعة</th>
+                                        <th>عدد السيارات</th>
+                                        <th>النسبة المئوية</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set total = make_stats|sum(attribute='1') %}
+                                    {% for make, count in make_stats %}
+                                        <tr>
+                                            <td>{{ make }}</td>
+                                            <td>{{ count }}</td>
+                                            <td>{{ "{:.1f}%".format(count / total * 100) }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle ms-2"></i>
+                            لا توجد بيانات متاحة للعرض
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- الإحصائيات حسب سنة الصنع -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header  ">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="fas fa-calendar-alt ms-2"></i>
+                        توزيع السيارات حسب سنة الصنع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="yearChart"></canvas>
+                    </div>
+                    {% if year_stats %}
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>سنة الصنع</th>
+                                        <th>عدد السيارات</th>
+                                        <th>النسبة المئوية</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set total = year_stats|sum(attribute='1') %}
+                                    {% for year, count in year_stats %}
+                                        <tr>
+                                            <td>{{ year }}</td>
+                                            <td>{{ count }}</td>
+                                            <td>{{ "{:.1f}%".format(count / total * 100) }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle ms-2"></i>
+                            لا توجد بيانات متاحة للعرض
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات الورشة والتكاليف -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header  ">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="fas fa-tools ms-2"></i>
+                        توزيع سجلات الورشة حسب السبب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="workshopReasonChart"></canvas>
+                    </div>
+                    {% if workshop_reason_stats %}
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>سبب الدخول</th>
+                                        <th>عدد المرات</th>
+                                        <th>النسبة المئوية</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set total = workshop_reason_stats|sum(attribute='1') %}
+                                    {% for reason, count in workshop_reason_stats %}
+                                        <tr>
+                                            <td>
+                                                {% if reason == 'maintenance' %}
+                                                    صيانة دورية
+                                                {% elif reason == 'breakdown' %}
+                                                    عطل
+                                                {% elif reason == 'accident' %}
+                                                    حادث
+                                                {% else %}
+                                                    {{ reason }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ count }}</td>
+                                            <td>{{ "{:.1f}%".format(count / total * 100) }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle ms-2"></i>
+                            لا توجد بيانات متاحة للعرض
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- السيارات الأعلى تكلفة في الصيانة -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header  ">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="fas fa-money-bill-wave ms-2"></i>
+                        أعلى 10 سيارات من حيث تكاليف الصيانة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if top_maintenance_costs %}
+                        <div class="chart-container">
+                            <canvas id="maintenanceCostChart"></canvas>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>رقم اللوحة</th>
+                                        <th>نوع السيارة</th>
+                                        <th>إجمالي التكاليف</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in top_maintenance_costs %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>{{ item.plate_number }}</td>
+                                            <td>{{ item.make }} {{ item.model }}</td>
+                                            <td>{{ "{:,.2f}".format(item.total_cost) }} ريال</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle ms-2"></i>
+                            لا توجد بيانات متاحة للعرض
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- زر التصدير إلى Excel -->
+    <div class="text-center mt-2 mb-5">
+        <a href="{{ url_for('vehicles.export_vehicles_excel') }}" class="btn btn-success btn-lg">
+            <i class="fas fa-file-excel ms-2"></i>
+            تصدير بيانات السيارات إلى Excel
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ألوان للمخططات البيانية
+        const colors = [
+            'rgba(75, 192, 192, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+            'rgba(255, 99, 132, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
+            'rgba(199, 199, 199, 0.7)', 'rgba(83, 102, 255, 0.7)', 'rgba(40, 159, 64, 0.7)',
+            'rgba(210, 99, 132, 0.7)', 'rgba(100, 192, 192, 0.7)', 'rgba(120, 162, 235, 0.7)'
+        ];
+        
+        // مخطط توزيع الشركات المصنعة
+        {% if make_stats %}
+            const makeCtx = document.getElementById('makeChart').getContext('2d');
+            new Chart(makeCtx, {
+                type: 'pie',
+                data: {
+                    labels: [{% for make, _ in make_stats %}'{{ make }}',{% endfor %}],
+                    datasets: [{
+                        data: [{% for _, count in make_stats %}{{ count }},{% endfor %}],
+                        backgroundColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        {% endif %}
+        
+        // مخطط توزيع سنوات الصنع
+        {% if year_stats %}
+            const yearCtx = document.getElementById('yearChart').getContext('2d');
+            new Chart(yearCtx, {
+                type: 'bar',
+                data: {
+                    labels: [{% for year, _ in year_stats %}'{{ year }}',{% endfor %}],
+                    datasets: [{
+                        label: 'عدد السيارات',
+                        data: [{% for _, count in year_stats %}{{ count }},{% endfor %}],
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        {% endif %}
+        
+        // مخطط أسباب الورشة
+        {% if workshop_reason_stats %}
+            const reasonCtx = document.getElementById('workshopReasonChart').getContext('2d');
+            new Chart(reasonCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        {% for reason, _ in workshop_reason_stats %}
+                            {% if reason == 'maintenance' %}'صيانة دورية'
+                            {% elif reason == 'breakdown' %}'عطل'
+                            {% elif reason == 'accident' %}'حادث'
+                            {% else %}'{{ reason }}'{% endif %},
+                        {% endfor %}
+                    ],
+                    datasets: [{
+                        data: [{% for _, count in workshop_reason_stats %}{{ count }},{% endfor %}],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        {% endif %}
+        
+        // مخطط تكاليف الصيانة
+        {% if top_maintenance_costs %}
+            const costCtx = document.getElementById('maintenanceCostChart').getContext('2d');
+            new Chart(costCtx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        {% for item in top_maintenance_costs %}
+                            '{{ item.plate_number }}',
+                        {% endfor %}
+                    ],
+                    datasets: [{
+                        label: 'تكلفة الصيانة (ريال)',
+                        data: [
+                            {% for item in top_maintenance_costs %}
+                                {{ item.total_cost }},
+                            {% endfor %}
+                        ],
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',  // أفقي بدلاً من عمودي
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('ar-SA') + ' ريال';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.formattedValue.toLocaleString('ar-SA') + ' ريال';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        {% endif %}
+    });
+</script>
+{% endblock %}

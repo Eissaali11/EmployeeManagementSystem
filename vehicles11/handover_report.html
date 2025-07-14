@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>نموذج تسليم واستلام مركبة - {{ handover.vehicle_plate_number }}</title>
+    <style>
+        /* ================================================ */
+        /* == المرحلة 1: الإعدادات الأساسية والهيكل العام == */
+        /* ================================================ */
+
+        /* --- متغيرات الألوان والخطوط مع خط beIN-Normal --- */
+        :root {
+            --brand-color: #00A99D;
+            --dark-text: #2c3e50;
+            --light-text: #7f8c8d;
+            --border-color: #e0e0e0;
+            --font-main: 'beIN-Normal', 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
+        }
+
+        /* --- إعدادات الصفحة للطباعة --- */
+        @page {
+            size: A4;
+            margin: 1.5cm; /* هوامش الصفحة */
+            
+            /* ربط التذييل بأسفل الصفحة */
+            @bottom-center {
+                content: element(footer);
+                vertical-align: top;
+                padding-top: 10px;
+            }
+        }
+        
+        /* --- تهيئة الجسم والخط الرئيسي --- */
+        body {
+            font-family: var(--font-main);
+            font-size: 9.5pt;
+            color: var(--dark-text);
+            -webkit-print-color-adjust: exact;
+            direction: rtl;
+            line-height: 1.6;
+        }
+
+        /* --- الحاوية الرئيسية للتقرير --- */
+        .container {
+            width: 100%;
+        }
+
+        /* --- كلاس لعمل فاصل صفحات (سيتم استخدامه لاحقاً) --- */
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* --- تهيئة عنصر التذييل --- */
+        .footer-content {
+            position: running(footer);
+            text-align: center;
+            font-size: 9pt;
+            color: var(--light-text);
+        }
+        .footer-content p { margin: 2px 0; }
+        .footer-content a { color: var(--brand-color); text-decoration: none; }
+
+
+                 /* ======================================================= */
+        /* == المرحلة 2 (النسخة النهائية): تنسيقات قسم الهيدر == */
+        /* ======================================================= */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0; /* خط فاصل خفيف */
+        }
+        
+        .header-left, .header-middle, .header-right {
+            /* flex: 1; -> تم إزالته لإعطاء تحكم يدوي أكثر في العرض */
+        }
+
+        /* العمود الأيمن (العنوان) يأخذ المساحة اللازمة فقط */
+        .header-right {
+            text-align: right;
+            padding-left: 20px; /* لإعطاء مسافة بينه وبين العنصر الأوسط */
+        }
+        
+        /* العمود الأوسط (اسم الشركة) يأخذ المساحة المتبقية ويتمركز */
+        .header-middle {
+            flex-grow: 1; /* هذا هو العنصر الذي سيتمدد ليملأ الفراغ */
+            text-align: center;
+        }
+        
+        /* العمود الأيسر (الشعار) يأخذ المساحة اللازمة فقط */
+        .header-left {
+            text-align: left;
+            padding-right: 20px; /* لإعطاء مسافة */
+        }
+
+        /* تنسيقات العنوان - كل سطر على حدة وحجم أصغر */
+        .header-title-main, .header-title-sub {
+            margin: 0;
+            line-height: 1.4; /* تقليل المسافة بين السطرين */
+            white-space: nowrap; /* ضمان عدم كسر السطر */
+        }
+        
+        .header-title-main {
+            font-size: 1.3rem; /* حجم أصغر لتجنب الكسر */
+            font-weight: bold;
+            color: var(--brand-color); /* اللون الأخضر المميز */
+        }
+        .header-title-sub {
+            font-size: 1rem; /* حجم أصغر */
+            color: var(--light-text); /* لون رمادي فاتح */
+        }
+        
+        /* تنسيق اسم الشركة في المنتصف */
+        .header-company-name {
+            font-size: 1.4rem; /* حجم منساب */
+            font-weight: bold;
+            color: var(--brand-color); /* اللون الأخضر المميز */
+        }
+
+        /* تنسيق الشعار (تم تكبيره قليلاً) */
+        .logo {
+            max-height: 65px; /* تم تكبير الارتفاع */
+            max-width: 190px; /* تم تكبير العرض */
+            vertical-align: middle;
+        }
+
+
+
+
+
+
+
+
+
+
+
+    </style>
+</head>
+<body>
+    <!-- الحاوية الرئيسية التي ستضم كل محتوى التقرير -->
+    <div class="container">
+
+
+        <!-- ============================================= -->
+        <!-- == القسم 1: الهيدر (نسخة نهائية) == -->
+        <!-- ============================================= -->
+        <header class="report-header margin: 1px;">
+            <!-- العمود الأيمن: عنوان النموذج -->
+            <div class="header-right">
+                <p class="header-title-main">نموذج تسليم واستلام مركبة</p>
+                <p class="header-title-sub">Vehicle Delivery and Receipt</p>
+            </div>
+
+            <!-- العمود الأوسط: اسم الشركة (ديناميكي) -->
+            <div class="header-middle">
+                 {% if handover.custom_company_name %}
+                    <p class="header-company-name">{{ handover.custom_company_name }}</p>
+                {% else %}
+                    <p class="header-company-name"> </p> 
+                {% endif %}
+            </div>
+
+            <!-- العمود الأيسر: الشعار (ديناميكي) -->
+            <div class="header-left">
+                {% if handover.custom_logo_path %}
+                    <img src="uploads/{{ handover.custom_logo_path }}" alt="Custom Logo" class="logo">
+                {% else %}
+                    <img src="images/logo.png" alt="نُظم Logo" class="logo">
+                {% endif %}
+            </div>
+        </header>
+
+
+        <!-- ============================================= -->
+        <!-- == القسم 2: المعلومات الرئيسية (فارغ حالياً) == -->
+        <!-- (سيحتوي على بيانات المشروع، المدينة، ومربعات الاختيار) -->
+        <!-- ============================================= -->
+
+<section style="direction: rtl; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 1px;">
+  <!-- عنوان التقرير -->
+  <div style="text-align: center; margin-bottom: 5px;">
+    {% set types = {
+      'delivery': 'تقرير تسليم مركبة',
+      'return': 'تقرير استلام مركبة',
+      'inspection': 'تقرير تفتيش عام',
+      'weekly_inspection': 'تقرير تفتيش أسبوعي',
+      'monthly_inspection': 'تقرير تفتيش شهري'
+    } %}
+    <h3 style="color: #0a9396; font-size: 13pt; font-weight: bold; margin: 0;">
+      {{ types.get(handover.handover_type , 'تقرير عام') }}
+    </h3>
+  </div>
+
+  <!-- ✅ الحاوية الرئيسية باستخدام Grid -->
+  <div style="
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 أعمدة متساوية */
+    gap: 30px;
+    font-size: 10pt;
+    line-height: 1.5;
+    text-align: right;
+  ">
+
+    <!-- العمود الأول (يمين) -->
+    <div>
+
+      <div style="margin-right: 60px;">
+        <span style="color: #0a9396; font-weight: bold;">المدينة: </span>
+        <span style="font-weight: bold;">{{ handover.city or 'N/A' }}</span><br>
+        <small style="color: #000000;">City</small>
+      </div>
+
+            <div style="margin-right: 60px;">
+        <span style="color: #0a9396; font-weight: bold;">الكيلو متر: </span>
+        <span style="font-weight: bold;">{{ "{:,}".format(handover.mileage) if handover.mileage else 'N/A' }}</span><br>
+        <small style="color: #000000;">Mileage km</small>
+      </div>
+
+
+    </div>
+
+    <!-- العمود الثاني (منتصف) -->
+    <div>
+      <div style="margin-bottom: 8px; margin-right: 50px;" >
+        <span style="color: #0a9396; font-weight: bold;">الساعة: </span>
+        <span style="font-weight: bold;">{{ handover.handover_time.strftime('%I:%M %p') if handover.handover_time else 'N/A' }}</span><br>
+        <small style="color: #000000;">Time</small>
+      </div>
+      <div style="margin-right: 50px;">
+        <span style="color: #0a9396; font-weight: bold;">التاريخ: </span>
+        <span style="font-weight: bold;">{{ handover.handover_date.strftime('%d/%m/%Y') if handover.handover_date else 'N/A' }}</span><br>
+        <small style="color: #000000;">Date</small>
+      </div>
+    </div>
+
+    <!-- العمود الثالث (يسار) -->
+    <div>
+        <div style="margin-bottom: 8px;">
+        <span style="color: #0a9396; font-weight: bold;">مسؤول الحركة: </span>
+        <span style="font-weight: bold;">{{ handover.movement_officer_name or 'غير محدد' }}</span><br>
+        <small style="color: #000000;">Movement Officer</small>
+      </div>
+      
+      <div style="margin-bottom: 8px;">
+        <span style="color: #0a9396; font-weight: bold;">المشروع: </span>
+        <span style="font-weight: bold;">{{ handover.project_name or 'N/A' }}</span><br>
+        <small style="color: #000000;">The Project</small>
+      </div>
+
+
+
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+        <!-- ============================================= -->
+        <!-- == القسم 3: بيانات المركبة والسائق (فارغ حالياً) == -->
+        <!-- ============================================= -->
+
+
+
+        <section style="direction: rtl; font-family: 'Segoe UI', Tahoma, sans-serif; margin-bottom: 20px;">
+  <!-- <h3 style="font-size: 12pt; font-weight: bold; color: #0a9396; border-bottom: 2px solid #0a9396; padding-bottom: 5px; margin-bottom: 15px;">
+    بيانات المركبة والسائق
+  </h3> -->
+
+  <table style="width: 100%; border-collapse: collapse; border: 1px solid #bbb; font-size: 8pt; text-align: center;">
+    <tr>
+      <!-- خلية: نوع السيارة -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #077a7a; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          نوع السيارة<br><span style="font-weight: normal;">Car Type</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.vehicle_car_type or 'N/A' }}</div>
+      </td>
+
+      <!-- خلية: رقم اللوحة -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #077a7a; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          رقم اللوحة<br><span style="font-weight: normal;">Plate No.</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.vehicle_plate_number or 'N/A' }}</div>
+      </td>
+
+      <!-- خلية: الموديل -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #077a7a; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          سنة الصنع<br><span style="font-weight: normal;">Model Year</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.vehicle_model_year or 'N/A' }}</div>
+      </td>
+            <!-- خلية: سبب التسليم -->
+    <td style="border: 1px solid #bbb;">
+        <div style="background-color: #077a7a; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          مستوى الوقود<br><span style="font-weight: normal;">fuel level</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.fuel_level or 'N/A' }}</div>
+      </td>
+
+      <!-- خلية: سبب التسليم -->
+    <td style="border: 1px solid #bbb;">
+        <div style="background-color: #077a7a; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          سبب تغيير السيارة<br><span style="font-weight: normal;">Reason</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.vehicle_model_year or 'لا يوجد' }}</div>
+      </td>
+
+
+
+    <tr>
+
+    <tr>
+           <!-- خلية: اسم السائق -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #065c5c; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          اسم السائق<br><span style="font-weight: normal;">Driver Name</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.person_name or 'N/A' }}</div>
+      </td>
+
+     
+
+      <!-- خلية: رقم الإقامة -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #065c5c; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          رقم الإقامة<br><span style="font-weight: normal;">Residency No.</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.driver_residency_number or 'N/A' }}</div>
+      </td>
+
+      <!-- خلية: رقم الشركة -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #065c5c; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          رقم الشركة<br><span style="font-weight: normal;">Company No.</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.id or 'N/A' }}</div>
+      </td>
+
+      <!-- خلية: رقم الهاتف -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #065c5c; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          رقم الهاتف<br><span style="font-weight: normal;">Phone</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.driver_phone_number or 'N/A' }}</div>
+      </td>
+
+       <!-- خلية: حالة المركبة -->
+      <td style="border: 1px solid #bbb;">
+        <div style="background-color: #065c5c; color: white; font-weight: bold; padding: 4px; font-size: 8pt;">
+          حالة المركبة<br><span style="font-weight: normal;">Status</span>
+        </div>
+        <div style="padding: 6px; font-weight: bold;">{{ handover.vehicle_status or 'N/A' }}</div>
+      </td>
+
+   
+    </tr>
+  </table>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        <!-- ============================================= -->
+        <!-- == القسم 4: فحص حالة المركبة (فارغ حالياً) == -->
+        <!-- (سيحتوي على قائمة الفحص ومخطط السيارة) -->
+        <!-- ============================================= -->
+       
+<!-- ✅ الحاوية الرئيسية التي توزع الأقسام -->
+<div style="
+  display: grid;
+  grid-template-columns: 45% 1fr; /* تم توسيع عرض الصورة إلى 45% */
+  gap: 30px;
+  align-items: start;
+">
+
+
+
+  <!-- ✅ مربعات الفحص -->
+  <div style="
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+    margin: 3px;
+  ">
+    {% set checks = {
+      'has_oil_leaks': 'تهريب زيوت',
+      'has_clutch_issue': 'كلتش',
+      'has_tires_issue': 'إطارات',
+      'has_body_issue': 'هيكل',
+      'has_lights_issue': 'أنوار',
+      'has_ac_issue': 'مكيف',
+      'has_spare_tire': 'إطار احتياطي',
+      'has_fire_extinguisher': 'طفاية حريق',
+      'has_first_aid_kit': 'عدة إسعافات',
+      'has_tools': 'عدة أدوات'
+    } %}
+    {% for key, label in checks.items() %}
+    <div style="display: flex; align-items: center;">
+      <div style="
+        width: 20px; height: 20px;
+        border: 2px solid #007373;
+        border-radius: 10px;
+        display: flex; justify-content: center; align-items: center;
+        color: #007373; font-size: 10pt; font-weight: bold;
+        flex-shrink: 0;
+        margin-left: 5px
+      ">
+        {% if handover[key] %}✓{% endif %}
+      </div>
+      <span style="margin-inline-start: 5px; font-weight: bold;
+                   color: #333; font-size: 9.5pt;">{{ label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+    <!-- ✅ صورة الهيكل -->
+<div style="width: 100%; height: 170px;">
+  <img src="{% if handover.damage_diagram_path %}uploads/{{ handover.damage_diagram_path }}{% else %}images/vehicle_diagram_new.png{% endif %}"
+    alt="Vehicle Diagram"
+    style="
+      width: 100%;
+      height: 100%;
+      object-fit: contain;  /* ✅ هذا يضمن عرض الصورة بالكامل بدون قص */
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: #f9f9f9;  /* خلفية رمادية خفيفة في حال وجود فراغات */
+    ">
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        <!-- ============================================= -->
+        <!-- == القسم 5: ملاحظات الفحص (فارغ حالياً) == -->
+        <!-- ============================================= -->
+
+<section style="direction: rtl; font-family: Arial, sans-serif; margin-bottom: 5px;">
+    <!-- عنوان القسم -->
+    <!-- <h3 style="
+        font-size: 13pt;
+        font-weight: bold;
+        color: #0a9396;
+        border-bottom: 2px solid #0a9396;
+        padding-bottom: 6px;
+        margin-bottom: 15px;
+        text-align: right;
+    ">
+        ملاحظات الفحص العامة
+    </h3> -->
+
+    <!-- صندوق عرض الملاحظات -->
+    <div style="
+        border: 1px solid #dee2e6; /* إطار خفيف للصندوق */
+        border-radius: 6px;      /* حواف دائرية */
+        padding: 15px;           /* مسافة داخلية */
+        min-height: 30px;        /* أقل ارتفاع للصندوق لضمان ظهوره حتى لو كان فارغًا */
+        text-align: right;
+        font-size: 10pt;
+        line-height: 1.7;        /* تباعد أسطر مريح للقراءة */
+        background-color: #f8f9fa; /* خلفية رمادية فاتحة جدًا لتمييزه */
+    ">
+        {{ handover.notes or 'لا توجد ملاحظات مسجلة.' }}
+    </div>
+</section>
+
+<section style="direction: rtl; font-family: Arial, sans-serif; margin-bottom: 5px;">
+  <!-- العنوان -->
+  <!-- <h3 style="
+    font-size: 13pt;
+    font-weight: bold;
+    color: #0a9396;
+    border-bottom: 2px solid #0a9396;
+    padding-bottom: 6px;
+    margin-bottom: 5px;
+    text-align: right;
+  ">
+    الرابط الخارجي + QR Code
+  </h3> -->
+
+  <!-- ✅ الحاوية المشتركة: الرابط + QR -->
+  <div style="
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    padding: 4px;
+    font-size: 9pt;
+    line-height: 1.7;
+    text-align: right;
+    box-sizing: border-box;
+    max-width: 100%;
+  ">
+
+    <!-- الرابط أو الملاحظة -->
+    <div style="flex: 1;">
+      {{ handover.form_link or 'لا توجد ملاحظات مسجلة.' }}
+    </div>
+
+    <!-- صورة QR -->
+    {% if qr_code_url %}
+    <div style="flex-shrink: 0;">
+      <img src="{{ qr_code_url }}" alt="QR Code"
+           style="width: 40px; height: 40px; border-radius: 4px;">
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+        
+
+        
+        <!-- ============================================= -->
+        <!-- == القسم 6: بيانات الأطراف والتفويض (فارغ حالياً) == -->
+        <!-- ============================================= -->
+
+        <!-- ============================================= -->
+<!-- == فاصل صفحات للصفحة الجديدة == -->
+<!-- ============================================= -->
+
+<!-- ============================================= -->
+<!-- == القسم 6: بيانات الأطراف والتفويض == -->
+<!-- ============================================= -->
+<section style="
+    direction: rtl; 
+    font-family: Arial, sans-serif;
+    margin-bottom: 30px; /* مسافة بعد هذا القسم */
+">
+    <!-- عنوان القسم -->
+    <!-- <h3 style="
+        font-size: 13pt;
+        font-weight: bold;
+        color: #0a9396;
+        border-bottom: 2px solid #0a9396;
+        padding-bottom: 6px;
+        margin-bottom: 20px;
+        text-align: right;
+    ">
+        بيانات الأطراف والتفويض
+    </h3> -->
+    
+    <!-- جدول بيانات الأطراف -->
+    <table style="
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8pt;
+    ">
+        <!-- رأس الجدول -->
+        <thead style="background-color: #0a9396; color: white; text-align: center;">
+            <tr>
+                <th style="padding: 10px; border: 1px solid #087a7d; width: 20%;">البيان</th>
+                <th style="padding: 10px; border: 1px solid #087a7d; width: 30%;">الإسم</th>
+                <th style="padding: 10px; border: 1px solid #087a7d;">رقم الشركة</th>
+                <th style="padding: 10px; border: 1px solid #087a7d;">حالة الرخصة</th>
+                <th style="padding: 10px; border: 1px solid #087a7d;">حالة العقد</th>
+            </tr>
+        </thead>
+        
+        <!-- جسم الجدول -->
+        <tbody>
+            <!-- صف المستلم -->
+            <tr>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold; background-color: #f8f9fa;">
+                    المستلم منه
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.person_name or 'N/A' }}
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.driver_company_id or 'N/A' }}
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.driver_license_status or 'N/A' }}
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.driver_contract_status or 'N/A' }}
+                </td>
+            </tr>
+
+            <!-- صف المُسلّم -->
+             <tr>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold; background-color: #f8f9fa;">
+                    المسلم له
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.supervisor_name or 'N/A' }}
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.supervisor_company_id or 'N/A' }}
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.supervisor_license_status or 'N/A' }}
+                </td>
+                <td style="border: 1px solid #dee2e6; padding: 10px; text-align: center; font-weight: bold;">
+                    {{ handover.supervisor_contract_status or 'N/A' }}
+                </td>
+            </tr>
+        </tbody>
+
+        <!-- جزء التفويض (يظهر بشكل شرطي) -->
+        {% if handover.reason_for_authorization %}
+        <tfoot>
+             <tr style="background-color: #f8f9fa;">
+                <td style="border: 1px solid #dee2e6; padding: 10px; font-weight: bold; text-align: center;" colspan="5">
+                    <span style="color: #0a9396;">سبب التفويض: </span> {{ handover.reason_for_authorization }}
+                    <span style="color: #0a9396; margin-right: 20px;">تفاصيل التفويض: </span> {{ handover.authorization_details or 'لا يوجد' }}
+                </td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</section>
+
+        <!-- ============================================= -->
+        <!-- == القسم 7: التواقيع (فارغ حالياً) == -->
+        <!-- ============================================= -->
+
+        <!-- ============================================= -->
+<!-- == القسم 7: التواقيع (ثلاثة تواقيع) == -->
+<!-- ============================================= -->
+<section style="
+  direction: rtl;
+  font-family: Arial, sans-serif;
+  margin-top: 3px;         /* ✅ تقليل المسافة فوق التواقيع */
+  padding-top: 5px;        /* ✅ تقليل الحشو الداخلي */
+">
+  <div style="
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  ">
+
+    <!-- ✅ توقيع السائق -->
+    <div style="text-align: center; flex: 1; padding: 0 10px;">
+      <p style="
+        font-size: 8.5pt;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 4px;
+      ">
+        توقيع المستلم (السائق)
+      </p>
+      <p style="font-size: 8.5pt; font-weight: bold; margin-bottom: 10px;">
+        {{ handover.person_name or ' ' }}
+      </p>
+
+      {% if handover.driver_signature_path %}
+        <img src="uploads/{{ handover.driver_signature_path }}"
+             alt="Driver Signature"
+             style="width: 160px; height: 45px; object-fit: contain;">
+      {% else %}
+        <div style="width: 160px; height: 45px;"></div>
+      {% endif %}
+    </div>
+
+    <!-- ✅ توقيع مسؤول الحركة -->
+    <div style="text-align: center; flex: 1; padding: 0 10px;">
+      <p style="
+        font-size: 8.5pt;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 4px;
+      ">
+        توقيع مسؤول الحركة
+      </p>
+      <p style="font-size: 8.5pt; font-weight: bold; margin-bottom: 10px;">
+        {{ handover.movement_officer_name or ' ' }}
+      </p>
+
+      {% if handover.movement_officer_signature_path %}
+        <img src="uploads/{{ handover.movement_officer_signature_path }}"
+             alt="Movement Officer Signature"
+             style="width: 160px; height: 45px; object-fit: contain;">
+      {% else %}
+        <div style="width: 160px; height: 45px;"></div>
+      {% endif %}
+    </div>
+
+    <!-- ✅ توقيع المشرف -->
+    <div style="text-align: center; flex: 1; padding: 0 10px;">
+      <p style="
+        font-size: 8.5pt;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 4px;
+      ">
+        توقيع المُسلّم (المشرف)
+      </p>
+      <p style="font-size: 8.5pt; font-weight: bold; margin-bottom: 10px;">
+        {{ handover.supervisor_name or ' ' }}
+      </p>
+
+      {% if handover.supervisor_signature_path %}
+        <img src="uploads/{{ handover.supervisor_signature_path }}"
+             alt="Supervisor Signature"
+             style="width: 160px; height: 45px; object-fit: contain;">
+      {% else %}
+        <div style="width: 160px; height: 45px;"></div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+        <!-- ============================================= -->
+        <!-- == القسم 8: المرفقات (فارغ وشرطي) == -->
+        <!-- (سيظهر فقط في حال وجود صور) -->
+        <!-- ============================================= -->
+
+        <!-- ============================================= -->
+<!-- == القسم 8: المرفقات (بأبعاد ثابتة) == -->
+<!-- ============================================= -->
+{% if handover.images and handover.images|length > 0 %}
+  <div style="page-break-before: always;"></div>
+
+  <section style="direction: rtl; font-family: 'Segoe UI', Tahoma, sans-serif;">
+    <h3 style="font-size: 10pt; font-weight: bold; color: #0a9396; border-bottom: 2px solid #0a9396; padding-bottom: 6px; margin-bottom: 20px; text-align: right;">
+      المرفقات
+    </h3>
+
+    <div style="
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* فقط صورتان في كل صف */
+      gap: 20px;
+    ">
+      {% for image in handover.images %}
+      <div style="
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 10px;
+        background-color: #fdfdfd;
+        page-break-inside: avoid;
+      ">
+        <!-- صورة بأبعاد محددة ثابتة -->
+        <div style="
+          width: 100%;
+          height: 220px;
+          background-color: #f9f9f9;
+          border-radius: 4px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+          margin-bottom: 10px;
+        ">
+          <img 
+            src="{{ image.file_path }}"
+            alt="مرفق"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;"
+          >
+        </div>
+
+        <!-- وصف الصورة -->
+        <div style="
+          text-align: right;
+          font-size: 9pt;
+          font-weight: bold;
+          color: #555;
+          background-color: #f1f1f1;
+          padding: 6px 8px;
+          border-radius: 4px;
+          min-height: 28px;
+        ">
+          {{ image.file_description or 'لا يوجد وصف' }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+
+
+    <!-- ============================================= -->
+    <!-- == القسم 9: محتوى التذييل (جاهز) == -->
+    <!-- (هذا المحتوى سيظهر في أسفل كل صفحة تلقائياً) -->
+    <!-- ============================================= -->
+     
+    <div class="footer-content">
+        <p><a href="http://www.rassaudi.com" target="_blank">www.rassaudi.com</a></p>
+        <p>Al Riyadh Musa Bin Nussier Road, Olaya, Al Nimer Tower Building 1, Office 709-710</p>
+    </div>
+</body>
+</html>

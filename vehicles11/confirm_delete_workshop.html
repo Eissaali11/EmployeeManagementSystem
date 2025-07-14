@@ -1,0 +1,128 @@
+{% extends 'layout.html' %}
+
+{% block title %}تأكيد حذف سجل الورشة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header  d-flex justify-content-between align-items-center">
+            <h3 class="mb-0 text-danger">
+                <i class="fas fa-exclamation-triangle ms-2"></i>
+                تأكيد حذف سجل الورشة
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.workshop_details', workshop_id=record.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye ms-1"></i>
+                    عرض التفاصيل
+                </a>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    العودة للسيارة
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">
+                    <i class="fas fa-exclamation-circle ms-2"></i>
+                    تحذير هام
+                </h4>
+                <p>أنت على وشك حذف سجل الورشة للسيارة <strong>{{ vehicle.plate_number }}</strong>.</p>
+                <p>هذا الإجراء سيؤدي إلى حذف جميع البيانات المرتبطة بهذا السجل بما في ذلك:</p>
+                <ul>
+                    <li>تفاصيل الصيانة وأسبابها</li>
+                    <li>التكاليف المسجلة</li>
+                    <li>تواريخ الدخول والخروج</li>
+                    <li>صور وملفات مرفقة</li>
+                    <li>روابط نماذج التسليم والاستلام</li>
+                </ul>
+                <hr>
+                <p class="mb-0">هذا الإجراء نهائي ولا يمكن التراجع عنه.</p>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">معلومات السجل</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>السيارة:</th>
+                                    <td>{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</td>
+                                </tr>
+                                <tr>
+                                    <th>تاريخ الدخول:</th>
+                                    <td>{{ record.formatted_entry_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th>تاريخ الخروج:</th>
+                                    <td>{{ record.formatted_exit_date or 'غير محدد' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>سبب الدخول:</th>
+                                    <td>
+                                        {% if record.reason == 'maintenance' %}صيانة دورية
+                                        {% elif record.reason == 'breakdown' %}عطل
+                                        {% elif record.reason == 'accident' %}حادث
+                                        {% else %}{{ record.reason }}{% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>حالة الإصلاح:</th>
+                                    <td>
+                                        {% if record.repair_status == 'in_progress' %}قيد التنفيذ
+                                        {% elif record.repair_status == 'completed' %}تم الإصلاح
+                                        {% elif record.repair_status == 'pending_approval' %}بانتظار الموافقة
+                                        {% else %}{{ record.repair_status }}{% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>التكلفة:</th>
+                                    <td>{{ "{:,.2f}".format(record.cost) }} ريال</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <form action="{{ url_for('vehicles.delete_workshop', id=record.id) }}" method="post">
+                        <div class="mb-3">
+                            <label for="confirmation" class="form-label required">تأكيد الحذف</label>
+                            <input type="text" class="form-control" id="confirmation" name="confirmation" 
+                                placeholder="اكتب 'تأكيد' للمتابعة" required>
+                            <div class="form-text text-danger">اكتب كلمة "تأكيد" بالضبط للمتابعة</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex mt-4">
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="fas fa-trash ms-1"></i>
+                                تأكيد حذف السجل
+                            </button>
+                            <a href="{{ url_for('vehicles.workshop_details', workshop_id=record.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmField = document.getElementById('confirmation');
+        const deleteButton = document.getElementById('deleteButton');
+        
+        confirmField.addEventListener('input', function() {
+            // تمكين زر الحذف فقط إذا كتب المستخدم "تأكيد" بالضبط
+            deleteButton.disabled = (this.value !== 'تأكيد');
+        });
+    });
+</script>
+{% endblock %}

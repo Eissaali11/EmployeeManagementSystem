@@ -1,0 +1,309 @@
+{% extends 'layout.html' %}
+
+{% block title %}إدارة السيارات{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-car ms-2"></i>
+            إدارة السيارات
+        </h2>
+        <div>
+            <a href="{{ url_for('vehicles.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة سيارة جديدة
+            </a>
+            <a href="{{ url_for('vehicles.detailed_list') }}" class="btn btn-success me-2">
+                <i class="fas fa-list-alt ms-1"></i>
+                القائمة التفصيلية
+            </a>
+            <a href="{{ url_for('vehicles.dashboard') }}" class="btn btn-info me-2">
+                <i class="fas fa-chart-bar ms-1"></i>
+                لوحة المعلومات
+            </a>
+            <a href="{{ url_for('vehicles.export_vehicles_excel') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-file-excel ms-1"></i>
+                تصدير Excel
+            </a>
+            <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-danger me-2">
+                <i class="fas fa-exclamation-triangle ms-1"></i>
+                الوثائق المنتهية
+            </a>
+
+
+        </div>
+    </div>
+
+    <!-- بطاقات الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="rounded-circle bg-primary p-3 me-3">
+                            <i class="fas fa-car text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">إجمالي السيارات</h6>
+                            <h3 class="mb-0">{{ stats.total }}</h3>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="rounded-circle bg-success p-3 me-3">
+                            <i class="fas fa-check text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">السيارات المتاحة</h6>
+                            <h3 class="mb-0">{{ stats.available }}</h3>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ (stats.available / stats.total * 100) if stats.total > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="rounded-circle bg-warning p-3 me-3">
+                            <i class="fas fa-tools text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">السيارات في الورشة</h6>
+                            <h3 class="mb-0">{{ stats.in_workshop }}</h3>
+                        </div>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" 
+                             style="width: {{ (stats.in_workshop / stats.total * 100) if stats.total > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- فلاتر البحث -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="{{ url_for('vehicles.index') }}" class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="status" class="form-label">فلترة حسب الحالة</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">جميع الحالات</option>
+                        {% for status in statuses %}
+                        <option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>
+                            {% if status == 'available' %}متاحة
+                            {% elif status == 'rented' %}مؤجرة
+                            {% elif status == 'in_project' %}في المشروع
+                            {% elif status == 'in_workshop' %}في الورشة
+                            {% elif status == 'accident' %}حادث
+                            {% else %}{{ status }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="make" class="form-label">فلترة حسب الشركة المصنعة</label>
+                    <select name="make" id="make" class="form-select">
+                        <option value="">جميع الشركات</option>
+                        {% for make in makes %}
+                        <option value="{{ make }}" {% if make_filter == make %}selected{% endif %}>{{ make }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end mb-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter ms-1"></i>
+                        تصفية
+                    </button>
+                    <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary ms-2">
+                        <i class="fas fa-redo ms-1"></i>
+                        إعادة ضبط
+                    </a>
+                    <a href="{{ url_for('vehicles.export_vehicles_excel') }}" class="btn btn-success ms-2">
+                        <i class="fas fa-file-excel ms-1"></i>
+                        تصدير Excel
+                    </a>
+                </div>
+            </form>
+            
+
+        </div>
+    </div>
+
+    <!-- بطاقات تنبيهات الوثائق -->
+    {% if expiring_documents %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle ms-2"></i>
+                تنبيهات الوثائق
+            </h5>
+            <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-danger btn-sm">
+                <i class="fas fa-exclamation-circle ms-1"></i>
+                عرض جميع الوثائق المنتهية
+            </a>
+        </div>
+        <div class="card-body">
+            <p class="mb-3">يوجد {{ expiring_documents|length }} وثيقة قريبة من انتهاء الصلاحية أو منتهية الصلاحية. يرجى مراجعتها وتحديثها.</p>
+            
+            <div class="row">
+                {% for doc in expiring_documents %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-{% if doc.days_remaining <= 0 %}danger{% elif doc.days_remaining <= 15 %}warning{% else %}info{% endif %}">
+                        <div class="card-header bg-{% if doc.days_remaining <= 0 %}danger{% elif doc.days_remaining <= 15 %}warning{% else %}info{% endif %} text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ doc.document_name }}</h6>
+                                <span class="badge bg-light text-dark">{{ doc.plate_number }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <i class="fas fa-calendar-alt ms-1"></i>
+                                تاريخ الانتهاء: {{ doc.expiry_date.strftime('%Y-%m-%d') }}
+                            </p>
+                            
+                            {% if doc.days_remaining < 0 %}
+                            <p class="text-danger">
+                                <i class="fas fa-times-circle ms-1"></i>
+                                <strong>منتهية منذ {{ doc.days_remaining|abs }} يوم</strong>
+                            </p>
+                            {% else %}
+                            <p class="{% if doc.days_remaining <= 15 %}text-warning{% else %}text-info{% endif %}">
+                                <i class="fas fa-hourglass-half ms-1"></i>
+                                <strong>متبقي {{ doc.days_remaining }} يوم</strong>
+                            </p>
+                            {% endif %}
+                            
+                            <a href="{{ url_for('vehicles.view_documents', id=doc.vehicle_id) }}" class="btn btn-sm btn-outline-secondary mt-2 w-100">
+                                <i class="fas fa-eye ms-1"></i>
+                                عرض التفاصيل
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- جدول السيارات -->
+    <div class="card shadow-sm">
+        <div class="card-header ">
+            <h5 class="mb-0">
+                <i class="fas fa-list ms-2"></i>
+                قائمة السيارات
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3">#</th>
+                            <th class="py-3">رقم اللوحة</th>
+                            <th class="py-3">الشركة</th>
+                            <th class="py-3">الموديل</th>
+                            <th class="py-3">السنة</th>
+                            <th class="py-3">اللون</th>
+                            <th class="py-3">اسم السائق</th>
+                            <th class="py-3">الحالة</th>
+                            <th class="py-3">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if vehicles %}
+                            {% for vehicle in vehicles %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ vehicle.plate_number }}</td>
+                                <td>{{ vehicle.make }}</td>
+                                <td>{{ vehicle.model }}</td>
+                                <td>{{ vehicle.year }}</td>
+                                <td>
+                                    <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                        {{ vehicle.color }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if vehicle.driver_name %}
+                                        {% if vehicle.current_employee_id %}
+                                            <a href="{{ url_for('employees.view', id=vehicle.current_employee_id) }}" class="text-success fw-bold text-decoration-none" title="انقر لعرض بيانات الموظف">
+                                                {{ vehicle.driver_name }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-success fw-bold">{{ vehicle.driver_name }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if vehicle.status == 'available' %}
+                                        <span class="badge bg-success">متاحة</span>
+                                    {% elif vehicle.status == 'rented' %}
+                                        <span class="badge bg-primary">مؤجرة</span>
+                                    {% elif vehicle.status == 'in_project' %}
+                                        <span class="badge bg-info">في المشروع</span>
+                                    {% elif vehicle.status == 'in_workshop' %}
+                                        <span class="badge bg-warning text-dark">في الورشة</span>
+                                    {% elif vehicle.status == 'accident' %}
+                                        <span class="badge bg-danger">حادث</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fas fa-info-circle ms-2"></i>
+                                        لا توجد سيارات متاحة للعرض. يمكنك إضافة سيارة جديدة من خلال النقر على زر "إضافة سيارة جديدة".
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // يمكن إضافة أي سكربتات خاصة بالصفحة هنا
+    });
+</script>
+{% endblock %}

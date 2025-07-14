@@ -1,0 +1,149 @@
+{% extends 'layout.html' %}
+
+{% block title %}تخصيص السيارة لمشروع: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <i class="fas fa-hard-hat ms-2"></i>
+                تخصيص السيارة لمشروع: {{ vehicle.plate_number }}
+            </h3>
+            <div>
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye ms-1"></i>
+                    عرض تفاصيل السيارة
+                </a>
+                <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-right ms-1"></i>
+                    قائمة السيارات
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">معلومات السيارة</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>النوع:</strong> {{ vehicle.make }} {{ vehicle.model }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>السنة:</strong> {{ vehicle.year }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>اللون:</strong> 
+                                <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                    {{ vehicle.color }}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>الحالة:</strong>
+                                {% if vehicle.status == 'available' %}
+                                    <span class="badge bg-success">متاحة</span>
+                                {% elif vehicle.status == 'rented' %}
+                                    <span class="badge bg-primary">مؤجرة</span>
+                                {% elif vehicle.status == 'in_project' %}
+                                    <span class="badge bg-info">في المشروع</span>
+                                {% elif vehicle.status == 'in_workshop' %}
+                                    <span class="badge bg-warning text-dark">في الورشة</span>
+                                {% elif vehicle.status == 'accident' %}
+                                    <span class="badge bg-danger">حادث</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        <span>إضافة تخصيص للمشروع سيغير حالة السيارة تلقائيًا إلى "في المشروع". إذا كان هناك تخصيص مشروع سابق نشط، سيتم إلغاء تنشيطه تلقائيًا.</span>
+                    </div>
+                    
+                    <form method="post" action="{{ url_for('vehicles.create_project', id=vehicle.id) }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="project_name" class="form-label required">اسم المشروع</label>
+                                <input type="text" class="form-control" id="project_name" name="project_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="location" class="form-label required">موقع المشروع</label>
+                                <input type="text" class="form-control" id="location" name="location" required placeholder="المدينة، المنطقة">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="manager_name" class="form-label required">اسم مدير المشروع</label>
+                                <input type="text" class="form-control" id="manager_name" name="manager_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label required">تاريخ بداية التخصيص</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">تاريخ نهاية التخصيص (اختياري)</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                            <div class="form-text">اتركه فارغًا إذا كان التخصيص مستمرًا</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="fas fa-save ms-1"></i>
+                                حفظ التخصيص
+                            </button>
+                            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ضبط تاريخ اليوم كقيمة افتراضية لتاريخ البداية
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').value = today;
+        
+        // إضافة التحقق من التواريخ
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        endDateInput.addEventListener('change', function() {
+            if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                alert('لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية');
+                endDateInput.value = '';
+            }
+        });
+        
+        startDateInput.addEventListener('change', function() {
+            if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                endDateInput.value = '';
+            }
+        });
+    });
+</script>
+{% endblock %}

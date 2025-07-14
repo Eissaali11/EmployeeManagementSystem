@@ -1,0 +1,660 @@
+{% extends 'layout.html' %}
+
+{% block title %}لوحة معلومات السيارات{% endblock %}
+
+{% block styles %}
+<style>
+    .info-box {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .info-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .info-box .icon {
+        width: 65px;
+        height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        border-radius: 50%;
+        margin-bottom: 15px;
+        color: white;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 15px;
+    }
+    .badge-card {
+        border-right: 5px solid;
+        transition: all 0.3s ease;
+    }
+    .badge-card:hover {
+        transform: translateX(-5px);
+    }
+    .timeline {
+        position: relative;
+        padding-right: 30px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        right: 9px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background: #dee2e6;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        right: -30px;
+        top: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #007bff;
+        z-index: 1;
+    }
+    .timeline-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 px-4">
+    <!-- العنوان وأزرار الإجراءات -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-tachometer-alt ms-2"></i>
+            لوحة معلومات إدارة السيارات
+        </h2>
+        <div>
+            <a href="{{ url_for('vehicles.reports') }}" class="btn btn-info">
+                <i class="fas fa-chart-pie ms-1"></i>
+                التقارير والإحصائيات
+            </a>
+            <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-car ms-1"></i>
+                قائمة السيارات
+            </a>
+            <a href="{{ url_for('vehicles.create') }}" class="btn btn-success me-2">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة سيارة
+            </a>
+        </div>
+    </div>
+    
+    <!-- صف البطاقات الإحصائية العلوية -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm info-box">
+                <div class="card-body text-center p-4">
+                    <div class="icon bg-primary mx-auto">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <h5>إجمالي السيارات</h5>
+                    <h2>{{ stats.total_vehicles }}</h2>
+                    <div class="text-muted small">
+                        {{ stats.new_vehicles_last_month }} سيارات جديدة الشهر الماضي
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm info-box">
+                <div class="card-body text-center p-4">
+                    <div class="icon bg-success mx-auto">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <h5>تكاليف الإيجار الشهرية</h5>
+                    <h2>{{ "{:,.0f}".format(stats.total_rental_cost) }}</h2>
+                    <div class="text-muted small">ريال سعودي</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm info-box">
+                <div class="card-body text-center p-4">
+                    <div class="icon bg-warning mx-auto">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h5>السيارات في الورش</h5>
+                    <h2>{{ stats.vehicles_in_workshop }}</h2>
+                    <div class="text-muted small">
+                        {{ stats.workshop_cost_current_month|default(0) }} ريال تكاليف الشهر الحالي
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm info-box">
+                <div class="card-body text-center p-4">
+                    <div class="icon bg-info mx-auto">
+                        <i class="fas fa-hard-hat"></i>
+                    </div>
+                    <h5>السيارات في المشاريع</h5>
+                    <h2>{{ stats.vehicles_in_projects }}</h2>
+                    <div class="text-muted small">
+                        {{ stats.project_assignments_count }} مشروع نشط
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الصف الرئيسي -->
+    <div class="row">
+        <!-- عمود المخططات البيانية -->
+        <div class="col-lg-8">
+            <!-- مخطط حالة السيارات -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header  d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie ms-2"></i>
+                        توزيع حالة السيارات
+                    </h5>
+                    <div>
+                        <span class="badge bg-success">متاحة: {{ stats.status_counts.available|default(0) }}</span>
+                        <span class="badge bg-primary mx-1">مؤجرة: {{ stats.status_counts.rented|default(0) }}</span>
+                        <span class="badge bg-info">في المشروع: {{ stats.status_counts.in_project|default(0) }}</span>
+                        <span class="badge bg-warning text-dark mx-1">في الورشة: {{ stats.status_counts.in_workshop|default(0) }}</span>
+                        <span class="badge bg-danger">حادث: {{ stats.status_counts.accident|default(0) }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- الرسوم البيانية للتكاليف -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header  ">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-line ms-2"></i>
+                                تكاليف الإيجار (آخر 6 أشهر)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="rentalCostChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header  ">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-line ms-2"></i>
+                                تكاليف الصيانة (آخر 6 أشهر)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="maintenanceCostChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- بطاقات السيارات في حالة إنذار -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header  ">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle ms-2"></i>
+                        السيارات التي تحتاج اهتمام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if alerts %}
+                        <div class="row">
+                            {% for alert in alerts %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card badge-card h-100" style="border-right-color: {{ alert.color }};">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="ms-3">
+                                                    <i class="fas fa-{{ alert.icon }} fa-2x" style="color: {{ alert.color }};"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">{{ alert.plate_number }} ({{ alert.make }} {{ alert.model }})</h6>
+                                                    <div class="small text-muted">{{ alert.message }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-end mt-2">
+                                                <a href="{{ url_for('vehicles.view', id=alert.vehicle_id) }}" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-eye ms-1"></i>
+                                                    عرض التفاصيل
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h5>لا توجد سيارات تحتاج اهتمام حاليًا</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- عمود الأحداث والإجراءات -->
+        <div class="col-lg-4">
+            <!-- السيارات المتاحة -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header   d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle ms-2 text-success"></i>
+                        السيارات المتاحة
+                    </h5>
+                    <span class="badge bg-success">{{ stats.status_counts.available|default(0) }}</span>
+                </div>
+                <div class="card-body">
+                    {% if available_vehicles %}
+                        <div class="list-group">
+                            {% for vehicle in available_vehicles %}
+                                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ vehicle.plate_number }}</strong>
+                                            <div class="small">{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }})</div>
+                                        </div>
+                                        <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                            {{ vehicle.color }}
+                                        </span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        {% if stats.status_counts.available > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('vehicles.index', status='available') }}" class="btn btn-sm btn-outline-success">
+                                    عرض جميع السيارات المتاحة
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">لا توجد سيارات متاحة حاليًا</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- آخر الأحداث -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header  ">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history ms-2"></i>
+                        آخر أحداث السيارات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_events %}
+                        <div class="timeline">
+                            {% for event in recent_events %}
+                                <div class="timeline-item">
+                                    <div class="card shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="timeline-date">{{ event.formatted_date }}</div>
+                                            <div class="mt-1">
+                                                {% if event.type == 'rental' %}
+                                                    <span class="badge bg-primary">إيجار</span>
+                                                {% elif event.type == 'workshop' %}
+                                                    <span class="badge bg-warning text-dark">ورشة</span>
+                                                {% elif event.type == 'project' %}
+                                                    <span class="badge bg-info">مشروع</span>
+                                                {% elif event.type == 'handover' %}
+                                                    <span class="badge bg-success">تسليم/استلام</span>
+                                                {% endif %}
+                                                {{ event.message }}
+                                            </div>
+                                            <div class="mt-2 small">
+                                                <a href="{{ url_for('vehicles.view', id=event.vehicle_id) }}">
+                                                    <i class="fas fa-car ms-1"></i>
+                                                    {{ event.plate_number }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">لا توجد أحداث مسجلة حتى الآن</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- السيارات ذات الوثائق المنتهية -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header  ">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-circle ms-2 text-danger"></i>
+                        السيارات ذات الوثائق المنتهية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs mb-3" id="expiredDocsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration-tab-pane" type="button" role="tab" aria-controls="registration-tab-pane" aria-selected="true">
+                                الاستمارة
+                                <span class="badge bg-danger ms-1">{{ expired_registration_vehicles|length }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="inspection-tab" data-bs-toggle="tab" data-bs-target="#inspection-tab-pane" type="button" role="tab" aria-controls="inspection-tab-pane" aria-selected="false">
+                                الفحص الدوري
+                                <span class="badge bg-danger ms-1">{{ expired_inspection_vehicles|length }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="authorization-tab" data-bs-toggle="tab" data-bs-target="#authorization-tab-pane" type="button" role="tab" aria-controls="authorization-tab-pane" aria-selected="false">
+                                التفويض
+                                <span class="badge bg-danger ms-1">{{ expired_authorization_vehicles|length }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="expiredDocsTabContent">
+                        <!-- الاستمارة -->
+                        <div class="tab-pane fade show active" id="registration-tab-pane" role="tabpanel" aria-labelledby="registration-tab" tabindex="0">
+                            {% if expired_registration_vehicles %}
+                                <div class="list-group">
+                                    {% for vehicle in expired_registration_vehicles %}
+                                        {% set days_expired = (today - vehicle.registration_expiry_date).days %}
+                                        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold">{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</div>
+                                                    <div class="small text-danger">
+                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                        منتهية منذ {{ days_expired }} يوم
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-secondary">{{ vehicle.year }}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    لا توجد استمارات منتهية حالياً
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- الفحص الدوري -->
+                        <div class="tab-pane fade" id="inspection-tab-pane" role="tabpanel" aria-labelledby="inspection-tab" tabindex="0">
+                            {% if expired_inspection_vehicles %}
+                                <div class="list-group">
+                                    {% for vehicle in expired_inspection_vehicles %}
+                                        {% set days_expired = (today - vehicle.inspection_expiry_date).days %}
+                                        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold">{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</div>
+                                                    <div class="small text-danger">
+                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                        منتهي منذ {{ days_expired }} يوم
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-secondary">{{ vehicle.year }}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    لا توجد فحوصات دورية منتهية حالياً
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- التفويض -->
+                        <div class="tab-pane fade" id="authorization-tab-pane" role="tabpanel" aria-labelledby="authorization-tab" tabindex="0">
+                            {% if expired_authorization_vehicles %}
+                                <div class="list-group">
+                                    {% for vehicle in expired_authorization_vehicles %}
+                                        {% set days_expired = (today - vehicle.authorization_expiry_date).days %}
+                                        <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <div class="fw-bold">{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</div>
+                                                    <div class="small text-danger">
+                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                        منتهي منذ {{ days_expired }} يوم
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-secondary">{{ vehicle.year }}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    لا توجد تفويضات منتهية حالياً
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- إحصائيات سريعة -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header  ">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-alt ms-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>سيارات مستأجرة</span>
+                            <span class="badge bg-primary rounded-pill">{{ stats.status_counts.rented|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>عقود إيجار نشطة</span>
+                            <span class="badge bg-info rounded-pill">{{ stats.active_rentals }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>عدد الشركات المصنعة</span>
+                            <span class="badge bg-secondary rounded-pill">{{ stats.makes_count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>سيارات في حالة حادث</span>
+                            <span class="badge bg-danger rounded-pill">{{ stats.status_counts.accident|default(0) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>سجلات تسليم/استلام</span>
+                            <span class="badge bg-success rounded-pill">{{ stats.handover_count }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ألوان للمخططات البيانية
+        const colors = {
+            available: 'rgba(40, 167, 69, 0.7)',
+            rented: 'rgba(0, 123, 255, 0.7)',
+            in_project: 'rgba(23, 162, 184, 0.7)',
+            in_workshop: 'rgba(255, 193, 7, 0.7)',
+            accident: 'rgba(220, 53, 69, 0.7)'
+        };
+        
+        // مخطط حالة السيارات
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['متاحة', 'مؤجرة', 'في المشروع', 'في الورشة', 'حادث'],
+                datasets: [{
+                    data: [
+                        {{ stats.status_counts.available|default(0) }},
+                        {{ stats.status_counts.rented|default(0) }},
+                        {{ stats.status_counts.in_project|default(0) }},
+                        {{ stats.status_counts.in_workshop|default(0) }},
+                        {{ stats.status_counts.accident|default(0) }}
+                    ],
+                    backgroundColor: [
+                        colors.available,
+                        colors.rented,
+                        colors.in_project,
+                        colors.in_workshop,
+                        colors.accident
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+        
+        // مخطط تكاليف الإيجار
+        const rentalCtx = document.getElementById('rentalCostChart').getContext('2d');
+        new Chart(rentalCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for month in rental_cost_data.labels %}
+                        '{{ month }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'تكاليف الإيجار (ريال)',
+                    data: [
+                        {% for value in rental_cost_data.data_values %}
+                            {{ value }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('ar-SA');
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toLocaleString('ar-SA') + ' ريال';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // مخطط تكاليف الصيانة
+        const maintenanceCtx = document.getElementById('maintenanceCostChart').getContext('2d');
+        new Chart(maintenanceCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for month in maintenance_cost_data.labels %}
+                        '{{ month }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'تكاليف الصيانة (ريال)',
+                    data: [
+                        {% for value in maintenance_cost_data.data_values %}
+                            {{ value }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('ar-SA');
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toLocaleString('ar-SA') + ' ريال';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

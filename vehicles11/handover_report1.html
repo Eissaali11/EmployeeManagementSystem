@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>نموذج تسليم و استلام مركبة</title>
+
+
+
+    <style>
+        /* --- General Setup & Variables --- */
+        :root {
+            --teal-color: #00A99D;
+            --dark-gray: #59595B;
+            --border-color: #BFBFBF;
+            --font-main: 'Amiri', 'Times New Roman', serif;
+        }
+
+        @page {
+            size: A4;
+            margin: 1cm; /* Margins for the printable area */
+        }
+
+        body {
+            font-family: var(--font-main);
+            font-size: 10pt;
+            color: var(--dark-gray);
+            line-height: 1.6;
+            -webkit-print-color-adjust: exact !important; /* Force printing colors in browsers */
+        }
+
+        /* --- Utility Classes --- */
+        .container {
+            width: 100%;
+            margin: 0 auto;
+        }
+        .d-flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .align-start { align-items: flex-start; }
+        .flex-column { flex-direction: column; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .w-100 { width: 100%; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 1rem; }
+        .mb-3 { margin-bottom: 1rem; }
+        .p-2 { padding: 0.5rem; }
+        .border-main { border: 1px solid var(--border-color); }
+        .font-bold { font-weight: bold; }
+
+        /* --- Specific Component Styles --- */
+        .header-line {
+            border-top: 2px solid var(--dark-gray);
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header .logo {
+            max-width: 200px;
+            max-height: 50px;
+        }
+        
+        .header .title-block {
+            text-align: left;
+        }
+
+        .header .title-block h1 {
+            color: var(--teal-color);
+            font-size: 12pt;
+            margin: 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-item .label {
+            font-weight: bold;
+            color: var(--teal-color);
+        }
+
+        .checkbox-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--dark-gray);
+            display: inline-block;
+            text-align: center;
+            line-height: 16px;
+        }
+        
+        .movement-officer {
+            text-align: center;
+        }
+        .movement-officer .signature {
+            width: 120px;
+            height: 40px;
+            margin: 0 auto;
+        }
+        .movement-officer .label {
+             color: var(--teal-color);
+             font-weight: bold;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        th {
+            background-color: var(--teal-color);
+            color: white;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        .reason-cell {
+            background-color: #E2EFDF; /* A light green for distinction */
+        }
+        
+        .reason-header {
+             background-color: #92D050;
+        }
+        
+        .full-width-cell {
+             background-color: white !important;
+             text-align: right;
+             padding-right: 15px;
+        }
+
+        .checklist-section {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            border: 1px solid var(--dark-gray);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .diagram { flex-basis: 55%; }
+        .checklist { flex-basis: 45%; }
+
+        .diagram img {
+            max-width: 100%;
+            border: 1px solid var(--border-color);
+        }
+
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 15px;
+        }
+        .checklist-item { text-align: right; } /* Adjust to right align the label */
+        
+        .notes-box {
+            border: 1px solid var(--dark-gray);
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 50px;
+            text-align: right;
+            margin-bottom: 1.5rem;
+        }
+
+        .authorization-section, .signature-section {
+            margin-bottom: 1.5rem;
+        }
+        .auth-title, .sig-title {
+             color: var(--teal-color);
+             font-weight: bold;
+             text-align: right;
+             margin-bottom: 0.5rem;
+        }
+        
+        .final-signatures {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .signature-block {
+            text-align: center;
+        }
+        
+        .signature-block .name-line {
+            display: flex;
+            justify-content: flex-end; /* Right align name and label */
+            gap: 10px;
+        }
+        .signature-block img {
+             width: 150px;
+             height: 50px;
+             margin-top: 5px;
+        }
+
+         .footer-content-for-print {
+            position: running(footer-content); /* يعيّن هذا العنصر ليتم استخدامه بواسطة @page */
+            text-align: center;
+            font-size: 9pt;
+        }
+        .footer-content-for-print p { margin: 0; }
+        .footer-content-for-print a { color: var(--teal-color); text-decoration: none; }
+
+        html {
+            /* هذا يخبر المتصفح ومحرك PDF بأن المستند بأكمله RTL */
+            direction: rtl; 
+        }
+
+        body {
+            /* إعادة تعريف الخط والاتجاه هنا للتأكيد */
+            font-family: 'Amiri', 'Times New Roman', serif;
+            direction: rtl;
+            font-size: 10pt;
+            color: var(--dark-gray);
+            line-height: 1.6;
+            -webkit-print-color-adjust: exact !important;
+        }
+
+        /* --- إصلاح محاذاة معلومات الرأس --- */
+        .header .title-block {
+            text-align: right; /* كان left، نجعله right */
+        }
+        
+        .header .logo-block {
+           margin-left: 0; /* ضمان عدم وجود هوامش إضافية */
+           margin-right: auto; /* دفع الشعار لأقصى اليسار في حاوية فليكس */
+        }
+        
+        /* ... باقي الأنماط ... */
+
+        /* --- إصلاح شبكة المعلومات --- */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* تعديل طفيف لضمان التوزيع المتساوي */
+            direction: ltr; /* نجعل الحاوية نفسها LTR حتى تترتب الأعمدة 3، 2، 1 بشكل صحيح (عربي) */
+            text-align: right; /* نجعل كل النصوص بداخلها تبدأ من اليمين */
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* ... باقي الأنماط ... */
+
+        /* --- إصلاح شبكة الفحص --- */
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 15px;
+            direction: ltr; /* نفس الخدعة، نرتب العناصر من اليمين لليسار */
+        }
+        .checklist-item { 
+            text-align: right; 
+            display: flex; /* نستخدم فليكس لمحاذاة أفضل */
+            align-items: center;
+            justify-content: flex-end; /* لدفع العناصر لليمين */
+            gap: 8px; /* مسافة بين النص والمربع */
+        }
+        
+        /* نجعل ترتيب المربع والنص معكوساً بصرياً ليظهر صحيحاً في RTL */
+        .checkbox-item span:first-child { order: 2; }
+        .checkbox-item span:last-child { order: 1; }
+    </style>
+
+
+
+<style>
+    /*
+     * تنسيقات رأس الصفحة لمحاكاة التصميم المطلوب
+    */
+
+    /* اللون الرئيسي من الصورة */
+    :root {
+        --brand-color: #00a99d; 
+    }
+
+    body {
+        /* استخدام خط نظيف واحترافي */
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    .report-header {
+        display: flex; /* تفعيل Flexbox لتوزيع العناصر */
+        justify-content: space-between; /* توزيع المسافات بين الأعمدة */
+        align-items: center; /* محاذاة العناصر عمودياً في المنتصف */
+        width: 100%;
+        padding-bottom: 15px;
+        margin-bottom: 25px; 
+        border-bottom: 2px solid #333; /* خط فاصل سفلي داكن */
+        direction: ltr; /* هام: لفرض الترتيب المرئي يسار-وسط-يمين */
+    }
+
+    .header-block {
+        flex: 1; /* إعطاء كل قسم مساحة متساوية للتوازن */
+        padding: 0 10px;
+    }
+
+    /* 1. القسم الأيسر: الشعار */
+    .logo-container {
+        text-align: left;
+    }
+    .logo-container .logo {
+        max-height: 70px;
+        max-width: 180px;
+        object-fit: contain;
+    }
+
+    /* 2. القسم الأوسط: العنوان */
+    .title-container {
+        text-align: center;
+    }
+    .title-container .title-main {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: var(--brand-color);
+        margin: 0 0 5px 0;
+    }
+    .title-container .title-sub {
+        font-size: 1.1rem;
+        font-weight: normal; /* أخف من العنوان الرئيسي */
+        color: var(--brand-color);
+        margin: 0;
+    }
+    
+    /* 3. القسم الأيمن: معلومات الشركة */
+    .company-info-container {
+        text-align: right; /* محاذاة النص لليمين */
+        direction: rtl; /* ضمان تدفق النص العربي بشكل صحيح داخل هذا البلوك */
+    }
+    .company-info-container .company-brand-name {
+        font-size: 2.2rem;
+        font-weight: 900; /* خط سميك جداً */
+        color: #222;
+        margin: 0;
+        letter-spacing: 1px; /* مسافة بين الحروف كما في كلمة RASSCO */
+    }
+    .company-info-container .company-full-name,
+    .company-info-container .company-full-name-en {
+        margin: 2px 0;
+        font-size: 0.85rem;
+        color: #444;
+    }
+</style>
+
+
+<style>
+    /*
+     * ملاحظة: بقية الكود (report-header, logo-container) يبقى كما هو.
+     * استبدل فقط الأقسام التالية أو أضفها لتجاوز القديمة.
+    */
+    
+    /* اللون الرئيسي من الصورة (يبقى كما هو) */
+    :root {
+        --brand-color: #00a99d; 
+    }
+
+    /* ... باقي الكود يبقى كما هو ... */
+    
+    /* 2. القسم الأوسط الجديد: العنوان (كان عنوانه الأصلي title-container) */
+    .title-container {
+        /* تم نقله إلى اليمين، لذا نجعل المحاذاة لليمين */
+        text-align: right;
+        direction: rtl; /* لضمان تدفق النص العربي من اليمين لليسار */
+    }
+    .title-container .title-main {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: var(--brand-color);
+        margin: 0 0 5px 0;
+    }
+    .title-container .title-sub {
+        font-size: 1.1rem;
+        font-weight: normal;
+        color: var(--brand-color);
+        margin: 0;
+    }
+    
+    /* 3. القسم الأيمن الجديد: معلومات الشركة (كان عنوانه الأصلي company-info-container) */
+    .company-info-container {
+        /* تم نقله إلى الوسط، لذا نجعل المحاذاة للمنتصف */
+        text-align: center;
+    }
+    .company-info-container .company-brand-name {
+        font-size: 2.2rem;
+        font-weight: 900;
+        color: #00a99d;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+    .company-info-container .company-full-name,
+    .company-info-container .company-full-name-en {
+        margin: 2px 0;
+        font-size: 0.85rem;
+        color: #444;
+    }
+
+
+</style>
+
+
+
+
+</head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<body>
+    <div class="container">
+        <!-- Section 1: Header -->
+
+
+        <!-- استبدل الهيدر القديم بهذا الهيدر الجديد بالكامل -->
+<header class="report-header">
+    <!-- القسم الأيسر: شعار الشركة (يبقى كما هو) -->
+    <div class="header-block logo-container">
+        {% if handover.custom_logo_path %}
+            <img src="{{ url_for('static', filename='uploads/' + handover.custom_logo_path, _external=True) }}" alt="Custom Logo" class="logo">
+        {% else %}
+            <img src="{{ url_for('static', filename='images/logo.png', _external=True) }}" alt="Rassco Logo" class="logo">
+        {% endif %}
+    </div>
+
+    <!-- **القسم الأوسط الجديد**: اسم الشركة -->
+    <div class="header-block company-info-container">
+        {% if handover.custom_company_name %}
+            <h1 class="company-brand-name">{{ handover.custom_company_name }}</h1>
+        {% else %}
+            <h1 class="company-brand-name">RASSCO</h1>
+            <p class="company-full-name">شركة راس السعودية المحدودة</p>
+            <p class="company-full-name-en">RAS SAUDI COMPANY LTD</p>
+        {% endif %}
+    </div>
+
+    <!-- **القسم الأيمن الجديد**: عنوان النموذج -->
+    <div class="header-block title-container">
+        <h2 class="title-main">نموذج تسليم واستلام مركبة</h2>
+        <h3 class="title-sub">Vehicle Delivery and Receipt</h3>
+    </div>
+</header>
+
+
+
+
+
+        <!-- <header class="header d-flex justify-between align-center">
+            <div class="title-block">
+                <h1>Vehicle Delivery and receipt</h1>
+                <h1>نموذج تسليم و استلام مركبة</h1>
+            </div>
+
+
+            <div class="title-block">
+                {% if handover.custom_company_name %}
+                    <h1>{{handover.custom_company_name}}</h1>
+                {% else %}
+                    <h1>شركة راس السعودية المحدودة</h1>
+                {% endif %}
+            </div>
+
+
+            <div class="logo-block">
+                {% if handover.custom_logo_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + handover.custom_logo_path, _external=True) }}" alt="Custom Logo" class="logo">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/logo.png', _external=True) }}" alt="Rassco Logo" class="logo">
+                {% endif %}
+            </div>
+             <p>{{handover.custom_company_nam}}</p>
+             
+
+        </header> -->
+        <div class="header-line"></div>
+
+
+
+
+
+
+        
+        <!-- Section 2: General Info & Type -->
+
+        
+        <section class="info-grid">
+            <div class="info-item flex-column align-start">
+                 <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <span class="checkbox">{{ 'X' if handover.handover_type == 'delivery' else ' ' }}</span>
+                        <span>تسليم</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <span class="checkbox">{{ 'X' if handover.handover_type in ['return', 'receive'] else ' ' }}</span>
+                        <span>استلام</span>
+                    </div>
+                     <div class="checkbox-item">
+                        <span class="checkbox">{{ 'X' if handover.handover_type == 'inspection' else ' ' }}</span>
+                        <span>تفتيش</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <span class="checkbox">{{ 'X' if handover.handover_type in ['weekly_inspection'] else ' ' }}</span>
+                        <span>تفتيش اسبوعي</span>
+                    </div>
+                     <div class="checkbox-item">
+                        <span class="checkbox">{{ 'X' if handover.handover_type == 'monthly_inspection' else ' ' }}</span>
+                        <span> تفتيش شهري</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                 <span class="value">{{ handover.handover_date.strftime('%d/%m/%Y') if handover.handover_date else 'N/A' }}</span>
+                <span class="label">التاريخ:</span>
+            </div>
+            <div class="info-item">
+                <span class="value">{{ handover.project_name or 'N/A' }}</span>
+                <span class="label">المشروع:</span>
+            </div>
+            
+            <div class="movement-officer">
+                 <p class="label">مسؤول الحركة</p>
+                 <p>{{ handover.movement_officer_name or 'غير محدد' }}</p>
+                 {% if handover.movement_officer_signature_path %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ handover.movement_officer_signature_path, _external=True) }}" alt="Signature" class="signature">
+                 {% else %}
+                    <div style="height:40px;"></div> {# Placeholder for signature space #}
+                 {% endif %}
+            </div>
+            
+            <div class="info-item">
+                <span class="value">{{ handover.handover_time.strftime('%I:%M %p') if handover.handover_time else 'N/A' }}</span>
+                <span class="label">الساعة:</span>
+            </div>
+            <div class="info-item">
+                <span class="value">{{ handover.city or 'N/A' }}</span>
+                <span class="label">المدينة:</span>
+            </div>
+
+            <div></div>
+            <div class="info-item">
+                 <span class="value">{{ "{:,}".format(handover.mileage) if handover.mileage else 'N/A' }}</span>
+                <span class="label">الكيلو متر:</span>
+            </div>
+             <div></div>
+        </section>
+
+
+
+
+
+
+
+
+        <!-- Section 3: Main Tables -->
+        <section class="main-tables">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="reason-header" colspan="4">سبب تغيير المركبة The Reason for changing vehicle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="full-width-cell" colspan="4">{{ handover.reason_for_change or 'لا يوجد' }}</td>
+                    </tr>
+                    <tr>
+                        <th>نوع السيارة (Car Type)</th>
+                        <th>اللوحة (Plate number)</th>
+                        <th>الموديل (Car model)</th>
+                        <th>سبب تغيير المركبة</th>
+                    </tr>
+                    <tr>
+                        <td>{{ handover.vehicle_car_type or 'N/A' }}</td>
+                        <td>{{ handover.vehicle_plate_number or 'N/A' }}</td>
+                        <td>{{ handover.vehicle_model_year or 'N/A' }}</td>
+                        <td class="reason-cell">تسليم السياره الي {{ handover.person_name }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم السائق (Driver Name)</th>
+                        <th>رقم الهاتف (Phone Number)</th>
+                        <th>رقم الشركة (Company Number)</th>
+                        <th>رقم الإقامة (Residency Number)</th>
+                        <th>حالة المركبة (Car Status)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ handover.person_name or 'N/A' }}</td>
+                        <td>{{ handover.driver_phone_number or 'N/A' }}</td>
+                        <td>{{ handover.driver_company_id or 'N/A' }}</td>
+                        <td>{{ handover.driver_residency_number or 'N/A' }}</td>
+                        <td>{{ handover.vehicle_status_summary or 'لا يوجد' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 4: Checklist & Diagram -->
+        <section class="checklist-section">
+            <div class="diagram">
+                <img src="{{ url_for('static', filename='uploads/' ~ handover.damage_diagram_path if handover.damage_diagram_path else 'images/vehicle_diagram.png', _external=True) }}" alt="Vehicle Diagram">
+            </div>
+            <div class="checklist">
+                <div class="checklist-grid">
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_gear_issue else ' ' }}</span> <span>جير</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_oil_leaks else ' ' }}</span> <span>تهريب زيوت</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_engine_issue else ' ' }}</span> <span>ماكينة</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_clutch_issue else ' ' }}</span> <span>كلتش</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_tires_issue else ' ' }}</span> <span>كفرات</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_windows_issue else ' ' }}</span> <span>زجاج</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_electricity_issue else ' ' }}</span> <span>كهرباء</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_body_issue else ' ' }}</span> <span>هيكل</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_ac_issue else ' ' }}</span> <span>مكيف</span></div>
+                    <div class="checkbox-item"><span class="checkbox">{{ 'X' if handover.has_lights_issue else ' ' }}</span> <span>أنوار</span></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Notes Box -->
+        <div class="notes-box">
+             {{ handover.notes or 'لا يوجد ملاحظات مسجلة.' }}
+        </div>
+
+        <!-- Section 5: Authorization & Supervisor/Recipient -->
+        <section class="authorization-section">
+            <h3 class="auth-title">تفويض المركبة (Vehicle Authorization)</h3>
+             <table>
+                <thead>
+                    <tr>
+                        <th width="20%">الإسم (Name)</th>
+                        <th width="16%">رقم الإقامة (Residency Number)</th>
+                        <th width="16%">رقم الجوال (Phone Number)</th>
+                        <th width="16%">رقم الشركة (Company Number)</th>
+                        <th width="16%">حالة الرخصة (License Status)</th>
+                        <th width="16%">حالة العقد (Contract Status)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>المستلم منه: {{ handover.person_name or 'N/A' }}</td>
+                        <td>{{ handover.driver_residency_number or 'N/A' }}</td>
+                        <td>{{ handover.driver_phone_number or 'N/A' }}</td>
+                        <td>{{ handover.driver_company_id or 'N/A' }}</td>
+                        <td>{{ handover.driver_license_status or 'N/A' }}</td>
+                        <td>{{ handover.driver_contract_status or 'N/A' }}</td>
+                    </tr>
+                     <tr>
+                        <td>المسلم له: {{ handover.supervisor_name or 'N/A' }}</td>
+                        <td>{{ handover.supervisor_residency_number or 'N/A' }}</td>
+                        <td>{{ handover.supervisor_phone_number or 'N/A' }}</td>
+                        <td>{{ handover.supervisor_company_id or 'N/A' }}</td>
+                        <td>{{ handover.supervisor_license_status or 'N/A' }}</td>
+                        <td>{{ handover.supervisor_contract_status or 'N/A' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+             <div class="d-flex justify-between mt-2">
+                <span>{{ handover.authorization_details or '' }}</span>
+                <span><strong>سبب تفويض المركبة: </strong>{{ handover.reason_for_authorization or 'لا يوجد' }}</span>
+            </div>
+        </section>
+
+        <!-- Section 6: Final Signatures -->
+        <section class="signature-section">
+             <div class="final-signatures">
+                <div class="signature-block">
+                    <div class="name-line">
+                         <span class="font-bold">{{ handover.supervisor_name or 'N/A' }}</span><span>اسم المشرف:</span>
+                    </div>
+                    {% if handover.supervisor_signature_path %}
+                        <img src="{{ url_for('static', filename='uploads/' + handover.supervisor_signature_path, _external=True) }}" alt="Supervisor Signature">
+                    {% else %}
+                        <div style="height:55px;"></div>
+                    {% endif %}
+                </div>
+                 <div class="signature-block">
+                    <div class="name-line">
+                         <span class="font-bold">{{ handover.person_name or 'N/A' }}</span><span>اسم السائق:</span>
+                    </div>
+                     {% if handover.driver_signature_path %}
+                        <img src="{{ url_for('static', filename='uploads/' + handover.driver_signature_path, _external=True) }}" alt="Driver Signature">
+                    {% else %}
+                        <div style="height:55px;"></div>
+                    {% endif %}
+                </div>
+             </div>
+        </section>
+
+         <!-- Footer -->
+
+        <div class="footer-content-for-print">
+    <a href="http://www.rassaudi.com" target="_blank">www.rassaudi.com</a>
+    <p>Al Riyadh Musa Bin Nussier Road, Olaya, Al Nimer Tower Building 1, Office 709-710</p>
+</div>
+
+
+
+    </div>
+
+   
+     
+    <!-- <footer class="footer">
+        <a href="http://www.rassaudi.com" target="_blank">www.rassaudi.com</a>
+        <p>Al Riyadh Musa Bin Nussier Road, Olaya, Al Nimer Tower Building 1, Office 709-710</p>
+    </footer> -->
+
+</body>
+</html>

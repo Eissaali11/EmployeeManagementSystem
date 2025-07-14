@@ -1,0 +1,195 @@
+{% extends 'layout.html' %}
+
+{% block title %}تعديل فحص سلامة - {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 rtl">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">تعديل فحص سلامة للسيارة: {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('vehicles.edit_safety_check', id=safety_check.id) }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="check_date">تاريخ الفحص <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="check_date" name="check_date" value="{{ safety_check.check_date.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="check_type">نوع الفحص <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="check_type" name="check_type" required>
+                                        {% for type in check_types %}
+                                            <option value="{{ type }}" {% if safety_check.check_type == type %}selected{% endif %}>
+                                                {% if type == 'daily' %}
+                                                    يومي
+                                                {% elif type == 'weekly' %}
+                                                    أسبوعي
+                                                {% elif type == 'monthly' %}
+                                                    شهري
+                                                {% else %}
+                                                    {{ type }}
+                                                {% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="driver_id">السائق (اختياري)</label>
+                                    <select class="form-select" id="driver_id" name="driver_id">
+                                        <option value="">-- اختر السائق --</option>
+                                        <!-- يمكن إضافة قائمة بالسائقين من قاعدة البيانات -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="driver_name">اسم السائق <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="driver_name" name="driver_name" value="{{ safety_check.driver_name }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="supervisor_id">المشرف (اختياري)</label>
+                                    <select class="form-select" id="supervisor_id" name="supervisor_id">
+                                        <option value="">-- اختر المشرف --</option>
+                                        {% for supervisor in supervisors %}
+                                            <option value="{{ supervisor.id }}" {% if safety_check.supervisor_id == supervisor.id %}selected{% endif %}>
+                                                {{ supervisor.name }} - {{ supervisor.job_title }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="supervisor_name">اسم المشرف <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="supervisor_name" name="supervisor_name" value="{{ safety_check.supervisor_name }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="status">حالة الفحص <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        {% for status in check_statuses %}
+                                            <option value="{{ status }}" {% if safety_check.status == status %}selected{% endif %}>
+                                                {% if status == 'completed' %}
+                                                    مكتمل
+                                                {% elif status == 'in_progress' %}
+                                                    قيد التنفيذ
+                                                {% elif status == 'needs_review' %}
+                                                    بحاجة للمراجعة
+                                                {% else %}
+                                                    {{ status }}
+                                                {% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="check_form_link">رابط نموذج الفحص (اختياري)</label>
+                                    <input type="url" class="form-control" id="check_form_link" name="check_form_link" value="{{ safety_check.check_form_link }}" placeholder="https://example.com/form">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="issues_found" name="issues_found" {% if safety_check.issues_found %}checked{% endif %}>
+                                        <label class="form-check-label" for="issues_found">تم اكتشاف مشاكل أثناء الفحص</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="issues-description-container" style="display: {% if safety_check.issues_found %}block{% else %}none{% endif %};">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="issues_description">وصف المشاكل</label>
+                                    <textarea class="form-control" id="issues_description" name="issues_description" rows="3">{{ safety_check.issues_description }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="actions_taken">الإجراءات المتخذة</label>
+                                    <textarea class="form-control" id="actions_taken" name="actions_taken" rows="3">{{ safety_check.actions_taken }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label for="notes">ملاحظات إضافية</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ safety_check.notes }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('vehicles.vehicle_safety_checks', id=vehicle.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right ml-1"></i> العودة
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save ml-1"></i> حفظ التعديلات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // إظهار/إخفاء حقل وصف المشاكل
+        document.getElementById('issues_found').addEventListener('change', function() {
+            var issuesDescriptionContainer = document.getElementById('issues-description-container');
+            if (this.checked) {
+                issuesDescriptionContainer.style.display = 'block';
+            } else {
+                issuesDescriptionContainer.style.display = 'none';
+            }
+        });
+        
+        // تحديث اسم السائق تلقائيًا عند اختيار سائق
+        document.getElementById('driver_id').addEventListener('change', function() {
+            var selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                document.getElementById('driver_name').value = selectedOption.text.split(' - ')[0];
+            }
+        });
+        
+        // تحديث اسم المشرف تلقائيًا عند اختيار مشرف
+        document.getElementById('supervisor_id').addEventListener('change', function() {
+            var selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                document.getElementById('supervisor_name').value = selectedOption.text.split(' - ')[0];
+            }
+        });
+    });
+</script>
+{% endblock %}

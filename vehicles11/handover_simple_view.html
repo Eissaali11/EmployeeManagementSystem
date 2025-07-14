@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض بيانات التسليم والاستلام</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            عرض بيانات التسليم والاستلام
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>رقم السجل</th>
+                                        <td>{{ handover.id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>رقم المركبة</th>
+                                        <td>{{ handover.vehicle_id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>رقم اللوحة</th>
+                                        <td>{{ handover.vehicle_plate_number or 'غير محدد' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>نوع العملية</th>
+                                        <td>
+                                            {% if handover.handover_type == 'تسليم' %}
+                                                <span class="badge bg-success">تسليم</span>
+                                            {% else %}
+                                                <span class="badge bg-info">استلام</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>اسم الشخص</th>
+                                        <td>{{ handover.person_name or 'غير محدد' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <td>{{ handover.handover_date or 'غير محدد' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>العداد (كم)</th>
+                                        <td>{{ handover.mileage or 'غير محدد' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>مستوى الوقود</th>
+                                        <td>{{ handover.fuel_level or 'غير محدد' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>حالة المركبة</th>
+                                        <td>{{ handover.vehicle_status_summary or 'غير محدد' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>ملاحظات</th>
+                                        <td>{{ handover.notes or 'لا توجد ملاحظات' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        {% if handover.project_name %}
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h5>معلومات المشروع</h5>
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>اسم المشروع</th>
+                                        <td>{{ handover.project_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>المدينة</th>
+                                        <td>{{ handover.city or 'غير محدد' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <h5>قائمة التحقق</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="list-group">
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                إطار احتياط
+                                                {% if handover.has_spare_tire %}
+                                                    <span class="badge bg-success">متوفر</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">غير متوفر</span>
+                                                {% endif %}
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                طفاية حريق
+                                                {% if handover.has_fire_extinguisher %}
+                                                    <span class="badge bg-success">متوفر</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">غير متوفر</span>
+                                                {% endif %}
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                حقيبة إسعافات أولية
+                                                {% if handover.has_first_aid_kit %}
+                                                    <span class="badge bg-success">متوفر</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">غير متوفر</span>
+                                                {% endif %}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="list-group">
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                مثلث تحذير
+                                                {% if handover.has_warning_triangle %}
+                                                    <span class="badge bg-success">متوفر</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">غير متوفر</span>
+                                                {% endif %}
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                أدوات
+                                                {% if handover.has_tools %}
+                                                    <span class="badge bg-success">متوفر</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">غير متوفر</span>
+                                                {% endif %}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12 text-center">
+                                <a href="{{ url_for('vehicles.view', id=handover.vehicle_id) }}" class="btn btn-secondary me-2">
+                                    <i class="fas fa-arrow-right me-1"></i>
+                                    العودة للمركبة
+                                </a>
+                                <a href="{{ url_for('vehicles.handover_pdf_public', id=handover.id) }}" class="btn btn-primary" target="_blank">
+                                    <i class="fas fa-file-pdf me-1"></i>
+                                    تحميل PDF
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

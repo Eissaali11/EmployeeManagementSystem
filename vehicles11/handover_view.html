@@ -1,0 +1,534 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ handover_type_name }} السيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block styles %}
+<style>
+    /* تأثير الخلفية الرئيسية */
+    .main-wrapper {
+        min-height: 100vh;
+        background: #1a2035;
+        padding: 20px 0;
+    }
+
+    /* تصميم البطاقات الرئيسية */
+    .main-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 25px;
+        background-color: #202940;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    
+    /* رأس البطاقة الرئيسية */
+    .main-card .card-header {
+        border: none;
+        padding: 20px;
+        font-weight: bold;
+    }
+    
+    /* جسم البطاقة الرئيسية */
+    .main-card .card-body {
+        background-color: #202940;
+        color: #e9ecef;
+        padding: 25px;
+    }
+    
+    /* البطاقات الفرعية */
+    .inner-card {
+        border: none;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        background-color: #283046;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .inner-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+    
+    /* رأس البطاقة الفرعية */
+    .inner-card .card-header {
+        border: none;
+        padding: 15px 20px;
+        font-weight: bold;
+    }
+    
+    /* جسم البطاقة الفرعية */
+    .inner-card .card-body {
+        background-color: #283046;
+        color: #e9ecef;
+        padding: 20px;
+    }
+
+    /* تصميم الجداول */
+    .info-table {
+        width: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #323c50;
+        color: #e9ecef;
+        margin-bottom: 15px;
+    }
+    
+    .info-table th {
+        background-color: #1e2639;
+        padding: 12px 15px;
+        color: #e9ecef;
+        font-weight: 600;
+    }
+    
+    .info-table td {
+        padding: 12px 15px;
+        color: #e9ecef;
+    }
+    
+    .info-table tr:nth-child(even) {
+        background-color: #28314a;
+    }
+    
+    /* تصميم مربع المعلومات */
+    .info-box {
+        background-color: #323c50;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        color: #e9ecef;
+    }
+    
+    /* تأثير 3D للأزرار */
+    .btn {
+        border-radius: 8px;
+        padding: 8px 15px;
+        margin: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+    
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    }
+    
+    /* تعديل زر الإجراء */
+    .btn-action {
+        border-radius: 50px;
+        padding: 8px 20px;
+        font-weight: 600;
+    }
+    
+    /* تصميم صور وملفات التسليم */
+    .handover-image {
+        position: relative;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease-in-out;
+    }
+    
+    .handover-image:hover {
+        transform: scale(1.03);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    
+    .handover-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    /* تصميم خاص لملفات PDF */
+    .pdf-preview {
+        background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.3s ease-in-out;
+    }
+    
+    .pdf-preview:hover {
+        background: linear-gradient(135deg, #34495e 0%, #1e1e3a 100%);
+    }
+    
+    .pdf-filename {
+        font-size: 0.9em;
+        color: rgba(255,255,255,0.8);
+        max-width: 100%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    
+    /* تأثير الأزرار */
+    .pdf-preview .btn {
+        transition: all 0.3s ease;
+        transform: translateY(0);
+    }
+    
+    .pdf-preview:hover .btn {
+        transform: translateY(-3px);
+    }
+    
+    .image-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        font-size: 14px;
+    }
+    
+    /* تأثير خاص حسب نوع النموذج */
+    .delivery-card {
+        border-right: 4px solid #28a745 !important;
+    }
+    
+    .return-card {
+        border-right: 4px solid #17a2b8 !important;
+    }
+    
+    /* ألوان النص والخلفية للعناصر المختلفة */
+    .text-positive {
+        color: #4CAF50;
+    }
+    
+    .text-negative {
+        color: #F44336;
+    }
+    
+    /* شريط التنقل العلوي */
+    .page-navigator {
+        background-color: #202940;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .table-info-box {
+        background-color: #323c50;
+        border-radius: 10px;
+        overflow: hidden;
+        color: #e9ecef;
+    }
+    
+    .table-info-box th,
+    .table-info-box td {
+        padding: 12px 15px;
+        border: 1px solid #454d66;
+    }
+    
+    .table-info-box th {
+        background-color: #1e2639;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-wrapper">
+<div class="container py-4">
+    <!-- شريط التنقل العلوي -->
+    <div class="page-navigator d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-white mb-0">
+            {% if handover.handover_type in ['delivery', 'تسليم', 'handover'] %}
+                <i class="fas fa-share ms-2 text-success"></i>
+            {% else %}
+                <i class="fas fa-reply ms-2 text-info"></i>
+            {% endif %}
+            نموذج {{ handover_type_name }} السيارة: {{ vehicle.plate_number }}
+        </h3>
+        <div>
+            <a href="{{ url_for('vehicles.handover_pdf_public', id=handover.id) }}" class="btn btn-danger btn-action">
+                <i class="fas fa-file-pdf ms-1"></i>
+                تصدير PDF
+            </a>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-primary btn-action me-2">
+                <i class="fas fa-car ms-1"></i>
+                تفاصيل السيارة
+            </a>
+            <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary btn-action me-2">
+                <i class="fas fa-arrow-right ms-1"></i>
+                قائمة السيارات
+            </a>
+        </div>
+    </div>
+    
+    <!-- البطاقة الرئيسية -->
+    <div class="main-card {{ 'delivery-card' if handover.handover_type in ['delivery', 'تسليم', 'handover'] else 'return-card' }}">
+        <div class="card-body">
+            <div class="row">
+                <!-- معلومات النموذج والسيارة -->
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="inner-card {{ 'delivery-card' if handover.handover_type in ['delivery', 'تسليم', 'handover'] else 'return-card' }}">
+                                <div class="card-header {{ 'bg-success text-white' if handover.handover_type in ['delivery', 'تسليم', 'handover'] else 'bg-info text-white' }}">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-info-circle ms-2"></i>
+                                        معلومات {{ handover_type_name }}
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <table class="info-table">
+                                                <tr>
+                                                    <th>التاريخ:</th>
+                                                    <td>{{ handover.formatted_handover_date if handover.formatted_handover_date else handover.handover_date }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>اسم الشخص:</th>
+                                                    <td>{{ handover.person_name or 'غير محدد' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>مستوى الوقود:</th>
+                                                    <td>{{ handover.fuel_level or 'غير محدد' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>العداد:</th>
+                                                    <td>{{ "{:,}".format(handover.mileage) if handover.mileage else 'غير محدد' }} كم</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <table class="info-table">
+                                                <tr>
+                                                    <th colspan="2">التجهيزات:</th>
+                                                </tr>
+                                                <tr>
+                                                    <td>إطار احتياطي:</td>
+                                                    <td>
+                                                        {% if handover.has_spare_tire %}
+                                                            <i class="fas fa-check text-success"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-times text-danger"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>طفاية حريق:</td>
+                                                    <td>
+                                                        {% if handover.has_fire_extinguisher %}
+                                                            <i class="fas fa-check text-success"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-times text-danger"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>إسعافات أولية:</td>
+                                                    <td>
+                                                        {% if handover.has_first_aid_kit %}
+                                                            <i class="fas fa-check text-success"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-times text-danger"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>مثلث تحذيري:</td>
+                                                    <td>
+                                                        {% if handover.has_warning_triangle %}
+                                                            <i class="fas fa-check text-success"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-times text-danger"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>أدوات:</td>
+                                                    <td>
+                                                        {% if handover.has_tools %}
+                                                            <i class="fas fa-check text-success"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-times text-danger"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if handover.vehicle_condition %}
+                                    <div class="mt-3">
+                                        <h6>حالة السيارة:</h6>
+                                        <div class="p-3 bg-light text-dark rounded">{{ handover.vehicle_condition }}</div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if handover.form_link %}
+                                    <div class="mt-3">
+                                        <h6>النموذج الخارجي:</h6>
+                                        <div class="p-3 bg-light text-dark rounded text-center">
+                                            <a href="{{ handover.form_link }}" target="_blank" 
+                                               class="btn btn-primary btn-lg fw-bold"
+                                               style="border-radius: 25px; padding: 12px 30px; box-shadow: 0 4px 15px rgba(0,123,255,0.3);">
+                                                <i class="fas fa-file-pdf ms-2"></i>
+                                                نموذج
+                                            </a>
+                                            <div class="mt-2">
+                                                <small class="text-muted">انقر لفتح النموذج في تطبيق خارجي</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if handover.notes %}
+                                    <div class="mt-3">
+                                        <h6>ملاحظات إضافية:</h6>
+                                        <div class="p-3 bg-light text-dark rounded">{{ handover.notes }}</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="inner-card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-car ms-2"></i>
+                                        معلومات السيارة
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <table class="table-info-box w-100">
+                                                <tr>
+                                                    <th>رقم اللوحة:</th>
+                                                    <td>{{ vehicle.plate_number }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>النوع:</th>
+                                                    <td>{{ vehicle.make }} {{ vehicle.model }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>سنة الصنع:</th>
+                                                    <td>{{ vehicle.year or 'غير محدد' }}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <table class="table-info-box w-100">
+                                                <tr>
+                                                    <th>اللون:</th>
+                                                    <td>
+                                                        <span class="badge rounded-pill" style="background-color: {{ vehicle.color or '#6c757d' }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                                            {{ vehicle.color or 'غير محدد' }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>الحالة:</th>
+                                                    <td>
+                                                        {% if vehicle.status == 'available' %}
+                                                            <span class="badge bg-success">متاحة</span>
+                                                        {% elif vehicle.status == 'rented' %}
+                                                            <span class="badge bg-primary">مؤجرة</span>
+                                                        {% elif vehicle.status == 'in_project' %}
+                                                            <span class="badge bg-info">في المشروع</span>
+                                                        {% elif vehicle.status == 'in_workshop' %}
+                                                            <span class="badge bg-warning text-dark">في الورشة</span>
+                                                        {% elif vehicle.status == 'accident' %}
+                                                            <span class="badge bg-danger">حادث</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- الملفات التوثيقية (صور و PDF) -->
+                <div class="col-md-4">
+                    <div class="inner-card">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-alt ms-2"></i>
+                                الملفات التوثيقية
+                                <span class="badge bg-secondary">{{ images|length if images else 0 }}</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if images %}
+                                <div class="row">
+                                    {% for image in images %}
+                                        <div class="col-md-12 mb-3">
+                                            <div class="handover-image">
+                                                {% if image.is_pdf() %}
+                                                    <!-- عرض ملف PDF -->
+                                                    <div class="pdf-preview text-center p-3 bg-dark rounded position-relative overflow-hidden" style="min-height: 200px;">
+                                                        <!-- أيقونة PDF بالخلفية -->
+                                                        <div class="position-absolute" style="opacity: 0.2; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                                            <i class="fas fa-file-pdf" style="font-size: 80px; color: #dc3545;"></i>
+                                                        </div>
+                                                        
+                                                        <!-- محتوى المقدمة -->
+                                                        <div class="position-relative z-index-2">
+                                                            <h6 class="text-white mb-3">
+                                                                <i class="fas fa-file-pdf text-danger ms-2"></i>
+                                                                ملف PDF
+                                                            </h6>
+                                                            
+                                                            <!-- اسم الملف -->
+                                                            <div class="pdf-filename mb-3">
+                                                                {{ image.filename or 'ملف PDF' }}
+                                                            </div>
+                                                            
+                                                            <!-- أزرار التفاعل -->
+                                                            <div class="d-flex justify-content-center gap-2">
+                                                                <a href="{{ url_for('static', filename='uploads/vehicles/handovers/' + image.image_path.split('/')[-1]) }}" 
+                                                                   target="_blank" 
+                                                                   class="btn btn-outline-primary btn-sm">
+                                                                    <i class="fas fa-eye ms-1"></i>
+                                                                    عرض
+                                                                </a>
+                                                                <a href="{{ url_for('static', filename='uploads/vehicles/handovers/' + image.image_path.split('/')[-1]) }}" 
+                                                                   download 
+                                                                   class="btn btn-outline-success btn-sm">
+                                                                    <i class="fas fa-download ms-1"></i>
+                                                                    تحميل
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <!-- عرض صورة عادية -->
+                                                    <img src="{{ url_for('static', filename='uploads/vehicles/handovers/' + image.image_path.split('/')[-1]) }}" 
+                                                         alt="صورة توثيقية" 
+                                                         class="img-fluid rounded shadow">
+                                                    {% if image.filename %}
+                                                        <div class="image-caption">{{ image.filename }}</div>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-file-alt fa-3x mb-3 opacity-50"></i>
+                                    <p>لا توجد ملفات مرفقة</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
