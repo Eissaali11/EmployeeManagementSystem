@@ -865,19 +865,27 @@ def view(id):
                         inspection_warnings.append(f"الفحص الدوري سينتهي خلال {days_remaining} يومًا")
                         break
         
+        # الحصول على المرفقات
+        attachments = VehicleWorkshopImage.query.filter_by(vehicle_id=id).all()
+        
+        # إضافة سجلات التسليم/الاستلام للقائمة الجانبية
+        handovers = handover_records
+        
         return render_template(
-                'vehicles/view.html',
+                'vehicles/view_with_sidebar.html',
                 vehicle=vehicle,
                 rental=rental,
                 workshop_records=workshop_records,
                 project_assignments=project_assignments,
                 handover_records=handover_records,
+                handovers=handovers,
                 periodic_inspections=periodic_inspections,
                 safety_checks=safety_checks,
                 accidents=accidents,
                 external_authorizations=external_authorizations,
                 departments=departments,
                 employees=employees,
+                attachments=attachments,
                 total_maintenance_cost=total_maintenance_cost,
                 days_in_workshop=days_in_workshop,
                 inspection_warnings=inspection_warnings,
