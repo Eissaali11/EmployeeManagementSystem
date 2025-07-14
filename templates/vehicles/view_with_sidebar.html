@@ -316,7 +316,7 @@
                                 <h5>آخر صيانة</h5>
                                 {% if workshop_records and workshop_records|length > 0 %}
                                 <p class="text-warning fw-bold mb-1">{{ workshop_records[0].entry_date|display_date }}</p>
-                                <small class="text-muted">{{ workshop_records[0].issue_description[:50] }}...</small>
+                                <small class="text-muted">{{ workshop_records[0].description[:50] }}...</small>
                                 {% else %}
                                 <p class="text-muted">لا توجد سجلات صيانة</p>
                                 {% endif %}
