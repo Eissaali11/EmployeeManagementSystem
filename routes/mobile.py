@@ -4015,7 +4015,7 @@ def delete_handover(handover_id):
         person_name = handover.person_name
         
         # حذف الصور المرتبطة أولاً
-        images = VehicleHandoverImage.query.filter_by(handover_id=handover_id).all()
+        images = VehicleHandoverImage.query.filter_by(handover_record_id=handover_id).all()
         for image in images:
             # حذف الملف من الخادم إذا كان موجوداً
             if image.file_path and os.path.exists(os.path.join('static', image.file_path)):
