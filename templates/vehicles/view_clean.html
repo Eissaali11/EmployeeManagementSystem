@@ -897,9 +897,10 @@
             <div class="documents-grid">
                 <!-- تفويض المركبة -->
                 <div class="document-card {% if vehicle.authorization_expiry_date %}
-                    {% if (vehicle.authorization_expiry_date - moment().date()).days < 0 %}
+                    {% set today = now.date() %}
+                    {% if (vehicle.authorization_expiry_date - today).days < 0 %}
                         expired
-                    {% elif (vehicle.authorization_expiry_date - moment().date()).days <= 30 %}
+                    {% elif (vehicle.authorization_expiry_date - today).days <= 30 %}
                         expiring-soon
                     {% else %}
                         active
@@ -914,7 +915,7 @@
                         <h4>تفويض المركبة</h4>
                         {% if vehicle.authorization_expiry_date %}
                             <p class="expiry-date">{{ vehicle.authorization_expiry_date.strftime('%Y-%m-%d') }}</p>
-                            {% set days_remaining = (vehicle.authorization_expiry_date - moment().date()).days %}
+                            {% set days_remaining = (vehicle.authorization_expiry_date - now.date()).days %}
                             {% if days_remaining < 0 %}
                                 <span class="status-badge expired">منتهي منذ {{ days_remaining|abs }} يوم</span>
                             {% elif days_remaining <= 30 %}
@@ -930,9 +931,10 @@
                 
                 <!-- استمارة السيارة -->
                 <div class="document-card {% if vehicle.registration_expiry_date %}
-                    {% if (vehicle.registration_expiry_date - moment().date()).days < 0 %}
+                    {% set today = now.date() %}
+                    {% if (vehicle.registration_expiry_date - today).days < 0 %}
                         expired
-                    {% elif (vehicle.registration_expiry_date - moment().date()).days <= 30 %}
+                    {% elif (vehicle.registration_expiry_date - today).days <= 30 %}
                         expiring-soon
                     {% else %}
                         active
@@ -947,7 +949,7 @@
                         <h4>استمارة السيارة</h4>
                         {% if vehicle.registration_expiry_date %}
                             <p class="expiry-date">{{ vehicle.registration_expiry_date.strftime('%Y-%m-%d') }}</p>
-                            {% set days_remaining = (vehicle.registration_expiry_date - moment().date()).days %}
+                            {% set days_remaining = (vehicle.registration_expiry_date - now.date()).days %}
                             {% if days_remaining < 0 %}
                                 <span class="status-badge expired">منتهي منذ {{ days_remaining|abs }} يوم</span>
                             {% elif days_remaining <= 30 %}
@@ -963,9 +965,10 @@
                 
                 <!-- الفحص الدوري -->
                 <div class="document-card {% if vehicle.inspection_expiry_date %}
-                    {% if (vehicle.inspection_expiry_date - moment().date()).days < 0 %}
+                    {% set today = now.date() %}
+                    {% if (vehicle.inspection_expiry_date - today).days < 0 %}
                         expired
-                    {% elif (vehicle.inspection_expiry_date - moment().date()).days <= 30 %}
+                    {% elif (vehicle.inspection_expiry_date - today).days <= 30 %}
                         expiring-soon
                     {% else %}
                         active
@@ -980,7 +983,7 @@
                         <h4>الفحص الدوري</h4>
                         {% if vehicle.inspection_expiry_date %}
                             <p class="expiry-date">{{ vehicle.inspection_expiry_date.strftime('%Y-%m-%d') }}</p>
-                            {% set days_remaining = (vehicle.inspection_expiry_date - moment().date()).days %}
+                            {% set days_remaining = (vehicle.inspection_expiry_date - now.date()).days %}
                             {% if days_remaining < 0 %}
                                 <span class="status-badge expired">منتهي منذ {{ days_remaining|abs }} يوم</span>
                             {% elif days_remaining <= 30 %}
