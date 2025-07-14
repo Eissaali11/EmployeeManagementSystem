@@ -114,11 +114,101 @@ body {
     </div>
 </div>
 
-
-
-
-
-
+<!-- قسم الروابط السريعة -->
+<div class="card mb-3 mx-3 modern-card">
+    <div class="card-header bg-gradient bg-primary text-white">
+        <h6 class="mb-0">
+            <i class="fas fa-bolt ms-2"></i>
+            الإجراءات السريعة
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="row g-0">
+            <!-- تعديل بيانات السيارة -->
+            <div class="col-6">
+                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="quick-action-btn">
+                    <div class="quick-action-icon bg-warning">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="quick-action-text">
+                        <span class="quick-action-title">تعديل</span>
+                        <span class="quick-action-subtitle">بيانات السيارة</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- حذف السيارة -->
+            <div class="col-6">
+                <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="quick-action-btn" 
+                   onclick="return confirm('هل أنت متأكد من حذف السيارة {{ vehicle.plate_number }}؟\n\nسيتم حذف جميع البيانات المرتبطة بها!')">
+                    <div class="quick-action-icon bg-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <div class="quick-action-text">
+                        <span class="quick-action-title">حذف</span>
+                        <span class="quick-action-subtitle">السيارة</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-0">
+            <!-- إضافة صيانة -->
+            <div class="col-6">
+                <a href="{{ url_for('mobile.vehicle_documents') }}" class="quick-action-btn">
+                    <div class="quick-action-icon bg-info">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="quick-action-text">
+                        <span class="quick-action-title">صيانة</span>
+                        <span class="quick-action-subtitle">إدارة الصيانة</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- الوثائق -->
+            <div class="col-6">
+                <a href="{{ url_for('mobile.vehicle_documents') }}" class="quick-action-btn">
+                    <div class="quick-action-icon bg-success">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="quick-action-text">
+                        <span class="quick-action-title">الوثائق</span>
+                        <span class="quick-action-subtitle">عرض الوثائق</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="row g-0">
+            <!-- التقارير -->
+            <div class="col-6">
+                <a href="{{ url_for('mobile.vehicle_reports') }}" class="quick-action-btn">
+                    <div class="quick-action-icon bg-purple">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="quick-action-text">
+                        <span class="quick-action-title">التقارير</span>
+                        <span class="quick-action-subtitle">تقارير السيارة</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- تشيك لست -->
+            <div class="col-6">
+                <a href="{{ url_for('mobile.vehicles') }}" class="quick-action-btn">
+                    <div class="quick-action-icon bg-teal">
+                        <i class="fas fa-list-check"></i>
+                    </div>
+                    <div class="quick-action-text">
+                        <span class="quick-action-title">تشيك لست</span>
+                        <span class="quick-action-subtitle">قائمة المراجعة</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- سجل الصيانة -->
 <div class="card mb-3 mx-3 modern-card">
@@ -814,6 +904,134 @@ body {
 
 
 <style>
+/* تنسيقات الروابط السريعة */
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    text-decoration: none;
+    color: inherit;
+    background: white;
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-action-btn:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: translateY(-2px);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.quick-action-btn:last-child {
+    border-right: none;
+}
+
+.row:last-child .quick-action-btn {
+    border-bottom: none;
+}
+
+.quick-action-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.quick-action-icon.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+}
+
+.quick-action-icon.bg-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.quick-action-icon.bg-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.quick-action-icon.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.quick-action-icon.bg-purple {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+}
+
+.quick-action-icon.bg-teal {
+    background: linear-gradient(135deg, #20c997 0%, #17a085 100%);
+}
+
+.quick-action-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: right;
+}
+
+.quick-action-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.quick-action-subtitle {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 400;
+}
+
+.quick-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.quick-action-btn:hover::before {
+    left: 100%;
+}
+
+/* تجاوب للشاشات الصغيرة */
+@media (max-width: 576px) {
+    .quick-action-btn {
+        padding: 12px 10px;
+    }
+    
+    .quick-action-icon {
+        width: 40px;
+        height: 40px;
+        margin-left: 8px;
+        font-size: 1rem;
+    }
+    
+    .quick-action-title {
+        font-size: 0.85rem;
+    }
+    
+    .quick-action-subtitle {
+        font-size: 0.75rem;
+    }
+}
+
 /* تنسيقات شريط الإجراءات */
 .action-bar {
     background-color: white;

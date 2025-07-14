@@ -321,7 +321,7 @@ def generate_employee_excel(employees, output=None):
                 'Project': employee.project or '',  # المشروع
                 'Email': employee.email or '',  # البريد الإلكتروني
                 # معلومات إضافية في أعمدة منفصلة
-                'Department': employee.department.name if employee.department else '',  # القسم
+                'Department': ', '.join([dept.name for dept in employee.departments]) if employee.departments else '',  # الأقسام
                 'Join Date': employee.join_date if employee.join_date else ''  # تاريخ الانضمام
             }
             data.append(row)
@@ -649,7 +649,7 @@ def generate_comprehensive_employee_report(db_session, department_id=None, emplo
                 'معرف': employee.id,
                 'رقم الموظف': employee.employee_id,
                 'الاسم': employee.name,
-                'القسم': employee.department.name,
+                'القسم': ', '.join([dept.name for dept in employee.departments]) if employee.departments else 'بدون قسم',
                 'الوظيفة': employee.job_title or '',
                 'تاريخ التعيين': employee.hire_date,
                 'الجنسية': employee.nationality or '',
@@ -769,7 +769,7 @@ def generate_comprehensive_employee_report(db_session, department_id=None, emplo
                         'معرف الموظف': employee.id,
                         'رقم الموظف': employee.employee_id,
                         'اسم الموظف': employee.name,
-                        'القسم': employee.department.name,
+                        'القسم': ', '.join([dept.name for dept in employee.departments]) if employee.departments else 'بدون قسم',
                         'الشهر': salary.month,
                         'السنة': salary.year,
                         'الراتب الأساسي': salary.basic_salary,
@@ -1087,13 +1087,14 @@ def generate_employee_salary_simple_excel(db_session, month=None, year=None, dep
         
         for salary in results:
             employee = salary.employee
-            department = employee.department
+            departments_list = employee.departments if employee.departments else []
+            department_name = ', '.join([dept.name for dept in departments_list]) if departments_list else 'بدون قسم'
             
             data = {
                 'اسم الموظف': employee.name,
                 'رقم الموظف': employee.employee_id,
                 'رقم الهوية': employee.national_id or '',
-                'القسم': department.name,
+                'القسم': department_name,
                 'الشهر': salary.month,
                 'السنة': salary.year,
                 'الراتب الأساسي': salary.basic_salary,
@@ -1289,7 +1290,7 @@ def generate_salary_excel(salaries, filter_description=None):
         # تجميع البيانات حسب القسم
         departments_data = {}
         for salary in salaries:
-            dept_name = salary.employee.department.name
+            dept_name = ', '.join([dept.name for dept in salary.employee.departments]) if salary.employee.departments else 'بدون قسم'
             if dept_name not in departments_data:
                 departments_data[dept_name] = []
             
@@ -2063,8 +2064,8 @@ def export_employee_attendance_to_excel(employee, month=None, year=None):
         
         # استخراج معلومات لموقع العمل والمشروع
         location = "AL QASSIM"  # قيمة افتراضية أو استخراجها من الموظف
-        if hasattr(employee, 'department') and employee.department:
-            location = employee.department.name[:20]  # استخدام اسم القسم كموقع
+        if hasattr(employee, 'departments') and employee.departments:
+            location = employee.departments[0].name[:20]  # استخدام اسم أول قسم كموقع
             
         project = "ARAMEX"  # قيمة افتراضية، يمكن استخراجها من بيانات الموظف
         
@@ -2264,7 +2265,7 @@ def export_attendance_by_department(employees, attendances, start_date, end_date
         # تنظيم الموظفين حسب الأقسام
         departments = {}
         for employee in employees:
-            dept_name = employee.department.name if employee.department else 'بدون قسم'
+            dept_name = ', '.join([dept.name for dept in employee.departments]) if employee.departments else 'بدون قسم'
             if dept_name not in departments:
                 departments[dept_name] = []
             departments[dept_name].append(employee)
@@ -2346,8 +2347,8 @@ def export_attendance_by_department(employees, attendances, start_date, end_date
                 
                 # أحضر اسم الموقع من القسم
                 location = "AL QASSIM"  # قيمة افتراضية أو استخراجها من الموظف
-                if employee.department:
-                    location = employee.department.name[:20]  # استخدام اسم القسم كموقع
+                if employee.departments:
+                    location = employee.departments[0].name[:20]  # استخدام اسم أول قسم كموقع
                 worksheet.write(row, 6, location, normal_format)  # Location
                 
                 # اسم المشروع

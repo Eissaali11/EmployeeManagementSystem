@@ -14,7 +14,7 @@
     pkgs.librsvg
     pkgs.freetype
     pkgs.glibcLocales
-    pkgs.postgresql
+    pkgs.postgresql_16
     pkgs.openssl
   ];
 }
