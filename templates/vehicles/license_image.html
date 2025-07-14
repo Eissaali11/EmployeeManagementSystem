@@ -378,14 +378,14 @@
                             <div class="upload-text">اسحب وأفلت صورة الرخصة هنا</div>
                             <div class="upload-subtext">أو انقر للاختيار من جهازك</div>
                             
-                            <input type="file" id="licenseFile" name="license_image" class="file-input" 
-                                   accept="image/*" onchange="handleFileSelect(event)" required>
-                            
                             <small class="text-muted">
                                 <i class="fas fa-info-circle me-1"></i>
                                 الصيغ المدعومة: JPG, PNG, WEBP (حد أقصى 10MB)
                             </small>
                         </div>
+                        
+                        <input type="file" id="licenseFile" name="license_image" class="file-input" 
+                               accept="image/*" onchange="handleFileSelect(event)" required>
                         
                         <div class="action-buttons">
                             <button type="submit" class="btn-modern btn-success-modern" id="uploadBtn" disabled>
@@ -503,7 +503,12 @@ function handleDrop(event) {
     
     const files = event.dataTransfer.files;
     if (files.length > 0) {
-        document.getElementById('licenseFile').files = files;
+        const fileInput = document.getElementById('licenseFile');
+        // استخدام DataTransfer لتعيين الملفات بشكل صحيح
+        const dt = new DataTransfer();
+        dt.items.add(files[0]);
+        fileInput.files = dt.files;
+        
         handleFileSelect({ target: { files: files } });
     }
 }
@@ -546,16 +551,23 @@ function confirmDeleteImage() {
 // إدارة نموذج الرفع
 document.getElementById('uploadForm').addEventListener('submit', function(event) {
     const fileInput = document.getElementById('licenseFile');
-    if (!fileInput.files[0]) {
+    
+    console.log('Form submitted');
+    console.log('File input:', fileInput);
+    console.log('Files:', fileInput.files);
+    console.log('Number of files:', fileInput.files.length);
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
         event.preventDefault();
         alert('يرجى اختيار صورة أولاً');
-        return;
+        return false;
     }
     
     // إظهار مؤشر التحميل
     document.getElementById('loadingOverlay').style.display = 'flex';
     
     // السماح للنموذج بالإرسال بشكل طبيعي
+    console.log('Submitting form with file:', fileInput.files[0].name);
     return true;
 });
 </script>
