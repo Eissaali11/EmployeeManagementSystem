@@ -357,17 +357,21 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
                     'التاريخ': handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date else '',
                     'نوع العملية': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
                     'اسم الشخص': handover.person_name or '',
-                    'اسم المشرف': handover.supervisor_name if hasattr(handover, 'supervisor_name') else '',
+                    'اسم المشرف': getattr(handover, 'supervisor_name', 'غير محدد'),
                     'قراءة العداد': handover.mileage or 0,
-                    'مستوى الوقود': handover.fuel_level or '',
-                    'حالة المركبة': handover.vehicle_condition or '',
-                    'إطار احتياطي': 'نعم' if handover.has_spare_tire else 'لا',
-                    'طفاية حريق': 'نعم' if handover.has_fire_extinguisher else 'لا',
-                    'حقيبة إسعافات': 'نعم' if handover.has_first_aid_kit else 'لا',
-                    'مثلث تحذير': 'نعم' if handover.has_warning_triangle else 'لا',
-                    'أدوات': 'نعم' if handover.has_tools else 'لا',
+                    'مستوى الوقود': getattr(handover, 'fuel_level', 'غير محدد'),
+                    'حالة المركبة': getattr(handover, 'vehicle_condition', 'غير محدد'),
+                    'إطار احتياطي': 'نعم' if getattr(handover, 'has_spare_tire', False) else 'لا',
+                    'طفاية حريق': 'نعم' if getattr(handover, 'has_fire_extinguisher', False) else 'لا',
+                    'حقيبة إسعافات': 'نعم' if getattr(handover, 'has_first_aid_kit', False) else 'لا',
+                    'مثلث تحذير': 'نعم' if getattr(handover, 'has_warning_triangle', False) else 'لا',
+                    'أدوات': 'نعم' if getattr(handover, 'has_tools', False) else 'لا',
                     'ملاحظات': handover.notes or '',
-                    'رابط النموذج': handover.form_link or ''
+                    'رابط النموذج': getattr(handover, 'form_link', 'غير متوفر'),
+                    'رقم الهاتف': getattr(handover, 'driver_phone_number', 'غير محدد'),
+                    'رقم الإقامة': getattr(handover, 'driver_residency_number', 'غير محدد'),
+                    'المشروع': getattr(handover, 'project_name', 'غير محدد'),
+                    'المدينة': getattr(handover, 'city', 'غير محدد')
                 })
             
             if handover_data:
