@@ -228,8 +228,7 @@ def generate_complete_vehicle_excel_report(vehicle, rental=None, workshop_record
                     'اسم الورشة': record.workshop_name or '',
                     'سبب الصيانة': record.reason or '',
                     'التكلفة': float(record.cost) if record.cost else 0,
-                    'القراءة قبل الصيانة': record.mileage_before or 0,
-                    'القراءة بعد الصيانة': record.mileage_after or 0,
+                    'حالة الإصلاح': record.repair_status or '',
                     'الملاحظات': record.notes or ''
                 })
             
