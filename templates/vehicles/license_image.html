@@ -545,34 +545,18 @@ function confirmDeleteImage() {
 
 // إدارة نموذج الرفع
 document.getElementById('uploadForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    
     const fileInput = document.getElementById('licenseFile');
     if (!fileInput.files[0]) {
+        event.preventDefault();
         alert('يرجى اختيار صورة أولاً');
         return;
     }
     
+    // إظهار مؤشر التحميل
     document.getElementById('loadingOverlay').style.display = 'flex';
     
-    const formData = new FormData(this);
-    
-    fetch(window.location.href, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (response.ok) {
-            window.location.reload();
-        } else {
-            throw new Error('حدث خطأ أثناء رفع الصورة');
-        }
-    })
-    .catch(error => {
-        document.getElementById('loadingOverlay').style.display = 'none';
-        alert('حدث خطأ أثناء رفع الصورة. يرجى المحاولة مرة أخرى.');
-        console.error('Error:', error);
-    });
+    // السماح للنموذج بالإرسال بشكل طبيعي
+    return true;
 });
 </script>
 {% endblock %}

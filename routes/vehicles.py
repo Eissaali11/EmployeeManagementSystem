@@ -4252,7 +4252,7 @@ def vehicle_license_image(vehicle_id):
                     db.session.commit()
                     
                     # تسجيل العملية
-                    log_activity(
+                    log_audit(
                         action='delete',
                         entity_type='vehicle',
                         entity_id=vehicle.id,
@@ -4319,12 +4319,12 @@ def vehicle_license_image(vehicle_id):
                 db.session.commit()
                 
                 # تسجيل العملية
-                action_text = 'update' if request.form.get('existing_image') else 'create'
-                log_activity(
+                action_text = 'update' if vehicle.license_image else 'create'
+                log_audit(
                     action=action_text,
                     entity_type='vehicle',
                     entity_id=vehicle.id,
-                    details=f'تم {"تحديث" if action_text == "update" else "رفع"} صورة رخصة {"جديدة " if action_text == "create" else ""}للسيارة {vehicle.plate_number}'
+                    details=f'تم {"تحديث" if action_text == "update" else "رفع"} صورة رخصة للسيارة {vehicle.plate_number}'
                 )
                 
                 flash('تم رفع صورة الرخصة بنجاح', 'success')
