@@ -141,6 +141,69 @@
             </div>
         </div>
 
+        <!-- صورة رخصة السيارة -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card ms-2"></i>
+                        صورة رخصة السيارة
+                    </h5>
+                    <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                        {% if vehicle.license_image %}تحديث الصورة{% else %}رفع الصورة{% endif %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if vehicle.license_image %}
+                    <div class="text-center">
+                        <div class="license-image-container mb-3">
+                            <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                                 class="img-fluid rounded border" 
+                                 style="max-height: 300px; max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" 
+                                 alt="صورة رخصة السيارة"
+                                 onclick="showLicenseModal()">
+                        </div>
+                        <div class="license-actions d-flex gap-2 justify-content-center flex-wrap">
+                            <button onclick="showLicenseModal()" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-search-plus ms-1"></i>
+                                عرض كبير
+                            </button>
+                            <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                               target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-download ms-1"></i>
+                                تحميل الصورة
+                            </a>
+                            <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                               class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit ms-1"></i>
+                                تحديث
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                انقر على الصورة للعرض بحجم كامل
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-id-card fa-4x text-muted"></i>
+                        </div>
+                        <h5>لا توجد صورة رخصة</h5>
+                        <p class="text-muted">لم يتم رفع صورة رخصة لهذه السيارة بعد</p>
+                        <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                           class="btn btn-primary mt-2">
+                            <i class="fas fa-plus ms-1"></i>
+                            رفع صورة الرخصة
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
         <!-- معلومات الإيجار -->
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
@@ -1661,6 +1724,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // تحديث حالة الزر في البداية
     updateDeleteButtonState();
 });
+
+// عرض نافذة منبثقة لصورة الرخصة
+function showLicenseModal() {
+    const modal = `
+        <div class="modal fade" id="licenseModal" tabindex="-1" aria-labelledby="licenseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="licenseModalLabel">صورة رخصة السيارة - {{ vehicle.plate_number }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) if vehicle.license_image else '' }}" 
+                             class="img-fluid rounded" 
+                             style="max-height: 70vh; width: auto;" 
+                             alt="صورة رخصة السيارة">
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) if vehicle.license_image else '#' }}" 
+                           target="_blank" class="btn btn-success">
+                            <i class="fas fa-download ms-1"></i>
+                            تحميل الصورة
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // إزالة النافذة إذا كانت موجودة
+    const existingModal = document.getElementById('licenseModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // إضافة النافذة للصفحة
+    document.body.insertAdjacentHTML('beforeend', modal);
+    
+    // عرض النافذة
+    const bootstrapModal = new bootstrap.Modal(document.getElementById('licenseModal'));
+    bootstrapModal.show();
+}
 </script>
 
 {% endblock %}
