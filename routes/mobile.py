@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime, timedelta, date
 from sqlalchemy import extract, func, cast, Date
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session, current_app, send_file
 
 from flask_login import login_user, logout_user, login_required, current_user

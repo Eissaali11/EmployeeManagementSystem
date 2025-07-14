@@ -173,13 +173,11 @@
             {% endif %}
         </div>
         
-        {% if salary.notes %}
-        <div class="notes-section">
-            <h5 class="notes-title">
-                <i class="fas fa-sticky-note"></i>
-                ملاحظات
-            </h5>
-            <div class="notes-content">{{ salary.notes }}</div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('mobile.salaries') }}" class="btn btn-primary">
+                <i class="fas fa-list me-2"></i>
+                العودة لقائمة الرواتب
+            </a>
         </div>
         {% endif %}
     </div>
@@ -202,7 +200,19 @@
             العودة لقائمة الرواتب
         </a>
     </div>
-</div>
+
+    <!-- معلومات إضافية -->
+    {% if salary.notes %}
+    <div class="additional-info">
+        <h4 class="section-title">
+            <i class="fas fa-sticky-note"></i>
+            ملاحظات
+        </h4>
+        <div class="notes-content">{{ salary.notes }}</div>
+    </div>
+    {% endif %}
+
+
 
 <style>
 .salary-details-page {
