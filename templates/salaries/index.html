@@ -161,6 +161,17 @@
         </div>
     </div>
 
+    <!-- تنبيه نظام الحفظ الذكي -->
+    {% if not has_salary_data and salaries %}
+    <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+        <i class="fas fa-lightbulb me-2"></i>
+        <strong>نظام الحفظ الذكي:</strong> 
+        يمكنك إدخال البيانات في الحقول المطلوبة فقط. الحقول الفارغة ستبقى فارغة ولن يتم حفظ قيم افتراضية لها.
+        سيظهر تنبيه قبل الحفظ لتأكيد الحقول التي ستُحفظ.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
     <!-- جدول الرواتب -->
     <div class="card">
         <div class="card-header">
@@ -200,13 +211,13 @@
                                 <input type="number" class="form-control form-control-sm salary-input" data-field="basic_salary" data-employee="{{ salary.employee.id }}" placeholder="الراتب الأساسي" required>
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm salary-input" data-field="allowances" data-employee="{{ salary.employee.id }}" placeholder="البدلات" value="0">
+                                <input type="number" class="form-control form-control-sm salary-input" data-field="allowances" data-employee="{{ salary.employee.id }}" placeholder="البدلات">
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm salary-input" data-field="deductions" data-employee="{{ salary.employee.id }}" placeholder="الخصومات" value="0">
+                                <input type="number" class="form-control form-control-sm salary-input" data-field="deductions" data-employee="{{ salary.employee.id }}" placeholder="الخصومات">
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm salary-input" data-field="bonus" data-employee="{{ salary.employee.id }}" placeholder="المكافآت" value="0">
+                                <input type="number" class="form-control form-control-sm salary-input" data-field="bonus" data-employee="{{ salary.employee.id }}" placeholder="المكافآت">
                             </td>
                             <td class="fw-bold">
                                 <span class="net-salary-display" data-employee="{{ salary.employee.id }}">0</span>
@@ -312,11 +323,11 @@
             }
         }
         
-        // تفعيل زر حفظ الراتب
+        // تفعيل زر حفظ الراتب الذكي
         const saveSalaryButtons = document.querySelectorAll('.save-salary-btn');
         if (saveSalaryButtons.length > 0) {
             saveSalaryButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', async function() {
                     const employeeId = this.getAttribute('data-employee');
                     const month = this.getAttribute('data-month');
                     const year = this.getAttribute('data-year');
@@ -327,33 +338,80 @@
                     const deductions = document.querySelector(`.salary-input[data-field="deductions"][data-employee="${employeeId}"]`).value;
                     const bonus = document.querySelector(`.salary-input[data-field="bonus"][data-employee="${employeeId}"]`).value;
                     
-                    // إنشاء نموذج وإرساله
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/salaries/create';
-                    
-                    // إضافة حقول النموذج
-                    const fields = {
-                        'employee_id': employeeId,
-                        'month': month,
-                        'year': year,
-                        'basic_salary': basicSalary,
-                        'allowances': allowances,
-                        'deductions': deductions,
-                        'bonus': bonus
-                    };
-                    
-                    for (const key in fields) {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = key;
-                        input.value = fields[key];
-                        form.appendChild(input);
+                    // التحقق أولاً من الحقول غير المكتملة
+                    try {
+                        const validateResponse = await fetch('/salaries/validate_incomplete', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                basic_salary: basicSalary,
+                                allowances: allowances,
+                                deductions: deductions,
+                                bonus: bonus
+                            })
+                        });
+                        
+                        const validation = await validateResponse.json();
+                        
+                        if (!validation.has_basic_salary) {
+                            alert('يجب إدخال الراتب الأساسي على الأقل');
+                            return;
+                        }
+                        
+                        // عرض تنبيه إذا كانت هناك حقول فارغة
+                        if (validation.empty_fields.length > 0) {
+                            const emptyFieldsList = validation.empty_fields.join('، ');
+                            const filledFieldsList = validation.filled_fields.join('، ');
+                            
+                            const confirmMsg = `سيتم حفظ الحقول التالية فقط: ${filledFieldsList}\n\nالحقول الفارغة (${emptyFieldsList}) ستبقى فارغة.\n\nهل تريد المتابعة؟`;
+                            
+                            if (!confirm(confirmMsg)) {
+                                return;
+                            }
+                        }
+                        
+                        // تعطيل الزر مؤقتاً
+                        this.disabled = true;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الحفظ...';
+                        
+                        // إرسال البيانات للحفظ الذكي
+                        const saveResponse = await fetch('/salaries/save_smart', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                employee_id: employeeId,
+                                month: month,
+                                year: year,
+                                basic_salary: basicSalary,
+                                allowances: allowances,
+                                deductions: deductions,
+                                bonus: bonus
+                            })
+                        });
+                        
+                        const result = await saveResponse.json();
+                        
+                        if (result.success) {
+                            alert(result.message);
+                            // إعادة تحميل الصفحة لعرض البيانات المحدثة
+                            window.location.reload();
+                        } else {
+                            alert('خطأ: ' + result.message);
+                            // إعادة تفعيل الزر
+                            this.disabled = false;
+                            this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
                     }
-                    
-                    // إضافة النموذج للصفحة وإرساله
-                    document.body.appendChild(form);
-                    form.submit();
                 });
             });
         }

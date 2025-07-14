@@ -439,6 +439,153 @@ def delete(id):
     
     return redirect(url_for('salaries.index', month=month, year=year))
 
+@salaries_bp.route('/save_smart', methods=['POST'])
+def save_smart():
+    """حفظ ذكي للراتب - يحفظ فقط الحقول التي تم إدخال بيانات فيها"""
+    try:
+        data = request.json
+        employee_id = data.get('employee_id')
+        month = int(data.get('month'))
+        year = int(data.get('year'))
+        
+        # التحقق من وجود بيانات أساسية
+        if not employee_id or not month or not year:
+            return {'success': False, 'message': 'بيانات أساسية مفقودة'}
+        
+        # فحص الحقول المالية
+        basic_salary = data.get('basic_salary')
+        allowances = data.get('allowances') 
+        deductions = data.get('deductions')
+        bonus = data.get('bonus')
+        
+        # التحقق من أن المستخدم أدخل على الأقل الراتب الأساسي
+        if not basic_salary or basic_salary == '' or float(basic_salary) <= 0:
+            return {'success': False, 'message': 'يجب إدخال الراتب الأساسي'}
+        
+        # تحويل القيم الفارغة إلى None بدلاً من 0
+        def parse_value(value):
+            if value is None or value == '' or value == 'null':
+                return None
+            try:
+                parsed = float(value)
+                return parsed if parsed != 0 else None
+            except (ValueError, TypeError):
+                return None
+        
+        # معالجة القيم
+        basic_salary = float(basic_salary)
+        allowances = parse_value(allowances)
+        deductions = parse_value(deductions) 
+        bonus = parse_value(bonus)
+        
+        # حساب صافي الراتب
+        net_salary = basic_salary
+        if allowances:
+            net_salary += allowances
+        if bonus:
+            net_salary += bonus
+        if deductions:
+            net_salary -= deductions
+        
+        # التحقق من وجود سجل سابق
+        existing = Salary.query.filter_by(
+            employee_id=employee_id,
+            month=month,
+            year=year
+        ).first()
+        
+        if existing:
+            return {'success': False, 'message': 'يوجد سجل راتب لهذا الموظف في نفس الشهر والسنة'}
+        
+        # إنشاء سجل جديد
+        salary = Salary(
+            employee_id=employee_id,
+            month=month,
+            year=year,
+            basic_salary=basic_salary,
+            allowances=allowances,
+            deductions=deductions,
+            bonus=bonus,
+            net_salary=net_salary,
+            notes=data.get('notes', '')
+        )
+        
+        db.session.add(salary)
+        
+        # تسجيل العملية
+        employee = Employee.query.get(employee_id)
+        audit = SystemAudit(
+            action='create',
+            entity_type='salary',
+            entity_id=employee_id,
+            details=f'تم إنشاء سجل راتب ذكي للموظف: {employee.name} لشهر {month}/{year}'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إعداد رسالة النجاح مع تفاصيل الحقول المحفوظة
+        saved_fields = ['الراتب الأساسي']
+        if allowances:
+            saved_fields.append('البدلات')
+        if deductions:
+            saved_fields.append('الخصومات')
+        if bonus:
+            saved_fields.append('المكافآت')
+        
+        return {
+            'success': True, 
+            'message': f'تم حفظ الراتب بنجاح. الحقول المحفوظة: {", ".join(saved_fields)}',
+            'net_salary': net_salary
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'حدث خطأ: {str(e)}'}
+
+@salaries_bp.route('/validate_incomplete', methods=['POST'])
+def validate_incomplete():
+    """التحقق من الحقول غير المكتملة قبل الحفظ"""
+    try:
+        data = request.json
+        
+        empty_fields = []
+        filled_fields = []
+        
+        # فحص الحقول
+        basic_salary = data.get('basic_salary')
+        allowances = data.get('allowances')
+        deductions = data.get('deductions') 
+        bonus = data.get('bonus')
+        
+        if not basic_salary or basic_salary == '' or float(basic_salary) <= 0:
+            empty_fields.append('الراتب الأساسي')
+        else:
+            filled_fields.append('الراتب الأساسي')
+            
+        if not allowances or allowances == '' or float(allowances) <= 0:
+            empty_fields.append('البدلات')
+        else:
+            filled_fields.append('البدلات')
+            
+        if not deductions or deductions == '' or float(deductions) <= 0:
+            empty_fields.append('الخصومات') 
+        else:
+            filled_fields.append('الخصومات')
+            
+        if not bonus or bonus == '' or float(bonus) <= 0:
+            empty_fields.append('المكافآت')
+        else:
+            filled_fields.append('المكافآت')
+        
+        return {
+            'empty_fields': empty_fields,
+            'filled_fields': filled_fields,
+            'has_basic_salary': 'الراتب الأساسي' in filled_fields
+        }
+        
+    except Exception as e:
+        return {'error': str(e)}
+
 @salaries_bp.route('/import', methods=['GET', 'POST'])
 def import_excel():
     """Import salary records from Excel file"""
