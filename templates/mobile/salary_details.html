@@ -207,8 +207,9 @@
 <style>
 .salary-details-page {
     padding: 15px;
-    padding-top: 80px !important; /* مسافة من أعلى لتجنب اختفاء المحتوى خلف البانر */
-    padding-bottom: 140px; /* زيادة المسافة لتجنب اختفاء المحتوى خلف القائمة السفلية */
+    padding-top: 85px !important; /* مسافة من أعلى لتجنب اختفاء المحتوى خلف البانر */
+    padding-bottom: 120px !important; /* مسافة من أسفل لتجنب اختفاء المحتوى خلف القائمة السفلية */
+    min-height: calc(100vh - 85px - 120px);
 }
 
 /* رأس بيانات الموظف */
@@ -218,9 +219,12 @@
     padding: 20px;
     border-radius: 15px;
     margin-bottom: 20px;
+    margin-top: 10px; /* مسافة إضافية من أعلى */
     display: flex;
     align-items: center;
     gap: 15px;
+    position: relative;
+    z-index: 1;
 }
 
 .employee-avatar {
@@ -533,6 +537,9 @@
     flex-direction: column;
     gap: 12px;
     margin-top: 30px;
+    margin-bottom: 40px; /* مسافة إضافية من أسفل لضمان عدم تداخل زر العودة */
+    position: relative;
+    z-index: 2;
 }
 
 .action-btn {
