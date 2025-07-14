@@ -83,6 +83,18 @@
             </div>
         </div>
         
+        <!-- فلتر القسم -->
+        <div class="row mb-2">
+            <div class="col-12">
+                <select name="department_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">جميع الأقسام</option>
+                    {% for department in departments %}
+                    <option value="{{ department.id }}" {% if request.args.get('department_id')|int == department.id %}selected{% endif %}>{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
         <div class="d-flex gap-2">
             <select name="employee_id" class="form-select" style="flex: 1" onchange="this.form.submit()">
                 <option value="">جميع الموظفين</option>
@@ -91,7 +103,7 @@
                 {% endfor %}
             </select>
             
-            {% if request.args.get('search') or request.args.get('month') or request.args.get('year') or request.args.get('employee_id') %}
+            {% if request.args.get('search') or request.args.get('month') or request.args.get('year') or request.args.get('employee_id') or request.args.get('department_id') %}
             <a href="{{ url_for('mobile.salaries') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-times"></i>
             </a>
@@ -153,30 +165,39 @@
 {% if salaries %}
 <div class="vehicle-list">
     {% for salary in salaries %}
-    <a href="{{ url_for('mobile.salary_details', salary_id=salary.id) }}" class="vehicle-item">
-        <div class="vehicle-icon">
-            <i class="fas fa-user-tie"></i>
-        </div>
-        <div class="vehicle-info">
-            <div class="vehicle-name">{{ salary.employee.name }}</div>
-            <div class="vehicle-plate">{{ salary.year }}/{{ '%02d'|format(salary.month) }}</div>
-            <div class="vehicle-details">
-                <span class="vehicle-model">أساسي: {{ '{:,.0f}'.format(salary.basic_salary) }}</span>
-                {% if salary.is_paid %}
-                <span class="vehicle-status active">تم الدفع</span>
-                {% else %}
-                <span class="vehicle-status inactive">لم يتم الدفع</span>
-                {% endif %}
-                <span class="salary-details">
-                    <span>بدلات: {{ '{:,.0f}'.format(salary.allowances) }}</span>
-                    <span>خصومات: {{ '{:,.0f}'.format(salary.deductions) }}</span>
-                </span>
+    <div class="vehicle-item salary-item" style="display: flex; align-items: center; text-decoration: none; background: white; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <a href="{{ url_for('mobile.salary_details', salary_id=salary.id) }}" style="flex: 1; display: flex; align-items: center; text-decoration: none; color: inherit; padding: 15px;">
+            <div class="vehicle-icon">
+                <i class="fas fa-user-tie"></i>
             </div>
+            <div class="vehicle-info">
+                <div class="vehicle-name">{{ salary.employee.name }}</div>
+                <div class="vehicle-plate">{{ salary.year }}/{{ '%02d'|format(salary.month) }}</div>
+                <div class="vehicle-details">
+                    <span class="vehicle-model">أساسي: {{ '{:,.0f}'.format(salary.basic_salary) }}</span>
+                    {% if salary.is_paid %}
+                    <span class="vehicle-status active">تم الدفع</span>
+                    {% else %}
+                    <span class="vehicle-status inactive">لم يتم الدفع</span>
+                    {% endif %}
+                    <span class="salary-details">
+                        <span>بدلات: {{ '{:,.0f}'.format(salary.allowances) }}</span>
+                        <span>خصومات: {{ '{:,.0f}'.format(salary.deductions) }}</span>
+                    </span>
+                </div>
+            </div>
+            <div class="vehicle-value">
+                {{ '{:,.0f}'.format(salary.net_salary) }}
+            </div>
+        </a>
+        <div style="padding: 10px;">
+            <button onclick="shareSalaryWhatsApp({{ salary.id }}, '{{ salary.employee.name }}', '{{ salary.year }}', '{{ '%02d'|format(salary.month) }}', '{{ '{:,.0f}'.format(salary.basic_salary) }}', '{{ '{:,.0f}'.format(salary.allowances) }}', '{{ '{:,.0f}'.format(salary.deductions) }}', '{{ '{:,.0f}'.format(salary.net_salary) }}', '{{ 'تم الدفع' if salary.is_paid else 'لم يتم الدفع' }}')" 
+                    class="btn btn-success btn-sm" 
+                    style="background: linear-gradient(135deg, #25D366, #20c157); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="fab fa-whatsapp" style="font-size: 18px; color: white;"></i>
+            </button>
         </div>
-        <div class="vehicle-value">
-            {{ '{:,.0f}'.format(salary.net_salary) }}
-        </div>
-    </a>
+    </div>
     {% endfor %}
 </div>
 
