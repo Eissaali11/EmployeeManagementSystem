@@ -456,7 +456,7 @@ body {
         {% for document in documents %}
         <div class="document-item" onclick="location.href='{{ url_for('mobile.document_details', document_id=document.id) }}'">
             <div class="document-header">
-                <div class="document-title">{{ document.document_type }}</div>
+                <div class="document-title">{{ document.document_type_display or document.document_type }}</div>
                 <div class="document-status {{ document.status }}">
                     {% if document.status == 'valid' %}سارية
                     {% elif document.status == 'expiring' %}تنتهي قريباً

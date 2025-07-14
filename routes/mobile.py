@@ -696,15 +696,26 @@ def documents():
     # قم باستعلام قاعدة البيانات للحصول على قائمة الموظفين
     employees = Employee.query.order_by(Employee.name).all()
     
-    # إنشاء استعلام أساسي للوثائق
-    query = Document.query
+    # إنشاء استعلام أساسي للوثائق مع جلب بيانات الموظف
+    query = Document.query.join(Employee)
     
     # إضافة فلاتر إلى الاستعلام إذا تم توفيرها
     if employee_id:
         query = query.filter(Document.employee_id == employee_id)
     
+    # معالجة نوع الوثيقة - تحويل من العربية إلى الإنجليزية للبحث في قاعدة البيانات
     if document_type:
-        query = query.filter(Document.document_type == document_type)
+        document_type_mapping = {
+            'هوية': 'national_id',
+            'جواز سفر': 'passport',
+            'رخصة قيادة': 'driving_license',
+            'إقامة': 'residence_permit',
+            'تأمين صحي': 'health_insurance',
+            'شهادة عمل': 'work_certificate',
+            'أخرى': 'other'
+        }
+        english_type = document_type_mapping.get(document_type, document_type)
+        query = query.filter(Document.document_type == english_type)
     
     # الحصول على التاريخ الحالي
     current_date = datetime.now().date()
@@ -731,6 +742,30 @@ def documents():
     # تقسيم النتائج إلى صفحات
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     documents = pagination.items
+    
+    # إضافة حالة الوثيقة لكل وثيقة
+    for document in documents:
+        if document.expiry_date:
+            if document.expiry_date >= current_date + timedelta(days=60):
+                document.status = 'valid'
+            elif document.expiry_date >= current_date:
+                document.status = 'expiring'
+            else:
+                document.status = 'expired'
+        else:
+            document.status = 'no_expiry'
+        
+        # تحويل نوع الوثيقة من الإنجليزية للعربية للعرض
+        document_type_display = {
+            'national_id': 'هوية وطنية',
+            'passport': 'جواز سفر',
+            'driving_license': 'رخصة قيادة',
+            'residence_permit': 'إقامة',
+            'health_insurance': 'تأمين صحي',
+            'work_certificate': 'شهادة عمل',
+            'other': 'أخرى'
+        }
+        document.document_type_display = document_type_display.get(document.document_type, document.document_type)
     
     # حساب إحصائيات الوثائق
     valid_count = Document.query.filter(Document.expiry_date >= current_date + timedelta(days=60)).count()
