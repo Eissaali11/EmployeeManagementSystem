@@ -601,6 +601,7 @@ def index():
         """عرض قائمة السيارات مع خيارات التصفية"""
         status_filter = request.args.get('status', '')
         make_filter = request.args.get('make', '')
+        search_plate = request.args.get('search_plate', '')
         
         # قاعدة الاستعلام الأساسية
         query = Vehicle.query
@@ -612,6 +613,10 @@ def index():
         # إضافة التصفية حسب الشركة المصنعة إذا تم تحديدها
         if make_filter:
                 query = query.filter(Vehicle.make == make_filter)
+        
+        # إضافة البحث برقم السيارة إذا تم تحديده
+        if search_plate:
+                query = query.filter(Vehicle.plate_number.contains(search_plate))
         
         # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
         makes = db.session.query(Vehicle.make).distinct().all()
@@ -684,6 +689,7 @@ def index():
                 stats=stats,
                 status_filter=status_filter,
                 make_filter=make_filter,
+                search_plate=search_plate,
                 makes=makes,
                 statuses=VEHICLE_STATUS_CHOICES,
                 expiring_documents=expiring_documents
