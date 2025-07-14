@@ -19,7 +19,7 @@ from models import (
         Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
         VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
-        Department, ExternalAuthorization, Project
+        Department
 )
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
@@ -750,7 +750,7 @@ def view(id):
         accidents = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
         
         # الحصول على التفويضات الخارجية
-        external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=id).order_by(ExternalAuthorization.created_at.desc()).all()
+        external_authorizations = []  # مؤقتاً - سيتم إعادة تفعيل النظام لاحقاً
         
         # الحصول على الأقسام والموظفين والمشاريع للنموذج
         departments = Department.query.all()
