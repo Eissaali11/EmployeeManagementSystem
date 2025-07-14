@@ -304,17 +304,6 @@
                                     {% endif %}
                                 </p>
                                 <small class="text-muted">{{ vehicle.make }} {{ vehicle.model }}</small>
-                                <span class="badge bg-primary fs-6">مؤجرة</span>
-                                {% elif vehicle.status == 'in_project' %}
-                                <span class="badge bg-info fs-6">في المشروع</span>
-                                {% elif vehicle.status == 'in_workshop' %}
-                                <span class="badge bg-warning text-dark fs-6">في الورشة</span>
-                                {% elif vehicle.status == 'accident' %}
-                                <span class="badge bg-danger fs-6">حادث</span>
-                                {% else %}
-                                <span class="badge bg-secondary fs-6">{{ vehicle.status }}</span>
-                                {% endif %}
-                                <p class="text-muted mt-2 mb-0">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.year }}</p>
                             </div>
                         </div>
 
