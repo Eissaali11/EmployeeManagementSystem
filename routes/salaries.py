@@ -188,16 +188,12 @@ def index():
                 print(f"تم العثور على {len(salaries)} سجل راتب للشهر {filter_month} في جميع السنوات مع {len(employee_records)} موظف بدون سجلات")
             else:
                 # إنشاء كائنات مؤقتة لعرض الموظفين بدون رواتب للشهر المحدد
+                # احصل على معرفات الموظفين الذين لديهم رواتب في هذا الشهر والسنة
+                employee_ids_with_salaries = {s.employee_id for s in salaries}
+                
                 for employee in active_employees:
-                    # التحقق مما إذا كان الموظف لديه راتب للشهر والسنة المحددين
-                    has_salary = False
-                    for s in salaries:
-                        if s.employee_id == employee.id:
-                            has_salary = True
-                            break
-                            
-                    # إذا لم يكن لديه راتب، أضف سجل مؤقت
-                    if not has_salary:
+                    # إذا لم يكن لديه راتب في هذا الشهر والسنة، أضف سجل مؤقت
+                    if employee.id not in employee_ids_with_salaries:
                         temp_salary = Salary(
                             employee_id=employee.id,
                             employee=employee,
@@ -211,7 +207,10 @@ def index():
                         )
                         employee_records.append(temp_salary)
                 
-                print(f"لا توجد سجلات رواتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
+                if len(salaries) == 0:
+                    print(f"لا توجد سجلات رواتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين النشطين")
+                else:
+                    print(f"تم العثور على {len(salaries)} سجل راتب للشهر {filter_month} والسنة {filter_year}. تم إنشاء {len(employee_records)} سجل مؤقت للموظفين الآخرين")
         else:
             if show_all_months and show_all_years:
                 print(f"تم العثور على {len(salaries)} سجل في جميع الشهور والسنوات")
