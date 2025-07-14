@@ -522,6 +522,98 @@ def import_excel():
     
     return render_template('employees/import.html')
 
+@employees_bp.route('/import/template')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def import_template():
+    """Download Excel template for employee import with all comprehensive fields"""
+    try:
+        import pandas as pd
+        
+        # إنشاء قالب Excel مع جميع الحقول المطلوبة والاختيارية
+        template_data = {
+            'الاسم الكامل': ['محمد أحمد علي', 'فاطمة سالم محمد'],
+            'رقم الموظف': ['EMP001', 'EMP002'],
+            'رقم الهوية الوطنية': ['1234567890', '0987654321'],
+            'رقم الجوال': ['0501234567', '0509876543'],
+            'الجوال الشخصي': ['0551234567', ''],
+            'المسمى الوظيفي': ['مطور برمجيات', 'محاسبة'],
+            'الحالة الوظيفية': ['active', 'active'],
+            'الموقع': ['الرياض', 'جدة'],
+            'المشروع': ['مشروع الرياض', 'مشروع جدة'],
+            'البريد الإلكتروني': ['mohamed@company.com', 'fatima@company.com'],
+            'الأقسام': ['تقنية المعلومات', 'المحاسبة'],
+            'تاريخ الانضمام': ['2024-01-15', '2024-02-01'],
+            'تاريخ انتهاء الإقامة': ['2025-12-31', '2025-11-30'],
+            'حالة العقد': ['محدد المدة', 'دائم'],
+            'حالة الرخصة': ['سارية', 'سارية'],
+            'الجنسية': ['سعودي', 'مصري'],
+            'ملاحظات': ['موظف متميز', '']
+        }
+        
+        # إنشاء DataFrame
+        df = pd.DataFrame(template_data)
+        
+        # إنشاء ملف Excel
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # كتابة البيانات النموذجية
+            df.to_excel(writer, sheet_name='البيانات النموذجية', index=False)
+            
+            # إنشاء ورقة فارغة للاستخدام
+            empty_df = pd.DataFrame(columns=template_data.keys())
+            empty_df.to_excel(writer, sheet_name='استيراد الموظفين', index=False)
+            
+            # إنشاء ورقة التعليمات
+            instructions_data = {
+                'العمود': list(template_data.keys()),
+                'مطلوب/اختياري': ['مطلوب', 'مطلوب', 'مطلوب', 'مطلوب', 'اختياري', 'مطلوب', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري', 'اختياري'],
+                'التنسيق المطلوب': [
+                    'نص',
+                    'نص فريد',
+                    'رقم من 10 أرقام',
+                    'رقم جوال سعودي',
+                    'رقم جوال (اختياري)',
+                    'نص',
+                    'active/inactive/on_leave',
+                    'نص',
+                    'نص',
+                    'بريد إلكتروني صحيح',
+                    'اسم القسم',
+                    'YYYY-MM-DD',
+                    'YYYY-MM-DD',
+                    'نص',
+                    'نص',
+                    'اسم الجنسية',
+                    'نص (اختياري)'
+                ]
+            }
+            instructions_df = pd.DataFrame(instructions_data)
+            instructions_df.to_excel(writer, sheet_name='التعليمات', index=False)
+        
+        output.seek(0)
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='download_template',
+            entity_type='employee_import',
+            entity_id=0,
+            details='تم تحميل قالب استيراد الموظفين المحسن'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        return send_file(
+            output,
+            download_name='قالب_استيراد_الموظفين_شامل.xlsx',
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        flash(f'حدث خطأ في إنشاء القالب: {str(e)}', 'danger')
+        return redirect(url_for('employees.import_excel'))
+
 @employees_bp.route('/<int:id>/update_status', methods=['POST'])
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.EDIT)

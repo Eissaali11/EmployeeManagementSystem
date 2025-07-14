@@ -25,9 +25,12 @@
                                 يرجى رفع ملف بصيغة Excel (.xlsx, .xls)
                             </div>
                             <div class="mt-2">
-                                <a href="{{ url_for('employees.export_excel') }}" class="btn btn-sm btn-outline-info">
-                                    <i class="fas fa-download me-1"></i> تحميل قالب استيراد البيانات
+                                <a href="{{ url_for('employees.import_template') }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-download me-1"></i> تحميل القالب الشامل للاستيراد
                                 </a>
+                                <div class="small text-success mt-1">
+                                    <i class="fas fa-star"></i> قالب محسن يحتوي على 17 حقل بيانات شامل مع التعليمات
+                                </div>
                             </div>
                         </div>
 
@@ -49,29 +52,45 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <h6>هيكل ملف Excel المطلوب:</h6>
-                    <ul class="list-group list-group-flush mb-3">
-                        <li class="list-group-item">
-                            <strong>الحقول الإلزامية:</strong> name, employee_id, national_id, mobile, job_title, status
-                        </li>
-                        <li class="list-group-item">
-                            <strong>الحقول الاختيارية:</strong> email, location, project, department_id, join_date
-                        </li>
-                    </ul>
+                    <h6>الحقول المتاحة في القالب الشامل:</h6>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card border-success">
+                                <div class="card-body p-2">
+                                    <h6 class="text-success mb-2">الحقول الإلزامية:</h6>
+                                    <small class="text-muted">
+                                        • الاسم الكامل • رقم الموظف • رقم الهوية الوطنية • رقم الجوال • المسمى الوظيفي
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <div class="card border-info">
+                                <div class="card-body p-2">
+                                    <h6 class="text-info mb-2">الحقول الاختيارية:</h6>
+                                    <small class="text-muted">
+                                        • الجوال الشخصي • الحالة الوظيفية • الموقع • المشروع • البريد الإلكتروني 
+                                        • الأقسام • تاريخ الانضمام • تاريخ انتهاء الإقامة • حالة العقد 
+                                        • حالة الرخصة • الجنسية • ملاحظات
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <h6>ملاحظات هامة:</h6>
+                    <h6 class="mt-3">ملاحظات هامة:</h6>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            تأكد من أن حقل 'status' يحتوي على إحدى القيم التالية: active, inactive, on_leave
+                        <li class="list-group-item p-2">
+                            <strong>القالب الشامل:</strong> يحتوي على 3 أوراق عمل - بيانات نموذجية، ورقة فارغة للاستيراد، وتعليمات مفصلة
                         </li>
-                        <li class="list-group-item">
-                            حقل 'department_id' يجب أن يكون رقم معرف القسم الموجود في النظام
+                        <li class="list-group-item p-2">
+                            <strong>التواريخ:</strong> يجب أن تكون بتنسيق YYYY-MM-DD (مثال: 2024-01-15)
                         </li>
-                        <li class="list-group-item">
-                            حقل 'join_date' يجب أن يكون بتنسيق YYYY-MM-DD
+                        <li class="list-group-item p-2">
+                            <strong>الحالة:</strong> active (نشط)، inactive (غير نشط)، on_leave (في إجازة)
                         </li>
-                        <li class="list-group-item">
-                            يمكنك <a href="{{ url_for('employees.export_excel') }}" target="_blank">تحميل نموذج</a> كمثال
+                        <li class="list-group-item p-2">
+                            <strong>أفضل طريقة:</strong> <a href="{{ url_for('employees.import_template') }}" class="text-success fw-bold">حمل القالب الشامل</a> واتبع التعليمات
                         </li>
                     </ul>
                 </div>

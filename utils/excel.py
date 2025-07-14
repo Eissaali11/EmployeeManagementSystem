@@ -37,17 +37,25 @@ def parse_employee_excel(file):
             clean_name = str(col).strip()
             clean_columns[col] = clean_name
             
-        # Create a mapping for column detection
+        # Create a mapping for column detection - شامل لجميع الحقول المطلوبة
         column_mappings = {
-            'name': ['name', 'full name', 'employee name', 'اسم', 'الاسم', 'اسم الموظف', 'full_name', 'employee_name'],
+            'name': ['name', 'full name', 'employee name', 'اسم', 'الاسم', 'اسم الموظف', 'الاسم الكامل', 'full_name', 'employee_name'],
             'employee_id': ['emp n', 'emp.n', 'emp. n', 'emp id', 'emp.id', 'emp. id', 'employee id', 'employee number', 'emp no', 'employee no', 'رقم الموظف', 'الرقم الوظيفي', 'employee_id', 'emp_id', 'emp_no', 'emp .n', 'empn'],
-            'national_id': ['id n', 'id.n', 'id. n', 'id no', 'national id', 'identity no', 'identity number', 'national number', 'هوية', 'رقم الهوية', 'الرقم الوطني', 'national_id', 'identity_no', 'id number'],
+            'national_id': ['id n', 'id.n', 'id. n', 'id no', 'national id', 'identity no', 'identity number', 'national number', 'هوية', 'رقم الهوية', 'الرقم الوطني', 'رقم الهوية الوطنية', 'national_id', 'identity_no', 'id number'],
             'mobile': ['mobile', 'mobil', 'phone', 'cell', 'telephone', 'جوال', 'رقم الجوال', 'هاتف', 'mobile_no', 'phone_no', 'no.mobile', 'no. mobile'],
+            'mobilePersonal': ['personal mobile', 'mobile personal', 'جوال شخصي', 'الجوال الشخصي', 'personal_mobile', 'mobilepersonal'],
             'job_title': ['job title', 'position', 'title', 'المسمى', 'المسمى الوظيفي', 'الوظيفة', 'job_title', 'job_position'],
-            'status': ['status', 'employee status', 'emp status', 'الحالة', 'حالة', 'حالة الموظف', 'employee_status'],
+            'status': ['status', 'employee status', 'emp status', 'الحالة', 'حالة', 'حالة الموظف', 'الحالة الوظيفية', 'employee_status'],
             'location': ['location', 'office location', 'work location', 'موقع', 'الموقع', 'location_name'],
             'project': ['project', 'project name', 'assigned project', 'مشروع', 'المشروع', 'project_name'],
-            'email': ['email', 'email address', 'بريد', 'البريد الإلكتروني', 'email_address']
+            'email': ['email', 'email address', 'بريد', 'البريد الإلكتروني', 'email_address'],
+            'department': ['department', 'dept', 'قسم', 'الأقسام', 'القسم', 'department_name'],
+            'join_date': ['join date', 'hire date', 'start date', 'تاريخ الانضمام', 'تاريخ التعيين', 'join_date', 'hire_date'],
+            'license_end_date': ['license end', 'license expiry', 'تاريخ انتهاء الإقامة', 'انتهاء الإقامة', 'license_end_date'],
+            'contract_status': ['contract status', 'حالة العقد', 'contract_status'],
+            'license_status': ['license status', 'حالة الرخصة', 'license_status'],
+            'nationality': ['nationality', 'الجنسية', 'جنسية'],
+            'notes': ['notes', 'remarks', 'comments', 'ملاحظات', 'notes_field']
         }
         
         # Map columns to their normalized names
@@ -167,7 +175,9 @@ def parse_employee_excel(file):
         
         # Check required columns - divide into essential and non-essential fields
         essential_fields = ['name', 'employee_id', 'national_id']  # هذه مطلوبة دائمًا
-        other_fields = ['mobile', 'job_title']  # هذه يمكن إنشاء قيم افتراضية لها
+        other_fields = ['mobile', 'job_title', 'status', 'location', 'project', 'email', 'mobilePersonal', 
+                       'department', 'join_date', 'license_end_date', 'contract_status', 'license_status', 
+                       'nationality', 'notes']  # هذه يمكن إنشاء قيم افتراضية لها أو تركها فارغة
         
         missing_essential = [field for field in essential_fields if field not in detected_columns]
         if missing_essential:
