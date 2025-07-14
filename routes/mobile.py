@@ -638,6 +638,48 @@ def salary_details(salary_id):
                           month_name=month_name,
                           employee_stats=employee_stats)
 
+# تعديل الراتب - النسخة المحمولة
+@mobile_bp.route('/salaries/<int:salary_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_salary(salary_id):
+    """تعديل الراتب للنسخة المحمولة"""
+    salary = Salary.query.options(joinedload(Salary.employee)).get_or_404(salary_id)
+    
+    if request.method == 'POST':
+        try:
+            # تحديث بيانات الراتب
+            salary.basic_salary = float(request.form.get('basic_salary', 0))
+            salary.allowances = float(request.form.get('allowances', 0))
+            salary.deductions = float(request.form.get('deductions', 0))
+            salary.bonus = float(request.form.get('bonus', 0))
+            salary.overtime_hours = float(request.form.get('overtime_hours', 0))
+            salary.is_paid = 'is_paid' in request.form
+            salary.notes = request.form.get('notes', '')
+            
+            # حساب صافي الراتب
+            salary.net_salary = salary.basic_salary + salary.allowances + salary.bonus - salary.deductions
+            salary.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            flash('تم تحديث بيانات الراتب بنجاح', 'success')
+            return redirect(url_for('mobile.salary_details', salary_id=salary.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ أثناء تحديث الراتب', 'error')
+            
+    # تحويل الشهر إلى اسمه بالعربية
+    month_names = {
+        1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
+        5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+        9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+    }
+    month_name = month_names.get(salary.month, '')
+    
+    return render_template('mobile/edit_salary.html',
+                          salary=salary,
+                          month_name=month_name)
+
 # صفحة الوثائق - النسخة المحمولة
 @mobile_bp.route('/documents')
 @login_required
