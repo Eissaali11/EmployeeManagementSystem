@@ -4228,112 +4228,118 @@ def update_handover_link(handover_id):
 
 # ========== مسارات إدارة صور رخص السيارات ==========
 
-@vehicles_bp.route('/<int:vehicle_id>/license-image')
+@vehicles_bp.route('/<int:vehicle_id>/license-image', methods=['GET', 'POST'])
 @login_required
 def vehicle_license_image(vehicle_id):
     """عرض وإدارة صورة رخصة السيارة"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        # التحقق من نوع العملية
+        action = request.form.get('action')
+        
+        if action == 'delete':
+            # حذف صورة الرخصة
+            if vehicle.license_image:
+                try:
+                    # حذف الملف من النظام
+                    file_path = os.path.join('static', 'uploads', 'vehicles', vehicle.license_image)
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                    
+                    # حذف المرجع من قاعدة البيانات
+                    vehicle.license_image = None
+                    db.session.commit()
+                    
+                    # تسجيل العملية
+                    log_activity(
+                        action='delete',
+                        entity_type='vehicle',
+                        entity_id=vehicle.id,
+                        details=f'تم حذف صورة رخصة السيارة {vehicle.plate_number}'
+                    )
+                    
+                    flash('تم حذف صورة الرخصة بنجاح', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'خطأ في حذف صورة الرخصة: {str(e)}', 'error')
+            else:
+                flash('لا توجد صورة رخصة لحذفها', 'warning')
+                
+            return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
+        
+        # رفع صورة جديدة
+        if 'license_image' not in request.files:
+            flash('لم يتم اختيار ملف', 'danger')
+            return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
+        
+        file = request.files['license_image']
+        if file.filename == '':
+            flash('لم يتم اختيار ملف', 'danger')
+            return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
+        
+        if file and allowed_file(file.filename, ['png', 'jpg', 'jpeg', 'gif', 'webp']):
+            try:
+                # إنشاء مجلد الرفع إذا لم يكن موجوداً
+                upload_dir = os.path.join('static', 'uploads', 'vehicles')
+                os.makedirs(upload_dir, exist_ok=True)
+                
+                # حذف الصورة القديمة إذا كانت موجودة
+                if vehicle.license_image:
+                    old_file_path = os.path.join(upload_dir, vehicle.license_image)
+                    if os.path.exists(old_file_path):
+                        os.remove(old_file_path)
+                
+                # تأمين اسم الملف وإضافة timestamp لتجنب التضارب
+                filename = secure_filename(file.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"license_{vehicle.plate_number}_{timestamp}_{filename}"
+                filepath = os.path.join(upload_dir, filename)
+                
+                # حفظ الملف
+                file.save(filepath)
+                
+                # ضغط الصورة إذا كانت كبيرة
+                try:
+                    from PIL import Image
+                    with Image.open(filepath) as img:
+                        # تحويل إلى RGB إذا كانت الصورة RGBA
+                        if img.mode == 'RGBA':
+                            img = img.convert('RGB')
+                        
+                        # تصغير الصورة إذا كانت أكبر من 1500x1500
+                        if img.width > 1500 or img.height > 1500:
+                            img.thumbnail((1500, 1500), Image.Resampling.LANCZOS)
+                            img.save(filepath, 'JPEG', quality=85, optimize=True)
+                except Exception as e:
+                    print(f"خطأ في معالجة الصورة: {e}")
+                
+                # تحديث قاعدة البيانات
+                vehicle.license_image = filename
+                db.session.commit()
+                
+                # تسجيل العملية
+                action_text = 'update' if request.form.get('existing_image') else 'create'
+                log_activity(
+                    action=action_text,
+                    entity_type='vehicle',
+                    entity_id=vehicle.id,
+                    details=f'تم {"تحديث" if action_text == "update" else "رفع"} صورة رخصة {"جديدة " if action_text == "create" else ""}للسيارة {vehicle.plate_number}'
+                )
+                
+                flash('تم رفع صورة الرخصة بنجاح', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'خطأ في رفع صورة الرخصة: {str(e)}', 'error')
+        else:
+            flash('نوع الملف غير مدعوم. يرجى رفع صورة بصيغة JPG, PNG, GIF أو WEBP', 'error')
+        
+        return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
+    
     return render_template('vehicles/license_image.html', vehicle=vehicle)
 
-@vehicles_bp.route('/<int:vehicle_id>/license-image/upload', methods=['POST'])
-@login_required
-def upload_license_image(vehicle_id):
-    """رفع صورة رخصة السيارة"""
-    import os
-    from werkzeug.utils import secure_filename
-    
-    vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
-    if 'license_image' not in request.files:
-        flash('لم يتم اختيار ملف', 'danger')
-        return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
-    
-    file = request.files['license_image']
-    if file.filename == '':
-        flash('لم يتم اختيار ملف', 'danger')
-        return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
-    
-    if file and allowed_file(file.filename, ['png', 'jpg', 'jpeg', 'gif']):
-        try:
-            # إنشاء مجلد الرفع إذا لم يكن موجوداً
-            upload_dir = os.path.join('static', 'uploads', 'vehicle_licenses')
-            os.makedirs(upload_dir, exist_ok=True)
-            
-            # تأمين اسم الملف وإضافة timestamp لتجنب التضارب
-            filename = secure_filename(file.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"license_{vehicle.plate_number}_{timestamp}_{filename}"
-            filepath = os.path.join(upload_dir, filename)
-            
-            # حفظ الملف
-            file.save(filepath)
-            
-            # ضغط الصورة إذا كانت كبيرة
-            try:
-                from PIL import Image
-                with Image.open(filepath) as img:
-                    # تحويل إلى RGB إذا كانت الصورة RGBA
-                    if img.mode == 'RGBA':
-                        img = img.convert('RGB')
-                    
-                    # تصغير الصورة إذا كانت أكبر من 1500x1500
-                    if img.width > 1500 or img.height > 1500:
-                        img.thumbnail((1500, 1500), Image.Resampling.LANCZOS)
-                        img.save(filepath, 'JPEG', quality=85, optimize=True)
-            except Exception as e:
-                print(f"خطأ في معالجة الصورة: {e}")
-            
-            # حذف الصورة القديمة إذا كانت موجودة
-            if vehicle.license_image and os.path.exists(vehicle.license_image):
-                try:
-                    os.remove(vehicle.license_image)
-                except:
-                    pass
-            
-            # حفظ المسار في قاعدة البيانات
-            vehicle.license_image = filepath
-            db.session.commit()
-            
-            # تسجيل العملية
-            log_audit('update', 'vehicle', vehicle.id, f'تم رفع صورة رخصة جديدة للسيارة {vehicle.plate_number}')
-            
-            flash('تم رفع صورة الرخصة بنجاح', 'success')
-            
-        except Exception as e:
-            flash(f'حدث خطأ أثناء رفع الصورة: {str(e)}', 'danger')
-    else:
-        flash('نوع الملف غير مدعوم. يُسمح فقط بـ PNG, JPG, JPEG, GIF', 'danger')
-    
-    return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
 
-@vehicles_bp.route('/<int:vehicle_id>/license-image/delete', methods=['POST'])
-@login_required
-def delete_license_image(vehicle_id):
-    """حذف صورة رخصة السيارة"""
-    import os
-    
-    vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
-    if vehicle.license_image:
-        # حذف الملف من النظام
-        if os.path.exists(vehicle.license_image):
-            try:
-                os.remove(vehicle.license_image)
-            except:
-                pass
-        
-        # حذف المسار من قاعدة البيانات
-        vehicle.license_image = None
-        db.session.commit()
-        
-        # تسجيل العملية
-        log_audit('delete', 'vehicle', vehicle.id, f'تم حذف صورة رخصة السيارة {vehicle.plate_number}')
-        
-        flash('تم حذف صورة الرخصة بنجاح', 'success')
-    else:
-        flash('لا توجد صورة رخصة لحذفها', 'warning')
-    
-    return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
 
 def allowed_file(filename, allowed_extensions):
     """التحقق من أن امتداد الملف مسموح"""
