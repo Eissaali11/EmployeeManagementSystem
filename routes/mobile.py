@@ -4036,10 +4036,10 @@ def delete_handover(handover_id):
         
         # تسجيل العملية في السجل
         log_activity(
-            user_id=current_user.id,
             action='delete',
-            table_name='vehicle_handover',
-            description=f'تم حذف سجل {"تسليم" if handover_type == "delivery" else "استلام"} للسيارة - الشخص: {person_name}'
+            entity_type='vehicle_handover',
+            entity_id=handover_id,
+            details=f'تم حذف سجل {"تسليم" if handover_type == "delivery" else "استلام"} للسيارة - الشخص: {person_name}'
         )
         
         # تحديث اسم السائق في السيارة بعد الحذف
