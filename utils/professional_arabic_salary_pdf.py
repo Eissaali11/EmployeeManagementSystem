@@ -20,16 +20,37 @@ class ProfessionalArabicSalaryPDF(FPDF):
         self.add_arabic_font()
         
     def add_arabic_font(self):
-        """إضافة الخط العربي"""
+        """إضافة الخط العربي - نفس الخط المستخدم في نظام التسليم والاستلام"""
         try:
-            # مسار الخط العربي
-            font_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'utils', 'beIN-Normal.ttf')
-            if os.path.exists(font_path):
-                self.add_font('Arabic', '', font_path, uni=True)
-                self.arabic_font_available = True
-            else:
-                self.arabic_font_available = False
-        except Exception:
+            # تجربة المسارات المختلفة للخط العربي
+            font_paths = [
+                os.path.join('static', 'fonts', 'beIN Normal .ttf'),  # نفس الخط المستخدم في نظام التسليم
+                os.path.join('static', 'fonts', 'beIN-Normal.ttf'),
+                os.path.join('static', 'fonts', 'Tajawal-Regular.ttf'),
+                os.path.join('static', 'fonts', 'Cairo.ttf'),
+                os.path.join('utils', 'beIN-Normal.ttf'),
+                'Cairo.ttf'  # الخط الموجود في المجلد الجذر
+            ]
+            
+            for font_path in font_paths:
+                if os.path.exists(font_path):
+                    try:
+                        self.add_font('Arabic', '', font_path, uni=True)
+                        self.arabic_font_available = True
+                        self.selected_font_path = font_path
+                        print(f"استخدام خط: {font_path}")
+                        return
+                    except Exception as e:
+                        print(f"فشل في تحميل الخط {font_path}: {e}")
+                        continue
+            
+            # إذا لم نجد أي خط، استخدام الخط الافتراضي
+            self.arabic_font_available = False
+            self.selected_font_path = None
+            print("لم يتم العثور على خط عربي، سيتم استخدام الخط الافتراضي")
+            
+        except Exception as e:
+            print(f"خطأ في إضافة الخط العربي: {e}")
             self.arabic_font_available = False
             
     def reshape_arabic(self, text):
@@ -267,6 +288,14 @@ def create_professional_arabic_salary_pdf(salary):
         # رسالة أسفل الصفحة
         pdf.ln(5)
         pdf.safe_cell(0, 6, 'هذا المستند مُولد إلكترونياً من نظام نُظم لإدارة الموظفين', 0, 1, 'C')
+        
+        # معلومات الخط المُستخدم
+        if hasattr(pdf, 'selected_font_path') and pdf.selected_font_path:
+            pdf.ln(2)
+            pdf.set_font('Arial', '', 6)
+            pdf.set_text_color(150, 150, 150)
+            font_name = os.path.basename(pdf.selected_font_path)
+            pdf.cell(0, 4, f'Font: {font_name}', 0, 1, 'C')
         
         # إرجاع PDF كـ bytes
         output = BytesIO()
