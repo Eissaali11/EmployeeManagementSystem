@@ -154,6 +154,14 @@
 - Environment variable protection
 
 ## Changelog
+- July 14, 2025: **إصلاح شامل لجميع أخطاء علاقة الأقسام في النظام:**
+  • حل مشكلة Employee.department في جميع مولدات التقارير (PDF والExcel)
+  • تطبيق العلاقة الصحيحة Employee.departments (many-to-many) بدلاً من employee.department
+  • إصلاح utils/employee_comprehensive_report_updated.py وutils/employee_basic_report.py
+  • إصلاح routes/documents.py في جميع دوال تصدير الوثائق (6 مواقع)
+  • إنشاء ملفات المحمول المفقودة: salary_details.html وadd_salary.html
+  • النظام يولد تقارير PDF بنجاح (58KB للتقرير الشامل)
+  • حل خطأ Internal Server Error في تصدير الوثائق المنتهية الصلاحية
 - July 14, 2025: **إصلاح شامل لتصميم PDF إشعار الرواتب مع دعم النصوص العربية:**
   • إنشاء مولد PDF جديد professional_arabic_salary_pdf.py مع دعم كامل للنصوص العربية
   • تطبيق تصميم احترافي مع ألوان متدرجة وتخطيط منظم للبيانات
