@@ -875,7 +875,7 @@ def view(id):
         handovers = handover_records
         
         return render_template(
-                'vehicles/view_with_sidebar.html',
+                'vehicles/view_clean.html',
                 vehicle=vehicle,
                 rental=rental,
                 workshop_records=workshop_records,
@@ -4362,12 +4362,12 @@ def update_drive_link(vehicle_id):
         
         if not drive_link:
             flash('يرجى إدخال رابط Google Drive', 'danger')
-            return redirect(url_for('vehicles.view_with_sidebar', id=vehicle_id))
+            return redirect(url_for('vehicles.view', id=vehicle_id))
         
         # التحقق من صحة الرابط
         if not drive_link.startswith('https://drive.google.com'):
             flash('يرجى إدخال رابط Google Drive صحيح', 'danger')
-            return redirect(url_for('vehicles.view_with_sidebar', id=vehicle_id))
+            return redirect(url_for('vehicles.view', id=vehicle_id))
         
         # حفظ الرابط
         old_link = vehicle.drive_folder_link
@@ -4382,7 +4382,7 @@ def update_drive_link(vehicle_id):
             log_audit('create', 'vehicle', vehicle.id, f'تم إضافة رابط Google Drive للسيارة {vehicle.plate_number}')
             flash('تم إضافة رابط Google Drive بنجاح', 'success')
     
-    return redirect(url_for('vehicles.view_with_sidebar', id=vehicle_id))
+    return redirect(url_for('vehicles.view', id=vehicle_id))
 
 @vehicles_bp.route('/<int:vehicle_id>/drive-files')
 @login_required
