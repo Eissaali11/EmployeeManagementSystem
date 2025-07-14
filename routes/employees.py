@@ -7,7 +7,8 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality, employee_departments
+from sqlalchemy import func, or_
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
 from utils.user_helpers import require_module_access
@@ -47,9 +48,68 @@ def save_employee_image(file, employee_id, image_type):
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def index():
-    """List all employees"""
-    employees = Employee.query.all()
-    return render_template('employees/index.html', employees=employees)
+    """List all employees with filtering options"""
+    # الحصول على معاملات الفلترة من URL
+    department_filter = request.args.get('department', '')
+    status_filter = request.args.get('status', '')
+    multi_department_filter = request.args.get('multi_department', '')
+    
+    # بناء الاستعلام الأساسي
+    query = Employee.query.options(
+        db.joinedload(Employee.departments),
+        db.joinedload(Employee.nationality_rel)
+    )
+    
+    # تطبيق فلتر القسم
+    if department_filter:
+        query = query.join(Employee.departments).filter(Department.id == department_filter)
+    
+    # تطبيق فلتر الحالة
+    if status_filter:
+        query = query.filter(Employee.status == status_filter)
+    
+    # تطبيق فلتر الموظفين في أكثر من قسم
+    if multi_department_filter == 'yes':
+        # الموظفين الذين لديهم أكثر من قسم
+        subquery = db.session.query(employee_departments.c.employee_id, 
+                                   func.count(employee_departments.c.department_id).label('dept_count'))\
+                            .group_by(employee_departments.c.employee_id)\
+                            .having(func.count(employee_departments.c.department_id) > 1)\
+                            .subquery()
+        query = query.join(subquery, Employee.id == subquery.c.employee_id)
+    elif multi_department_filter == 'no':
+        # الموظفين الذين لديهم قسم واحد فقط أو لا يوجد لديهم أقسام
+        subquery = db.session.query(employee_departments.c.employee_id, 
+                                   func.count(employee_departments.c.department_id).label('dept_count'))\
+                            .group_by(employee_departments.c.employee_id)\
+                            .having(func.count(employee_departments.c.department_id) <= 1)\
+                            .subquery()
+        query = query.outerjoin(subquery, Employee.id == subquery.c.employee_id)\
+                     .filter(or_(subquery.c.employee_id.is_(None), 
+                               subquery.c.dept_count <= 1))
+    
+    employees = query.all()
+    
+    # الحصول على جميع الأقسام للفلتر
+    departments = Department.query.all()
+    
+    # حساب إحصائيات الموظفين متعددي الأقسام
+    multi_dept_count = db.session.query(Employee.id)\
+                                .join(employee_departments)\
+                                .group_by(Employee.id)\
+                                .having(func.count(employee_departments.c.department_id) > 1)\
+                                .count()
+    
+    single_dept_count = db.session.query(Employee).count() - multi_dept_count
+    
+    return render_template('employees/index.html', 
+                         employees=employees, 
+                         departments=departments,
+                         current_department=department_filter,
+                         current_status=status_filter,
+                         current_multi_department=multi_department_filter,
+                         multi_dept_count=multi_dept_count,
+                         single_dept_count=single_dept_count)
 
 @employees_bp.route('/create', methods=['GET', 'POST'])
 @login_required
