@@ -308,21 +308,30 @@ def generate_employee_excel(employees, output=None):
         # إنشاء بيانات لملف Excel بنفس ترتيب النموذج الأصلي
         data = []
         for employee in employees:
-            # ترتيب البيانات حسب النموذج الأصلي - تم تصحيح ترتيب الأعمدة
-            # Name, ID Number (هوية), Emp .N (رقم موظف), No.Mobile, Job Title, Status, Location, Project, Email
+            # ترتيب البيانات حسب النموذج الأصلي مع إضافة جميع الحقول المتاحة
             row = {
-                'Name': employee.name,  # الاسم
-                'ID Number': employee.national_id,  # رقم الهوية
-                'Emp .N': employee.employee_id,  # رقم الموظف
-                'No.Mobile': employee.mobile,  # رقم الجوال
-                'Job Title': employee.job_title,  # المسمى الوظيفي
-                'Status': employee.status,  # الحالة
-                'Location': employee.location or '',  # الموقع
-                'Project': employee.project or '',  # المشروع
-                'Email': employee.email or '',  # البريد الإلكتروني
-                # معلومات إضافية في أعمدة منفصلة
-                'Department': ', '.join([dept.name for dept in employee.departments]) if employee.departments else '',  # الأقسام
-                'Join Date': employee.join_date if employee.join_date else ''  # تاريخ الانضمام
+                'الاسم الكامل': employee.name,  # الاسم
+                'رقم الموظف': employee.employee_id,  # رقم الموظف
+                'رقم الهوية الوطنية': employee.national_id,  # رقم الهوية
+                'رقم الجوال': employee.mobile,  # رقم الجوال
+                'الجوال الشخصي': getattr(employee, 'mobilePersonal', '') or '',  # الجوال الشخصي
+                'المسمى الوظيفي': employee.job_title,  # المسمى الوظيفي
+                'الحالة الوظيفية': employee.status,  # الحالة
+                'الموقع': employee.location or '',  # الموقع
+                'المشروع': employee.project or '',  # المشروع
+                'البريد الإلكتروني': employee.email or '',  # البريد الإلكتروني
+                'الأقسام': ', '.join([dept.name for dept in employee.departments]) if employee.departments else '',  # الأقسام
+                'تاريخ الانضمام': employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '',  # تاريخ الانضمام
+                'تاريخ انتهاء الإقامة': employee.license_end_date.strftime('%Y-%m-%d') if hasattr(employee, 'license_end_date') and employee.license_end_date else '',  # تاريخ انتهاء الإقامة
+                'حالة العقد': getattr(employee, 'contract_status', '') or '',  # حالة العقد
+                'حالة الرخصة': getattr(employee, 'license_status', '') or '',  # حالة الرخصة
+                'الجنسية': employee.nationality.name if hasattr(employee, 'nationality') and employee.nationality else '',  # الجنسية
+                'تاريخ الإنشاء': employee.created_at.strftime('%Y-%m-%d %H:%M:%S') if hasattr(employee, 'created_at') and employee.created_at else '',  # تاريخ الإنشاء
+                'آخر تحديث': employee.updated_at.strftime('%Y-%m-%d %H:%M:%S') if hasattr(employee, 'updated_at') and employee.updated_at else '',  # آخر تحديث
+                'صورة الملف الشخصي': 'نعم' if hasattr(employee, 'profile_image') and employee.profile_image else 'لا',  # صورة الملف الشخصي
+                'صورة الهوية': 'نعم' if hasattr(employee, 'national_id_image') and employee.national_id_image else 'لا',  # صورة الهوية
+                'صورة الرخصة': 'نعم' if hasattr(employee, 'license_image') and employee.license_image else 'لا',  # صورة الرخصة
+                'ملاحظات': getattr(employee, 'notes', '') or ''  # ملاحظات
             }
             data.append(row)
         

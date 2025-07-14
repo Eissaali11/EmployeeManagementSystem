@@ -72,7 +72,15 @@
                             <td>{{ employee.national_id }}</td>
                             <td>{{ employee.mobile }}</td>
                             <td>{{ employee.job_title }}</td>
-                            <td>{{ employee.department.name if employee.department else '-' }}</td>
+                            <td>
+                                {%- if employee.departments -%}
+                                    {%- for dept in employee.departments -%}
+                                        {{ dept.name }}{% if not loop.last %}, {% endif %}
+                                    {%- endfor -%}
+                                {%- else -%}
+                                    -
+                                {%- endif -%}
+                            </td>
                             <td>
                                 {% if employee.status == 'active' %}
                                 <span class="badge bg-success">نشط</span>
