@@ -455,7 +455,7 @@
                                 {% if workshop_records %}
                                 {% set latest_workshop = workshop_records[0] %}
                                 <p class="fw-bold mb-1">{{ latest_workshop.formatted_entry_date }}</p>
-                                <small class="text-muted">{{ latest_workshop.problem_description[:50] }}...</small>
+                                <small class="text-muted">{{ latest_workshop.description[:50] }}...</small>
                                 {% else %}
                                 <p class="text-muted">لا توجد سجلات صيانة</p>
                                 {% endif %}
@@ -669,7 +669,7 @@
                                 {% for record in workshop_records %}
                                 <tr>
                                     <td>{{ record.formatted_entry_date }}</td>
-                                    <td>{{ record.problem_description[:50] }}{% if record.problem_description|length > 50 %}...{% endif %}</td>
+                                    <td>{{ record.description[:50] }}{% if record.description|length > 50 %}...{% endif %}</td>
                                     <td>{{ record.workshop_name or 'غير محدد' }}</td>
                                     <td>{{ "{:,.2f}".format(record.cost) if record.cost else 'غير محدد' }} ريال</td>
                                     <td>
