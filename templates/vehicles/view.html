@@ -137,6 +137,103 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- ملفات Google Drive داخل معلومات السيارة -->
+                    <hr class="my-3">
+                    <div class="row mb-2">
+                        <div class="col-sm-4 fw-bold">
+                            <i class="fab fa-google-drive text-info ms-1"></i>
+                            ملفات Google Drive:
+                        </div>
+                        <div class="col-sm-8">
+                            {% if vehicle.drive_folder_link %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">مرتبط</span>
+                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-sm btn-success me-2">
+                                    <i class="fab fa-google-drive me-1"></i>
+                                    فتح المجلد
+                                </a>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-cog me-1"></i>
+                                    إدارة
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">تم ربط مجلد لتنظيم ملفات المركبة</small>
+                            {% else %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-2">غير مرتبط</span>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-link me-1"></i>
+                                    ربط مجلد
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">لم يتم ربط مجلد Google Drive بعد</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- صورة رخصة السيارة -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card ms-2"></i>
+                        صورة رخصة السيارة
+                    </h5>
+                    <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                        {% if vehicle.license_image %}تحديث الصورة{% else %}رفع الصورة{% endif %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if vehicle.license_image %}
+                    <div class="text-center">
+                        <div class="license-image-container mb-3">
+                            <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                                 class="img-fluid rounded border" 
+                                 style="max-height: 300px; max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" 
+                                 alt="صورة رخصة السيارة"
+                                 onclick="showLicenseModal()">
+                        </div>
+                        <div class="license-actions d-flex gap-2 justify-content-center flex-wrap">
+                            <button onclick="showLicenseModal()" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-search-plus ms-1"></i>
+                                عرض كبير
+                            </button>
+                            <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                               target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-download ms-1"></i>
+                                تحميل الصورة
+                            </a>
+                            <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                               class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit ms-1"></i>
+                                تحديث
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                انقر على الصورة للعرض بحجم كامل
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-id-card fa-4x text-muted"></i>
+                        </div>
+                        <h5>لا توجد صورة رخصة</h5>
+                        <p class="text-muted">لم يتم رفع صورة رخصة لهذه السيارة بعد</p>
+                        <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                           class="btn btn-primary mt-2">
+                            <i class="fas fa-plus ms-1"></i>
+                            رفع صورة الرخصة
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -450,76 +547,7 @@
         </div>
     </div>
 
-    <!-- ملفات المركبة -->
-    <div class="row mb-4">
-        <!-- بطاقة إدارة ملفات Google Drive -->
-        <div class="col-md-12 mb-4">
-            <div class="card shadow-sm border-info">
-                <div class="card-header bg-gradient-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="fab fa-google-drive ms-2"></i>
-                        ملفات المركبة - Google Drive
-                    </h5>
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#driveModal">
-                            <i class="fas fa-link ms-1"></i>
-                            إدارة الرابط
-                        </button>
-                        {% if vehicle.drive_folder_link %}
-                        <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-sm btn-warning">
-                            <i class="fas fa-external-link-alt ms-1"></i>
-                            فتح المجلد
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    {% if vehicle.drive_folder_link %}
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="drive-link-display p-3 bg-light rounded">
-                                <h6 class="text-success mb-2">
-                                    <i class="fas fa-check-circle ms-1"></i>
-                                    تم ربط مجلد Google Drive بنجاح
-                                </h6>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" value="{{ vehicle.drive_folder_link }}" readonly>
-                                    <button class="btn btn-outline-secondary" onclick="copyToClipboard('{{ vehicle.drive_folder_link }}')">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                </div>
-                                <small class="text-muted">يمكنك الوصول لجميع ملفات ووثائق هذه المركبة من خلال هذا الرابط</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center">
-                                <div class="drive-icon-large mb-3">
-                                    <i class="fab fa-google-drive fa-4x text-info"></i>
-                                </div>
-                                <a href="{{ url_for('vehicles.vehicle_drive_files', vehicle_id=vehicle.id) }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-folder-open ms-1"></i>
-                                    إدارة الملفات
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <div class="mb-3">
-                            <i class="fab fa-google-drive fa-4x text-muted"></i>
-                        </div>
-                        <h5 class="text-muted">لم يتم ربط مجلد Google Drive</h5>
-                        <p class="text-muted">يمكنك إنشاء مجلد مخصص لملفات هذه المركبة وربطه هنا</p>
-                        <button class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#driveModal">
-                            <i class="fas fa-plus ms-1"></i>
-                            إضافة رابط Google Drive
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- وثائق المركبة -->
     <div class="row mb-4">
