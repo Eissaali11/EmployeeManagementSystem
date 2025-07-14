@@ -2616,17 +2616,17 @@ def handover_view_public(id):
 
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
-    """إنشاء ملف PDF لنموذج تسليم/استلام باستخدام نفس خط beIN Normal المحسن"""
+    """إنشاء ملف PDF لنموذج تسليم/استلام باستخدام نفس خط beIN Normal المحسن من نظام الرواتب"""
     try:
         # الحصول على سجل التسليم/الاستلام
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
         
-        # استخدام نفس النظام المحسن المستخدم في الرواتب مع خط beIN Normal
-        from utils.professional_arabic_handover_pdf import generate_handover_pdf_with_bein_font
+        # استخدام مولد PDF الأصلي مع تحديث خط beIN-Normal
+        from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
         
-        # إنشاء PDF باستخدام FPDF مع نفس خط beIN Normal
-        pdf_buffer = generate_handover_pdf_with_bein_font(handover, vehicle)
+        # إنشاء PDF باستخدام WeasyPrint مع خط beIN-Normal
+        pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
         
         # التحقق من نجاح إنشاء PDF
         if not pdf_buffer:
@@ -2642,7 +2642,7 @@ def handover_pdf_public(id):
             current_app.logger.error(f"PDF فارغ للتسليم {id}")
             return "ملف PDF فارغ. يرجى المحاولة مرة أخرى.", 500
         
-        current_app.logger.info(f"تم إنشاء PDF محسن بحجم {pdf_size} بايت للتسليم {id}")
+        current_app.logger.info(f"تم إنشاء PDF بحجم {pdf_size} بايت للتسليم {id}")
         
         # تحضير اسم الملف
         plate_clean = handover.vehicle.plate_number if handover.vehicle else f"record_{handover.id}"
@@ -2657,8 +2657,6 @@ def handover_pdf_public(id):
 
     except Exception as e:
         current_app.logger.error(f"خطأ في إنشاء PDF للتسليم {id}: {e}")
-        import traceback
-        traceback.print_exc()
         return "خطأ في إنشاء الملف. يرجى المحاولة مرة أخرى.", 500
 
 
