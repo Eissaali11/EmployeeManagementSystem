@@ -88,20 +88,30 @@ def index():
         # إضافة تصفية القسم إذا تم تحديدها
         if filter_department:
             # هنا نقوم بعمل join مع جدول الموظفين ثم الأقسام للفلترة
-            query = query.join(Employee).filter(Employee.department_id == filter_department)
+            query = query.join(Employee).join(Employee.departments).filter(Department.id == filter_department)
         
         # تنفيذ الاستعلام
         salaries = query.all()
         
-        # إذا لم تكن هناك سجلات رواتب أو كانت البيانات مصفاة حسب جميع الشهور ويريد المستخدم عرض الموظفين النشطين
-        # فقط إذا لم يتم تحديد موظف معين
-        if (not salaries or show_all_months) and not filter_employee:
+        # **منطق معالجة عرض الموظفين بدون رواتب**
+        # نريد أن نعرض موظفين للإدخال في الحالات التالية:
+        # 1. عدم وجود رواتب للشهر والسنة المحددين
+        # 2. عرض جميع الشهور 
+        # 3. تم تحديد قسم معين (لإظهار موظفيه حتى لو لم تكن لديهم رواتب)
+        # ولكن ليس إذا تم تحديد موظف معين
+        should_show_employees_for_input = (not filter_employee) and (
+            not salaries or  # لا توجد رواتب
+            show_all_months or  # عرض جميع الشهور
+            filter_department  # تم تحديد قسم معين
+        )
+        
+        if should_show_employees_for_input:
             # الحصول على قائمة الموظفين النشطين
             active_employees_query = Employee.query.filter_by(status='active')
             
             # إذا تم تحديد قسم، قم بتصفية الموظفين حسب القسم
             if filter_department:
-                active_employees_query = active_employees_query.filter_by(department_id=filter_department)
+                active_employees_query = active_employees_query.join(Employee.departments).filter(Department.id == filter_department)
                 
             active_employees = active_employees_query.all()
             
@@ -112,7 +122,12 @@ def index():
                 print(f"تم العثور على {len(salaries)} سجل في جميع الشهور وجميع السنوات")
                 
                 # إضافة الموظفين الذين ليس لديهم سجلات على الإطلاق
-                employee_ids_with_salaries = db.session.query(Salary.employee_id).distinct().all()
+                if filter_department:
+                    # إذا تم تحديد قسم، أحضر الموظفين الذين ليس لديهم أي سجلات راتب في هذا القسم
+                    employee_ids_with_salaries = db.session.query(Salary.employee_id).join(Employee).join(Employee.departments).filter(Department.id == filter_department).distinct().all()
+                else:
+                    # إذا لم يتم تحديد قسم، أحضر كل الموظفين الذين ليس لديهم سجلات راتب
+                    employee_ids_with_salaries = db.session.query(Salary.employee_id).distinct().all()
                 employee_ids_with_salaries_set = {id[0] for id in employee_ids_with_salaries}
                 employees_without_salaries = [e for e in active_employees if e.id not in employee_ids_with_salaries_set]
                 
@@ -133,9 +148,10 @@ def index():
             elif show_all_months and not show_all_years:
                 # عرض جميع الشهور لسنة محددة
                 # الحصول على قائمة الموظفين الذين لديهم رواتب في السنة المحددة
-                employee_ids_with_salaries = db.session.query(Salary.employee_id).filter(
-                    Salary.year == filter_year
-                ).distinct().all()
+                salary_query = db.session.query(Salary.employee_id).filter(Salary.year == filter_year)
+                if filter_department:
+                    salary_query = salary_query.join(Employee).join(Employee.departments).filter(Department.id == filter_department)
+                employee_ids_with_salaries = salary_query.distinct().all()
                 
                 # تحويل القائمة إلى مجموعة (set) للبحث بسرعة
                 employee_ids_with_salaries_set = {id[0] for id in employee_ids_with_salaries}
