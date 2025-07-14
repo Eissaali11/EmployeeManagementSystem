@@ -1,0 +1,438 @@
+{% extends 'layout.html' %}
+
+{% block title %}صورة رخصة السيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block head %}
+<style>
+.license-container {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.license-image-display {
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    max-width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.license-image-display:hover {
+    transform: scale(1.02);
+}
+
+.upload-area {
+    border: 3px dashed #1976d2;
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    background: linear-gradient(145deg, #f8f9fa, #ffffff);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: #1565c0;
+    background: linear-gradient(145deg, #e3f2fd, #f8f9fa);
+}
+
+.upload-area.dragover {
+    border-color: #4caf50;
+    background: linear-gradient(145deg, #e8f5e8, #f1f8e9);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #1976d2;
+    margin-bottom: 15px;
+}
+
+.action-btn {
+    border-radius: 50px;
+    padding: 12px 30px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.section-header {
+    background: linear-gradient(145deg, #1976d2, #1565c0);
+    color: white;
+    padding: 20px;
+    border-radius: 15px 15px 0 0;
+    margin-bottom: 0;
+}
+
+.section-content {
+    background: white;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+.no-image-placeholder {
+    background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
+    border-radius: 15px;
+    padding: 60px 20px;
+    text-align: center;
+    color: #666;
+}
+
+.no-image-placeholder i {
+    font-size: 4rem;
+    color: #bbb;
+    margin-bottom: 20px;
+}
+
+/* تأثيرات التحميل */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #1976d2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* تصميم متجاوب */
+@media (max-width: 768px) {
+    .license-container {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .upload-area {
+        padding: 30px 15px;
+    }
+    
+    .upload-icon {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- شريط التنقل العلوي -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-id-card ms-2"></i>
+            صورة رخصة السيارة: {{ vehicle.plate_number }}
+        </h2>
+        <div>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-secondary action-btn">
+                <i class="fas fa-arrow-right ms-1"></i>
+                العودة لتفاصيل السيارة
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <!-- قسم عرض الصورة الحالية -->
+            <div class="license-container">
+                <div class="section-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-image ms-2"></i>
+                        صورة الرخصة الحالية
+                    </h4>
+                </div>
+                <div class="section-content">
+                    {% if vehicle.license_image %}
+                    <div class="text-center">
+                        <img src="{{ url_for('static', filename=vehicle.license_image) }}" 
+                             alt="صورة رخصة السيارة {{ vehicle.plate_number }}" 
+                             class="license-image-display"
+                             onclick="openImageModal('{{ url_for('static', filename=vehicle.license_image) }}')">
+                        
+                        <div class="mt-4">
+                            <p class="text-muted mb-3">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                انقر على الصورة لعرضها بحجم أكبر
+                            </p>
+                            
+                            <!-- زر حذف الصورة -->
+                            <form method="POST" action="{{ url_for('vehicles.delete_license_image', vehicle_id=vehicle.id) }}" 
+                                  style="display: inline;" 
+                                  onsubmit="return confirm('هل أنت متأكد من حذف صورة الرخصة؟')">
+                                <button type="submit" class="btn btn-danger action-btn">
+                                    <i class="fas fa-trash ms-1"></i>
+                                    حذف الصورة
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="no-image-placeholder">
+                        <i class="fas fa-image"></i>
+                        <h5>لا توجد صورة رخصة مرفوعة</h5>
+                        <p class="text-muted">يمكنك رفع صورة رخصة السيارة من القسم أدناه</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- قسم رفع صورة جديدة -->
+            <div class="license-container">
+                <div class="section-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-upload ms-2"></i>
+                        {% if vehicle.license_image %}استبدال صورة الرخصة{% else %}رفع صورة الرخصة{% endif %}
+                    </h4>
+                </div>
+                <div class="section-content">
+                    <form method="POST" action="{{ url_for('vehicles.upload_license_image', vehicle_id=vehicle.id) }}" 
+                          enctype="multipart/form-data" id="uploadForm">
+                        
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h5>اسحب وأفلت صورة الرخصة هنا</h5>
+                            <p class="text-muted mb-3">أو انقر للاختيار من جهازك</p>
+                            
+                            <input type="file" 
+                                   name="license_image" 
+                                   id="license_image" 
+                                   accept="image/*" 
+                                   style="display: none;" 
+                                   onchange="handleFileSelect(this)">
+                            
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle ms-1"></i>
+                                    أنواع الملفات المدعومة: PNG, JPG, JPEG, GIF | الحد الأقصى: 10MB
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div id="filePreview" class="mt-4" style="display: none;">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">معاينة الصورة المختارة</h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img id="previewImage" src="" alt="معاينة" style="max-width: 300px; max-height: 300px; border-radius: 10px;">
+                                    <div class="mt-3">
+                                        <span id="fileName" class="badge bg-info fs-6"></span>
+                                        <span id="fileSize" class="badge bg-secondary fs-6 ms-2"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success action-btn" id="uploadBtn" disabled>
+                                <i class="fas fa-upload ms-1"></i>
+                                {% if vehicle.license_image %}استبدال الصورة{% else %}رفع الصورة{% endif %}
+                            </button>
+                            <button type="button" class="btn btn-secondary action-btn ms-2" onclick="clearSelection()">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- معلومات إضافية -->
+            <div class="license-container">
+                <div class="section-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-lightbulb ms-2"></i>
+                        نصائح هامة
+                    </h4>
+                </div>
+                <div class="section-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-check-circle text-success ms-2 mt-1"></i>
+                                <div>
+                                    <strong>جودة عالية:</strong>
+                                    <br><small class="text-muted">تأكد من وضوح الصورة وقراءة جميع البيانات</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-shield-alt text-primary ms-2 mt-1"></i>
+                                <div>
+                                    <strong>الأمان:</strong>
+                                    <br><small class="text-muted">الصور محمية ومشفرة لضمان الخصوصية</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-compress-alt text-info ms-2 mt-1"></i>
+                                <div>
+                                    <strong>ضغط تلقائي:</strong>
+                                    <br><small class="text-muted">الصور الكبيرة يتم ضغطها تلقائياً لتوفير المساحة</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-history text-warning ms-2 mt-1"></i>
+                                <div>
+                                    <strong>النسخ الاحتياطية:</strong>
+                                    <br><small class="text-muted">النظام يحتفظ بسجل جميع التحديثات</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لعرض الصورة بحجم كامل -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">صورة رخصة السيارة {{ vehicle.plate_number }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="صورة الرخصة" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <a id="downloadLink" href="" download="license_{{ vehicle.plate_number }}.jpg" class="btn btn-primary">
+                    <i class="fas fa-download ms-1"></i>
+                    تحميل الصورة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تأثير التحميل -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="text-center text-white">
+        <div class="loading-spinner"></div>
+        <p class="mt-3">جاري رفع الصورة...</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('license_image');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const filePreview = document.getElementById('filePreview');
+    const previewImage = document.getElementById('previewImage');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // النقر على منطقة الرفع
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(fileInput);
+        }
+    });
+
+    // إرسال النموذج
+    uploadForm.addEventListener('submit', function(e) {
+        if (fileInput.files.length > 0) {
+            loadingOverlay.style.display = 'flex';
+        }
+    });
+});
+
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (file) {
+        // التحقق من نوع الملف
+        if (!file.type.startsWith('image/')) {
+            alert('يرجى اختيار ملف صورة صالح');
+            input.value = '';
+            return;
+        }
+
+        // التحقق من حجم الملف (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('حجم الملف كبير جداً. الحد الأقصى 10MB');
+            input.value = '';
+            return;
+        }
+
+        // عرض معاينة الصورة
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            filePreview.style.display = 'block';
+            uploadBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearSelection() {
+    document.getElementById('license_image').value = '';
+    document.getElementById('filePreview').style.display = 'none';
+    document.getElementById('uploadBtn').disabled = true;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function openImageModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('downloadLink').href = imageSrc;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+</script>
+{% endblock %}
