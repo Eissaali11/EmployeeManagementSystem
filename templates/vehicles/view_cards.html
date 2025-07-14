@@ -6,7 +6,7 @@
 <style>
 /* تصميم منظم ببطاقات احترافية */
 .page-container {
-    background-color: #f8f9fa;
+    background-color: #ffffff !important;
     min-height: 100vh;
     padding: 20px 0;
 }
@@ -57,11 +57,11 @@
 }
 
 .section-header h3 {
-    color: #007bff;
-    font-weight: 600;
+    color: #000000 !important;
+    font-weight: 700;
     margin: 0;
     margin-right: 15px;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
 }
 
 .section-header .icon {
@@ -109,14 +109,14 @@
 .stat-number {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #212529;
+    color: #000000 !important;
     margin-bottom: 5px;
 }
 
 .stat-label {
-    color: #6c757d;
+    color: #333333 !important;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 /* نمط المعلومات */
@@ -139,13 +139,13 @@
 }
 
 .info-label {
-    font-weight: 600;
-    color: #495057;
+    font-weight: 700;
+    color: #000000 !important;
 }
 
 .info-value {
-    color: #212529;
-    font-weight: 500;
+    color: #333333 !important;
+    font-weight: 600;
 }
 
 /* نمط الجداول */
@@ -174,7 +174,8 @@
 .custom-table td {
     padding: 12px 15px;
     border-bottom: 1px solid #f1f3f4;
-    color: #495057;
+    color: #000000 !important;
+    font-weight: 500;
 }
 
 .custom-table tr:hover {
@@ -250,14 +251,15 @@
 }
 
 .empty-state h5 {
-    color: #495057;
-    font-weight: 600;
+    color: #000000 !important;
+    font-weight: 700;
     margin-bottom: 10px;
 }
 
 .empty-state p {
-    color: #6c757d;
+    color: #333333 !important;
     margin-bottom: 20px;
+    font-weight: 500;
 }
 
 /* شارات */
@@ -326,8 +328,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-container">
-    <div class="container">
+<div class="page-container" style="background: white !important;">
+    <div class="container" style="color: #000 !important;">
         <!-- بطاقة رأس السيارة -->
         <div class="vehicle-header-card">
             <h1>🚗 {{ vehicle.plate_number }}</h1>
@@ -404,27 +406,27 @@
             
             <div class="info-grid">
                 <div class="info-item">
-                    <span class="info-label">رقم اللوحة:</span>
-                    <span class="info-value">{{ vehicle.plate_number }}</span>
+                    <span class="info-label" style="color: #000 !important;">رقم اللوحة:</span>
+                    <span class="info-value" style="color: #333 !important;">{{ vehicle.plate_number }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">الماركة:</span>
-                    <span class="info-value">{{ vehicle.make }}</span>
+                    <span class="info-label" style="color: #000 !important;">الماركة:</span>
+                    <span class="info-value" style="color: #333 !important;">{{ vehicle.make }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">الموديل:</span>
-                    <span class="info-value">{{ vehicle.model }}</span>
+                    <span class="info-label" style="color: #000 !important;">الموديل:</span>
+                    <span class="info-value" style="color: #333 !important;">{{ vehicle.model }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">سنة الصنع:</span>
-                    <span class="info-value">{{ vehicle.year }}</span>
+                    <span class="info-label" style="color: #000 !important;">سنة الصنع:</span>
+                    <span class="info-value" style="color: #333 !important;">{{ vehicle.year }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">اللون:</span>
-                    <span class="info-value">{{ vehicle.color }}</span>
+                    <span class="info-label" style="color: #000 !important;">اللون:</span>
+                    <span class="info-value" style="color: #333 !important;">{{ vehicle.color }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">الحالة:</span>
+                    <span class="info-label" style="color: #000 !important;">الحالة:</span>
                     <span class="info-value">
                         <span class="badge-custom badge-success">{{ vehicle.status }}</span>
                     </span>
