@@ -123,9 +123,7 @@ def generate_employee_comprehensive_pdf(employee_id):
     pdf.add_info_row('رقم الهوية', employee.national_id)
     pdf.add_info_row('تاريخ الالتحاق', employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '-')
     pdf.add_info_row('الجنسية', employee.nationality)
-    # الحصول على أسماء الأقسام (many-to-many relationship)
-    department_names = ', '.join([dept.name for dept in employee.departments]) if employee.departments else '-'
-    pdf.add_info_row('القسم', department_names)
+    pdf.add_info_row('القسم', employee.department.name if employee.department else '-')
     pdf.add_info_row('المشروع', employee.project)
     pdf.add_info_row('الموقع', employee.location)
     pdf.add_info_row('البريد الإلكتروني', employee.email)
@@ -303,8 +301,7 @@ def generate_employee_comprehensive_excel(employee_id):
             employee.national_id,
             employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '-',
             employee.nationality,
-            # الحصول على أسماء الأقسام (many-to-many relationship)
-            ', '.join([dept.name for dept in employee.departments]) if employee.departments else '-',
+            employee.department.name if employee.department else '-',
             employee.project,
             employee.location,
             employee.email,

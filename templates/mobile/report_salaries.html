@@ -108,26 +108,18 @@
                         <th>الشهر/السنة</th>
                         <th>المبلغ</th>
                         <th>حالة الدفع</th>
-                        <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for salary in salaries %}
-                    <tr>
+                    <tr onclick="location.href='{{ url_for('mobile.salary_details', salary_id=salary.id) }}'">
                         <td>{{ salary.employee.name if salary.employee else '-' }}</td>
                         <td>{{ salary.month }}/{{ salary.year }}</td>
-                        <td>{{ '{:,.2f}'.format(salary.net_salary or 0) }} ريال</td>
+                        <td>{{ '{:,.2f}'.format(salary.amount) }}</td>
                         <td>
                             <span class="salary-badge salary-{{ 'paid' if salary.is_paid else 'unpaid' }}">
                                 {{ 'مدفوع' if salary.is_paid else 'غير مدفوع' }}
                             </span>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('mobile.share_salary_via_whatsapp', id=salary.id) }}" 
-                               class="mobile-btn mobile-btn-success mobile-btn-sm"
-                               title="إرسال تفاصيل الراتب عبر الواتس اب">
-                                <i class="fab fa-whatsapp"></i> إرسال
-                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -331,26 +323,6 @@
 .chart-container {
     height: 250px;
     margin: 10px 0;
-}
-
-.mobile-btn-success {
-    background-color: #25d366;
-    color: white;
-    border: none;
-    text-decoration: none;
-    display: inline-block;
-    border-radius: 4px;
-}
-
-.mobile-btn-success:hover {
-    background-color: #128c7e;
-    color: white;
-    text-decoration: none;
-}
-
-.mobile-btn-sm {
-    padding: 4px 8px;
-    font-size: 0.8rem;
 }
 </style>
 {% endblock %}

@@ -24,7 +24,7 @@ from models import (
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
-from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
+# from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 # from utils.workshop_report import generate_workshop_report_pdf
 # from utils.html_to_pdf import generate_pdf_from_template
 # from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
@@ -601,7 +601,6 @@ def index():
         """عرض قائمة السيارات مع خيارات التصفية"""
         status_filter = request.args.get('status', '')
         make_filter = request.args.get('make', '')
-        search_plate = request.args.get('search_plate', '')
         
         # قاعدة الاستعلام الأساسية
         query = Vehicle.query
@@ -613,10 +612,6 @@ def index():
         # إضافة التصفية حسب الشركة المصنعة إذا تم تحديدها
         if make_filter:
                 query = query.filter(Vehicle.make == make_filter)
-        
-        # إضافة البحث برقم السيارة إذا تم تحديده
-        if search_plate:
-                query = query.filter(Vehicle.plate_number.contains(search_plate))
         
         # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
         makes = db.session.query(Vehicle.make).distinct().all()
@@ -689,7 +684,6 @@ def index():
                 stats=stats,
                 status_filter=status_filter,
                 make_filter=make_filter,
-                search_plate=search_plate,
                 makes=makes,
                 statuses=VEHICLE_STATUS_CHOICES,
                 expiring_documents=expiring_documents
@@ -2616,7 +2610,7 @@ def handover_view_public(id):
 
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
-    """إنشاء ملف PDF لنموذج تسليم/استلام باستخدام نفس خط beIN Normal المحسن من نظام الرواتب"""
+    """إنشاء ملف PDF لنموذج تسليم/استلام - نسخة متقدمة"""
     try:
         # الحصول على سجل التسليم/الاستلام
         handover = VehicleHandover.query.get_or_404(id)
@@ -4358,7 +4352,7 @@ def allowed_file(filename, allowed_extensions):
 
 # ========== مسارات إدارة Google Drive ==========
 
-@vehicles_bp.route('/<int:vehicle_id>/drive-link', methods=['POST'])
+@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-link', methods=['POST'])
 @login_required
 def update_drive_link(vehicle_id):
     """تحديث أو حذف رابط Google Drive"""

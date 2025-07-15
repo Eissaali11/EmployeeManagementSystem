@@ -1,13 +1,13 @@
 """
-وحدة إنشاء إشعار راتب كملف PDF محسنة - الإصدار الاحترافي العربي
-تصميم احترافي مع دعم كامل للنصوص العربية
+وحدة إنشاء إشعار راتب كملف PDF محسنة - الإصدار الآمن
+تصميم احترافي مع معالجة آمنة للنصوص العربية
 """
 
-from utils.professional_arabic_salary_pdf import create_professional_arabic_salary_pdf
+from utils.ultra_safe_pdf import create_ultra_safe_salary_pdf
 
 def generate_salary_notification_pdf(salary):
     """
-    إنشاء إشعار راتب محترف كملف PDF مع دعم كامل للعربية
+    إنشاء إشعار راتب محترف كملف PDF
     
     Args:
         salary: كائن Salary يحتوي على بيانات الراتب
@@ -16,18 +16,12 @@ def generate_salary_notification_pdf(salary):
         bytes: ملف PDF كـ bytes
     """
     try:
-        # استخدام المولد الاحترافي الجديد مع دعم النصوص العربية
-        return create_professional_arabic_salary_pdf(salary)
+        # استخدام المولد الآمن الذي يعمل بدون مشاكل ترميز
+        return create_ultra_safe_salary_pdf(salary)
         
     except Exception as e:
-        print(f"خطأ في إنشاء إشعار الراتب الاحترافي: {str(e)}")
-        # في حالة الفشل، محاولة استخدام المولد القديم كاحتياطي
-        try:
-            from utils.ultra_safe_pdf import create_ultra_safe_salary_pdf
-            return create_ultra_safe_salary_pdf(salary)
-        except Exception as e2:
-            print(f"فشل أيضاً في المولد الاحتياطي: {str(e2)}")
-            raise Exception(f"فشل تام في إنشاء إشعار الراتب: {str(e)}")
+        print(f"خطأ في إنشاء إشعار الراتب: {str(e)}")
+        raise Exception(f"فشل في إنشاء إشعار الراتب: {str(e)}")
 
 
 def generate_batch_salary_notifications(department_id=None, month=None, year=None):

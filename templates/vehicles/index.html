@@ -99,12 +99,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="get" action="{{ url_for('vehicles.index') }}" class="row">
-                <div class="col-md-3 mb-3">
-                    <label for="search_plate" class="form-label">البحث برقم السيارة</label>
-                    <input type="text" name="search_plate" id="search_plate" class="form-control" 
-                           placeholder="ادخل رقم السيارة..." value="{{ search_plate }}">
-                </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="status" class="form-label">فلترة حسب الحالة</label>
                     <select name="status" id="status" class="form-select">
                         <option value="">جميع الحالات</option>
@@ -120,7 +115,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="make" class="form-label">فلترة حسب الشركة المصنعة</label>
                     <select name="make" id="make" class="form-select">
                         <option value="">جميع الشركات</option>
@@ -129,10 +124,10 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end mb-3">
+                <div class="col-md-4 d-flex align-items-end mb-3">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search ms-1"></i>
-                        بحث
+                        <i class="fas fa-filter ms-1"></i>
+                        تصفية
                     </button>
                     <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary ms-2">
                         <i class="fas fa-redo ms-1"></i>
