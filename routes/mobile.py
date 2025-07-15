@@ -8,7 +8,6 @@ import json
 import uuid
 from datetime import datetime, timedelta, date
 from sqlalchemy import extract, func, cast, Date
-from sqlalchemy.orm import joinedload
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session, current_app, send_file
 
 from flask_login import login_user, logout_user, login_required, current_user
@@ -519,9 +518,8 @@ def salaries():
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
     
-    # جلب بيانات الموظفين والأقسام
+    # جلب بيانات الموظفين
     employees = Employee.query.order_by(Employee.name).all()
-    departments = Department.query.order_by(Department.name).all()
     
     # إحصائيات الرواتب
     current_year = datetime.now().year
@@ -532,10 +530,6 @@ def salaries():
     # فلترة الموظف
     employee_id_str = request.args.get('employee_id', '')
     employee_id = int(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
-    
-    # فلترة القسم
-    department_id_str = request.args.get('department_id', '')
-    department_id = int(department_id_str) if department_id_str and department_id_str.isdigit() else None
     
     # تحويل الشهر إلى اسمه بالعربية
     month_names = {
@@ -554,12 +548,6 @@ def salaries():
     # تطبيق فلتر الموظف إذا تم تحديده
     if employee_id:
         query = query.filter(Salary.employee_id == employee_id)
-    
-    # تطبيق فلتر القسم إذا تم تحديده
-    if department_id:
-        # فلترة الموظفين في القسم المحدد
-        department_employee_ids = db.session.query(Employee.id).join(Employee.departments).filter(Department.id == department_id).subquery()
-        query = query.filter(Salary.employee_id.in_(department_employee_ids))
         
     # تطبيق فلتر حالة الدفع إذا تم تحديده
     is_paid = request.args.get('is_paid')
@@ -588,7 +576,6 @@ def salaries():
     
     return render_template('mobile/salaries.html',
                           employees=employees,
-                          departments=departments,
                           salaries=salaries,
                           current_year=current_year,
                           current_month=current_month,
@@ -596,7 +583,6 @@ def salaries():
                           selected_month=selected_month,
                           selected_month_name=selected_month_name,
                           employee_id=employee_id,
-                          department_id=department_id,
                           salary_stats=salary_stats,
                           pagination=paginator)
 
@@ -613,72 +599,8 @@ def add_salary():
 @login_required
 def salary_details(salary_id):
     """تفاصيل الراتب للنسخة المحمولة"""
-    # جلب بيانات الراتب مع بيانات الموظف
-    salary = Salary.query.options(joinedload(Salary.employee)).get_or_404(salary_id)
-    
-    # تحويل الشهر إلى اسمه بالعربية
-    month_names = {
-        1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
-        5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
-        9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
-    }
-    month_name = month_names.get(salary.month, '')
-    
-    # حساب إحصائيات أخرى للموظف
-    employee_salaries = Salary.query.filter_by(employee_id=salary.employee_id).all()
-    employee_stats = {
-        'total_salaries': len(employee_salaries),
-        'total_paid': sum(1 for s in employee_salaries if s.is_paid),
-        'total_unpaid': sum(1 for s in employee_salaries if not s.is_paid),
-        'avg_net_salary': sum(s.net_salary for s in employee_salaries) / len(employee_salaries) if employee_salaries else 0
-    }
-    
-    return render_template('mobile/salary_details.html',
-                          salary=salary,
-                          month_name=month_name,
-                          employee_stats=employee_stats)
-
-# تعديل الراتب - النسخة المحمولة
-@mobile_bp.route('/salaries/<int:salary_id>/edit', methods=['GET', 'POST'])
-@login_required
-def edit_salary(salary_id):
-    """تعديل الراتب للنسخة المحمولة"""
-    salary = Salary.query.options(joinedload(Salary.employee)).get_or_404(salary_id)
-    
-    if request.method == 'POST':
-        try:
-            # تحديث بيانات الراتب
-            salary.basic_salary = float(request.form.get('basic_salary', 0))
-            salary.allowances = float(request.form.get('allowances', 0))
-            salary.deductions = float(request.form.get('deductions', 0))
-            salary.bonus = float(request.form.get('bonus', 0))
-            salary.overtime_hours = float(request.form.get('overtime_hours', 0))
-            salary.is_paid = 'is_paid' in request.form
-            salary.notes = request.form.get('notes', '')
-            
-            # حساب صافي الراتب
-            salary.net_salary = salary.basic_salary + salary.allowances + salary.bonus - salary.deductions
-            salary.updated_at = datetime.utcnow()
-            
-            db.session.commit()
-            flash('تم تحديث بيانات الراتب بنجاح', 'success')
-            return redirect(url_for('mobile.salary_details', salary_id=salary.id))
-            
-        except Exception as e:
-            db.session.rollback()
-            flash('حدث خطأ أثناء تحديث الراتب', 'error')
-            
-    # تحويل الشهر إلى اسمه بالعربية
-    month_names = {
-        1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
-        5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
-        9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
-    }
-    month_name = month_names.get(salary.month, '')
-    
-    return render_template('mobile/edit_salary.html',
-                          salary=salary,
-                          month_name=month_name)
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/salary_details.html')
 
 # صفحة الوثائق - النسخة المحمولة
 @mobile_bp.route('/documents')
@@ -696,26 +618,15 @@ def documents():
     # قم باستعلام قاعدة البيانات للحصول على قائمة الموظفين
     employees = Employee.query.order_by(Employee.name).all()
     
-    # إنشاء استعلام أساسي للوثائق مع جلب بيانات الموظف
-    query = Document.query.join(Employee)
+    # إنشاء استعلام أساسي للوثائق
+    query = Document.query
     
     # إضافة فلاتر إلى الاستعلام إذا تم توفيرها
     if employee_id:
         query = query.filter(Document.employee_id == employee_id)
     
-    # معالجة نوع الوثيقة - تحويل من العربية إلى الإنجليزية للبحث في قاعدة البيانات
     if document_type:
-        document_type_mapping = {
-            'هوية': 'national_id',
-            'جواز سفر': 'passport',
-            'رخصة قيادة': 'driving_license',
-            'إقامة': 'residence_permit',
-            'تأمين صحي': 'health_insurance',
-            'شهادة عمل': 'work_certificate',
-            'أخرى': 'other'
-        }
-        english_type = document_type_mapping.get(document_type, document_type)
-        query = query.filter(Document.document_type == english_type)
+        query = query.filter(Document.document_type == document_type)
     
     # الحصول على التاريخ الحالي
     current_date = datetime.now().date()
@@ -742,30 +653,6 @@ def documents():
     # تقسيم النتائج إلى صفحات
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     documents = pagination.items
-    
-    # إضافة حالة الوثيقة لكل وثيقة
-    for document in documents:
-        if document.expiry_date:
-            if document.expiry_date >= current_date + timedelta(days=60):
-                document.status = 'valid'
-            elif document.expiry_date >= current_date:
-                document.status = 'expiring'
-            else:
-                document.status = 'expired'
-        else:
-            document.status = 'no_expiry'
-        
-        # تحويل نوع الوثيقة من الإنجليزية للعربية للعرض
-        document_type_display = {
-            'national_id': 'هوية وطنية',
-            'passport': 'جواز سفر',
-            'driving_license': 'رخصة قيادة',
-            'residence_permit': 'إقامة',
-            'health_insurance': 'تأمين صحي',
-            'work_certificate': 'شهادة عمل',
-            'other': 'أخرى'
-        }
-        document.document_type_display = document_type_display.get(document.document_type, document.document_type)
     
     # حساب إحصائيات الوثائق
     valid_count = Document.query.filter(Document.expiry_date >= current_date + timedelta(days=60)).count()
@@ -1064,85 +951,6 @@ def report_salaries():
                          salaries=salaries,
                          available_years=available_years,
                          available_months=available_months)
-
-@mobile_bp.route('/salary/<int:id>/share_whatsapp')
-@login_required
-def share_salary_via_whatsapp(id):
-    """مشاركة إشعار راتب عبر الواتس اب في النسخة المحمولة"""
-    try:
-        # الحصول على سجل الراتب
-        salary = Salary.query.get_or_404(id)
-        employee = salary.employee
-        
-        # الحصول على اسم الشهر بالعربية
-        month_names = {
-            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
-            5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
-            9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
-        }
-        month_name = month_names.get(salary.month, str(salary.month))
-        
-        # إنشاء رابط لتحميل ملف PDF
-        pdf_url = url_for('salaries.salary_notification_pdf', id=salary.id, _external=True)
-        
-        # إعداد نص الرسالة مع رابط التحميل
-        message_text = f"""*إشعار راتب - نُظم*
-
-السلام عليكم ورحمة الله وبركاته،
-
-تحية طيبة،
-
-نود إشعاركم بإيداع راتب شهر {month_name} {salary.year}.
-
-الموظف: {employee.name}
-الشهر: {month_name} {salary.year}
-
-صافي الراتب: *{salary.net_salary:.2f} ريال*
-
-للاطلاع على تفاصيل الراتب، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
-{pdf_url}
-
-مع تحيات إدارة الموارد البشرية
-نُظم - نظام إدارة متكامل"""
-        
-        # تسجيل العملية
-        from models import SystemAudit
-        audit = SystemAudit(
-            action='share_whatsapp_link_mobile',
-            entity_type='salary',
-            entity_id=salary.id,
-            details=f'تم مشاركة إشعار راتب عبر رابط واتس اب (موبايل) للموظف: {employee.name} لشهر {salary.month}/{salary.year}',
-            user_id=None
-        )
-        db.session.add(audit)
-        db.session.commit()
-        
-        # إنشاء رابط الواتس اب مع نص الرسالة
-        from urllib.parse import quote
-        
-        # التحقق مما إذا كان رقم الهاتف متوفر للموظف
-        if employee.mobile:
-            # تنسيق رقم الهاتف (إضافة رمز الدولة +966 إذا لم يكن موجودًا)
-            to_phone = employee.mobile
-            if not to_phone.startswith('+'):
-                # إذا كان الرقم يبدأ بـ 0، نحذفه ونضيف رمز الدولة
-                if to_phone.startswith('0'):
-                    to_phone = "+966" + to_phone[1:]
-                else:
-                    to_phone = "+966" + to_phone
-            
-            # إنشاء رابط مباشر للموظف
-            whatsapp_url = f"https://wa.me/{to_phone}?text={quote(message_text)}"
-        else:
-            # إذا لم يكن هناك رقم هاتف، استخدم الطريقة العادية
-            whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
-        
-        # إعادة توجيه المستخدم إلى رابط الواتس اب
-        return redirect(whatsapp_url)
-        
-    except Exception as e:
-        flash(f'حدث خطأ أثناء مشاركة إشعار الراتب عبر الواتس اب: {str(e)}', 'danger')
-        return redirect(url_for('mobile.report_salaries'))
 
 # تقرير الوثائق - النسخة المحمولة
 @mobile_bp.route('/reports/documents')
@@ -3860,101 +3668,16 @@ def edit_workshop_record(workshop_id):
             workshop_record.notes = request.form.get('notes')
             workshop_record.updated_at = datetime.utcnow()
             
-            # معالجة الصور المرفوعة
-            import os
-            from PIL import Image
-            import uuid
-            
-            uploaded_images = []
-            
-            # معالجة صور قبل الإصلاح
-            if 'before_images' in request.files:
-                before_files = request.files.getlist('before_images')
-                for file in before_files:
-                    if file and file.filename and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                        try:
-                            # إنشاء اسم ملف فريد
-                            filename = f"workshop_before_{workshop_record.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
-                            
-                            # إنشاء المجلد إذا لم يكن موجوداً
-                            upload_dir = os.path.join('static', 'uploads', 'workshop')
-                            os.makedirs(upload_dir, exist_ok=True)
-                            
-                            # حفظ الملف
-                            file_path = os.path.join(upload_dir, filename)
-                            file.save(file_path)
-                            
-                            # ضغط الصورة إذا كانت كبيرة
-                            try:
-                                with Image.open(file_path) as img:
-                                    if img.width > 1200 or img.height > 1200:
-                                        img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
-                                        img.save(file_path, optimize=True, quality=85)
-                            except Exception as e:
-                                current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
-                            
-                            # إضافة سجل الصورة لقاعدة البيانات
-                            image_record = VehicleWorkshopImage(
-                                workshop_record_id=workshop_record.id,
-                                image_type='before',
-                                image_path=f"uploads/workshop/{filename}",
-                                notes=f"صورة قبل الإصلاح - تم الرفع في {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-                            )
-                            db.session.add(image_record)
-                            uploaded_images.append(filename)
-                            
-                        except Exception as e:
-                            current_app.logger.error(f"خطأ في رفع صورة قبل الإصلاح: {str(e)}")
-            
-            # معالجة صور بعد الإصلاح
-            if 'after_images' in request.files:
-                after_files = request.files.getlist('after_images')
-                for file in after_files:
-                    if file and file.filename and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                        try:
-                            # إنشاء اسم ملف فريد
-                            filename = f"workshop_after_{workshop_record.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
-                            
-                            # حفظ الملف
-                            file_path = os.path.join('static', 'uploads', 'workshop', filename)
-                            file.save(file_path)
-                            
-                            # ضغط الصورة
-                            try:
-                                with Image.open(file_path) as img:
-                                    if img.width > 1200 or img.height > 1200:
-                                        img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
-                                        img.save(file_path, optimize=True, quality=85)
-                            except Exception as e:
-                                current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
-                            
-                            # إضافة سجل الصورة لقاعدة البيانات
-                            image_record = VehicleWorkshopImage(
-                                workshop_record_id=workshop_record.id,
-                                image_type='after',
-                                image_path=f"uploads/workshop/{filename}",
-                                notes=f"صورة بعد الإصلاح - تم الرفع في {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-                            )
-                            db.session.add(image_record)
-                            uploaded_images.append(filename)
-                            
-                        except Exception as e:
-                            current_app.logger.error(f"خطأ في رفع صورة بعد الإصلاح: {str(e)}")
-            
             db.session.commit()
             
             # تسجيل العملية
             log_activity(
                 action='update',
                 entity_type='vehicle_workshop',
-                details=f'تم تعديل سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال وإضافة {len(uploaded_images)} صورة'
+                details=f'تم تعديل سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال'
             )
             
-            success_message = f'تم تحديث سجل الورشة بنجاح!'
-            if uploaded_images:
-                success_message += f' تم رفع {len(uploaded_images)} صورة جديدة.'
-            
-            flash(success_message, 'success')
+            flash('تم تحديث سجل الورشة بنجاح!', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
             
         except Exception as e:
@@ -4017,40 +3740,8 @@ def delete_workshop_record(workshop_id):
 @login_required
 def view_workshop_details(workshop_id):
     """عرض تفاصيل سجل ورشة للنسخة المحمولة"""
-    workshop_record = VehicleWorkshop.query.options(
-        joinedload(VehicleWorkshop.images)
-    ).get_or_404(workshop_id)
+    workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
     vehicle = workshop_record.vehicle
-    
-    # فحص وجود الصور الفعلي على الخادم مع البحث في مسارات متعددة
-    valid_images = []
-    if workshop_record.images:
-        for image in workshop_record.images:
-            # محاولة أولى: المسار المحفوظ في قاعدة البيانات
-            image_path = os.path.join(current_app.static_folder, image.image_path)
-            
-            # إذا لم يوجد، نبحث عن نفس الملف في مجلد الورشة
-            if not os.path.exists(image_path):
-                filename = os.path.basename(image.image_path)
-                # البحث عن أي ملف يحتوي على اسم مشابه
-                workshop_dir = os.path.join(current_app.static_folder, 'uploads/workshop')
-                if os.path.exists(workshop_dir):
-                    for file in os.listdir(workshop_dir):
-                        # البحث عن الجزء المميز من اسم الملف
-                        if 'WhatsApp_Image_2025-07-14_at_11.29.07_ef6d7df0' in file:
-                            # تحديث المسار ليشير للملف الموجود
-                            image.image_path = f'uploads/workshop/{file}'
-                            image_path = os.path.join(current_app.static_folder, image.image_path)
-                            break
-            
-            if os.path.exists(image_path):
-                valid_images.append(image)
-                current_app.logger.info(f"الصورة موجودة: {image.image_path}")
-            else:
-                current_app.logger.warning(f"الصورة غير موجودة: {image_path}")
-    
-    # تحديث قائمة الصور بالصور الموجودة فقط
-    workshop_record.valid_images = valid_images
     
     return render_template('mobile/workshop_details.html',
                            workshop_record=workshop_record,

@@ -83,18 +83,6 @@
             </div>
         </div>
         
-        <!-- فلتر القسم -->
-        <div class="row mb-2">
-            <div class="col-12">
-                <select name="department_id" class="form-select" onchange="this.form.submit()">
-                    <option value="">جميع الأقسام</option>
-                    {% for department in departments %}
-                    <option value="{{ department.id }}" {% if request.args.get('department_id')|int == department.id %}selected{% endif %}>{{ department.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        
         <div class="d-flex gap-2">
             <select name="employee_id" class="form-select" style="flex: 1" onchange="this.form.submit()">
                 <option value="">جميع الموظفين</option>
@@ -103,7 +91,7 @@
                 {% endfor %}
             </select>
             
-            {% if request.args.get('search') or request.args.get('month') or request.args.get('year') or request.args.get('employee_id') or request.args.get('department_id') %}
+            {% if request.args.get('search') or request.args.get('month') or request.args.get('year') or request.args.get('employee_id') %}
             <a href="{{ url_for('mobile.salaries') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-times"></i>
             </a>
@@ -165,39 +153,30 @@
 {% if salaries %}
 <div class="vehicle-list">
     {% for salary in salaries %}
-    <div class="vehicle-item salary-item" style="display: flex; align-items: center; text-decoration: none; background: white; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <a href="{{ url_for('mobile.salary_details', salary_id=salary.id) }}" style="flex: 1; display: flex; align-items: center; text-decoration: none; color: inherit; padding: 15px;">
-            <div class="vehicle-icon">
-                <i class="fas fa-user-tie"></i>
-            </div>
-            <div class="vehicle-info">
-                <div class="vehicle-name">{{ salary.employee.name }}</div>
-                <div class="vehicle-plate">{{ salary.year }}/{{ '%02d'|format(salary.month) }}</div>
-                <div class="vehicle-details">
-                    <span class="vehicle-model">أساسي: {{ '{:,.0f}'.format(salary.basic_salary) }}</span>
-                    {% if salary.is_paid %}
-                    <span class="vehicle-status active">تم الدفع</span>
-                    {% else %}
-                    <span class="vehicle-status inactive">لم يتم الدفع</span>
-                    {% endif %}
-                    <span class="salary-details">
-                        <span>بدلات: {{ '{:,.0f}'.format(salary.allowances) }}</span>
-                        <span>خصومات: {{ '{:,.0f}'.format(salary.deductions) }}</span>
-                    </span>
-                </div>
-            </div>
-            <div class="vehicle-value">
-                {{ '{:,.0f}'.format(salary.net_salary) }}
-            </div>
-        </a>
-        <div style="padding: 10px;">
-            <button onclick="shareSalaryWhatsApp({{ salary.id }}, '{{ salary.employee.name }}', '{{ salary.year }}', '{{ '%02d'|format(salary.month) }}', '{{ '{:,.0f}'.format(salary.basic_salary) }}', '{{ '{:,.0f}'.format(salary.allowances) }}', '{{ '{:,.0f}'.format(salary.deductions) }}', '{{ '{:,.0f}'.format(salary.net_salary) }}', '{{ 'تم الدفع' if salary.is_paid else 'لم يتم الدفع' }}')" 
-                    class="btn btn-success btn-sm" 
-                    style="background: linear-gradient(135deg, #25D366, #20c157); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                <i class="fab fa-whatsapp" style="font-size: 18px; color: white;"></i>
-            </button>
+    <a href="{{ url_for('mobile.salary_details', salary_id=salary.id) }}" class="vehicle-item">
+        <div class="vehicle-icon">
+            <i class="fas fa-user-tie"></i>
         </div>
-    </div>
+        <div class="vehicle-info">
+            <div class="vehicle-name">{{ salary.employee.name }}</div>
+            <div class="vehicle-plate">{{ salary.year }}/{{ '%02d'|format(salary.month) }}</div>
+            <div class="vehicle-details">
+                <span class="vehicle-model">أساسي: {{ '{:,.0f}'.format(salary.basic_salary) }}</span>
+                {% if salary.is_paid %}
+                <span class="vehicle-status active">تم الدفع</span>
+                {% else %}
+                <span class="vehicle-status inactive">لم يتم الدفع</span>
+                {% endif %}
+                <span class="salary-details">
+                    <span>بدلات: {{ '{:,.0f}'.format(salary.allowances) }}</span>
+                    <span>خصومات: {{ '{:,.0f}'.format(salary.deductions) }}</span>
+                </span>
+            </div>
+        </div>
+        <div class="vehicle-value">
+            {{ '{:,.0f}'.format(salary.net_salary) }}
+        </div>
+    </a>
     {% endfor %}
 </div>
 
@@ -558,107 +537,5 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('تم تحميل صفحة الرواتب');
 });
-
-function shareSalaryWhatsApp(salaryId, employeeName, year, month, basicSalary, allowances, deductions, netSalary, paymentStatus) {
-    // إنشاء رسالة مفصلة لمشاركة معلومات الراتب
-    const monthNames = {
-        '01': 'يناير', '02': 'فبراير', '03': 'مارس', '04': 'أبريل',
-        '05': 'مايو', '06': 'يونيو', '07': 'يوليو', '08': 'أغسطس',
-        '09': 'سبتمبر', '10': 'أكتوبر', '11': 'نوفمبر', '12': 'ديسمبر'
-    };
-    
-    const currentDate = new Date();
-    const hijriDate = currentDate.toLocaleDateString('ar-SA-u-ca-islamic');
-    
-    const message = `مرحباً 👋
-
-📊 *إشعار راتب - نُظم*
-━━━━━━━━━━━━━━━━━━━━━━━━━
-
-👤 *الموظف:* ${employeeName}
-📅 *الشهر:* ${monthNames[month]} ${year}
-📋 *حالة الدفع:* ${paymentStatus}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 *تفاصيل الراتب:*
-
-💵 الراتب الأساسي: ${basicSalary} ريال
-➕ البدلات: ${allowances} ريال
-➖ الخصومات: ${deductions} ريال
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ *صافي الراتب: ${netSalary} ريال*
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-📱 نُظم - نظام إدارة الموظفين
-📅 تاريخ الإشعار: ${currentDate.toLocaleDateString('ar')}
-🌙 ${hijriDate}`;
-
-    // محاولة استخدام Web Share API أولاً
-    if (navigator.share) {
-        navigator.share({
-            title: `إشعار راتب - ${employeeName}`,
-            text: message
-        }).catch(err => {
-            console.log('خطأ في المشاركة:', err);
-            fallbackShare(message);
-        });
-    } else {
-        // استخدام واتساب مباشرة إذا لم يكن Web Share API متاحاً
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-    }
-}
-
-function fallbackShare(message) {
-    // نسخ النص إلى الحافظة كبديل
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(message).then(() => {
-            alert('تم نسخ تفاصيل الراتب إلى الحافظة! يمكنك الآن لصقها في واتساب.');
-        }).catch(() => {
-            showShareModal(message);
-        });
-    } else {
-        showShareModal(message);
-    }
-}
-
-function showShareModal(message) {
-    // إنشاء modal لعرض النص
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.8); z-index: 9999; display: flex; 
-        align-items: center; justify-content: center; padding: 20px;
-    `;
-    
-    const content = document.createElement('div');
-    content.style.cssText = `
-        background: white; padding: 20px; border-radius: 10px; 
-        max-width: 90%; max-height: 80%; overflow-y: auto; direction: rtl;
-    `;
-    
-    content.innerHTML = `
-        <h4 style="margin-bottom: 15px; color: #25D366;">
-            <i class="fab fa-whatsapp"></i> مشاركة تفاصيل الراتب
-        </h4>
-        <textarea readonly style="width: 100%; height: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: Arial, sans-serif; font-size: 14px; direction: rtl;">${message}</textarea>
-        <div style="margin-top: 15px; text-align: center;">
-            <button onclick="window.open('https://wa.me/?text=${encodeURIComponent(message)}', '_blank')" 
-                    style="background: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-left: 10px; cursor: pointer;">
-                <i class="fab fa-whatsapp"></i> فتح واتساب
-            </button>
-            <button onclick="this.closest('.modal-overlay').remove()" 
-                    style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                إغلاق
-            </button>
-        </div>
-    `;
-    
-    modal.className = 'modal-overlay';
-    modal.appendChild(content);
-    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-    document.body.appendChild(modal);
-}
 </script>
 {% endblock %}

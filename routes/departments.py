@@ -194,9 +194,8 @@ def edit(id):
 @require_module_access(Module.DEPARTMENTS, Permission.VIEW)
 def view(id):
     """View department details and its employees"""
-    department = Department.query.options(joinedload(Department.employees)).get_or_404(id)
-    # Use the many-to-many relationship
-    employees = department.employees
+    department = Department.query.get_or_404(id)
+    employees = Employee.query.filter_by(department_id=id).all()
     
     # حساب عدد الموظفين حسب الحالة
     active_count = sum(1 for e in employees if e.status == 'active')
@@ -318,8 +317,7 @@ def import_employees(id):
 def delete(id):
     """Show delete confirmation page for a department"""
     department = Department.query.get_or_404(id)
-    # Use many-to-many relationship to count employees
-    employees_count = len(department.employees)
+    employees_count = Employee.query.filter_by(department_id=id).count()
     
     return render_template('departments/delete.html', 
                           department=department, 
@@ -338,8 +336,8 @@ def delete_confirm(id):
     user_id = current_user.id if current_user.is_authenticated else None
     
     try:
-        # Check if department has employees using many-to-many relationship
-        employees_count = len(department.employees)
+        # Check if department has employees
+        employees_count = Employee.query.filter_by(department_id=id).count()
         if employees_count > 0:
             flash(f'لا يمكن حذف القسم لأنه يحتوي على {employees_count} موظف', 'danger')
             return redirect(url_for('departments.index'))

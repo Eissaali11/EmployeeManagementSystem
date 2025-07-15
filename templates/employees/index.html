@@ -79,25 +79,6 @@
                     </div>
                 </div>
                 
-                <!-- صف ثاني للفلاتر الإضافية -->
-                <div class="row">
-                    <!-- فلتر الموظفين بدون أقسام -->
-                    <div class="col-md-3 mb-2">
-                        <select name="no_department" class="form-select" onchange="this.form.submit()">
-                            <option value="">بحسب الأقسام</option>
-                            <option value="yes" {% if current_no_department == 'yes' %}selected{% endif %}>
-                                ⚠️ بدون أقسام ({{ no_dept_count }})
-                            </option>
-                        </select>
-                    </div>
-                    <div class="col-md-9 mb-2">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i>
-                            استخدم هذا الفلتر لعرض الموظفين الذين لم يتم ربطهم بأي قسم بعد
-                        </small>
-                    </div>
-                </div>
-                
                 <!-- معلومات النتائج والإحصائيات -->
                 <div class="row mt-2">
                     <div class="col-md-8">
@@ -106,7 +87,7 @@
                         </div>
                         
                         <!-- إحصائيات الفلاتر النشطة -->
-                        {% if current_department or current_status or current_multi_department or current_no_department %}
+                        {% if current_department or current_status or current_multi_department %}
                         <div class="small text-info">
                             <i class="fas fa-filter me-1"></i>
                             الفلاتر النشطة: 
@@ -130,11 +111,6 @@
                                 <span class="badge bg-warning me-1">
                                     {% if current_multi_department == 'yes' %}أكثر من قسم
                                     {% else %}قسم واحد{% endif %}
-                                </span>
-                            {% endif %}
-                            {% if current_no_department %}
-                                <span class="badge bg-danger me-1">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>بدون أقسام
                                 </span>
                             {% endif %}
                             <a href="{{ url_for('employees.index') }}" class="btn btn-sm btn-outline-secondary ms-2">

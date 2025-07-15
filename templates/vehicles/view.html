@@ -97,11 +97,11 @@
                     </div>
                     <div class="row mb-2">
                         <div class="col-sm-4 fw-bold">تاريخ الإضافة:</div>
-                        <div class="col-sm-8">{{ vehicle.created_at.strftime('%Y-%m-%d') }}</div>
+                        <div class="col-sm-8">{{ vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else 'غير محدد' }}</div>
                     </div>
                     <div class="row mb-2">
                         <div class="col-sm-4 fw-bold">آخر تحديث:</div>
-                        <div class="col-sm-8">{{ vehicle.updated_at.strftime('%Y-%m-%d') }}</div>
+                        <div class="col-sm-8">{{ vehicle.updated_at.strftime('%Y-%m-%d') if vehicle.updated_at else 'غير محدد' }}</div>
                     </div>
 
                     <div class="row mb-3">
@@ -135,6 +135,69 @@
                         <div class="col-12 mt-2">
                             <div class="alert alert-secondary">{{ vehicle.notes }}</div>
                         </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- صورة رخصة السيارة -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card ms-2"></i>
+                        صورة رخصة السيارة
+                    </h5>
+                    <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                        {% if vehicle.license_image %}تحديث الصورة{% else %}رفع الصورة{% endif %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if vehicle.license_image %}
+                    <div class="text-center">
+                        <div class="license-image-container mb-3">
+                            <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                                 class="img-fluid rounded border" 
+                                 style="max-height: 300px; max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" 
+                                 alt="صورة رخصة السيارة"
+                                 onclick="showLicenseModal()">
+                        </div>
+                        <div class="license-actions d-flex gap-2 justify-content-center flex-wrap">
+                            <button onclick="showLicenseModal()" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-search-plus ms-1"></i>
+                                عرض كبير
+                            </button>
+                            <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                               target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-download ms-1"></i>
+                                تحميل الصورة
+                            </a>
+                            <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                               class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit ms-1"></i>
+                                تحديث
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                انقر على الصورة للعرض بحجم كامل
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-id-card fa-4x text-muted"></i>
+                        </div>
+                        <h5>لا توجد صورة رخصة</h5>
+                        <p class="text-muted">لم يتم رفع صورة رخصة لهذه السيارة بعد</p>
+                        <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                           class="btn btn-primary mt-2">
+                            <i class="fas fa-plus ms-1"></i>
+                            رفع صورة الرخصة
+                        </a>
                     </div>
                     {% endif %}
                 </div>
@@ -450,6 +513,48 @@
         </div>
     </div>
 
+    <!-- ملفات Google Drive - مصغر -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1">
+                                <i class="fab fa-google-drive text-info ms-2"></i>
+                                ملفات Google Drive
+                                {% if vehicle.drive_folder_link %}
+                                <span class="badge bg-success ms-2">مرتبط</span>
+                                {% else %}
+                                <span class="badge bg-warning ms-2">غير مرتبط</span>
+                                {% endif %}
+                            </h6>
+                            {% if vehicle.drive_folder_link %}
+                            <small class="text-muted">تم ربط مجلد لتنظيم ملفات المركبة</small>
+                            {% else %}
+                            <small class="text-muted">لم يتم ربط مجلد Google Drive بعد</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                {% if vehicle.drive_folder_link %}
+                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-success btn-sm">
+                                    <i class="fab fa-google-drive"></i>
+                                    فتح المجلد
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-cog"></i>
+                                    إدارة
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- وثائق المركبة -->
     <div class="row mb-4">
         <!-- بطاقة معلومات وثائق المركبة -->
@@ -686,10 +791,27 @@
             </div>
             <div class="card-body">
                 {% if workshop_records %}
-                <div class="list-group">
+                <!-- إحصائيات الورشة -->
+                <div class="row mb-3">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-primary h5">{{ workshop_records|selectattr('repair_status', 'equalto', 'in_progress')|list|length }}</div>
+                        <small class="text-muted">قيد التنفيذ</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-success h5">{{ workshop_records|selectattr('repair_status', 'equalto', 'completed')|list|length }}</div>
+                        <small class="text-muted">مكتمل</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-warning h5">{{ workshop_records|selectattr('repair_status', 'equalto', 'pending_approval')|list|length }}</div>
+                        <small class="text-muted">في الانتظار</small>
+                    </div>
+                </div>
+                <hr>
+                
+                <!-- عرض آخر 4 عمليات مع إمكانية التوسع -->
+                <div class="list-group" style="max-height: 600px; overflow-y: auto;">
                     {% for record in workshop_records %}
-                    <div
-                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 {% if loop.index > 4 %}d-none older-workshop-record{% endif %}">
                         <div class="w-75">
                             <div class="fw-bold d-flex align-items-center mb-1">
                                 {% if record.reason == 'maintenance' %}
@@ -944,6 +1066,16 @@
                         </div>
                     </div>
                     {% endfor %}
+                    
+                    <!-- زر عرض المزيد -->
+                    {% if workshop_records|length > 4 %}
+                    <div class="text-center py-3 border-top">
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleOlderWorkshopRecords()">
+                            <i class="fas fa-chevron-down ms-1" id="toggleWorkshopIcon"></i>
+                            <span id="toggleWorkshopText">عرض العمليات السابقة ({{ workshop_records|length - 4 }})</span>
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="d-flex justify-content-between mt-3">
                     <div>
@@ -1190,7 +1322,7 @@
                                     </td>
                                     <td>{{ record.formatted_handover_date }}</td>
                                     <td>
-                                        {% if record.handover_type == 'delivery' %}
+                                        {% if record.handover_type_ar == 'تسليم' %}
                                         <span class="badge bg-success">تسليم</span>
                                         {% else %}
                                         <span class="badge bg-info">استلام</span>
@@ -1243,6 +1375,8 @@
         </div>
     </div>
 </div>
+
+
 
 <!-- قسم بيانات الحوادث المرورية -->
 <div class="row mb-4">
@@ -1374,55 +1508,381 @@
         </div>
     </div>
 </div>
+
+<!-- قسم التفويضات الخارجية -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    التفويضات الخارجية
+                    <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
+                </h5>
+                <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة تفويض جديد
+                </a>
+            </div>
+            <div class="card-body">
+                {% if external_authorizations %}
+                <!-- إحصائيات التفويضات -->
+                <div class="row mb-3">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-warning h5">{{ external_authorizations|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                        <small class="text-muted">في الانتظار</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-success h5">{{ external_authorizations|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+                        <small class="text-muted">مُوافق عليه</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-danger h5">{{ external_authorizations|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
+                        <small class="text-muted">مرفوض</small>
+                    </div>
+                </div>
+                <hr>
+                
+                <!-- جدول التفويضات -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>الموظف</th>
+                                <th>المشروع</th>
+                                <th>نوع التفويض</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auth in external_authorizations %}
+                            <tr>
+                                <td>{{ auth.employee.name }}</td>
+                                <td>{{ auth.project_name or 'غير محدد' }}</td>
+                                <td><span class="badge bg-info">{{ auth.authorization_type }}</span></td>
+                                <td>
+                                    {% if auth.status == 'pending' %}
+                                        <span class="badge bg-warning">قيد المراجعة</span>
+                                    {% elif auth.status == 'approved' %}
+                                        <span class="badge bg-success">مُوافق عليه</span>
+                                    {% elif auth.status == 'rejected' %}
+                                        <span class="badge bg-danger">مرفوض</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('vehicles.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-primary" title="عرض التفاصيل">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-warning" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if auth.file_path %}
+                                        <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info" title="عرض الملف">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if auth.external_link %}
+                                        <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-success" title="فتح الرابط">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if auth.status == 'pending' %}
+                                        <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-success" 
+                                           onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" title="موافقة">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-danger" 
+                                           onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" title="رفض">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-file-signature fa-3x text-muted mb-3"></i>
+                    <h6>لا توجد تفويضات خارجية</h6>
+                    <p class="text-muted small">يمكنك إضافة تفويض خارجي جديد من خلال النقر على زر "إضافة تفويض جديد"</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-{{ super() }}
+
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // تحديد العناصر
-        const selectAllCheckbox = document.getElementById('select-all');
-        const handoverCheckboxes = document.querySelectorAll('.handover-checkbox');
-        const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+// دالة لعرض/إخفاء السجلات القديمة
+function toggleOlderWorkshopRecords() {
+    const olderRecords = document.querySelectorAll('.older-workshop-record');
+    const toggleIcon = document.getElementById('toggleWorkshopIcon');
+    const toggleText = document.getElementById('toggleWorkshopText');
+    
+    if (olderRecords[0] && olderRecords[0].classList.contains('d-none')) {
+        // إظهار السجلات القديمة
+        olderRecords.forEach(record => {
+            record.classList.remove('d-none');
+        });
+        toggleIcon.className = 'fas fa-chevron-up ms-1';
+        toggleText.textContent = 'إخفاء العمليات السابقة';
+    } else {
+        // إخفاء السجلات القديمة
+        olderRecords.forEach(record => {
+            record.classList.add('d-none');
+        });
+        toggleIcon.className = 'fas fa-chevron-down ms-1';
+        toggleText.textContent = 'عرض العمليات السابقة (' + olderRecords.length + ')';
+    }
+}
 
-        if (selectAllCheckbox && handoverCheckboxes.length > 0 && deleteSelectedBtn) {
-            // تحديث زر الحذف بناءً على الخانات المحددة
-            function updateDeleteButton() {
-                const checkedCount = document.querySelectorAll('.handover-checkbox:checked').length;
-                deleteSelectedBtn.disabled = checkedCount === 0;
+// دوال للتعامل مع التفويضات الخارجية
+function viewAuthDetails(authId) {
+    alert('عرض تفاصيل التفويض رقم: ' + authId);
+}
 
-                // تحديث نص الزر ليعكس عدد العناصر المحددة
-                if (checkedCount > 0) {
-                    deleteSelectedBtn.innerHTML = `<i class="fas fa-trash-alt ms-1"></i> حذف المحدد (${checkedCount})`;
-                } else {
-                    deleteSelectedBtn.innerHTML = `<i class="fas fa-trash-alt ms-1"></i> حذف المحدد`;
-                }
+function editAuthDetails(authId) {
+    alert('تعديل التفويض رقم: ' + authId);
+}
+
+function approveAuth(authId) {
+    if (confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')) {
+        alert('تم الموافقة على التفويض رقم: ' + authId);
+    }
+}
+
+function rejectAuth(authId) {
+    if (confirm('هل أنت متأكد من رفض هذا التفويض؟')) {
+        alert('تم رفض التفويض رقم: ' + authId);
+    }
+}
+
+// فلترة الموظفين حسب القسم (إذا كانت العناصر موجودة)
+const departmentSelect = document.getElementById('department_id');
+if (departmentSelect) {
+    departmentSelect.addEventListener('change', function() {
+        const departmentId = this.value;
+        const employeeSelect = document.getElementById('employee_id');
+        if (!employeeSelect) return;
+        
+        const options = employeeSelect.querySelectorAll('option');
+        
+        options.forEach(option => {
+            if (option.value === '') {
+                option.style.display = 'block';
+                return;
             }
-
-            // تحديد/إلغاء تحديد الكل
-            selectAllCheckbox.addEventListener('change', function () {
-                handoverCheckboxes.forEach(checkbox => {
-                    checkbox.checked = selectAllCheckbox.checked;
-                });
-                updateDeleteButton();
-            });
-
-            // تحديث زر الحذف عند تغيير حالة أي خانة
-            handoverCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function () {
-                    // تحديث حالة خانة تحديد الكل
-                    const allChecked = document.querySelectorAll('.handover-checkbox:checked').length === handoverCheckboxes.length;
-                    selectAllCheckbox.checked = allChecked;
-
-                    // تحديث زر الحذف
-                    updateDeleteButton();
-                });
-            });
-
-            // تحديث حالة زر الحذف عند تحميل الصفحة
-            updateDeleteButton();
-        }
+            
+            const employeeDepartments = option.dataset.departments ? option.dataset.departments.split(',') : [];
+            
+            if (!departmentId || employeeDepartments.includes(departmentId)) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        // إعادة تعيين الموظف المختار
+        employeeSelect.value = '';
     });
+}
+
+// دالة animateCounters المفقودة
+function animateCounters() {
+    // دالة وهمية لحل الخطأ
+    console.log('animateCounters called');
+}
+
+// إدارة أزرار حذف سجلات التسليم والاستلام
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all');
+    const handoverCheckboxes = document.querySelectorAll('.handover-checkbox');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const handoverDeleteForm = document.getElementById('handover-delete-form');
+
+    // تفعيل/إلغاء تفعيل زر الحذف بناءً على التحديد
+    function updateDeleteButtonState() {
+        const checkedBoxes = document.querySelectorAll('.handover-checkbox:checked');
+        if (deleteSelectedBtn) {
+            deleteSelectedBtn.disabled = checkedBoxes.length === 0;
+        }
+    }
+
+    // وظيفة تحديد الكل
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            handoverCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateDeleteButtonState();
+        });
+    }
+
+    // تحديث حالة زر الحذف عند التغيير في أي checkbox
+    handoverCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateDeleteButtonState();
+            
+            // تحديث حالة "تحديد الكل"
+            if (selectAllCheckbox) {
+                const checkedCount = document.querySelectorAll('.handover-checkbox:checked').length;
+                selectAllCheckbox.checked = checkedCount === handoverCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < handoverCheckboxes.length;
+            }
+        });
+    });
+
+    // تأكيد الحذف قبل الإرسال
+    if (handoverDeleteForm) {
+        handoverDeleteForm.addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.handover-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('يرجى تحديد السجلات المراد حذفها');
+                return false;
+            }
+            
+            const confirmMessage = `هل أنت متأكد من حذف ${checkedBoxes.length} سجل من سجلات التسليم والاستلام؟\n\nهذا الإجراء لا يمكن التراجع عنه.`;
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    // تحديث حالة الزر في البداية
+    updateDeleteButtonState();
+});
+
+// عرض نافذة منبثقة لصورة الرخصة
+function showLicenseModal() {
+    const modal = `
+        <div class="modal fade" id="licenseModal" tabindex="-1" aria-labelledby="licenseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="licenseModalLabel">صورة رخصة السيارة - {{ vehicle.plate_number }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) if vehicle.license_image else '' }}" 
+                             class="img-fluid rounded" 
+                             style="max-height: 70vh; width: auto;" 
+                             alt="صورة رخصة السيارة">
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) if vehicle.license_image else '#' }}" 
+                           target="_blank" class="btn btn-success">
+                            <i class="fas fa-download ms-1"></i>
+                            تحميل الصورة
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // إزالة النافذة إذا كانت موجودة
+    const existingModal = document.getElementById('licenseModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // إضافة النافذة للصفحة
+    document.body.insertAdjacentHTML('beforeend', modal);
+    
+    // عرض النافذة
+    const bootstrapModal = new bootstrap.Modal(document.getElementById('licenseModal'));
+    bootstrapModal.show();
+}
+
+// دالة نسخ الرابط للحافظة
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // إظهار تنبيه نجاح
+        const toast = document.createElement('div');
+        toast.className = 'toast show position-fixed top-0 end-0 m-3';
+        toast.innerHTML = `
+            <div class="toast-header">
+                <strong class="me-auto text-success">نجح النسخ</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                تم نسخ الرابط إلى الحافظة
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }).catch(function() {
+        alert('تم نسخ الرابط');
+    });
+}
+
+// دالة التحقق من صحة رابط Google Drive
+function validateDriveLink(url) {
+    const drivePattern = /^https:\/\/(drive\.google\.com|docs\.google\.com)/;
+    return drivePattern.test(url);
+}
+
+// معالجة نموذج إدارة Google Drive
+document.addEventListener('DOMContentLoaded', function() {
+    const driveForm = document.getElementById('driveForm');
+    const driveLinkInput = document.getElementById('driveLink');
+    const linkPreview = document.getElementById('linkPreview');
+    const previewContainer = document.getElementById('previewContainer');
+    
+    if (driveLinkInput) {
+        driveLinkInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url && validateDriveLink(url)) {
+                linkPreview.textContent = url;
+                previewContainer.style.display = 'block';
+                previewContainer.className = 'alert alert-success';
+                previewContainer.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>رابط صحيح:</strong><br>
+                    <small>${url}</small>
+                `;
+            } else if (url) {
+                previewContainer.style.display = 'block';
+                previewContainer.className = 'alert alert-warning';
+                previewContainer.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    يرجى إدخال رابط Google Drive صحيح
+                `;
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+    
+    if (driveForm) {
+        driveForm.addEventListener('submit', function(e) {
+            const url = driveLinkInput.value.trim();
+            if (url && !validateDriveLink(url)) {
+                e.preventDefault();
+                alert('يرجى إدخال رابط Google Drive صحيح');
+                return false;
+            }
+        });
+    }
+});
 </script>
+
+
+
 {% endblock %}

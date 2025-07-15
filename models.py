@@ -160,8 +160,6 @@ class Salary(db.Model):
     deductions = db.Column(db.Float, default=0.0)
     bonus = db.Column(db.Float, default=0.0)
     net_salary = db.Column(db.Float, nullable=False)
-    is_paid = db.Column(db.Boolean, default=False, nullable=False)
-    overtime_hours = db.Column(db.Float, default=0.0)
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

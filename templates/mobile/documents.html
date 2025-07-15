@@ -11,402 +11,27 @@
 {% endblock %}
 
 {% block content %}
-<style>
-/* تصميم أنيق ومتطور للصفحة */
-body {
-    padding-top: 85px !important;
-    padding-bottom: 120px !important;
-}
-
-.documents-container {
-    padding: 20px 15px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 100vh;
-}
-
-/* بطاقة الترحيب */
-.welcome-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 25px 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.welcome-title {
-    color: white;
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.welcome-subtitle {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.95rem;
-    margin-bottom: 0;
-}
-
-/* بطاقة الإحصائيات */
-.stats-card {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.stats-title {
-    color: #2d3748;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-}
-
-.stats-title i {
-    margin-left: 10px;
-    color: #667eea;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
-.stat-item {
-    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.stat-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.stat-number {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #2d3748;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.stat-label {
-    color: #718096;
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-.stat-item.valid .stat-number { color: #38a169; }
-.stat-item.expiring .stat-number { color: #ed8936; }
-.stat-item.expired .stat-number { color: #e53e3e; }
-.stat-item.total .stat-number { color: #3182ce; }
-
-/* فلاتر البحث */
-.filter-card {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.filter-title {
-    color: #2d3748;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-}
-
-.filter-title i {
-    margin-left: 10px;
-    color: #667eea;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-label {
-    display: block;
-    color: #4a5568;
-    font-weight: 500;
-    margin-bottom: 5px;
-    font-size: 0.9rem;
-}
-
-.form-control {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    background: white;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.btn-group {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    text-align: center;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    flex: 3;
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-.btn-secondary {
-    background: #e2e8f0;
-    color: #4a5568;
-    flex: 1;
-}
-
-.btn-secondary:hover {
-    background: #cbd5e0;
-    transform: translateY(-1px);
-}
-
-/* قائمة الوثائق */
-.documents-list {
-    background: white;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.documents-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.documents-header i {
-    margin-left: 10px;
-}
-
-.document-item {
-    padding: 20px;
-    border-bottom: 1px solid #e2e8f0;
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-}
-
-.document-item:hover {
-    background: #f7fafc;
-}
-
-.document-item:last-child {
-    border-bottom: none;
-}
-
-.document-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-}
-
-.document-title {
-    font-weight: 600;
-    color: #2d3748;
-    font-size: 1rem;
-}
-
-.document-status {
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.document-status.valid {
-    background: rgba(56, 161, 105, 0.1);
-    color: #38a169;
-}
-
-.document-status.expiring {
-    background: rgba(237, 137, 54, 0.1);
-    color: #ed8936;
-}
-
-.document-status.expired {
-    background: rgba(229, 62, 62, 0.1);
-    color: #e53e3e;
-}
-
-.document-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
-}
-
-.document-employee {
-    color: #718096;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-}
-
-.document-employee i {
-    margin-left: 5px;
-    color: #cbd5e0;
-}
-
-.document-date {
-    color: #a0aec0;
-    font-size: 0.85rem;
-}
-
-/* حالة فارغة */
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #718096;
-}
-
-.empty-icon {
-    font-size: 4rem;
-    color: #e2e8f0;
-    margin-bottom: 20px;
-}
-
-.empty-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #4a5568;
-    margin-bottom: 10px;
-}
-
-.empty-text {
-    color: #718096;
-    line-height: 1.6;
-}
-
-/* تصميم متجاوب */
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .document-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .document-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-}
-</style>
-
-<div class="documents-container">
-    <!-- بطاقة الترحيب -->
-    <div class="welcome-card">
-        <div class="welcome-title">
-            <i class="fas fa-file-alt"></i>
-            إدارة الوثائق
-        </div>
-        <div class="welcome-subtitle">
-            تتبع وإدارة جميع وثائق الموظفين بكفاءة
-        </div>
+<!-- فلاتر البحث -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-filter"></i> البحث والفلترة
     </div>
-
-    <!-- إحصائيات الوثائق -->
-    <div class="stats-card">
-        <div class="stats-title">
-            <i class="fas fa-chart-bar"></i>
-            إحصائيات الوثائق
-        </div>
-        <div class="stats-grid">
-            <div class="stat-item valid">
-                <div class="stat-number">{{ document_stats.valid or 0 }}</div>
-                <div class="stat-label">سارية</div>
-            </div>
-            <div class="stat-item expiring">
-                <div class="stat-number">{{ document_stats.expiring or 0 }}</div>
-                <div class="stat-label">تنتهي قريباً</div>
-            </div>
-            <div class="stat-item expired">
-                <div class="stat-number">{{ document_stats.expired or 0 }}</div>
-                <div class="stat-label">منتهية</div>
-            </div>
-            <div class="stat-item total">
-                <div class="stat-number">{{ document_stats.total or 0 }}</div>
-                <div class="stat-label">الإجمالي</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- فلاتر البحث -->
-    <div class="filter-card">
-        <div class="filter-title">
-            <i class="fas fa-search"></i>
-            البحث والفلترة
-        </div>
-        <form action="{{ url_for('mobile.documents') }}" method="GET">
-            <div class="form-group">
-                <label class="form-label">الموظف</label>
-                <select name="employee_id" class="form-control">
+    
+    <div class="mobile-card-content">
+        <form action="{{ url_for('mobile.documents') }}" method="GET" class="mobile-form">
+            <div class="mobile-form-group">
+                <label>الموظف</label>
+                <select name="employee_id" class="mobile-form-select">
                     <option value="">جميع الموظفين</option>
                     {% for employee in employees %}
-                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>
-                        {{ employee.name }}
-                    </option>
+                    <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>{{ employee.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             
-            <div class="form-group">
-                <label class="form-label">نوع الوثيقة</label>
-                <select name="document_type" class="form-control">
+            <div class="mobile-form-group">
+                <label>نوع الوثيقة</label>
+                <select name="document_type" class="mobile-form-select">
                     <option value="">جميع الأنواع</option>
                     <option value="هوية" {% if request.args.get('document_type') == 'هوية' %}selected{% endif %}>هوية</option>
                     <option value="جواز سفر" {% if request.args.get('document_type') == 'جواز سفر' %}selected{% endif %}>جواز سفر</option>
@@ -418,9 +43,9 @@ body {
                 </select>
             </div>
             
-            <div class="form-group">
-                <label class="form-label">حالة الوثيقة</label>
-                <select name="status" class="form-control">
+            <div class="mobile-form-group">
+                <label>حالة الوثيقة</label>
+                <select name="status" class="mobile-form-select">
                     <option value="">جميع الحالات</option>
                     <option value="valid" {% if request.args.get('status') == 'valid' %}selected{% endif %}>سارية</option>
                     <option value="expiring" {% if request.args.get('status') == 'expiring' %}selected{% endif %}>تنتهي قريباً</option>
@@ -428,71 +53,273 @@ body {
                 </select>
             </div>
             
-            <div class="btn-group">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i>
-                    بحث
+            <div class="d-flex gap-2">
+                <button type="submit" class="mobile-btn mobile-btn-primary" style="flex: 3">
+                    <i class="fas fa-search"></i> بحث
                 </button>
-                <a href="{{ url_for('mobile.documents') }}" class="btn btn-secondary">
+                <a href="{{ url_for('mobile.documents') }}" class="mobile-btn mobile-btn-secondary" style="flex: 1">
                     <i class="fas fa-redo"></i>
                 </a>
             </div>
         </form>
     </div>
+</div>
 
-    <!-- قائمة الوثائق -->
-    {% if documents %}
-    <div class="documents-list">
-        <div class="documents-header">
-            <div>
-                <i class="fas fa-list"></i>
-                قائمة الوثائق
+<!-- ملخص الوثائق -->
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-file-alt"></i> ملخص الوثائق
+    </div>
+    
+    <div class="mobile-card-content">
+        <div class="document-summary">
+            <div class="document-stat valid">
+                <div class="document-count">{{ document_stats.valid or 0 }}</div>
+                <div class="document-label">سارية</div>
             </div>
-            <div style="font-size: 0.9rem; opacity: 0.9;">
-                {{ documents|length }} وثيقة
+            <div class="document-stat expiring">
+                <div class="document-count">{{ document_stats.expiring or 0 }}</div>
+                <div class="document-label">تنتهي قريباً</div>
+            </div>
+            <div class="document-stat expired">
+                <div class="document-count">{{ document_stats.expired or 0 }}</div>
+                <div class="document-label">منتهية</div>
+            </div>
+            <div class="document-stat total">
+                <div class="document-count">{{ document_stats.total or 0 }}</div>
+                <div class="document-label">الإجمالي</div>
             </div>
         </div>
-        
-        {% for document in documents %}
-        <div class="document-item" onclick="location.href='{{ url_for('mobile.document_details', document_id=document.id) }}'">
-            <div class="document-header">
-                <div class="document-title">{{ document.document_type_display or document.document_type }}</div>
-                <div class="document-status {{ document.status }}">
-                    {% if document.status == 'valid' %}سارية
-                    {% elif document.status == 'expiring' %}تنتهي قريباً
-                    {% elif document.status == 'expired' %}منتهية
-                    {% else %}غير محدد{% endif %}
-                </div>
-            </div>
-            <div class="document-info">
-                <div class="document-employee">
-                    <i class="fas fa-user"></i>
-                    {{ document.employee.name }}
-                </div>
-                <div class="document-date">
-                    {% if document.expiry_date %}
-                    تنتهي: {{ document.expiry_date.strftime('%Y-%m-%d') }}
+    </div>
+</div>
+
+<!-- قائمة الوثائق -->
+{% if documents %}
+<div class="mobile-card">
+    <div class="mobile-card-title">
+        <i class="fas fa-list-alt"></i> قائمة الوثائق
+    </div>
+    
+    <div class="mobile-card-content p-0">
+        <div class="mobile-list">
+            {% for document in documents %}
+            <div class="mobile-list-item" onclick="location.href='{{ url_for('mobile.document_details', document_id=document.id) }}'">
+                <div class="mobile-list-item-icon">
+                    {% if document.document_type == 'هوية' %}
+                    <i class="fas fa-id-card"></i>
+                    {% elif document.document_type == 'جواز سفر' %}
+                    <i class="fas fa-passport"></i>
+                    {% elif document.document_type == 'رخصة قيادة' %}
+                    <i class="fas fa-car"></i>
+                    {% elif document.document_type == 'إقامة' %}
+                    <i class="fas fa-home"></i>
+                    {% elif document.document_type == 'تأمين صحي' %}
+                    <i class="fas fa-heartbeat"></i>
+                    {% elif document.document_type == 'شهادة عمل' %}
+                    <i class="fas fa-certificate"></i>
                     {% else %}
-                    بدون تاريخ انتهاء
+                    <i class="fas fa-file-alt"></i>
+                    {% endif %}
+                </div>
+                <div class="mobile-list-item-content">
+                    <div class="mobile-list-item-title">{{ document.name }}</div>
+                    <div class="mobile-list-item-subtitle">
+                        {{ document.employee.name }}
+                        <small>({{ document.document_type }})</small>
+                    </div>
+                    <div class="mobile-list-item-info">
+                        <div class="document-details">
+                            <span>رقم: {{ document.document_number }}</span>
+                            {% if document.expiry_date %}
+                            <span>تنتهي: {{ document.expiry_date.strftime('%Y-%m-%d') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-list-item-status">
+                    {% if document.expiry_date %}
+                        {% if document.expiry_date < current_date %}
+                        <span class="doc-status expired">منتهية</span>
+                        {% elif (document.expiry_date - current_date).days <= 30 %}
+                        <span class="doc-status expiring">تنتهي قريباً</span>
+                        {% else %}
+                        <span class="doc-status valid">سارية</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="doc-status">-</span>
                     {% endif %}
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="documents-list">
-        <div class="empty-state">
-            <div class="empty-icon">
-                <i class="fas fa-file-alt"></i>
-            </div>
-            <div class="empty-title">لا توجد وثائق</div>
-            <div class="empty-text">
-                لم يتم العثور على أي وثائق تطابق معايير البحث المحددة.<br>
-                يمكنك إضافة وثيقة جديدة أو تعديل فلاتر البحث.
-            </div>
+        
+        <!-- ترقيم الصفحات -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mobile-pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('mobile.documents', page=pagination.prev_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+            
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                    <a href="{{ url_for('mobile.documents', page=page, **request.args) }}" class="mobile-pagination-item">{{ page }}</a>
+                    {% else %}
+                    <span class="mobile-pagination-item active">{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="mobile-pagination-item">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <a href="{{ url_for('mobile.documents', page=pagination.next_num, **request.args) }}" class="mobile-pagination-item">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
         </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
+{% else %}
+<div class="mobile-card">
+    <div class="mobile-card-content text-center py-5">
+        <i class="fas fa-file-alt fa-3x text-secondary mb-3"></i>
+        <h5>لا توجد وثائق</h5>
+        <p class="text-secondary">لا توجد بيانات وثائق متطابقة مع معايير البحث</p>
+        <a href="{{ url_for('mobile.add_document') }}" class="mobile-btn mobile-btn-primary mt-3">
+            <i class="fas fa-plus"></i> إضافة وثيقة جديدة
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.mobile-list {
+    border-top: 1px solid #eee;
+}
+
+.mobile-list-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    cursor: pointer;
+}
+
+.mobile-list-item:hover {
+    background-color: #f9f9f9;
+}
+
+.mobile-list-item-icon {
+    margin-left: 15px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+
+.mobile-list-item-content {
+    flex: 1;
+}
+
+.mobile-list-item-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-subtitle {
+    color: #757575;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.mobile-list-item-info {
+    color: #757575;
+    font-size: 0.85rem;
+}
+
+.mobile-list-item-status {
+    display: flex;
+    align-items: center;
+}
+
+.doc-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.doc-status.valid {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.doc-status.expiring {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.doc-status.expired {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.document-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.document-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.document-stat {
+    text-align: center;
+    padding: 15px 10px;
+    border-radius: 6px;
+}
+
+.document-stat.valid {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.document-stat.expiring {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.document-stat.expired {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.document-stat.total {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.document-count {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.document-label {
+    font-size: 0.85rem;
+    color: #757575;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('تم تحميل صفحة الوثائق');
+});
+</script>
 {% endblock %}
