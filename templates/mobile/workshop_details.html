@@ -476,15 +476,34 @@ function shareWorkshopDetails() {
         // تحويل الصور إلى ملفات للمشاركة
         Promise.all(allImages.map(async (image, index) => {
             try {
-                // تنظيف URL لإزالة المسافات والمحارف الخاصة
-                const cleanUrl = encodeURI(image.url);
-                const response = await fetch(cleanUrl);
+                // إنشاء URL صحيح مع معالجة المسافات والمحارف الخاصة
+                let imageUrl = image.url;
+                
+                // التأكد من أن URL مكتمل
+                if (!imageUrl.startsWith('http')) {
+                    imageUrl = window.location.origin + '/' + imageUrl.replace(/^\/+/, '');
+                }
+                
+                // معالجة المسافات في اسم الملف فقط (الجزء الأخير من المسار)
+                const urlParts = imageUrl.split('/');
+                const fileName = urlParts[urlParts.length - 1];
+                const encodedFileName = encodeURIComponent(fileName);
+                urlParts[urlParts.length - 1] = encodedFileName;
+                const cleanUrl = urlParts.join('/');
+                
+                console.log('محاولة تحميل الصورة من:', cleanUrl);
+                const response = await fetch(cleanUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'same-origin'
+                });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status} for URL: ${cleanUrl}`);
                 }
                 
                 const blob = await response.blob();
+                console.log('تم تحميل الصورة بنجاح، الحجم:', blob.size, 'bytes, النوع:', blob.type);
                 
                 // تحديد نوع الملف بناءً على محتوى الصورة أو امتداد الملف
                 let fileExtension = 'jpg';
@@ -517,6 +536,27 @@ function shareWorkshopDetails() {
                 return new File([blob], fileName, { type: mimeType });
             } catch (error) {
                 console.error('خطأ في تحميل الصورة:', image.url, error);
+                
+                // محاولة بديلة: تحميل الصورة مباشرة من static path
+                try {
+                    const staticPath = image.url.replace(window.location.origin, '');
+                    const alternativeUrl = window.location.origin + '/static/' + staticPath.replace(/^\/static\//, '');
+                    console.log('محاولة بديلة من:', alternativeUrl);
+                    
+                    const altResponse = await fetch(alternativeUrl);
+                    if (altResponse.ok) {
+                        const altBlob = await altResponse.blob();
+                        const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
+                        const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
+                        const timestamp = Date.now();
+                        const fileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.jpg`;
+                        
+                        return new File([altBlob], fileName, { type: 'image/jpeg' });
+                    }
+                } catch (altError) {
+                    console.error('فشلت المحاولة البديلة أيضاً:', altError);
+                }
+                
                 return null;
             }
         })).then(files => {
