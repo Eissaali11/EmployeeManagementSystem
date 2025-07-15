@@ -476,12 +476,23 @@ function shareWorkshopDetails() {
         // تحويل الصور إلى ملفات للمشاركة
         Promise.all(allImages.map(async (image, index) => {
             try {
-                const response = await fetch(image.url);
+                // تنظيف URL لإزالة المسافات والمحارف الخاصة
+                const cleanUrl = encodeURI(image.url);
+                const response = await fetch(cleanUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const blob = await response.blob();
                 
-                // تحديد نوع الملف بناءً على محتوى الصورة
+                // تحديد نوع الملف بناءً على محتوى الصورة أو امتداد الملف
                 let fileExtension = 'jpg';
                 let mimeType = 'image/jpeg';
+                
+                // استخراج امتداد الملف من URL كبديل
+                const urlPath = new URL(cleanUrl).pathname;
+                const urlExtension = urlPath.split('.').pop().toLowerCase();
                 
                 if (blob.type) {
                     mimeType = blob.type;
@@ -492,35 +503,52 @@ function shareWorkshopDetails() {
                     } else if (blob.type.includes('gif')) {
                         fileExtension = 'gif';
                     }
+                } else if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(urlExtension)) {
+                    fileExtension = urlExtension === 'jpeg' ? 'jpg' : urlExtension;
+                    mimeType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
                 }
                 
-                // إنشاء اسم ملف واضح ومفهوم باللغة الإنجليزية لضمان التوافق
+                // إنشاء اسم ملف واضح ومفهوم باللغة الإنجليزية
                 const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
-                const vehicleId = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '_');
-                const fileName = `workshop_${vehicleId}_${imageType}_${index + 1}.${fileExtension}`;
+                const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
+                const timestamp = Date.now();
+                const fileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.${fileExtension}`;
                 
                 return new File([blob], fileName, { type: mimeType });
             } catch (error) {
-                console.error('خطأ في تحميل الصورة:', error);
+                console.error('خطأ في تحميل الصورة:', image.url, error);
                 return null;
             }
         })).then(files => {
             const validFiles = files.filter(file => file !== null);
             
-            // استخدام Web Share API مع الصور
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: validFiles })) {
-                navigator.share({
-                    title: `سجل ورشة - ${workshopData.vehicle}`,
-                    text: shareText,
-                    files: validFiles
-                }).then(() => {
-                    console.log('تم مشاركة التفاصيل والصور بنجاح');
-                    showShareSuccess('تم مشاركة التفاصيل مع الصور بنجاح!');
-                }).catch((error) => {
-                    console.log('فشلت المشاركة مع الصور:', error);
-                    // إعادة المحاولة بدون صور
+            // طباعة معلومات التشخيص
+            console.log('عدد الصور الصالحة للمشاركة:', validFiles.length);
+            validFiles.forEach((file, i) => {
+                console.log(`الملف ${i + 1}:`, file.name, file.type, file.size, 'bytes');
+            });
+            
+            // التحقق من دعم المتصفح للمشاركة
+            if (navigator.share) {
+                // التحقق من إمكانية مشاركة الملفات
+                if (validFiles.length > 0 && navigator.canShare && navigator.canShare({ files: validFiles })) {
+                    console.log('المتصفح يدعم مشاركة الملفات، جاري المشاركة...');
+                    navigator.share({
+                        title: `سجل ورشة - ${workshopData.vehicle}`,
+                        text: shareText,
+                        files: validFiles
+                    }).then(() => {
+                        console.log('تم مشاركة التفاصيل والصور بنجاح');
+                        showShareSuccess('تم مشاركة التفاصيل مع الصور بنجاح!');
+                    }).catch((error) => {
+                        console.error('فشلت المشاركة مع الصور:', error);
+                        // إعادة المحاولة بدون صور
+                        shareWithoutImages(shareText);
+                    });
+                } else {
+                    console.log('المتصفح لا يدعم مشاركة الملفات، مشاركة النص فقط...');
                     shareWithoutImages(shareText);
-                });
+                }
             } else {
                 // المتصفح لا يدعم مشاركة الملفات
                 shareWithoutImages(shareText);
