@@ -572,11 +572,104 @@
         });
     }
     
+    // دالة تحديث التاريخ
+    function updateDate() {
+        const now = new Date();
+        const options = { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            weekday: 'long'
+        };
+        const formattedDate = now.toLocaleDateString('ar-SA', options);
+        const dateElement = document.getElementById('current-date');
+        if (dateElement) {
+            dateElement.textContent = formattedDate;
+        }
+        console.log('تم تحديث التاريخ');
+    }
+
+    // دالة تحريك العدادات
+    function animateCounters() {
+        const counters = document.querySelectorAll('.fs-1.fw-bold, .fw-bold.text-warning');
+        console.log(`العثور على ${counters.length} عداد للتحديث`);
+        
+        counters.forEach(counter => {
+            const finalValue = parseInt(counter.textContent) || 0;
+            let currentValue = 0;
+            const increment = Math.ceil(finalValue / 30);
+            
+            const updateCounter = () => {
+                if (currentValue < finalValue) {
+                    currentValue = Math.min(currentValue + increment, finalValue);
+                    counter.textContent = currentValue;
+                    requestAnimationFrame(updateCounter);
+                }
+            };
+            
+            counter.textContent = '0';
+            updateCounter();
+        });
+        
+        console.log('تم تشغيل عدادات الأرقام');
+    }
+
+    // دالة تهيئة عدادات الإحصائيات
+    function initializeCounters() {
+        // التحقق من وجود عناصر إحصائيات الوثائق
+        const validElement = document.getElementById('valid-docs-count');
+        const expiringElement = document.getElementById('expiring-docs-count');
+        const expiredElement = document.getElementById('expired-docs-count');
+        const totalElement = document.getElementById('total-docs-count');
+        
+        console.log('قيم إحصائيات الوثائق:');
+        console.log('valid:', validElement ? validElement.textContent : 'غير موجود');
+        console.log('expiring:', expiringElement ? expiringElement.textContent : 'غير موجود');
+        console.log('expired:', expiredElement ? expiredElement.textContent : 'غير موجود');
+        console.log('total:', totalElement ? totalElement.textContent : 'غير موجود');
+        
+        // تشغيل الحركة المتحركة للعدادات
+        animateCounters();
+    }
+
+    // دالة تهيئة مخطط الأقسام
+    function initializeDepartmentCharts() {
+        const departmentChartElement = document.getElementById('departmentChart');
+        if (!departmentChartElement) {
+            console.log('عنصر مخطط الأقسام غير موجود');
+            return;
+        }
+        
+        // إنشاء مخطط بسيط للأقسام
+        new Chart(departmentChartElement, {
+            type: 'pie',
+            data: {
+                labels: ['الأقسام المتاحة'],
+                datasets: [{
+                    data: [{{ total_departments }}],
+                    backgroundColor: ['#28a745'],
+                    borderColor: ['#28a745'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        console.log('تم تهيئة مخطط الأقسام');
+    }
+
     // تشغيل جميع الدوال عند تحميل الصفحة
     document.addEventListener('DOMContentLoaded', function() {
         updateDate();
         initializeCounters();
-        initializeDepartmentChart();
+        initializeDepartmentCharts();
         initializeSalaryChart();
         initializeDocumentChart();
         
