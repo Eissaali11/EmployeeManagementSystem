@@ -486,8 +486,8 @@ function shareWorkshopDetails() {
                 
                 // معالجة المسافات في اسم الملف فقط (الجزء الأخير من المسار)
                 const urlParts = imageUrl.split('/');
-                const fileName = urlParts[urlParts.length - 1];
-                const encodedFileName = encodeURIComponent(fileName);
+                const originalFileName = urlParts[urlParts.length - 1];
+                const encodedFileName = encodeURIComponent(originalFileName);
                 urlParts[urlParts.length - 1] = encodedFileName;
                 const cleanUrl = urlParts.join('/');
                 
@@ -531,9 +531,9 @@ function shareWorkshopDetails() {
                 const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
                 const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
                 const timestamp = Date.now();
-                const fileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.${fileExtension}`;
+                const finalFileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.${fileExtension}`;
                 
-                return new File([blob], fileName, { type: mimeType });
+                return new File([blob], finalFileName, { type: mimeType });
             } catch (error) {
                 console.error('خطأ في تحميل الصورة:', image.url, error);
                 
@@ -549,9 +549,9 @@ function shareWorkshopDetails() {
                         const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
                         const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
                         const timestamp = Date.now();
-                        const fileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.jpg`;
+                        const backupFileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.jpg`;
                         
-                        return new File([altBlob], fileName, { type: 'image/jpeg' });
+                        return new File([altBlob], backupFileName, { type: 'image/jpeg' });
                     }
                 } catch (altError) {
                     console.error('فشلت المحاولة البديلة أيضاً:', altError);
