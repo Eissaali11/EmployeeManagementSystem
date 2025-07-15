@@ -23,175 +23,78 @@ def parse_employee_excel(file):
         # Read the Excel file explicitly using openpyxl engine
         df = pd.read_excel(file, engine='openpyxl')
         
-        # Print column names for debugging
+        # Debug: Print column names
         print(f"Excel columns: {df.columns.tolist()}")
         
-        # Clean column names - convert all to string and strip whitespace
-        clean_columns = {}
-        for col in df.columns:
-            # Skip datetime objects
-            if isinstance(col, datetime):
-                continue
-            
-            # Clean column name
-            clean_name = str(col).strip()
-            clean_columns[col] = clean_name
-            
-        # Create a mapping for column detection - شامل لجميع الحقول المطلوبة
+        # Remove empty rows
+        df = df.dropna(how='all')
+        
+        # Check if DataFrame is empty
+        if df.empty:
+            raise ValueError("Excel file is empty or has no data")
+        
+        # Create a more flexible column mapping
         column_mappings = {
-            'name': ['name', 'full name', 'employee name', 'اسم', 'الاسم', 'اسم الموظف', 'الاسم الكامل', 'full_name', 'employee_name'],
-            'employee_id': ['emp n', 'emp.n', 'emp. n', 'emp id', 'emp.id', 'emp. id', 'employee id', 'employee number', 'emp no', 'employee no', 'رقم الموظف', 'الرقم الوظيفي', 'employee_id', 'emp_id', 'emp_no', 'emp .n', 'empn'],
-            'national_id': ['id n', 'id.n', 'id. n', 'id no', 'national id', 'identity no', 'identity number', 'national number', 'هوية', 'رقم الهوية', 'الرقم الوطني', 'رقم الهوية الوطنية', 'national_id', 'identity_no', 'id number'],
-            'mobile': ['mobile', 'mobil', 'phone', 'cell', 'telephone', 'جوال', 'رقم الجوال', 'هاتف', 'mobile_no', 'phone_no', 'no.mobile', 'no. mobile'],
-            'mobilePersonal': ['personal mobile', 'mobile personal', 'جوال شخصي', 'الجوال الشخصي', 'personal_mobile', 'mobilepersonal'],
-            'job_title': ['job title', 'position', 'title', 'المسمى', 'المسمى الوظيفي', 'الوظيفة', 'job_title', 'job_position'],
-            'status': ['status', 'employee status', 'emp status', 'الحالة', 'حالة', 'حالة الموظف', 'الحالة الوظيفية', 'employee_status'],
-            'location': ['location', 'office location', 'work location', 'موقع', 'الموقع', 'location_name'],
-            'project': ['project', 'project name', 'assigned project', 'مشروع', 'المشروع', 'project_name'],
-            'email': ['email', 'email address', 'بريد', 'البريد الإلكتروني', 'email_address'],
-            'department': ['department', 'dept', 'قسم', 'الأقسام', 'القسم', 'department_name'],
-            'join_date': ['join date', 'hire date', 'start date', 'تاريخ الانضمام', 'تاريخ التعيين', 'join_date', 'hire_date'],
-            'license_end_date': ['license end', 'license expiry', 'تاريخ انتهاء الإقامة', 'انتهاء الإقامة', 'license_end_date'],
-            'contract_status': ['contract status', 'حالة العقد', 'contract_status'],
-            'license_status': ['license status', 'حالة الرخصة', 'license_status'],
-            'nationality': ['nationality', 'الجنسية', 'جنسية'],
-            'notes': ['notes', 'remarks', 'comments', 'ملاحظات', 'notes_field']
+            'name': ['name', 'الاسم الكامل', 'اسم', 'الاسم', 'full name', 'employee name', 'Name'],
+            'employee_id': ['رقم الموظف', 'employee_id', 'emp_id', 'emp id', 'Emp .N', 'Emp.N', 'EmpN'],
+            'national_id': ['رقم الهوية الوطنية', 'national_id', 'id', 'ID .N', 'ID Number', 'هوية'],
+            'mobile': ['رقم الجوال', 'mobile', 'phone', 'هاتف', 'جوال', 'No.Mobile', 'Mobil'],
+            'job_title': ['المسمى الوظيفي', 'job_title', 'position', 'title', 'Job Title', 'وظيفة'],
+            'status': ['الحالة الوظيفية', 'status', 'حالة', 'Status'],
+            'location': ['الموقع', 'location', 'موقع', 'Location'],
+            'project': ['المشروع', 'project', 'مشروع', 'Project'],
+            'email': ['البريد الإلكتروني', 'email', 'بريد', 'Email'],
+            'department': ['الأقسام', 'department', 'قسم', 'Department'],
+            'join_date': ['تاريخ الانضمام', 'join_date', 'hire_date', 'انضمام'],
+            'license_end_date': ['تاريخ انتهاء الإقامة', 'license_end_date', 'انتهاء الإقامة'],
+            'contract_status': ['حالة العقد', 'contract_status', 'عقد'],
+            'license_status': ['حالة الرخصة', 'license_status', 'رخصة'],
+            'nationality': ['الجنسية', 'nationality', 'جنسية'],
+            'notes': ['ملاحظات', 'notes', 'remarks', 'comments'],
+            'mobilePersonal': ['الجوال الشخصي', 'mobile_personal', 'جوال شخصي']
         }
         
-        # Map columns to their normalized names
+        # Map columns to their field names
         detected_columns = {}
         for col in df.columns:
             if isinstance(col, datetime):
                 continue
                 
-            col_str = str(col).lower().strip()
+            col_str = str(col).strip()
             
-            # Check for exact column name or common variations
+            # Check for matches in column mappings
             for field, variations in column_mappings.items():
-                if col_str in variations or any(var in col_str for var in variations):
+                if col_str in variations:
                     detected_columns[field] = col
                     print(f"Detected '{field}' column: {col}")
                     break
-                    
-        # Handle special case for Excel files with columns like 'Name', 'Emp .N', etc. - explicit mappings
-        # هذه المعلومات تستخدم في معالجة النموذج الرسمي المستخدم في النظام
-        # الترتيب هنا مهم جداً كما في نموذج الموظفين
-        explicit_mappings = {
-            'Name': 'name',  # الاسم
-            'Emp .N': 'employee_id',  # رقم الموظف (عادة ما يستخدم في ملفات الموظفين)
-            'ID .N': 'national_id',  # رقم الهوية الوطنية (تصحيح الخطأ)
-            'ID Number': 'national_id',  # رقم الهوية
-            'Emp.N': 'employee_id',  # تنسيق آخر للرقم الوظيفي
-            'No.Mobile': 'mobile',  # رقم الجوال
-            'No.Mobile ': 'mobile',  # رقم الجوال (مع مسافة إضافية)
-            'Mobil': 'mobile',  # رقم الجوال صيغة بديلة
-            'Job Title': 'job_title',  # المسمى الوظيفي
-            'Status': 'status',  # الحالة
-            'Location': 'location',  # الموقع
-            'Project': 'project',  # المشروع
-            'Email': 'email'  # البريد الإلكتروني
-        }
         
-        # التأكد من وجود الأعمدة المطلوبة حسب الترتيب الصحيح
-        expected_columns = ['Name', 'Emp .N', 'ID .N', 'Mobil', 'Job Title']
-        missing_columns = [col for col in expected_columns if col not in df.columns]
-        if missing_columns:
-            print(f"تحذير: العمود التالي غير موجود في الملف: {', '.join(missing_columns)}")
-            print(f"الأعمدة الموجودة هي: {[c for c in df.columns if not isinstance(c, datetime)]}")
-        
-        # التعرف على أعمدة Emp .N (قد تأتي بأشكال مختلفة)
-        employee_id_columns = ['Emp .N', 'Emp.N', 'EmpN', 'Emp N']
-        for col_name in employee_id_columns:
-            if col_name in df.columns:
-                detected_columns['employee_id'] = col_name
-                print(f"تم العثور على عمود رقم الموظف: {col_name}")
-                break
+        # If no columns detected, try to guess from position and content
+        if not detected_columns:
+            print("No columns detected by name, trying to guess from position...")
+            columns_list = [col for col in df.columns if not isinstance(col, datetime)]
+            
+            # If we have enough columns, try to guess based on position
+            if len(columns_list) >= 3:
+                # Basic required fields
+                detected_columns['name'] = columns_list[0]
+                detected_columns['employee_id'] = columns_list[1] if len(columns_list) > 1 else None
+                detected_columns['national_id'] = columns_list[2] if len(columns_list) > 2 else None
                 
-        # الاعتماد على نص "Emp" في اسم العمود للكشف عن رقم الموظف
-        if 'employee_id' not in detected_columns:
-            for col in df.columns:
-                if isinstance(col, str) and 'emp' in col.lower() and '.n' in col.lower():
-                    detected_columns['employee_id'] = col
-                    print(f"تم العثور على عمود رقم الموظف من خلال الكلمة المفتاحية: {col}")
-                    break
-                    
-        # إعطاء الأولوية لعمود Emp .N لرقم الموظف، حتى لو كان قد تم تعيينه كرقم هوية سابقا
-        if 'Emp .N' in df.columns:
-            detected_columns['employee_id'] = 'Emp .N'
-            print("إعطاء الأولوية لعمود Emp .N كرقم موظف")
+                # Optional fields
+                if len(columns_list) > 3:
+                    detected_columns['mobile'] = columns_list[3]
+                if len(columns_list) > 4:
+                    detected_columns['job_title'] = columns_list[4]
+                
+                print(f"Guessed columns: {detected_columns}")
         
-        # فحص ترتيب الأعمدة وإصلاحه إذا كان غير صحيح
-        if len(df.columns) >= 4:  # نخفض العدد المطلوب للأعمدة
-            if 'Name' in df.columns:
-                detected_columns['name'] = 'Name'
-            
-            if 'ID Number' in df.columns:
-                detected_columns['national_id'] = 'ID Number'
-            
-            if 'Job Title' in df.columns:
-                detected_columns['job_title'] = 'Job Title'
-            
-            # البحث عن أعمدة الجوال بصيغ مختلفة
-            mobile_columns = ['No.Mobile', 'No.Mobile ', 'Mobil', 'Mobile', 'Phone']
-            for col_name in mobile_columns:
-                if col_name in df.columns:
-                    detected_columns['mobile'] = col_name
-                    print(f"تم العثور على عمود رقم الجوال: {col_name}")
-                    break
-                    
-            # إذا لم يتم العثور على الأعمدة الأساسية، نحاول أن نخمنها حسب الترتيب
-            if not (set(['name', 'employee_id', 'national_id', 'job_title']).issubset(set(detected_columns.keys()))):
-                print("الأعمدة الأساسية غير موجودة، محاولة تخمينها حسب الترتيب...")
-                # نفترض أن العمود الأول هو الاسم والثاني رقم الهوية والثالث رقم الموظف
-                columns_list = [col for col in df.columns if not isinstance(col, datetime)]
-                if len(columns_list) >= 5:
-                    if 'name' not in detected_columns and len(columns_list) > 0:
-                        detected_columns['name'] = columns_list[0]
-                        print(f"تخمين: العمود الأول '{columns_list[0]}' = الاسم")
-                    
-                    if 'national_id' not in detected_columns and len(columns_list) > 1:
-                        detected_columns['national_id'] = columns_list[1]
-                        print(f"تخمين: العمود الثاني '{columns_list[1]}' = رقم الهوية الوطنية")
-                    
-                    if 'employee_id' not in detected_columns and len(columns_list) > 2:
-                        detected_columns['employee_id'] = columns_list[2]
-                        print(f"تخمين: العمود الثالث '{columns_list[2]}' = رقم الموظف")
-                    
-                    if 'mobile' not in detected_columns and len(columns_list) > 3:
-                        detected_columns['mobile'] = columns_list[3]
-                        print(f"تخمين: العمود الرابع '{columns_list[3]}' = رقم الجوال")
-                    
-                    if 'job_title' not in detected_columns and len(columns_list) > 4:
-                        detected_columns['job_title'] = columns_list[4]
-                        print(f"تخمين: العمود الخامس '{columns_list[4]}' = المسمى الوظيفي")
+        # Check for minimum required columns
+        required_fields = ['name']
+        missing_required = [field for field in required_fields if field not in detected_columns]
         
-        for excel_col, field in explicit_mappings.items():
-            if excel_col in df.columns:
-                detected_columns[field] = excel_col
-                print(f"Explicitly mapped '{excel_col}' to '{field}'")
-        
-        # Print final column mapping
-        print(f"Final column mapping: {detected_columns}")
-        
-        # Check required columns - divide into essential and non-essential fields
-        essential_fields = ['name', 'employee_id', 'national_id']  # هذه مطلوبة دائمًا
-        other_fields = ['mobile', 'job_title', 'status', 'location', 'project', 'email', 'mobilePersonal', 
-                       'department', 'join_date', 'license_end_date', 'contract_status', 'license_status', 
-                       'nationality', 'notes']  # هذه يمكن إنشاء قيم افتراضية لها أو تركها فارغة
-        
-        missing_essential = [field for field in essential_fields if field not in detected_columns]
-        if missing_essential:
-            missing_str = ", ".join(missing_essential)
-            raise ValueError(f"Required columns missing: {missing_str}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
-        
-        # بالنسبة للحقول غير الأساسية المفقودة، سننشئ أعمدة وهمية تحتوي على قيم افتراضية
-        for field in other_fields:
-            if field not in detected_columns:
-                print(f"Warning: Creating default column for: {field}")
-                # إنشاء عمود وهمي يحتوي على قيم فارغة/افتراضية
-                dummy_column_name = f"__{field}__default"
-                df[dummy_column_name] = None  # إنشاء عمود فارغ
-                detected_columns[field] = dummy_column_name  # تعيين العمود الوهمي للحقل
+        if missing_required:
+            raise ValueError(f"Required columns missing: {', '.join(missing_required)}. Available columns: {[c for c in df.columns if not isinstance(c, datetime)]}")
         
         # Process each row
         employees = []
@@ -201,87 +104,84 @@ def parse_employee_excel(file):
                 if row.isnull().all():
                     continue
                 
-                # Handle rows with missing required fields by filling with defaults
-                missing_fields = []
-                all_fields = essential_fields + other_fields  # جميع الحقول المطلوبة والإضافية
-                for field in all_fields:
-                    if pd.isna(row[detected_columns[field]]):
-                        missing_fields.append(field)
-                
-                # If more than 3 required fields are missing, skip the row
-                if len(missing_fields) > 3:
-                    print(f"Skipping row {idx+1} due to too many missing required fields: {', '.join(missing_fields)}")
+                # Check if name is present
+                name_col = detected_columns.get('name')
+                if name_col and pd.isna(row[name_col]):
                     continue
-                    
-                # If name is missing but there are at least 2 other fields with values, try to process it
-                if 'name' in missing_fields and len(missing_fields) <= 2:
-                    # Generate a temporary name based on available data
-                    temp_name = f"موظف-{idx+1}"
-                    print(f"Row {idx+1}: Missing name, using '{temp_name}' temporarily")
-                    # We'll fill this in the next section
                 
-                # Create employee dictionary with required fields
+                # Create employee dictionary
                 employee = {}
                 
-                # Add required fields with defaults for missing values
-                for field in all_fields:
-                    value = row[detected_columns[field]]
-                    # Convert to string and handle NaN values
-                    if pd.isna(value):
-                        # Generate default values for missing fields
-                        if field == 'name':
-                            value = f"موظف-{idx+1}"
-                        elif field == 'employee_id':
-                            value = f"EMP{idx+1000}"
-                        elif field == 'national_id':
-                            # تنسيق مختلف للرقم الوطني بحيث لا يكون مشابه للرقم الوظيفي
-                            value = f"N-{idx+5000:07d}"
-                        elif field == 'mobile':
-                            value = f"05xxxxxxxx"
-                        elif field == 'job_title':
-                            value = "موظف"
-                        print(f"Row {idx+1}: Auto-filled missing {field} with '{value}'")
-                    employee[field] = str(value)
+                # Add name (required)
+                if name_col:
+                    employee['name'] = str(row[name_col]).strip()
                 
-                # Handle status field specially
-                if 'status' in detected_columns:
-                    status_col = detected_columns['status']
-                    status_value = row[status_col]
-                    
-                    if isinstance(status_value, datetime) or pd.isna(status_value):
-                        employee['status'] = 'active'  # Default value
-                    else:
-                        # Normalize status values
-                        status_str = str(status_value).lower().strip()
-                        if status_str in ['active', 'نشط', 'فعال']:
-                            employee['status'] = 'active'
-                        elif status_str in ['inactive', 'غير نشط', 'غير فعال']:
-                            employee['status'] = 'inactive'
-                        elif status_str in ['on_leave', 'on leave', 'leave', 'إجازة', 'في إجازة']:
-                            employee['status'] = 'on_leave'
-                        else:
-                            employee['status'] = 'active'  # Default to active
+                # Add employee_id (auto-generate if missing)
+                emp_id_col = detected_columns.get('employee_id')
+                if emp_id_col and not pd.isna(row[emp_id_col]):
+                    employee['employee_id'] = str(row[emp_id_col]).strip()
                 else:
-                    employee['status'] = 'active'  # Default value
+                    employee['employee_id'] = f"EMP{idx+1000}"
                 
-                # Add optional fields if present in the detected columns
-                optional_fields = ['location', 'project', 'email']
+                # Add national_id (auto-generate if missing)
+                national_id_col = detected_columns.get('national_id')
+                if national_id_col and not pd.isna(row[national_id_col]):
+                    employee['national_id'] = str(row[national_id_col]).strip()
+                else:
+                    employee['national_id'] = f"N{idx+5000:07d}"
+                
+                # Add mobile (auto-generate if missing)
+                mobile_col = detected_columns.get('mobile')
+                if mobile_col and not pd.isna(row[mobile_col]):
+                    employee['mobile'] = str(row[mobile_col]).strip()
+                else:
+                    employee['mobile'] = f"05xxxxxxxx"
+                
+                # Add job_title (default if missing)
+                job_title_col = detected_columns.get('job_title')
+                if job_title_col and not pd.isna(row[job_title_col]):
+                    employee['job_title'] = str(row[job_title_col]).strip()
+                else:
+                    employee['job_title'] = "موظف"
+                
+                # Add status (default to active)
+                status_col = detected_columns.get('status')
+                if status_col and not pd.isna(row[status_col]):
+                    status_value = str(row[status_col]).lower().strip()
+                    if status_value in ['active', 'نشط', 'فعال']:
+                        employee['status'] = 'active'
+                    elif status_value in ['inactive', 'غير نشط', 'غير فعال']:
+                        employee['status'] = 'inactive'
+                    elif status_value in ['on_leave', 'on leave', 'leave', 'إجازة', 'في إجازة']:
+                        employee['status'] = 'on_leave'
+                    else:
+                        employee['status'] = 'active'
+                else:
+                    employee['status'] = 'active'
+                
+                # Add optional fields
+                optional_fields = ['location', 'project', 'email', 'department', 'join_date', 
+                                 'license_end_date', 'contract_status', 'license_status', 
+                                 'nationality', 'notes', 'mobilePersonal']
+                
                 for field in optional_fields:
-                    if field in detected_columns and not pd.isna(row[detected_columns[field]]):
-                        employee[field] = str(row[detected_columns[field]])
+                    col = detected_columns.get(field)
+                    if col and not pd.isna(row[col]):
+                        employee[field] = str(row[col]).strip()
                 
-                # Print the processed employee data for debugging
-                print(f"Processed employee: {employee.get('name', 'Unknown')}")
+                # Debug: Print processed employee
+                print(f"Processed employee {idx+1}: {employee.get('name', 'Unknown')}")
                 
                 employees.append(employee)
+                
             except Exception as e:
                 print(f"Error processing row {idx+1}: {str(e)}")
-                # Continue to next row instead of failing the entire import
                 continue
         
         if not employees:
             raise ValueError("No valid employee records found in the Excel file")
             
+        print(f"Successfully parsed {len(employees)} employee records")
         return employees
     
     except Exception as e:
