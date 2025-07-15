@@ -19,7 +19,7 @@ from models import (
         Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
         VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
-        Department
+        Department, ExternalAuthorization
 )
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
