@@ -3860,16 +3860,101 @@ def edit_workshop_record(workshop_id):
             workshop_record.notes = request.form.get('notes')
             workshop_record.updated_at = datetime.utcnow()
             
+            # معالجة الصور المرفوعة
+            import os
+            from PIL import Image
+            import uuid
+            
+            uploaded_images = []
+            
+            # معالجة صور قبل الإصلاح
+            if 'before_images' in request.files:
+                before_files = request.files.getlist('before_images')
+                for file in before_files:
+                    if file and file.filename and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                        try:
+                            # إنشاء اسم ملف فريد
+                            filename = f"workshop_before_{workshop_record.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
+                            
+                            # إنشاء المجلد إذا لم يكن موجوداً
+                            upload_dir = os.path.join('static', 'uploads', 'workshop')
+                            os.makedirs(upload_dir, exist_ok=True)
+                            
+                            # حفظ الملف
+                            file_path = os.path.join(upload_dir, filename)
+                            file.save(file_path)
+                            
+                            # ضغط الصورة إذا كانت كبيرة
+                            try:
+                                with Image.open(file_path) as img:
+                                    if img.width > 1200 or img.height > 1200:
+                                        img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                                        img.save(file_path, optimize=True, quality=85)
+                            except Exception as e:
+                                current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
+                            
+                            # إضافة سجل الصورة لقاعدة البيانات
+                            image_record = VehicleWorkshopImage(
+                                workshop_record_id=workshop_record.id,
+                                image_type='before',
+                                image_path=f"uploads/workshop/{filename}",
+                                notes=f"صورة قبل الإصلاح - تم الرفع في {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                            )
+                            db.session.add(image_record)
+                            uploaded_images.append(filename)
+                            
+                        except Exception as e:
+                            current_app.logger.error(f"خطأ في رفع صورة قبل الإصلاح: {str(e)}")
+            
+            # معالجة صور بعد الإصلاح
+            if 'after_images' in request.files:
+                after_files = request.files.getlist('after_images')
+                for file in after_files:
+                    if file and file.filename and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                        try:
+                            # إنشاء اسم ملف فريد
+                            filename = f"workshop_after_{workshop_record.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
+                            
+                            # حفظ الملف
+                            file_path = os.path.join('static', 'uploads', 'workshop', filename)
+                            file.save(file_path)
+                            
+                            # ضغط الصورة
+                            try:
+                                with Image.open(file_path) as img:
+                                    if img.width > 1200 or img.height > 1200:
+                                        img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                                        img.save(file_path, optimize=True, quality=85)
+                            except Exception as e:
+                                current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
+                            
+                            # إضافة سجل الصورة لقاعدة البيانات
+                            image_record = VehicleWorkshopImage(
+                                workshop_record_id=workshop_record.id,
+                                image_type='after',
+                                image_path=f"uploads/workshop/{filename}",
+                                notes=f"صورة بعد الإصلاح - تم الرفع في {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                            )
+                            db.session.add(image_record)
+                            uploaded_images.append(filename)
+                            
+                        except Exception as e:
+                            current_app.logger.error(f"خطأ في رفع صورة بعد الإصلاح: {str(e)}")
+            
             db.session.commit()
             
             # تسجيل العملية
             log_activity(
                 action='update',
                 entity_type='vehicle_workshop',
-                details=f'تم تعديل سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال'
+                details=f'تم تعديل سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال وإضافة {len(uploaded_images)} صورة'
             )
             
-            flash('تم تحديث سجل الورشة بنجاح!', 'success')
+            success_message = f'تم تحديث سجل الورشة بنجاح!'
+            if uploaded_images:
+                success_message += f' تم رفع {len(uploaded_images)} صورة جديدة.'
+            
+            flash(success_message, 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
             
         except Exception as e:
