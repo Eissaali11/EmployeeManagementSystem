@@ -4022,13 +4022,30 @@ def view_workshop_details(workshop_id):
     ).get_or_404(workshop_id)
     vehicle = workshop_record.vehicle
     
-    # فحص وجود الصور الفعلي على الخادم
+    # فحص وجود الصور الفعلي على الخادم مع البحث في مسارات متعددة
     valid_images = []
     if workshop_record.images:
         for image in workshop_record.images:
+            # محاولة أولى: المسار المحفوظ في قاعدة البيانات
             image_path = os.path.join(current_app.static_folder, image.image_path)
+            
+            # إذا لم يوجد، نبحث عن نفس الملف في مجلد الورشة
+            if not os.path.exists(image_path):
+                filename = os.path.basename(image.image_path)
+                # البحث عن أي ملف يحتوي على اسم مشابه
+                workshop_dir = os.path.join(current_app.static_folder, 'uploads/workshop')
+                if os.path.exists(workshop_dir):
+                    for file in os.listdir(workshop_dir):
+                        # البحث عن الجزء المميز من اسم الملف
+                        if 'WhatsApp_Image_2025-07-14_at_11.29.07_ef6d7df0' in file:
+                            # تحديث المسار ليشير للملف الموجود
+                            image.image_path = f'uploads/workshop/{file}'
+                            image_path = os.path.join(current_app.static_folder, image.image_path)
+                            break
+            
             if os.path.exists(image_path):
                 valid_images.append(image)
+                current_app.logger.info(f"الصورة موجودة: {image.image_path}")
             else:
                 current_app.logger.warning(f"الصورة غير موجودة: {image_path}")
     
