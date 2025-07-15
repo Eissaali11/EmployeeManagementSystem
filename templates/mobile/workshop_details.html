@@ -103,6 +103,114 @@
     </div>
 
     <!-- معلومات الورشة والفني -->
+    <div class="card mb-3">
+        <div class="card-header bg-warning text-dark">
+            <h6 class="mb-0">
+                <i class="fas fa-wrench ms-2"></i>
+                معلومات الورشة
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">اسم الورشة</label>
+                        <div class="fw-bold">{{ workshop_record.workshop_name if workshop_record.workshop_name else 'غير محدد' }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">الفني المسؤول</label>
+                        <div class="fw-bold">{{ workshop_record.technician_name if workshop_record.technician_name else 'غير محدد' }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if workshop_record.workshop_phone %}
+            <div class="info-item mb-3">
+                <label class="text-muted small">هاتف الورشة</label>
+                <div class="fw-bold">
+                    <a href="tel:{{ workshop_record.workshop_phone }}" class="text-decoration-none">
+                        <i class="fas fa-phone text-success"></i> {{ workshop_record.workshop_phone }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if workshop_record.workshop_address %}
+            <div class="info-item mb-3">
+                <label class="text-muted small">عنوان الورشة</label>
+                <div>{{ workshop_record.workshop_address }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- معلومات تسليم الورشة -->
+    <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-hand-holding ms-2"></i>
+                تسليم الورشة
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">تاريخ التسليم</label>
+                        <div class="fw-bold">{{ workshop_record.delivery_date.strftime('%Y-%m-%d') if workshop_record.delivery_date else 'غير محدد' }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">الشخص المسلم</label>
+                        <div class="fw-bold">{{ workshop_record.delivered_by if workshop_record.delivered_by else 'غير محدد' }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if workshop_record.delivery_notes %}
+            <div class="info-item mb-3">
+                <label class="text-muted small">ملاحظات التسليم</label>
+                <div>{{ workshop_record.delivery_notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- معلومات استلام الورشة -->
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-hand-receiving ms-2"></i>
+                استلام الورشة
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">تاريخ الاستلام</label>
+                        <div class="fw-bold">{{ workshop_record.pickup_date.strftime('%Y-%m-%d') if workshop_record.pickup_date else 'لم يتم الاستلام بعد' }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item mb-3">
+                        <label class="text-muted small">الشخص المستلم</label>
+                        <div class="fw-bold">{{ workshop_record.received_by if workshop_record.received_by else 'غير محدد' }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if workshop_record.pickup_notes %}
+            <div class="info-item mb-3">
+                <label class="text-muted small">ملاحظات الاستلام</label>
+                <div>{{ workshop_record.pickup_notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
     {% if workshop_record.workshop_name or workshop_record.technician_name %}
     <div class="card mb-3">
         <div class="card-header bg-secondary text-white">
@@ -364,7 +472,7 @@ function shareWorkshopDetails() {
         imagesCount: {{ workshop_record.valid_images|length if workshop_record.valid_images else 0 }},
         beforeImages: [
             {% for image in workshop_record.valid_images %}
-            {% if image.image_type == 'before' %}
+            {% if image.image_type == 'before' or 'before' in (image.image_path or '') %}
             {
                 url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
                 notes: "{{ image.notes or 'صورة قبل الإصلاح' }}",
@@ -375,7 +483,7 @@ function shareWorkshopDetails() {
         ],
         afterImages: [
             {% for image in workshop_record.valid_images %}
-            {% if image.image_type == 'after' %}
+            {% if image.image_type == 'after' or 'after' in (image.image_path or '') %}
             {
                 url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
                 notes: "{{ image.notes or 'صورة بعد الإصلاح' }}",
@@ -402,6 +510,24 @@ function shareWorkshopDetails() {
     shareText += `📅 تاريخ خروج الورشة: ${workshopData.exitDate}\n`;
     shareText += `🛠️ حالة الإصلاح: ${workshopData.status}\n`;
     shareText += `📝 سبب الدخول: ${workshopData.reason}\n\n`;
+    
+    // إضافة معلومات تسليم الورشة
+    shareText += `🚚 تسليم الورشة:\n`;
+    shareText += `• تاريخ التسليم: {{ workshop_record.delivery_date.strftime('%Y-%m-%d') if workshop_record.delivery_date else 'غير محدد' }}\n`;
+    shareText += `• المُسلم: {{ workshop_record.delivered_by if workshop_record.delivered_by else 'غير محدد' }}\n`;
+    {% if workshop_record.delivery_notes %}
+    shareText += `• ملاحظات التسليم: {{ workshop_record.delivery_notes }}\n`;
+    {% endif %}
+    shareText += `\n`;
+    
+    // إضافة معلومات استلام الورشة
+    shareText += `📦 استلام من الورشة:\n`;
+    shareText += `• تاريخ الاستلام: {{ workshop_record.pickup_date.strftime('%Y-%m-%d') if workshop_record.pickup_date else 'لم يتم الاستلام بعد' }}\n`;
+    shareText += `• المُستلم: {{ workshop_record.received_by if workshop_record.received_by else 'غير محدد' }}\n`;
+    {% if workshop_record.pickup_notes %}
+    shareText += `• ملاحظات الاستلام: {{ workshop_record.pickup_notes }}\n`;
+    {% endif %}
+    shareText += `\n`;
     
     shareText += `📖 وصف تفصيلي للعملية:\n`;
     shareText += `${workshopData.description}\n\n`;
@@ -490,7 +616,7 @@ function shareWorkshopDetails() {
                             const ctx = canvas.getContext('2d');
                             
                             // تحديد أبعاد مناسبة
-                            const maxSize = 800;
+                            const maxSize = 1200;
                             let { width, height } = img;
                             
                             if (width > height) {
@@ -514,8 +640,23 @@ function shareWorkshopDetails() {
                             // تحويل إلى Blob
                             canvas.toBlob((blob) => {
                                 if (blob) {
-                                    const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
-                                    const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
+                                    // تحديد نوع الصورة بناءً على الملاحظات أو المسار
+                                    let imageType = 'workshop_image';
+                                    if (image.notes) {
+                                        if (image.notes.includes('قبل') || image.notes.includes('before')) {
+                                            imageType = 'before_repair';
+                                        } else if (image.notes.includes('بعد') || image.notes.includes('after')) {
+                                            imageType = 'after_repair';
+                                        }
+                                    } else if (image.image_path) {
+                                        if (image.image_path.includes('before')) {
+                                            imageType = 'before_repair';
+                                        } else if (image.image_path.includes('after')) {
+                                            imageType = 'after_repair';
+                                        }
+                                    }
+                                    
+                                    const vehicleNum = '{{ vehicle.plate_number }}'.replace(/[^a-zA-Z0-9]/g, '');
                                     const timestamp = Date.now() + index;
                                     const fileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.jpg`;
                                     
@@ -526,7 +667,7 @@ function shareWorkshopDetails() {
                                     console.error('فشل في تحويل Canvas إلى Blob');
                                     resolve(null);
                                 }
-                            }, 'image/jpeg', 0.8);
+                            }, 'image/jpeg', 0.9);
                             
                         } catch (canvasError) {
                             console.error('خطأ في Canvas:', canvasError);
