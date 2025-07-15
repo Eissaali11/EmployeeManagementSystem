@@ -921,7 +921,7 @@ def view_with_sidebar(id):
         accidents = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
         
         # الحصول على التفويضات الخارجية
-        external_authorizations = []  # مؤقتاً - سيتم إعادة تفعيل النظام لاحقاً
+        external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=id).order_by(ExternalAuthorization.created_at.desc()).all()
         
         # الحصول على الأقسام والموظفين والمشاريع للنموذج
         departments = Department.query.all()
