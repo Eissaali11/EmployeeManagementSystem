@@ -541,8 +541,26 @@ def import_excel():
                             error_details.append(f"الموظف برقم هوية {data['national_id']} موجود مسبقا")
                             continue
                         
+                        # Extract department data separately
+                        department_name = data.pop('department', None)
+                        
+                        # Create employee without department field
                         employee = Employee(**data)
                         db.session.add(employee)
+                        db.session.flush()  # Get the ID without committing
+                        
+                        # Handle department assignment if provided
+                        if department_name:
+                            department = Department.query.filter_by(name=department_name).first()
+                            if department:
+                                employee.departments.append(department)
+                            else:
+                                # Create new department if it doesn't exist
+                                new_department = Department(name=department_name)
+                                db.session.add(new_department)
+                                db.session.flush()
+                                employee.departments.append(new_department)
+                        
                         db.session.commit()
                         success_count += 1
                         print(f"Successfully added employee: {data.get('name')}")

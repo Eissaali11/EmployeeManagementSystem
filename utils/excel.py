@@ -159,8 +159,8 @@ def parse_employee_excel(file):
                 else:
                     employee['status'] = 'active'
                 
-                # Add optional fields
-                optional_fields = ['location', 'project', 'email', 'department', 'join_date', 
+                # Add optional fields (excluding department which is handled separately)
+                optional_fields = ['location', 'project', 'email', 'join_date', 
                                  'license_end_date', 'contract_status', 'license_status', 
                                  'nationality', 'notes', 'mobilePersonal']
                 
@@ -168,6 +168,11 @@ def parse_employee_excel(file):
                     col = detected_columns.get(field)
                     if col and not pd.isna(row[col]):
                         employee[field] = str(row[col]).strip()
+                
+                # Handle department separately
+                dept_col = detected_columns.get('department')
+                if dept_col and not pd.isna(row[dept_col]):
+                    employee['department'] = str(row[dept_col]).strip()
                 
                 # Debug: Print processed employee
                 print(f"Processed employee {idx+1}: {employee.get('name', 'Unknown')}")
