@@ -473,93 +473,89 @@ function shareWorkshopDetails() {
     const allImages = [...workshopData.beforeImages, ...workshopData.afterImages];
     
     if (allImages.length > 0) {
-        // تحويل الصور إلى ملفات للمشاركة
-        Promise.all(allImages.map(async (image, index) => {
-            try {
-                // إنشاء URL صحيح مع معالجة المسافات والمحارف الخاصة
-                let imageUrl = image.url;
-                
-                // التأكد من أن URL مكتمل
-                if (!imageUrl.startsWith('http')) {
-                    imageUrl = window.location.origin + '/' + imageUrl.replace(/^\/+/, '');
-                }
-                
-                // معالجة المسافات في اسم الملف فقط (الجزء الأخير من المسار)
-                const urlParts = imageUrl.split('/');
-                const originalFileName = urlParts[urlParts.length - 1];
-                const encodedFileName = encodeURIComponent(originalFileName);
-                urlParts[urlParts.length - 1] = encodedFileName;
-                const cleanUrl = urlParts.join('/');
-                
-                console.log('محاولة تحميل الصورة من:', cleanUrl);
-                const response = await fetch(cleanUrl, {
-                    method: 'GET',
-                    mode: 'cors',
-                    credentials: 'same-origin'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} for URL: ${cleanUrl}`);
-                }
-                
-                const blob = await response.blob();
-                console.log('تم تحميل الصورة بنجاح، الحجم:', blob.size, 'bytes, النوع:', blob.type);
-                
-                // تحديد نوع الملف بناءً على محتوى الصورة أو امتداد الملف
-                let fileExtension = 'jpg';
-                let mimeType = 'image/jpeg';
-                
-                // استخراج امتداد الملف من URL كبديل
-                const urlPath = new URL(cleanUrl).pathname;
-                const urlExtension = urlPath.split('.').pop().toLowerCase();
-                
-                if (blob.type) {
-                    mimeType = blob.type;
-                    if (blob.type.includes('png')) {
-                        fileExtension = 'png';
-                    } else if (blob.type.includes('webp')) {
-                        fileExtension = 'webp';
-                    } else if (blob.type.includes('gif')) {
-                        fileExtension = 'gif';
-                    }
-                } else if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(urlExtension)) {
-                    fileExtension = urlExtension === 'jpeg' ? 'jpg' : urlExtension;
-                    mimeType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
-                }
-                
-                // إنشاء اسم ملف واضح ومفهوم باللغة الإنجليزية
-                const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
-                const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
-                const timestamp = Date.now();
-                const finalFileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.${fileExtension}`;
-                
-                return new File([blob], finalFileName, { type: mimeType });
-            } catch (error) {
-                console.error('خطأ في تحميل الصورة:', image.url, error);
-                
-                // محاولة بديلة: تحميل الصورة مباشرة من static path
+        console.log('بدء معالجة الصور للمشاركة باستخدام Canvas...');
+        
+        // طريقة جديدة: استخدام Canvas لتحويل الصور المعروضة إلى ملفات
+        const createFileFromImage = async (image, index) => {
+            return new Promise((resolve) => {
                 try {
-                    const staticPath = image.url.replace(window.location.origin, '');
-                    const alternativeUrl = window.location.origin + '/static/' + staticPath.replace(/^\/static\//, '');
-                    console.log('محاولة بديلة من:', alternativeUrl);
+                    // إنشاء عنصر img من الصورة المعروضة في الصفحة
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
                     
-                    const altResponse = await fetch(alternativeUrl);
-                    if (altResponse.ok) {
-                        const altBlob = await altResponse.blob();
-                        const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
-                        const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
-                        const timestamp = Date.now();
-                        const backupFileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.jpg`;
-                        
-                        return new File([altBlob], backupFileName, { type: 'image/jpeg' });
+                    img.onload = function() {
+                        try {
+                            // إنشاء Canvas
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            // تحديد أبعاد مناسبة
+                            const maxSize = 800;
+                            let { width, height } = img;
+                            
+                            if (width > height) {
+                                if (width > maxSize) {
+                                    height = (height * maxSize) / width;
+                                    width = maxSize;
+                                }
+                            } else {
+                                if (height > maxSize) {
+                                    width = (width * maxSize) / height;
+                                    height = maxSize;
+                                }
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            // رسم الصورة
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // تحويل إلى Blob
+                            canvas.toBlob((blob) => {
+                                if (blob) {
+                                    const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
+                                    const vehicleNum = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '');
+                                    const timestamp = Date.now() + index;
+                                    const fileName = `workshop_${vehicleNum}_${imageType}_${timestamp}.jpg`;
+                                    
+                                    const file = new File([blob], fileName, { type: 'image/jpeg' });
+                                    console.log(`تم إنشاء ملف: ${fileName} (${blob.size} bytes)`);
+                                    resolve(file);
+                                } else {
+                                    console.error('فشل في تحويل Canvas إلى Blob');
+                                    resolve(null);
+                                }
+                            }, 'image/jpeg', 0.8);
+                            
+                        } catch (canvasError) {
+                            console.error('خطأ في Canvas:', canvasError);
+                            resolve(null);
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        console.error('فشل تحميل الصورة:', image.url);
+                        resolve(null);
+                    };
+                    
+                    // تحديد مصدر الصورة
+                    let imageUrl = image.url;
+                    if (!imageUrl.startsWith('http')) {
+                        imageUrl = window.location.origin + '/' + imageUrl.replace(/^\/+/, '');
                     }
-                } catch (altError) {
-                    console.error('فشلت المحاولة البديلة أيضاً:', altError);
+                    
+                    img.src = imageUrl;
+                    
+                } catch (error) {
+                    console.error('خطأ عام في معالجة الصورة:', error);
+                    resolve(null);
                 }
-                
-                return null;
-            }
-        })).then(files => {
+            });
+        };
+        
+        // معالجة جميع الصور
+        Promise.all(allImages.map(createFileFromImage)).then(files => {
             const validFiles = files.filter(file => file !== null);
             
             // طباعة معلومات التشخيص
