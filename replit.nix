@@ -1,5 +1,7 @@
 {pkgs}: {
   deps = [
+    pkgs.nano
+    pkgs.openssh
     pkgs.libffi
     pkgs.gdk-pixbuf
     pkgs.cairo
