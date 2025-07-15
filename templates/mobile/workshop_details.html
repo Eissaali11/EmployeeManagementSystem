@@ -365,7 +365,8 @@ function shareWorkshopDetails() {
             {% if image.image_type == 'before' %}
             {
                 url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
-                notes: "{{ image.notes or 'صورة قبل الإصلاح' }}"
+                notes: "{{ image.notes or 'صورة قبل الإصلاح' }}",
+                type: "before"
             },
             {% endif %}
             {% endfor %}
@@ -375,7 +376,8 @@ function shareWorkshopDetails() {
             {% if image.image_type == 'after' %}
             {
                 url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
-                notes: "{{ image.notes or 'صورة بعد الإصلاح' }}"
+                notes: "{{ image.notes or 'صورة بعد الإصلاح' }}",
+                type: "after"
             },
             {% endif %}
             {% endfor %}
@@ -470,12 +472,32 @@ function shareWorkshopDetails() {
     
     if (allImages.length > 0) {
         // تحويل الصور إلى ملفات للمشاركة
-        Promise.all(allImages.map(async (image) => {
+        Promise.all(allImages.map(async (image, index) => {
             try {
                 const response = await fetch(image.url);
                 const blob = await response.blob();
-                const fileName = image.url.split('/').pop() || 'workshop_image.jpg';
-                return new File([blob], fileName, { type: blob.type });
+                
+                // تحديد نوع الملف بناءً على محتوى الصورة
+                let fileExtension = 'jpg';
+                let mimeType = 'image/jpeg';
+                
+                if (blob.type) {
+                    mimeType = blob.type;
+                    if (blob.type.includes('png')) {
+                        fileExtension = 'png';
+                    } else if (blob.type.includes('webp')) {
+                        fileExtension = 'webp';
+                    } else if (blob.type.includes('gif')) {
+                        fileExtension = 'gif';
+                    }
+                }
+                
+                // إنشاء اسم ملف واضح ومفهوم باللغة الإنجليزية لضمان التوافق
+                const imageType = image.type === 'before' ? 'before_repair' : 'after_repair';
+                const vehicleId = workshopData.vehicle.replace(/[^a-zA-Z0-9]/g, '_');
+                const fileName = `workshop_${vehicleId}_${imageType}_${index + 1}.${fileExtension}`;
+                
+                return new File([blob], fileName, { type: mimeType });
             } catch (error) {
                 console.error('خطأ في تحميل الصورة:', error);
                 return null;
