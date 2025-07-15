@@ -313,7 +313,9 @@ def generate_employee_basic_pdf(employee_id):
         # معلومات العمل
         pdf.add_section_title('معلومات العمل')
         pdf.add_info_row('المسمى الوظيفي', employee.job_title)
-        pdf.add_info_row('القسم', employee.department.name if employee.department else 'غير محدد')
+        # الحصول على أسماء الأقسام (many-to-many relationship)
+        department_names = ', '.join([dept.name for dept in employee.departments]) if employee.departments else 'غير محدد'
+        pdf.add_info_row('القسم', department_names)
         pdf.add_info_row('الحالة الوظيفية', employee.status)
         pdf.add_info_row('نوع العقد', employee.contract_type)
         pdf.add_info_row('تاريخ الالتحاق', employee.join_date.strftime('%Y/%m/%d') if employee.join_date else 'غير محدد')

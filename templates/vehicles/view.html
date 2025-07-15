@@ -137,6 +137,40 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- ملفات Google Drive داخل معلومات السيارة -->
+                    <hr class="my-3">
+                    <div class="row mb-2">
+                        <div class="col-sm-4 fw-bold">
+                            <i class="fab fa-google-drive text-info ms-1"></i>
+                            ملفات Google Drive:
+                        </div>
+                        <div class="col-sm-8">
+                            {% if vehicle.drive_folder_link %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">مرتبط</span>
+                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-sm btn-success me-2">
+                                    <i class="fab fa-google-drive me-1"></i>
+                                    فتح المجلد
+                                </a>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-cog me-1"></i>
+                                    إدارة
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">تم ربط مجلد لتنظيم ملفات المركبة</small>
+                            {% else %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-2">غير مرتبط</span>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-link me-1"></i>
+                                    ربط مجلد
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">لم يتم ربط مجلد Google Drive بعد</small>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -513,47 +547,7 @@
         </div>
     </div>
 
-    <!-- ملفات Google Drive - مصغر -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-body py-3">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="mb-1">
-                                <i class="fab fa-google-drive text-info ms-2"></i>
-                                ملفات Google Drive
-                                {% if vehicle.drive_folder_link %}
-                                <span class="badge bg-success ms-2">مرتبط</span>
-                                {% else %}
-                                <span class="badge bg-warning ms-2">غير مرتبط</span>
-                                {% endif %}
-                            </h6>
-                            {% if vehicle.drive_folder_link %}
-                            <small class="text-muted">تم ربط مجلد لتنظيم ملفات المركبة</small>
-                            {% else %}
-                            <small class="text-muted">لم يتم ربط مجلد Google Drive بعد</small>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <div class="btn-group">
-                                {% if vehicle.drive_folder_link %}
-                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-success btn-sm">
-                                    <i class="fab fa-google-drive"></i>
-                                    فتح المجلد
-                                </a>
-                                {% endif %}
-                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-cog"></i>
-                                    إدارة
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- وثائق المركبة -->
     <div class="row mb-4">
@@ -1376,7 +1370,119 @@
     </div>
 </div>
 
-
+<!-- قسم التفويضات الخارجية -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    التفويضات الخارجية
+                    <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
+                </h5>
+                <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة تفويض جديد
+                </a>
+            </div>
+            <div class="card-body">
+                {% if external_authorizations %}
+                <!-- إحصائيات التفويضات -->
+                <div class="row mb-3">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-warning h5">{{ external_authorizations|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                        <small class="text-muted">في الانتظار</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-success h5">{{ external_authorizations|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+                        <small class="text-muted">مُوافق عليه</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-danger h5">{{ external_authorizations|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
+                        <small class="text-muted">مرفوض</small>
+                    </div>
+                </div>
+                <hr>
+                
+                <!-- جدول التفويضات -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>الموظف</th>
+                                <th>المشروع</th>
+                                <th>نوع التفويض</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auth in external_authorizations %}
+                            <tr>
+                                <td>{{ auth.employee.name }}</td>
+                                <td>{{ auth.project_name or 'غير محدد' }}</td>
+                                <td><span class="badge bg-info">{{ auth.authorization_type }}</span></td>
+                                <td>
+                                    {% if auth.status == 'pending' %}
+                                        <span class="badge bg-warning">قيد المراجعة</span>
+                                    {% elif auth.status == 'approved' %}
+                                        <span class="badge bg-success">مُوافق عليه</span>
+                                    {% elif auth.status == 'rejected' %}
+                                        <span class="badge bg-danger">مرفوض</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('vehicles.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-primary" title="عرض التفاصيل">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-warning" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if auth.file_path %}
+                                        <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info" title="عرض الملف">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if auth.external_link %}
+                                        <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-success" title="فتح الرابط">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if auth.status == 'pending' %}
+                                        <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-success" 
+                                           onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" title="موافقة">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-danger" 
+                                           onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" title="رفض">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-file-signature fa-3x text-muted mb-3"></i>
+                    <h6>لا توجد تفويضات خارجية</h6>
+                    <p class="text-muted small">يمكنك إضافة تفويض خارجي جديد من خلال النقر على زر "إضافة تفويض جديد"</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- قسم بيانات الحوادث المرورية -->
 <div class="row mb-4">
@@ -1509,119 +1615,6 @@
     </div>
 </div>
 
-<!-- قسم التفويضات الخارجية -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-file-signature ms-2"></i>
-                    التفويضات الخارجية
-                    <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
-                </h5>
-                <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-plus ms-1"></i>
-                    إضافة تفويض جديد
-                </a>
-            </div>
-            <div class="card-body">
-                {% if external_authorizations %}
-                <!-- إحصائيات التفويضات -->
-                <div class="row mb-3">
-                    <div class="col-4 text-center">
-                        <div class="fw-bold text-warning h5">{{ external_authorizations|selectattr('status', 'equalto', 'pending')|list|length }}</div>
-                        <small class="text-muted">في الانتظار</small>
-                    </div>
-                    <div class="col-4 text-center">
-                        <div class="fw-bold text-success h5">{{ external_authorizations|selectattr('status', 'equalto', 'approved')|list|length }}</div>
-                        <small class="text-muted">مُوافق عليه</small>
-                    </div>
-                    <div class="col-4 text-center">
-                        <div class="fw-bold text-danger h5">{{ external_authorizations|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
-                        <small class="text-muted">مرفوض</small>
-                    </div>
-                </div>
-                <hr>
-                
-                <!-- جدول التفويضات -->
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>الموظف</th>
-                                <th>المشروع</th>
-                                <th>نوع التفويض</th>
-                                <th>الحالة</th>
-                                <th>تاريخ الإنشاء</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for auth in external_authorizations %}
-                            <tr>
-                                <td>{{ auth.employee.name }}</td>
-                                <td>{{ auth.project_name or 'غير محدد' }}</td>
-                                <td><span class="badge bg-info">{{ auth.authorization_type }}</span></td>
-                                <td>
-                                    {% if auth.status == 'pending' %}
-                                        <span class="badge bg-warning">قيد المراجعة</span>
-                                    {% elif auth.status == 'approved' %}
-                                        <span class="badge bg-success">مُوافق عليه</span>
-                                    {% elif auth.status == 'rejected' %}
-                                        <span class="badge bg-danger">مرفوض</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('vehicles.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                           class="btn btn-outline-primary" title="عرض التفاصيل">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ url_for('vehicles.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                           class="btn btn-outline-warning" title="تعديل">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        {% if auth.file_path %}
-                                        <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info" title="عرض الملف">
-                                            <i class="fas fa-file-alt"></i>
-                                        </a>
-                                        {% endif %}
-                                        {% if auth.external_link %}
-                                        <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-success" title="فتح الرابط">
-                                            <i class="fas fa-external-link-alt"></i>
-                                        </a>
-                                        {% endif %}
-                                        {% if auth.status == 'pending' %}
-                                        <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                           class="btn btn-outline-success" 
-                                           onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" title="موافقة">
-                                            <i class="fas fa-check"></i>
-                                        </a>
-                                        <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
-                                           class="btn btn-outline-danger" 
-                                           onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" title="رفض">
-                                            <i class="fas fa-times"></i>
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-file-signature fa-3x text-muted mb-3"></i>
-                    <h6>لا توجد تفويضات خارجية</h6>
-                    <p class="text-muted small">يمكنك إضافة تفويض خارجي جديد من خلال النقر على زر "إضافة تفويض جديد"</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
 
 
 

@@ -952,6 +952,85 @@ def report_salaries():
                          available_years=available_years,
                          available_months=available_months)
 
+@mobile_bp.route('/salary/<int:id>/share_whatsapp')
+@login_required
+def share_salary_via_whatsapp(id):
+    """مشاركة إشعار راتب عبر الواتس اب في النسخة المحمولة"""
+    try:
+        # الحصول على سجل الراتب
+        salary = Salary.query.get_or_404(id)
+        employee = salary.employee
+        
+        # الحصول على اسم الشهر بالعربية
+        month_names = {
+            1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
+            5: 'مايو', 6: 'يونيو', 7: 'يوليو', 8: 'أغسطس',
+            9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
+        }
+        month_name = month_names.get(salary.month, str(salary.month))
+        
+        # إنشاء رابط لتحميل ملف PDF
+        pdf_url = url_for('salaries.salary_notification_pdf', id=salary.id, _external=True)
+        
+        # إعداد نص الرسالة مع رابط التحميل
+        message_text = f"""*إشعار راتب - نُظم*
+
+السلام عليكم ورحمة الله وبركاته،
+
+تحية طيبة،
+
+نود إشعاركم بإيداع راتب شهر {month_name} {salary.year}.
+
+الموظف: {employee.name}
+الشهر: {month_name} {salary.year}
+
+صافي الراتب: *{salary.net_salary:.2f} ريال*
+
+للاطلاع على تفاصيل الراتب، يمكنكم تحميل نسخة الإشعار من الرابط التالي:
+{pdf_url}
+
+مع تحيات إدارة الموارد البشرية
+نُظم - نظام إدارة متكامل"""
+        
+        # تسجيل العملية
+        from models import SystemAudit
+        audit = SystemAudit(
+            action='share_whatsapp_link_mobile',
+            entity_type='salary',
+            entity_id=salary.id,
+            details=f'تم مشاركة إشعار راتب عبر رابط واتس اب (موبايل) للموظف: {employee.name} لشهر {salary.month}/{salary.year}',
+            user_id=None
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إنشاء رابط الواتس اب مع نص الرسالة
+        from urllib.parse import quote
+        
+        # التحقق مما إذا كان رقم الهاتف متوفر للموظف
+        if employee.mobile:
+            # تنسيق رقم الهاتف (إضافة رمز الدولة +966 إذا لم يكن موجودًا)
+            to_phone = employee.mobile
+            if not to_phone.startswith('+'):
+                # إذا كان الرقم يبدأ بـ 0، نحذفه ونضيف رمز الدولة
+                if to_phone.startswith('0'):
+                    to_phone = "+966" + to_phone[1:]
+                else:
+                    to_phone = "+966" + to_phone
+            
+            # إنشاء رابط مباشر للموظف
+            whatsapp_url = f"https://wa.me/{to_phone}?text={quote(message_text)}"
+        else:
+            # إذا لم يكن هناك رقم هاتف، استخدم الطريقة العادية
+            whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
+        
+        # إعادة توجيه المستخدم إلى رابط الواتس اب
+        return redirect(whatsapp_url)
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء مشاركة إشعار الراتب عبر الواتس اب: {str(e)}', 'danger')
+        return redirect(url_for('mobile.report_salaries'))
+
 # تقرير الوثائق - النسخة المحمولة
 @mobile_bp.route('/reports/documents')
 @login_required
