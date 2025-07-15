@@ -359,7 +359,27 @@ function shareWorkshopDetails() {
         receptionLink: "{{ workshop_record.reception_link or '' }}",
         notes: "{{ workshop_record.notes or 'لا توجد ملاحظات' }}",
         detailsUrl: window.location.href,
-        imagesCount: {{ workshop_record.images|length if workshop_record.images else 0 }}
+        imagesCount: {{ workshop_record.images|length if workshop_record.images else 0 }},
+        beforeImages: [
+            {% for image in workshop_record.images %}
+            {% if image.image_type == 'before' %}
+            {
+                url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
+                notes: "{{ image.notes or 'صورة قبل الإصلاح' }}"
+            },
+            {% endif %}
+            {% endfor %}
+        ],
+        afterImages: [
+            {% for image in workshop_record.images %}
+            {% if image.image_type == 'after' %}
+            {
+                url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
+                notes: "{{ image.notes or 'صورة بعد الإصلاح' }}"
+            },
+            {% endif %}
+            {% endfor %}
+        ]
     };
     
     // تكوين النص للمشاركة - تاريخ ميلادي
@@ -406,6 +426,34 @@ function shareWorkshopDetails() {
             shareText += `📝 رابط نموذج تسليم الورشة:\n${workshopData.deliveryLink}\n\n`;
         } else if (workshopData.receptionLink) {
             shareText += `📝 رابط نموذج استلام من الورشة:\n${workshopData.receptionLink}\n\n`;
+        }
+    }
+    
+    // قسم الصور المرفقة
+    if (workshopData.beforeImages.length > 0 || workshopData.afterImages.length > 0) {
+        shareText += `📸 الصور المرفقة:\n`;
+        shareText += `════════════════════\n\n`;
+        
+        if (workshopData.beforeImages.length > 0) {
+            shareText += `🔴 صور قبل الإصلاح (${workshopData.beforeImages.length}):\n`;
+            workshopData.beforeImages.forEach((image, index) => {
+                shareText += `${index + 1}. ${image.url}\n`;
+                if (image.notes && image.notes !== 'صورة قبل الإصلاح') {
+                    shareText += `   📝 ${image.notes}\n`;
+                }
+            });
+            shareText += `\n`;
+        }
+        
+        if (workshopData.afterImages.length > 0) {
+            shareText += `🟢 صور بعد الإصلاح (${workshopData.afterImages.length}):\n`;
+            workshopData.afterImages.forEach((image, index) => {
+                shareText += `${index + 1}. ${image.url}\n`;
+                if (image.notes && image.notes !== 'صورة بعد الإصلاح') {
+                    shareText += `   📝 ${image.notes}\n`;
+                }
+            });
+            shareText += `\n`;
         }
     }
     
