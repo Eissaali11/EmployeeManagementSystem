@@ -4017,8 +4017,23 @@ def delete_workshop_record(workshop_id):
 @login_required
 def view_workshop_details(workshop_id):
     """عرض تفاصيل سجل ورشة للنسخة المحمولة"""
-    workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
+    workshop_record = VehicleWorkshop.query.options(
+        joinedload(VehicleWorkshop.images)
+    ).get_or_404(workshop_id)
     vehicle = workshop_record.vehicle
+    
+    # فحص وجود الصور الفعلي على الخادم
+    valid_images = []
+    if workshop_record.images:
+        for image in workshop_record.images:
+            image_path = os.path.join(current_app.static_folder, image.image_path)
+            if os.path.exists(image_path):
+                valid_images.append(image)
+            else:
+                current_app.logger.warning(f"الصورة غير موجودة: {image_path}")
+    
+    # تحديث قائمة الصور بالصور الموجودة فقط
+    workshop_record.valid_images = valid_images
     
     return render_template('mobile/workshop_details.html',
                            workshop_record=workshop_record,
