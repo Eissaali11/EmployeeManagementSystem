@@ -53,6 +53,7 @@ def index():
     department_filter = request.args.get('department', '')
     status_filter = request.args.get('status', '')
     multi_department_filter = request.args.get('multi_department', '')
+    no_department_filter = request.args.get('no_department', '')
     
     # بناء الاستعلام الأساسي
     query = Employee.query.options(
@@ -68,8 +69,12 @@ def index():
     if status_filter:
         query = query.filter(Employee.status == status_filter)
     
-    # تطبيق فلتر الموظفين في أكثر من قسم
-    if multi_department_filter == 'yes':
+    # تطبيق فلتر الموظفين غير المربوطين بأي قسم
+    if no_department_filter == 'yes':
+        # الموظفين الذين لا يوجد لديهم أي أقسام
+        query = query.outerjoin(employee_departments)\
+                     .filter(employee_departments.c.employee_id.is_(None))
+    elif multi_department_filter == 'yes':
         # الموظفين الذين لديهم أكثر من قسم
         subquery = db.session.query(employee_departments.c.employee_id, 
                                    func.count(employee_departments.c.department_id).label('dept_count'))\
@@ -100,7 +105,13 @@ def index():
                                 .having(func.count(employee_departments.c.department_id) > 1)\
                                 .count()
     
-    single_dept_count = db.session.query(Employee).count() - multi_dept_count
+    # حساب الموظفين بدون أقسام
+    no_dept_count = db.session.query(Employee.id)\
+                             .outerjoin(employee_departments)\
+                             .filter(employee_departments.c.employee_id.is_(None))\
+                             .count()
+    
+    single_dept_count = db.session.query(Employee).count() - multi_dept_count - no_dept_count
     
     return render_template('employees/index.html', 
                          employees=employees, 
@@ -108,8 +119,10 @@ def index():
                          current_department=department_filter,
                          current_status=status_filter,
                          current_multi_department=multi_department_filter,
+                         current_no_department=no_department_filter,
                          multi_dept_count=multi_dept_count,
-                         single_dept_count=single_dept_count)
+                         single_dept_count=single_dept_count,
+                         no_dept_count=no_dept_count)
 
 @employees_bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -541,8 +554,26 @@ def import_excel():
                             error_details.append(f"الموظف برقم هوية {data['national_id']} موجود مسبقا")
                             continue
                         
+                        # Extract department data separately
+                        department_name = data.pop('department', None)
+                        
+                        # Create employee without department field
                         employee = Employee(**data)
                         db.session.add(employee)
+                        db.session.flush()  # Get the ID without committing
+                        
+                        # Handle department assignment if provided
+                        if department_name:
+                            department = Department.query.filter_by(name=department_name).first()
+                            if department:
+                                employee.departments.append(department)
+                            else:
+                                # Create new department if it doesn't exist
+                                new_department = Department(name=department_name)
+                                db.session.add(new_department)
+                                db.session.flush()
+                                employee.departments.append(new_department)
+                        
                         db.session.commit()
                         success_count += 1
                         print(f"Successfully added employee: {data.get('name')}")

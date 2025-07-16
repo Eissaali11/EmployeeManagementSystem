@@ -1,0 +1,672 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<style>
+    .insights-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -2rem -1rem 2rem -1rem;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .insight-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .insight-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .metric-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: none;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-change {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .metric-change.positive {
+        color: #28a745;
+    }
+    
+    .metric-change.negative {
+        color: #dc3545;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 1rem 0;
+    }
+    
+    .recommendation-card {
+        border-left: 4px solid;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .recommendation-card.high {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .recommendation-card.medium {
+        border-left-color: #ffc107;
+        background: #fffbf0;
+    }
+    
+    .recommendation-card.low {
+        border-left-color: #17a2b8;
+        background: #f0f9ff;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+        stroke: #e9ecef;
+        stroke-width: 4;
+        fill: transparent;
+        stroke-dasharray: 251.2;
+        stroke-dashoffset: 251.2;
+        transition: stroke-dashoffset 0.5s ease-in-out;
+    }
+    
+    .progress-ring-circle.active {
+        stroke: #28a745;
+    }
+    
+    .department-bar {
+        height: 20px;
+        background: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .department-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.5s ease;
+        border-radius: 10px;
+    }
+    
+    .insight-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .insight-icon.employees {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .insight-icon.departments {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+    }
+    
+    .insight-icon.vehicles {
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: white;
+    }
+    
+    .insight-icon.performance {
+        background: linear-gradient(135deg, #43e97b, #38f9d7);
+        color: white;
+    }
+    
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .trend-up {
+        color: #28a745;
+    }
+    
+    .trend-down {
+        color: #dc3545;
+    }
+    
+    .trend-stable {
+        color: #ffc107;
+    }
+    
+    .activity-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #667eea, #764ba2);
+    }
+    
+    .activity-item {
+        position: relative;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -1.75rem;
+        top: 1rem;
+        width: 12px;
+        height: 12px;
+        background: #667eea;
+        border-radius: 50%;
+        border: 3px solid white;
+    }
+    
+    .refresh-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .refresh-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        flex-grow: 1;
+    }
+    
+    .section-header .badge {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="insights-dashboard">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 mb-2">لوحة الرؤى الذكية</h1>
+                <p class="lead mb-0">تحليلات متقدمة ورؤى ذكية لأداء مؤسستك</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="insight-card">
+                    <h5 class="mb-1">تحديث البيانات</h5>
+                    <p class="mb-0 small">آخر تحديث: {{ moment().format('YYYY-MM-DD HH:mm') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Key Metrics Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="insight-icon employees">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="metric-label">إجمالي الموظفين</div>
+                <div class="metric-value">{{ employee_insights.total }}</div>
+                <div class="metric-change {% if employee_insights.growth_trend > 0 %}positive{% elif employee_insights.growth_trend < 0 %}negative{% endif %}">
+                    <i class="fas fa-arrow-{{ 'up' if employee_insights.growth_trend > 0 else 'down' }}"></i>
+                    {{ employee_insights.growth_trend }}% من الشهر الماضي
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="insight-icon departments">
+                    <i class="fas fa-sitemap"></i>
+                </div>
+                <div class="metric-label">الأقسام النشطة</div>
+                <div class="metric-value">{{ department_insights.total_departments }}</div>
+                <div class="metric-change">
+                    <i class="fas fa-users-cog"></i>
+                    متوسط {{ department_insights.average_size }} موظف/قسم
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="insight-icon vehicles">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="metric-label">المركبات المتاحة</div>
+                <div class="metric-value">{{ vehicle_insights.total_vehicles }}</div>
+                <div class="metric-change">
+                    <i class="fas fa-chart-line"></i>
+                    {{ vehicle_insights.utilization_rate }}% معدل الاستخدام
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="insight-icon performance">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <div class="metric-label">جودة البيانات</div>
+                <div class="metric-value">{{ performance_metrics.data_completeness }}%</div>
+                <div class="metric-change">
+                    <i class="fas fa-database"></i>
+                    اكتمال البيانات
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Insights -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card metric-card">
+                <div class="section-header">
+                    <h3>تحليل الموظفين</h3>
+                    <div class="badge">{{ employee_insights.total }} موظف</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>نشط</span>
+                                <span class="status-badge status-active">{{ employee_insights.active }}</span>
+                            </div>
+                            <div class="department-bar">
+                                <div class="department-bar-fill" style="width: {{ (employee_insights.active / employee_insights.total * 100) if employee_insights.total > 0 else 0 }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>غير نشط</span>
+                                <span class="status-badge status-inactive">{{ employee_insights.inactive }}</span>
+                            </div>
+                            <div class="department-bar">
+                                <div class="department-bar-fill" style="width: {{ (employee_insights.inactive / employee_insights.total * 100) if employee_insights.total > 0 else 0 }}%; background: #dc3545;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>في إجازة</span>
+                                <span class="status-badge status-warning">{{ employee_insights.on_leave }}</span>
+                            </div>
+                            <div class="department-bar">
+                                <div class="department-bar-fill" style="width: {{ (employee_insights.on_leave / employee_insights.total * 100) if employee_insights.total > 0 else 0 }}%; background: #ffc107;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>بدون أقسام</span>
+                                <span class="status-badge status-inactive">{{ employee_insights.no_department }}</span>
+                            </div>
+                            <div class="department-bar">
+                                <div class="department-bar-fill" style="width: {{ (employee_insights.no_department / employee_insights.total * 100) if employee_insights.total > 0 else 0 }}%; background: #6c757d;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 p-3 bg-light rounded">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h4 mb-0 text-primary">{{ employee_insights.activity_rate }}%</div>
+                            <small class="text-muted">معدل النشاط</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-0 text-success">{{ employee_insights.multi_department }}</div>
+                            <small class="text-muted">متعدد الأقسام</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-0 text-info">{{ employee_insights.recent_hires }}</div>
+                            <small class="text-muted">تعيينات حديثة</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card metric-card">
+                <div class="section-header">
+                    <h3>توزيع الأقسام</h3>
+                    <div class="badge">{{ department_insights.total_departments }} قسم</div>
+                </div>
+                
+                <div class="mb-4">
+                    {% for dept in department_insights.department_stats[:5] %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="fw-bold">{{ dept.name }}</div>
+                            <small class="text-muted">المدير: {{ dept.manager }}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">{{ dept.employee_count }}</div>
+                            <small class="text-muted">موظف</small>
+                        </div>
+                    </div>
+                    <div class="department-bar">
+                        <div class="department-bar-fill" style="width: {{ (dept.employee_count / department_insights.department_stats[0].employee_count * 100) if department_insights.department_stats and department_insights.department_stats[0].employee_count > 0 else 0 }}%"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h5 mb-0 text-primary">{{ department_insights.largest_department.name if department_insights.largest_department }}</div>
+                        <small class="text-muted">أكبر قسم</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 mb-0 text-success">{{ department_insights.departments_with_managers }}</div>
+                        <small class="text-muted">أقسام لديها مدراء</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle & Activity Insights -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card metric-card">
+                <div class="section-header">
+                    <h3>إحصائيات المركبات</h3>
+                    <div class="badge">{{ vehicle_insights.total_vehicles }} مركبة</div>
+                </div>
+                
+                <div class="text-center mb-3">
+                    <svg class="progress-ring" width="120" height="120">
+                        <circle class="progress-ring-circle" 
+                                cx="60" cy="60" r="40" 
+                                stroke-dashoffset="{{ 251.2 - (251.2 * vehicle_insights.utilization_rate / 100) }}"
+                                stroke="#667eea" stroke-width="6">
+                        </circle>
+                    </svg>
+                    <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <div class="h3 mb-0">{{ vehicle_insights.utilization_rate }}%</div>
+                        <small class="text-muted">معدل الاستخدام</small>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="h5 mb-0 text-primary">{{ vehicle_insights.vehicles_with_drivers }}</div>
+                        <small class="text-muted">مع سائقين</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 mb-0 text-warning">{{ vehicle_insights.workshop_activity }}</div>
+                        <small class="text-muted">في الورشة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card metric-card">
+                <div class="section-header">
+                    <h3>النشاط الحديث</h3>
+                    <div class="badge">{{ activity_insights.total_activities }} عملية</div>
+                </div>
+                
+                <div class="activity-timeline">
+                    {% for activity_type, count in activity_insights.activity_by_type.items() %}
+                    <div class="activity-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ activity_type }}</div>
+                                <small class="text-muted">نوع العملية</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="h5 mb-0">{{ count }}</div>
+                                <small class="text-muted">عملية</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card metric-card">
+                <div class="section-header">
+                    <h3>التوصيات الذكية</h3>
+                    <div class="badge">{{ trends.recommendations|length }} توصية</div>
+                </div>
+                
+                <div class="row">
+                    {% for rec in trends.recommendations %}
+                    <div class="col-md-6 mb-3">
+                        <div class="recommendation-card {{ rec.priority }}">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    {% if rec.type == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle text-warning fs-4"></i>
+                                    {% elif rec.type == 'info' %}
+                                        <i class="fas fa-info-circle text-info fs-4"></i>
+                                    {% else %}
+                                        <i class="fas fa-lightbulb text-success fs-4"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ rec.title }}</h6>
+                                    <p class="mb-2 text-muted">{{ rec.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-primary">{{ rec.action }}</small>
+                                        <span class="badge bg-{{ 'danger' if rec.priority == 'high' else 'warning' if rec.priority == 'medium' else 'info' }}">
+                                            {{ rec.priority }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card metric-card">
+                <div class="section-header">
+                    <h3>مؤشرات الأداء</h3>
+                    <div class="badge">تحديث مباشر</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="insight-icon performance mx-auto">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="h4 mb-0">{{ performance_metrics.avg_response_time }}s</div>
+                        <small class="text-muted">متوسط وقت الاستجابة</small>
+                    </div>
+                    
+                    <div class="col-md-3 text-center">
+                        <div class="insight-icon performance mx-auto">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div class="h4 mb-0">{{ performance_metrics.system_uptime }}%</div>
+                        <small class="text-muted">معدل توفر النظام</small>
+                    </div>
+                    
+                    <div class="col-md-3 text-center">
+                        <div class="insight-icon performance mx-auto">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="h4 mb-0">{{ performance_metrics.expired_documents }}</div>
+                        <small class="text-muted">وثائق منتهية الصلاحية</small>
+                    </div>
+                    
+                    <div class="col-md-3 text-center">
+                        <div class="insight-icon performance mx-auto">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="h4 mb-0">{{ performance_metrics.expiring_soon_documents }}</div>
+                        <small class="text-muted">وثائق تنتهي قريباً</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refresh Button -->
+<button class="refresh-button" onclick="refreshDashboard()" title="تحديث البيانات">
+    <i class="fas fa-sync-alt"></i>
+</button>
+
+<script>
+function refreshDashboard() {
+    const button = document.querySelector('.refresh-button');
+    button.style.transform = 'scale(0.9)';
+    button.querySelector('i').style.animation = 'spin 1s linear infinite';
+    
+    // Simulate refresh
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+// Auto-refresh every 5 minutes
+setInterval(refreshDashboard, 300000);
+
+// Animate progress rings on load
+document.addEventListener('DOMContentLoaded', function() {
+    const progressRings = document.querySelectorAll('.progress-ring-circle');
+    progressRings.forEach(ring => {
+        ring.style.transition = 'stroke-dashoffset 1s ease-in-out';
+    });
+});
+
+// Add keyframe for spin animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
