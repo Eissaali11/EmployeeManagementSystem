@@ -274,6 +274,37 @@
 {{ super() }}
 
 <script>
+// تعريف الدوال العامة
+function toggleCustodyFields() {
+    const employeeType = document.getElementById('employee_type').value;
+    const custodySection = document.getElementById('custody-section');
+    
+    if (employeeType === 'driver') {
+        custodySection.style.display = 'block';
+    } else {
+        custodySection.style.display = 'none';
+        // إخفاء وإلغاء تحديد حقول الجوال
+        document.getElementById('has_mobile_custody').checked = false;
+        toggleMobileFields();
+    }
+}
+
+function toggleMobileFields() {
+    const hasMobileCustody = document.getElementById('has_mobile_custody').checked;
+    const mobileFields = document.getElementById('mobile-fields');
+    
+    if (hasMobileCustody) {
+        mobileFields.style.display = 'block';
+    } else {
+        mobileFields.style.display = 'none';
+        // مسح قيم حقول الجوال إذا لم تكن معبأة من قبل
+        if (!mobileFields.dataset.hasExistingData) {
+            document.getElementById('mobile_type').value = '';
+            document.getElementById('mobile_imei').value = '';
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM is ready. Initializing employee edit scripts...");
 
@@ -305,44 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // إعداد الحالة الافتراضية للحقول الشرطية عند تحميل الصفحة
     toggleCustodyFields();
-});
-
-function toggleCustodyFields() {
-    const employeeType = document.getElementById('employee_type').value;
-    const custodySection = document.getElementById('custody-section');
-    
-    if (employeeType === 'driver') {
-        custodySection.style.display = 'block';
-    } else {
-        custodySection.style.display = 'none';
-        // إخفاء وإلغاء تحديد حقول الجوال
-        document.getElementById('has_mobile_custody').checked = false;
-        toggleMobileFields();
-    }
-}
-
-function toggleMobileFields() {
-    const hasMobileCustody = document.getElementById('has_mobile_custody').checked;
-    const mobileFields = document.getElementById('mobile-fields');
-    
-    if (hasMobileCustody) {
-        mobileFields.style.display = 'block';
-    } else {
-        mobileFields.style.display = 'none';
-        // مسح قيم حقول الجوال إذا لم تكن معبأة من قبل
-        if (!mobileFields.dataset.hasExistingData) {
-            document.getElementById('mobile_type').value = '';
-            document.getElementById('mobile_imei').value = '';
-        }
-    }
-}
-
-    // --- كود إضافي آخر (مثل إظهار/إخفاء كلمة المرور) يمكن أن يكون هنا ---
-    const togglePassword = document.getElementById('togglePassword');
-    if (togglePassword) {
-        // ... (منطق زر كلمة المرور)
-    }
-
 });
 </script>
 
