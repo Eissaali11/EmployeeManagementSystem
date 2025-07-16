@@ -80,6 +80,70 @@
                             </div>
                         </div>
                         
+                        <!-- الصور المحفوظة مسبقاً -->
+                        {% if safety_check.safety_images %}
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-images"></i> الصور المحفوظة ({{ safety_check.safety_images|length }} صورة)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for image in safety_check.safety_images %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card border-light">
+                                            <div class="card-body text-center">
+                                                <!-- عرض الصورة -->
+                                                <div class="mb-3">
+                                                    {% if image.image_path %}
+                                                        {% set image_url = '/' + image.image_path %}
+                                                        <img src="{{ image_url }}" 
+                                                             alt="صورة فحص السلامة" 
+                                                             class="img-fluid rounded" 
+                                                             style="max-height: 200px; cursor: pointer; border: 2px solid #007bff;"
+                                                             onclick="showImageModal('{{ image_url }}')"
+                                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                        <div class="alert alert-warning" style="display: none;">
+                                                            <i class="fas fa-exclamation-triangle"></i> لم يتم العثور على الصورة
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="alert alert-warning">
+                                                            <i class="fas fa-exclamation-triangle"></i> لم يتم العثور على الصورة
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <!-- حقل تعديل الوصف -->
+                                                <div class="form-group">
+                                                    <label class="font-weight-bold">وصف الصورة:</label>
+                                                    <textarea class="form-control" 
+                                                              name="image_description_{{ image.id }}" 
+                                                              rows="3" 
+                                                              placeholder="أدخل وصف للصورة..."
+                                                              style="resize: vertical;">{{ image.image_description or '' }}</textarea>
+                                                </div>
+                                                
+                                                <!-- معلومات الصورة -->
+                                                <div class="text-muted small">
+                                                    <i class="fas fa-info-circle"></i> 
+                                                    الصورة #{{ loop.index }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- تنبيه للمستخدم -->
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    يمكنك تعديل أوصاف الصور أعلاه. سيتم حفظ التغييرات عند الضغط على زر "حفظ التغييرات".
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         <!-- الملاحظات -->
                         <div class="card border-secondary mb-3">
                             <div class="card-header bg-secondary text-white">
@@ -110,6 +174,23 @@
     </div>
 </div>
 
+<!-- Modal عرض الصور -->
+<div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">عرض الصورة</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="صورة" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .form-group {
         margin-bottom: 1rem;
@@ -123,5 +204,24 @@
     .card {
         margin-bottom: 1rem;
     }
+    
+    .img-fluid {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .img-fluid:hover {
+        border-color: #007bff;
+        box-shadow: 0 4px 8px rgba(0,123,255,0.2);
+        transform: scale(1.02);
+    }
 </style>
+
+<script>
+function showImageModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    $('#imageModal').modal('show');
+}
+</script>
 {% endblock %}

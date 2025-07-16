@@ -323,6 +323,12 @@ def edit_safety_check(check_id):
             safety_check.driver_city = request.form.get('driver_city', '')
             safety_check.notes = request.form.get('notes', '')
             
+            # تحديث أوصاف الصور
+            for image in safety_check.safety_images:
+                description_field = f'image_description_{image.id}'
+                if description_field in request.form:
+                    image.image_description = request.form.get(description_field, '')
+            
             # تحديث تاريخ التعديل
             safety_check.updated_at = datetime.now()
             
