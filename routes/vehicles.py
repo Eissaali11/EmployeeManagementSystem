@@ -4674,7 +4674,6 @@ def upload_document(id):
             
             # تسجيل النشاط
             log_activity(
-                user_id=current_user.id,
                 action='upload',
                 entity_type='Vehicle',
                 entity_id=vehicle.id,
@@ -4737,7 +4736,6 @@ def delete_document(id):
             
             # تسجيل النشاط
             log_activity(
-                user_id=current_user.id,
                 action='delete',
                 entity_type='Vehicle',
                 entity_id=vehicle.id,
