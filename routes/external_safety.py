@@ -507,16 +507,33 @@ def export_safety_check_pdf(check_id):
             title=f"تقرير فحص السلامة رقم {safety_check.id}"
         )
         
-        # تسجيل خط عربي
-        try:
-            pdfmetrics.registerFont(TTFont('Arabic', 'Cairo.ttf'))
-            arabic_font = 'Arabic'
-        except:
+        # تسجيل خط عربي بترتيب أولوية
+        arabic_font = 'Helvetica'  # قيمة افتراضية
+        font_paths = [
+            ('static/fonts/beIN-Normal.ttf', 'خط beIN-Normal.ttf'),
+            ('static/fonts/beIN Normal .ttf', 'خط beIN Normal .ttf'),
+            ('utils/beIN-Normal.ttf', 'خط beIN-Normal.ttf من utils'),
+            ('Cairo.ttf', 'خط Cairo.ttf'),
+            ('static/fonts/NotoSansArabic-Regular.ttf', 'خط NotoSansArabic'),
+        ]
+        
+        for font_path, font_name in font_paths:
             try:
-                pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/NotoSansArabic-Regular.ttf'))
-                arabic_font = 'Arabic'
-            except:
-                arabic_font = 'Helvetica'
+                if os.path.exists(font_path):
+                    pdfmetrics.registerFont(TTFont('Arabic', font_path))
+                    arabic_font = 'Arabic'
+                    current_app.logger.info(f"تم تحميل {font_name} بنجاح من {font_path}")
+                    break
+                else:
+                    current_app.logger.warning(f"الخط غير موجود: {font_path}")
+            except Exception as e:
+                current_app.logger.error(f"فشل في تحميل {font_name}: {str(e)}")
+                continue
+        
+        if arabic_font == 'Helvetica':
+            current_app.logger.warning("لم يتم العثور على أي خط عربي، سيتم استخدام Helvetica")
+        
+        current_app.logger.info(f"الخط المستخدم في PDF: {arabic_font}")
         
         # تعريف الأنماط
         styles = getSampleStyleSheet()
