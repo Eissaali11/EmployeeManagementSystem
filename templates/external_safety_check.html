@@ -180,9 +180,13 @@
             margin-top: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            padding: 5px 10px;
+            padding: 8px 12px;
             font-size: 0.9rem;
             width: 100%;
+            background: white;
+            color: #333;
+            display: block !important;
+            visibility: visible !important;
         }
         
         .submit-btn {
@@ -577,16 +581,47 @@
             uploadedImages.forEach((image, index) => {
                 const item = document.createElement('div');
                 item.className = 'image-preview-item';
-                item.innerHTML = `
-                    <img src="${image.src}" alt="صورة ${index + 1}">
-                    <button type="button" class="remove-btn" onclick="removeImage(${image.id})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <input type="text" 
-                           class="description-input" 
-                           placeholder="وصف الصورة (اختياري)"
-                           onchange="updateImageDescription(${image.id}, this.value)">
-                `;
+                item.style.position = 'relative';
+                item.style.marginBottom = '20px';
+                
+                // إنشاء عنصر الصورة
+                const img = document.createElement('img');
+                img.src = image.src;
+                img.alt = `صورة ${index + 1}`;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                // إنشاء زر الحذف
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.onclick = () => removeImage(image.id);
+                
+                // إنشاء حقل الوصف
+                const descInput = document.createElement('input');
+                descInput.type = 'text';
+                descInput.className = 'description-input';
+                descInput.placeholder = 'وصف الصورة (اختياري)';
+                descInput.name = 'image_descriptions';
+                descInput.value = image.description || '';
+                descInput.style.display = 'block';
+                descInput.style.width = '100%';
+                descInput.style.marginTop = '10px';
+                descInput.style.padding = '8px 12px';
+                descInput.style.border = '1px solid #ddd';
+                descInput.style.borderRadius = '5px';
+                descInput.style.fontSize = '0.9rem';
+                descInput.style.background = 'white';
+                descInput.style.color = '#333';
+                descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
+                
+                // إضافة العناصر للحاوية
+                item.appendChild(img);
+                item.appendChild(removeBtn);
+                item.appendChild(descInput);
+                
                 preview.appendChild(item);
             });
         }
@@ -642,12 +677,10 @@
                 }
             }
             
-            // إضافة الصور
+            // إضافة الصور مع أوصافها
             uploadedImages.forEach((image, index) => {
                 formData.append(`safety_images`, image.file);
-                if (image.description) {
-                    formData.append(`image_descriptions`, image.description);
-                }
+                formData.append(`image_descriptions`, image.description || '');
             });
             
             const submitBtn = document.getElementById('submitBtn');
