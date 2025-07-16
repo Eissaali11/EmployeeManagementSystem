@@ -154,6 +154,15 @@
 - Environment variable protection
 
 ## Changelog
+- July 16, 2025: **إصلاح مشكلة عرض الوثائق المرفوعة في نظام إدارة الوثائق:**
+  • إصلاح مشكلة عدم عرض الصور بعد رفعها في قسم "إدارة الوثائق"
+  • تحديث مسارات الصور في قوالب الويب والموبايل لتستخدم مسارات مباشرة
+  • تغيير url_for('static', filename=path) إلى '/' + path لتجنب تضارب المسارات
+  • إصلاح عرض الوثائق الثلاثة: صورة الاستمارة، صورة اللوحة، ملف التأمين
+  • تحديث كل من templates/vehicles/view.html و templates/mobile/vehicle_details.html
+  • إضافة imports المطلوبة لـ Module, Permission, UserRole في routes/vehicles.py
+  • تحسين معالجة الأخطاء في دوال الرفع والحذف مع try/except blocks
+  • الوثائق تعرض الآن بصورة صحيحة في كل من واجهة الويب والموبايل
 - July 16, 2025: **إضافة نظام شامل لإدارة الوثائق الجديدة في السيارات:**
   • إضافة ثلاث حقول جديدة لقاعدة البيانات: registration_form_image, plate_image, insurance_file
   • إنشاء مسارات جديدة: upload_document, delete_document مع دعم أنواع الوثائق المختلفة
