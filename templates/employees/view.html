@@ -534,6 +534,81 @@ document.addEventListener('DOMContentLoaded', function() {
                                 {% endif %}
                             </p>
                         </div>
+                        
+                        <!-- نوع الموظف وبيانات العهدة -->
+                        <div class="col-12">
+                            <div class="border-top pt-3 mt-3">
+                                <h6 class="mb-3 text-primary">
+                                    <i class="fas fa-user-tag me-2"></i>نوع الموظف والعهدة
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1 text-muted">نوع الموظف</p>
+                                        <p class="fs-5">
+                                            {% if employee.employee_type == 'driver' %}
+                                            <span class="badge bg-info px-3 py-2">
+                                                <i class="fas fa-car me-1"></i>موظف سائق
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary px-3 py-2">
+                                                <i class="fas fa-user me-1"></i>موظف عادي
+                                            </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    
+                                    {% if employee.employee_type == 'driver' %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1 text-muted">عهدة الجوال</p>
+                                        <p class="fs-5">
+                                            {% if employee.has_mobile_custody %}
+                                            <span class="badge bg-success px-3 py-2">
+                                                <i class="fas fa-mobile-alt me-1"></i>يحمل جوال عمل
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-warning px-3 py-2">
+                                                <i class="fas fa-times me-1"></i>لا يحمل جوال عمل
+                                            </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    
+                                    {% if employee.has_mobile_custody and (employee.mobile_type or employee.mobile_imei) %}
+                                    <div class="col-12">
+                                        <div class="card bg-light border-primary">
+                                            <div class="card-header bg-primary text-white py-2">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-mobile-alt me-2"></i>تفاصيل الجوال المُستلم
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row g-3">
+                                                    {% if employee.mobile_type %}
+                                                    <div class="col-md-6">
+                                                        <p class="mb-1 text-muted">نوع الجوال</p>
+                                                        <p class="fs-6 fw-bold">
+                                                            <i class="fas fa-mobile me-2 text-primary"></i>{{ employee.mobile_type }}
+                                                        </p>
+                                                    </div>
+                                                    {% endif %}
+                                                    
+                                                    {% if employee.mobile_imei %}
+                                                    <div class="col-md-6">
+                                                        <p class="mb-1 text-muted">رقم IMEI</p>
+                                                        <p class="fs-6 fw-bold font-monospace">
+                                                            <i class="fas fa-barcode me-2 text-success"></i>{{ employee.mobile_imei }}
+                                                        </p>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
