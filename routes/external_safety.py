@@ -4,7 +4,7 @@ import os
 import uuid
 from datetime import datetime
 from PIL import Image
-from models import VehicleExternalSafetyCheck, VehicleSafetyImage, Vehicle, Employee, User
+from models import VehicleExternalSafetyCheck, VehicleSafetyImage, Vehicle, Employee, User, UserRole
 from app import db
 from utils.audit_logger import log_audit
 from flask_login import current_user
@@ -163,7 +163,7 @@ def external_safety_success():
 def admin_external_safety_checks():
     """عرض جميع طلبات فحص السلامة للإدارة"""
     # التحقق من صلاحيات الإدارة
-    if not current_user.is_authenticated or not current_user.is_admin:
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
         return redirect(url_for('main.index'))
     
@@ -177,7 +177,7 @@ def admin_external_safety_checks():
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>')
 def admin_view_safety_check(check_id):
     """عرض تفاصيل طلب فحص السلامة"""
-    if not current_user.is_authenticated or not current_user.is_admin:
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
         return redirect(url_for('main.index'))
     
@@ -187,7 +187,7 @@ def admin_view_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/approve', methods=['POST'])
 def approve_safety_check(check_id):
     """اعتماد طلب فحص السلامة"""
-    if not current_user.is_authenticated or not current_user.is_admin:
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         return jsonify({'error': 'غير مصرح لك'}), 403
     
     try:
@@ -220,7 +220,7 @@ def approve_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/reject', methods=['POST'])
 def reject_safety_check(check_id):
     """رفض طلب فحص السلامة"""
-    if not current_user.is_authenticated or not current_user.is_admin:
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         return jsonify({'error': 'غير مصرح لك'}), 403
     
     try:

@@ -154,6 +154,14 @@
 - Environment variable protection
 
 ## Changelog
+- July 16, 2025: **إكمال إصلاح نظام فحوصات السلامة الخارجية:**
+  • إصلاح جميع أخطاء التحقق من صلاحيات الإدارة من is_admin إلى UserRole.ADMIN
+  • إضافة UserRole import في routes/external_safety.py لحل مشاكل التحقق من الصلاحيات
+  • إصلاح 4 مواقع authentication checks في الدوال الإدارية: admin_external_safety_checks، admin_view_safety_check، approve_safety_check، reject_safety_check
+  • إنشاء نظام اختبار شامل مع test_safety_check.py لتوليد بيانات تجريبية
+  • اختبار النظام بنجاح: تم إنشاء فحص سلامة تجريبي (ID: 1) للسيارة 3220 ب س ن
+  • التحقق من عمل جميع الحقول: vehicle_id، employee_id، driver_name، inspection_date، issues_found، recommendations، approval_status
+  • النظام يعمل بالكامل مع قاعدة البيانات PostgreSQL وجاهز للاستخدام
 - July 16, 2025: **إضافة نظام فحوصات السلامة الخارجية كامل:**
   • إنشاء نظام فحوصات السلامة مع Blueprint منفصل (routes/external_safety.py)
   • إضافة SafetyInspection model في قاعدة البيانات مع جميع الحقول المطلوبة
