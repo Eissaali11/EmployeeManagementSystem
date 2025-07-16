@@ -584,7 +584,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <div class="card-body">
                                                 <div class="row g-3">
                                                     {% if employee.mobile_type %}
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <p class="mb-1 text-muted">نوع الجوال</p>
                                                         <p class="fs-6 fw-bold">
                                                             <i class="fas fa-mobile me-2 text-primary"></i>{{ employee.mobile_type }}
@@ -592,8 +592,20 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     </div>
                                                     {% endif %}
                                                     
+                                                    {% if employee.mobilePersonal %}
+                                                    <div class="col-md-4">
+                                                        <p class="mb-1 text-muted">رقم جوال العمل</p>
+                                                        <p class="fs-6 fw-bold">
+                                                            <i class="fas fa-phone me-2 text-info"></i>
+                                                            <a href="tel:{{ employee.mobilePersonal }}" class="text-decoration-none">
+                                                                {{ employee.mobilePersonal }}
+                                                            </a>
+                                                        </p>
+                                                    </div>
+                                                    {% endif %}
+                                                    
                                                     {% if employee.mobile_imei %}
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <p class="mb-1 text-muted">رقم IMEI</p>
                                                         <p class="fs-6 fw-bold font-monospace">
                                                             <i class="fas fa-barcode me-2 text-success"></i>{{ employee.mobile_imei }}
