@@ -136,19 +136,28 @@
         }
         
         .image-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
         
         .image-preview-item {
             position: relative;
-            width: 150px;
-            height: 150px;
+            background: white;
+            border: 2px solid #ddd;
             border-radius: 10px;
-            overflow: hidden;
+            padding: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
         }
         
         .image-preview-item img {
@@ -177,16 +186,32 @@
         }
         
         .description-input {
-            margin-top: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            width: 100%;
-            background: white;
-            color: #333;
             display: block !important;
+            width: calc(100% - 24px) !important;
+            margin-top: 10px !important;
+            margin-bottom: 5px !important;
+            border: 2px solid #667eea !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            font-size: 0.9rem !important;
+            background: white !important;
+            color: #333 !important;
+            font-family: 'Cairo', sans-serif !important;
+            transition: all 0.3s ease !important;
+            box-sizing: border-box !important;
             visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        .description-input:focus {
+            outline: none !important;
+            border-color: #5a6fd8 !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        }
+        
+        .description-input::placeholder {
+            color: #999 !important;
+            font-style: italic !important;
         }
         
         .submit-btn {
@@ -581,16 +606,15 @@
             uploadedImages.forEach((image, index) => {
                 const item = document.createElement('div');
                 item.className = 'image-preview-item';
-                item.style.position = 'relative';
-                item.style.marginBottom = '20px';
+                
+                // إنشاء حاوية الصورة
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'image-container';
                 
                 // إنشاء عنصر الصورة
                 const img = document.createElement('img');
                 img.src = image.src;
                 img.alt = `صورة ${index + 1}`;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
                 
                 // إنشاء زر الحذف
                 const removeBtn = document.createElement('button');
@@ -599,27 +623,25 @@
                 removeBtn.innerHTML = '<i class="fas fa-times"></i>';
                 removeBtn.onclick = () => removeImage(image.id);
                 
+                // إضافة الصورة وزر الحذف لحاوية الصورة
+                imageContainer.appendChild(img);
+                imageContainer.appendChild(removeBtn);
+                
                 // إنشاء حقل الوصف
                 const descInput = document.createElement('input');
                 descInput.type = 'text';
                 descInput.className = 'description-input';
-                descInput.placeholder = 'وصف الصورة (اختياري)';
+                descInput.placeholder = `وصف الصورة ${index + 1} (اختياري)`;
                 descInput.name = 'image_descriptions';
                 descInput.value = image.description || '';
                 descInput.style.display = 'block';
                 descInput.style.width = '100%';
-                descInput.style.marginTop = '10px';
-                descInput.style.padding = '8px 12px';
-                descInput.style.border = '1px solid #ddd';
-                descInput.style.borderRadius = '5px';
-                descInput.style.fontSize = '0.9rem';
-                descInput.style.background = 'white';
-                descInput.style.color = '#333';
+                descInput.style.boxSizing = 'border-box';
                 descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
+                descInput.oninput = (e) => updateImageDescription(image.id, e.target.value);
                 
-                // إضافة العناصر للحاوية
-                item.appendChild(img);
-                item.appendChild(removeBtn);
+                // إضافة العناصر للحاوية الرئيسية
+                item.appendChild(imageContainer);
                 item.appendChild(descInput);
                 
                 preview.appendChild(item);
