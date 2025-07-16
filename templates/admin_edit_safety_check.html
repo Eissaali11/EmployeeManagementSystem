@@ -432,7 +432,7 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetZoom()">
                         <i class="fas fa-expand-arrows-alt"></i> إعادة تعيين
                     </button>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeImageModal()">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -481,13 +481,20 @@
     let isDragging = false;
     let startX, startY, initialX, initialY;
     
-    function showImageModal(imageSrc) {
+    function showImageModal(imageSrc, description) {
+        console.log('showImageModal called with:', imageSrc, description);
+        
         // تحقق من وجود العناصر المطلوبة
         const modalImageElement = document.getElementById('modalImage');
+        const modalElement = document.getElementById('imageModal');
         
-        if (!modalImageElement) {
-            console.error('Modal image element not found');
-            // فتح الصورة في تبويب جديد كبديل
+        console.log('Modal elements found:', {
+            modalImage: !!modalImageElement,
+            modal: !!modalElement
+        });
+        
+        if (!modalImageElement || !modalElement) {
+            console.error('Modal elements not found, opening in new tab');
             window.open(imageSrc, '_blank');
             return;
         }
@@ -495,17 +502,50 @@
         modalImageElement.src = imageSrc;
         resetZoom();
         
-        // تحقق من وجود Bootstrap modal
-        if (typeof $ !== 'undefined' && $('#imageModal').length > 0) {
-            $('#imageModal').modal('show');
-        } else if (typeof bootstrap !== 'undefined') {
-            // استخدام Bootstrap 5
-            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
-            modal.show();
-        } else {
-            // فتح الصورة في تبويب جديد كبديل
+        // عرض النافذة المنبثقة
+        try {
+            if (typeof $ !== 'undefined' && $('#imageModal').length > 0) {
+                console.log('Using jQuery Bootstrap modal');
+                $('#imageModal').modal('show');
+            } else if (typeof bootstrap !== 'undefined') {
+                console.log('Using Bootstrap 5 modal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                console.log('Bootstrap not available, using fallback');
+                modalElement.style.display = 'block';
+                modalElement.classList.add('show');
+                document.body.classList.add('modal-open');
+                
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                backdrop.id = 'imageModalBackdrop';
+                document.body.appendChild(backdrop);
+                
+                backdrop.addEventListener('click', function() {
+                    closeImageModal();
+                });
+            }
+        } catch (error) {
+            console.error('Error showing modal:', error);
             window.open(imageSrc, '_blank');
         }
+    }
+    
+    function closeImageModal() {
+        const modalElement = document.getElementById('imageModal');
+        const backdrop = document.getElementById('imageModalBackdrop');
+        
+        if (modalElement) {
+            modalElement.style.display = 'none';
+            modalElement.classList.remove('show');
+        }
+        
+        if (backdrop) {
+            backdrop.remove();
+        }
+        
+        document.body.classList.remove('modal-open');
     }
     
     function zoomImage(deltaZoom) {
