@@ -28,7 +28,11 @@ class Department(db.Model):
     employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments')
     # employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments', lazy='dynamic')
 
-    manager = db.relationship('Employee', foreign_keys=[manager_id], uselist=False)
+    manager_id = db.Column(
+        db.Integer,
+        db.ForeignKey('employee.id', name='fk_department_manager', ondelete='SET NULL', use_alter=True),
+        nullable=True
+    )
     accessible_users = db.relationship('User', 
                                        secondary=user_accessible_departments,
                                        back_populates='departments')
