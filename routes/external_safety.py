@@ -405,6 +405,29 @@ def export_safety_check_pdf(check_id):
         from reportlab.pdfbase.ttfonts import TTFont
         from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
         import io
+        import os
+        
+        # استيراد مكتبات معالجة النصوص العربية
+        try:
+            import arabic_reshaper
+            from bidi.algorithm import get_display
+            arabic_support = True
+        except ImportError:
+            arabic_support = False
+        
+        # دالة لمعالجة النصوص العربية
+        def process_arabic_text(text):
+            if not text or not arabic_support:
+                return text
+            try:
+                # تشكيل النص العربي
+                reshaped_text = arabic_reshaper.reshape(text)
+                # تطبيق خوارزمية الـ bidi للاتجاه الصحيح
+                display_text = get_display(reshaped_text)
+                return display_text
+            except Exception as e:
+                current_app.logger.error(f"خطأ في معالجة النص العربي: {str(e)}")
+                return text
         
         # إنشاء buffer للـ PDF
         buffer = io.BytesIO()
@@ -485,18 +508,20 @@ def export_safety_check_pdf(check_id):
         story = []
         
         # العنوان الرئيسي مع شعار
-        story.append(Paragraph(f"تقرير فحص السلامة الخارجي رقم {safety_check.id}", title_style))
+        title_text = process_arabic_text(f"تقرير فحص السلامة الخارجي رقم {safety_check.id}")
+        story.append(Paragraph(title_text, title_style))
         story.append(Spacer(1, 20))
         
         # معلومات السيارة
-        story.append(Paragraph("🚗 معلومات السيارة", subtitle_style))
+        vehicle_section_title = process_arabic_text("معلومات السيارة")
+        story.append(Paragraph(vehicle_section_title, subtitle_style))
         
         vehicle_data = [
-            ['البيان', 'القيمة'],
-            ['رقم اللوحة', safety_check.vehicle_plate_number],
-            ['نوع السيارة', safety_check.vehicle_make_model],
-            ['المفوض الحالي', safety_check.current_delegate or 'غير محدد'],
-            ['تاريخ الفحص', safety_check.inspection_date.strftime('%Y-%m-%d %H:%M')]
+            [process_arabic_text('البيان'), process_arabic_text('القيمة')],
+            [process_arabic_text('رقم اللوحة'), process_arabic_text(safety_check.vehicle_plate_number)],
+            [process_arabic_text('نوع السيارة'), process_arabic_text(safety_check.vehicle_make_model)],
+            [process_arabic_text('المفوض الحالي'), process_arabic_text(safety_check.current_delegate or 'غير محدد')],
+            [process_arabic_text('تاريخ الفحص'), safety_check.inspection_date.strftime('%Y-%m-%d %H:%M')]
         ]
         
         vehicle_table = Table(vehicle_data, colWidths=[6*cm, 8*cm])
@@ -524,14 +549,15 @@ def export_safety_check_pdf(check_id):
         story.append(Spacer(1, 20))
         
         # معلومات السائق
-        story.append(Paragraph("👤 معلومات السائق", subtitle_style))
+        driver_section_title = process_arabic_text("معلومات السائق")
+        story.append(Paragraph(driver_section_title, subtitle_style))
         
         driver_data = [
-            ['البيان', 'القيمة'],
-            ['اسم السائق', safety_check.driver_name],
-            ['رقم الهوية', safety_check.driver_national_id],
-            ['القسم', safety_check.driver_department],
-            ['المدينة', safety_check.driver_city]
+            [process_arabic_text('البيان'), process_arabic_text('القيمة')],
+            [process_arabic_text('اسم السائق'), process_arabic_text(safety_check.driver_name)],
+            [process_arabic_text('رقم الهوية'), process_arabic_text(safety_check.driver_national_id)],
+            [process_arabic_text('القسم'), process_arabic_text(safety_check.driver_department)],
+            [process_arabic_text('المدينة'), process_arabic_text(safety_check.driver_city)]
         ]
         
         driver_table = Table(driver_data, colWidths=[6*cm, 8*cm])
@@ -560,14 +586,16 @@ def export_safety_check_pdf(check_id):
         
         # الملاحظات
         if safety_check.notes:
-            story.append(Paragraph("📝 الملاحظات والتوصيات", subtitle_style))
-            notes_para = Paragraph(safety_check.notes, normal_style)
+            notes_title = process_arabic_text("الملاحظات والتوصيات")
+            story.append(Paragraph(notes_title, subtitle_style))
+            notes_text = process_arabic_text(safety_check.notes)
+            notes_para = Paragraph(notes_text, normal_style)
             story.append(notes_para)
             story.append(Spacer(1, 20))
         
         # معلومات الحالة
         if safety_check.approved_by:
-            status_text = "معتمدة ✅" if safety_check.is_approved else "مرفوضة ❌"
+            status_text = process_arabic_text("معتمدة ✅" if safety_check.is_approved else "مرفوضة ❌")
             status_color = colors.HexColor('#27AE60') if safety_check.is_approved else colors.HexColor('#E74C3C')
             
             status_style = ParagraphStyle(
@@ -583,18 +611,25 @@ def export_safety_check_pdf(check_id):
                 backColor=colors.HexColor('#F8F9FA')
             )
             
-            story.append(Paragraph(f"حالة الطلب: {status_text}", status_style))
-            story.append(Paragraph(f"تاريخ الاعتماد: {safety_check.approved_at.strftime('%Y-%m-%d %H:%M')}", normal_style))
-            story.append(Paragraph(f"تم بواسطة: {safety_check.approver.name if safety_check.approver else 'غير محدد'}", normal_style))
+            status_label = process_arabic_text(f"حالة الطلب: {status_text}")
+            story.append(Paragraph(status_label, status_style))
+            
+            approval_date = process_arabic_text(f"تاريخ الاعتماد: {safety_check.approved_at.strftime('%Y-%m-%d %H:%M')}")
+            story.append(Paragraph(approval_date, normal_style))
+            
+            approved_by = process_arabic_text(f"تم بواسطة: {safety_check.approver.name if safety_check.approver else 'غير محدد'}")
+            story.append(Paragraph(approved_by, normal_style))
             
             if safety_check.rejection_reason:
-                story.append(Paragraph(f"سبب الرفض: {safety_check.rejection_reason}", normal_style))
+                rejection_reason = process_arabic_text(f"سبب الرفض: {safety_check.rejection_reason}")
+                story.append(Paragraph(rejection_reason, normal_style))
             
             story.append(Spacer(1, 20))
         
         # صور فحص السلامة
         if safety_check.safety_images:
-            story.append(Paragraph(f"📸 صور فحص السلامة ({len(safety_check.safety_images)} صورة)", subtitle_style))
+            images_title = process_arabic_text(f"صور فحص السلامة ({len(safety_check.safety_images)} صورة)")
+            story.append(Paragraph(images_title, subtitle_style))
             story.append(Spacer(1, 10))
             
             # تنظيم الصور في صفوف (صورتين في كل صف)
@@ -603,9 +638,15 @@ def export_safety_check_pdf(check_id):
             
             for i, image in enumerate(safety_check.safety_images):
                 try:
-                    # التحقق من وجود الصورة
+                    # التحقق من وجود الصورة مع المسار الكامل
                     image_path = image.image_path
+                    if not image_path.startswith('/'):
+                        # إضافة المسار المطلق إذا لم يكن موجوداً
+                        image_path = os.path.join(os.getcwd(), image_path)
+                    
+                    # التحقق من وجود الصورة
                     if not os.path.exists(image_path):
+                        current_app.logger.warning(f"الصورة غير موجودة: {image_path}")
                         continue
                     
                     # إنشاء كائن الصورة
@@ -624,9 +665,10 @@ def export_safety_check_pdf(check_id):
                     img.drawHeight = img_height * ratio
                     
                     # إضافة الصورة مع الوصف
+                    description = process_arabic_text(image.image_description or f'صورة رقم {i+1}')
                     img_data = [
                         [img],
-                        [Paragraph(image.image_description or f'صورة رقم {i+1}', image_desc_style)]
+                        [Paragraph(description, image_desc_style)]
                     ]
                     
                     img_table = Table(img_data, colWidths=[max_width])
@@ -681,8 +723,10 @@ def export_safety_check_pdf(check_id):
             backColor=colors.HexColor('#F8F9FA')
         )
         
-        story.append(Paragraph(f"تم إنشاء هذا التقرير في: {datetime.now().strftime('%Y-%m-%d %H:%M')}", footer_style))
-        story.append(Paragraph("نُظم - نظام إدارة المركبات والموظفين", footer_style))
+        footer_text1 = process_arabic_text(f"تم إنشاء هذا التقرير في: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        footer_text2 = process_arabic_text("نُظم - نظام إدارة المركبات والموظفين")
+        story.append(Paragraph(footer_text1, footer_style))
+        story.append(Paragraph(footer_text2, footer_style))
         
         # بناء الـ PDF
         doc.build(story)
