@@ -97,7 +97,11 @@
                                                 <!-- عرض الصورة -->
                                                 <div class="mb-3">
                                                     {% if image.image_path %}
-                                                        {% set image_url = '/' + image.image_path %}
+                                                        {% if image.image_path.startswith('static/') %}
+                                                            {% set image_url = url_for('static', filename=image.image_path.replace('static/', '')) %}
+                                                        {% else %}
+                                                            {% set image_url = '/' + image.image_path %}
+                                                        {% endif %}
                                                         <img src="{{ image_url }}" 
                                                              alt="صورة فحص السلامة" 
                                                              class="img-fluid rounded" 
