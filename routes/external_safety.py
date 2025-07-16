@@ -43,9 +43,55 @@ def external_safety_check_form(vehicle_id):
 
 @external_safety_bp.route('/share-links')
 def share_links():
-    """صفحة مشاركة روابط النماذج الخارجية لجميع السيارات"""
-    vehicles = Vehicle.query.all()
-    return render_template('external_safety_share_links.html', vehicles=vehicles)
+    """صفحة مشاركة روابط النماذج الخارجية لجميع السيارات مع الفلاتر"""
+    # الحصول على معاملات الفلترة من الطلب
+    status_filter = request.args.get('status', '')
+    make_filter = request.args.get('make', '')
+    search_plate = request.args.get('search_plate', '')
+    project_filter = request.args.get('project', '')
+    
+    # قاعدة الاستعلام الأساسية
+    query = Vehicle.query
+    
+    # إضافة التصفية حسب الحالة إذا تم تحديدها
+    if status_filter:
+        query = query.filter(Vehicle.status == status_filter)
+    
+    # إضافة التصفية حسب الشركة المصنعة إذا تم تحديدها
+    if make_filter:
+        query = query.filter(Vehicle.make == make_filter)
+    
+    # إضافة التصفية حسب المشروع إذا تم تحديده
+    if project_filter:
+        query = query.filter(Vehicle.project == project_filter)
+    
+    # إضافة البحث برقم السيارة إذا تم تحديده
+    if search_plate:
+        query = query.filter(Vehicle.plate_number.contains(search_plate))
+    
+    # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
+    makes = db.session.query(Vehicle.make).distinct().all()
+    makes = [make[0] for make in makes]
+    
+    # الحصول على قائمة بالمشاريع لقائمة التصفية
+    projects = db.session.query(Vehicle.project).filter(Vehicle.project.isnot(None)).distinct().all()
+    projects = [project[0] for project in projects]
+    
+    # الحصول على قائمة السيارات
+    vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
+    
+    # قائمة حالات السيارات
+    statuses = ['available', 'rented', 'in_project', 'in_workshop', 'accident']
+    
+    return render_template('external_safety_share_links.html', 
+                           vehicles=vehicles,
+                           status_filter=status_filter,
+                           make_filter=make_filter,
+                           search_plate=search_plate,
+                           project_filter=project_filter,
+                           makes=makes,
+                           projects=projects,
+                           statuses=statuses)
 
 @external_safety_bp.route('/external-safety-check', methods=['POST'])
 def submit_external_safety_check():

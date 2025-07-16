@@ -28,6 +28,89 @@
         </ul>
     </div>
 
+    <!-- فلاتر البحث والتصفية -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-filter ms-2"></i>
+                البحث والتصفية
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('external_safety.share_links') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">البحث برقم السيارة:</label>
+                        <input type="text" name="search_plate" class="form-control" 
+                               placeholder="ادخل رقم السيارة..." 
+                               value="{{ search_plate }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الحالة:</label>
+                        <select name="status" class="form-select">
+                            <option value="">جميع الحالات</option>
+                            {% for status in statuses %}
+                            <option value="{{ status }}" 
+                                    {% if status_filter == status %}selected{% endif %}>
+                                {% if status == 'available' %}متاحة
+                                {% elif status == 'rented' %}مؤجرة
+                                {% elif status == 'in_project' %}في المشروع
+                                {% elif status == 'in_workshop' %}في الورشة
+                                {% elif status == 'accident' %}حادث
+                                {% else %}{{ status }}
+                                {% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الشركة المصنعة:</label>
+                        <select name="make" class="form-select">
+                            <option value="">جميع الشركات</option>
+                            {% for make in makes %}
+                            <option value="{{ make }}" 
+                                    {% if make_filter == make %}selected{% endif %}>
+                                {{ make }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">المشروع:</label>
+                        <select name="project" class="form-select">
+                            <option value="">جميع المشاريع</option>
+                            {% for project in projects %}
+                            <option value="{{ project }}" 
+                                    {% if project_filter == project %}selected{% endif %}>
+                                {{ project }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search ms-1"></i>
+                            بحث
+                        </button>
+                        <a href="{{ url_for('external_safety.share_links') }}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-undo ms-1"></i>
+                            إعادة تعيين
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <span class="text-muted">
+                            <i class="fas fa-info-circle ms-1"></i>
+                            عدد السيارات: {{ vehicles|length }}
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- قائمة السيارات -->
     <div class="card shadow-sm">
         <div class="card-header">
             <h5 class="mb-0">
@@ -44,6 +127,7 @@
                             <th>رقم اللوحة</th>
                             <th>النوع</th>
                             <th>اللون</th>
+                            <th>المشروع</th>
                             <th>الحالة</th>
                             <th>رابط النموذج</th>
                             <th>الإجراءات</th>
@@ -61,6 +145,13 @@
                                       style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
                                     {{ vehicle.color }}
                                 </span>
+                            </td>
+                            <td>
+                                {% if vehicle.project %}
+                                    <span class="badge bg-info">{{ vehicle.project }}</span>
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if vehicle.status == 'available' %}
