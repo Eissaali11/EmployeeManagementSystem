@@ -199,6 +199,24 @@
                                     <i class="fas fa-arrow-left"></i> العودة للقائمة
                                 </a>
                                 
+                                <!-- زر التعديل -->
+                                <a href="{{ url_for('external_safety.edit_safety_check', check_id=safety_check.id) }}" 
+                                   class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> تعديل الفحص
+                                </a>
+                                
+                                <!-- زر الحذف -->
+                                <button class="btn btn-danger" 
+                                        onclick="showDeleteModal()">
+                                    <i class="fas fa-trash"></i> حذف الفحص
+                                </button>
+                                
+                                <!-- زر تصدير PDF -->
+                                <a href="{{ url_for('external_safety.export_safety_check_pdf', check_id=safety_check.id) }}" 
+                                   class="btn btn-info" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> تصدير PDF
+                                </a>
+                                
                                 {% if safety_check.is_pending %}
                                 <form method="POST" 
                                       action="{{ url_for('external_safety.approve_safety_check', check_id=safety_check.id) }}" 
@@ -277,6 +295,40 @@
     </div>
 </div>
 
+<!-- نافذة منبثقة لتأكيد الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">حذف طلب فحص السلامة</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('external_safety.delete_safety_check', check_id=safety_check.id) }}">
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تحذير:</strong> سيتم حذف طلب فحص السلامة هذا نهائياً مع جميع الصور والملفات المرفقة.
+                    </div>
+                    <p><strong>تفاصيل الطلب:</strong></p>
+                    <ul>
+                        <li>رقم الطلب: #{{ safety_check.id }}</li>
+                        <li>السيارة: {{ safety_check.vehicle_plate_number }}</li>
+                        <li>السائق: {{ safety_check.driver_name }}</li>
+                        <li>تاريخ الفحص: {{ safety_check.inspection_date.strftime('%Y-%m-%d') }}</li>
+                    </ul>
+                    <p class="text-danger"><strong>هذا الإجراء لا يمكن التراجع عنه!</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     function showImageModal(imageSrc, description) {
         document.getElementById('modalImage').src = imageSrc;
@@ -286,6 +338,10 @@
     
     function showRejectModal() {
         $('#rejectModal').modal('show');
+    }
+    
+    function showDeleteModal() {
+        $('#deleteModal').modal('show');
     }
 </script>
 

@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+
+{% block title %}تعديل طلب فحص السلامة #{{ safety_check.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-edit ml-2"></i>
+                        تعديل طلب فحص السلامة #{{ safety_check.id }}
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('external_safety.edit_safety_check', check_id=safety_check.id) }}">
+                        <div class="row">
+                            <!-- معلومات السيارة -->
+                            <div class="col-md-6">
+                                <div class="card border-info mb-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0">معلومات السيارة</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>رقم اللوحة:</label>
+                                            <input type="text" class="form-control" name="vehicle_plate_number" 
+                                                   value="{{ safety_check.vehicle_plate_number }}" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>نوع السيارة:</label>
+                                            <input type="text" class="form-control" name="vehicle_make_model" 
+                                                   value="{{ safety_check.vehicle_make_model }}" readonly>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>المفوض الحالي:</label>
+                                            <input type="text" class="form-control" name="current_delegate" 
+                                                   value="{{ safety_check.current_delegate or '' }}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>تاريخ الفحص:</label>
+                                            <input type="datetime-local" class="form-control" name="inspection_date" 
+                                                   value="{{ safety_check.inspection_date.strftime('%Y-%m-%dT%H:%M') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- معلومات السائق -->
+                            <div class="col-md-6">
+                                <div class="card border-success mb-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">معلومات السائق</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>اسم السائق:</label>
+                                            <input type="text" class="form-control" name="driver_name" 
+                                                   value="{{ safety_check.driver_name }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>رقم الهوية:</label>
+                                            <input type="text" class="form-control" name="driver_national_id" 
+                                                   value="{{ safety_check.driver_national_id }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>القسم:</label>
+                                            <input type="text" class="form-control" name="driver_department" 
+                                                   value="{{ safety_check.driver_department }}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>المدينة:</label>
+                                            <input type="text" class="form-control" name="driver_city" 
+                                                   value="{{ safety_check.driver_city }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- الملاحظات -->
+                        <div class="card border-secondary mb-3">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0">الملاحظات</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>ملاحظات إضافية:</label>
+                                    <textarea class="form-control" name="notes" rows="4">{{ safety_check.notes or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- أزرار الحفظ -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> حفظ التغييرات
+                            </button>
+                            <a href="{{ url_for('external_safety.admin_view_safety_check', check_id=safety_check.id) }}" 
+                               class="btn btn-secondary btn-lg ml-2">
+                                <i class="fas fa-arrow-left"></i> العودة
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
