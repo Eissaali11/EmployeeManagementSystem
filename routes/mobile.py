@@ -1480,7 +1480,7 @@ def vehicle_details(vehicle_id):
             
             # الحصول على سجلات التسليم والاستلام مع بيانات الموظف والأقسام
         handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id)\
-            .options(joinedload(VehicleHandover.employee).joinedload(Employee.departments))\
+            .options(joinedload(VehicleHandover.driver_employee).joinedload(Employee.departments))\
             .order_by(VehicleHandover.handover_date.desc()).all()
         
         # الحصول على التفويضات الخارجية مع معالجة القيم الفارغة

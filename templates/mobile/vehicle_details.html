@@ -453,12 +453,12 @@ body {
                                             data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                             data-notes="{{ record.notes|e if record.notes else '' }}"
                                             data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
-                                            data-employee-mobile="{{ record.employee.mobile if record.employee else '' }}"
-                                            data-employee-mobile-personal="{{ record.employee.mobilePersonal if record.employee else '' }}"
-                                            data-employee-departments="{{ (record.employee.departments|map(attribute='name')|join(', ')) if record.employee and record.employee.departments else '' }}"
-                                            data-employee-mobile-type="{{ record.employee.mobile_type if record.employee else '' }}"
-                                            data-employee-mobile-imei="{{ record.employee.mobile_imei if record.employee else '' }}"
-                                            data-employee-has-custody="{{ record.employee.has_mobile_custody if record.employee else '' }}"
+                                            data-employee-mobile="{{ record.driver_employee.mobile if record.driver_employee else '' }}"
+                                            data-employee-mobile-personal="{{ record.driver_employee.mobilePersonal if record.driver_employee else '' }}"
+                                            data-employee-departments="{{ (record.driver_employee.departments|map(attribute='name')|join(', ')) if record.driver_employee and record.driver_employee.departments else '' }}"
+                                            data-employee-mobile-type="{{ record.driver_employee.mobile_type if record.driver_employee else '' }}"
+                                            data-employee-mobile-imei="{{ record.driver_employee.mobile_imei if record.driver_employee else '' }}"
+                                            data-employee-has-custody="{{ record.driver_employee.has_mobile_custody if record.driver_employee else '' }}"
                                             onclick="shareHandoverRecord(this)" title="مشاركة">
                                             <i class="fas fa-share-alt"></i>
                                         </button>
@@ -549,12 +549,12 @@ body {
                                                 data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                                 data-notes="{{ record.notes|e if record.notes else '' }}"
                                                 data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
-                                                data-employee-mobile="{{ record.employee.mobile if record.employee else '' }}"
-                                                data-employee-mobile-personal="{{ record.employee.mobilePersonal if record.employee else '' }}"
-                                                data-employee-departments="{{ (record.employee.departments|map(attribute='name')|join(', ')) if record.employee and record.employee.departments else '' }}"
-                                                data-employee-mobile-type="{{ record.employee.mobile_type if record.employee else '' }}"
-                                                data-employee-mobile-imei="{{ record.employee.mobile_imei if record.employee else '' }}"
-                                                data-employee-has-custody="{{ record.employee.has_mobile_custody if record.employee else '' }}"
+                                                data-employee-mobile="{{ record.driver_employee.mobile if record.driver_employee else '' }}"
+                                                data-employee-mobile-personal="{{ record.driver_employee.mobilePersonal if record.driver_employee else '' }}"
+                                                data-employee-departments="{{ (record.driver_employee.departments|map(attribute='name')|join(', ')) if record.driver_employee and record.driver_employee.departments else '' }}"
+                                                data-employee-mobile-type="{{ record.driver_employee.mobile_type if record.driver_employee else '' }}"
+                                                data-employee-mobile-imei="{{ record.driver_employee.mobile_imei if record.driver_employee else '' }}"
+                                                data-employee-has-custody="{{ record.driver_employee.has_mobile_custody if record.driver_employee else '' }}"
                                                 onclick="shareHandoverRecord(this)" title="مشاركة">
                                                 <i class="fas fa-share-alt"></i>
                                             </button>
