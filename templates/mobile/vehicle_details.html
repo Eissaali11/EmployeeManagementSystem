@@ -342,6 +342,165 @@ body {
 
 
 
+<!-- إدارة الوثائق -->
+<div class="card mb-3 mx-3 modern-card">
+    <div class="card-header gradient-header-purple d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 text-white">
+            <i class="fas fa-file-alt ms-2"></i>
+            إدارة الوثائق
+        </h6>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" onclick="toggleDocumentForms()">
+                    <i class="fas fa-upload ms-1"></i> رفع الوثائق
+                </a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="documents-grid">
+            <!-- صورة الاستمارة -->
+            <div class="document-item">
+                <div class="document-icon">
+                    <i class="fas fa-file-alt text-primary"></i>
+                </div>
+                <div class="document-content">
+                    <h6>صورة الاستمارة</h6>
+                    {% if vehicle.registration_form_image %}
+                    <div class="document-status text-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>متوفرة</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDocument('{{ url_for('static', filename=vehicle.registration_form_image) }}', 'صورة الاستمارة')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('registration_form', 'صورة الاستمارة')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="document-status text-muted">
+                        <i class="fas fa-times-circle"></i>
+                        <span>غير متوفرة</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- صورة اللوحة -->
+            <div class="document-item">
+                <div class="document-icon">
+                    <i class="fas fa-id-card text-success"></i>
+                </div>
+                <div class="document-content">
+                    <h6>صورة اللوحة</h6>
+                    {% if vehicle.plate_image %}
+                    <div class="document-status text-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>متوفرة</span>
+                    </div>
+                    <div class="document-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewDocument('{{ url_for('static', filename=vehicle.plate_image) }}', 'صورة اللوحة')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('plate', 'صورة اللوحة')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="document-status text-muted">
+                        <i class="fas fa-times-circle"></i>
+                        <span>غير متوفرة</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ملف التأمين -->
+            <div class="document-item">
+                <div class="document-icon">
+                    <i class="fas fa-shield-alt text-warning"></i>
+                </div>
+                <div class="document-content">
+                    <h6>ملف التأمين</h6>
+                    {% if vehicle.insurance_file %}
+                    <div class="document-status text-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>متوفرة</span>
+                    </div>
+                    <div class="document-actions">
+                        <a href="{{ url_for('static', filename=vehicle.insurance_file) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('insurance', 'ملف التأمين')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="document-status text-muted">
+                        <i class="fas fa-times-circle"></i>
+                        <span>غير متوفرة</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- نماذج رفع الوثائق -->
+        <div id="documentForms" class="document-forms" style="display: none;">
+            <div class="form-divider">
+                <h6><i class="fas fa-upload me-2"></i>رفع الوثائق</h6>
+            </div>
+            
+            <!-- نموذج رفع الاستمارة -->
+            <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
+                <input type="hidden" name="document_type" value="registration_form">
+                <div class="input-group mb-2">
+                    <span class="input-group-text">
+                        <i class="fas fa-file-alt"></i>
+                    </span>
+                    <input type="file" name="file" class="form-control" accept="image/*,application/pdf" required>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> استمارة
+                    </button>
+                </div>
+            </form>
+
+            <!-- نموذج رفع اللوحة -->
+            <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
+                <input type="hidden" name="document_type" value="plate">
+                <div class="input-group mb-2">
+                    <span class="input-group-text">
+                        <i class="fas fa-id-card"></i>
+                    </span>
+                    <input type="file" name="file" class="form-control" accept="image/*,application/pdf" required>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> لوحة
+                    </button>
+                </div>
+            </form>
+
+            <!-- نموذج رفع التأمين -->
+            <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
+                <input type="hidden" name="document_type" value="insurance">
+                <div class="input-group mb-2">
+                    <span class="input-group-text">
+                        <i class="fas fa-shield-alt"></i>
+                    </span>
+                    <input type="file" name="file" class="form-control" accept="image/*,application/pdf,.doc,.docx" required>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-upload"></i> تأمين
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- سجلات التسليم والاستلام -->
 <div class="card mb-3 mx-3 modern-card">
     <div class="card-header gradient-header-orange d-flex justify-content-between align-items-center">
@@ -2800,7 +2959,166 @@ function showTextModal(text) {
     modal.className = 'modal';
     document.body.appendChild(modal);
 }
+
+// وظائف إدارة الوثائق
+function toggleDocumentForms() {
+    const forms = document.getElementById('documentForms');
+    forms.style.display = forms.style.display === 'none' ? 'block' : 'none';
+}
+
+function viewDocument(src, title) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
+        z-index: 9999;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white; padding: 20px; border-radius: 8px;
+        max-width: 90%; max-height: 80%; overflow-y: auto;
+        direction: rtl; text-align: center;
+    `;
+    
+    content.innerHTML = `
+        <h5>${title}</h5>
+        <img src="${src}" style="width: 100%; max-width: 400px; height: auto; margin: 10px 0;">
+        <br>
+        <button onclick="this.closest('.modal').remove()" class="btn btn-primary">إغلاق</button>
+    `;
+    
+    modal.appendChild(content);
+    modal.className = 'modal';
+    document.body.appendChild(modal);
+}
+
+function deleteDocument(type, title) {
+    if (confirm(`هل أنت متأكد من حذف ${title}؟`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ url_for('vehicles.delete_document', id=vehicle.id) }}";
+        
+        const typeInput = document.createElement('input');
+        typeInput.type = 'hidden';
+        typeInput.name = 'document_type';
+        typeInput.value = type;
+        form.appendChild(typeInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
+
+<style>
+/* تنسيقات الوثائق */
+.documents-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 20px;
+}
+
+.document-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.document-item:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.document-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.document-icon i {
+    font-size: 1.5rem;
+}
+
+.document-content {
+    flex: 1;
+    text-align: right;
+}
+
+.document-content h6 {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.document-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.document-status i {
+    margin-right: 5px;
+}
+
+.document-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.document-forms {
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.form-divider {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-divider h6 {
+    color: #495057;
+    font-weight: 600;
+}
+
+.upload-form {
+    margin-bottom: 15px;
+}
+
+.upload-form:last-child {
+    margin-bottom: 0;
+}
+
+.input-group .btn {
+    min-width: 100px;
+}
+
+/* تدرج بنفسجي للوثائق */
+.gradient-header-purple {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+}
+
+/* تحسين responsive للوثائق */
+@media (min-width: 768px) {
+    .documents-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+</style>
 
 </div> <!-- إغلاق mobile-content-wrapper -->
 {% endblock %}

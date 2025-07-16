@@ -227,6 +227,186 @@
         </div>
     </div>
 
+    <!-- إدارة الوثائق الجديدة -->
+    <div class="row mb-4">
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt ms-2"></i>
+                        إدارة الوثائق
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- صورة الاستمارة -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        صورة الاستمارة
+                                    </h6>
+                                    {% if vehicle.registration_form_image %}
+                                    <div class="mb-3">
+                                        <img src="{{ url_for('static', filename=vehicle.registration_form_image) }}" 
+                                             alt="صورة الاستمارة" 
+                                             class="img-fluid rounded" 
+                                             style="max-height: 200px; cursor: pointer;"
+                                             onclick="openImageModal('{{ url_for('static', filename=vehicle.registration_form_image) }}', 'صورة الاستمارة')">
+                                    </div>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="openImageModal('{{ url_for('static', filename=vehicle.registration_form_image) }}', 'صورة الاستمارة')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <form method="POST" action="{{ url_for('vehicles.delete_document', id=vehicle.id) }}" class="d-inline">
+                                            <input type="hidden" name="document_type" value="registration_form">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="return confirm('هل أنت متأكد من حذف صورة الاستمارة؟')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted mb-3">
+                                        <i class="fas fa-file-alt fa-3x"></i>
+                                        <p class="mt-2">لم يتم رفع صورة الاستمارة</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- نموذج رفع الصورة -->
+                                    <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" 
+                                          enctype="multipart/form-data" class="mt-3">
+                                        <input type="hidden" name="document_type" value="registration_form">
+                                        <div class="input-group">
+                                            <input type="file" name="file" class="form-control form-control-sm" 
+                                                   accept="image/*,application/pdf" required>
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-upload"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- صورة اللوحة -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-success">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-id-card me-2"></i>
+                                        صورة اللوحة
+                                    </h6>
+                                    {% if vehicle.plate_image %}
+                                    <div class="mb-3">
+                                        <img src="{{ url_for('static', filename=vehicle.plate_image) }}" 
+                                             alt="صورة اللوحة" 
+                                             class="img-fluid rounded" 
+                                             style="max-height: 200px; cursor: pointer;"
+                                             onclick="openImageModal('{{ url_for('static', filename=vehicle.plate_image) }}', 'صورة اللوحة')">
+                                    </div>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="openImageModal('{{ url_for('static', filename=vehicle.plate_image) }}', 'صورة اللوحة')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <form method="POST" action="{{ url_for('vehicles.delete_document', id=vehicle.id) }}" class="d-inline">
+                                            <input type="hidden" name="document_type" value="plate">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="return confirm('هل أنت متأكد من حذف صورة اللوحة؟')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted mb-3">
+                                        <i class="fas fa-id-card fa-3x"></i>
+                                        <p class="mt-2">لم يتم رفع صورة اللوحة</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- نموذج رفع الصورة -->
+                                    <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" 
+                                          enctype="multipart/form-data" class="mt-3">
+                                        <input type="hidden" name="document_type" value="plate">
+                                        <div class="input-group">
+                                            <input type="file" name="file" class="form-control form-control-sm" 
+                                                   accept="image/*,application/pdf" required>
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-upload"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ملف التأمين -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-warning">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-shield-alt me-2"></i>
+                                        ملف التأمين
+                                    </h6>
+                                    {% if vehicle.insurance_file %}
+                                    <div class="mb-3">
+                                        {% if vehicle.insurance_file.lower().endswith('.pdf') %}
+                                        <div class="text-center">
+                                            <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                                            <p class="small">ملف PDF</p>
+                                        </div>
+                                        {% else %}
+                                        <img src="{{ url_for('static', filename=vehicle.insurance_file) }}" 
+                                             alt="ملف التأمين" 
+                                             class="img-fluid rounded" 
+                                             style="max-height: 200px; cursor: pointer;"
+                                             onclick="openImageModal('{{ url_for('static', filename=vehicle.insurance_file) }}', 'ملف التأمين')">
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ url_for('static', filename=vehicle.insurance_file) }}" 
+                                           target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('vehicles.delete_document', id=vehicle.id) }}" class="d-inline">
+                                            <input type="hidden" name="document_type" value="insurance">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                    onclick="return confirm('هل أنت متأكد من حذف ملف التأمين؟')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted mb-3">
+                                        <i class="fas fa-shield-alt fa-3x"></i>
+                                        <p class="mt-2">لم يتم رفع ملف التأمين</p>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- نموذج رفع الملف -->
+                                    <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" 
+                                          enctype="multipart/form-data" class="mt-3">
+                                        <input type="hidden" name="document_type" value="insurance">
+                                        <div class="input-group">
+                                            <input type="file" name="file" class="form-control form-control-sm" 
+                                                   accept="image/*,application/pdf,.doc,.docx" required>
+                                            <button type="submit" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-upload"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- فحوصات السيارة -->
     <div class="row mb-4">
         <div class="col-md-6 mb-4">
@@ -1424,5 +1604,34 @@
             updateDeleteButton();
         }
     });
+
+    // دالة لعرض الصور في نافذة منبثقة
+    function openImageModal(imageSrc, imageTitle) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        modalImg.src = imageSrc;
+        modalTitle.textContent = imageTitle;
+        
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+    }
 </script>
+
+<!-- Modal لعرض الصور -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">عرض الصورة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" class="img-fluid" src="" alt="صورة">
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

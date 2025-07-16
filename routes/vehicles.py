@@ -4611,3 +4611,136 @@ def drive_management(vehicle_id):
     
     return render_template('vehicles/drive_management.html', vehicle=vehicle)
 
+
+@vehicles_bp.route('/<int:id>/upload-document', methods=['POST'])
+@login_required
+def upload_document(id):
+    """رفع الوثائق (استمارة، لوحة، تأمين)"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # التحقق من صلاحية الوصول
+    if not current_user.has_permission('can_edit_vehicles'):
+        flash('ليس لديك صلاحية لتعديل بيانات السيارات', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    document_type = request.form.get('document_type')
+    if 'file' not in request.files:
+        flash('لم يتم اختيار ملف', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('لم يتم اختيار ملف', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    if file and allowed_file(file.filename):
+        # إنشاء اسم ملف فريد
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        
+        # إنشاء المسار المناسب حسب نوع الوثيقة
+        if document_type == 'registration_form':
+            upload_folder = 'static/uploads/vehicles/registration_forms'
+            field_name = 'registration_form_image'
+        elif document_type == 'plate':
+            upload_folder = 'static/uploads/vehicles/plates'
+            field_name = 'plate_image'
+        elif document_type == 'insurance':
+            upload_folder = 'static/uploads/vehicles/insurance'
+            field_name = 'insurance_file'
+        else:
+            flash('نوع الوثيقة غير صحيح', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+        
+        # إنشاء المجلد إذا لم يكن موجوداً
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # حفظ الملف
+        file_path = os.path.join(upload_folder, unique_filename)
+        file.save(file_path)
+        
+        # تحديث قاعدة البيانات
+        setattr(vehicle, field_name, file_path)
+        
+        try:
+            db.session.commit()
+            flash('تم رفع الوثيقة بنجاح', 'success')
+            
+            # تسجيل النشاط
+            log_activity(
+                user_id=current_user.id,
+                action='upload',
+                entity_type='Vehicle',
+                entity_id=vehicle.id,
+                details=f'رفع وثيقة {document_type} للسيارة {vehicle.plate_number}'
+            )
+            
+        except Exception as e:
+            db.session.rollback()
+            # حذف الملف إذا فشل الحفظ في قاعدة البيانات
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            flash(f'خطأ في حفظ الوثيقة: {str(e)}', 'error')
+    
+    return redirect(url_for('vehicles.view', id=id))
+
+
+@vehicles_bp.route('/<int:id>/delete-document', methods=['POST'])
+@login_required
+def delete_document(id):
+    """حذف الوثائق"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # التحقق من صلاحية الوصول
+    if not current_user.has_permission('can_edit_vehicles'):
+        flash('ليس لديك صلاحية لحذف بيانات السيارات', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    document_type = request.form.get('document_type')
+    
+    if document_type == 'registration_form':
+        field_name = 'registration_form_image'
+    elif document_type == 'plate':
+        field_name = 'plate_image'
+    elif document_type == 'insurance':
+        field_name = 'insurance_file'
+    else:
+        flash('نوع الوثيقة غير صحيح', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    # الحصول على مسار الملف
+    file_path = getattr(vehicle, field_name)
+    
+    if file_path:
+        # حذف الملف من النظام
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # حذف المرجع من قاعدة البيانات
+        setattr(vehicle, field_name, None)
+        
+        try:
+            db.session.commit()
+            flash('تم حذف الوثيقة بنجاح', 'success')
+            
+            # تسجيل النشاط
+            log_activity(
+                user_id=current_user.id,
+                action='delete',
+                entity_type='Vehicle',
+                entity_id=vehicle.id,
+                details=f'حذف وثيقة {document_type} للسيارة {vehicle.plate_number}'
+            )
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في حذف الوثيقة: {str(e)}', 'error')
+    
+    return redirect(url_for('vehicles.view', id=id))
+
+
+def allowed_file(filename):
+    """التحقق من أنواع الملفات المسموحة"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+

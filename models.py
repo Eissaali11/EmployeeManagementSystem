@@ -518,6 +518,11 @@ class Vehicle(db.Model):
     # إضافة حقل صورة رخصة السيارة
     license_image = db.Column(db.String(255), nullable=True)  # صورة رخصة السيارة
     
+    # إضافة حقول الصور الجديدة المطلوبة
+    registration_form_image = db.Column(db.String(255), nullable=True)  # صورة استمارة السيارة
+    plate_image = db.Column(db.String(255), nullable=True)  # صورة لوحة السيارة
+    insurance_file = db.Column(db.String(255), nullable=True)  # ملف التأمين
+    
     # إضافة حقل رابط مجلد Google Drive
     drive_folder_link = db.Column(db.String(500), nullable=True)  # رابط مجلد Google Drive
     
