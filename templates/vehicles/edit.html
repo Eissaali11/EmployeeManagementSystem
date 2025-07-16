@@ -132,17 +132,53 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+/* إصلاح تنسيق القائمة المنسدلة للمشروع */
+#project {
+    background-color: #ffffff !important;
+    color: #495057 !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+}
+
+#project option {
+    background-color: #ffffff !important;
+    color: #495057 !important;
+    padding: 8px 12px !important;
+}
+
+#project option:hover {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+}
+
+#project option:selected {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+/* إصلاح عام للقوائم المنسدلة */
+.form-select {
+    background-color: #ffffff !important;
+    color: #495057 !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+.form-select option {
+    background-color: #ffffff !important;
+    color: #495057 !important;
+}
+</style>
+
 <script>
 $(document).ready(function() {
-    // تحسين القائمة المنسدلة للمشاريع مع البحث
-    $('#project').select2({
-        placeholder: 'اختر المشروع',
-        allowClear: true,
-        language: {
-            noResults: function() {
-                return 'لا توجد نتائج';
-            }
-        }
+    // إضافة وظيفة بحث بسيطة للقائمة المنسدلة
+    $('#project').on('focus', function() {
+        $(this).css('background-color', '#ffffff');
+        $(this).css('color', '#495057');
     });
 });
 </script>
