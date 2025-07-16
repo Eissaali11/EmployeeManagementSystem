@@ -452,7 +452,7 @@ body {
                                             data-person-national-id="{{ record.driver_residency_number|e }}"
                                             data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                             data-notes="{{ record.notes|e if record.notes else '' }}"
-                                            data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
+                                            data-employee-id="{{ record.driver_employee.employee_id if record.driver_employee else '' }}"
                                             data-employee-mobile="{{ record.driver_employee.mobile if record.driver_employee else '' }}"
                                             data-employee-mobile-personal="{{ record.driver_employee.mobilePersonal if record.driver_employee else '' }}"
                                             data-employee-departments="{{ (record.driver_employee.departments|map(attribute='name')|join(', ')) if record.driver_employee and record.driver_employee.departments else '' }}"
@@ -548,7 +548,7 @@ body {
                                                 data-person-national-id="{{ record.driver_residency_number|e }}"
                                                 data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                                 data-notes="{{ record.notes|e if record.notes else '' }}"
-                                                data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
+                                                data-employee-id="{{ record.driver_employee.employee_id if record.driver_employee else '' }}"
                                                 data-employee-mobile="{{ record.driver_employee.mobile if record.driver_employee else '' }}"
                                                 data-employee-mobile-personal="{{ record.driver_employee.mobilePersonal if record.driver_employee else '' }}"
                                                 data-employee-departments="{{ (record.driver_employee.departments|map(attribute='name')|join(', ')) if record.driver_employee and record.driver_employee.departments else '' }}"
@@ -2419,7 +2419,12 @@ function shareHandoverRecord(button) {
         shareText += `• الرقم الشخصي: ${personPhone}\n`;
     }
     
-    // إضافة رقم جوال العمل (من mobile - وهو الرقم الوظيفي)
+    // إضافة الرقم الوظيفي (من employee_id الفعلي وليس mobile)
+    if (employeeId && employeeId.trim() !== '' && employeeId !== 'null') {
+        shareText += `• الرقم الوظيفي: ${employeeId}\n`;
+    }
+    
+    // إضافة رقم جوال العمل (من mobile)
     if (employeeMobile && employeeMobile.trim() !== '' && employeeMobile !== 'null') {
         shareText += `• رقم جوال العمل: ${employeeMobile}\n`;
     }
