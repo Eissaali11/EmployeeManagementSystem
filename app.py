@@ -344,6 +344,7 @@ with app.app_context():
     
     from routes.employee_portal import employee_portal_bp
     from routes.insights import insights_bp
+    from routes.external_safety import external_safety_bp
     
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
@@ -367,6 +368,7 @@ with app.app_context():
     # app.register_blueprint(workshop_reports_bp, url_prefix='/workshop-reports')
     app.register_blueprint(employee_portal_bp, url_prefix='/employee-portal')
     app.register_blueprint(insights_bp, url_prefix='/insights')
+    app.register_blueprint(external_safety_bp)
 
     
     # إضافة دوال مساعدة لقوالب Jinja

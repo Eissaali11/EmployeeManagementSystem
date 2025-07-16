@@ -229,6 +229,12 @@
                                 <span>السيارات المخصصة حالياً</span>
                             </a>
                         </li>
+                        <li class="nav-item mb-1">
+                            <a href="{{ url_for('external_safety.admin_external_safety_checks') }}" class="nav-link nav-link-custom {% if '/admin/external-safety-checks' in request.path %}active{% endif %}">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <span>إدارة فحوصات السلامة</span>
+                            </a>
+                        </li>
 
                         {% endif %}
                         
@@ -311,6 +317,8 @@
                                 تكاليف الرسوم
                             {% elif '/vehicles' in request.path %}
                                 نظام إدارة السيارات
+                            {% elif '/admin/external-safety-checks' in request.path %}
+                                إدارة فحوصات السلامة
                             {% elif '/reports' in request.path %}
                                 التقارير والإحصائيات
                             {% elif '/employee-stats' in request.path %}
