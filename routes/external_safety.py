@@ -243,6 +243,57 @@ def admin_view_safety_check(check_id):
         return redirect(url_for('main.index'))
     
     safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    
+    # تحديث مسار الصور المحفوظة في قاعدة البيانات
+    if safety_check.safety_images:
+        for img in safety_check.safety_images:
+            if img.image_path and not img.image_path.startswith('static/'):
+                img.image_path = 'static/' + img.image_path
+    
+    db.session.commit()
+    
+    return render_template('admin_view_safety_check.html', safety_check=safety_check)
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/reject', methods=['GET', 'POST'])
+def reject_safety_check_page(check_id):
+    """صفحة رفض طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect(url_for('main.index'))
+    
+    safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    
+    if request.method == 'POST':
+        # معالجة رفض الطلب
+        rejection_reason = request.form.get('rejection_reason')
+        
+        if not rejection_reason or not rejection_reason.strip():
+            flash('يرجى كتابة سبب الرفض', 'error')
+            return render_template('admin_reject_safety_check.html', safety_check=safety_check)
+        
+        # تحديث حالة الطلب
+        safety_check.approval_status = 'rejected'
+        safety_check.rejection_reason = rejection_reason.strip()
+        safety_check.approved_by = current_user.id
+        safety_check.approved_at = datetime.now()
+        
+        db.session.commit()
+        
+        # تسجيل العملية
+        log_audit(
+            user_id=current_user.id,
+            action='reject',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم رفض طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number}. السبب: {rejection_reason}'
+        )
+        
+        current_app.logger.info(f'تم رفض طلب فحص السلامة ID={safety_check.id} بواسطة {current_user.name}')
+        
+        flash('تم رفض الطلب بنجاح', 'success')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+    
+    return render_template('admin_reject_safety_check.html', safety_check=safety_check)
     return render_template('admin_view_safety_check.html', safety_check=safety_check)
 
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/approve', methods=['POST'])
