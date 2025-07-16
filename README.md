@@ -1,5 +1,45 @@
 # نُظم - Arabic Employee Management System
 
+
+## clone it -> make env file -> activate it ->  config the .env like the following -> run create_test_data.py -> run project 
+
+
+## env file 
+```
+# متغيرات قاعدة البيانات
+# ملاحظة: يبدو أن الاستضافة تستخدم MySQL وليس PostgreSQL
+# صيغة الاتصال بـ MySQL مع ترميز الرموز الخاصة في كلمة المرور
+DATABASE_URL="mysql://username:password@localhost:3306/u800258840_eissa"
+
+# مفتاح سري للتطبيق (مطلوب لـ Flask)
+SECRET_KEY=1234567890987654321
+
+# إعدادات تويليو للإشعارات عبر الرسائل النصية 
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token  
+TWILIO_PHONE_NUMBER=your_twilio_phone_number
+
+# إعدادات Firebase للمصادقة
+FIREBASE_API_KEY=AIzaSyCUATPbRt7hMivQwtDkMNg7G1skrOVuBSA
+FIREBASE_PROJECT_ID=tesstapfir-1adc0
+FIREBASE_APP_ID=1:120689771242:web:d9984d7affe482717f8d93
+FIREBASE_AUTH_DOMAIN=tesstapfir-1adc0.firebaseapp.com
+FIREBASE_STORAGE_BUCKET=tesstapfir-1adc0.firebasestorage.app
+FIREBASE_MESSAGING_SENDER_ID=120689771242
+
+# إعدادات التطبيق
+FLASK_ENV=production
+FLASK_DEBUG=False
+
+# المنطقة الزمنية (مهم للتواريخ الهجرية)
+TZ=Asia/Riyadh
+
+# إعدادات إضافية للنشر على استضافة مشتركة
+SERVER_NAME=eissa.site
+APPLICATION_ROOT=/
+PREFERRED_URL_SCHEME=https
+```
+
 ## Overview
 
 نُظم is a comprehensive Arabic employee management system with a complete RESTful API. The system provides employee lifecycle management, vehicle tracking, attendance monitoring, and detailed reporting capabilities with full Arabic language support.
