@@ -247,18 +247,34 @@
     </div>
 </div>
 
-<!-- نافذة منبثقة لعرض الصورة -->
+<!-- نافذة منبثقة لعرض الصورة مع تكبير/تصغير -->
 <div class="modal fade" id="imageModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="imageModalTitle">صورة فحص السلامة</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <div class="ml-auto">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="zoomImage(-0.2)">
+                        <i class="fas fa-search-minus"></i> تصغير
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="zoomImage(0.2)">
+                        <i class="fas fa-search-plus"></i> تكبير
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetZoom()">
+                        <i class="fas fa-expand-arrows-alt"></i> إعادة تعيين
+                    </button>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
             </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" alt="صورة فحص السلامة" class="img-fluid">
+            <div class="modal-body text-center" style="max-height: 70vh; overflow: auto;">
+                <div id="imageContainer" style="position: relative; display: inline-block;">
+                    <img id="modalImage" 
+                         src="" 
+                         alt="صورة فحص السلامة" 
+                         style="max-width: 100%; height: auto; cursor: grab; transition: transform 0.2s;">
+                </div>
                 <p id="modalDescription" class="mt-3 text-muted"></p>
             </div>
         </div>
@@ -302,13 +318,108 @@
 </div>
 
 <script>
+    let currentZoom = 1;
+    let isDragging = false;
+    let startX, startY, initialX, initialY;
+    
     function showImageModal(imageSrc, description) {
         document.getElementById('modalImage').src = imageSrc;
         document.getElementById('modalDescription').textContent = description;
+        resetZoom();
         $('#imageModal').modal('show');
     }
     
-
+    function zoomImage(deltaZoom) {
+        currentZoom += deltaZoom;
+        if (currentZoom < 0.5) currentZoom = 0.5;
+        if (currentZoom > 3) currentZoom = 3;
+        
+        const img = document.getElementById('modalImage');
+        img.style.transform = `scale(${currentZoom})`;
+        img.style.cursor = currentZoom > 1 ? 'grab' : 'grab';
+    }
+    
+    function resetZoom() {
+        currentZoom = 1;
+        const img = document.getElementById('modalImage');
+        img.style.transform = 'scale(1)';
+        img.style.cursor = 'grab';
+    }
+    
+    // إضافة دعم السحب والإفلات للصور المكبرة
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalImage = document.getElementById('modalImage');
+        
+        modalImage.addEventListener('mousedown', function(e) {
+            if (currentZoom > 1) {
+                isDragging = true;
+                startX = e.clientX - initialX;
+                startY = e.clientY - initialY;
+                modalImage.style.cursor = 'grabbing';
+            }
+        });
+        
+        modalImage.addEventListener('mousemove', function(e) {
+            if (isDragging && currentZoom > 1) {
+                e.preventDefault();
+                initialX = e.clientX - startX;
+                initialY = e.clientY - startY;
+                modalImage.style.transform = `scale(${currentZoom}) translate(${initialX}px, ${initialY}px)`;
+            }
+        });
+        
+        modalImage.addEventListener('mouseup', function() {
+            isDragging = false;
+            modalImage.style.cursor = currentZoom > 1 ? 'grab' : 'grab';
+        });
+        
+        modalImage.addEventListener('mouseleave', function() {
+            isDragging = false;
+            modalImage.style.cursor = currentZoom > 1 ? 'grab' : 'grab';
+        });
+        
+        // دعم التكبير/التصغير بالماوس
+        modalImage.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            zoomImage(delta);
+        });
+        
+        // دعم اللمس للأجهزة المحمولة
+        let touchDistance = 0;
+        let touchStartDistance = 0;
+        
+        modalImage.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                touchStartDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                touchDistance = touchStartDistance;
+            }
+        });
+        
+        modalImage.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                const delta = (currentDistance - touchDistance) / 100;
+                zoomImage(delta);
+                touchDistance = currentDistance;
+            }
+        });
+        
+        // إعادة تعيين الموضع عند إغلاق النافذة
+        $('#imageModal').on('hidden.bs.modal', function () {
+            resetZoom();
+            initialX = 0;
+            initialY = 0;
+        });
+    });
     
     function showDeleteModal() {
         $('#deleteModal').modal('show');
