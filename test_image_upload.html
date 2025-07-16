@@ -31,25 +31,32 @@
         .image-container {
             position: relative;
             width: 100%;
-            height: 250px;
+            height: auto;
+            min-height: 200px;
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 15px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .image-preview-item img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
         }
         .description-input {
             display: block !important;
             width: 100% !important;
             margin-top: 15px !important;
-            margin-bottom: 10px !important;
-            border: 3px solid #667eea !important;
+            margin-bottom: 15px !important;
+            border: 2px solid #667eea !important;
             border-radius: 8px !important;
-            padding: 12px 15px !important;
-            font-size: 1rem !important;
+            padding: 15px !important;
+            font-size: 1.1rem !important;
             background: white !important;
             color: #333 !important;
             font-family: 'Cairo', sans-serif !important;
@@ -57,7 +64,7 @@
             box-sizing: border-box !important;
             visibility: visible !important;
             opacity: 1 !important;
-            min-height: 45px !important;
+            min-height: 55px !important;
         }
         .remove-btn {
             position: absolute;
@@ -82,17 +89,24 @@
                 padding: 15px !important;
             }
             .image-container {
-                height: 200px !important;
+                height: auto !important;
+                min-height: 150px !important;
                 margin-bottom: 15px !important;
+            }
+            .image-preview-item img {
+                max-height: 250px !important;
+                object-fit: contain !important;
             }
             .description-input {
                 width: 100% !important;
                 font-size: 1.1rem !important;
                 padding: 15px !important;
                 margin-top: 15px !important;
+                margin-bottom: 15px !important;
                 box-sizing: border-box !important;
-                min-height: 50px !important;
-                border: 3px solid #667eea !important;
+                min-height: 55px !important;
+                border: 2px solid #667eea !important;
+                border-radius: 8px !important;
             }
         }
     </style>
@@ -168,13 +182,16 @@
                 descInput.style.width = '100%';
                 descInput.style.boxSizing = 'border-box';
                 descInput.style.marginTop = '15px';
+                descInput.style.marginBottom = '15px';
                 descInput.style.padding = '15px';
-                descInput.style.border = '3px solid #667eea';
+                descInput.style.border = '2px solid #667eea';
                 descInput.style.borderRadius = '8px';
-                descInput.style.fontSize = '1rem';
+                descInput.style.fontSize = '1.1rem';
                 descInput.style.backgroundColor = 'white';
                 descInput.style.color = '#333';
-                descInput.style.minHeight = '50px';
+                descInput.style.minHeight = '55px';
+                descInput.style.visibility = 'visible';
+                descInput.style.opacity = '1';
                 descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
                 
                 // إضافة العناصر للحاوية الرئيسية
