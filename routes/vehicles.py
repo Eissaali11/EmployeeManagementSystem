@@ -19,7 +19,7 @@ from models import (
         Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
         VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
-        Department, ExternalAuthorization
+        Department, ExternalAuthorization, Module, Permission, UserRole
 )
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
@@ -4619,9 +4619,15 @@ def upload_document(id):
     vehicle = Vehicle.query.get_or_404(id)
     
     # التحقق من صلاحية الوصول
-    if not current_user.has_permission('can_edit_vehicles'):
-        flash('ليس لديك صلاحية لتعديل بيانات السيارات', 'error')
-        return redirect(url_for('vehicles.view', id=id))
+    try:
+        if not current_user.has_permission(Module.VEHICLES, Permission.EDIT):
+            flash('ليس لديك صلاحية لتعديل بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+    except:
+        # في حالة عدم وجود صلاحيات، السماح للمديرين أو تخطي للتجربة
+        if not hasattr(current_user, 'role') or current_user.role != UserRole.ADMIN:
+            flash('ليس لديك صلاحية لتعديل بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
     
     document_type = request.form.get('document_type')
     if 'file' not in request.files:
@@ -4692,9 +4698,15 @@ def delete_document(id):
     vehicle = Vehicle.query.get_or_404(id)
     
     # التحقق من صلاحية الوصول
-    if not current_user.has_permission('can_edit_vehicles'):
-        flash('ليس لديك صلاحية لحذف بيانات السيارات', 'error')
-        return redirect(url_for('vehicles.view', id=id))
+    try:
+        if not current_user.has_permission(Module.VEHICLES, Permission.DELETE):
+            flash('ليس لديك صلاحية لحذف بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+    except:
+        # في حالة عدم وجود صلاحيات، السماح للمديرين أو تخطي للتجربة
+        if not hasattr(current_user, 'role') or current_user.role != UserRole.ADMIN:
+            flash('ليس لديك صلاحية لحذف بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
     
     document_type = request.form.get('document_type')
     
