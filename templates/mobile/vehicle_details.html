@@ -448,8 +448,8 @@ body {
                                             data-handover-id="{{ record.id }}"
                                             data-handover-type="{{ record.handover_type }}"
                                             data-person-name="{{ record.person_name|e }}"
-                                            data-person-phone="{{ record.person_phone|e }}"
-                                            data-person-national-id="{{ record.person_national_id|e }}"
+                                            data-person-phone="{{ record.driver_phone_number|e }}"
+                                            data-person-national-id="{{ record.driver_residency_number|e }}"
                                             data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                             data-notes="{{ record.notes|e if record.notes else '' }}"
                                             data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
@@ -544,8 +544,8 @@ body {
                                                 data-handover-id="{{ record.id }}"
                                                 data-handover-type="{{ record.handover_type }}"
                                                 data-person-name="{{ record.person_name|e }}"
-                                                data-person-phone="{{ record.person_phone|e }}"
-                                                data-person-national-id="{{ record.person_national_id|e }}"
+                                                data-person-phone="{{ record.driver_phone_number|e }}"
+                                                data-person-national-id="{{ record.driver_residency_number|e }}"
                                                 data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                                 data-notes="{{ record.notes|e if record.notes else '' }}"
                                                 data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
@@ -2419,14 +2419,14 @@ function shareHandoverRecord(button) {
         shareText += `• الرقم الشخصي: ${personPhone}\n`;
     }
     
-    // إضافة رقم الموظف الوظيفي (من mobile)
+    // إضافة رقم جوال العمل (من mobile - وهو الرقم الوظيفي)
     if (employeeMobile && employeeMobile.trim() !== '' && employeeMobile !== 'null') {
-        shareText += `• الرقم الوظيفي: ${employeeMobile}\n`;
+        shareText += `• رقم جوال العمل: ${employeeMobile}\n`;
     }
     
-    // إضافة جوال العمل (من mobilePersonal)
+    // إضافة الرقم الشخصي (من mobilePersonal)
     if (employeeMobilePersonal && employeeMobilePersonal.trim() !== '' && employeeMobilePersonal !== 'null') {
-        shareText += `• رقم جوال العمل: ${employeeMobilePersonal}\n`;
+        shareText += `• رقم الجوال الشخصي: ${employeeMobilePersonal}\n`;
     }
     
     // إضافة معلومات الأقسام
