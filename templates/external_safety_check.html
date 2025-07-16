@@ -142,6 +142,32 @@
             margin-top: 20px;
         }
         
+        @media (max-width: 768px) {
+            .image-preview {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .image-preview-item {
+                width: 100% !important;
+                min-height: auto !important;
+                padding: 15px !important;
+            }
+            
+            .image-container {
+                height: 220px !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .description-input {
+                width: 100% !important;
+                font-size: 1rem !important;
+                padding: 12px !important;
+                margin-top: 10px !important;
+                border-width: 2px !important;
+            }
+        }
+        
         .image-preview-item {
             position: relative;
             background: white;
@@ -187,7 +213,7 @@
         
         .description-input {
             display: block !important;
-            width: calc(100% - 24px) !important;
+            width: 100% !important;
             margin-top: 10px !important;
             margin-bottom: 5px !important;
             border: 2px solid #667eea !important;
@@ -287,6 +313,7 @@
         @media (max-width: 768px) {
             .main-container {
                 margin: 10px;
+                border-radius: 15px;
             }
             
             .header h1 {
@@ -298,12 +325,67 @@
             }
             
             .section {
-                padding: 20px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .image-preview {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            
+            .image-preview-item {
+                width: 100% !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .image-container {
+                height: 180px !important;
+                margin-bottom: 10px !important;
+            }
+            
+            .description-input {
+                width: 100% !important;
+                font-size: 1rem !important;
+                padding: 12px !important;
+                margin-top: 10px !important;
+                box-sizing: border-box !important;
             }
             
             .image-preview-item {
                 width: 100px;
                 height: 100px;
+            }
+            
+            .image-upload-area {
+                padding: 20px !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .image-upload-area i {
+                font-size: 2rem !important;
+            }
+            
+            .image-upload-area p {
+                font-size: 1rem !important;
+            }
+            
+            .section {
+                border-radius: 10px !important;
+            }
+            
+            .form-group {
+                margin-bottom: 15px !important;
+            }
+            
+            .form-control {
+                font-size: 1rem !important;
+                padding: 12px !important;
+            }
+            
+            .btn {
+                font-size: 1rem !important;
+                padding: 10px 20px !important;
             }
         }
     </style>
@@ -637,6 +719,13 @@
                 descInput.style.display = 'block';
                 descInput.style.width = '100%';
                 descInput.style.boxSizing = 'border-box';
+                descInput.style.marginTop = '10px';
+                descInput.style.padding = '10px 12px';
+                descInput.style.border = '2px solid #667eea';
+                descInput.style.borderRadius = '8px';
+                descInput.style.fontSize = '0.95rem';
+                descInput.style.backgroundColor = 'white';
+                descInput.style.color = '#333';
                 descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
                 descInput.oninput = (e) => updateImageDescription(image.id, e.target.value);
                 
