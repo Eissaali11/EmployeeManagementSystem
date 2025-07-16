@@ -2167,7 +2167,7 @@ def create_handover_mobile():
             log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
             
             flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
-            return redirect(url_for('mobile.vehicle_checklist_list')) # توجيه المستخدم لقائمة التقارير
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
 
         except Exception as e:
             db.session.rollback()
