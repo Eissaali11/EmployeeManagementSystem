@@ -361,142 +361,192 @@ body {
         </div>
     </div>
     <div class="card-body p-0">
-        <div class="documents-grid">
+        <div class="documents-list p-3">
             <!-- صورة الاستمارة -->
-            <div class="document-item">
-                <div class="document-icon">
-                    <i class="fas fa-file-alt text-primary"></i>
-                </div>
-                <div class="document-content">
-                    <h6>صورة الاستمارة</h6>
-                    {% if vehicle.registration_form_image %}
-                    <div class="document-status text-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>متوفرة</span>
+            <div class="document-card mb-3 p-3 border rounded shadow-sm">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="document-icon-large me-3">
+                        <i class="fas fa-file-alt text-primary fs-3"></i>
                     </div>
-                    <div class="document-actions">
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewDocument('{{ '/' + vehicle.registration_form_image }}', 'صورة الاستمارة')">
-                            <i class="fas fa-eye"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="document-title mb-1">صورة الاستمارة</h5>
+                        <p class="document-desc text-muted mb-0">استمارة تسجيل السيارة</p>
+                    </div>
+                </div>
+                <div class="document-status-section">
+                    {% if vehicle.registration_form_image %}
+                    <div class="alert alert-success py-2 mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>الوثيقة متوفرة ومرفوعة</strong>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary flex-fill" onclick="viewDocument('{{ '/' + vehicle.registration_form_image }}', 'صورة الاستمارة')">
+                            <i class="fas fa-eye me-1"></i>
+                            عرض الوثيقة
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('registration_form', 'صورة الاستمارة')">
-                            <i class="fas fa-trash"></i>
+                        <button class="btn btn-outline-danger flex-fill" onclick="deleteDocument('registration_form', 'صورة الاستمارة')">
+                            <i class="fas fa-trash me-1"></i>
+                            حذف
                         </button>
                     </div>
                     {% else %}
-                    <div class="document-status text-muted">
-                        <i class="fas fa-times-circle"></i>
-                        <span>غير متوفرة</span>
+                    <div class="alert alert-warning py-2 mb-2">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>الوثيقة غير متوفرة</strong>
                     </div>
+                    <button class="btn btn-primary w-100" onclick="toggleDocumentForms()">
+                        <i class="fas fa-upload me-1"></i>
+                        رفع الوثيقة
+                    </button>
                     {% endif %}
                 </div>
             </div>
 
             <!-- صورة اللوحة -->
-            <div class="document-item">
-                <div class="document-icon">
-                    <i class="fas fa-id-card text-success"></i>
-                </div>
-                <div class="document-content">
-                    <h6>صورة اللوحة</h6>
-                    {% if vehicle.plate_image %}
-                    <div class="document-status text-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>متوفرة</span>
+            <div class="document-card mb-3 p-3 border rounded shadow-sm">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="document-icon-large me-3">
+                        <i class="fas fa-id-card text-success fs-3"></i>
                     </div>
-                    <div class="document-actions">
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewDocument('{{ '/' + vehicle.plate_image }}', 'صورة اللوحة')">
-                            <i class="fas fa-eye"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="document-title mb-1">صورة اللوحة</h5>
+                        <p class="document-desc text-muted mb-0">صورة لوحة السيارة</p>
+                    </div>
+                </div>
+                <div class="document-status-section">
+                    {% if vehicle.plate_image %}
+                    <div class="alert alert-success py-2 mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>الوثيقة متوفرة ومرفوعة</strong>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary flex-fill" onclick="viewDocument('{{ '/' + vehicle.plate_image }}', 'صورة اللوحة')">
+                            <i class="fas fa-eye me-1"></i>
+                            عرض الوثيقة
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('plate', 'صورة اللوحة')">
-                            <i class="fas fa-trash"></i>
+                        <button class="btn btn-outline-danger flex-fill" onclick="deleteDocument('plate', 'صورة اللوحة')">
+                            <i class="fas fa-trash me-1"></i>
+                            حذف
                         </button>
                     </div>
                     {% else %}
-                    <div class="document-status text-muted">
-                        <i class="fas fa-times-circle"></i>
-                        <span>غير متوفرة</span>
+                    <div class="alert alert-warning py-2 mb-2">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>الوثيقة غير متوفرة</strong>
                     </div>
+                    <button class="btn btn-primary w-100" onclick="toggleDocumentForms()">
+                        <i class="fas fa-upload me-1"></i>
+                        رفع الوثيقة
+                    </button>
                     {% endif %}
                 </div>
             </div>
 
             <!-- ملف التأمين -->
-            <div class="document-item">
-                <div class="document-icon">
-                    <i class="fas fa-shield-alt text-warning"></i>
-                </div>
-                <div class="document-content">
-                    <h6>ملف التأمين</h6>
-                    {% if vehicle.insurance_file %}
-                    <div class="document-status text-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>متوفرة</span>
+            <div class="document-card mb-3 p-3 border rounded shadow-sm">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="document-icon-large me-3">
+                        <i class="fas fa-shield-alt text-warning fs-3"></i>
                     </div>
-                    <div class="document-actions">
-                        <a href="{{ '/' + vehicle.insurance_file }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="document-title mb-1">ملف التأمين</h5>
+                        <p class="document-desc text-muted mb-0">وثيقة تأمين السيارة</p>
+                    </div>
+                </div>
+                <div class="document-status-section">
+                    {% if vehicle.insurance_file %}
+                    <div class="alert alert-success py-2 mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>الوثيقة متوفرة ومرفوعة</strong>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ '/' + vehicle.insurance_file }}" target="_blank" class="btn btn-outline-primary flex-fill">
+                            <i class="fas fa-eye me-1"></i>
+                            عرض الوثيقة
                         </a>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('insurance', 'ملف التأمين')">
-                            <i class="fas fa-trash"></i>
+                        <button class="btn btn-outline-danger flex-fill" onclick="deleteDocument('insurance', 'ملف التأمين')">
+                            <i class="fas fa-trash me-1"></i>
+                            حذف
                         </button>
                     </div>
                     {% else %}
-                    <div class="document-status text-muted">
-                        <i class="fas fa-times-circle"></i>
-                        <span>غير متوفرة</span>
+                    <div class="alert alert-warning py-2 mb-2">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>الوثيقة غير متوفرة</strong>
                     </div>
+                    <button class="btn btn-primary w-100" onclick="toggleDocumentForms()">
+                        <i class="fas fa-upload me-1"></i>
+                        رفع الوثيقة
+                    </button>
                     {% endif %}
                 </div>
             </div>
         </div>
 
         <!-- نماذج رفع الوثائق -->
-        <div id="documentForms" class="document-forms" style="display: none;">
-            <div class="form-divider">
-                <h6><i class="fas fa-upload me-2"></i>رفع الوثائق</h6>
+        <div id="documentForms" class="document-forms p-3" style="display: none;">
+            <div class="form-divider mb-3">
+                <h5 class="text-primary"><i class="fas fa-upload me-2"></i>رفع الوثائق</h5>
+                <p class="text-muted">اختر نوع الوثيقة وارفع الملف المطلوب</p>
             </div>
             
             <!-- نموذج رفع الاستمارة -->
-            <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
-                <input type="hidden" name="document_type" value="registration_form">
-                <div class="input-group mb-2">
-                    <span class="input-group-text">
-                        <i class="fas fa-file-alt"></i>
-                    </span>
-                    <input type="file" name="file" class="form-control" accept="image/*,application/pdf" required>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload"></i> استمارة
-                    </button>
+            <div class="upload-form-card mb-3 p-3 border rounded shadow-sm">
+                <div class="mb-2">
+                    <h6 class="text-primary"><i class="fas fa-file-alt me-2"></i>صورة الاستمارة</h6>
+                    <small class="text-muted">يقبل ملفات الصور و PDF</small>
                 </div>
-            </form>
+                <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
+                    <input type="hidden" name="document_type" value="registration_form">
+                    <div class="mb-2">
+                        <input type="file" name="file" class="form-control" accept="image/*,application/pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-upload me-1"></i> رفع صورة الاستمارة
+                    </button>
+                </form>
+            </div>
 
             <!-- نموذج رفع اللوحة -->
-            <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
-                <input type="hidden" name="document_type" value="plate">
-                <div class="input-group mb-2">
-                    <span class="input-group-text">
-                        <i class="fas fa-id-card"></i>
-                    </span>
-                    <input type="file" name="file" class="form-control" accept="image/*,application/pdf" required>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-upload"></i> لوحة
-                    </button>
+            <div class="upload-form-card mb-3 p-3 border rounded shadow-sm">
+                <div class="mb-2">
+                    <h6 class="text-success"><i class="fas fa-id-card me-2"></i>صورة اللوحة</h6>
+                    <small class="text-muted">يقبل ملفات الصور و PDF</small>
                 </div>
-            </form>
+                <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
+                    <input type="hidden" name="document_type" value="plate">
+                    <div class="mb-2">
+                        <input type="file" name="file" class="form-control" accept="image/*,application/pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-upload me-1"></i> رفع صورة اللوحة
+                    </button>
+                </form>
+            </div>
 
             <!-- نموذج رفع التأمين -->
-            <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
-                <input type="hidden" name="document_type" value="insurance">
-                <div class="input-group mb-2">
-                    <span class="input-group-text">
-                        <i class="fas fa-shield-alt"></i>
-                    </span>
-                    <input type="file" name="file" class="form-control" accept="image/*,application/pdf,.doc,.docx" required>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-upload"></i> تأمين
-                    </button>
+            <div class="upload-form-card mb-3 p-3 border rounded shadow-sm">
+                <div class="mb-2">
+                    <h6 class="text-warning"><i class="fas fa-shield-alt me-2"></i>ملف التأمين</h6>
+                    <small class="text-muted">يقبل ملفات الصور، PDF، و Word</small>
                 </div>
-            </form>
+                <form method="POST" action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" enctype="multipart/form-data" class="upload-form">
+                    <input type="hidden" name="document_type" value="insurance">
+                    <div class="mb-2">
+                        <input type="file" name="file" class="form-control" accept="image/*,application/pdf,.doc,.docx" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="fas fa-upload me-1"></i> رفع ملف التأمين
+                    </button>
+                </form>
+            </div>
+            
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-outline-secondary" onclick="toggleDocumentForms()">
+                    <i class="fas fa-times me-1"></i>
+                    إغلاق
+                </button>
+            </div>
         </div>
     </div>
 </div>
