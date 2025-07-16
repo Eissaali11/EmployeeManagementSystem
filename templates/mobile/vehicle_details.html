@@ -125,7 +125,7 @@ body {
     <div class="card-body p-0">
         <div class="row g-0">
             <!-- تعديل بيانات السيارة -->
-            <div class="col-6">
+            <div class="col-12">
                 <a href="{{ url_for('mobile.edit_vehicle', vehicle_id=vehicle.id) }}" class="quick-action-btn">
                     <div class="quick-action-icon bg-warning">
                         <i class="fas fa-edit"></i>
@@ -135,24 +135,6 @@ body {
                         <span class="quick-action-subtitle">بيانات السيارة</span>
                     </div>
                 </a>
-            </div>
-            
-            <!-- حذف السيارة -->
-            <div class="col-6">
-                <form method="POST" action="{{ url_for('mobile.delete_vehicle', vehicle_id=vehicle.id) }}" 
-                      style="display: inline;" class="quick-action-btn-form">
-                    {{ csrf_token() }}
-                    <button type="submit" class="quick-action-btn border-0 bg-transparent w-100 h-100" 
-                            onclick="return confirm('هل أنت متأكد من حذف السيارة {{ vehicle.plate_number }}؟\n\nسيتم حذف جميع البيانات المرتبطة بها!')">
-                        <div class="quick-action-icon bg-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </div>
-                        <div class="quick-action-text">
-                            <span class="quick-action-title">حذف</span>
-                            <span class="quick-action-subtitle">السيارة</span>
-                        </div>
-                    </button>
-                </form>
             </div>
         </div>
         

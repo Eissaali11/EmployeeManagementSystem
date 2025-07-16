@@ -654,7 +654,7 @@ def export_employee_documents_pdf(employee_id):
             get_display(arabic_reshaper.reshape("الرقم الوظيفي:")), 
             employee.employee_id, 
             get_display(arabic_reshaper.reshape("القسم:")), 
-            get_display(arabic_reshaper.reshape(employee.department.name if employee.department else '-'))
+            get_display(arabic_reshaper.reshape(', '.join([dept.name for dept in employee.departments]) if employee.departments else '-'))
         ],
         [
             get_display(arabic_reshaper.reshape("رقم الهوية:")), 
@@ -908,7 +908,7 @@ def export_employee_documents_excel(employee_id):
         ['الرقم الوظيفي', employee.employee_id],
         ['رقم الهوية', employee.national_id],
         ['رقم الجوال', employee.mobile],
-        ['القسم', employee.department.name if employee.department else ''],
+        ['القسم', ', '.join([dept.name for dept in employee.departments]) if employee.departments else ''],
         ['المسمى الوظيفي', employee.job_title],
         ['الحالة', employee.status],
         ['الموقع', employee.location or '']
@@ -1084,7 +1084,7 @@ def export_excel():
         # Get employee information
         employee_name = doc.employee.name if doc.employee else "غير متوفر"
         employee_id = doc.employee.employee_id if doc.employee else "غير متوفر"
-        department_name = doc.employee.department.name if doc.employee and doc.employee.department else "غير متوفر"
+        department_name = ', '.join([dept.name for dept in doc.employee.departments]) if doc.employee and doc.employee.departments else "غير متوفر"
         
         # Get document type in Arabic
         doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
@@ -1178,7 +1178,7 @@ def export_excel():
             # Get employee information
             employee_name = doc.employee.name if doc.employee else "غير متوفر"
             employee_id = doc.employee.employee_id if doc.employee else "غير متوفر"
-            department_name = doc.employee.department.name if doc.employee and doc.employee.department else "غير متوفر"
+            department_name = ', '.join([dept.name for dept in doc.employee.departments]) if doc.employee and doc.employee.departments else "غير متوفر"
             
             # Get document type in Arabic
             doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
@@ -1379,8 +1379,8 @@ def export_expiring_excel():
     if document_type:
         query = query.filter(Document.document_type == document_type)
     
-    # تنفيذ الاستعلام مع تحميل بيانات الموظف والقسم
-    query = query.options(selectinload(Document.employee).selectinload(Employee.department))
+    # تنفيذ الاستعلام مع تحميل بيانات الموظف والأقسام
+    query = query.options(selectinload(Document.employee).selectinload(Employee.departments))
     documents = query.all()
     
     # حساب الأيام المتبقية للانتهاء لكل وثيقة
@@ -1489,9 +1489,10 @@ def export_expiring_excel():
     
     # كتابة البيانات
     for row_num, doc in enumerate(documents, 2):
-        # الحصول على اسم الموظف والقسم
+        # الحصول على اسم الموظف والأقسام
         employee_name = doc.employee.name if doc.employee else "غير محدد"
-        department_name = doc.employee.department.name if doc.employee and doc.employee.department else "غير محدد"
+        # استخدام علاقة many-to-many للأقسام
+        department_name = ', '.join([dept.name for dept in doc.employee.departments]) if doc.employee and doc.employee.departments else "غير محدد"
         
         # الحصول على نوع الوثيقة بالعربية
         doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)

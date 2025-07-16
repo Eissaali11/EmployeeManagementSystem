@@ -1,0 +1,526 @@
+{% extends 'mobile/layout.html' %}
+
+{% block title %}تعديل راتب {{ salary.employee.name }} - {{ month_name }} {{ salary.year }}{% endblock %}
+
+{% block header_title %}تعديل الراتب{% endblock %}
+
+{% block header_actions %}
+<button class="mobile-menu-button" aria-label="رجوع" onclick="window.history.back()">
+    <i class="fas fa-arrow-right"></i>
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="edit-salary-page">
+    <!-- رأس بيانات الموظف -->
+    <div class="employee-header">
+        <div class="employee-avatar">
+            {% if salary.employee.profile_image %}
+            <img src="{{ url_for('static', filename='uploads/employees/' + salary.employee.profile_image) }}" 
+                 alt="{{ salary.employee.name }}" 
+                 class="avatar-img">
+            {% else %}
+            <i class="fas fa-user avatar-icon"></i>
+            {% endif %}
+        </div>
+        <div class="employee-info">
+            <h3 class="employee-name">{{ salary.employee.name }}</h3>
+            <p class="employee-details">
+                <span><i class="fas fa-id-card"></i> {{ salary.employee.employee_number or 'غير محدد' }}</span>
+                {% if salary.employee.departments %}
+                <span><i class="fas fa-building"></i> {{ salary.employee.departments[0].name }}</span>
+                {% endif %}
+            </p>
+            <div class="salary-period">
+                <i class="fas fa-calendar"></i>
+                {{ month_name }} {{ salary.year }}
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج التعديل -->
+    <form method="POST" class="edit-form">
+        <div class="form-section">
+            <h4 class="section-title">
+                <i class="fas fa-money-bill-wave"></i>
+                تفاصيل الراتب
+            </h4>
+            
+            <div class="form-group">
+                <label for="basic_salary">الراتب الأساسي</label>
+                <div class="input-wrapper">
+                    <input type="number" 
+                           id="basic_salary" 
+                           name="basic_salary" 
+                           value="{{ salary.basic_salary }}" 
+                           step="0.01" 
+                           min="0"
+                           class="form-control" 
+                           required>
+                    <span class="currency">ريال</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="allowances">البدلات</label>
+                <div class="input-wrapper">
+                    <input type="number" 
+                           id="allowances" 
+                           name="allowances" 
+                           value="{{ salary.allowances or 0 }}" 
+                           step="0.01" 
+                           min="0"
+                           class="form-control">
+                    <span class="currency">ريال</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="bonus">المكافآت والحوافز</label>
+                <div class="input-wrapper">
+                    <input type="number" 
+                           id="bonus" 
+                           name="bonus" 
+                           value="{{ salary.bonus or 0 }}" 
+                           step="0.01" 
+                           min="0"
+                           class="form-control">
+                    <span class="currency">ريال</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="deductions">الخصومات</label>
+                <div class="input-wrapper">
+                    <input type="number" 
+                           id="deductions" 
+                           name="deductions" 
+                           value="{{ salary.deductions or 0 }}" 
+                           step="0.01" 
+                           min="0"
+                           class="form-control">
+                    <span class="currency">ريال</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="overtime_hours">الساعات الإضافية</label>
+                <div class="input-wrapper">
+                    <input type="number" 
+                           id="overtime_hours" 
+                           name="overtime_hours" 
+                           value="{{ salary.overtime_hours or 0 }}" 
+                           step="0.5" 
+                           min="0"
+                           class="form-control">
+                    <span class="currency">ساعة</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h4 class="section-title">
+                <i class="fas fa-cogs"></i>
+                حالة الدفع والملاحظات
+            </h4>
+            
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" 
+                           id="is_paid" 
+                           name="is_paid" 
+                           {{ 'checked' if salary.is_paid else '' }}>
+                    <label for="is_paid" class="checkbox-label">
+                        <i class="fas fa-check-circle"></i>
+                        تم دفع الراتب
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">ملاحظات</label>
+                <textarea id="notes" 
+                          name="notes" 
+                          class="form-control" 
+                          rows="4" 
+                          placeholder="أضف أي ملاحظات خاصة بالراتب...">{{ salary.notes or '' }}</textarea>
+            </div>
+        </div>
+
+        <!-- معاينة صافي الراتب -->
+        <div class="net-salary-preview">
+            <h4 class="preview-title">
+                <i class="fas fa-calculator"></i>
+                معاينة صافي الراتب
+            </h4>
+            <div class="preview-content">
+                <div class="preview-amount" id="net-salary-amount">{{ '{:,.0f}'.format(salary.net_salary) }} ريال</div>
+                <div class="preview-calculation" id="salary-breakdown">
+                    <span class="basic">{{ '{:,.0f}'.format(salary.basic_salary) }}</span>
+                    <span class="plus">+</span>
+                    <span class="allowances">{{ '{:,.0f}'.format(salary.allowances or 0) }}</span>
+                    <span class="plus">+</span>
+                    <span class="bonus">{{ '{:,.0f}'.format(salary.bonus or 0) }}</span>
+                    <span class="minus">-</span>
+                    <span class="deductions">{{ '{:,.0f}'.format(salary.deductions or 0) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- أزرار الحفظ -->
+        <div class="form-actions">
+            <button type="submit" class="action-btn save-btn">
+                <i class="fas fa-save"></i>
+                حفظ التغييرات
+            </button>
+            
+            <a href="{{ url_for('mobile.salary_details', salary_id=salary.id) }}" class="action-btn cancel-btn">
+                <i class="fas fa-times"></i>
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+.edit-salary-page {
+    padding: 15px;
+    padding-top: 85px !important; /* مسافة من أعلى لتجنب اختفاء المحتوى خلف البانر */
+    padding-bottom: 120px !important; /* مسافة من أسفل لتجنب اختفاء المحتوى خلف القائمة السفلية */
+    min-height: calc(100vh - 85px - 120px);
+}
+
+/* رأس بيانات الموظف */
+.employee-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    margin-top: 10px; /* مسافة إضافية من أعلى */
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    z-index: 1;
+}
+
+.employee-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-icon {
+    font-size: 24px;
+    color: white;
+}
+
+.employee-info {
+    flex: 1;
+}
+
+.employee-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.employee-details {
+    margin: 0 0 8px 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.employee-details span {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.employee-details i {
+    width: 16px;
+    margin-left: 8px;
+}
+
+.salary-period {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: inline-block;
+}
+
+/* نموذج التعديل */
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-section {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title i {
+    color: #4f46e5;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 60px 12px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.currency {
+    position: absolute;
+    left: 15px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #4f46e5;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #1f2937;
+    cursor: pointer;
+    margin: 0;
+}
+
+.checkbox-label i {
+    color: #4f46e5;
+}
+
+textarea.form-control {
+    padding: 15px;
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* معاينة صافي الراتب */
+.net-salary-preview {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+}
+
+.preview-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.preview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.preview-amount {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.preview-calculation {
+    font-size: 14px;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.preview-calculation .plus,
+.preview-calculation .minus {
+    font-weight: 600;
+    margin: 0 2px;
+}
+
+/* أزرار الحفظ */
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+    margin-bottom: 40px; /* مسافة إضافية من أسفل لضمان عدم تداخل الأزرار */
+    position: relative;
+    z-index: 2;
+}
+
+.action-btn {
+    padding: 15px 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
+}
+
+.save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(5, 150, 105, 0.4);
+}
+
+.cancel-btn {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.cancel-btn:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+/* تجاوب مع الشاشات الصغيرة */
+@media (max-width: 480px) {
+    .edit-salary-page {
+        padding: 10px;
+    }
+    
+    .employee-header {
+        padding: 15px;
+    }
+    
+    .employee-name {
+        font-size: 18px;
+    }
+    
+    .form-section {
+        padding: 15px;
+    }
+    
+    .preview-amount {
+        font-size: 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// حساب صافي الراتب تلقائياً
+function calculateNetSalary() {
+    const basic = parseFloat(document.getElementById('basic_salary').value) || 0;
+    const allowances = parseFloat(document.getElementById('allowances').value) || 0;
+    const bonus = parseFloat(document.getElementById('bonus').value) || 0;
+    const deductions = parseFloat(document.getElementById('deductions').value) || 0;
+    
+    const netSalary = basic + allowances + bonus - deductions;
+    
+    // تحديث المعاينة
+    document.getElementById('net-salary-amount').textContent = 
+        new Intl.NumberFormat('ar-SA').format(netSalary) + ' ريال';
+    
+    // تحديث تفاصيل الحساب
+    document.querySelector('.basic').textContent = new Intl.NumberFormat('ar-SA').format(basic);
+    document.querySelector('.allowances').textContent = new Intl.NumberFormat('ar-SA').format(allowances);
+    document.querySelector('.bonus').textContent = new Intl.NumberFormat('ar-SA').format(bonus);
+    document.querySelector('.deductions').textContent = new Intl.NumberFormat('ar-SA').format(deductions);
+}
+
+// ربط الحدث بجميع حقول الإدخال
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['basic_salary', 'allowances', 'bonus', 'deductions'];
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', calculateNetSalary);
+    });
+    
+    // حساب أولي
+    calculateNetSalary();
+});
+</script>
+{% endblock %}

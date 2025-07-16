@@ -19,12 +19,12 @@ from models import (
         Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
         VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
-        Department
+        Department, ExternalAuthorization
 )
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
-# from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
+from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 # from utils.workshop_report import generate_workshop_report_pdf
 # from utils.html_to_pdf import generate_pdf_from_template
 # from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
@@ -601,6 +601,7 @@ def index():
         """عرض قائمة السيارات مع خيارات التصفية"""
         status_filter = request.args.get('status', '')
         make_filter = request.args.get('make', '')
+        search_plate = request.args.get('search_plate', '')
         
         # قاعدة الاستعلام الأساسية
         query = Vehicle.query
@@ -612,6 +613,10 @@ def index():
         # إضافة التصفية حسب الشركة المصنعة إذا تم تحديدها
         if make_filter:
                 query = query.filter(Vehicle.make == make_filter)
+        
+        # إضافة البحث برقم السيارة إذا تم تحديده
+        if search_plate:
+                query = query.filter(Vehicle.plate_number.contains(search_plate))
         
         # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
         makes = db.session.query(Vehicle.make).distinct().all()
@@ -684,6 +689,7 @@ def index():
                 stats=stats,
                 status_filter=status_filter,
                 make_filter=make_filter,
+                search_plate=search_plate,
                 makes=makes,
                 statuses=VEHICLE_STATUS_CHOICES,
                 expiring_documents=expiring_documents
@@ -876,6 +882,158 @@ def view(id):
         
         return render_template(
                 'vehicles/view.html',
+                vehicle=vehicle,
+                rental=rental,
+                workshop_records=workshop_records,
+                project_assignments=project_assignments,
+                handover_records=handover_records,
+                handovers=handovers,
+                periodic_inspections=periodic_inspections,
+                safety_checks=safety_checks,
+                accidents=accidents,
+                external_authorizations=external_authorizations,
+                departments=departments,
+                employees=employees,
+                attachments=attachments,
+                total_maintenance_cost=total_maintenance_cost,
+                days_in_workshop=days_in_workshop,
+                inspection_warnings=inspection_warnings,
+                current_driver=current_driver,
+                previous_drivers=previous_drivers,
+                today=today
+        )
+
+@vehicles_bp.route('/<int:id>/sidebar')
+@login_required
+def view_with_sidebar(id):
+        """عرض تفاصيل سيارة معينة مع القائمة الجانبية المنظمة"""
+        vehicle = Vehicle.query.get_or_404(id)
+        
+        # الحصول على سجلات مختلفة للسيارة
+        rental = VehicleRental.query.filter_by(vehicle_id=id, is_active=True).first()
+        workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
+        project_assignments = VehicleProject.query.filter_by(vehicle_id=id).order_by(VehicleProject.start_date.desc()).all()
+        handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+        
+        # الحصول على سجلات الفحص الدوري وفحص السلامة والحوادث
+        periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
+        safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
+        accidents = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
+        
+        # الحصول على التفويضات الخارجية
+        external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=id).order_by(ExternalAuthorization.created_at.desc()).all()
+        
+        # الحصول على الأقسام والموظفين والمشاريع للنموذج
+        departments = Department.query.all()
+        employees = Employee.query.all()
+        
+        # حساب إجمالي تكلفة الصيانة وأيام الورشة
+        total_maintenance_cost = sum(record.cost for record in workshop_records if record.cost)
+        days_in_workshop = sum(
+                (record.exit_date - record.entry_date).days if record.exit_date else 0
+                for record in workshop_records
+        )
+        
+        # تاريخ اليوم للاستخدام في حسابات الفرق بين التواريخ
+        today = datetime.now().date()
+        
+        # استخراج معلومات السائق الحالي والسائقين السابقين
+        current_driver = None
+        previous_drivers = []
+        
+        # البحث عن آخر سجل تسليم (من حيث التاريخ) للعثور على السائق الحالي
+        delivery_records = [rec for rec in handover_records if rec.handover_type in ['delivery', 'تسليم', 'handover']]
+        delivery_records.sort(key=lambda x: x.handover_date, reverse=True)  # ترتيب حسب التاريخ (الأحدث أولاً)
+        
+        # تعيين أحدث سجل تسليم كسائق حالي والباقي كسائقين سابقين
+        for i, record in enumerate(delivery_records):
+                # الحصول على رقم هاتف الموظف إذا كان متوفراً
+                phone_number = None
+                if record.driver_employee and record.driver_employee.mobile:
+                        phone_number = record.driver_employee.mobile
+                        
+                if i == 0:  # أول سجل بعد الترتيب (الأحدث)
+                        current_driver = {
+                                'name': record.person_name,
+                                'date': record.handover_date,
+                                'formatted_date': format_date_arabic(record.handover_date),
+                                'handover_id': record.id,
+                                'mobile': phone_number,
+                                'employee_id': record.employee_id,
+                                'handover_type': record.handover_type,
+                                'handover_type_ar': 'تسليم' if record.handover_type in ['delivery', 'تسليم', 'handover'] else 'استلام'
+                        }
+                else:
+                        previous_drivers.append({
+                                'name': record.person_name,
+                                'date': record.handover_date,
+                                'formatted_date': format_date_arabic(record.handover_date),
+                                'handover_id': record.id,
+                                'mobile': phone_number,
+                                'employee_id': record.employee_id,
+                                'handover_type': record.handover_type,
+                                'handover_type_ar': 'تسليم' if record.handover_type in ['delivery', 'تسليم', 'handover'] else 'استلام'
+                        })
+        
+        # تنسيق التواريخ
+        for record in workshop_records:
+                record.formatted_entry_date = format_date_arabic(record.entry_date)
+                if record.exit_date:
+                        record.formatted_exit_date = format_date_arabic(record.exit_date)
+        
+        for record in project_assignments:
+                record.formatted_start_date = format_date_arabic(record.start_date)
+                if record.end_date:
+                        record.formatted_end_date = format_date_arabic(record.end_date)
+        
+        for record in handover_records:
+                record.formatted_handover_date = format_date_arabic(record.handover_date)
+                # إضافة معلومات رقم الهاتف للسجل
+                record.mobile = None
+                # تحديد نوع التسليم بالعربية
+                if record.handover_type in ['delivery', 'تسليم', 'handover']:
+                    record.handover_type_ar = 'تسليم'
+                elif record.handover_type in ['return', 'استلام']:
+                    record.handover_type_ar = 'استلام'
+                else:
+                    record.handover_type_ar = record.handover_type
+                if record.driver_employee and record.driver_employee.mobile:
+                        record.mobile = record.driver_employee.mobile
+        
+        for record in periodic_inspections:
+                record.formatted_inspection_date = format_date_arabic(record.inspection_date)
+                record.formatted_expiry_date = format_date_arabic(record.expiry_date)
+        
+        for record in safety_checks:
+                record.formatted_check_date = format_date_arabic(record.check_date)
+        
+        if rental:
+                rental.formatted_start_date = format_date_arabic(rental.start_date)
+                if rental.end_date:
+                        rental.formatted_end_date = format_date_arabic(rental.end_date)
+        
+        # ملاحظات تنبيهية عن انتهاء الفحص الدوري
+        inspection_warnings = []
+        for inspection in periodic_inspections:
+                if inspection.is_expired:
+                        inspection_warnings.append(f"الفحص الدوري منتهي الصلاحية منذ {(datetime.now().date() - inspection.expiry_date).days} يومًا")
+                        break
+                elif inspection.is_expiring_soon:
+                        days_remaining = (inspection.expiry_date - datetime.now().date()).days
+                        inspection_warnings.append(f"الفحص الدوري سينتهي خلال {days_remaining} يومًا")
+                        break
+        
+        # الحصول على المرفقات (صور الورشة للسيارة)
+        attachments = []
+        for workshop_record in workshop_records:
+            workshop_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=workshop_record.id).all()
+            attachments.extend(workshop_images)
+        
+        # إضافة سجلات التسليم/الاستلام للقائمة الجانبية
+        handovers = handover_records
+        
+        return render_template(
+                'vehicles/view_with_sidebar.html',
                 vehicle=vehicle,
                 rental=rental,
                 workshop_records=workshop_records,
@@ -2610,7 +2768,7 @@ def handover_view_public(id):
 
 @vehicles_bp.route('/handover/<int:id>/pdf/public')
 def handover_pdf_public(id):
-    """إنشاء ملف PDF لنموذج تسليم/استلام - نسخة متقدمة"""
+    """إنشاء ملف PDF لنموذج تسليم/استلام باستخدام نفس خط beIN Normal المحسن من نظام الرواتب"""
     try:
         # الحصول على سجل التسليم/الاستلام
         handover = VehicleHandover.query.get_or_404(id)
@@ -4352,7 +4510,7 @@ def allowed_file(filename, allowed_extensions):
 
 # ========== مسارات إدارة Google Drive ==========
 
-@vehicles_bp.route('/vehicles/<int:vehicle_id>/drive-link', methods=['POST'])
+@vehicles_bp.route('/<int:vehicle_id>/drive-link', methods=['POST'])
 @login_required
 def update_drive_link(vehicle_id):
     """تحديث أو حذف رابط Google Drive"""
