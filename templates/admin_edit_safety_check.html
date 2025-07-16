@@ -111,6 +111,17 @@
                                                         <div class="alert alert-warning" style="display: none;">
                                                             <i class="fas fa-exclamation-triangle"></i> لم يتم العثور على الصورة
                                                         </div>
+                                                        
+                                                        <!-- أزرار عرض الصورة -->
+                                                        <div class="btn-group btn-group-sm w-100 mt-2 mb-2">
+                                                            <button type="button" class="btn btn-primary btn-sm" 
+                                                                    onclick="showImageModal('{{ image_url }}')">
+                                                                <i class="fas fa-search-plus"></i> عرض
+                                                            </button>
+                                                            <a href="{{ image_url }}" target="_blank" class="btn btn-secondary btn-sm">
+                                                                <i class="fas fa-external-link-alt"></i> تبويب جديد
+                                                            </a>
+                                                        </div>
                                                     {% else %}
                                                         <div class="alert alert-warning">
                                                             <i class="fas fa-exclamation-triangle"></i> لم يتم العثور على الصورة
@@ -244,9 +255,30 @@
     let startX, startY, initialX, initialY;
     
     function showImageModal(imageSrc) {
-        document.getElementById('modalImage').src = imageSrc;
+        // تحقق من وجود العناصر المطلوبة
+        const modalImageElement = document.getElementById('modalImage');
+        
+        if (!modalImageElement) {
+            console.error('Modal image element not found');
+            // فتح الصورة في تبويب جديد كبديل
+            window.open(imageSrc, '_blank');
+            return;
+        }
+        
+        modalImageElement.src = imageSrc;
         resetZoom();
-        $('#imageModal').modal('show');
+        
+        // تحقق من وجود Bootstrap modal
+        if (typeof $ !== 'undefined' && $('#imageModal').length > 0) {
+            $('#imageModal').modal('show');
+        } else if (typeof bootstrap !== 'undefined') {
+            // استخدام Bootstrap 5
+            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            modal.show();
+        } else {
+            // فتح الصورة في تبويب جديد كبديل
+            window.open(imageSrc, '_blank');
+        }
     }
     
     function zoomImage(deltaZoom) {
@@ -264,6 +296,13 @@
         const img = document.getElementById('modalImage');
         img.style.transform = 'scale(1)';
         img.style.cursor = 'grab';
+    }
+    
+    function openImageInNewTab() {
+        const img = document.getElementById('modalImage');
+        if (img && img.src) {
+            window.open(img.src, '_blank');
+        }
     }
     
     // إضافة دعم السحب والإفلات للصور المكبرة
