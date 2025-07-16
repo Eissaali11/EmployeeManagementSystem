@@ -433,6 +433,11 @@
             </div>
             
             <form id="safetyForm" method="POST" enctype="multipart/form-data">
+                <!-- حقول مخفية -->
+                <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
+                <input type="hidden" name="vehicle_plate_number" value="{{ vehicle.plate_number }}">
+                <input type="hidden" name="vehicle_make_model" value="{{ vehicle.make }} {{ vehicle.model }}">
+                
                 <!-- بيانات السائق -->
                 <div class="section">
                     <h3><i class="fas fa-user"></i> بيانات السائق</h3>
@@ -842,7 +847,7 @@
             
             try {
                 console.log('بدء إرسال النموذج...');
-                const response = await fetch('/external-safety-check', {
+                const response = await fetch(window.location.pathname, {
                     method: 'POST',
                     body: formData
                 });

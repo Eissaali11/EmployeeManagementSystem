@@ -35,11 +35,103 @@ def compress_image(image_path, max_size=1200, quality=85):
         current_app.logger.error(f"خطأ في ضغط الصورة: {str(e)}")
         return False
 
-@external_safety_bp.route('/external-safety-check/<int:vehicle_id>')
+@external_safety_bp.route('/external-safety-check/<int:vehicle_id>', methods=['GET', 'POST'])
 def external_safety_check_form(vehicle_id):
-    """عرض نموذج فحص السلامة الخارجي للسيارة"""
+    """عرض نموذج فحص السلامة الخارجي للسيارة أو معالجة البيانات المرسلة"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        return handle_safety_check_submission(vehicle)
+    
     return render_template('external_safety_check.html', vehicle=vehicle)
+
+def handle_safety_check_submission(vehicle):
+    """معالجة إرسال بيانات فحص السلامة"""
+    try:
+        # الحصول على البيانات من النموذج
+        driver_name = request.form.get('driver_name')
+        driver_national_id = request.form.get('driver_national_id')
+        driver_department = request.form.get('driver_department')
+        driver_city = request.form.get('driver_city')
+        vehicle_plate_number = request.form.get('vehicle_plate_number', vehicle.plate_number)
+        vehicle_make_model = request.form.get('vehicle_make_model', f"{vehicle.make} {vehicle.model}")
+        current_delegate = request.form.get('current_delegate')
+        notes = request.form.get('notes')
+        
+        # التحقق من البيانات المطلوبة
+        if not all([driver_name, driver_national_id, driver_department, driver_city]):
+            return jsonify({'error': 'يرجى ملء جميع الحقول المطلوبة'}), 400
+        
+        # إنشاء سجل فحص السلامة
+        safety_check = VehicleExternalSafetyCheck(
+            vehicle_id=vehicle.id,
+            driver_name=driver_name,
+            driver_national_id=driver_national_id,
+            driver_department=driver_department,
+            driver_city=driver_city,
+            vehicle_plate_number=vehicle_plate_number,
+            vehicle_make_model=vehicle_make_model,
+            current_delegate=current_delegate,
+            notes=notes,
+            inspection_date=datetime.now(),
+            approval_status='pending'
+        )
+        
+        db.session.add(safety_check)
+        db.session.flush()  # للحصول على ID الجديد
+        
+        # معالجة الصور المرفوعة
+        safety_images = request.files.getlist('safety_images')
+        descriptions = request.form.getlist('image_descriptions')
+        
+        if safety_images and safety_images[0].filename:
+            # إنشاء مجلد الصور إذا لم يكن موجوداً
+            upload_dir = os.path.join(current_app.static_folder, 'uploads', 'safety_checks')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            for i, image in enumerate(safety_images):
+                if image and allowed_file(image.filename):
+                    # إنشاء اسم ملف آمن
+                    filename = secure_filename(f"{uuid.uuid4()}_{image.filename}")
+                    image_path = os.path.join(upload_dir, filename)
+                    
+                    # حفظ الصورة
+                    image.save(image_path)
+                    
+                    # ضغط الصورة
+                    compress_image(image_path)
+                    
+                    # حفظ معلومات الصورة في قاعدة البيانات
+                    description = descriptions[i] if i < len(descriptions) else None
+                    
+                    safety_image = VehicleSafetyImage(
+                        safety_check_id=safety_check.id,
+                        image_path=f'static/uploads/safety_checks/{filename}',
+                        image_description=description
+                    )
+                    
+                    db.session.add(safety_image)
+        
+        # حفظ جميع التغييرات
+        db.session.commit()
+        
+        # تسجيل العملية في سجل المراجعة
+        log_audit(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            action='create',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم إنشاء طلب فحص السلامة الخارجي للسيارة {vehicle.plate_number} بواسطة {safety_check.driver_name}'
+        )
+        
+        current_app.logger.info(f'تم إنشاء طلب فحص السلامة بنجاح: ID={safety_check.id}, Vehicle={vehicle.plate_number}')
+        
+        return jsonify({'success': True, 'message': 'تم إرسال طلب فحص السلامة بنجاح'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'خطأ في معالجة طلب فحص السلامة: {str(e)}')
+        return jsonify({'error': 'حدث خطأ أثناء معالجة الطلب'}), 500
 
 @external_safety_bp.route('/share-links')
 def share_links():
@@ -93,92 +185,7 @@ def share_links():
                            projects=projects,
                            statuses=statuses)
 
-@external_safety_bp.route('/external-safety-check', methods=['POST'])
-def submit_external_safety_check():
-    """إرسال طلب فحص السلامة الخارجي"""
-    try:
-        # التحقق من البيانات المطلوبة
-        required_fields = ['vehicle_id', 'driver_national_id', 'driver_name', 'driver_department', 'driver_city']
-        for field in required_fields:
-            if not request.form.get(field):
-                return jsonify({'error': f'الحقل {field} مطلوب'}), 400
-        
-        # التحقق من وجود السيارة
-        vehicle = Vehicle.query.get(request.form.get('vehicle_id'))
-        if not vehicle:
-            return jsonify({'error': 'السيارة غير موجودة'}), 404
-        
-        # إنشاء سجل فحص السلامة
-        safety_check = VehicleExternalSafetyCheck(
-            vehicle_id=vehicle.id,
-            driver_name=request.form.get('driver_name'),
-            driver_national_id=request.form.get('driver_national_id'),
-            driver_department=request.form.get('driver_department'),
-            driver_city=request.form.get('driver_city'),
-            vehicle_plate_number=request.form.get('vehicle_plate_number'),
-            vehicle_make_model=request.form.get('vehicle_make_model'),
-            current_delegate=request.form.get('current_delegate'),
-            notes=request.form.get('notes'),
-            inspection_date=datetime.now()
-        )
-        
-        db.session.add(safety_check)
-        db.session.flush()  # للحصول على ID
-        
-        # معالجة الصور المرفوعة
-        uploaded_files = request.files.getlist('safety_images')
-        descriptions = request.form.getlist('image_descriptions')
-        
-        if uploaded_files:
-            # إنشاء مجلد للصور
-            upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'safety_checks')
-            if not os.path.exists(upload_folder):
-                os.makedirs(upload_folder)
-            
-            for i, file in enumerate(uploaded_files):
-                if file and file.filename and allowed_file(file.filename):
-                    # إنشاء اسم ملف آمن
-                    file_extension = file.filename.rsplit('.', 1)[1].lower()
-                    filename = f"safety_{safety_check.id}_{uuid.uuid4().hex}.{file_extension}"
-                    file_path = os.path.join(upload_folder, filename)
-                    
-                    # حفظ الملف
-                    file.save(file_path)
-                    
-                    # ضغط الصورة
-                    compress_image(file_path)
-                    
-                    # حفظ معلومات الصورة في قاعدة البيانات
-                    description = descriptions[i] if i < len(descriptions) else None
-                    
-                    safety_image = VehicleSafetyImage(
-                        safety_check_id=safety_check.id,
-                        image_path=f'static/uploads/safety_checks/{filename}',
-                        image_description=description
-                    )
-                    
-                    db.session.add(safety_image)
-        
-        # حفظ جميع التغييرات
-        db.session.commit()
-        
-        # تسجيل العملية في سجل المراجعة
-        log_audit(
-            user_id=current_user.id if current_user.is_authenticated else None,
-            action='create',
-            entity_type='VehicleExternalSafetyCheck',
-            entity_id=safety_check.id,
-            details=f'تم إنشاء طلب فحص السلامة الخارجي للسيارة {vehicle.plate_number} بواسطة {safety_check.driver_name}'
-        )
-        
-        current_app.logger.info(f'تم إنشاء طلب فحص السلامة بنجاح: ID={safety_check.id}, Vehicle={vehicle.plate_number}')
-        
-        return jsonify({'success': True, 'message': 'تم إرسال طلب فحص السلامة بنجاح'}), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"خطأ في إرسال طلب فحص السلامة: {str(e)}")
-        return jsonify({'error': 'حدث خطأ في إرسال الطلب'}), 500
+
 
 @external_safety_bp.route('/api/verify-employee/<national_id>')
 def verify_employee(national_id):
