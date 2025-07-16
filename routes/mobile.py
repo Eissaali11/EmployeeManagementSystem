@@ -1478,8 +1478,10 @@ def vehicle_details(vehicle_id):
             # الحصول على تعيينات المشاريع
         project_assignments = VehicleProject.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleProject.start_date.desc()).limit(5).all()
             
-            # الحصول على سجلات التسليم والاستلام
-        handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).all()
+            # الحصول على سجلات التسليم والاستلام مع بيانات الموظف والأقسام
+        handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id)\
+            .options(joinedload(VehicleHandover.employee).joinedload(Employee.departments))\
+            .order_by(VehicleHandover.handover_date.desc()).all()
         
         # الحصول على التفويضات الخارجية مع معالجة القيم الفارغة
         external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=vehicle_id).all()

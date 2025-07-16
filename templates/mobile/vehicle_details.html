@@ -2407,43 +2407,52 @@ function shareHandoverRecord(button) {
                    `• نوع العملية: ${operationType}\n` +
                    `• تاريخ العملية: ${handoverDate || 'غير محدد'}\n\n` +
                    `═══════════════════════════\n` +
-                   `👤 بيانات السائق الأساسية\n` +
+                   `👤 بيانات السائق الكاملة\n` +
                    `═══════════════════════════\n` +
                    `• الاسم: ${personName}\n`;
     
     if (personNationalId) {
-        shareText += `• رقم الإقامة/الهوية: ${personNationalId}\n`;
+        shareText += `• رقم الهوية/الإقامة: ${personNationalId}\n`;
     }
     
     if (personPhone) {
-        shareText += `• رقم الهاتف الشخصي: ${personPhone}\n`;
+        shareText += `• الرقم الشخصي: ${personPhone}\n`;
     }
     
-    // إضافة جوال العمل إذا كان متوفراً
-    if (employeeMobilePersonal && employeeMobilePersonal.trim() !== '') {
+    // إضافة رقم الموظف الوظيفي (من mobile)
+    if (employeeMobile && employeeMobile.trim() !== '' && employeeMobile !== 'null') {
+        shareText += `• الرقم الوظيفي: ${employeeMobile}\n`;
+    }
+    
+    // إضافة جوال العمل (من mobilePersonal)
+    if (employeeMobilePersonal && employeeMobilePersonal.trim() !== '' && employeeMobilePersonal !== 'null') {
         shareText += `• رقم جوال العمل: ${employeeMobilePersonal}\n`;
     }
     
     // إضافة معلومات الأقسام
     if (employeeDepartments && employeeDepartments.trim() !== '') {
-        shareText += `• الأقسام المرتبط بها: ${employeeDepartments}\n`;
+        shareText += `• الأقسام المرتبطة: ${employeeDepartments}\n`;
     }
     
     // إضافة معلومات عهدة الجوال إذا كانت متوفرة
-    if (employeeHasCustody === 'True' && (employeeMobileType || employeeMobileImei)) {
+    if (employeeHasCustody === 'True' || employeeMobileType || employeeMobileImei) {
         shareText += `\n═══════════════════════════\n` +
                     `📱 تفاصيل عهدة الجوال\n` +
                     `═══════════════════════════\n`;
         
-        if (employeeMobileType && employeeMobileType.trim() !== '') {
+        if (employeeMobileType && employeeMobileType.trim() !== '' && employeeMobileType !== 'null') {
             shareText += `• نوع الجوال: ${employeeMobileType}\n`;
         }
         
-        if (employeeMobileImei && employeeMobileImei.trim() !== '') {
+        if (employeeMobileImei && employeeMobileImei.trim() !== '' && employeeMobileImei !== 'null') {
             shareText += `• رقم IMEI: ${employeeMobileImei}\n`;
         }
         
-        shareText += `• حالة العهدة: مُستلمة\n`;
+        if (employeeHasCustody === 'True') {
+            shareText += `• حالة العهدة: مُستلمة ✅\n`;
+        } else if (employeeHasCustody === 'False') {
+            shareText += `• حالة العهدة: غير مُستلمة ❌\n`;
+        }
     }
     
     if (notes) {
