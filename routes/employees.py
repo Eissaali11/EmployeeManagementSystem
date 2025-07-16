@@ -54,6 +54,7 @@ def index():
     status_filter = request.args.get('status', '')
     multi_department_filter = request.args.get('multi_department', '')
     no_department_filter = request.args.get('no_department', '')
+    duplicate_names_filter = request.args.get('duplicate_names', '')
     
     # بناء الاستعلام الأساسي
     query = Employee.query.options(
@@ -68,6 +69,15 @@ def index():
     # تطبيق فلتر الحالة
     if status_filter:
         query = query.filter(Employee.status == status_filter)
+    
+    # تطبيق فلتر الأسماء المكررة
+    if duplicate_names_filter == 'yes':
+        # البحث عن الأسماء المكررة
+        duplicate_names_subquery = db.session.query(Employee.name, func.count(Employee.name).label('name_count'))\
+                                           .group_by(Employee.name)\
+                                           .having(func.count(Employee.name) > 1)\
+                                           .subquery()
+        query = query.join(duplicate_names_subquery, Employee.name == duplicate_names_subquery.c.name)
     
     # تطبيق فلتر الموظفين غير المربوطين بأي قسم
     if no_department_filter == 'yes':
@@ -111,6 +121,20 @@ def index():
                              .filter(employee_departments.c.employee_id.is_(None))\
                              .count()
     
+    # حساب الموظفين بأسماء مكررة - طريقة مبسطة
+    duplicate_names_list = db.session.query(Employee.name)\
+                                    .group_by(Employee.name)\
+                                    .having(func.count(Employee.name) > 1)\
+                                    .all()
+    
+    duplicate_names_count = 0
+    duplicate_names_set = set()
+    for name_tuple in duplicate_names_list:
+        name = name_tuple[0]
+        count = db.session.query(Employee).filter(Employee.name == name).count()
+        duplicate_names_count += count
+        duplicate_names_set.add(name)
+    
     single_dept_count = db.session.query(Employee).count() - multi_dept_count - no_dept_count
     
     return render_template('employees/index.html', 
@@ -120,9 +144,12 @@ def index():
                          current_status=status_filter,
                          current_multi_department=multi_department_filter,
                          current_no_department=no_department_filter,
+                         current_duplicate_names=duplicate_names_filter,
                          multi_dept_count=multi_dept_count,
                          single_dept_count=single_dept_count,
-                         no_dept_count=no_dept_count)
+                         no_dept_count=no_dept_count,
+                         duplicate_names_count=duplicate_names_count,
+                         duplicate_names_set=duplicate_names_set)
 
 @employees_bp.route('/create', methods=['GET', 'POST'])
 @login_required
