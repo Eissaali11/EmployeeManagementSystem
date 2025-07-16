@@ -132,7 +132,16 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end mb-3">
+                <div class="col-md-3 mb-3">
+                    <label for="project" class="form-label">فلترة حسب المشروع</label>
+                    <select name="project" id="project" class="form-select">
+                        <option value="">جميع المشاريع</option>
+                        {% for project in projects %}
+                        <option value="{{ project }}" {% if project_filter == project %}selected{% endif %}>{{ project }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-12 d-flex align-items-end mb-3">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search ms-1"></i>
                         بحث

@@ -602,6 +602,7 @@ def index():
         status_filter = request.args.get('status', '')
         make_filter = request.args.get('make', '')
         search_plate = request.args.get('search_plate', '')
+        project_filter = request.args.get('project', '')
         
         # قاعدة الاستعلام الأساسية
         query = Vehicle.query
@@ -614,6 +615,10 @@ def index():
         if make_filter:
                 query = query.filter(Vehicle.make == make_filter)
         
+        # إضافة التصفية حسب المشروع إذا تم تحديده
+        if project_filter:
+                query = query.filter(Vehicle.project == project_filter)
+        
         # إضافة البحث برقم السيارة إذا تم تحديده
         if search_plate:
                 query = query.filter(Vehicle.plate_number.contains(search_plate))
@@ -621,6 +626,10 @@ def index():
         # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
         makes = db.session.query(Vehicle.make).distinct().all()
         makes = [make[0] for make in makes]
+        
+        # الحصول على قائمة بالمشاريع لقائمة التصفية
+        projects = db.session.query(Vehicle.project).filter(Vehicle.project.isnot(None)).distinct().all()
+        projects = [project[0] for project in projects]
         
         # الحصول على قائمة السيارات
         vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
@@ -690,7 +699,9 @@ def index():
                 status_filter=status_filter,
                 make_filter=make_filter,
                 search_plate=search_plate,
+                project_filter=project_filter,
                 makes=makes,
+                projects=projects,
                 statuses=VEHICLE_STATUS_CHOICES,
                 expiring_documents=expiring_documents
         )
