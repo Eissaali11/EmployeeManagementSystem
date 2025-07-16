@@ -153,7 +153,7 @@ def submit_external_safety_check():
                     
                     safety_image = VehicleSafetyImage(
                         safety_check_id=safety_check.id,
-                        image_path=f'uploads/safety_checks/{filename}',
+                        image_path=f'static/uploads/safety_checks/{filename}',
                         image_description=description
                     )
                     
@@ -170,6 +170,8 @@ def submit_external_safety_check():
             entity_id=safety_check.id,
             details=f'تم إنشاء طلب فحص السلامة الخارجي للسيارة {vehicle.plate_number} بواسطة {safety_check.driver_name}'
         )
+        
+        current_app.logger.info(f'تم إنشاء طلب فحص السلامة بنجاح: ID={safety_check.id}, Vehicle={vehicle.plate_number}')
         
         return jsonify({'success': True, 'message': 'تم إرسال طلب فحص السلامة بنجاح'}), 200
         

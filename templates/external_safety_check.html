@@ -830,6 +830,10 @@
                 formData.append(`image_descriptions`, image.description || '');
             });
             
+            // تسجيل تفصيلي للتشخيص
+            console.log('عدد الصور المرفوعة:', uploadedImages.length);
+            console.log('البيانات المرسلة:', Object.fromEntries(formData.entries()));
+            
             const submitBtn = document.getElementById('submitBtn');
             const loadingSpinner = document.getElementById('loadingSpinner');
             
@@ -837,22 +841,59 @@
             loadingSpinner.style.display = 'block';
             
             try {
+                console.log('بدء إرسال النموذج...');
                 const response = await fetch('/external-safety-check', {
                     method: 'POST',
                     body: formData
                 });
                 
+                console.log('تم استلام الاستجابة:', response.status, response.statusText);
+                
                 if (response.ok) {
-                    alert('تم إرسال طلب فحص السلامة بنجاح! سيتم مراجعته من قبل المسؤول المختص.');
-                    window.location.href = '/external-safety-check/success';
+                    // إظهار رسالة نجاح مباشرة وإخفاء النموذج
+                    document.querySelector('.form-container').innerHTML = `
+                        <div class="text-center">
+                            <div class="success-icon" style="font-size: 5rem; color: #28a745; margin-bottom: 30px; animation: pulse 2s infinite;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h2 style="color: #28a745; margin-bottom: 20px; font-weight: bold;">تم إرسال الطلب بنجاح!</h2>
+                            <p style="font-size: 1.2rem; color: #666; margin-bottom: 30px;">
+                                تم إرسال طلب فحص السلامة بنجاح وسيتم مراجعته من قبل المسؤول المختص.
+                            </p>
+                            <div class="alert alert-success">
+                                <i class="fas fa-info-circle"></i>
+                                سيتم مراجعة طلبك خلال 24 ساعة كحد أقصى.
+                            </div>
+                            <button class="btn btn-primary" onclick="window.close()">
+                                <i class="fas fa-times"></i> إغلاق النافذة
+                            </button>
+                        </div>
+                    `;
+                    
+                    // إضافة تأثير الـ pulse animation
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes pulse {
+                            0% { transform: scale(1); }
+                            50% { transform: scale(1.1); }
+                            100% { transform: scale(1); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    // إغلاق النافذة تلقائياً بعد 10 ثوان
+                    setTimeout(() => {
+                        window.close();
+                    }, 10000);
                 } else {
                     const errorData = await response.json();
                     alert('حدث خطأ: ' + (errorData.error || 'خطأ غير معروف'));
+                    submitBtn.disabled = false;
+                    loadingSpinner.style.display = 'none';
                 }
             } catch (error) {
                 console.error('خطأ في إرسال النموذج:', error);
-                alert('حدث خطأ في إرسال النموذج');
-            } finally {
+                alert('حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
                 submitBtn.disabled = false;
                 loadingSpinner.style.display = 'none';
             }
