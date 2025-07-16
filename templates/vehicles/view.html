@@ -23,6 +23,10 @@
                 <i class="fas fa-shield-alt ms-1"></i>
                 فحص السلامة الخارجي
             </a>
+            <button class="btn btn-info me-2" onclick="shareSafetyCheckForm({{ vehicle.id }}, '{{ vehicle.plate_number }}')">
+                <i class="fas fa-share-alt ms-1"></i>
+                مشاركة رابط الفحص
+            </button>
             <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-danger me-2">
                 <i class="fas fa-trash ms-1"></i>
                 حذف السيارة
@@ -815,6 +819,46 @@
 </div>
 </div>
 </div>
+</div>
+
+<!-- فحص السلامة الخارجي -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0">
+            <i class="fas fa-shield-alt ms-2"></i>
+            فحص السلامة الخارجي
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-info-circle text-info me-2"></i>
+                    <span>يمكنك مشاركة رابط نموذج فحص السلامة الخارجي مع الآخرين</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-link text-primary me-2"></i>
+                    <small class="text-muted">الرابط: {{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-mobile-alt text-success me-2"></i>
+                    <small class="text-muted">يمكن الوصول للنموذج من الهاتف المحمول أو الكمبيوتر</small>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-warning btn-lg" 
+                        onclick="shareSafetyCheckForm({{ vehicle.id }}, '{{ vehicle.plate_number }}')">
+                    <i class="fas fa-share-alt ms-2"></i>
+                    مشاركة النموذج
+                </button>
+                <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
+                   class="btn btn-outline-warning btn-lg ms-2" target="_blank">
+                    <i class="fas fa-external-link-alt ms-2"></i>
+                    فتح النموذج
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- القسم الثاني: سجلات الورشة والمشاريع -->
@@ -1620,6 +1664,139 @@
         
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
+    }
+
+    // دالة مشاركة رابط نموذج فحص السلامة الخارجي
+    function shareSafetyCheckForm(vehicleId, plateNumber) {
+        const formUrl = window.location.origin + '/external-safety-check/' + vehicleId;
+        
+        const shareData = {
+            title: 'نموذج فحص السلامة الخارجي - نُظم',
+            text: `مرحباً 👋
+
+يرجى تعبئة نموذج فحص السلامة الخارجي للمركبة التالية:
+
+🚗 رقم اللوحة: ${plateNumber}
+📋 نوع النموذج: فحص السلامة الخارجي
+🏢 نظام نُظم لإدارة المركبات
+
+يرجى الضغط على الرابط أدناه لتعبئة النموذج:
+${formUrl}
+
+⚠️ ملاحظة: يرجى تعبئة النموذج بعناية وإرفاق جميع الصور المطلوبة للفحص.
+
+شكراً لتعاونكم`,
+            url: formUrl
+        };
+
+        // استخدام Web Share API إذا كان متاحاً
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => {
+                    showToast('تم مشاركة الرابط بنجاح!', 'success');
+                })
+                .catch((error) => {
+                    console.error('خطأ في المشاركة:', error);
+                    fallbackShare(shareData);
+                });
+        } else {
+            // استخدام النسخ للحافظة كبديل
+            fallbackShare(shareData);
+        }
+    }
+
+    // دالة بديلة للمشاركة
+    function fallbackShare(shareData) {
+        const textToCopy = shareData.text;
+        
+        // محاولة نسخ النص للحافظة
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    showToast('تم نسخ رابط الفحص للحافظة!', 'success');
+                })
+                .catch(() => {
+                    showShareModal(shareData);
+                });
+        } else {
+            showShareModal(shareData);
+        }
+    }
+
+    // عرض نافذة منبثقة للمشاركة
+    function showShareModal(shareData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">مشاركة رابط فحص السلامة</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3">انسخ الرابط والرسالة التالية لمشاركتها:</p>
+                        <textarea class="form-control" rows="8" readonly>${shareData.text}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="copyToClipboard(this, '${shareData.text}')">
+                            <i class="fas fa-copy ms-1"></i>
+                            نسخ النص
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        // إزالة النافذة عند الإغلاق
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
+    }
+
+    // دالة نسخ النص للحافظة
+    function copyToClipboard(button, text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        // تغيير نص الزر مؤقتاً
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check ms-1"></i> تم النسخ!';
+        button.className = 'btn btn-success';
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.className = 'btn btn-primary';
+        }, 2000);
+    }
+
+    // دالة عرض رسائل Toast
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // إزالة الرسالة تلقائياً بعد 5 ثوانٍ
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 5000);
     }
 </script>
 

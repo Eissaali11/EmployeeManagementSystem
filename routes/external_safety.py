@@ -41,6 +41,12 @@ def external_safety_check_form(vehicle_id):
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     return render_template('external_safety_check.html', vehicle=vehicle)
 
+@external_safety_bp.route('/share-links')
+def share_links():
+    """صفحة مشاركة روابط النماذج الخارجية لجميع السيارات"""
+    vehicles = Vehicle.query.all()
+    return render_template('external_safety_share_links.html', vehicles=vehicles)
+
 @external_safety_bp.route('/external-safety-check', methods=['POST'])
 def submit_external_safety_check():
     """إرسال طلب فحص السلامة الخارجي"""
