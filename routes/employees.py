@@ -316,6 +316,20 @@ def edit(id):
             
             log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الموظف: {employee.name}')
             flash('تم تحديث بيانات الموظف وأقسامه بنجاح.', 'success')
+            
+            # التحقق من مصدر الطلب للعودة إلى الصفحة المناسبة
+            return_url = request.form.get('return_url')
+            if not return_url:
+                return_url = request.referrer
+            
+            if return_url and '/departments/' in return_url:
+                # استخراج معرف القسم من الرابط المرجعي
+                try:
+                    department_id = return_url.split('/departments/')[1].split('/')[0]
+                    return redirect(url_for('departments.view', id=department_id))
+                except:
+                    pass
+            
             return redirect(url_for('employees.index'))
         
         except Exception as e:

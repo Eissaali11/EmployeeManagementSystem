@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>تعديل بيانات موظف</h1>
-        <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">
+        <a href="{% if request.referrer and '/departments/' in request.referrer %}{{ request.referrer }}{% else %}{{ url_for('employees.index') }}{% endif %}" class="btn btn-secondary">
             <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
         </a>
     </div>
@@ -15,6 +15,8 @@
         </div>
         <div class="card-body">
             <form action="{{ url_for('employees.edit', id=employee.id) }}" method="post">
+                <!-- إضافة حقل مخفي لتتبع الصفحة المرجعية -->
+                <input type="hidden" name="return_url" value="{{ request.referrer or url_for('employees.index') }}">
                 <div class="row">
                     <!-- معلومات أساسية -->
                     <div class="col-md-6">
