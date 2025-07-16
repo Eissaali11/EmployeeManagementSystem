@@ -111,6 +111,14 @@
                         <div class="col-sm-4 fw-bold">آخر تحديث:</div>
                         <div class="col-sm-8">{{ vehicle.updated_at.strftime('%Y-%m-%d') }}</div>
                     </div>
+                    {% if vehicle.project %}
+                    <div class="row mb-2">
+                        <div class="col-sm-4 fw-bold">المشروع:</div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-info">{{ vehicle.project }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <div class="row mb-3">
                         <div class="col-sm-4 fw-bold">السائق الحالي:</div>
