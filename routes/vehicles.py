@@ -1184,6 +1184,7 @@ def edit(id):
                 
                 # تحديث بيانات السيارة
                 driver_name = request.form.get('driver_name')
+                project = request.form.get('project')
                 vehicle.plate_number = plate_number
                 vehicle.make = make
                 vehicle.model = model
@@ -1191,6 +1192,7 @@ def edit(id):
                 vehicle.color = color
                 vehicle.status = status
                 vehicle.driver_name = driver_name
+                vehicle.project = project
                 vehicle.notes = notes
                 vehicle.updated_at = datetime.utcnow()
                 
@@ -1202,7 +1204,9 @@ def edit(id):
                 flash('تم تعديل بيانات السيارة بنجاح!', 'success')
                 return redirect(url_for('vehicles.view', id=id))
         
-        return render_template('vehicles/edit.html', vehicle=vehicle, statuses=VEHICLE_STATUS_CHOICES)
+        # جلب الأقسام لقائمة المشاريع
+        departments = Department.query.all()
+        return render_template('vehicles/edit.html', vehicle=vehicle, statuses=VEHICLE_STATUS_CHOICES, departments=departments)
 
 @vehicles_bp.route('/<int:id>/confirm-delete')
 @login_required

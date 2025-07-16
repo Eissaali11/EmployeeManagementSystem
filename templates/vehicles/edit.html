@@ -77,6 +77,18 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="project" class="form-label">المشروع</label>
+                        <select class="form-select" id="project" name="project">
+                            <option value="">اختر المشروع</option>
+                            {% for department in departments %}
+                            <option value="{{ department.name }}" {% if department.name == vehicle.project %}selected{% endif %}>
+                                {{ department.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">اختياري - المشروع المرتبط بهذه السيارة</div>
+                    </div>
                 </div>
                 
                 <div class="mb-3">
@@ -117,4 +129,21 @@
     
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // تحسين القائمة المنسدلة للمشاريع مع البحث
+    $('#project').select2({
+        placeholder: 'اختر المشروع',
+        allowClear: true,
+        language: {
+            noResults: function() {
+                return 'لا توجد نتائج';
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

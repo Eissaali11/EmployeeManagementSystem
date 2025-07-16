@@ -523,6 +523,9 @@ class Vehicle(db.Model):
     plate_image = db.Column(db.String(255), nullable=True)  # صورة لوحة السيارة
     insurance_file = db.Column(db.String(255), nullable=True)  # ملف التأمين
     
+    # إضافة حقل المشروع
+    project = db.Column(db.String(100), nullable=True)  # اسم المشروع
+    
     # إضافة حقل رابط مجلد Google Drive
     drive_folder_link = db.Column(db.String(500), nullable=True)  # رابط مجلد Google Drive
     
