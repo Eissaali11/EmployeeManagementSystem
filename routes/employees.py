@@ -174,6 +174,13 @@ def create():
             nationality_id = request.form.get('nationality_id')
             contract_status = request.form.get('contract_status')
             license_status = request.form.get('license_status')
+            
+            # الحقول الجديدة لنوع الموظف والعهدة
+            employee_type = request.form.get('employee_type', 'regular')
+            has_mobile_custody = 'has_mobile_custody' in request.form
+            mobile_type = request.form.get('mobile_type', '') if has_mobile_custody else None
+            mobile_imei = request.form.get('mobile_imei', '') if has_mobile_custody else None
+            
             selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
             
             # Convert empty department_id to None
@@ -197,8 +204,10 @@ def create():
                 nationality_id=int(nationality_id) if nationality_id else None,
                 contract_status=contract_status,
                 license_status=license_status,
-
-
+                employee_type=employee_type,
+                has_mobile_custody=has_mobile_custody,
+                mobile_type=mobile_type,
+                mobile_imei=mobile_imei
             )
             if selected_dept_ids:
                 departments_to_assign = Department.query.filter(Department.id.in_(selected_dept_ids)).all()
@@ -278,6 +287,12 @@ def edit(id):
             employee.license_status = request.form.get('license_status', '')
             nationality_id = request.form.get('nationality_id')
             employee.nationality_id = int(nationality_id) if nationality_id else None
+            
+            # تحديث الحقول الجديدة لنوع الموظف والعهدة
+            employee.employee_type = request.form.get('employee_type', 'regular')
+            employee.has_mobile_custody = 'has_mobile_custody' in request.form
+            employee.mobile_type = request.form.get('mobile_type', '') if employee.has_mobile_custody else None
+            employee.mobile_imei = request.form.get('mobile_imei', '') if employee.has_mobile_custody else None
             
             join_date_str = request.form.get('join_date')
             employee.join_date = parse_date(join_date_str) if join_date_str else None

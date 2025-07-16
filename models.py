@@ -81,6 +81,12 @@ class Employee(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     contract_status = db.Column(db.String(50), nullable=True) # مثال: "ساري", "منتهي", "في فترة التجربة"
     license_status = db.Column(db.String(50), nullable=True)  # مثال: "سارية", "منتهية", "موقوفة"
+    
+    # حقول نوع الموظف والعهدة
+    employee_type = db.Column(db.String(20), default='regular')  # 'regular' أو 'driver'
+    has_mobile_custody = db.Column(db.Boolean, default=False)  # هل لديه عهدة جوال
+    mobile_type = db.Column(db.String(100), nullable=True)  # نوع الجوال
+    mobile_imei = db.Column(db.String(20), nullable=True)  # رقم IMEI
 
     def to_dict(self):
         """

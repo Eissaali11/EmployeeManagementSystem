@@ -105,6 +105,17 @@
     </div>
 </div>
 
+                    <!-- نوع الموظف -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="employee_type" class="form-label required-field">نوع الموظف</label>
+                            <select class="form-select" id="employee_type" name="employee_type" required onchange="toggleCustodyFields()">
+                                <option value="regular" {% if employee.employee_type == 'regular' %}selected{% endif %}>موظف عادي</option>
+                                <option value="driver" {% if employee.employee_type == 'driver' %}selected{% endif %}>موظف سائق</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- معلومات العمل -->
                     <div class="col-md-6">
                         <div class="form-group mb-3">
@@ -115,6 +126,43 @@
                                 <option value="on_leave" {% if employee.status == 'on_leave' %}selected{% endif %}>في إجازة</option>
                                 <option value="terminated" {% if employee.status == 'terminated' %}selected{% endif %}>متوقف عن العمل</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- حقول العهدة للسائقين -->
+                    <div class="col-12" id="custody-section" style="display: {% if employee.employee_type == 'driver' %}block{% else %}none{% endif %};">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>عهدة السائق</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="has_mobile_custody" name="has_mobile_custody" onchange="toggleMobileFields()" {% if employee.has_mobile_custody %}checked{% endif %}>
+                                                <label class="form-check-label" for="has_mobile_custody">
+                                                    عهدة جوال
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" id="mobile-fields" style="display: {% if employee.has_mobile_custody %}block{% else %}none{% endif %};">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="mobile_type" class="form-label">نوع الجوال</label>
+                                            <input type="text" class="form-control" id="mobile_type" name="mobile_type" value="{{ employee.mobile_type or '' }}" placeholder="مثال: iPhone 15, Samsung Galaxy S24">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="mobile_imei" class="form-label">رقم IMEI</label>
+                                            <input type="text" class="form-control" id="mobile_imei" name="mobile_imei" value="{{ employee.mobile_imei or '' }}" placeholder="15 رقم" maxlength="15">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <!-- في ملف employees/edit.html -->
@@ -254,6 +302,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     // --- نهاية منطق شارات الأقسام التفاعلية ---
+    
+    // إعداد الحالة الافتراضية للحقول الشرطية عند تحميل الصفحة
+    toggleCustodyFields();
+});
+
+function toggleCustodyFields() {
+    const employeeType = document.getElementById('employee_type').value;
+    const custodySection = document.getElementById('custody-section');
+    
+    if (employeeType === 'driver') {
+        custodySection.style.display = 'block';
+    } else {
+        custodySection.style.display = 'none';
+        // إخفاء وإلغاء تحديد حقول الجوال
+        document.getElementById('has_mobile_custody').checked = false;
+        toggleMobileFields();
+    }
+}
+
+function toggleMobileFields() {
+    const hasMobileCustody = document.getElementById('has_mobile_custody').checked;
+    const mobileFields = document.getElementById('mobile-fields');
+    
+    if (hasMobileCustody) {
+        mobileFields.style.display = 'block';
+    } else {
+        mobileFields.style.display = 'none';
+        // مسح قيم حقول الجوال إذا لم تكن معبأة من قبل
+        if (!mobileFields.dataset.hasExistingData) {
+            document.getElementById('mobile_type').value = '';
+            document.getElementById('mobile_imei').value = '';
+        }
+    }
+}
 
 
     // --- كود إضافي آخر (مثل إظهار/إخفاء كلمة المرور) يمكن أن يكون هنا ---

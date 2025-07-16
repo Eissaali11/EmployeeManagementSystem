@@ -101,6 +101,17 @@
                         </div>
                     </div>
 
+                    <!-- نوع الموظف -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="employee_type" class="form-label required-field">نوع الموظف</label>
+                            <select class="form-select" id="employee_type" name="employee_type" required onchange="toggleCustodyFields()">
+                                <option value="regular">موظف عادي</option>
+                                <option value="driver">موظف سائق</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- معلومات العمل -->
                     <div class="col-md-6">
                         <div class="form-group mb-3">
@@ -111,6 +122,43 @@
                                 <option value="on_leave">في إجازة</option>
                                 <option value="terminated">متوقف عن العمل</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- حقول العهدة للسائقين -->
+                    <div class="col-12" id="custody-section" style="display: none;">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>عهدة السائق</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="has_mobile_custody" name="has_mobile_custody" onchange="toggleMobileFields()">
+                                                <label class="form-check-label" for="has_mobile_custody">
+                                                    عهدة جوال
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" id="mobile-fields" style="display: none;">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="mobile_type" class="form-label">نوع الجوال</label>
+                                            <input type="text" class="form-control" id="mobile_type" name="mobile_type" placeholder="مثال: iPhone 15, Samsung Galaxy S24">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="mobile_imei" class="form-label">رقم IMEI</label>
+                                            <input type="text" class="form-control" id="mobile_imei" name="mobile_imei" placeholder="15 رقم" maxlength="15">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -160,4 +208,40 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleCustodyFields() {
+    const employeeType = document.getElementById('employee_type').value;
+    const custodySection = document.getElementById('custody-section');
+    
+    if (employeeType === 'driver') {
+        custodySection.style.display = 'block';
+    } else {
+        custodySection.style.display = 'none';
+        // إخفاء وإلغاء تحديد حقول الجوال
+        document.getElementById('has_mobile_custody').checked = false;
+        toggleMobileFields();
+    }
+}
+
+function toggleMobileFields() {
+    const hasMobileCustody = document.getElementById('has_mobile_custody').checked;
+    const mobileFields = document.getElementById('mobile-fields');
+    
+    if (hasMobileCustody) {
+        mobileFields.style.display = 'block';
+    } else {
+        mobileFields.style.display = 'none';
+        // مسح قيم حقول الجوال
+        document.getElementById('mobile_type').value = '';
+        document.getElementById('mobile_imei').value = '';
+    }
+}
+
+// إعداد الحالة الافتراضية عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCustodyFields();
+});
+</script>
+
 {% endblock %}
