@@ -452,6 +452,13 @@ body {
                                             data-person-national-id="{{ record.person_national_id|e }}"
                                             data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                             data-notes="{{ record.notes|e if record.notes else '' }}"
+                                            data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
+                                            data-employee-mobile="{{ record.employee.mobile if record.employee else '' }}"
+                                            data-employee-mobile-personal="{{ record.employee.mobilePersonal if record.employee else '' }}"
+                                            data-employee-departments="{{ (record.employee.departments|map(attribute='name')|join(', ')) if record.employee and record.employee.departments else '' }}"
+                                            data-employee-mobile-type="{{ record.employee.mobile_type if record.employee else '' }}"
+                                            data-employee-mobile-imei="{{ record.employee.mobile_imei if record.employee else '' }}"
+                                            data-employee-has-custody="{{ record.employee.has_mobile_custody if record.employee else '' }}"
                                             onclick="shareHandoverRecord(this)" title="مشاركة">
                                             <i class="fas fa-share-alt"></i>
                                         </button>
@@ -541,6 +548,13 @@ body {
                                                 data-person-national-id="{{ record.person_national_id|e }}"
                                                 data-handover-date="{{ record.handover_date.strftime('%Y-%m-%d') if record.handover_date else '' }}"
                                                 data-notes="{{ record.notes|e if record.notes else '' }}"
+                                                data-employee-id="{{ record.employee_id if record.employee_id else '' }}"
+                                                data-employee-mobile="{{ record.employee.mobile if record.employee else '' }}"
+                                                data-employee-mobile-personal="{{ record.employee.mobilePersonal if record.employee else '' }}"
+                                                data-employee-departments="{{ (record.employee.departments|map(attribute='name')|join(', ')) if record.employee and record.employee.departments else '' }}"
+                                                data-employee-mobile-type="{{ record.employee.mobile_type if record.employee else '' }}"
+                                                data-employee-mobile-imei="{{ record.employee.mobile_imei if record.employee else '' }}"
+                                                data-employee-has-custody="{{ record.employee.has_mobile_custody if record.employee else '' }}"
                                                 onclick="shareHandoverRecord(this)" title="مشاركة">
                                                 <i class="fas fa-share-alt"></i>
                                             </button>
@@ -2361,6 +2375,14 @@ function shareHandoverRecord(button) {
     const handoverDate = button.getAttribute('data-handover-date');
     const notes = button.getAttribute('data-notes');
     
+    // بيانات الموظف الإضافية
+    const employeeMobile = button.getAttribute('data-employee-mobile');
+    const employeeMobilePersonal = button.getAttribute('data-employee-mobile-personal');
+    const employeeDepartments = button.getAttribute('data-employee-departments');
+    const employeeMobileType = button.getAttribute('data-employee-mobile-type');
+    const employeeMobileImei = button.getAttribute('data-employee-mobile-imei');
+    const employeeHasCustody = button.getAttribute('data-employee-has-custody');
+    
     // ترجمة نوع العملية
     let operationType = handoverType === 'delivery' ? 'تسليم' : 'استلام';
     
@@ -2385,7 +2407,7 @@ function shareHandoverRecord(button) {
                    `• نوع العملية: ${operationType}\n` +
                    `• تاريخ العملية: ${handoverDate || 'غير محدد'}\n\n` +
                    `═══════════════════════════\n` +
-                   `👤 بيانات السائق\n` +
+                   `👤 بيانات السائق الأساسية\n` +
                    `═══════════════════════════\n` +
                    `• الاسم: ${personName}\n`;
     
@@ -2394,7 +2416,34 @@ function shareHandoverRecord(button) {
     }
     
     if (personPhone) {
-        shareText += `• رقم الهاتف: ${personPhone}\n`;
+        shareText += `• رقم الهاتف الشخصي: ${personPhone}\n`;
+    }
+    
+    // إضافة جوال العمل إذا كان متوفراً
+    if (employeeMobilePersonal && employeeMobilePersonal.trim() !== '') {
+        shareText += `• رقم جوال العمل: ${employeeMobilePersonal}\n`;
+    }
+    
+    // إضافة معلومات الأقسام
+    if (employeeDepartments && employeeDepartments.trim() !== '') {
+        shareText += `• الأقسام المرتبط بها: ${employeeDepartments}\n`;
+    }
+    
+    // إضافة معلومات عهدة الجوال إذا كانت متوفرة
+    if (employeeHasCustody === 'True' && (employeeMobileType || employeeMobileImei)) {
+        shareText += `\n═══════════════════════════\n` +
+                    `📱 تفاصيل عهدة الجوال\n` +
+                    `═══════════════════════════\n`;
+        
+        if (employeeMobileType && employeeMobileType.trim() !== '') {
+            shareText += `• نوع الجوال: ${employeeMobileType}\n`;
+        }
+        
+        if (employeeMobileImei && employeeMobileImei.trim() !== '') {
+            shareText += `• رقم IMEI: ${employeeMobileImei}\n`;
+        }
+        
+        shareText += `• حالة العهدة: مُستلمة\n`;
     }
     
     if (notes) {
