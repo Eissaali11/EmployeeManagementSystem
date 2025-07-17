@@ -194,11 +194,11 @@
             if (sponsorshipFilter) {
                 if (sponsorshipFilter === 'on_sponsorship') {
                     departmentEmployees = departmentEmployees.filter(emp => 
-                        emp.sponsorship_status === 'على الكفالة'
+                        emp.sponsorship_status === 'على الكفالة' || emp.sponsorship_status === 'inside'
                     );
                 } else if (sponsorshipFilter === 'off_sponsorship') {
                     departmentEmployees = departmentEmployees.filter(emp => 
-                        emp.sponsorship_status === 'خارج الكفالة'
+                        emp.sponsorship_status === 'خارج الكفالة' || emp.sponsorship_status === 'outside'
                     );
                 }
             }
@@ -235,9 +235,9 @@
             employees.forEach((emp, index) => {
                 const autoDocumentNumber = getAutoDocumentNumber(emp, documentType);
                 
-                const sponsorshipBadge = emp.sponsorship_status === 'على الكفالة' 
+                const sponsorshipBadge = (emp.sponsorship_status === 'على الكفالة' || emp.sponsorship_status === 'inside') 
                     ? '<span class="badge bg-success">على الكفالة</span>'
-                    : emp.sponsorship_status === 'خارج الكفالة' 
+                    : (emp.sponsorship_status === 'خارج الكفالة' || emp.sponsorship_status === 'outside') 
                     ? '<span class="badge bg-warning">خارج الكفالة</span>'
                     : '<span class="badge bg-secondary">غير محدد</span>';
                 
