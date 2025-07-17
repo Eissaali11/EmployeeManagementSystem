@@ -368,6 +368,7 @@ def index():
     document_type = request.args.get('document_type', '')
     employee_id = request.args.get('employee_id', '')
     department_id = request.args.get('department_id', '')
+    sponsorship_status = request.args.get('sponsorship_status', '')
     expiring = request.args.get('expiring', '')
     show_all = request.args.get('show_all', 'false')
     
@@ -381,9 +382,17 @@ def index():
     if employee_id and employee_id.isdigit():
         query = query.filter(Document.employee_id == int(employee_id))
     
-    # تصفية حسب القسم
-    if department_id and department_id.isdigit():
-        query = query.join(Employee).filter(Employee.department_id == int(department_id))
+    # تصفية حسب القسم والكفالة (نحتاج للـ join مع Employee)
+    needs_employee_join = department_id or sponsorship_status
+    
+    if needs_employee_join:
+        query = query.join(Employee)
+        
+        if department_id and department_id.isdigit():
+            query = query.filter(Employee.department_id == int(department_id))
+        
+        if sponsorship_status:
+            query = query.filter(Employee.sponsorship_status == sponsorship_status)
     
     if expiring:
         # Get documents expiring in the next 30, 60, or 90 days
@@ -451,6 +460,7 @@ def index():
                           selected_type=document_type,
                           selected_employee=employee_id,
                           selected_department=department_id,
+                          selected_sponsorship=sponsorship_status,
                           selected_expiring=expiring,
                           show_all=show_all.lower() == 'true',
                           total_docs=total_docs,

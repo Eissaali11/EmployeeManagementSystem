@@ -63,7 +63,7 @@
         </div>
         <div class="card-body">
             <form method="get" action="{{ url_for('documents.index') }}" class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="document_type" class="form-label">نوع الوثيقة</label>
                     <select class="form-select" id="document_type" name="document_type">
                         <option value="">جميع الأنواع</option>
@@ -108,6 +108,15 @@
                             {{ department.name }}
                         </option>
                         {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="sponsorship_status" class="form-label">حالة الكفالة</label>
+                    <select class="form-select" id="sponsorship_status" name="sponsorship_status">
+                        <option value="">جميع الموظفين</option>
+                        <option value="inside" {% if selected_sponsorship == 'inside' %}selected{% endif %}>على الكفالة</option>
+                        <option value="outside" {% if selected_sponsorship == 'outside' %}selected{% endif %}>خارج الكفالة</option>
                     </select>
                 </div>
                 
@@ -166,6 +175,7 @@
                             <th>تاريخ الإصدار</th>
                             <th>تاريخ الانتهاء</th>
                             <th>الحالة</th>
+                            <th>حالة الكفالة</th>
                             <th>ملاحظات</th>
                             <th>الإجراءات</th>
                         </tr>
@@ -212,6 +222,15 @@
                                     {% else %}
                                     <span class="badge bg-success">سارية</span>
                                     {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if document.employee.sponsorship_status == 'inside' %}
+                                <span class="badge bg-success">على الكفالة</span>
+                                {% elif document.employee.sponsorship_status == 'outside' %}
+                                <span class="badge bg-warning">خارج الكفالة</span>
+                                {% else %}
+                                <span class="badge bg-secondary">غير محدد</span>
                                 {% endif %}
                             </td>
                             <td>{{ document.notes or '-' }}</td>
@@ -261,7 +280,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // إعادة تحميل الصفحة عند تغيير أي من حقول البحث
-        const filterFields = ['document_type', 'employee_id', 'department_id', 'expiring'];
+        const filterFields = ['document_type', 'employee_id', 'department_id', 'sponsorship_status', 'expiring'];
         
         filterFields.forEach(function(field) {
             const element = document.getElementById(field);
