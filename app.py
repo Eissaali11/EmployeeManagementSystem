@@ -264,7 +264,7 @@ def root():
         if current_user.is_authenticated:
             return redirect(url_for('mobile.index'))
         else:
-            return redirect(url_for('mobil e.login'))
+            return redirect(url_for('mobile.login'))
     
     # إذا كان المستخدم يستخدم جهاز كمبيوتر
     if current_user.is_authenticated:
