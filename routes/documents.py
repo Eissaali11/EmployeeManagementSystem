@@ -430,6 +430,44 @@ def create():
                 
                 return jsonify({'success': True, 'message': 'تم حفظ الوثيقة بنجاح'})
             
+            elif add_type == 'department_bulk':
+                # حفظ جميع وثائق القسم
+                import json
+                employees_data = json.loads(request.form.get('employees_data', '[]'))
+                department_id = request.form.get('department_id')
+                
+                if not employees_data:
+                    return jsonify({'success': False, 'message': 'لا توجد بيانات للحفظ'})
+                
+                saved_count = 0
+                for emp_data in employees_data:
+                    if emp_data.get('document_number'):
+                        document = Document(
+                            employee_id=emp_data['employee_id'],
+                            document_type=document_type,
+                            document_number=emp_data['document_number'],
+                            issue_date=parse_date(emp_data['issue_date']) if emp_data.get('issue_date') else None,
+                            expiry_date=parse_date(emp_data['expiry_date']) if emp_data.get('expiry_date') else None,
+                            notes=emp_data.get('notes', '')
+                        )
+                        
+                        db.session.add(document)
+                        saved_count += 1
+                
+                # Log the action
+                department = Department.query.get(department_id)
+                audit = SystemAudit(
+                    action='bulk_create',
+                    entity_type='document',
+                    entity_id=department_id,
+                    details=f'تم إضافة {saved_count} وثيقة من نوع {document_type} لقسم {department.name if department else "غير محدد"}',
+                    user_id=current_user.id if current_user.is_authenticated else None
+                )
+                db.session.add(audit)
+                db.session.commit()
+                
+                return jsonify({'success': True, 'message': f'تم حفظ {saved_count} وثيقة بنجاح'})
+            
             elif add_type == 'sponsorship_bulk':
                 # حفظ جميع بيانات الكفالة
                 import json
