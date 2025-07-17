@@ -28,11 +28,7 @@ class Department(db.Model):
     employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments')
     # employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments', lazy='dynamic')
 
-    manager_id = db.Column(
-        db.Integer,
-        db.ForeignKey('employee.id', name='fk_department_manager', ondelete='SET NULL', use_alter=True),
-        nullable=True
-    )
+    manager = db.relationship('Employee', foreign_keys=[manager_id], uselist=False)
     accessible_users = db.relationship('User', 
                                        secondary=user_accessible_departments,
                                        back_populates='departments')
@@ -517,14 +513,6 @@ class Vehicle(db.Model):
     
     # إضافة حقل صورة رخصة السيارة
     license_image = db.Column(db.String(255), nullable=True)  # صورة رخصة السيارة
-    
-    # إضافة حقول الصور الجديدة المطلوبة
-    registration_form_image = db.Column(db.String(255), nullable=True)  # صورة استمارة السيارة
-    plate_image = db.Column(db.String(255), nullable=True)  # صورة لوحة السيارة
-    insurance_file = db.Column(db.String(255), nullable=True)  # ملف التأمين
-    
-    # إضافة حقل المشروع
-    project = db.Column(db.String(100), nullable=True)  # اسم المشروع
     
     # إضافة حقل رابط مجلد Google Drive
     drive_folder_link = db.Column(db.String(500), nullable=True)  # رابط مجلد Google Drive
@@ -1173,110 +1161,4 @@ class AuditLog(db.Model):
     def __repr__(self):
         return f'<AuditLog {self.action} {self.entity_type} by {self.user_id}>'
 
-
-
-class VehicleExternalSafetyCheck(db.Model):
-    """فحوصات السلامة الخارجية للسيارات"""
-    __tablename__ = 'vehicle_external_safety_check'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
-    
-    # بيانات السائق
-    driver_name = db.Column(db.String(100), nullable=False)  # اسم السائق
-    driver_national_id = db.Column(db.String(20), nullable=False)  # رقم الهوية
-    driver_department = db.Column(db.String(100), nullable=False)  # القسم
-    driver_city = db.Column(db.String(100), nullable=False)  # المدينة
-    
-    # بيانات السيارة (محملة تلقائياً)
-    vehicle_plate_number = db.Column(db.String(20), nullable=False)  # رقم اللوحة
-    vehicle_make_model = db.Column(db.String(100), nullable=False)  # النوع والموديل
-    current_delegate = db.Column(db.String(100), nullable=True)  # المفوض الحالي
-    
-    # تاريخ ووقت الفحص
-    inspection_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    
-    # حالة الاعتماد
-    approval_status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
-    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # المعتمد من قبل
-    approved_at = db.Column(db.DateTime, nullable=True)  # تاريخ الاعتماد
-    rejection_reason = db.Column(db.Text, nullable=True)  # سبب الرفض
-    
-    # ملاحظات عامة
-    notes = db.Column(db.Text)  # ملاحظات إضافية
-    
-    # معلومات النظام
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # العلاقات
-    vehicle = db.relationship('Vehicle', backref=db.backref('external_safety_checks', cascade='all, delete-orphan'))
-    approver = db.relationship('User', foreign_keys=[approved_by])
-    safety_images = db.relationship('VehicleSafetyImage', back_populates='safety_check', cascade='all, delete-orphan')
-    
-    def __repr__(self):
-        return f'<VehicleExternalSafetyCheck {self.vehicle_plate_number} by {self.driver_name}>'
-        
-    @property
-    def is_approved(self):
-        return self.approval_status == 'approved'
-    
-    @property
-    def is_pending(self):
-        return self.approval_status == 'pending'
-    
-    @property
-    def is_rejected(self):
-        return self.approval_status == 'rejected'
-
-
-class VehicleSafetyImage(db.Model):
-    """صور فحوصات السلامة"""
-    __tablename__ = 'vehicle_safety_image'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    safety_check_id = db.Column(db.Integer, db.ForeignKey('vehicle_external_safety_check.id', ondelete='CASCADE'), nullable=False)
-    image_path = db.Column(db.String(255), nullable=False)  # مسار الصورة
-    image_description = db.Column(db.String(200), nullable=True)  # وصف الصورة (اختياري)
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # العلاقات
-    safety_check = db.relationship('VehicleExternalSafetyCheck', back_populates='safety_images')
-    
-    def __repr__(self):
-        return f'<VehicleSafetyImage {self.safety_check_id}>'
-
-
-class SafetyInspection(db.Model):
-    """نموذج فحص السلامة - نسخة مبسطة للاستخدام في routes/external_safety.py"""
-    __tablename__ = 'safety_inspection'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
-    employee_id = db.Column(db.String(20), nullable=False)  # رقم الموظف
-    driver_name = db.Column(db.String(100), nullable=False)
-    
-    # معلومات الفحص
-    inspection_date = db.Column(db.DateTime, default=datetime.utcnow)
-    issues_found = db.Column(db.Text)  # المشاكل المكتشفة
-    recommendations = db.Column(db.Text)  # التوصيات
-    
-    # الصور المرفقة
-    images = db.Column(db.Text)  # قائمة بمسارات الصور (JSON)
-    
-    # حالة الموافقة
-    approval_status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
-    admin_notes = db.Column(db.Text)  # ملاحظات الإدارة
-    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    approved_at = db.Column(db.DateTime, nullable=True)
-    
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # العلاقات
-    vehicle = db.relationship('Vehicle', backref='safety_inspections')
-    approver = db.relationship('User', foreign_keys=[approved_by])
-    
-    def __repr__(self):
-        return f'<SafetyInspection {self.vehicle_id} by {self.driver_name}>'
 

@@ -153,6 +153,103 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- ملفات Google Drive داخل معلومات السيارة -->
+                    <hr class="my-3">
+                    <div class="row mb-2">
+                        <div class="col-sm-4 fw-bold">
+                            <i class="fab fa-google-drive text-info ms-1"></i>
+                            ملفات Google Drive:
+                        </div>
+                        <div class="col-sm-8">
+                            {% if vehicle.drive_folder_link %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">مرتبط</span>
+                                <a href="{{ vehicle.drive_folder_link }}" target="_blank" class="btn btn-sm btn-success me-2">
+                                    <i class="fab fa-google-drive me-1"></i>
+                                    فتح المجلد
+                                </a>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-cog me-1"></i>
+                                    إدارة
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">تم ربط مجلد لتنظيم ملفات المركبة</small>
+                            {% else %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-2">غير مرتبط</span>
+                                <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-link me-1"></i>
+                                    ربط مجلد
+                                </a>
+                            </div>
+                            <small class="text-muted d-block mt-1">لم يتم ربط مجلد Google Drive بعد</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- صورة رخصة السيارة -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-id-card ms-2"></i>
+                        صورة رخصة السيارة
+                    </h5>
+                    <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                        {% if vehicle.license_image %}تحديث الصورة{% else %}رفع الصورة{% endif %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if vehicle.license_image %}
+                    <div class="text-center">
+                        <div class="license-image-container mb-3">
+                            <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                                 class="img-fluid rounded border" 
+                                 style="max-height: 300px; max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" 
+                                 alt="صورة رخصة السيارة"
+                                 onclick="showLicenseModal()">
+                        </div>
+                        <div class="license-actions d-flex gap-2 justify-content-center flex-wrap">
+                            <button onclick="showLicenseModal()" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-search-plus ms-1"></i>
+                                عرض كبير
+                            </button>
+                            <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) }}" 
+                               target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-download ms-1"></i>
+                                تحميل الصورة
+                            </a>
+                            <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                               class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit ms-1"></i>
+                                تحديث
+                            </a>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                انقر على الصورة للعرض بحجم كامل
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-id-card fa-4x text-muted"></i>
+                        </div>
+                        <h5>لا توجد صورة رخصة</h5>
+                        <p class="text-muted">لم يتم رفع صورة رخصة لهذه السيارة بعد</p>
+                        <a href="{{ url_for('vehicles.vehicle_license_image', vehicle_id=vehicle.id) }}" 
+                           class="btn btn-primary mt-2">
+                            <i class="fas fa-plus ms-1"></i>
+                            رفع صورة الرخصة
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -645,6 +742,8 @@
             </div>
         </div>
     </div>
+
+
 
     <!-- وثائق المركبة -->
     <div class="row mb-4">
@@ -1480,6 +1579,120 @@
     </div>
 </div>
 
+<!-- قسم التفويضات الخارجية -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-signature ms-2"></i>
+                    التفويضات الخارجية
+                    <span class="badge bg-secondary">{{ external_authorizations|length }}</span>
+                </h5>
+                <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة تفويض جديد
+                </a>
+            </div>
+            <div class="card-body">
+                {% if external_authorizations %}
+                <!-- إحصائيات التفويضات -->
+                <div class="row mb-3">
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-warning h5">{{ external_authorizations|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                        <small class="text-muted">في الانتظار</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-success h5">{{ external_authorizations|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+                        <small class="text-muted">مُوافق عليه</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="fw-bold text-danger h5">{{ external_authorizations|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
+                        <small class="text-muted">مرفوض</small>
+                    </div>
+                </div>
+                <hr>
+                
+                <!-- جدول التفويضات -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>الموظف</th>
+                                <th>المشروع</th>
+                                <th>نوع التفويض</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for auth in external_authorizations %}
+                            <tr>
+                                <td>{{ auth.employee.name }}</td>
+                                <td>{{ auth.project_name or 'غير محدد' }}</td>
+                                <td><span class="badge bg-info">{{ auth.authorization_type }}</span></td>
+                                <td>
+                                    {% if auth.status == 'pending' %}
+                                        <span class="badge bg-warning">قيد المراجعة</span>
+                                    {% elif auth.status == 'approved' %}
+                                        <span class="badge bg-success">مُوافق عليه</span>
+                                    {% elif auth.status == 'rejected' %}
+                                        <span class="badge bg-danger">مرفوض</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('vehicles.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-primary" title="عرض التفاصيل">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-warning" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if auth.file_path %}
+                                        <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" target="_blank" class="btn btn-outline-info" title="عرض الملف">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if auth.external_link %}
+                                        <a href="{{ auth.external_link }}" target="_blank" class="btn btn-outline-success" title="فتح الرابط">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if auth.status == 'pending' %}
+                                        <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-success" 
+                                           onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" title="موافقة">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                           class="btn btn-outline-danger" 
+                                           onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" title="رفض">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-file-signature fa-3x text-muted mb-3"></i>
+                    <h6>لا توجد تفويضات خارجية</h6>
+                    <p class="text-muted small">يمكنك إضافة تفويض خارجي جديد من خلال النقر على زر "إضافة تفويض جديد"</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- قسم بيانات الحوادث المرورية -->
 <div class="row mb-4">
     <div class="col-12">
@@ -1656,10 +1869,142 @@
                 });
             });
 
-            // تحديث حالة زر الحذف عند تحميل الصفحة
-            updateDeleteButton();
-        }
+    // تأكيد الحذف قبل الإرسال
+    if (handoverDeleteForm) {
+        handoverDeleteForm.addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.handover-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('يرجى تحديد السجلات المراد حذفها');
+                return false;
+            }
+            
+            const confirmMessage = `هل أنت متأكد من حذف ${checkedBoxes.length} سجل من سجلات التسليم والاستلام؟\n\nهذا الإجراء لا يمكن التراجع عنه.`;
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    // تحديث حالة الزر في البداية
+    updateDeleteButtonState();
+});
+
+// عرض نافذة منبثقة لصورة الرخصة
+function showLicenseModal() {
+    const modal = `
+        <div class="modal fade" id="licenseModal" tabindex="-1" aria-labelledby="licenseModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="licenseModalLabel">صورة رخصة السيارة - {{ vehicle.plate_number }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) if vehicle.license_image else '' }}" 
+                             class="img-fluid rounded" 
+                             style="max-height: 70vh; width: auto;" 
+                             alt="صورة رخصة السيارة">
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{{ url_for('static', filename='uploads/vehicles/' + vehicle.license_image) if vehicle.license_image else '#' }}" 
+                           target="_blank" class="btn btn-success">
+                            <i class="fas fa-download ms-1"></i>
+                            تحميل الصورة
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // إزالة النافذة إذا كانت موجودة
+    const existingModal = document.getElementById('licenseModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // إضافة النافذة للصفحة
+    document.body.insertAdjacentHTML('beforeend', modal);
+    
+    // عرض النافذة
+    const bootstrapModal = new bootstrap.Modal(document.getElementById('licenseModal'));
+    bootstrapModal.show();
+}
+
+// دالة نسخ الرابط للحافظة
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // إظهار تنبيه نجاح
+        const toast = document.createElement('div');
+        toast.className = 'toast show position-fixed top-0 end-0 m-3';
+        toast.innerHTML = `
+            <div class="toast-header">
+                <strong class="me-auto text-success">نجح النسخ</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                تم نسخ الرابط إلى الحافظة
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }).catch(function() {
+        alert('تم نسخ الرابط');
     });
+}
+
+// دالة التحقق من صحة رابط Google Drive
+function validateDriveLink(url) {
+    const drivePattern = /^https:\/\/(drive\.google\.com|docs\.google\.com)/;
+    return drivePattern.test(url);
+}
+
+// معالجة نموذج إدارة Google Drive
+document.addEventListener('DOMContentLoaded', function() {
+    const driveForm = document.getElementById('driveForm');
+    const driveLinkInput = document.getElementById('driveLink');
+    const linkPreview = document.getElementById('linkPreview');
+    const previewContainer = document.getElementById('previewContainer');
+    
+    if (driveLinkInput) {
+        driveLinkInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url && validateDriveLink(url)) {
+                linkPreview.textContent = url;
+                previewContainer.style.display = 'block';
+                previewContainer.className = 'alert alert-success';
+                previewContainer.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>رابط صحيح:</strong><br>
+                    <small>${url}</small>
+                `;
+            } else if (url) {
+                previewContainer.style.display = 'block';
+                previewContainer.className = 'alert alert-warning';
+                previewContainer.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    يرجى إدخال رابط Google Drive صحيح
+                `;
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+    
+    if (driveForm) {
+        driveForm.addEventListener('submit', function(e) {
+            const url = driveLinkInput.value.trim();
+            if (url && !validateDriveLink(url)) {
+                e.preventDefault();
+                alert('يرجى إدخال رابط Google Drive صحيح');
+                return false;
+            }
+        });
+    }
+});
 
     // دالة لعرض الصور في نافذة منبثقة
     function openImageModal(imageSrc, imageTitle) {
@@ -1808,17 +2153,72 @@ ${formUrl}
     }
 </script>
 
-<!-- Modal لعرض الصور -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+<!-- نافذة إدارة Google Drive -->
+<div class="modal fade" id="driveModal" tabindex="-1" aria-labelledby="driveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">عرض الصورة</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="driveModalLabel">
+                    <i class="fab fa-google-drive me-2"></i>
+                    إدارة ملفات Google Drive
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" class="img-fluid" src="" alt="صورة">
-            </div>
+            <form method="post" action="{{ url_for('vehicles.update_drive_link', vehicle_id=vehicle.id) }}" id="driveForm">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="driveLink" class="form-label">
+                                    <i class="fas fa-link me-1"></i>
+                                    رابط مجلد Google Drive
+                                </label>
+                                <input type="url" class="form-control" id="driveLink" name="drive_link" 
+                                       value="{{ vehicle.drive_folder_link or '' }}"
+                                       placeholder="https://drive.google.com/drive/folders/..."
+                                       dir="ltr">
+                                <div class="form-text">
+                                    قم بإنشاء مجلد في Google Drive وانسخ رابط المشاركة هنا
+                                </div>
+                            </div>
+                            
+                            <div id="previewContainer" style="display: none;" class="alert">
+                                <!-- سيتم ملؤها بواسطة JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-1"></i> كيفية إنشاء رابط Google Drive:</h6>
+                        <ol class="mb-0">
+                            <li>انتقل إلى <a href="https://drive.google.com" target="_blank">Google Drive</a></li>
+                            <li>انقر بزر الماوس الأيمن واختر "مجلد جديد"</li>
+                            <li>اسم المجلد باسم السيارة: "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}"</li>
+                            <li>انقر بزر الماوس الأيمن على المجلد واختر "مشاركة"</li>
+                            <li>غير الإذن إلى "أي شخص لديه الرابط يمكنه العرض"</li>
+                            <li>انسخ الرابط والصقه هنا</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        إلغاء
+                    </button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save me-1"></i>
+                        حفظ الرابط
+                    </button>
+                    {% if vehicle.drive_folder_link %}
+                    <button type="submit" name="action" value="remove" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>
+                        حذف الرابط
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -25,6 +25,7 @@ from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
+from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
 # from utils.workshop_report import generate_workshop_report_pdf
 # from utils.html_to_pdf import generate_pdf_from_template
 # from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
@@ -38,6 +39,7 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 # from utils.fpdf_handover_pdf import generate_handover_report_pdf
 
+vehicles_bp = Blueprint('vehicles', __name__)
 vehicles_bp = Blueprint('vehicles', __name__)
 
 def update_vehicle_driver(vehicle_id):
@@ -4577,6 +4579,7 @@ def vehicle_drive_files(vehicle_id):
                          title=f'ملفات Google Drive - {vehicle.plate_number}',
                          vehicle=vehicle)
 
+@vehicles_bp.route('/<int:vehicle_id>/drive-management', methods=['GET', 'POST'])
 @vehicles_bp.route('/<int:vehicle_id>/drive-management', methods=['GET', 'POST'])
 @login_required
 def drive_management(vehicle_id):

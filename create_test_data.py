@@ -7,8 +7,8 @@ import os
 from datetime import datetime, date
 from dotenv import load_dotenv
 # تحميل متغيرات البيئة
-load_dotenv('.env')
-os.environ.setdefault('DATABASE_URL', 'mysql://root:Null123%23%40@localhost:3306/u800258840_eissa')
+load_dotenv('.env.local')
+os.environ.setdefault('DATABASE_URL', 'sqlite:///nuzum_local.db')
 
 from app import app, db
 from models import User, Department, Employee, UserRole
