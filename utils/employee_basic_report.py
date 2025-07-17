@@ -323,6 +323,16 @@ def generate_employee_basic_pdf(employee_id):
         pdf.add_info_row('الموقع', employee.location)
         pdf.add_info_row('المشروع', employee.project)
         
+        # معلومات الكفالة
+        pdf.add_section_title('معلومات الكفالة')
+        sponsorship_status_text = 'على الكفالة' if employee.sponsorship_status != 'outside' else 'خارج الكفالة'
+        pdf.add_info_row('حالة الكفالة', sponsorship_status_text)
+        
+        if employee.sponsorship_status != 'outside' and employee.current_sponsor_name:
+            pdf.add_info_row('اسم الكفيل الحالي', employee.current_sponsor_name)
+        elif employee.sponsorship_status != 'outside':
+            pdf.add_info_row('اسم الكفيل الحالي', 'غير محدد')
+        
         # سجلات تسليم/استلام المركبات
         vehicle_records = VehicleHandover.query.filter_by(employee_id=employee.id).order_by(VehicleHandover.handover_date.desc()).limit(10).all()
         
