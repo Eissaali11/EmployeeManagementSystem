@@ -976,8 +976,10 @@
             if (addType === 'single') {
                 $('#employee_selection').show();
                 $('#department_selection').hide();
+                $('#advanced_selection').hide();
                 $('#sponsorship_bulk_selection').hide();
                 $('#sponsorship_employees_list').hide();
+                $('#advanced_employees_section').hide();
                 $('#single_form_buttons').show();
                 $('#document_type_single').show();
                 $('.row:has(#issue_date)').show();
@@ -986,18 +988,34 @@
             } else if (addType === 'department') {
                 $('#employee_selection').hide();
                 $('#department_selection').show();
+                $('#advanced_selection').hide();
                 $('#sponsorship_bulk_selection').hide();
                 $('#sponsorship_employees_list').hide();
+                $('#advanced_employees_section').hide();
                 $('#single_form_buttons').show();
                 $('#document_type_single').show();
                 $('.row:has(#issue_date)').show();
                 $('.mb-3:has(#notes)').show();
                 $('#document_number_container').show();
+            } else if (addType === 'advanced') {
+                $('#employee_selection').hide();
+                $('#department_selection').hide();
+                $('#advanced_selection').show();
+                $('#sponsorship_bulk_selection').hide();
+                $('#sponsorship_employees_list').hide();
+                $('#advanced_employees_section').hide();
+                $('#single_form_buttons').hide();
+                $('#document_type_single').hide();
+                $('.row:has(#issue_date)').hide();
+                $('.mb-3:has(#notes)').hide();
+                $('#document_number_container').hide();
             } else if (addType === 'sponsorship_bulk') {
                 $('#employee_selection').hide();
                 $('#department_selection').hide();
+                $('#advanced_selection').hide();
                 $('#sponsorship_bulk_selection').show();
                 $('#sponsorship_employees_list').hide();
+                $('#advanced_employees_section').hide();
                 $('#single_form_buttons').hide();
                 $('#document_type_single').hide();
                 $('.row:has(#issue_date)').hide();
