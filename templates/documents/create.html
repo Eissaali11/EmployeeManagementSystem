@@ -33,9 +33,9 @@
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="add_type" id="add_advanced" value="advanced">
-                                <label class="form-check-label" for="add_advanced">
-                                    <i class="fas fa-filter me-1"></i> إضافة متقدمة (قسم + كفالة)
+                                <input class="form-check-input" type="radio" name="add_type" id="add_sponsorship" value="sponsorship">
+                                <label class="form-check-label" for="add_sponsorship">
+                                    <i class="fas fa-filter me-1"></i> إضافة حسب الكفالة
                                 </label>
                             </div>
                         </div>
@@ -85,29 +85,14 @@
                                 </select>
                             </div>
 
-                            <!-- قسم الإضافة المتقدمة - يظهر فقط عند اختيار "إضافة متقدمة" -->
-                            <div class="col-md-12 mb-3 d-none" id="advanced_selection">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="advanced_department_id" class="form-label required-field">القسم</label>
-                                        <select class="form-select" id="advanced_department_id" name="advanced_department_id">
-                                            <option value="">اختر القسم</option>
-                                            {% for department in departments %}
-                                            <option value="{{ department.id }}">
-                                                {{ department.name }} ({{ department.employees|length }} موظف)
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="advanced_sponsorship_filter" class="form-label required-field">فلترة حسب الكفالة</label>
-                                        <select class="form-select" id="advanced_sponsorship_filter" name="advanced_sponsorship_filter">
-                                            <option value="">اختر نوع الكفالة</option>
-                                            <option value="on_sponsorship">على الكفالة</option>
-                                            <option value="off_sponsorship">خارج الكفالة</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <!-- قسم الإضافة حسب الكفالة - يظهر فقط عند اختيار "إضافة حسب الكفالة" -->
+                            <div class="col-md-6 mb-3 d-none" id="sponsorship_selection">
+                                <label for="sponsorship_filter" class="form-label required-field">فلترة حسب الكفالة</label>
+                                <select class="form-select" id="sponsorship_filter" name="sponsorship_filter">
+                                    <option value="">اختر نوع الكفالة</option>
+                                    <option value="on_sponsorship">على الكفالة</option>
+                                    <option value="off_sponsorship">خارج الكفالة</option>
+                                </select>
                             </div>
                             
                             <div class="col-md-6 mb-3" id="document_type_single">
@@ -240,16 +225,48 @@
                             </div>
                         </div>
 
-                        <!-- قسم الموظفين المتقدم - يظهر فقط عند اختيار "إضافة متقدمة" -->
-                        <div class="d-none" id="advanced_employees_section">
+                        <!-- قسم الموظفين حسب الكفالة - يظهر فقط عند اختيار "إضافة حسب الكفالة" -->
+                        <div class="d-none" id="sponsorship_employees_section">
                             <div class="card mt-4">
-                                <div class="card-header bg-primary text-white">
+                                <div class="card-header bg-success text-white">
                                     <h5 class="mb-0">
                                         <i class="fas fa-users me-2"></i>
-                                        موظفي القسم المحدد
+                                        الموظفين حسب حالة الكفالة
                                     </h5>
                                 </div>
                                 <div class="card-body">
+                                    <div class="alert alert-info mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        اختر نوع الوثيقة أولاً ثم املأ البيانات لكل موظف واضغط "حفظ" بجواره، أو استخدم "حفظ جميع البيانات" لحفظ الجميع.
+                                    </div>
+                                    
+                                    <!-- نوع الوثيقة للإضافة حسب الكفالة -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="sponsorship_document_type" class="form-label required-field">نوع الوثيقة</label>
+                                            <select class="form-select" id="sponsorship_document_type" name="sponsorship_document_type">
+                                                <option value="">اختر نوع الوثيقة</option>
+                                                {% for doc_type in document_types %}
+                                                <option value="{{ doc_type }}">
+                                                    {% if doc_type == 'national_id' %}
+                                                    الهوية الوطنية
+                                                    {% elif doc_type == 'passport' %}
+                                                    جواز السفر
+                                                    {% elif doc_type == 'health_certificate' %}
+                                                    الشهادة الصحية
+                                                    {% elif doc_type == 'work_permit' %}
+                                                    تصريح العمل
+                                                    {% elif doc_type == 'education_certificate' %}
+                                                    الشهادة الدراسية
+                                                    {% else %}
+                                                    {{ doc_type }}
+                                                    {% endif %}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="table-responsive">
                                         <table class="table table-striped table-hover">
                                             <thead class="table-dark">
@@ -265,7 +282,7 @@
                                                     <th style="width: 120px;">إجراءات</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="advanced_employees_tbody">
+                                            <tbody id="sponsorship_employees_tbody">
                                                 <!-- سيتم ملؤها عبر JavaScript -->
                                             </tbody>
                                         </table>
@@ -273,10 +290,10 @@
                                     
                                     <!-- أزرار الحفظ الجماعي -->
                                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-                                        <button type="button" class="btn btn-success" id="save_all_advanced_documents">
+                                        <button type="button" class="btn btn-success" id="save_all_sponsorship_documents">
                                             <i class="fas fa-save me-1"></i> حفظ جميع البيانات المُدخلة
                                         </button>
-                                        <button type="button" class="btn btn-secondary" id="reset_advanced_form">
+                                        <button type="button" class="btn btn-secondary" id="reset_sponsorship_form">
                                             <i class="fas fa-undo me-1"></i> إعادة تعيين النموذج
                                         </button>
                                     </div>
@@ -761,7 +778,7 @@
         });
         
         // إعداد أقسام النماذج
-        $('#sponsorship_department_id, #sponsorship_type, #sponsorship_document_type').select2({
+        $('#sponsorship_department_id, #sponsorship_type, #sponsorship_document_type, #sponsorship_filter').select2({
             theme: 'bootstrap-5',
             allowClear: true,
             dir: 'rtl',
@@ -769,8 +786,136 @@
             width: '100%'
         });
 
+        // تحديث الموظفين عند تغيير نوع الكفالة
+        $('#sponsorship_filter').on('change', function() {
+            const sponsorshipType = $(this).val();
+            
+            if (sponsorshipType) {
+                loadSponsorshipEmployeesByType(sponsorshipType);
+            } else {
+                $('#sponsorship_employees_section').hide();
+            }
+        });
+
+        function loadSponsorshipEmployeesByType(sponsorshipType) {
+            // إرسال طلب AJAX لجلب الموظفين
+            $.ajax({
+                url: '{{ url_for("documents.get_sponsorship_employees") }}',
+                type: 'POST',
+                data: {
+                    sponsorship_filter: sponsorshipType,
+                    csrf_token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        sponsorshipEmployees = response.employees.map(emp => ({
+                            ...emp,
+                            documentNumber: '',
+                            issueDate: '',
+                            expiryDate: '',
+                            notes: '',
+                            saved: false
+                        }));
+                        updateSponsorshipEmployeesTable();
+                        $('#sponsorship_employees_section').show();
+                    } else {
+                        alert('حدث خطأ أثناء جلب الموظفين');
+                    }
+                },
+                error: function() {
+                    alert('حدث خطأ في الشبكة');
+                }
+            });
+        }
+
+        // حفظ موظف واحد من قائمة الكفالة
+        window.saveSponsorshipEmployee = function(index) {
+            const emp = sponsorshipEmployees[index];
+            const documentType = $('#sponsorship_document_type').val();
+            
+            if (!documentType) {
+                alert('يرجى اختيار نوع الوثيقة أولاً');
+                return;
+            }
+            
+            if (!emp.documentNumber) {
+                alert('يرجى إدخال رقم الوثيقة');
+                return;
+            }
+            
+            const data = {
+                add_type: 'sponsorship_single',
+                employee_id: emp.id,
+                document_type: documentType,
+                document_number: emp.documentNumber,
+                issue_date: emp.issueDate,
+                expiry_date: emp.expiryDate,
+                notes: emp.notes,
+                csrf_token: '{{ csrf_token() }}'
+            };
+            
+            $.ajax({
+                url: '{{ url_for("documents.create") }}',
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    emp.saved = true;
+                    updateSponsorshipEmployeesTable();
+                    showToast('تم حفظ الوثيقة بنجاح', 'success');
+                },
+                error: function() {
+                    alert('حدث خطأ أثناء الحفظ');
+                }
+            });
+        };
+
+        // حفظ جميع الوثائق من قائمة الكفالة
+        $('#save_all_sponsorship_documents').click(function() {
+            const documentType = $('#sponsorship_document_type').val();
+            
+            if (!documentType) {
+                alert('يرجى اختيار نوع الوثيقة أولاً');
+                return;
+            }
+            
+            const unsavedEmployees = sponsorshipEmployees.filter(emp => !emp.saved);
+            
+            if (unsavedEmployees.length === 0) {
+                alert('لا توجد وثائق جديدة للحفظ');
+                return;
+            }
+            
+            const data = {
+                add_type: 'sponsorship_bulk',
+                document_type: documentType,
+                employees: JSON.stringify(unsavedEmployees),
+                csrf_token: '{{ csrf_token() }}'
+            };
+            
+            $.ajax({
+                url: '{{ url_for("documents.create") }}',
+                method: 'POST',
+                data: data,
+                success: function(response) {
+                    unsavedEmployees.forEach(emp => emp.saved = true);
+                    updateSponsorshipEmployeesTable();
+                    alert(`تم حفظ ${unsavedEmployees.length} وثيقة بنجاح`);
+                },
+                error: function() {
+                    alert('حدث خطأ أثناء الحفظ');
+                }
+            });
+        });
+
         // بيانات الموظفين للإضافة الجماعية
         let sponsorshipEmployees = [];
+
+        // إضافة دالة updateEmployeeData للاستخدام في الجدول
+        window.updateEmployeeData = function(index, field, value) {
+            if (sponsorshipEmployees[index]) {
+                sponsorshipEmployees[index][field] = value;
+            }
+        };
 
         // التحكم في الكفالة - عند تغيير القسم أو نوع الكفالة
         $('#sponsorship_department_id, #sponsorship_type').on('change', function() {
@@ -810,8 +955,10 @@
             sponsorshipEmployees.forEach((emp, index) => {
                 const row = `
                     <tr id="emp_row_${index}" class="${emp.saved ? 'table-success' : ''}">
-                        <td>${emp.text}</td>
-                        <td>${emp.id}</td>
+                        <td>${emp.name}</td>
+                        <td>${emp.employee_id}</td>
+                        <td>${emp.national_id || 'غير محدد'}</td>
+                        <td>${emp.sponsorship_status}</td>
                         <td>
                             <input type="text" class="form-control form-control-sm" 
                                    value="${emp.documentNumber}" 
@@ -839,7 +986,7 @@
                         <td>
                             ${emp.saved ? 
                                 '<span class="badge bg-success">تم الحفظ</span>' : 
-                                `<button type="button" class="btn btn-sm btn-primary" onclick="saveIndividualEmployee(${index})">
+                                `<button type="button" class="btn btn-sm btn-primary" onclick="saveSponsorshipEmployee(${index})">
                                     <i class="fas fa-save"></i> حفظ
                                 </button>`
                             }
@@ -850,7 +997,7 @@
             });
         }
 
-        // حفظ موظف واحد
+        // حفظ موظف واحد من الإضافة الجماعية الأصلية
         window.saveIndividualEmployee = function(index) {
             const emp = sponsorshipEmployees[index];
             const documentType = $('#sponsorship_document_type').val();
@@ -997,13 +1144,13 @@
                 $('.row:has(#issue_date)').show();
                 $('.mb-3:has(#notes)').show();
                 $('#document_number_container').show();
-            } else if (addType === 'advanced') {
+            } else if (addType === 'sponsorship') {
                 $('#employee_selection').hide();
                 $('#department_selection').hide();
-                $('#advanced_selection').show();
+                $('#sponsorship_selection').show();
                 $('#sponsorship_bulk_selection').hide();
                 $('#sponsorship_employees_list').hide();
-                $('#advanced_employees_section').hide();
+                $('#sponsorship_employees_section').hide();
                 $('#single_form_buttons').hide();
                 $('#document_type_single').hide();
                 $('.row:has(#issue_date)').hide();
