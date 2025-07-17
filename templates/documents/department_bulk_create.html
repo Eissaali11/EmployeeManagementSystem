@@ -16,7 +16,7 @@
                 <div class="card-body">
                     <!-- فلاتر التحديد -->
                     <div class="row mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="department_filter" class="form-label required-field">القسم</label>
                             <select class="form-select" id="department_filter" name="department_filter" required>
                                 <option value="">اختر القسم</option>
@@ -27,7 +27,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="document_type_filter" class="form-label required-field">نوع الوثيقة</label>
                             <select class="form-select" id="document_type_filter" name="document_type_filter" required>
                                 <option value="">اختر نوع الوثيقة</option>
@@ -50,6 +50,14 @@
                                 {% endfor %}
                             </select>
                         </div>
+                        <div class="col-md-4">
+                            <label for="sponsorship_filter" class="form-label">نوع الكفالة</label>
+                            <select class="form-select" id="sponsorship_filter" name="sponsorship_filter">
+                                <option value="">جميع الموظفين</option>
+                                <option value="on_sponsorship">على الكفالة</option>
+                                <option value="off_sponsorship">خارج الكفالة</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- رسالة تعليمية -->
@@ -58,6 +66,7 @@
                         <strong>إرشادات:</strong>
                         <ul class="mb-0 mt-2">
                             <li>املأ البيانات المطلوبة لكل موظف</li>
+                            <li><strong>فلتر الكفالة:</strong> يمكنك تحديد الموظفين على الكفالة أو خارج الكفالة</li>
                             <li><strong>الحفظ الفردي:</strong> يحفظ بيانات الموظف المحدد فقط دون التأثير على الآخرين</li>
                             <li><strong>الحفظ الجماعي:</strong> يحفظ جميع البيانات المُدخلة وينتقل لصفحة عرض الوثائق</li>
                             <li>سيتم تعبئة رقم الوثيقة تلقائياً عند اختيار "الهوية الوطنية"</li>
@@ -125,6 +134,7 @@
             name: "{{ employee.name }}",
             employee_id: "{{ employee.employee_id }}",
             national_id: "{{ employee.national_id or '' }}",
+            sponsorship_status: "{{ employee.sponsorship_status or '' }}",
             department_ids: [{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}],
             department_names: "{% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}, {% endif %}{% endfor %}"
         });
@@ -149,13 +159,23 @@
             width: '100%'
         });
         
-        // معالجة تغيير القسم أو نوع الوثيقة
-        $('#department_filter, #document_type_filter').on('change', function() {
+        $('#sponsorship_filter').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'جميع الموظفين',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
+        // معالجة تغيير القسم أو نوع الوثيقة أو الكفالة
+        $('#department_filter, #document_type_filter, #sponsorship_filter').on('change', function() {
             const departmentId = $('#department_filter').val();
             const documentType = $('#document_type_filter').val();
+            const sponsorshipFilter = $('#sponsorship_filter').val();
             
             if (departmentId && documentType) {
-                loadDepartmentEmployees(departmentId, documentType);
+                loadDepartmentEmployees(departmentId, documentType, sponsorshipFilter);
             } else {
                 $('#employees_section').addClass('d-none');
                 $('#empty_message').removeClass('d-none');
@@ -164,18 +184,37 @@
         });
         
         // تحميل موظفي القسم
-        function loadDepartmentEmployees(departmentId, documentType) {
+        function loadDepartmentEmployees(departmentId, documentType, sponsorshipFilter) {
             // فلترة الموظفين حسب القسم
-            const departmentEmployees = employeesData.filter(emp => 
+            let departmentEmployees = employeesData.filter(emp => 
                 emp.department_ids.includes(parseInt(departmentId))
             );
             
+            // فلترة حسب نوع الكفالة
+            if (sponsorshipFilter) {
+                if (sponsorshipFilter === 'on_sponsorship') {
+                    departmentEmployees = departmentEmployees.filter(emp => 
+                        emp.sponsorship_status === 'على الكفالة'
+                    );
+                } else if (sponsorshipFilter === 'off_sponsorship') {
+                    departmentEmployees = departmentEmployees.filter(emp => 
+                        emp.sponsorship_status === 'خارج الكفالة'
+                    );
+                }
+            }
+            
             if (departmentEmployees.length === 0) {
+                let message = 'لا توجد موظفين في هذا القسم';
+                if (sponsorshipFilter) {
+                    const sponsorshipText = sponsorshipFilter === 'on_sponsorship' ? 'على الكفالة' : 'خارج الكفالة';
+                    message = `لا توجد موظفين ${sponsorshipText} في هذا القسم`;
+                }
+                
                 $('#employees_tbody').html(`
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
                             <i class="fas fa-users fa-2x mb-2"></i>
-                            <br>لا توجد موظفين في هذا القسم
+                            <br>${message}
                         </td>
                     </tr>
                 `);
@@ -196,6 +235,12 @@
             employees.forEach((emp, index) => {
                 const autoDocumentNumber = getAutoDocumentNumber(emp, documentType);
                 
+                const sponsorshipBadge = emp.sponsorship_status === 'على الكفالة' 
+                    ? '<span class="badge bg-success">على الكفالة</span>'
+                    : emp.sponsorship_status === 'خارج الكفالة' 
+                    ? '<span class="badge bg-warning">خارج الكفالة</span>'
+                    : '<span class="badge bg-secondary">غير محدد</span>';
+                
                 const row = `
                     <tr id="employee-row-${index}" class="employee-row" data-employee-id="${emp.id}">
                         <td>
@@ -208,6 +253,8 @@
                                     <small class="text-muted">الهوية: ${emp.national_id || 'غير محددة'}</small>
                                     <br>
                                     <small class="text-info">${emp.department_names}</small>
+                                    <br>
+                                    ${sponsorshipBadge}
                                 </div>
                             </div>
                         </td>
@@ -410,6 +457,7 @@
         window.resetForm = function() {
             $('#department_filter').val('').trigger('change');
             $('#document_type_filter').val('').trigger('change');
+            $('#sponsorship_filter').val('').trigger('change');
             $('#employees_tbody').empty();
             $('#employees_section').addClass('d-none');
             $('#empty_message').removeClass('d-none');
