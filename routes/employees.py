@@ -294,6 +294,10 @@ def edit(id):
             employee.mobile_type = request.form.get('mobile_type', '') if employee.has_mobile_custody else None
             employee.mobile_imei = request.form.get('mobile_imei', '') if employee.has_mobile_custody else None
             
+            # تحديث حقول الكفالة
+            employee.sponsorship_status = request.form.get('sponsorship_status', 'inside')
+            employee.current_sponsor_name = request.form.get('current_sponsor_name', '') if employee.sponsorship_status == 'inside' else None
+            
             join_date_str = request.form.get('join_date')
             employee.join_date = parse_date(join_date_str) if join_date_str else None
 

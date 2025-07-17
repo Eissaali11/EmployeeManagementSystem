@@ -165,6 +165,45 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- قسم معلومات الكفالة -->
+                    <div class="col-12">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>معلومات الكفالة</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="sponsorship_status" class="form-label">حالة الكفالة</label>
+                                            <select class="form-select" id="sponsorship_status" name="sponsorship_status" onchange="toggleSponsorNameField()">
+                                                <option value="inside" {% if employee.sponsorship_status == 'inside' or not employee.sponsorship_status %}selected{% endif %}>على الكفالة</option>
+                                                <option value="outside" {% if employee.sponsorship_status == 'outside' %}selected{% endif %}>خارج الكفالة</option>
+                                            </select>
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                اختر "على الكفالة" إذا كان الموظف لا يزال على كفالة الشركة أو كفيل آخر
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3" id="sponsor-name-field">
+                                            <label for="current_sponsor_name" class="form-label">اسم الكفيل الحالي</label>
+                                            <input type="text" class="form-control" id="current_sponsor_name" name="current_sponsor_name" 
+                                                   value="{{ employee.current_sponsor_name or '' }}" 
+                                                   placeholder="اختياري - اسم الكفيل أو الشركة الكافلة">
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                يمكن تركه فارغاً إذا كان غير معروف أو غير محدد
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- في ملف employees/edit.html -->
 
 <!-- ابحث عن الحقل الخاص بـ department_id وقم باستبداله بهذا الكود -->
@@ -305,6 +344,21 @@ function toggleMobileFields() {
     }
 }
 
+function toggleSponsorNameField() {
+    const sponsorshipStatus = document.getElementById('sponsorship_status').value;
+    const sponsorNameField = document.getElementById('sponsor-name-field');
+    const sponsorNameInput = document.getElementById('current_sponsor_name');
+    
+    if (sponsorshipStatus === 'outside') {
+        // إذا كان خارج الكفالة، إخفاء حقل اسم الكفيل
+        sponsorNameField.style.display = 'none';
+        sponsorNameInput.value = ''; // مسح القيمة
+    } else {
+        // إذا كان على الكفالة، إظهار حقل اسم الكفيل
+        sponsorNameField.style.display = 'block';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM is ready. Initializing employee edit scripts...");
 
@@ -336,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // إعداد الحالة الافتراضية للحقول الشرطية عند تحميل الصفحة
     toggleCustodyFields();
+    toggleSponsorNameField();
 });
 </script>
 
