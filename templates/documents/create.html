@@ -38,11 +38,28 @@
                             <!-- قسم اختيار الموظف - يظهر فقط عند اختيار "إضافة لموظف واحد" -->
                             <div class="col-md-6 mb-3" id="employee_selection">
                                 <label for="employee_id" class="form-label required-field">الموظف</label>
+                                <!-- فلترة الموظفين حسب القسم -->
+                                <div class="mb-2">
+                                    <label for="filter_department" class="form-label text-muted">فلترة حسب القسم (اختياري)</label>
+                                    <select class="form-select" id="filter_department" name="filter_department">
+                                        <option value="">جميع الأقسام</option>
+                                        {% for department in departments %}
+                                        <option value="{{ department.id }}">
+                                            {{ department.name }} ({{ department.employees|length }} موظف)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                                 <select class="form-select" id="employee_id" name="employee_id">
                                     <option value="">اختر الموظف</option>
                                     {% for employee in employees %}
-                                    <option value="{{ employee.id }}">
+                                    <option value="{{ employee.id }}" 
+                                            data-national-id="{{ employee.national_id }}" 
+                                            data-department-id="{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}">
                                         {{ employee.name }} ({{ employee.employee_id }})
+                                        {% if employee.departments %}
+                                        - {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
+                                        {% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -153,6 +170,16 @@
             width: '100%'
         });
         
+        // تفعيل البحث في قائمة فلترة الأقسام
+        $('#filter_department').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'جميع الأقسام',
+            allowClear: true,
+            dir: 'rtl',
+            language: 'ar',
+            width: '100%'
+        });
+        
         // تفعيل البحث في قائمة الأقسام باستخدام Select2
         $('#department_id').select2({
             theme: 'bootstrap-5',
@@ -171,6 +198,70 @@
             dir: 'rtl',
             language: 'ar',
             width: '100%'
+        });
+        
+        // فلترة الموظفين حسب القسم المحدد
+        $('#filter_department').on('change', function() {
+            const selectedDepartmentId = $(this).val();
+            const employeeSelect = $('#employee_id');
+            
+            // إعادة تعيين اختيار الموظف
+            employeeSelect.val(null).trigger('change');
+            
+            // إظهار أو إخفاء الموظفين حسب القسم المحدد
+            employeeSelect.find('option').each(function() {
+                const option = $(this);
+                const employeeDepartmentIds = option.data('department-id');
+                
+                if (!selectedDepartmentId || option.val() === '') {
+                    // إظهار جميع الموظفين إذا لم يتم اختيار قسم
+                    option.show();
+                } else {
+                    // إظهار الموظفين في القسم المحدد فقط
+                    if (employeeDepartmentIds && employeeDepartmentIds.toString().split(',').includes(selectedDepartmentId)) {
+                        option.show();
+                    } else {
+                        option.hide();
+                    }
+                }
+            });
+            
+            // تحديث Select2 لإعادة رسم القائمة
+            employeeSelect.select2('destroy').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'اختر الموظف',
+                allowClear: true,
+                dir: 'rtl',
+                language: 'ar',
+                width: '100%'
+            });
+        });
+        
+        // التعبئة التلقائية لرقم الهوية عند اختيار موظف
+        $('#employee_id').on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            const nationalId = selectedOption.data('national-id');
+            const documentType = $('#document_type').val();
+            
+            // التعبئة التلقائية لرقم الوثيقة إذا كان نوع الوثيقة هو الهوية الوطنية
+            if (documentType === 'national_id' && nationalId) {
+                $('#document_number').val(nationalId);
+            }
+        });
+        
+        // التعبئة التلقائية عند تغيير نوع الوثيقة
+        $('#document_type').on('change', function() {
+            const documentType = $(this).val();
+            const selectedEmployee = $('#employee_id').find('option:selected');
+            const nationalId = selectedEmployee.data('national-id');
+            
+            // التعبئة التلقائية لرقم الوثيقة إذا كان نوع الوثيقة هو الهوية الوطنية
+            if (documentType === 'national_id' && nationalId) {
+                $('#document_number').val(nationalId);
+            } else if (documentType !== 'national_id') {
+                // مسح الحقل إذا لم يكن نوع الوثيقة هو الهوية الوطنية
+                $('#document_number').val('');
+            }
         });
         
         // التبديل بين اختيار الموظف أو القسم
