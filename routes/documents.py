@@ -7,7 +7,7 @@ import io
 from io import BytesIO
 import csv
 import xlsxwriter
-from flask_login import current_user
+from flask_login import current_user, login_required
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -62,6 +62,123 @@ def get_sponsorship_employees():
         })
         
     except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'حدث خطأ: {str(e)}'
+        })
+
+@documents_bp.route('/department-bulk-create', methods=['GET', 'POST'])
+@login_required
+def department_bulk_create():
+    """صفحة إنشاء وثائق القسم الكامل"""
+    try:
+        # جلب البيانات الأساسية
+        departments = Department.query.all()
+        employees = Employee.query.options(selectinload(Employee.departments)).all()
+        document_types = [
+            'national_id', 'passport', 'health_certificate', 
+            'work_permit', 'education_certificate'
+        ]
+        
+        if request.method == 'POST':
+            # معالجة طلب الحفظ
+            save_type = request.form.get('save_type')
+            department_id = request.form.get('department_id')
+            document_type = request.form.get('document_type')
+            
+            if save_type == 'individual':
+                # حفظ موظف واحد
+                employee_id = request.form.get('employee_id')
+                document_number = request.form.get('document_number')
+                issue_date = request.form.get('issue_date')
+                expiry_date = request.form.get('expiry_date')
+                notes = request.form.get('notes', '')
+                
+                if not all([employee_id, document_type, document_number]):
+                    return jsonify({
+                        'success': False, 
+                        'message': 'يرجى إدخال جميع البيانات المطلوبة'
+                    })
+                
+                # إنشاء الوثيقة
+                document = Document(
+                    employee_id=employee_id,
+                    document_type=document_type,
+                    document_number=document_number,
+                    issue_date=parse_date(issue_date) if issue_date else None,
+                    expiry_date=parse_date(expiry_date) if expiry_date else None,
+                    notes=notes
+                )
+                
+                db.session.add(document)
+                
+                # تسجيل العملية
+                employee = Employee.query.get(employee_id)
+                audit = SystemAudit(
+                    action='create',
+                    entity_type='document',
+                    entity_id=document.id,
+                    details=f'تم إضافة وثيقة {document_type} للموظف {employee.name if employee else "غير محدد"}',
+                    user_id=current_user.id if current_user.is_authenticated else None
+                )
+                db.session.add(audit)
+                db.session.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'تم حفظ الوثيقة بنجاح'
+                })
+            
+            elif save_type == 'bulk':
+                # حفظ جماعي
+                import json
+                employees_data = json.loads(request.form.get('employees_data', '[]'))
+                
+                if not employees_data:
+                    return jsonify({
+                        'success': False,
+                        'message': 'لا توجد بيانات للحفظ'
+                    })
+                
+                saved_count = 0
+                for emp_data in employees_data:
+                    if emp_data.get('document_number'):
+                        document = Document(
+                            employee_id=emp_data['employee_id'],
+                            document_type=document_type,
+                            document_number=emp_data['document_number'],
+                            issue_date=parse_date(emp_data['issue_date']) if emp_data.get('issue_date') else None,
+                            expiry_date=parse_date(emp_data['expiry_date']) if emp_data.get('expiry_date') else None,
+                            notes=emp_data.get('notes', '')
+                        )
+                        db.session.add(document)
+                        saved_count += 1
+                
+                # تسجيل العملية
+                department = Department.query.get(department_id)
+                audit = SystemAudit(
+                    action='bulk_create',
+                    entity_type='document',
+                    entity_id=department_id,
+                    details=f'تم إضافة {saved_count} وثيقة من نوع {document_type} لقسم {department.name if department else "غير محدد"}',
+                    user_id=current_user.id if current_user.is_authenticated else None
+                )
+                db.session.add(audit)
+                db.session.commit()
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'تم حفظ {saved_count} وثيقة بنجاح',
+                    'redirect': url_for('documents.index')
+                })
+        
+        return render_template('documents/department_bulk_create.html',
+                             departments=departments,
+                             employees=employees,
+                             document_types=document_types)
+    
+    except Exception as e:
+        db.session.rollback()
         return jsonify({
             'success': False,
             'message': f'حدث خطأ: {str(e)}'
