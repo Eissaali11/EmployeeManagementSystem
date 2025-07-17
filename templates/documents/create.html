@@ -435,10 +435,16 @@
             });
         }
         
+        // متغير لتخزين بيانات موظفي الكفالة
+        let sponsorshipEmployeesData = [];
+        
         // عرض الموظفين في الجدول
         function displaySponsorshipEmployees(employees) {
             const tbody = $('#sponsorship_employees_tbody');
             tbody.empty();
+            
+            // حفظ البيانات محلياً للاستخدام في التعبئة التلقائية
+            sponsorshipEmployeesData = employees;
             
             if (employees.length === 0) {
                 tbody.append(`
@@ -462,8 +468,7 @@
                         <td>${employee.employee_id || 'غير محدد'}</td>
                         <td>
                             <input type="text" class="form-control form-control-sm document-number-input" 
-                                   placeholder="رقم الوثيقة" data-employee-id="${employee.id}"
-                                   value="${employee.national_id || ''}" />
+                                   placeholder="رقم الوثيقة" data-employee-id="${employee.id}" />
                         </td>
                         <td>
                             <input type="date" class="form-control form-control-sm issue-date-input" 
@@ -501,10 +506,10 @@
                     $('.document-number-input').each(function() {
                         const employeeId = $(this).data('employee-id');
                         const row = $(`#employee_row_${employeeId}`);
-                        // البحث عن رقم الهوية في بيانات الموظف
-                        const employeeData = employeesData.find(emp => emp.id == employeeId);
-                        if (employeeData && employeeData.nationalId) {
-                            $(this).val(employeeData.nationalId);
+                        // البحث عن رقم الهوية في بيانات موظفي الكفالة
+                        const employeeData = sponsorshipEmployeesData.find(emp => emp.id == employeeId);
+                        if (employeeData && employeeData.national_id) {
+                            $(this).val(employeeData.national_id);
                         }
                     });
                 }
@@ -623,7 +628,7 @@
             btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري حفظ البيانات...');
             
             // إرسال البيانات للخادم
-            fetch('/documents/save_bulk_sponsorship_documents', {
+            fetch('/documents/save_bulk_documents', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
