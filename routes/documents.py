@@ -64,6 +64,53 @@ def get_employees_by_sponsorship():
             'message': f'حدث خطأ: {str(e)}'
         })
 
+@documents_bp.route('/get_employees_by_department_and_sponsorship', methods=['POST'])
+def get_employees_by_department_and_sponsorship():
+    """Get employees filtered by department and sponsorship status"""
+    try:
+        data = request.get_json()
+        department_id = data.get('department_id')
+        sponsorship_type = data.get('sponsorship_type')
+        
+        # Build base query
+        query = Employee.query.options(selectinload(Employee.departments))
+        
+        # Filter by department
+        if department_id:
+            query = query.filter(Employee.departments.any(Department.id == department_id))
+        
+        # Filter by sponsorship status
+        if sponsorship_type == 'on_sponsorship':
+            query = query.filter(Employee.sponsorship_status == 'على الكفالة')
+        elif sponsorship_type == 'off_sponsorship':
+            query = query.filter(Employee.sponsorship_status == 'خارج الكفالة')
+        
+        employees = query.all()
+        
+        # Format employee data
+        employees_data = []
+        for emp in employees:
+            dept_names = ', '.join([dept.name for dept in emp.departments]) if emp.departments else 'غير محدد'
+            employees_data.append({
+                'id': emp.id,
+                'name': emp.name,
+                'employee_id': emp.employee_id,
+                'national_id': emp.national_id,
+                'department_names': dept_names,
+                'sponsorship_status': sponsorship_type
+            })
+        
+        return jsonify({
+            'success': True,
+            'employees': employees_data
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'حدث خطأ: {str(e)}'
+        })
+
 @documents_bp.route('/save_individual_document', methods=['POST'])
 def save_individual_document():
     """Save individual document for sponsorship-based addition"""
@@ -107,7 +154,7 @@ def save_individual_document():
 
 @documents_bp.route('/save_bulk_documents', methods=['POST'])
 def save_bulk_documents():
-    """Save bulk documents for sponsorship-based addition"""
+    """Save bulk documents for advanced filtering"""
     try:
         data = request.get_json()
         document_type = data['document_type']
@@ -138,13 +185,13 @@ def save_bulk_documents():
             action='create',
             entity_type='document',
             entity_id=0,
-            details=f'تم إضافة {saved_count} وثيقة من نوع {document_type} جماعياً حسب الكفالة'
+            details=f'تم إضافة {saved_count} وثيقة من نوع {document_type} بشكل جماعي'
         )
         
         return jsonify({
             'success': True,
-            'saved_count': saved_count,
-            'message': f'تم حفظ {saved_count} وثيقة بنجاح'
+            'message': f'تم حفظ {saved_count} وثيقة بنجاح',
+            'saved_count': saved_count
         })
         
     except Exception as e:
@@ -153,6 +200,8 @@ def save_bulk_documents():
             'success': False,
             'message': f'حدث خطأ في حفظ الوثائق: {str(e)}'
         })
+
+# Duplicate route code removed - using the one above
 
 @documents_bp.route('/')
 def index():

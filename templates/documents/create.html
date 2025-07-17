@@ -33,15 +33,9 @@
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="add_type" id="add_sponsorship_internal" value="sponsorship_internal">
-                                <label class="form-check-label" for="add_sponsorship_internal">
-                                    <i class="fas fa-building me-1"></i> إضافة للموظفين على الكفالة
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="add_type" id="add_sponsorship_external" value="sponsorship_external">
-                                <label class="form-check-label" for="add_sponsorship_external">
-                                    <i class="fas fa-user-tie me-1"></i> إضافة للموظفين خارج الكفالة
+                                <input class="form-check-input" type="radio" name="add_type" id="add_advanced" value="advanced">
+                                <label class="form-check-label" for="add_advanced">
+                                    <i class="fas fa-filter me-1"></i> إضافة متقدمة (قسم + كفالة)
                                 </label>
                             </div>
                         </div>
@@ -91,12 +85,12 @@
                                 </select>
                             </div>
 
-                            <!-- قسم الإضافة الجماعية حسب الكفالة - يظهر فقط عند اختيار "إضافة جماعية حسب الكفالة" -->
-                            <div class="col-md-12 mb-3 d-none" id="sponsorship_bulk_selection">
+                            <!-- قسم الإضافة المتقدمة - يظهر فقط عند اختيار "إضافة متقدمة" -->
+                            <div class="col-md-12 mb-3 d-none" id="advanced_selection">
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="sponsorship_department_id" class="form-label required-field">القسم</label>
-                                        <select class="form-select" id="sponsorship_department_id" name="sponsorship_department_id">
+                                        <label for="advanced_department_id" class="form-label required-field">القسم</label>
+                                        <select class="form-select" id="advanced_department_id" name="advanced_department_id">
                                             <option value="">اختر القسم</option>
                                             {% for department in departments %}
                                             <option value="{{ department.id }}">
@@ -106,11 +100,11 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="sponsorship_type" class="form-label required-field">نوع الكفالة</label>
-                                        <select class="form-select" id="sponsorship_type" name="sponsorship_type">
+                                        <label for="advanced_sponsorship_filter" class="form-label required-field">فلترة حسب الكفالة</label>
+                                        <select class="form-select" id="advanced_sponsorship_filter" name="advanced_sponsorship_filter">
                                             <option value="">اختر نوع الكفالة</option>
-                                            <option value="inside">داخل الكفالة</option>
-                                            <option value="outside">خارج الكفالة</option>
+                                            <option value="on_sponsorship">على الكفالة</option>
+                                            <option value="off_sponsorship">خارج الكفالة</option>
                                         </select>
                                     </div>
                                 </div>
@@ -246,6 +240,50 @@
                             </div>
                         </div>
 
+                        <!-- قسم الموظفين المتقدم - يظهر فقط عند اختيار "إضافة متقدمة" -->
+                        <div class="d-none" id="advanced_employees_section">
+                            <div class="card mt-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-users me-2"></i>
+                                        موظفي القسم المحدد
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th style="width: 250px;">الموظف</th>
+                                                    <th style="width: 150px;">رقم الموظف</th>
+                                                    <th style="width: 150px;">الهوية الوطنية</th>
+                                                    <th style="width: 120px;">حالة الكفالة</th>
+                                                    <th style="width: 150px;">رقم الوثيقة</th>
+                                                    <th style="width: 130px;">تاريخ الإصدار</th>
+                                                    <th style="width: 130px;">تاريخ الانتهاء</th>
+                                                    <th style="width: 200px;">ملاحظات</th>
+                                                    <th style="width: 120px;">إجراءات</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="advanced_employees_tbody">
+                                                <!-- سيتم ملؤها عبر JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- أزرار الحفظ الجماعي -->
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                        <button type="button" class="btn btn-success" id="save_all_advanced_documents">
+                                            <i class="fas fa-save me-1"></i> حفظ جميع البيانات المُدخلة
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" id="reset_advanced_form">
+                                            <i class="fas fa-undo me-1"></i> إعادة تعيين النموذج
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mt-4" id="single_form_buttons">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-1"></i> حفظ البيانات
@@ -378,7 +416,23 @@
             const addType = $(this).val();
             
             // إخفاء جميع الأقسام أولاً
-            $('#employee_selection').show();
+            $('#employee_selection').hide();
+            $('#department_selection').addClass('d-none');
+            $('#advanced_selection').addClass('d-none');
+            $('#bulk_employees_section').addClass('d-none');
+            $('#advanced_employees_section').addClass('d-none');
+            $('#single_form_buttons').show();
+            
+            // إظهار القسم المطلوب حسب النوع
+            if (addType === 'single') {
+                $('#employee_selection').show();
+            } else if (addType === 'department') {
+                $('#department_selection').removeClass('d-none');
+            } else if (addType === 'advanced') {
+                $('#advanced_selection').removeClass('d-none');
+                $('#single_form_buttons').hide();
+            }
+        });
             $('#department_selection').hide();
             $('#sponsorship_employees_list').hide();
             $('#single_form_buttons').show();
