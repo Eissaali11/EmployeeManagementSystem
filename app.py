@@ -344,6 +344,7 @@ with app.app_context():
     
     from routes.employee_portal import employee_portal_bp
     from routes.insights import insights_bp
+    from routes.external_safety import external_safety_bp
     
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
@@ -367,7 +368,13 @@ with app.app_context():
     # app.register_blueprint(workshop_reports_bp, url_prefix='/workshop-reports')
     app.register_blueprint(employee_portal_bp, url_prefix='/employee-portal')
     app.register_blueprint(insights_bp, url_prefix='/insights')
+    app.register_blueprint(external_safety_bp)
 
+    # إضافة route لخدمة الصور من مجلد uploads
+    @app.route('/uploads/<path:filename>')
+    def uploaded_file(filename):
+        from flask import send_from_directory
+        return send_from_directory('uploads', filename)
     
     # إضافة دوال مساعدة لقوالب Jinja
     from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions, check_module_access

@@ -1,0 +1,838 @@
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app, send_file
+from werkzeug.utils import secure_filename
+import os
+import uuid
+from datetime import datetime
+from PIL import Image
+from models import VehicleExternalSafetyCheck, VehicleSafetyImage, Vehicle, Employee, User, UserRole
+from app import db
+from utils.audit_logger import log_audit
+from flask_login import current_user
+
+external_safety_bp = Blueprint('external_safety', __name__)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def compress_image(image_path, max_size=1200, quality=85):
+    """ضغط الصورة لتقليل حجمها"""
+    try:
+        with Image.open(image_path) as img:
+            # تحويل RGBA إلى RGB إذا لزم الأمر
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            # تغيير حجم الصورة إذا كانت أكبر من الحد المسموح
+            if img.width > max_size or img.height > max_size:
+                img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+            
+            # حفظ الصورة المضغوطة
+            img.save(image_path, 'JPEG', quality=quality, optimize=True)
+            return True
+    except Exception as e:
+        current_app.logger.error(f"خطأ في ضغط الصورة: {str(e)}")
+        return False
+
+@external_safety_bp.route('/external-safety-check/<int:vehicle_id>', methods=['GET', 'POST'])
+def external_safety_check_form(vehicle_id):
+    """عرض نموذج فحص السلامة الخارجي للسيارة أو معالجة البيانات المرسلة"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    
+    if request.method == 'POST':
+        return handle_safety_check_submission(vehicle)
+    
+    return render_template('external_safety_check.html', vehicle=vehicle)
+
+def handle_safety_check_submission(vehicle):
+    """معالجة إرسال بيانات فحص السلامة"""
+    try:
+        # الحصول على البيانات من النموذج
+        driver_name = request.form.get('driver_name')
+        driver_national_id = request.form.get('driver_national_id')
+        driver_department = request.form.get('driver_department')
+        driver_city = request.form.get('driver_city')
+        vehicle_plate_number = request.form.get('vehicle_plate_number', vehicle.plate_number)
+        vehicle_make_model = request.form.get('vehicle_make_model', f"{vehicle.make} {vehicle.model}")
+        current_delegate = request.form.get('current_delegate')
+        notes = request.form.get('notes')
+        
+        # التحقق من البيانات المطلوبة
+        if not all([driver_name, driver_national_id, driver_department, driver_city]):
+            return jsonify({'error': 'يرجى ملء جميع الحقول المطلوبة'}), 400
+        
+        # إنشاء سجل فحص السلامة
+        safety_check = VehicleExternalSafetyCheck(
+            vehicle_id=vehicle.id,
+            driver_name=driver_name,
+            driver_national_id=driver_national_id,
+            driver_department=driver_department,
+            driver_city=driver_city,
+            vehicle_plate_number=vehicle_plate_number,
+            vehicle_make_model=vehicle_make_model,
+            current_delegate=current_delegate,
+            notes=notes,
+            inspection_date=datetime.now(),
+            approval_status='pending'
+        )
+        
+        db.session.add(safety_check)
+        db.session.flush()  # للحصول على ID الجديد
+        
+        # معالجة الصور المرفوعة
+        safety_images = request.files.getlist('safety_images')
+        descriptions = request.form.getlist('image_descriptions')
+        
+        if safety_images and safety_images[0].filename:
+            # إنشاء مجلد الصور إذا لم يكن موجوداً
+            upload_dir = os.path.join(current_app.static_folder, 'uploads', 'safety_checks')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            for i, image in enumerate(safety_images):
+                if image and allowed_file(image.filename):
+                    # إنشاء اسم ملف آمن
+                    filename = secure_filename(f"{uuid.uuid4()}_{image.filename}")
+                    image_path = os.path.join(upload_dir, filename)
+                    
+                    # حفظ الصورة
+                    image.save(image_path)
+                    
+                    # ضغط الصورة
+                    compress_image(image_path)
+                    
+                    # حفظ معلومات الصورة في قاعدة البيانات
+                    description = descriptions[i] if i < len(descriptions) else None
+                    
+                    safety_image = VehicleSafetyImage(
+                        safety_check_id=safety_check.id,
+                        image_path=f'static/uploads/safety_checks/{filename}',
+                        image_description=description
+                    )
+                    
+                    db.session.add(safety_image)
+        
+        # حفظ جميع التغييرات
+        db.session.commit()
+        
+        # تسجيل العملية في سجل المراجعة
+        log_audit(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            action='create',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم إنشاء طلب فحص السلامة الخارجي للسيارة {vehicle.plate_number} بواسطة {safety_check.driver_name}'
+        )
+        
+        current_app.logger.info(f'تم إنشاء طلب فحص السلامة بنجاح: ID={safety_check.id}, Vehicle={vehicle.plate_number}')
+        
+        return jsonify({'success': True, 'message': 'تم إرسال طلب فحص السلامة بنجاح'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'خطأ في معالجة طلب فحص السلامة: {str(e)}')
+        return jsonify({'error': 'حدث خطأ أثناء معالجة الطلب'}), 500
+
+@external_safety_bp.route('/share-links')
+def share_links():
+    """صفحة مشاركة روابط النماذج الخارجية لجميع السيارات مع الفلاتر"""
+    # الحصول على معاملات الفلترة من الطلب
+    status_filter = request.args.get('status', '')
+    make_filter = request.args.get('make', '')
+    search_plate = request.args.get('search_plate', '')
+    project_filter = request.args.get('project', '')
+    
+    # قاعدة الاستعلام الأساسية
+    query = Vehicle.query
+    
+    # إضافة التصفية حسب الحالة إذا تم تحديدها
+    if status_filter:
+        query = query.filter(Vehicle.status == status_filter)
+    
+    # إضافة التصفية حسب الشركة المصنعة إذا تم تحديدها
+    if make_filter:
+        query = query.filter(Vehicle.make == make_filter)
+    
+    # إضافة التصفية حسب المشروع إذا تم تحديده
+    if project_filter:
+        query = query.filter(Vehicle.project == project_filter)
+    
+    # إضافة البحث برقم السيارة إذا تم تحديده
+    if search_plate:
+        query = query.filter(Vehicle.plate_number.contains(search_plate))
+    
+    # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
+    makes = db.session.query(Vehicle.make).distinct().all()
+    makes = [make[0] for make in makes]
+    
+    # الحصول على قائمة بالمشاريع لقائمة التصفية
+    projects = db.session.query(Vehicle.project).filter(Vehicle.project.isnot(None)).distinct().all()
+    projects = [project[0] for project in projects]
+    
+    # الحصول على قائمة السيارات
+    vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
+    
+    # قائمة حالات السيارات
+    statuses = ['available', 'rented', 'in_project', 'in_workshop', 'accident']
+    
+    return render_template('external_safety_share_links.html', 
+                           vehicles=vehicles,
+                           status_filter=status_filter,
+                           make_filter=make_filter,
+                           search_plate=search_plate,
+                           project_filter=project_filter,
+                           makes=makes,
+                           projects=projects,
+                           statuses=statuses)
+
+
+
+@external_safety_bp.route('/api/verify-employee/<national_id>')
+def verify_employee(national_id):
+    """التحقق من الموظف بواسطة رقم الهوية"""
+    try:
+        # البحث عن الموظف بواسطة رقم الهوية
+        employee = Employee.query.filter_by(national_id=national_id).first()
+        
+        if not employee:
+            return jsonify({'success': False, 'message': 'الموظف غير موجود'}), 404
+        
+        # الحصول على أسماء الأقسام
+        department_names = [dept.name for dept in employee.departments] if employee.departments else []
+        
+        return jsonify({
+            'success': True,
+            'employee': {
+                'id': employee.id,
+                'name': employee.name,
+                'department': ', '.join(department_names) if department_names else 'غير محدد',
+                'city': employee.city if hasattr(employee, 'city') else 'الرياض',
+                'national_id': employee.national_id
+            }
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"خطأ في التحقق من الموظف: {str(e)}")
+        return jsonify({'success': False, 'message': 'حدث خطأ في التحقق من الموظف'}), 500
+
+@external_safety_bp.route('/external-safety-check/success')
+def external_safety_success():
+    """صفحة نجاح إرسال طلب فحص السلامة"""
+    return render_template('external_safety_success.html')
+
+@external_safety_bp.route('/admin/external-safety-checks')
+def admin_external_safety_checks():
+    """عرض جميع طلبات فحص السلامة للإدارة"""
+    # التحقق من صلاحيات الإدارة
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect(url_for('main.index'))
+    
+    # جلب جميع طلبات فحص السلامة
+    safety_checks = VehicleExternalSafetyCheck.query.order_by(
+        VehicleExternalSafetyCheck.created_at.desc()
+    ).all()
+    
+    return render_template('admin_external_safety_checks.html', safety_checks=safety_checks)
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>')
+def admin_view_safety_check(check_id):
+    """عرض تفاصيل طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect(url_for('main.index'))
+    
+    safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    
+    # تحديث مسار الصور المحفوظة في قاعدة البيانات
+    if safety_check.safety_images:
+        for img in safety_check.safety_images:
+            if img.image_path and not img.image_path.startswith('static/'):
+                img.image_path = 'static/' + img.image_path
+    
+    db.session.commit()
+    
+    return render_template('admin_view_safety_check.html', safety_check=safety_check)
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/reject', methods=['GET', 'POST'])
+def reject_safety_check_page(check_id):
+    """صفحة رفض طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect(url_for('main.index'))
+    
+    safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    
+    if request.method == 'POST':
+        # معالجة رفض الطلب
+        rejection_reason = request.form.get('rejection_reason')
+        
+        if not rejection_reason or not rejection_reason.strip():
+            flash('يرجى كتابة سبب الرفض', 'error')
+            return render_template('admin_reject_safety_check.html', safety_check=safety_check)
+        
+        # تحديث حالة الطلب
+        safety_check.approval_status = 'rejected'
+        safety_check.rejection_reason = rejection_reason.strip()
+        safety_check.approved_by = current_user.id
+        safety_check.approved_at = datetime.now()
+        
+        db.session.commit()
+        
+        # تسجيل العملية
+        log_audit(
+            user_id=current_user.id,
+            action='reject',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم رفض طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number}. السبب: {rejection_reason}'
+        )
+        
+        current_app.logger.info(f'تم رفض طلب فحص السلامة ID={safety_check.id} بواسطة {current_user.name}')
+        
+        flash('تم رفض الطلب بنجاح', 'success')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+    
+    return render_template('admin_reject_safety_check.html', safety_check=safety_check)
+    return render_template('admin_view_safety_check.html', safety_check=safety_check)
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/approve', methods=['POST'])
+def approve_safety_check(check_id):
+    """اعتماد طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        return jsonify({'error': 'غير مصرح لك'}), 403
+    
+    try:
+        safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+        
+        safety_check.approval_status = 'approved'
+        safety_check.approved_by = current_user.id
+        safety_check.approved_at = datetime.now()
+        
+        db.session.commit()
+        
+        # تسجيل العملية
+        log_audit(
+            user_id=current_user.id,
+            action='approve',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم اعتماد طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number}'
+        )
+        
+        flash('تم اعتماد طلب فحص السلامة بنجاح', 'success')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في اعتماد طلب فحص السلامة: {str(e)}")
+        flash('حدث خطأ في اعتماد الطلب', 'error')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/reject', methods=['POST'])
+def reject_safety_check(check_id):
+    """رفض طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        return jsonify({'error': 'غير مصرح لك'}), 403
+    
+    try:
+        safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+        
+        safety_check.approval_status = 'rejected'
+        safety_check.approved_by = current_user.id
+        safety_check.approved_at = datetime.now()
+        safety_check.rejection_reason = request.form.get('rejection_reason', '')
+        
+        db.session.commit()
+        
+        # تسجيل العملية
+        log_audit(
+            user_id=current_user.id,
+            action='reject',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم رفض طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number}. السبب: {safety_check.rejection_reason}'
+        )
+        
+        flash('تم رفض طلب فحص السلامة', 'success')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في رفض طلب فحص السلامة: {str(e)}")
+        flash('حدث خطأ في رفض الطلب', 'error')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/edit', methods=['GET', 'POST'])
+def edit_safety_check(check_id):
+    """تعديل طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect(url_for('main.index'))
+    
+    safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    
+    if request.method == 'POST':
+        try:
+            # تحديث البيانات
+            safety_check.current_delegate = request.form.get('current_delegate', '')
+            safety_check.inspection_date = datetime.fromisoformat(request.form.get('inspection_date'))
+            safety_check.driver_name = request.form.get('driver_name', '')
+            safety_check.driver_national_id = request.form.get('driver_national_id', '')
+            safety_check.driver_department = request.form.get('driver_department', '')
+            safety_check.driver_city = request.form.get('driver_city', '')
+            safety_check.notes = request.form.get('notes', '')
+            
+            # تحديث أوصاف الصور
+            for image in safety_check.safety_images:
+                description_field = f'image_description_{image.id}'
+                if description_field in request.form:
+                    image.image_description = request.form.get(description_field, '')
+            
+            # تحديث تاريخ التعديل
+            safety_check.updated_at = datetime.now()
+            
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_audit(
+                user_id=current_user.id,
+                action='update',
+                entity_type='VehicleExternalSafetyCheck',
+                entity_id=safety_check.id,
+                details=f'تم تحديث طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number}'
+            )
+            
+            flash('تم تحديث طلب فحص السلامة بنجاح', 'success')
+            return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطأ في تحديث طلب فحص السلامة: {str(e)}")
+            flash('حدث خطأ في تحديث الطلب', 'error')
+    
+    return render_template('admin_edit_safety_check.html', safety_check=safety_check)
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/delete', methods=['POST'])
+def delete_safety_check(check_id):
+    """حذف طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        return jsonify({'error': 'غير مصرح لك'}), 403
+    
+    try:
+        safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+        
+        # حذف الصور المرفقة
+        for image in safety_check.safety_images:
+            try:
+                if os.path.exists(image.image_path):
+                    os.remove(image.image_path)
+            except Exception as e:
+                current_app.logger.error(f"خطأ في حذف الصورة: {str(e)}")
+        
+        # تسجيل العملية قبل الحذف
+        log_audit(
+            user_id=current_user.id,
+            action='delete',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم حذف طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number}'
+        )
+        
+        db.session.delete(safety_check)
+        db.session.commit()
+        
+        flash('تم حذف طلب فحص السلامة بنجاح', 'success')
+        return redirect(url_for('external_safety.admin_external_safety_checks'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في حذف طلب فحص السلامة: {str(e)}")
+        flash('حدث خطأ في حذف الطلب', 'error')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/pdf')
+def export_safety_check_pdf(check_id):
+    """تصدير طلب فحص السلامة كملف PDF"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect(url_for('main.index'))
+    
+    try:
+        safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+        
+        # استيراد مكتبات ReportLab المطلوبة
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage, PageBreak
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch, mm, cm
+        from reportlab.lib import colors
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+        import io
+        import os
+        
+        # استيراد مكتبات معالجة النصوص العربية
+        try:
+            import arabic_reshaper
+            from bidi.algorithm import get_display
+            arabic_support = True
+        except ImportError:
+            arabic_support = False
+        
+        # دالة لمعالجة النصوص العربية
+        def process_arabic_text(text):
+            if not text or not arabic_support:
+                return text
+            try:
+                # تشكيل النص العربي
+                reshaped_text = arabic_reshaper.reshape(text)
+                # تطبيق خوارزمية الـ bidi للاتجاه الصحيح
+                display_text = get_display(reshaped_text)
+                return display_text
+            except Exception as e:
+                current_app.logger.error(f"خطأ في معالجة النص العربي: {str(e)}")
+                return text
+        
+        # إنشاء buffer للـ PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer, 
+            pagesize=A4,
+            rightMargin=20*mm,
+            leftMargin=20*mm,
+            topMargin=20*mm,
+            bottomMargin=20*mm,
+            title=f"تقرير فحص السلامة رقم {safety_check.id}"
+        )
+        
+        # تسجيل خط عربي بترتيب أولوية
+        arabic_font = 'Helvetica'  # قيمة افتراضية
+        font_paths = [
+            ('static/fonts/beIN-Normal.ttf', 'خط beIN-Normal.ttf'),
+            ('static/fonts/beIN Normal .ttf', 'خط beIN Normal .ttf'),
+            ('utils/beIN-Normal.ttf', 'خط beIN-Normal.ttf من utils'),
+            ('Cairo.ttf', 'خط Cairo.ttf'),
+            ('static/fonts/NotoSansArabic-Regular.ttf', 'خط NotoSansArabic'),
+        ]
+        
+        for font_path, font_name in font_paths:
+            try:
+                if os.path.exists(font_path):
+                    pdfmetrics.registerFont(TTFont('Arabic', font_path))
+                    arabic_font = 'Arabic'
+                    current_app.logger.info(f"تم تحميل {font_name} بنجاح من {font_path}")
+                    break
+                else:
+                    current_app.logger.warning(f"الخط غير موجود: {font_path}")
+            except Exception as e:
+                current_app.logger.error(f"فشل في تحميل {font_name}: {str(e)}")
+                continue
+        
+        if arabic_font == 'Helvetica':
+            current_app.logger.warning("لم يتم العثور على أي خط عربي، سيتم استخدام Helvetica")
+        
+        current_app.logger.info(f"الخط المستخدم في PDF: {arabic_font}")
+        
+        # تعريف الأنماط
+        styles = getSampleStyleSheet()
+        
+        # نمط العنوان الرئيسي
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            fontName=arabic_font,
+            fontSize=20,
+            spaceAfter=30,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor('#2C3E50'),
+            borderWidth=2,
+            borderColor=colors.HexColor('#3498DB'),
+            borderPadding=10,
+            backColor=colors.HexColor('#ECF0F1')
+        )
+        
+        # نمط العناوين الفرعية
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            fontName=arabic_font,
+            fontSize=14,
+            spaceAfter=15,
+            alignment=TA_RIGHT,
+            textColor=colors.HexColor('#2C3E50'),
+            borderWidth=1,
+            borderColor=colors.HexColor('#BDC3C7'),
+            borderPadding=5,
+            backColor=colors.HexColor('#F8F9FA')
+        )
+        
+        # نمط النص العادي
+        normal_style = ParagraphStyle(
+            'CustomNormal',
+            fontName=arabic_font,
+            fontSize=11,
+            spaceAfter=8,
+            alignment=TA_RIGHT,
+            textColor=colors.HexColor('#34495E')
+        )
+        
+        # نمط وصف الصور
+        image_desc_style = ParagraphStyle(
+            'ImageDesc',
+            fontName=arabic_font,
+            fontSize=10,
+            spaceAfter=5,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor('#7F8C8D'),
+            backColor=colors.HexColor('#F8F9FA')
+        )
+        
+        # محتوى الـ PDF
+        story = []
+        
+        # العنوان الرئيسي مع شعار
+        title_text = process_arabic_text(f"تقرير فحص السلامة الخارجي رقم {safety_check.id}")
+        story.append(Paragraph(title_text, title_style))
+        story.append(Spacer(1, 20))
+        
+        # معلومات السيارة
+        vehicle_section_title = process_arabic_text("معلومات السيارة")
+        story.append(Paragraph(vehicle_section_title, subtitle_style))
+        
+        vehicle_data = [
+            [process_arabic_text('البيان'), process_arabic_text('القيمة')],
+            [process_arabic_text('رقم اللوحة'), process_arabic_text(safety_check.vehicle_plate_number)],
+            [process_arabic_text('نوع السيارة'), process_arabic_text(safety_check.vehicle_make_model)],
+            [process_arabic_text('المفوض الحالي'), process_arabic_text(safety_check.current_delegate or 'غير محدد')],
+            [process_arabic_text('تاريخ الفحص'), safety_check.inspection_date.strftime('%Y-%m-%d %H:%M')]
+        ]
+        
+        vehicle_table = Table(vehicle_data, colWidths=[6*cm, 8*cm])
+        vehicle_table.setStyle(TableStyle([
+            # نمط الرأس
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498DB')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), arabic_font),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            # نمط الصفوف
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ECF0F1')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8F9FA')]),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#BDC3C7')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8)
+        ]))
+        
+        story.append(vehicle_table)
+        story.append(Spacer(1, 20))
+        
+        # معلومات السائق
+        driver_section_title = process_arabic_text("معلومات السائق")
+        story.append(Paragraph(driver_section_title, subtitle_style))
+        
+        driver_data = [
+            [process_arabic_text('البيان'), process_arabic_text('القيمة')],
+            [process_arabic_text('اسم السائق'), process_arabic_text(safety_check.driver_name)],
+            [process_arabic_text('رقم الهوية'), process_arabic_text(safety_check.driver_national_id)],
+            [process_arabic_text('القسم'), process_arabic_text(safety_check.driver_department)],
+            [process_arabic_text('المدينة'), process_arabic_text(safety_check.driver_city)]
+        ]
+        
+        driver_table = Table(driver_data, colWidths=[6*cm, 8*cm])
+        driver_table.setStyle(TableStyle([
+            # نمط الرأس
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#27AE60')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), arabic_font),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            # نمط الصفوف
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ECF0F1')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8F9FA')]),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#BDC3C7')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8)
+        ]))
+        
+        story.append(driver_table)
+        story.append(Spacer(1, 20))
+        
+        # الملاحظات
+        if safety_check.notes:
+            notes_title = process_arabic_text("الملاحظات والتوصيات")
+            story.append(Paragraph(notes_title, subtitle_style))
+            notes_text = process_arabic_text(safety_check.notes)
+            notes_para = Paragraph(notes_text, normal_style)
+            story.append(notes_para)
+            story.append(Spacer(1, 20))
+        
+        # معلومات الحالة
+        if safety_check.approved_by:
+            status_text = process_arabic_text("معتمدة ✅" if safety_check.is_approved else "مرفوضة ❌")
+            status_color = colors.HexColor('#27AE60') if safety_check.is_approved else colors.HexColor('#E74C3C')
+            
+            status_style = ParagraphStyle(
+                'StatusStyle',
+                fontName=arabic_font,
+                fontSize=14,
+                spaceAfter=10,
+                alignment=TA_CENTER,
+                textColor=status_color,
+                borderWidth=2,
+                borderColor=status_color,
+                borderPadding=8,
+                backColor=colors.HexColor('#F8F9FA')
+            )
+            
+            status_label = process_arabic_text(f"حالة الطلب: {status_text}")
+            story.append(Paragraph(status_label, status_style))
+            
+            approval_date = process_arabic_text(f"تاريخ الاعتماد: {safety_check.approved_at.strftime('%Y-%m-%d %H:%M')}")
+            story.append(Paragraph(approval_date, normal_style))
+            
+            approved_by = process_arabic_text(f"تم بواسطة: {safety_check.approver.name if safety_check.approver else 'غير محدد'}")
+            story.append(Paragraph(approved_by, normal_style))
+            
+            if safety_check.rejection_reason:
+                rejection_reason = process_arabic_text(f"سبب الرفض: {safety_check.rejection_reason}")
+                story.append(Paragraph(rejection_reason, normal_style))
+            
+            story.append(Spacer(1, 20))
+        
+        # صور فحص السلامة
+        if safety_check.safety_images:
+            images_title = process_arabic_text(f"صور فحص السلامة ({len(safety_check.safety_images)} صورة)")
+            story.append(Paragraph(images_title, subtitle_style))
+            story.append(Spacer(1, 10))
+            
+            # تنظيم الصور في صفوف (صورتين في كل صف)
+            images_per_row = 2
+            current_row = []
+            
+            for i, image in enumerate(safety_check.safety_images):
+                try:
+                    # التحقق من وجود الصورة مع المسار الكامل
+                    image_path = image.image_path
+                    if not image_path.startswith('/'):
+                        # إضافة المسار المطلق إذا لم يكن موجوداً
+                        image_path = os.path.join(os.getcwd(), image_path)
+                    
+                    # التحقق من وجود الصورة
+                    if not os.path.exists(image_path):
+                        current_app.logger.warning(f"الصورة غير موجودة: {image_path}")
+                        continue
+                    
+                    # إنشاء كائن الصورة
+                    img = RLImage(image_path)
+                    
+                    # تحديد حجم الصورة (الحد الأقصى)
+                    max_width = 7*cm
+                    max_height = 5*cm
+                    
+                    # حساب النسبة للحفاظ على أبعاد الصورة
+                    img_width = img.imageWidth
+                    img_height = img.imageHeight
+                    
+                    ratio = min(max_width/img_width, max_height/img_height)
+                    img.drawWidth = img_width * ratio
+                    img.drawHeight = img_height * ratio
+                    
+                    # إضافة الصورة مع الوصف
+                    description = process_arabic_text(image.image_description or f'صورة رقم {i+1}')
+                    img_data = [
+                        [img],
+                        [Paragraph(description, image_desc_style)]
+                    ]
+                    
+                    img_table = Table(img_data, colWidths=[max_width])
+                    img_table.setStyle(TableStyle([
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#BDC3C7')),
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+                        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#F8F9FA')),
+                        ('TOPPADDING', (0, 0), (-1, -1), 5),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 5)
+                    ]))
+                    
+                    current_row.append(img_table)
+                    
+                    # إذا امتلأ الصف أو كانت هذه آخر صورة
+                    if len(current_row) == images_per_row or i == len(safety_check.safety_images) - 1:
+                        # إضافة خلايا فارغة لإكمال الصف
+                        while len(current_row) < images_per_row:
+                            current_row.append('')
+                        
+                        # إنشاء جدول للصف
+                        row_table = Table([current_row], colWidths=[max_width + 1*cm] * images_per_row)
+                        row_table.setStyle(TableStyle([
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('LEFTPADDING', (0, 0), (-1, -1), 5),
+                            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+                            ('TOPPADDING', (0, 0), (-1, -1), 5),
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 5)
+                        ]))
+                        
+                        story.append(row_table)
+                        story.append(Spacer(1, 15))
+                        current_row = []
+                
+                except Exception as e:
+                    current_app.logger.error(f"خطأ في إضافة الصورة للـ PDF: {str(e)}")
+                    continue
+        
+        # تذييل التقرير
+        story.append(Spacer(1, 30))
+        footer_style = ParagraphStyle(
+            'FooterStyle',
+            fontName=arabic_font,
+            fontSize=10,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor('#7F8C8D'),
+            borderWidth=1,
+            borderColor=colors.HexColor('#BDC3C7'),
+            borderPadding=5,
+            backColor=colors.HexColor('#F8F9FA')
+        )
+        
+        footer_text1 = process_arabic_text(f"تم إنشاء هذا التقرير في: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        footer_text2 = process_arabic_text("نُظم - نظام إدارة المركبات والموظفين")
+        story.append(Paragraph(footer_text1, footer_style))
+        story.append(Paragraph(footer_text2, footer_style))
+        
+        # بناء الـ PDF
+        doc.build(story)
+        buffer.seek(0)
+        
+        # تسجيل العملية
+        log_audit(
+            user_id=current_user.id,
+            action='export_pdf',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=safety_check.id,
+            details=f'تم تصدير طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number} كملف PDF'
+        )
+        
+        # إرسال الـ PDF
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=f'safety_check_{safety_check.id}_{safety_check.vehicle_plate_number}.pdf',
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"خطأ في تصدير طلب فحص السلامة كـ PDF: {str(e)}")
+        flash('حدث خطأ في تصدير الطلب', 'error')
+        return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))

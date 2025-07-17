@@ -1,0 +1,842 @@
+{% extends "layout.html" %}
+
+{% block title %}تفاصيل طلب فحص السلامة #{{ safety_check.id }}{% endblock %}
+
+{% block styles %}
+<style>
+    /* تحسين الألوان لتتطابق مع النظام */
+    body {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%) !important;
+        min-height: 100vh;
+    }
+    
+    .container-fluid {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%) !important;
+        min-height: 100vh;
+    }
+    
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%) !important;
+        color: white !important;
+        border-bottom: 2px solid #fff !important;
+    }
+    
+    .card-header.bg-info {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+        color: white !important;
+        border-bottom: 2px solid #fff !important;
+    }
+    
+    .card-header.bg-warning {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
+        color: white !important;
+        border-bottom: 2px solid #fff !important;
+    }
+    
+    .card-header.bg-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+        color: white !important;
+        border-bottom: 2px solid #fff !important;
+    }
+    
+    .card-header.bg-success {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+        color: white !important;
+        border-bottom: 2px solid #fff !important;
+    }
+    
+    .card-header.bg-danger {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+        color: white !important;
+        border-bottom: 2px solid #fff !important;
+    }
+    
+    .card {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 15px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    .card-body {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%) !important;
+        color: white !important;
+    }
+    
+    .table {
+        color: white !important;
+        background: linear-gradient(135deg, #2d4a6b 0%, #1e3a5c 100%) !important;
+    }
+    
+    .table th {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%) !important;
+        color: white !important;
+        border-color: #4a6b8a !important;
+    }
+    
+    .table td {
+        background-color: rgba(45, 74, 107, 0.8) !important;
+        color: white !important;
+        border-color: #4a6b8a !important;
+    }
+    
+    .table-borderless th,
+    .table-borderless td {
+        border: none !important;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: none !important;
+        color: white !important;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #654d8f 100%) !important;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+    }
+    
+    .btn-success {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+    
+    .btn-danger {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+    
+    .btn-warning {
+        background-color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+    
+    .btn-info {
+        background-color: #17a2b8 !important;
+        border-color: #17a2b8 !important;
+    }
+    
+    .badge-lg {
+        font-size: 1rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .badge-warning {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+    
+    .badge-success {
+        background-color: #28a745 !important;
+        color: white !important;
+    }
+    
+    .badge-danger {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .text-muted {
+        color: #adb5bd !important;
+    }
+    
+    .card-text {
+        color: #ffffff !important;
+    }
+    
+    .small {
+        color: #adb5bd !important;
+    }
+    
+    /* تحسين النافذة المنبثقة */
+    .modal-content {
+        background-color: #1e3a5c !important;
+        color: white !important;
+        border: none !important;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        border-bottom: none !important;
+    }
+    
+    .modal-body {
+        background-color: #1e3a5c !important;
+        color: white !important;
+    }
+    
+    .modal-title {
+        color: white !important;
+    }
+    
+    .btn-outline-secondary {
+        color: #6c757d !important;
+        border-color: #6c757d !important;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        color: white !important;
+    }
+    
+    .close {
+        color: white !important;
+        opacity: 1 !important;
+    }
+    
+    .close:hover {
+        color: #ccc !important;
+    }
+    
+    /* تحسين الصور */
+    .card-img-top {
+        border-radius: 8px !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .card-img-top:hover {
+        transform: scale(1.05) !important;
+    }
+    
+    /* تحسين الروابط */
+    a {
+        color: #667eea !important;
+    }
+    
+    a:hover {
+        color: #5a6fd8 !important;
+    }
+    
+    /* تحسين التدرجات */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+    
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+    }
+    
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+    }
+    
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    }
+    
+    .bg-gradient-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    }
+    
+    /* تحسين الحدود */
+    .border-info {
+        border-color: #17a2b8 !important;
+    }
+    
+    .border-warning {
+        border-color: #ffc107 !important;
+    }
+    
+    .border-secondary {
+        border-color: #6c757d !important;
+    }
+    
+    .border-success {
+        border-color: #28a745 !important;
+    }
+    
+    .border-danger {
+        border-color: #dc3545 !important;
+    }
+    
+    /* تحسين الظلال */
+    .shadow {
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* تحسين الأيقونات */
+    .fas {
+        color: inherit !important;
+    }
+    
+    .card-header .fas {
+        color: white !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-shield-alt ml-2"></i>
+                            تفاصيل طلب فحص السلامة #{{ safety_check.id }}
+                        </h3>
+                        <div>
+                            {% if safety_check.is_pending %}
+                                <span class="badge badge-warning badge-lg">قيد المراجعة</span>
+                            {% elif safety_check.is_approved %}
+                                <span class="badge badge-success badge-lg">معتمدة</span>
+                            {% elif safety_check.is_rejected %}
+                                <span class="badge badge-danger badge-lg">مرفوضة</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <!-- معلومات السيارة -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-car"></i> معلومات السيارة
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>رقم اللوحة:</strong></td>
+                                            <td>{{ safety_check.vehicle_plate_number }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>نوع السيارة:</strong></td>
+                                            <td>{{ safety_check.vehicle_make_model }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>المفوض الحالي:</strong></td>
+                                            <td>{{ safety_check.current_delegate or 'غير محدد' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>تاريخ الفحص:</strong></td>
+                                            <td>{{ safety_check.inspection_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- معلومات السائق -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-user"></i> معلومات السائق
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>اسم السائق:</strong></td>
+                                            <td>{{ safety_check.driver_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>رقم الهوية:</strong></td>
+                                            <td>{{ safety_check.driver_national_id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>القسم:</strong></td>
+                                            <td>{{ safety_check.driver_department }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>المدينة:</strong></td>
+                                            <td>{{ safety_check.driver_city }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- الصور المرفقة -->
+                    {% if safety_check.safety_images %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-images"></i> صور فحص السلامة ({{ safety_check.safety_images | length }})
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for image in safety_check.safety_images %}
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card">
+                                                {% if image.image_path.startswith('static/') %}
+                                                    {% set image_url = url_for('static', filename=image.image_path.replace('static/', '')) %}
+                                                {% else %}
+                                                    {% set image_url = '/' + image.image_path %}
+                                                {% endif %}
+                                                <img src="{{ image_url }}" 
+                                                     class="card-img-top" 
+                                                     alt="صورة فحص السلامة" 
+                                                     style="height: 200px; object-fit: cover; cursor: pointer;"
+                                                     onclick="showImageModal('{{ image_url }}', '{{ image.image_description or 'بدون وصف' }}')">
+                                                <div class="card-body p-2">
+                                                    <!-- أزرار عرض الصورة -->
+                                                    <div class="btn-group btn-group-sm w-100 mb-2">
+                                                        <button type="button" class="btn btn-primary btn-sm" 
+                                                                onclick="showImageModal('{{ image_url }}', '{{ image.image_description or 'بدون وصف' }}')">
+                                                            <i class="fas fa-search-plus"></i> عرض
+                                                        </button>
+                                                        <a href="{{ image_url }}" target="_blank" class="btn btn-secondary btn-sm">
+                                                            <i class="fas fa-external-link-alt"></i> تبويب جديد
+                                                        </a>
+                                                    </div>
+                                                    <p class="card-text small text-muted">
+                                                        {{ image.image_description or 'بدون وصف' }}
+                                                    </p>
+                                                    <small class="text-muted">
+                                                        {{ image.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- الملاحظات -->
+                    {% if safety_check.notes %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-secondary">
+                                <div class="card-header bg-secondary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-sticky-note"></i> ملاحظات إضافية
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">{{ safety_check.notes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- معلومات الاعتماد -->
+                    {% if safety_check.approved_by %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-{% if safety_check.is_approved %}success{% else %}danger{% endif %}">
+                                <div class="card-header bg-{% if safety_check.is_approved %}success{% else %}danger{% endif %} text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-{% if safety_check.is_approved %}check{% else %}times{% endif %}-circle"></i> 
+                                        معلومات الاعتماد
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>الحالة:</strong></td>
+                                            <td>
+                                                {% if safety_check.is_approved %}
+                                                    <span class="badge badge-success">معتمدة</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">مرفوضة</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>تاريخ الاعتماد:</strong></td>
+                                            <td>{{ safety_check.approved_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>تم بواسطة:</strong></td>
+                                            <td>{{ safety_check.approver.name if safety_check.approver else 'غير محدد' }}</td>
+                                        </tr>
+                                        {% if safety_check.rejection_reason %}
+                                        <tr>
+                                            <td><strong>سبب الرفض:</strong></td>
+                                            <td>{{ safety_check.rejection_reason }}</td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- أزرار الإجراءات -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('external_safety.admin_external_safety_checks') }}" 
+                                   class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> العودة للقائمة
+                                </a>
+                                
+                                <!-- زر التعديل -->
+                                <a href="{{ url_for('external_safety.edit_safety_check', check_id=safety_check.id) }}" 
+                                   class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> تعديل الفحص
+                                </a>
+                                
+                                <!-- زر الحذف -->
+                                <button class="btn btn-danger" 
+                                        onclick="showDeleteModal()">
+                                    <i class="fas fa-trash"></i> حذف الفحص
+                                </button>
+                                
+                                <!-- زر تصدير PDF -->
+                                <a href="{{ url_for('external_safety.export_safety_check_pdf', check_id=safety_check.id) }}" 
+                                   class="btn btn-info" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> تصدير PDF
+                                </a>
+                                
+                                {% if safety_check.is_pending %}
+                                <form method="POST" 
+                                      action="{{ url_for('external_safety.approve_safety_check', check_id=safety_check.id) }}" 
+                                      style="display: inline-block;">
+                                    <button type="submit" 
+                                            class="btn btn-success" 
+                                            onclick="return confirm('هل أنت متأكد من اعتماد هذا الطلب؟')">
+                                        <i class="fas fa-check"></i> اعتماد الطلب
+                                    </button>
+                                </form>
+                                
+                                <a href="{{ url_for('external_safety.reject_safety_check_page', check_id=safety_check.id) }}" 
+                                   class="btn btn-danger">
+                                    <i class="fas fa-times"></i> رفض الطلب
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة منبثقة لعرض الصورة مع تكبير/تصغير -->
+<div class="modal fade" id="imageModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">صورة فحص السلامة</h5>
+                <div class="ml-auto">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="zoomImage(-0.2)">
+                        <i class="fas fa-search-minus"></i> تصغير
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="zoomImage(0.2)">
+                        <i class="fas fa-search-plus"></i> تكبير
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetZoom()">
+                        <i class="fas fa-expand-arrows-alt"></i> إعادة تعيين
+                    </button>
+                    <button type="button" class="close" data-dismiss="modal" onclick="closeImageModal()">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body text-center" style="max-height: 70vh; overflow: auto;">
+                <div id="imageContainer" style="position: relative; display: inline-block;">
+                    <img id="modalImage" 
+                         src="" 
+                         alt="صورة فحص السلامة" 
+                         style="max-width: 100%; height: auto; cursor: grab; transition: transform 0.2s;">
+                </div>
+                <p id="modalDescription" class="mt-3 text-muted"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- نافذة منبثقة لتأكيد الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">حذف طلب فحص السلامة</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('external_safety.delete_safety_check', check_id=safety_check.id) }}">
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تحذير:</strong> سيتم حذف طلب فحص السلامة هذا نهائياً مع جميع الصور والملفات المرفقة.
+                    </div>
+                    <p><strong>تفاصيل الطلب:</strong></p>
+                    <ul>
+                        <li>رقم الطلب: #{{ safety_check.id }}</li>
+                        <li>السيارة: {{ safety_check.vehicle_plate_number }}</li>
+                        <li>السائق: {{ safety_check.driver_name }}</li>
+                        <li>تاريخ الفحص: {{ safety_check.inspection_date.strftime('%Y-%m-%d') }}</li>
+                    </ul>
+                    <p class="text-danger"><strong>هذا الإجراء لا يمكن التراجع عنه!</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentZoom = 1;
+    let isDragging = false;
+    let startX, startY, initialX, initialY;
+    
+    function showImageModal(imageSrc, description) {
+        console.log('showImageModal called with:', imageSrc, description);
+        
+        // تحقق من وجود العناصر المطلوبة
+        const modalImageElement = document.getElementById('modalImage');
+        const modalDescElement = document.getElementById('modalDescription');
+        const modalElement = document.getElementById('imageModal');
+        
+        console.log('Modal elements found:', {
+            modalImage: !!modalImageElement,
+            modalDescription: !!modalDescElement,
+            modal: !!modalElement
+        });
+        
+        if (!modalImageElement || !modalDescElement || !modalElement) {
+            console.error('Modal elements not found, opening in new tab');
+            // فتح الصورة في تبويب جديد كبديل
+            window.open(imageSrc, '_blank');
+            return;
+        }
+        
+        // إعداد الصورة والوصف
+        modalImageElement.src = imageSrc;
+        modalDescElement.textContent = description || 'بدون وصف';
+        resetZoom();
+        
+        // عرض النافذة المنبثقة
+        try {
+            // تحقق من وجود Bootstrap modal
+            if (typeof $ !== 'undefined' && $('#imageModal').length > 0) {
+                console.log('Using jQuery Bootstrap modal');
+                $('#imageModal').modal('show');
+            } else if (typeof bootstrap !== 'undefined') {
+                console.log('Using Bootstrap 5 modal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                console.log('Bootstrap not available, using fallback');
+                // عرض النافذة المنبثقة يدوياً
+                modalElement.style.display = 'block';
+                modalElement.classList.add('show');
+                document.body.classList.add('modal-open');
+                
+                // إضافة backdrop
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                backdrop.id = 'imageModalBackdrop';
+                document.body.appendChild(backdrop);
+                
+                // إضافة مستمع لإغلاق النافذة
+                backdrop.addEventListener('click', function() {
+                    closeImageModal();
+                });
+            }
+        } catch (error) {
+            console.error('Error showing modal:', error);
+            // فتح الصورة في تبويب جديد كبديل
+            window.open(imageSrc, '_blank');
+        }
+    }
+    
+    function closeImageModal() {
+        const modalElement = document.getElementById('imageModal');
+        const backdrop = document.getElementById('imageModalBackdrop');
+        
+        if (modalElement) {
+            modalElement.style.display = 'none';
+            modalElement.classList.remove('show');
+        }
+        
+        if (backdrop) {
+            backdrop.remove();
+        }
+        
+        document.body.classList.remove('modal-open');
+    }
+    
+    function zoomImage(deltaZoom) {
+        currentZoom += deltaZoom;
+        if (currentZoom < 0.5) currentZoom = 0.5;
+        if (currentZoom > 3) currentZoom = 3;
+        
+        const img = document.getElementById('modalImage');
+        img.style.transform = `scale(${currentZoom})`;
+        img.style.cursor = currentZoom > 1 ? 'grab' : 'grab';
+    }
+    
+    function resetZoom() {
+        currentZoom = 1;
+        const img = document.getElementById('modalImage');
+        img.style.transform = 'scale(1)';
+        img.style.cursor = 'grab';
+    }
+    
+    function openImageInNewTab() {
+        const img = document.getElementById('modalImage');
+        if (img && img.src) {
+            window.open(img.src, '_blank');
+        }
+    }
+    
+    function showDeleteModal() {
+        const deleteModal = document.getElementById('deleteModal');
+        if (deleteModal) {
+            if (typeof $ !== 'undefined') {
+                $('#deleteModal').modal('show');
+            } else if (typeof bootstrap !== 'undefined') {
+                const modal = new bootstrap.Modal(deleteModal);
+                modal.show();
+            } else {
+                deleteModal.style.display = 'block';
+                deleteModal.classList.add('show');
+                document.body.classList.add('modal-open');
+            }
+        }
+    }
+    
+    // إضافة دعم السحب والإفلات للصور المكبرة
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing image modal...');
+        const modalImage = document.getElementById('modalImage');
+        
+        if (!modalImage) {
+            console.error('Modal image element not found on page load');
+            return;
+        }
+        
+        modalImage.addEventListener('mousedown', function(e) {
+            if (currentZoom > 1) {
+                isDragging = true;
+                startX = e.clientX - initialX;
+                startY = e.clientY - initialY;
+                modalImage.style.cursor = 'grabbing';
+            }
+        });
+        
+        modalImage.addEventListener('mousemove', function(e) {
+            if (isDragging && currentZoom > 1) {
+                e.preventDefault();
+                initialX = e.clientX - startX;
+                initialY = e.clientY - startY;
+                modalImage.style.transform = `scale(${currentZoom}) translate(${initialX}px, ${initialY}px)`;
+            }
+        });
+        
+        modalImage.addEventListener('mouseup', function() {
+            isDragging = false;
+            modalImage.style.cursor = currentZoom > 1 ? 'grab' : 'grab';
+        });
+        
+        modalImage.addEventListener('mouseleave', function() {
+            isDragging = false;
+            modalImage.style.cursor = currentZoom > 1 ? 'grab' : 'grab';
+        });
+        
+        // دعم التكبير/التصغير بالماوس
+        modalImage.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            zoomImage(delta);
+        });
+        
+        // دعم اللمس للأجهزة المحمولة
+        let touchDistance = 0;
+        let touchStartDistance = 0;
+        
+        modalImage.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                touchStartDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                touchDistance = touchStartDistance;
+            }
+        });
+        
+        modalImage.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                const delta = (currentDistance - touchDistance) / 100;
+                zoomImage(delta);
+                touchDistance = currentDistance;
+            }
+        });
+        
+        // إعادة تعيين الموضع عند إغلاق النافذة
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal) {
+            imageModal.addEventListener('hidden.bs.modal', function () {
+                resetZoom();
+                initialX = 0;
+                initialY = 0;
+            });
+        }
+        
+        // إضافة دعم لضغط مفتاح Escape لإغلاق النافذة
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+    });
+</script>
+
+<style>
+    .badge-lg {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .table td {
+        padding: 0.5rem;
+    }
+    
+    .modal-lg {
+        max-width: 80%;
+    }
+    
+    #modalImage {
+        max-height: 70vh;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}

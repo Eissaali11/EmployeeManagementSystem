@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار رفع الصور</title>
+    <style>
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            padding: 20px;
+            direction: rtl;
+            background: #f8f9fa;
+        }
+        .image-preview {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-preview-item {
+            position: relative;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-preview-item img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .description-input {
+            display: block !important;
+            width: 100% !important;
+            margin-top: 15px !important;
+            margin-bottom: 15px !important;
+            border: 2px solid #667eea !important;
+            border-radius: 8px !important;
+            padding: 15px !important;
+            font-size: 1.1rem !important;
+            background: white !important;
+            color: #333 !important;
+            font-family: 'Cairo', sans-serif !important;
+            transition: all 0.3s ease !important;
+            box-sizing: border-box !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            min-height: 55px !important;
+        }
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .image-preview {
+                flex-direction: column !important;
+                gap: 20px !important;
+            }
+            .image-preview-item {
+                width: 100% !important;
+                margin-bottom: 20px !important;
+                padding: 15px !important;
+            }
+            .image-container {
+                height: auto !important;
+                min-height: 150px !important;
+                margin-bottom: 15px !important;
+            }
+            .image-preview-item img {
+                max-height: 250px !important;
+                object-fit: contain !important;
+            }
+            .description-input {
+                width: 100% !important;
+                font-size: 1.1rem !important;
+                padding: 15px !important;
+                margin-top: 15px !important;
+                margin-bottom: 15px !important;
+                box-sizing: border-box !important;
+                min-height: 55px !important;
+                border: 2px solid #667eea !important;
+                border-radius: 8px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>اختبار رفع الصور مع الأوصاف</h1>
+    
+    <input type="file" id="imageInput" multiple accept="image/*" onchange="handleImageUpload(this)">
+    
+    <div id="imagePreview" class="image-preview"></div>
+    
+    <script>
+        let uploadedImages = [];
+        
+        function handleImageUpload(input) {
+            const files = input.files;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const imageData = {
+                            file: file,
+                            src: e.target.result,
+                            id: Date.now() + i,
+                            description: ''
+                        };
+                        
+                        uploadedImages.push(imageData);
+                        displayImagePreview();
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+        
+        function displayImagePreview() {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            
+            uploadedImages.forEach((image, index) => {
+                const item = document.createElement('div');
+                item.className = 'image-preview-item';
+                
+                // إنشاء حاوية الصورة
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'image-container';
+                
+                const img = document.createElement('img');
+                img.src = image.src;
+                img.alt = `صورة ${index + 1}`;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = () => removeImage(image.id);
+                
+                // إضافة الصورة وزر الحذف لحاوية الصورة
+                imageContainer.appendChild(img);
+                imageContainer.appendChild(removeBtn);
+                
+                // إنشاء حقل الوصف
+                const descInput = document.createElement('input');
+                descInput.type = 'text';
+                descInput.className = 'description-input';
+                descInput.placeholder = `وصف الصورة ${index + 1} (اختياري)`;
+                descInput.value = image.description || '';
+                descInput.style.display = 'block';
+                descInput.style.width = '100%';
+                descInput.style.boxSizing = 'border-box';
+                descInput.style.marginTop = '15px';
+                descInput.style.marginBottom = '15px';
+                descInput.style.padding = '15px';
+                descInput.style.border = '2px solid #667eea';
+                descInput.style.borderRadius = '8px';
+                descInput.style.fontSize = '1.1rem';
+                descInput.style.backgroundColor = 'white';
+                descInput.style.color = '#333';
+                descInput.style.minHeight = '55px';
+                descInput.style.visibility = 'visible';
+                descInput.style.opacity = '1';
+                descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
+                
+                // إضافة العناصر للحاوية الرئيسية
+                item.appendChild(imageContainer);
+                item.appendChild(descInput);
+                
+                preview.appendChild(item);
+            });
+        }
+        
+        function removeImage(imageId) {
+            uploadedImages = uploadedImages.filter(img => img.id !== imageId);
+            displayImagePreview();
+        }
+        
+        function updateImageDescription(imageId, description) {
+            const image = uploadedImages.find(img => img.id === imageId);
+            if (image) {
+                image.description = description;
+                console.log('تم تحديث وصف الصورة:', imageId, description);
+            }
+        }
+    </script>
+</body>
+</html>

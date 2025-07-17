@@ -193,3 +193,55 @@ def log_system_activity(action, details):
         entity_type='System',
         details=details
     )
+
+
+def log_audit(user_id, action, entity_type, entity_id=None, details=None, previous_data=None, new_data=None):
+    """
+    دالة تسجيل المراجعة العامة
+    
+    :param user_id: معرف المستخدم
+    :param action: نوع العملية (create, update, delete, etc.)
+    :param entity_type: نوع الكيان
+    :param entity_id: معرف الكيان
+    :param details: تفاصيل العملية
+    :param previous_data: البيانات السابقة
+    :param new_data: البيانات الجديدة
+    """
+    try:
+        # تحويل البيانات إلى JSON إذا كانت قاموس
+        if isinstance(previous_data, dict):
+            previous_data = json.dumps(previous_data, ensure_ascii=False)
+        if isinstance(new_data, dict):
+            new_data = json.dumps(new_data, ensure_ascii=False)
+        
+        audit_log = AuditLog()
+        audit_log.user_id = user_id
+        audit_log.action = action
+        audit_log.entity_type = entity_type
+        audit_log.entity_id = entity_id
+        audit_log.details = details
+        
+        # التعامل الآمن مع request
+        try:
+            audit_log.ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'Unknown'))
+            audit_log.user_agent = request.environ.get('HTTP_USER_AGENT', 'Unknown')
+        except:
+            audit_log.ip_address = 'Unknown'
+            audit_log.user_agent = 'Unknown'
+        
+        audit_log.previous_data = previous_data
+        audit_log.new_data = new_data
+        audit_log.timestamp = datetime.utcnow()
+        
+        db.session.add(audit_log)
+        db.session.commit()
+        print(f"تم تسجيل العملية بنجاح: {audit_log.id}")
+        
+    except Exception as e:
+        print(f"خطأ في تسجيل المراجعة: {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            db.session.rollback()
+        except:
+            pass

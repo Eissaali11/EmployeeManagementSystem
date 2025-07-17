@@ -19,7 +19,7 @@ from models import (
         Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
         VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
-        Department, ExternalAuthorization
+        Department, ExternalAuthorization, Module, Permission, UserRole
 )
 from utils.audit_logger import log_activity
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
@@ -604,6 +604,7 @@ def index():
         status_filter = request.args.get('status', '')
         make_filter = request.args.get('make', '')
         search_plate = request.args.get('search_plate', '')
+        project_filter = request.args.get('project', '')
         
         # قاعدة الاستعلام الأساسية
         query = Vehicle.query
@@ -616,6 +617,10 @@ def index():
         if make_filter:
                 query = query.filter(Vehicle.make == make_filter)
         
+        # إضافة التصفية حسب المشروع إذا تم تحديده
+        if project_filter:
+                query = query.filter(Vehicle.project == project_filter)
+        
         # إضافة البحث برقم السيارة إذا تم تحديده
         if search_plate:
                 query = query.filter(Vehicle.plate_number.contains(search_plate))
@@ -623,6 +628,10 @@ def index():
         # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
         makes = db.session.query(Vehicle.make).distinct().all()
         makes = [make[0] for make in makes]
+        
+        # الحصول على قائمة بالمشاريع لقائمة التصفية
+        projects = db.session.query(Vehicle.project).filter(Vehicle.project.isnot(None)).distinct().all()
+        projects = [project[0] for project in projects]
         
         # الحصول على قائمة السيارات
         vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
@@ -692,7 +701,9 @@ def index():
                 status_filter=status_filter,
                 make_filter=make_filter,
                 search_plate=search_plate,
+                project_filter=project_filter,
                 makes=makes,
+                projects=projects,
                 statuses=VEHICLE_STATUS_CHOICES,
                 expiring_documents=expiring_documents
         )
@@ -1186,6 +1197,7 @@ def edit(id):
                 
                 # تحديث بيانات السيارة
                 driver_name = request.form.get('driver_name')
+                project = request.form.get('project')
                 vehicle.plate_number = plate_number
                 vehicle.make = make
                 vehicle.model = model
@@ -1193,6 +1205,7 @@ def edit(id):
                 vehicle.color = color
                 vehicle.status = status
                 vehicle.driver_name = driver_name
+                vehicle.project = project
                 vehicle.notes = notes
                 vehicle.updated_at = datetime.utcnow()
                 
@@ -1204,7 +1217,9 @@ def edit(id):
                 flash('تم تعديل بيانات السيارة بنجاح!', 'success')
                 return redirect(url_for('vehicles.view', id=id))
         
-        return render_template('vehicles/edit.html', vehicle=vehicle, statuses=VEHICLE_STATUS_CHOICES)
+        # جلب الأقسام لقائمة المشاريع
+        departments = Department.query.all()
+        return render_template('vehicles/edit.html', vehicle=vehicle, statuses=VEHICLE_STATUS_CHOICES, departments=departments)
 
 @vehicles_bp.route('/<int:id>/confirm-delete')
 @login_required
@@ -4613,4 +4628,147 @@ def drive_management(vehicle_id):
         return redirect(url_for('vehicles.drive_management', vehicle_id=vehicle_id))
     
     return render_template('vehicles/drive_management.html', vehicle=vehicle)
+
+
+@vehicles_bp.route('/<int:id>/upload-document', methods=['POST'])
+@login_required
+def upload_document(id):
+    """رفع الوثائق (استمارة، لوحة، تأمين)"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # التحقق من صلاحية الوصول
+    try:
+        if not current_user.has_permission(Module.VEHICLES, Permission.EDIT):
+            flash('ليس لديك صلاحية لتعديل بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+    except:
+        # في حالة عدم وجود صلاحيات، السماح للمديرين أو تخطي للتجربة
+        if not hasattr(current_user, 'role') or current_user.role != UserRole.ADMIN:
+            flash('ليس لديك صلاحية لتعديل بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+    
+    document_type = request.form.get('document_type')
+    if 'file' not in request.files:
+        flash('لم يتم اختيار ملف', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('لم يتم اختيار ملف', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    if file and allowed_file(file.filename):
+        # إنشاء اسم ملف فريد
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        
+        # إنشاء المسار المناسب حسب نوع الوثيقة
+        if document_type == 'registration_form':
+            upload_folder = 'static/uploads/vehicles/registration_forms'
+            field_name = 'registration_form_image'
+        elif document_type == 'plate':
+            upload_folder = 'static/uploads/vehicles/plates'
+            field_name = 'plate_image'
+        elif document_type == 'insurance':
+            upload_folder = 'static/uploads/vehicles/insurance'
+            field_name = 'insurance_file'
+        else:
+            flash('نوع الوثيقة غير صحيح', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+        
+        # إنشاء المجلد إذا لم يكن موجوداً
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # حفظ الملف
+        file_path = os.path.join(upload_folder, unique_filename)
+        file.save(file_path)
+        
+        # تحديث قاعدة البيانات
+        setattr(vehicle, field_name, file_path)
+        
+        try:
+            db.session.commit()
+            flash('تم رفع الوثيقة بنجاح', 'success')
+            
+            # تسجيل النشاط
+            log_activity(
+                action='upload',
+                entity_type='Vehicle',
+                entity_id=vehicle.id,
+                details=f'رفع وثيقة {document_type} للسيارة {vehicle.plate_number}'
+            )
+            
+        except Exception as e:
+            db.session.rollback()
+            # حذف الملف إذا فشل الحفظ في قاعدة البيانات
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            flash(f'خطأ في حفظ الوثيقة: {str(e)}', 'error')
+    
+    return redirect(url_for('vehicles.view', id=id))
+
+
+@vehicles_bp.route('/<int:id>/delete-document', methods=['POST'])
+@login_required
+def delete_document(id):
+    """حذف الوثائق"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # التحقق من صلاحية الوصول
+    try:
+        if not current_user.has_permission(Module.VEHICLES, Permission.DELETE):
+            flash('ليس لديك صلاحية لحذف بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+    except:
+        # في حالة عدم وجود صلاحيات، السماح للمديرين أو تخطي للتجربة
+        if not hasattr(current_user, 'role') or current_user.role != UserRole.ADMIN:
+            flash('ليس لديك صلاحية لحذف بيانات السيارات', 'error')
+            return redirect(url_for('vehicles.view', id=id))
+    
+    document_type = request.form.get('document_type')
+    
+    if document_type == 'registration_form':
+        field_name = 'registration_form_image'
+    elif document_type == 'plate':
+        field_name = 'plate_image'
+    elif document_type == 'insurance':
+        field_name = 'insurance_file'
+    else:
+        flash('نوع الوثيقة غير صحيح', 'error')
+        return redirect(url_for('vehicles.view', id=id))
+    
+    # الحصول على مسار الملف
+    file_path = getattr(vehicle, field_name)
+    
+    if file_path:
+        # حذف الملف من النظام
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # حذف المرجع من قاعدة البيانات
+        setattr(vehicle, field_name, None)
+        
+        try:
+            db.session.commit()
+            flash('تم حذف الوثيقة بنجاح', 'success')
+            
+            # تسجيل النشاط
+            log_activity(
+                action='delete',
+                entity_type='Vehicle',
+                entity_id=vehicle.id,
+                details=f'حذف وثيقة {document_type} للسيارة {vehicle.plate_number}'
+            )
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في حذف الوثيقة: {str(e)}', 'error')
+    
+    return redirect(url_for('vehicles.view', id=id))
+
+
+def allowed_file(filename):
+    """التحقق من أنواع الملفات المسموحة"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 

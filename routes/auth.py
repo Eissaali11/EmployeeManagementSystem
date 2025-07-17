@@ -40,7 +40,7 @@ def login():
         
         # البحث عن المستخدم
         user = User.query.filter_by(email=email).first()
-        
+        print(user)
         # التحقق من وجود المستخدم وصحة كلمة المرور
         if not user or not user.check_password(password):
             flash('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'danger')
