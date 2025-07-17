@@ -253,8 +253,8 @@ def create():
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
     
-    # Get all employees for dropdown
-    employees = Employee.query.all()
+    # Get all employees for dropdown with their departments loaded
+    employees = Employee.query.options(db.selectinload(Employee.departments)).all()
     
     # Get all departments for dropdown
     departments = Department.query.all()

@@ -54,8 +54,9 @@
                                     <option value="">اختر الموظف</option>
                                     {% for employee in employees %}
                                     <option value="{{ employee.id }}" 
-                                            data-national-id="{{ employee.national_id }}" 
-                                            data-department-id="{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}">
+                                            data-national-id="{{ employee.national_id or '' }}" 
+                                            data-department-id="{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}"
+                                            data-department-names="{% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %},{% endif %}{% endfor %}">
                                         {{ employee.name }} ({{ employee.employee_id }})
                                         {% if employee.departments %}
                                         - {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
@@ -200,34 +201,64 @@
             width: '100%'
         });
         
+        // إنشاء مصفوفة البيانات للفلترة
+        let employeesData = [];
+        $('#employee_id option').each(function() {
+            const option = $(this);
+            if (option.val()) {
+                employeesData.push({
+                    id: option.val(),
+                    text: option.text(),
+                    nationalId: option.data('national-id') || '',
+                    departmentIds: (option.data('department-id') || '').toString().split(',').filter(id => id),
+                    departmentNames: option.data('department-names') || ''
+                });
+            }
+        });
+        
+        console.log('بيانات الموظفين:', employeesData);
+        
         // فلترة الموظفين حسب القسم المحدد
         $('#filter_department').on('change', function() {
             const selectedDepartmentId = $(this).val();
+            
+            console.log('فلتر القسم المحدد:', selectedDepartmentId);
+            
+            // تدمير Select2 قبل التعديل
+            $('#employee_id').select2('destroy');
+            
+            // إعادة بناء القائمة
             const employeeSelect = $('#employee_id');
+            employeeSelect.empty();
+            employeeSelect.append('<option value="">اختر الموظف</option>');
             
-            // إعادة تعيين اختيار الموظف
-            employeeSelect.val(null).trigger('change');
-            
-            // إظهار أو إخفاء الموظفين حسب القسم المحدد
-            employeeSelect.find('option').each(function() {
-                const option = $(this);
-                const employeeDepartmentIds = option.data('department-id');
+            // إضافة الموظفين المفلترين
+            let addedCount = 0;
+            employeesData.forEach(function(employee) {
+                let shouldInclude = true;
                 
-                if (!selectedDepartmentId || option.val() === '') {
-                    // إظهار جميع الموظفين إذا لم يتم اختيار قسم
-                    option.show();
-                } else {
-                    // إظهار الموظفين في القسم المحدد فقط
-                    if (employeeDepartmentIds && employeeDepartmentIds.toString().split(',').includes(selectedDepartmentId)) {
-                        option.show();
-                    } else {
-                        option.hide();
-                    }
+                if (selectedDepartmentId) {
+                    shouldInclude = employee.departmentIds.includes(selectedDepartmentId.toString());
+                    console.log('الموظف:', employee.text, 'أقسامه:', employee.departmentIds, 'يجب إضافته:', shouldInclude);
+                }
+                
+                if (shouldInclude) {
+                    const option = $('<option></option>')
+                        .attr('value', employee.id)
+                        .attr('data-national-id', employee.nationalId)
+                        .attr('data-department-id', employee.departmentIds.join(','))
+                        .text(employee.text);
+                    employeeSelect.append(option);
+                    addedCount++;
                 }
             });
             
-            // تحديث Select2 لإعادة رسم القائمة
-            employeeSelect.select2('destroy').select2({
+            console.log('تم إضافة', addedCount, 'موظف للقائمة');
+            
+            console.log('عدد الموظفين المعروضين:', employeeSelect.find('option').length - 1);
+            
+            // إعادة تطبيق Select2
+            employeeSelect.select2({
                 theme: 'bootstrap-5',
                 placeholder: 'اختر الموظف',
                 allowClear: true,
