@@ -7,7 +7,7 @@ import os
 from datetime import datetime, date
 from dotenv import load_dotenv
 # تحميل متغيرات البيئة
-load_dotenv('.env.local')
+load_dotenv('.env')
 os.environ.setdefault('DATABASE_URL', 'sqlite:///nuzum_local.db')
 
 from app import app, db
