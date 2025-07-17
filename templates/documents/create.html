@@ -33,9 +33,15 @@
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="add_type" id="add_sponsorship_bulk" value="sponsorship_bulk">
-                                <label class="form-check-label" for="add_sponsorship_bulk">
-                                    <i class="fas fa-clipboard-list me-1"></i> إضافة جماعية حسب الكفالة
+                                <input class="form-check-input" type="radio" name="add_type" id="add_sponsorship_internal" value="sponsorship_internal">
+                                <label class="form-check-label" for="add_sponsorship_internal">
+                                    <i class="fas fa-building me-1"></i> إضافة للموظفين على الكفالة
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="add_type" id="add_sponsorship_external" value="sponsorship_external">
+                                <label class="form-check-label" for="add_sponsorship_external">
+                                    <i class="fas fa-user-tie me-1"></i> إضافة للموظفين خارج الكفالة
                                 </label>
                             </div>
                         </div>
@@ -366,6 +372,307 @@
                 width: '100%'
             });
         });
+        
+        // التحكم في إظهار وإخفاء الأقسام حسب نوع الإضافة
+        $('input[name="add_type"]').on('change', function() {
+            const addType = $(this).val();
+            
+            // إخفاء جميع الأقسام أولاً
+            $('#employee_selection').show();
+            $('#department_selection').hide();
+            $('#sponsorship_employees_list').hide();
+            $('#single_form_buttons').show();
+            $('#document_number_container, #issue_date, #expiry_date, #notes').closest('.mb-3, .col-md-6').show();
+            
+            if (addType === 'single') {
+                // إضافة لموظف واحد
+                $('#employee_selection').show();
+                $('#department_selection').hide();
+            } else if (addType === 'department') {
+                // إضافة لقسم كامل
+                $('#employee_selection').hide();
+                $('#department_selection').show();
+            } else if (addType === 'sponsorship_internal' || addType === 'sponsorship_external') {
+                // إضافة حسب الكفالة
+                $('#employee_selection').hide();
+                $('#department_selection').hide();
+                $('#sponsorship_employees_list').show();
+                $('#single_form_buttons').hide();
+                $('#document_number_container, #issue_date, #expiry_date, #notes').closest('.mb-3, .col-md-6').hide();
+                
+                // جلب الموظفين حسب حالة الكفالة
+                loadEmployeesBySponsorshipStatus(addType);
+            }
+        });
+        
+        // جلب الموظفين حسب حالة الكفالة
+        function loadEmployeesBySponsorshipStatus(sponsorshipType) {
+            const isInternal = sponsorshipType === 'sponsorship_internal';
+            
+            // إرسال طلب للخادم لجلب الموظفين
+            fetch('/documents/get_employees_by_sponsorship', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': $('input[name="csrf_token"]').val()
+                },
+                body: JSON.stringify({
+                    sponsorship_type: isInternal ? 'internal' : 'external'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displaySponsorshipEmployees(data.employees);
+                } else {
+                    console.error('خطأ في جلب الموظفين:', data.message);
+                    alert('حدث خطأ في جلب بيانات الموظفين');
+                }
+            })
+            .catch(error => {
+                console.error('خطأ في الشبكة:', error);
+                alert('حدث خطأ في الاتصال بالخادم');
+            });
+        }
+        
+        // عرض الموظفين في الجدول
+        function displaySponsorshipEmployees(employees) {
+            const tbody = $('#sponsorship_employees_tbody');
+            tbody.empty();
+            
+            if (employees.length === 0) {
+                tbody.append(`
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            <i class="fas fa-users me-2"></i>
+                            لا توجد موظفين متاحين لهذا النوع من الكفالة
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+            
+            employees.forEach(function(employee) {
+                const row = `
+                    <tr id="employee_row_${employee.id}" data-employee-id="${employee.id}">
+                        <td>
+                            <strong>${employee.name}</strong><br>
+                            <small class="text-muted">${employee.department_names || 'غير محدد'}</small>
+                        </td>
+                        <td>${employee.employee_id || 'غير محدد'}</td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm document-number-input" 
+                                   placeholder="رقم الوثيقة" data-employee-id="${employee.id}"
+                                   value="${employee.national_id || ''}" />
+                        </td>
+                        <td>
+                            <input type="date" class="form-control form-control-sm issue-date-input" 
+                                   data-employee-id="${employee.id}" />
+                        </td>
+                        <td>
+                            <input type="date" class="form-control form-control-sm expiry-date-input" 
+                                   data-employee-id="${employee.id}" />
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm notes-input" 
+                                   placeholder="ملاحظات" data-employee-id="${employee.id}" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-success save-individual-btn" 
+                                    data-employee-id="${employee.id}">
+                                <i class="fas fa-save"></i> حفظ
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+            
+            // تطبيق الأحداث للأزرار
+            attachSponsorshipEventHandlers();
+        }
+        
+        // ربط الأحداث للأزرار والحقول
+        function attachSponsorshipEventHandlers() {
+            // التعبئة التلقائية لرقم الهوية عند اختيار نوع الوثيقة كـ "الهوية الوطنية"
+            $('#sponsorship_document_type').on('change', function() {
+                const documentType = $(this).val();
+                if (documentType === 'national_id') {
+                    $('.document-number-input').each(function() {
+                        const employeeId = $(this).data('employee-id');
+                        const row = $(`#employee_row_${employeeId}`);
+                        // البحث عن رقم الهوية في بيانات الموظف
+                        const employeeData = employeesData.find(emp => emp.id == employeeId);
+                        if (employeeData && employeeData.nationalId) {
+                            $(this).val(employeeData.nationalId);
+                        }
+                    });
+                }
+            });
+            
+            // حفظ فردي لكل موظف
+            $('.save-individual-btn').on('click', function() {
+                const employeeId = $(this).data('employee-id');
+                const row = $(`#employee_row_${employeeId}`);
+                const btn = $(this);
+                
+                // جمع البيانات
+                const documentType = $('#sponsorship_document_type').val();
+                const documentNumber = row.find('.document-number-input').val();
+                const issueDate = row.find('.issue-date-input').val();
+                const expiryDate = row.find('.expiry-date-input').val();
+                const notes = row.find('.notes-input').val();
+                
+                // التحقق من البيانات المطلوبة
+                if (!documentType) {
+                    alert('يرجى اختيار نوع الوثيقة أولاً');
+                    return;
+                }
+                
+                if (!documentNumber || !issueDate || !expiryDate) {
+                    alert('يرجى ملء جميع الحقول المطلوبة');
+                    return;
+                }
+                
+                // تعطيل الزر أثناء الحفظ
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...');
+                
+                // إرسال البيانات للخادم
+                fetch('/documents/save_individual_document', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': $('input[name="csrf_token"]').val()
+                    },
+                    body: JSON.stringify({
+                        employee_id: employeeId,
+                        document_type: documentType,
+                        document_number: documentNumber,
+                        issue_date: issueDate,
+                        expiry_date: expiryDate,
+                        notes: notes
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // تغيير الصف للأخضر
+                        row.addClass('table-success');
+                        btn.removeClass('btn-success').addClass('btn-secondary')
+                           .html('<i class="fas fa-check"></i> تم الحفظ')
+                           .prop('disabled', false);
+                        
+                        // إظهار رسالة نجاح
+                        showToast('تم حفظ البيانات بنجاح', 'success');
+                    } else {
+                        alert('خطأ في حفظ البيانات: ' + data.message);
+                        btn.prop('disabled', false).html('<i class="fas fa-save"></i> حفظ');
+                    }
+                })
+                .catch(error => {
+                    console.error('خطأ في الشبكة:', error);
+                    alert('حدث خطأ في الاتصال بالخادم');
+                    btn.prop('disabled', false).html('<i class="fas fa-save"></i> حفظ');
+                });
+            });
+        }
+        
+        // حفظ جميع البيانات المُدخلة
+        $('#save_all_sponsorship_documents').on('click', function() {
+            const documentType = $('#sponsorship_document_type').val();
+            
+            if (!documentType) {
+                alert('يرجى اختيار نوع الوثيقة أولاً');
+                return;
+            }
+            
+            const allDocuments = [];
+            let hasValidData = false;
+            
+            // جمع بيانات جميع الموظفين
+            $('#sponsorship_employees_tbody tr').each(function() {
+                const row = $(this);
+                const employeeId = row.data('employee-id');
+                
+                if (employeeId) {
+                    const documentNumber = row.find('.document-number-input').val();
+                    const issueDate = row.find('.issue-date-input').val();
+                    const expiryDate = row.find('.expiry-date-input').val();
+                    const notes = row.find('.notes-input').val();
+                    
+                    // إضافة فقط إذا كانت هناك بيانات
+                    if (documentNumber || issueDate || expiryDate || notes) {
+                        hasValidData = true;
+                        allDocuments.push({
+                            employee_id: employeeId,
+                            document_number: documentNumber,
+                            issue_date: issueDate,
+                            expiry_date: expiryDate,
+                            notes: notes
+                        });
+                    }
+                }
+            });
+            
+            if (!hasValidData) {
+                alert('لا توجد بيانات للحفظ');
+                return;
+            }
+            
+            const btn = $(this);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري حفظ البيانات...');
+            
+            // إرسال البيانات للخادم
+            fetch('/documents/save_bulk_sponsorship_documents', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': $('input[name="csrf_token"]').val()
+                },
+                body: JSON.stringify({
+                    document_type: documentType,
+                    documents: allDocuments
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`تم حفظ ${data.saved_count} وثيقة بنجاح`);
+                    location.reload(); // إعادة تحميل الصفحة
+                } else {
+                    alert('خطأ في حفظ البيانات: ' + data.message);
+                }
+                btn.prop('disabled', false).html('<i class="fas fa-save"></i> حفظ جميع البيانات المُدخلة');
+            })
+            .catch(error => {
+                console.error('خطأ في الشبكة:', error);
+                alert('حدث خطأ في الاتصال بالخادم');
+                btn.prop('disabled', false).html('<i class="fas fa-save"></i> حفظ جميع البيانات المُدخلة');
+            });
+        });
+        
+        // إظهار رسالة توست
+        function showToast(message, type = 'success') {
+            const toast = $(`
+                <div class="toast align-items-center text-white bg-${type} border-0 position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999;" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                                data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `);
+            
+            $('body').append(toast);
+            const bsToast = new bootstrap.Toast(toast[0]);
+            bsToast.show();
+            
+            // حذف العنصر بعد إخفاؤه
+            toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
         
         // التعبئة التلقائية لرقم الهوية عند اختيار موظف
         $('#employee_id').on('change', function() {

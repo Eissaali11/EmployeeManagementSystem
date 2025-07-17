@@ -22,6 +22,7 @@ from models import Document, Employee, Department, SystemAudit
 from utils.excel import parse_document_excel
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
 from utils.audit_logger import log_activity
+import json
 
 documents_bp = Blueprint('documents', __name__)
 
@@ -1629,3 +1630,172 @@ def export_expiring_excel():
         download_name=filename,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ))
+
+@documents_bp.route('/get_employees_by_sponsorship', methods=['POST'])
+def get_employees_by_sponsorship():
+    """جلب الموظفين حسب حالة الكفالة"""
+    try:
+        data = request.get_json()
+        sponsorship_type = data.get('sponsorship_type')  # 'internal' or 'external'
+        
+        if sponsorship_type == 'internal':
+            # الموظفين على الكفالة (sponsorship_status = 'on_sponsorship' أو فارغ)
+            employees = Employee.query.filter(
+                (Employee.sponsorship_status == 'on_sponsorship') |
+                (Employee.sponsorship_status.is_(None)) |
+                (Employee.sponsorship_status == '')
+            ).options(selectinload(Employee.departments)).all()
+        else:
+            # الموظفين خارج الكفالة (sponsorship_status = 'off_sponsorship')
+            employees = Employee.query.filter(
+                Employee.sponsorship_status == 'off_sponsorship'
+            ).options(selectinload(Employee.departments)).all()
+        
+        # تحويل بيانات الموظفين إلى JSON
+        employees_data = []
+        for emp in employees:
+            employees_data.append({
+                'id': emp.id,
+                'name': emp.name,
+                'employee_id': emp.employee_id,
+                'national_id': emp.national_id,
+                'department_names': ', '.join([dept.name for dept in emp.departments]) if emp.departments else ''
+            })
+        
+        return jsonify({
+            'success': True,
+            'employees': employees_data
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في جلب بيانات الموظفين: {str(e)}'
+        })
+
+@documents_bp.route('/save_individual_document', methods=['POST'])
+def save_individual_document():
+    """حفظ وثيقة فردية من الإضافة الجماعية"""
+    try:
+        data = request.get_json()
+        
+        # استخراج البيانات
+        employee_id = data.get('employee_id')
+        document_type = data.get('document_type')
+        document_number = data.get('document_number')
+        issue_date_str = data.get('issue_date')
+        expiry_date_str = data.get('expiry_date')
+        notes = data.get('notes', '')
+        
+        # التحقق من البيانات المطلوبة
+        if not employee_id or not document_type:
+            return jsonify({
+                'success': False,
+                'message': 'بيانات غير مكتملة'
+            })
+        
+        # تحويل التواريخ
+        issue_date = parse_date(issue_date_str) if issue_date_str else None
+        expiry_date = parse_date(expiry_date_str) if expiry_date_str else None
+        
+        # إنشاء وثيقة جديدة
+        document = Document(
+            employee_id=employee_id,
+            document_type=document_type,
+            document_number=document_number,
+            issue_date=issue_date,
+            expiry_date=expiry_date,
+            notes=notes
+        )
+        
+        db.session.add(document)
+        
+        # تسجيل العملية في سجل التدقيق
+        employee = Employee.query.get(employee_id)
+        audit = SystemAudit(
+            action='create',
+            entity_type='document',
+            entity_id=employee_id,
+            details=f'تم إضافة وثيقة {document_type} فردياً للموظف: {employee.name}',
+            user_id=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(audit)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم حفظ الوثيقة بنجاح'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في حفظ الوثيقة: {str(e)}'
+        })
+
+@documents_bp.route('/save_bulk_sponsorship_documents', methods=['POST'])
+def save_bulk_sponsorship_documents():
+    """حفظ جميع وثائق الكفالة الجماعية"""
+    try:
+        data = request.get_json()
+        
+        document_type = data.get('document_type')
+        documents_data = data.get('documents', [])
+        
+        if not document_type or not documents_data:
+            return jsonify({
+                'success': False,
+                'message': 'بيانات غير مكتملة'
+            })
+        
+        saved_count = 0
+        
+        for doc_data in documents_data:
+            # التحقق من وجود بيانات للحفظ
+            if not any([doc_data.get('document_number'), doc_data.get('issue_date'), 
+                       doc_data.get('expiry_date'), doc_data.get('notes')]):
+                continue
+            
+            # تحويل التواريخ
+            issue_date = parse_date(doc_data.get('issue_date')) if doc_data.get('issue_date') else None
+            expiry_date = parse_date(doc_data.get('expiry_date')) if doc_data.get('expiry_date') else None
+            
+            # إنشاء الوثيقة
+            document = Document(
+                employee_id=doc_data.get('employee_id'),
+                document_type=document_type,
+                document_number=doc_data.get('document_number', ''),
+                issue_date=issue_date,
+                expiry_date=expiry_date,
+                notes=doc_data.get('notes', '')
+            )
+            
+            db.session.add(document)
+            saved_count += 1
+        
+        # تسجيل العملية في سجل التدقيق
+        audit = SystemAudit(
+            action='create',
+            entity_type='document',
+            entity_id=None,
+            details=f'تم إضافة {saved_count} وثيقة من نوع {document_type} جماعياً حسب الكفالة',
+            user_id=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(audit)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'تم حفظ {saved_count} وثيقة بنجاح',
+            'saved_count': saved_count
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في حفظ الوثائق: {str(e)}'
+        })
