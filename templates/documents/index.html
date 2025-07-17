@@ -157,6 +157,7 @@
                     <thead>
                         <tr>
                             <th>الموظف</th>
+                            <th>الرقم الوظيفي</th>
                             <th>نوع الوثيقة</th>
                             <th>رقم الوثيقة</th>
                             <th>تاريخ الإصدار</th>
@@ -171,6 +172,7 @@
                         {% set days_to_expiry = (document.expiry_date - now.date()).days if document.expiry_date and now else 0 %}
                         <tr class="document-{{ document.document_type }}">
                             <td>{{ document.employee.name }}</td>
+                            <td>{{ document.employee.employee_id }}</td>
                             <td>
                                 {% if document.document_type == 'national_id' %}
                                 <span class="badge bg-primary">الهوية الوطنية</span>

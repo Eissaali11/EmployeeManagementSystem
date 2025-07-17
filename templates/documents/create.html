@@ -206,11 +206,12 @@
         $('#employee_id option').each(function() {
             const option = $(this);
             if (option.val()) {
+                const deptIds = option.data('department-id');
                 employeesData.push({
                     id: option.val(),
                     text: option.text(),
                     nationalId: option.data('national-id') || '',
-                    departmentIds: (option.data('department-id') || '').toString().split(',').filter(id => id),
+                    departmentIds: deptIds ? deptIds.toString().split(',').filter(id => id.trim()) : [],
                     departmentNames: option.data('department-names') || ''
                 });
             }
