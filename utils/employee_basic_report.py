@@ -273,6 +273,100 @@ class EmployeeBasicReportPDF(FPDF):
             self.ln(8)
             return False
 
+    def add_documents_row(self, employee):
+        """إضافة صور الوثائق في صف واحد مع تنسيق احترافي"""
+        # إضافة عنوان للوثائق
+        self.set_font('Arabic', 'B', 14)
+        docs_title = get_display(reshape('وثائق الموظف'))
+        self.set_fill_color(230, 240, 250)
+        self.cell(0, 10, docs_title, 1, 1, 'C', True)
+        self.ln(8)
+        
+        # تحديد أبعاد الصور
+        doc_width = 55
+        doc_height = 40
+        spacing = 15
+        
+        # حساب المواضع للصور الثلاث
+        total_width = 3 * doc_width + 2 * spacing
+        start_x = (self.w - total_width) / 2
+        
+        current_y = self.get_y()
+        
+        # الوثائق المطلوب عرضها
+        documents = [
+            (employee.national_id_image, 'الهوية الوطنية'),
+            (employee.license_image, 'رخصة القيادة'),
+            (employee.profile_image, 'صورة إضافية')
+        ]
+        
+        # عرض الصور والعناوين
+        for i, (image_path, title) in enumerate(documents):
+            x_pos = start_x + i * (doc_width + spacing)
+            
+            # رسم إطار للصورة مع تدرج لوني
+            self.set_draw_color(70, 130, 180)
+            self.set_line_width(1.5)
+            
+            # إطار خارجي
+            self.rect(x_pos - 2, current_y - 2, doc_width + 4, doc_height + 4)
+            
+            # إطار داخلي
+            self.set_draw_color(200, 220, 240)
+            self.set_line_width(0.5)
+            self.rect(x_pos - 1, current_y - 1, doc_width + 2, doc_height + 2)
+            
+            # إضافة العنوان أسفل الإطار
+            self.set_xy(x_pos, current_y + doc_height + 5)
+            self.set_font('Arabic', 'B', 10)
+            self.set_text_color(70, 130, 180)
+            title_text = get_display(reshape(title))
+            self.cell(doc_width, 6, title_text, 0, 0, 'C')
+            
+            # إضافة الصورة إذا كانت متوفرة
+            if image_path:
+                try:
+                    full_path = os.path.join('/home/runner/workspace/static', image_path)
+                    if os.path.exists(full_path):
+                        # إضافة الصورة مع هوامش داخلية
+                        margin = 3
+                        self.image(full_path, x=x_pos + margin, y=current_y + margin, 
+                                 w=doc_width - 2*margin, h=doc_height - 2*margin)
+                    else:
+                        # إضافة نص "غير متوفرة" مع تصميم أنيق
+                        self.set_xy(x_pos + 5, current_y + doc_height/2 - 3)
+                        self.set_font('Arabic', '', 9)
+                        self.set_text_color(150, 150, 150)
+                        error_text = get_display(reshape('غير متوفرة'))
+                        self.cell(doc_width - 10, 6, error_text, 0, 0, 'C')
+                        
+                        # إضافة أيقونة بديلة
+                        self.set_draw_color(200, 200, 200)
+                        self.set_line_width(2)
+                        center_x = x_pos + doc_width/2
+                        center_y = current_y + doc_height/2
+                        # رسم X بسيط
+                        self.line(center_x - 8, center_y - 8, center_x + 8, center_y + 8)
+                        self.line(center_x - 8, center_y + 8, center_x + 8, center_y - 8)
+                        
+                except Exception as e:
+                    print(f"خطأ في عرض الصورة {image_path}: {str(e)}")
+            else:
+                # إضافة نص "غير متوفرة" مع أيقونة
+                self.set_xy(x_pos + 5, current_y + doc_height/2 - 3)
+                self.set_font('Arabic', '', 9)
+                self.set_text_color(150, 150, 150)
+                no_img_text = get_display(reshape('غير متوفرة'))
+                self.cell(doc_width - 10, 6, no_img_text, 0, 0, 'C')
+        
+        # إعادة تعيين الألوان والخط
+        self.set_text_color(0, 0, 0)
+        self.set_draw_color(0, 0, 0)
+        self.set_line_width(0.2)
+        
+        # الانتقال لأسفل قسم الوثائق
+        self.set_y(current_y + doc_height + 25)
+
 
 def generate_employee_basic_pdf(employee_id):
     """إنشاء تقرير المعلومات الأساسية للموظف"""
@@ -291,15 +385,14 @@ def generate_employee_basic_pdf(employee_id):
         pdf = EmployeeBasicReportPDF()
         pdf.add_page()
         
-        # عرض الصور في البداية
-        # الصورة الشخصية في الرأس (دائرية)
-        pdf.add_employee_image(employee.profile_image, 'الصورة الشخصية', 80, 80, is_profile=True)
+        # قسم الصور بتخطيط محسن
+        pdf.add_section_title('الصور الشخصية والوثائق')
         
-        # صورة الهوية الوطنية (مستطيلة مع إطار)
-        pdf.add_employee_image(employee.national_id_image, 'صورة الهوية الوطنية', 70, 50, is_profile=False)
+        # الصورة الشخصية في المنتصف (دائرية وأكبر)
+        pdf.add_employee_image(employee.profile_image, 'الصورة الشخصية', 90, 90, is_profile=True)
         
-        # صورة رخصة القيادة (مستطيلة مع إطار)
-        pdf.add_employee_image(employee.license_image, 'صورة رخصة القيادة', 70, 50, is_profile=False)
+        # صور الوثائق في صف واحد جنباً إلى جنب
+        pdf.add_documents_row(employee)
         
         # المعلومات الأساسية
         pdf.add_section_title('المعلومات الأساسية')
