@@ -16,64 +16,105 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #1e2a38;
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --dark-bg: #1e2a38;
+            --darker-bg: #15202b;
+            --light-text: #ecf0f1;
+            --muted-text: #7f8c8d;
+            --gradient-bg: linear-gradient(135deg, #4f8cff 0%, #6dd5ed 100%);
+            --gradient-blue: linear-gradient(135deg, #1e3c72, #2a5298);
+            --gradient-green-blue: linear-gradient(to right, #3498db, #2ecc71);
+            --glass-bg: rgba(30, 42, 56, 0.65);
+            --glass-blur: 18px;
+            --error-bg: rgba(231, 76, 60, 0.2);
+            --error-border: rgba(231, 76, 60, 0.5);
+            --success-bg: rgba(46, 204, 113, 0.2);
+            --success-border: rgba(46, 204, 113, 0.5);
+        }
+        html, body {
+            height: 100%;
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
+            overflow: hidden;
         }
-        
-        /* شريط التقويم العلوي */
-        .topbar {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-        
-        .calendar-switch {
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--gradient-bg);
+            color: var(--light-text);
+            width: 100vw;
+            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            font-size: 14px;
+            justify-content: center;
+            position: relative;
         }
-        
-        .calendar-switch i {
-            margin-left: 5px;
+        /* Decorative SVG wave at the top */
+        .wave-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 120px;
+            z-index: 1;
         }
-        
-        /* محتوى الصفحة الرئيسي */
+        .wave-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 120px;
+            z-index: 1;
+        }
         .main-container {
             flex: 1;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0;
+            min-height: 0;
+            overflow: hidden;
+            z-index: 2;
         }
-        
-        /* مكونات صفحة تسجيل الدخول */
         .login-page {
             display: flex;
             width: 100%;
-            height: calc(100vh - 40px); /* ارتفاع الصفحة ناقص ارتفاع الشريط العلوي */
+            height: calc(100vh - 50px);
+            min-height: 0;
+            align-items: center;
+            justify-content: center;
         }
-        
-        /* قسم المعلومات (الجانب الأيمن) */
-        .login-info {
-            flex: 1;
-            padding: 40px;
-            color: #fff;
-            background: linear-gradient(to bottom right, #1e3c72, #2c3e50);
-            position: relative;
+        .login-form, .login-info {
+            border-radius: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 8px 0 rgba(80, 80, 80, 0.08);
+            backdrop-filter: blur(var(--glass-blur));
+            background: var(--glass-bg);
+            border: 1.5px solid rgba(255,255,255,0.18);
+            margin: 1.5rem;
+        }
+        .login-form {
+            width: 420px;
+            padding: 2.5rem 2rem 2rem 2rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 8px 0 rgba(80, 80, 80, 0.08);
+            z-index: 3;
         }
-        
+        .login-info {
+            flex: 1.2;
+            padding: 2.5rem 2rem;
+            background: linear-gradient(135deg, #1e3c72cc, #2c3e50cc);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            min-width: 300px;
+            position: relative;
+            z-index: 3;
+        }
         .login-info::before {
             content: '';
             position: absolute;
@@ -83,149 +124,145 @@
             bottom: 0;
             background-image: url('{{ url_for('static', filename='img/pattern.png') }}');
             background-size: cover;
-            opacity: 0.05;
+            opacity: 0.04;
             z-index: 0;
         }
-        
         .system-title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 30px;
-            color: #3498db;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 2.7rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
             position: relative;
             z-index: 2;
         }
-        
         .system-description {
             line-height: 1.8;
-            margin-bottom: 30px;
-            font-size: 16px;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
             position: relative;
             z-index: 2;
+            opacity: 0.92;
         }
-        
-        /* قائمة المميزات */
         .feature-list {
             position: relative;
             z-index: 2;
         }
-        
         .feature-item {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
+            transition: transform 0.3s cubic-bezier(.4,2,.3,1);
         }
-        
+        .feature-item:hover {
+            transform: translateX(-7px) scale(1.03);
+        }
         .feature-icon {
-            width: 50px;
-            height: 50px;
-            background-color: rgba(52, 152, 219, 0.2);
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #4f8cff 0%, #6dd5ed 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-left: 15px;
-            font-size: 20px;
-            color: #3498db;
+            margin-left: 18px;
+            font-size: 1.35rem;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(80, 80, 80, 0.12);
             flex-shrink: 0;
+            transition: all 0.3s;
         }
-        
+        .feature-item:hover .feature-icon {
+            background: linear-gradient(135deg, #6dd5ed 0%, #4f8cff 100%);
+            transform: scale(1.08);
+        }
         .feature-text h3 {
-            margin: 0 0 5px;
-            font-size: 18px;
-            color: #3498db;
+            margin: 0 0 0.5rem;
+            font-size: 1.13rem;
+            color: var(--primary-color);
+            font-weight: 600;
         }
-        
         .feature-text p {
             margin: 0;
-            font-size: 14px;
-            color: #ecf0f1;
-            opacity: 0.8;
+            font-size: 0.97rem;
+            color: var(--light-text);
+            opacity: 0.85;
         }
-        
-        /* قسم نموذج تسجيل الدخول (الجانب الأيسر) */
-        .login-form {
-            width: 450px;
-            padding: 40px;
-            background-color: #1e2a38;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        
         .logo-container {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
+            width: 100%;
         }
-        
         .logo-img {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 0.5rem auto;
             border-radius: 50%;
-            background-color: #1e3c72;
+            background: linear-gradient(135deg, #4f8cff 0%, #6dd5ed 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.18);
             position: relative;
+            transition: all 0.3s;
         }
-        
+        .logo-img:hover {
+            transform: scale(1.07);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+        }
         .logo-text {
             color: white;
-            font-size: 36px;
-            font-weight: bold;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 2.3rem;
+            font-weight: 700;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
         }
-        
         .system-name {
             text-align: center;
-            color: #3498db;
-            margin: 15px 0;
-            font-size: 20px;
+            color: var(--primary-color);
+            margin: 1rem 0;
+            font-size: 1.18rem;
+            font-weight: 500;
         }
-        
         h1 {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
-            font-size: 24px;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
             position: relative;
+            font-weight: 600;
         }
-        
         h1:after {
             content: '';
             position: absolute;
-            bottom: -10px;
+            bottom: -0.75rem;
             left: 50%;
             transform: translateX(-50%);
             width: 50px;
             height: 3px;
-            background: linear-gradient(to right, #3498db, #2ecc71);
+            background: var(--gradient-green-blue);
+            border-radius: 3px;
         }
-        
-        /* التبويبات */
         .login-tabs {
             display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
         .login-tab {
             flex: 1;
-            padding: 10px;
+            padding: 0.75rem;
             text-align: center;
-            color: #7f8c8d;
+            color: var(--muted-text);
             cursor: pointer;
             transition: all 0.3s;
             position: relative;
+            font-weight: 500;
+            border-radius: 8px 8px 0 0;
         }
-        
         .login-tab.active {
-            color: #3498db;
+            color: var(--primary-color);
+            font-weight: 600;
+            background: rgba(255,255,255,0.08);
         }
-        
         .login-tab.active:after {
             content: '';
             position: absolute;
@@ -233,149 +270,208 @@
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(to right, #3498db, #2ecc71);
+            background: var(--gradient-green-blue);
+            border-radius: 2px 2px 0 0;
         }
-        
-        /* نموذج التسجيل */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
+            width: 100%;
         }
-        
         label {
             display: block;
-            margin-bottom: 8px;
-            color: white;
+            margin-bottom: 0.5rem;
+            color: var(--light-text);
             font-weight: 500;
+            font-size: 0.97rem;
         }
-        
-        input[type="email"],
-        input[type="password"] {
+        input[type="email"], input[type="password"] {
             width: 100%;
-            padding: 12px 15px;
-            background-color: #2c3e50;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: all 0.3s;
-            color: white;
+            padding: 0.85rem 1.1rem;
+            background: rgba(255,255,255,0.08);
+            border: 1.5px solid rgba(255,255,255,0.18);
+            border-radius: 8px;
+            font-size: 1.05rem;
+            color: var(--light-text);
+            font-family: 'Tajawal', sans-serif;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            box-shadow: 0 1.5px 8px 0 rgba(80, 80, 80, 0.08);
         }
-        
-        input[type="email"]:focus,
-        input[type="password"]:focus {
-            border-color: #3498db;
+        input[type="email"]:focus, input[type="password"]:focus {
+            border-color: var(--primary-color);
             outline: none;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.18);
+            background: rgba(255,255,255,0.13);
         }
-        
-        /* تذكرني */
+        input::placeholder {
+            color: var(--muted-text);
+            opacity: 0.7;
+        }
         .remember-row {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
         }
-        
         .remember-me {
             margin-right: auto;
             display: flex;
             align-items: center;
-            color: #7f8c8d;
-            font-size: 14px;
+            color: var(--muted-text);
+            font-size: 0.93rem;
+            cursor: pointer;
         }
-        
-        input[type="checkbox"] {
-            margin-left: 5px;
+        .remember-me input {
+            margin-left: 0.5rem;
+            cursor: pointer;
         }
-        
-        /* زر تسجيل الدخول */
-        button {
+        .btn-login {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(to right, #3498db, #2ecc71);
+            padding: 0.95rem;
+            background: var(--gradient-green-blue);
             color: white;
             border: none;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 1.08rem;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
+            margin-top: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(80, 80, 80, 0.10);
+            transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
         }
-        
-        button:hover {
+        .btn-login:hover {
             background: linear-gradient(to right, #2980b9, #27ae60);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            transform: translateY(-2px) scale(1.03);
         }
-        
-        button i {
-            margin-left: 10px;
+        .btn-login:active {
+            transform: translateY(0) scale(0.98);
         }
-        
-        /* رسائل الخطأ والنجاح */
-        .error-message, .alert-danger {
-            background-color: rgba(231, 76, 60, 0.2);
-            border: 1px solid rgba(231, 76, 60, 0.5);
-            color: #e74c3c;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
+        .btn-login i {
+            margin-left: 0.5rem;
         }
-        
-        .success-message, .alert-success {
-            background-color: rgba(46, 204, 113, 0.2);
-            border: 1px solid rgba(46, 204, 113, 0.5);
-            color: #2ecc71;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
+        .employee-portal-link {
+            margin: 1.25rem 0 0.5rem 0;
+            text-align: center;
+            width: 100%;
         }
-        
-        /* معلومات تسجيل الدخول التجريبية */
-        .login-test-info {
-            margin-top: 20px;
-            background-color: rgba(52, 152, 219, 0.1);
-            border: 1px solid rgba(52, 152, 219, 0.3);
-            border-radius: 4px;
-            padding: 15px;
-            font-size: 14px;
-            color: #3498db;
+        .employee-portal-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1.2rem;
+            border: 1.5px solid var(--primary-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.07);
+            box-shadow: 0 1.5px 8px 0 rgba(80, 80, 80, 0.08);
         }
-        
-        .login-test-info strong {
-            color: #2ecc71;
+        .employee-portal-link a:hover {
+            background-color: rgba(52, 152, 219, 0.13);
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
         }
-        
-        /* تذييل الصفحة */
+        .employee-portal-link i {
+            margin-left: 0.5rem;
+        }
         .login-footer {
             text-align: center;
-            margin-top: 30px;
-            color: #7f8c8d;
-            font-size: 12px;
+            margin-top: 1.5rem;
+            color: var(--muted-text);
+            font-size: 0.9rem;
+            width: 100%;
         }
-        
-        /* تصميم متجاوب */
+        .login-test-info {
+            margin-top: 1.25rem;
+            background: rgba(52, 152, 219, 0.08);
+            border: 1.5px solid rgba(52, 152, 219, 0.18);
+            border-radius: 8px;
+            padding: 1.1rem;
+            font-size: 0.97rem;
+            color: var(--primary-color);
+            width: 100%;
+            box-shadow: 0 1.5px 8px 0 rgba(80, 80, 80, 0.08);
+        }
+        .login-test-info strong {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        .login-test-info ul {
+            padding-right: 1.25rem;
+            margin: 0.5rem 0 0;
+        }
+        .login-test-info li {
+            margin-bottom: 0.25rem;
+        }
+        .error-message, .alert-danger {
+            background-color: var(--error-bg);
+            border: 1.5px solid var(--error-border);
+            color: #e74c3c;
+            padding: 0.85rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            font-size: 1rem;
+        }
+        .success-message, .alert-success {
+            background-color: var(--success-bg);
+            border: 1.5px solid var(--success-border);
+            color: var(--secondary-color);
+            padding: 0.85rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            font-size: 1rem;
+        }
         @media (max-width: 991px) {
             .login-page {
                 flex-direction: column;
                 height: auto;
+                min-height: calc(100vh - 50px);
             }
-            
             .login-info {
-                padding: 40px 20px;
+                padding: 2rem 1.25rem;
+                order: 2;
+                flex: none;
+                height: auto;
+                border-radius: 2rem 2rem 0 0;
             }
-            
             .login-form {
                 width: 100%;
-                padding: 40px 20px;
+                padding: 2rem 1.25rem;
+                order: 1;
+                flex: none;
+                height: auto;
+                border-radius: 0 0 2rem 2rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .login-info {
+                padding: 1.5rem 1rem;
+            }
+            .login-form {
+                padding: 1.5rem 1rem;
+            }
+            .system-title {
+                font-size: 2rem;
+            }
+            .feature-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
+    <div class="wave-top">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" fill-opacity="0.18" d="M0,64L48,74.7C96,85,192,107,288,117.3C384,128,480,128,576,112C672,96,768,64,864,53.3C960,43,1056,53,1152,69.3C1248,85,1344,107,1392,117.3L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>
+    </div>
     <!-- شريط التقويم العلوي -->
     <div class="topbar">
         <div class="calendar-switch">
@@ -431,7 +527,7 @@
                             </div>
                         </div>
                         
-                        <button type="submit">
+                        <button type="submit" class="btn-login">
                             <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                         </button>
                     </form>
@@ -444,15 +540,15 @@
                             <i class="fab fa-google text-danger fa-3x mb-3"></i>
                             <p>يمكنك تسجيل الدخول باستخدام حساب Google الخاص بك للوصول السريع والآمن</p>
                         </div>
-                        <button id="googleSignIn" onclick="handleGoogleLogin()">
+                        <button id="googleSignIn" class="btn-login" onclick="handleGoogleLogin()">
                             <i class="fab fa-google"></i> تسجيل الدخول باستخدام Google
                         </button>
                     </div>
                 </div>
                 
-                <div class="employee-portal-link" style="margin-bottom: 20px; text-align: center;">
-                    <a href="{{ url_for('employee_portal.employee_login') }}" style="color: #3498db; text-decoration: none; display: inline-flex; align-items: center; padding: 10px 15px; border: 1px solid #3498db; border-radius: 5px; transition: all 0.3s;">
-                        <i class="fas fa-user-tie" style="margin-left: 8px;"></i>
+                <div class="employee-portal-link">
+                    <a href="{{ url_for('employee_portal.employee_login') }}">
+                        <i class="fas fa-user-tie"></i>
                         بوابة الموظفين
                     </a>
                 </div>
@@ -530,6 +626,9 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="wave-bottom">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" fill-opacity="0.18" d="M0,64L48,74.7C96,85,192,107,288,117.3C384,128,480,128,576,112C672,96,768,64,864,53.3C960,43,1056,53,1152,69.3C1248,85,1344,107,1392,117.3L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>
     </div>
     
     <!-- jQuery -->

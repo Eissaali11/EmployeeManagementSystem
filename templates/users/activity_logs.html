@@ -2,25 +2,187 @@
 
 {% block title %}سجل النشاط - نظام إدارة الموظفين{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Activity Log Styles */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --info-gradient: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Page Header */
+    .page-header-enhanced {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        position: relative;
+        animation: slideDown 0.6s ease-out;
+    }
+
+    .page-header-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .page-header-enhanced .card-body {
+        background: white;
+        color: blue;
+        padding: 2rem;
+    }
+
+    /* User Cards */
+    .user-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .user-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary-gradient);
+    }
+
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .user-card .card-body {
+        padding: 1.5rem;
+    }
+
+    /* Avatar */
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-circle .fa-user {
+        font-size: 1.25rem;
+    }
+
+    /* Role Badges */
+    .role-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        border-radius: 8px;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-header-enhanced .card-body {
+            padding: 1.5rem;
+        }
+        
+        .user-card .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     <div class="mb-5">
-        <!-- عنوان الصفحة والشعار -->
-        <div class="card mb-4 bg-gradient-primary text-white shadow">
-            <div class="card-body py-4">
-                <div class="d-flex justify-content-between align-items-center">
+        <!-- Enhanced Page Header -->
+        <div class="page-header-enhanced card mb-4" style="background-color: white; !important">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
                     <div>
-                        <h1 class="mb-0 display-6 fw-bold">سجل النشاط</h1>
+                        <h1 class="mb-2 display-5 fw-bold">سجل النشاط</h1>
                         <p class="mb-0 opacity-75">عرض نشاط المستخدمين في النظام</p>
                     </div>
-                    <div class="text-end">
+                    <div>
                         <i class="fas fa-history fa-3x opacity-50"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- قائمة المستخدمين -->
+        <!-- Users List Card -->
         <div class="card shadow">
             <div class="card-header">
                 <h5 class="mb-0">
@@ -33,14 +195,14 @@
                 <div class="row">
                     {% for user in users %}
                     <div class="col-lg-4 col-md-6 mb-3">
-                        <div class="card h-100 border-start-4 border-primary">
+                        <div class="user-card card">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="avatar-circle me-3">
                                         {% if user.profile_picture %}
-                                            <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="rounded-circle" width="50" height="50">
+                                            <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="rounded-circle">
                                         {% else %}
-                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                            <div class="bg-primary text-white d-flex align-items-center justify-content-center">
                                                 <i class="fas fa-user"></i>
                                             </div>
                                         {% endif %}
@@ -52,7 +214,10 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <span class="badge {% if user.role.value == 'admin' %}bg-danger{% elif user.role.value == 'manager' %}bg-warning{% else %}bg-info{% endif %} mb-2">
+                                    <span class="role-badge 
+                                        {% if user.role.value == 'admin' %}bg-danger
+                                        {% elif user.role.value == 'manager' %}bg-warning
+                                        {% else %}bg-info{% endif %}">
                                         {% if user.role.value == 'admin' %}
                                             مدير النظام
                                         {% elif user.role.value == 'manager' %}
@@ -64,7 +229,7 @@
                                     
                                     {% if user.assigned_department %}
                                     <br>
-                                    <small class="text-muted">
+                                    <small class="text-muted mt-1 d-block">
                                         <i class="fas fa-building me-1"></i>
                                         {{ user.assigned_department.name }}
                                     </small>
@@ -78,11 +243,11 @@
                                     </small>
                                     
                                     <div>
-                                        <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-sm btn-outline-primary me-1">
+                                        <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-sm btn-outline-primary me-1 btn-action">
                                             <i class="fas fa-eye"></i>
                                             عرض
                                         </a>
-                                        <a href="{{ url_for('users.activity_log', id=user.id) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ url_for('users.activity_log', id=user.id) }}" class="btn btn-sm btn-primary btn-action">
                                             <i class="fas fa-history"></i>
                                             السجل
                                         </a>
@@ -94,8 +259,8 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <div class="empty-state">
+                    <i class="fas fa-users text-muted"></i>
                     <h5 class="text-muted">لا توجد مستخدمين في النظام</h5>
                     <p class="text-muted">لم يتم العثور على أي مستخدمين مسجلين في النظام</p>
                 </div>
@@ -104,27 +269,4 @@
         </div>
     </div>
 </div>
-
-<style>
-.border-start-4 {
-    border-left-width: 4px !important;
-}
-
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #1da18e 0%, #0d6968 100%);
-}
-
-.card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
-
-.avatar-circle img {
-    object-fit: cover;
-}
-</style>
 {% endblock %}

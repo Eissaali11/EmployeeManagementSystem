@@ -1,284 +1,539 @@
 {% extends 'layout.html' %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --info-gradient: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Enhanced Page Header */
+    .fees-header {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .fees-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .fees-header h5 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Enhanced Action Buttons */
+    .btn-enhanced {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--card-shadow);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-enhanced:hover::before {
+        left: 100%;
+    }
+
+    .btn-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+        text-decoration: none;
+    }
+
+    .btn-primary-enhanced {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .btn-success-enhanced {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    /* Enhanced Summary Cards */
+    .summary-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    .summary-card:hover::before {
+        transform: translateX(100%);
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .summary-card .card-body {
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .summary-card.primary-card::before {
+        background: var(--primary-gradient);
+    }
+
+    .summary-card.info-card::before {
+        background: var(--info-gradient);
+    }
+
+    .summary-card.warning-card::before {
+        background: var(--warning-gradient);
+    }
+
+    .summary-card.danger-card::before {
+        background: var(--danger-gradient);
+    }
+
+    .summary-card.success-card::before {
+        background: var(--success-gradient);
+    }
+
+    /* Enhanced Tabs */
+    .nav-tabs-custom {
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .nav-tabs-custom .nav-link {
+        border: none;
+        border-radius: 8px 8px 0 0;
+        padding: 0.75rem 1.25rem;
+        font-weight: 600;
+        color: #495057;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-tabs-custom .nav-link.active {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        border-bottom: 3px solid #1d4ed8;
+    }
+
+    .nav-tabs-custom .nav-link:hover:not(.active) {
+        background: rgba(0,0,0,0.03);
+    }
+
+    /* Enhanced Tables */
+    .table-enhanced {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-enhanced thead th {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1rem;
+        font-weight: 600;
+        border: none;
+    }
+
+    .table-enhanced tbody td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .table-enhanced tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-enhanced .badge {
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .table-enhanced .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Enhanced Alert */
+    .alert-enhanced {
+        border-radius: 8px;
+        border-left: 4px solid;
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .summary-card .card-body {
+            padding: 0.75rem;
+        }
+        
+        .nav-tabs-custom .nav-link {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .table-enhanced thead th,
+        .table-enhanced tbody td {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .btn-enhanced {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid p-3">
+<div class="container-fluid py-3">
+    <!-- Enhanced Header Card -->
+    <div class="fees-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="text-primary">
+                <i class="fas fa-money-check-alt me-2"></i> تكاليف الرسوم
+            </h5>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('fees_costs.export_to_excel') }}" class="btn-enhanced btn-success-enhanced">
+                    <i class="fas fa-file-excel me-1"></i> تصدير إلى إكسل
+                </a>
+                <a href="{{ url_for('fees_costs.create') }}" class="btn-enhanced btn-primary-enhanced">
+                    <i class="fas fa-plus-circle me-1"></i> إضافة تكاليف
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Summary Cards -->
     <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-money-check-alt me-2"></i>تكاليف الرسوم
-                    </h5>
-                    <div>
-                        <a href="{{ url_for('fees_costs.export_to_excel') }}" class="btn btn-success btn-sm me-2">
-                            <i class="fas fa-file-excel me-1"></i> تصدير إلى إكسل
-                        </a>
-                        <a href="{{ url_for('fees_costs.create') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus-circle me-1"></i> إضافة تكاليف جديدة
-                        </a>
-                    </div>
-                </div>
+        <div class="col-md-3 mb-3">
+            <div class="summary-card primary-card">
                 <div class="card-body">
-                    <!-- ملخص البيانات -->
-                    <div class="row mb-4">
-                        <div class="col-md-3 mb-3">
-                            <div class="card shadow-sm border-primary">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">إجمالي رسوم الجوازات</h6>
-                                    <h3 class="mb-0">{{ "%.2f"|format(total_passport_fees) }} ر.س</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card shadow-sm border-info">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">إجمالي رسوم مكتب العمل</h6>
-                                    <h3 class="mb-0">{{ "%.2f"|format(total_labor_fees) }} ر.س</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card shadow-sm border-warning">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">إجمالي رسوم التأمين</h6>
-                                    <h3 class="mb-0">{{ "%.2f"|format(total_insurance_fees) }} ر.س</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card shadow-sm border-danger">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">إجمالي رسوم التأمينات الإجتماعية</h6>
-                                    <h3 class="mb-0">{{ "%.2f"|format(total_social_insurance_fees) }} ر.س</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-12 mt-3 mb-3">
-                            <div class="card shadow-sm border-success">
-                                <div class="card-body text-center">
-                                    <h5 class="text-muted">إجمالي جميع الرسوم</h5>
-                                    <h2 class="mb-0">{{ "%.2f"|format(total_fees) }} ر.س</h2>
-                                </div>
-                            </div>
-                        </div>
+                    <h6 class="text-muted">إجمالي رسوم الجوازات</h6>
+                    <h4 class="mb-0">{{ "%.2f"|format(total_passport_fees) }} ر.س</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="summary-card info-card">
+                <div class="card-body">
+                    <h6 class="text-muted">إجمالي رسوم مكتب العمل</h6>
+                    <h4 class="mb-0">{{ "%.2f"|format(total_labor_fees) }} ر.س</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="summary-card warning-card">
+                <div class="card-body">
+                    <h6 class="text-muted">إجمالي رسوم التأمين</h6>
+                    <h4 class="mb-0">{{ "%.2f"|format(total_insurance_fees) }} ر.س</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="summary-card danger-card">
+                <div class="card-body">
+                    <h6 class="text-muted">إجمالي رسوم التأمينات</h6>
+                    <h4 class="mb-0">{{ "%.2f"|format(total_social_insurance_fees) }} ر.س</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 mb-3">
+            <div class="summary-card success-card">
+                <div class="card-body">
+                    <h5 class="text-muted">إجمالي جميع الرسوم</h5>
+                    <h2 class="mb-0">{{ "%.2f"|format(total_fees) }} ر.س</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Tabs -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-0">
+            <ul class="nav nav-tabs nav-tabs-custom" id="documentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="expired-tab" data-bs-toggle="tab" href="#expired" role="tab">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        الوثائق المنتهية
+                        <span class="badge bg-danger ms-1">{{ expired_docs|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="expiring-tab" data-bs-toggle="tab" href="#expiring" role="tab">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        الوثائق المشرفة على الانتهاء
+                        <span class="badge bg-warning text-dark ms-1">{{ expiring_docs|length }}</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="fees-tab" data-bs-toggle="tab" href="#fees" role="tab">
+                        <i class="fas fa-money-bill me-1"></i>
+                        تكاليف الرسوم المسجلة
+                        <span class="badge bg-success ms-1">{{ fees_costs|length }}</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content p-3" id="documentTabsContent">
+                <!-- Expired Documents Tab -->
+                <div class="tab-pane fade show active" id="expired" role="tabpanel">
+                    {% if expired_docs %}
+                    <div class="table-responsive">
+                        <table class="table table-enhanced">
+                            <thead>
+                                <tr>
+                                    <th>المستند</th>
+                                    <th>الموظف</th>
+                                    <th>رقم المستند</th>
+                                    <th>تاريخ الإصدار</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in expired_docs %}
+                                <tr>
+                                    <td>{{ doc.document_type }}</td>
+                                    <td>{{ doc.employee.name }}</td>
+                                    <td>{{ doc.document_number }}</td>
+                                    <td>{{ doc.issue_date|display_date('%Y-%m-%d', 'غير محدد') }}</td>
+                                    <td>
+                                        <span class="badge bg-danger">
+                                            {{ doc.expiry_date|format_date('%Y-%m-%d', 'غير محدد') }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ url_for('fees_costs.document_details', document_id=doc.id) }}" 
+                                               class="btn btn-sm btn-info" title="عرض التفاصيل">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('fees_costs.create') }}?document_id={{ doc.id }}" 
+                                               class="btn btn-sm btn-success" title="إضافة تكاليف">
+                                                <i class="fas fa-plus-circle"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-
-                    <!-- لوحات التنقل للوثائق -->
-                    <ul class="nav nav-tabs nav-tabs-custom mb-3" id="documentTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="expired-tab" data-bs-toggle="tab" href="#expired" role="tab" aria-controls="expired" aria-selected="true">
-                                <i class="fas fa-exclamation-circle me-1 text-danger"></i>
-                                الوثائق المنتهية
-                                <span class="badge bg-danger">{{ expired_docs|length }}</span>
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="expiring-tab" data-bs-toggle="tab" href="#expiring" role="tab" aria-controls="expiring" aria-selected="false">
-                                <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
-                                الوثائق المشرفة على الانتهاء
-                                <span class="badge bg-warning text-dark">{{ expiring_docs|length }}</span>
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="fees-tab" data-bs-toggle="tab" href="#fees" role="tab" aria-controls="fees" aria-selected="false">
-                                <i class="fas fa-money-bill me-1 text-success"></i>
-                                تكاليف الرسوم المسجلة
-                                <span class="badge bg-success">{{ fees_costs|length }}</span>
-                            </a>
-                        </li>
-                    </ul>
-
-                    <!-- محتوى لوحات التنقل -->
-                    <div class="tab-content" id="documentTabsContent">
-                        <!-- الوثائق المنتهية -->
-                        <div class="tab-pane fade show active" id="expired" role="tabpanel" aria-labelledby="expired-tab">
-                            {% if expired_docs %}
-                            <div class="table-responsive table-scroll-horizontal">
-                                <table class="table table-hover table-striped align-middle">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>المستند</th>
-                                            <th>الموظف</th>
-                                            <th>رقم المستند</th>
-                                            <th>تاريخ الإصدار</th>
-                                            <th>تاريخ الانتهاء</th>
-                                            <th>الإجراءات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for doc in expired_docs %}
-                                        <tr class="{% if doc.expiry_date and doc.expiry_date <= now.date() %}table-danger{% endif %}">
-                                            <td>{{ doc.document_type }}</td>
-                                            <td>{{ doc.employee.name }}</td>
-                                            <td>{{ doc.document_number }}</td>
-                                            <td>
-                                                {{ doc.issue_date|display_date('%Y-%m-%d', 'غير محدد') }}
-                                            </td>
-                                            <td>
-                                                {% if doc.expiry_date %}
-                                                    <span class="badge bg-danger">{{ doc.expiry_date|format_date('%Y-%m-%d') }}</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">غير محدد</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ url_for('fees_costs.document_details', document_id=doc.id) }}" class="btn btn-info">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="{{ url_for('fees_costs.create') }}?document_id={{ doc.id }}" class="btn btn-success">
-                                                        <i class="fas fa-plus-circle"></i> إضافة تكاليف
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                لا توجد وثائق منتهية حالياً.
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- الوثائق المشرفة على الانتهاء -->
-                        <div class="tab-pane fade" id="expiring" role="tabpanel" aria-labelledby="expiring-tab">
-                            {% if expiring_docs %}
-                            <div class="table-responsive table-scroll-horizontal">
-                                <table class="table table-hover table-striped align-middle">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>المستند</th>
-                                            <th>الموظف</th>
-                                            <th>رقم المستند</th>
-                                            <th>تاريخ الإصدار</th>
-                                            <th>تاريخ الانتهاء</th>
-                                            <th>المتبقي</th>
-                                            <th>الإجراءات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for doc in expiring_docs %}
-                                        {% set days_left = doc.expiry_date and (doc.expiry_date - now.date()).days or 0 %}
-                                        <tr class="{% if doc.expiry_date and days_left <= 30 %}table-warning{% elif doc.expiry_date and days_left <= 60 %}table-info{% endif %}">
-                                            <td>{{ doc.document_type }}</td>
-                                            <td>{{ doc.employee.name }}</td>
-                                            <td>{{ doc.document_number }}</td>
-                                            <td>
-                                                {{ doc.issue_date|display_date('%Y-%m-%d', 'غير محدد') }}
-                                            </td>
-                                            <td>
-                                                {{ doc.expiry_date|display_date('%Y-%m-%d', 'غير محدد') }}
-                                            </td>
-                                            <td>
-                                                {% if doc.expiry_date %}
-                                                    <span class="badge {% if days_left <= 30 %}bg-warning text-dark{% elif days_left <= 60 %}bg-info{% else %}bg-primary{% endif %}">
-                                                        {{ days_left }} يوم
-                                                    </span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary">غير محدد</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ url_for('fees_costs.document_details', document_id=doc.id) }}" class="btn btn-info">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="{{ url_for('fees_costs.create') }}?document_id={{ doc.id }}" class="btn btn-success">
-                                                        <i class="fas fa-plus-circle"></i> إضافة تكاليف
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                لا توجد وثائق مشرفة على الانتهاء خلال الـ 90 يوماً القادمة.
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- تكاليف الرسوم المسجلة -->
-                        <div class="tab-pane fade" id="fees" role="tabpanel" aria-labelledby="fees-tab">
-                            {% if fees_costs %}
-                            <div class="table-responsive table-scroll-horizontal">
-                                <table class="table table-hover table-striped align-middle">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>نوع المستند</th>
-                                            <th>الموظف</th>
-                                            <th>رسوم الجوازات</th>
-                                            <th>رسوم مكتب العمل</th>
-                                            <th>رسوم التأمين</th>
-                                            <th>رسوم التأمينات الاجتماعية</th>
-                                            <th>نقل كفالة</th>
-                                            <th>الإجمالي</th>
-                                            <th>حالة السداد</th>
-                                            <th>تاريخ الاستحقاق</th>
-                                            <th>الإجراءات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for fee in fees_costs %}
-                                        <tr>
-                                            <td>{{ fee.document_type }}</td>
-                                            <td>{{ fee.document.employee.name }}</td>
-                                            <td>{{ "%.2f"|format(fee.passport_fee) }} ر.س</td>
-                                            <td>{{ "%.2f"|format(fee.labor_office_fee) }} ر.س</td>
-                                            <td>{{ "%.2f"|format(fee.insurance_fee) }} ر.س</td>
-                                            <td>{{ "%.2f"|format(fee.social_insurance_fee) }} ر.س</td>
-                                            <td>
-                                                {% if fee.transfer_sponsorship %}
-                                                <span class="badge bg-success">نعم</span>
-                                                {% else %}
-                                                <span class="badge bg-secondary">لا</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="fw-bold">
-                                                {{ "%.2f"|format(fee.total_fees) }} ر.س
-                                            </td>
-                                            <td>
-                                                {% if fee.payment_status == 'paid' %}
-                                                <span class="badge bg-success">تم السداد</span>
-                                                {% elif fee.payment_status == 'pending' %}
-                                                <span class="badge bg-warning text-dark">قيد الانتظار</span>
-                                                {% else %}
-                                                <span class="badge bg-danger">متأخر</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {{ fee.due_date|display_date('%Y-%m-%d', 'غير محدد') }}
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ url_for('fees_costs.edit', id=fee.id) }}" class="btn btn-primary">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <a href="{{ url_for('fees_costs.confirm_delete', id=fee.id) }}" class="btn btn-danger">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                لا توجد تكاليف رسوم مسجلة بعد.
-                            </div>
-                            {% endif %}
-                        </div>
+                    {% else %}
+                    <div class="alert alert-enhanced alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        لا توجد وثائق منتهية حالياً.
                     </div>
+                    {% endif %}
+                </div>
+
+                <!-- Expiring Documents Tab -->
+                <div class="tab-pane fade" id="expiring" role="tabpanel">
+                    {% if expiring_docs %}
+                    <div class="table-responsive">
+                        <table class="table table-enhanced">
+                            <thead>
+                                <tr>
+                                    <th>المستند</th>
+                                    <th>الموظف</th>
+                                    <th>رقم المستند</th>
+                                    <th>تاريخ الإصدار</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th>المتبقي</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in expiring_docs %}
+                                {% set days_left = doc.expiry_date and (doc.expiry_date - now.date()).days or 0 %}
+                                <tr>
+                                    <td>{{ doc.document_type }}</td>
+                                    <td>{{ doc.employee.name }}</td>
+                                    <td>{{ doc.document_number }}</td>
+                                    <td>{{ doc.issue_date|display_date('%Y-%m-%d', 'غير محدد') }}</td>
+                                    <td>{{ doc.expiry_date|display_date('%Y-%m-%d', 'غير محدد') }}</td>
+                                    <td>
+                                        <span class="badge {% if days_left <= 30 %}bg-warning text-dark{% elif days_left <= 60 %}bg-info{% else %}bg-primary{% endif %}">
+                                            {{ days_left }} يوم
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ url_for('fees_costs.document_details', document_id=doc.id) }}" 
+                                               class="btn btn-sm btn-info" title="عرض التفاصيل">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('fees_costs.create') }}?document_id={{ doc.id }}" 
+                                               class="btn btn-sm btn-success" title="إضافة تكاليف">
+                                                <i class="fas fa-plus-circle"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-enhanced alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        لا توجد وثائق مشرفة على الانتهاء خلال الـ 90 يوماً القادمة.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Fees Costs Tab -->
+                <div class="tab-pane fade" id="fees" role="tabpanel">
+                    {% if fees_costs %}
+                    <div class="table-responsive">
+                        <table class="table table-enhanced">
+                            <thead>
+                                <tr>
+                                    <th>نوع المستند</th>
+                                    <th>الموظف</th>
+                                    <th>رسوم الجوازات</th>
+                                    <th>رسوم مكتب العمل</th>
+                                    <th>رسوم التأمين</th>
+                                    <th>رسوم التأمينات</th>
+                                    <th>نقل كفالة</th>
+                                    <th>الإجمالي</th>
+                                    <th>حالة السداد</th>
+                                    <th>تاريخ الاستحقاق</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fee in fees_costs %}
+                                <tr>
+                                    <td>{{ fee.document_type }}</td>
+                                    <td>{{ fee.document.employee.name }}</td>
+                                    <td>{{ "%.2f"|format(fee.passport_fee) }} ر.س</td>
+                                    <td>{{ "%.2f"|format(fee.labor_office_fee) }} ر.س</td>
+                                    <td>{{ "%.2f"|format(fee.insurance_fee) }} ر.س</td>
+                                    <td>{{ "%.2f"|format(fee.social_insurance_fee) }} ر.س</td>
+                                    <td>
+                                        <span class="badge {% if fee.transfer_sponsorship %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ 'نعم' if fee.transfer_sponsorship else 'لا' }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold">{{ "%.2f"|format(fee.total_fees) }} ر.س</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if fee.payment_status == 'paid' %}bg-success
+                                            {% elif fee.payment_status == 'pending' %}bg-warning text-dark
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ 'تم السداد' if fee.payment_status == 'paid' else 
+                                               'قيد الانتظار' if fee.payment_status == 'pending' else 'متأخر' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ fee.due_date|display_date('%Y-%m-%d', 'غير محدد') }}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ url_for('fees_costs.edit', id=fee.id) }}" 
+                                               class="btn btn-sm btn-primary" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('fees_costs.confirm_delete', id=fee.id) }}" 
+                                               class="btn btn-sm btn-danger" title="حذف">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-enhanced alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        لا توجد تكاليف رسوم مسجلة بعد.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -288,19 +543,34 @@
 
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        // تفعيل التاب المناسب عند تحميل الصفحة
-        const urlParams = new URLSearchParams(window.location.search);
-        const tab = urlParams.get('tab');
-        if (tab) {
-            $(`#documentTabs a[href="#${tab}"]`).tab('show');
+document.addEventListener('DOMContentLoaded', function() {
+    // Activate the appropriate tab on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+        const tabElement = document.querySelector(`#documentTabs a[href="#${tab}"]`);
+        if (tabElement) {
+            new bootstrap.Tab(tabElement).show();
         }
-        
-        // تحديث الرابط عند تغيير التاب
-        $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-            const target = $(e.target).attr("href").substring(1);
-            history.replaceState({}, '', `?tab=${target}`);
+    }
+    
+    // Update URL when changing tabs
+    document.querySelectorAll('#documentTabs a[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (e) {
+            const target = e.target.getAttribute('href').substring(1);
+            const url = new URL(window.location);
+            url.searchParams.set('tab', target);
+            window.history.replaceState({}, '', url);
         });
     });
+
+    // Initialize tooltips
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
 </script>
 {% endblock %}

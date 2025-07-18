@@ -1,20 +1,21 @@
 {% extends 'layout.html' %}
 
+
 {% block content %}
 <div class="container-fluid">
     <!-- Welcome Header with Date -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm">
+            <div class="card welcome-header fade-in">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h1 class="display-6 mb-0">لوحة التحكم</h1>
-                            <p class="text-muted">مرحبًا بك في نظام إدارة الموظفين</p>
+                            <h1 class="display-6 mb-0 text-white">لوحة التحكم</h1>
+                            <p class="text-muted mb-0">مرحبًا بك في نظام إدارة الموظفين المتطور</p>
                         </div>
                         <div class="text-left">
-                            <div class="text-muted" id="hijri-date">
-                                <i class="fas fa-calendar-alt"></i>
+                            <div class="date-display pulse-effect" id="hijri-date">
+                                <i class="fas fa-calendar-alt me-2"></i>
                                 <span id="current-date"></span>
                             </div>
                         </div>
@@ -26,229 +27,251 @@
             
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card dashboard-card shadow-sm border-0 mb-3">
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card slide-up" style="animation-delay: 0.1s;">
                 <div class="card-body position-relative">
-                    <div class="card-icon-bg bg-primary-subtle position-absolute opacity-25 rounded-circle"></div>
+                    <div class="card-icon-bg bg-primary position-absolute rounded-circle"></div>
                     <div class="d-flex justify-content-between align-items-center position-relative">
-                        <div>
-                            <h6 class="card-subtitle mb-2 text-body-secondary">الموظفون النشطون</h6>
-                            <h2 class="fs-1 fw-bold text-primary">{{ total_employees }}</h2>
+                        <div class="flex-grow-1">
+                            <h6 class="card-subtitle mb-2 text-body-secondary fw-bold">الموظفون النشطون</h6>
+                            <h2 class="counter-value text-primary" data-target="{{ total_employees }}">0</h2>
                             <small class="text-muted">من إجمالي {{ total_all_employees }}</small>
                         </div>
-                        <div class="card-icon rounded-circle bg-primary text-white">
-                            <i class="fas fa-users"></i>
+                        <div class="card-icon-wrapper">
+                            <div class="card-icon rounded-circle bg-primary text-white">
+                                <i class="fas fa-users"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0">
-                    <a href="{{ url_for('employees.index') }}" class="btn btn-sm btn-outline-primary w-100">
-                        عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
+                    <a href="{{ url_for('employees.index') }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-eye me-2"></i>عرض التفاصيل
                     </a>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
-            <div class="card dashboard-card shadow-sm border-0 mb-3">
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card slide-up" style="animation-delay: 0.2s;">
                 <div class="card-body position-relative">
-                    <div class="card-icon-bg bg-success-subtle position-absolute opacity-25 rounded-circle"></div>
+                    <div class="card-icon-bg bg-success position-absolute rounded-circle"></div>
                     <div class="d-flex justify-content-between align-items-center position-relative">
-                        <div>
-                            <h6 class="card-subtitle mb-2 text-body-secondary">الأقسام</h6>
-                            <h2 class="fs-1 fw-bold text-success">{{ total_departments }}</h2>
+                        <div class="flex-grow-1">
+                            <h6 class="card-subtitle mb-2 text-body-secondary fw-bold">الأقسام</h6>
+                            <h2 class="counter-value text-success" data-target="{{ total_departments }}">0</h2>
+                            <small class="text-muted">قسم نشط</small>
                         </div>
-                        <div class="card-icon rounded-circle bg-success text-white">
-                            <i class="fas fa-sitemap"></i>
+                        <div class="card-icon-wrapper">
+                            <div class="card-icon rounded-circle bg-success text-white">
+                                <i class="fas fa-sitemap"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0">
-                    <a href="{{ url_for('departments.index') }}" class="btn btn-sm btn-outline-success w-100">
-                        عرض التفاصيل <i class="fas fa-arrow-left me-1"></i>
+                    <a href="{{ url_for('departments.index') }}" class="btn btn-outline-success w-100">
+                        <i class="fas fa-eye me-2"></i>عرض التفاصيل
                     </a>
                 </div>
             </div>
         </div>
                 
-                <div class="col-md-3">
-                    <div class="card dashboard-card shadow-sm border-0 mb-3">
-                        <div class="card-body position-relative">
-                            <div class="card-icon-bg bg-info-subtle position-absolute opacity-25 rounded-circle"></div>
-                            <div class="d-flex justify-content-between align-items-center position-relative">
-                                <div>
-                                    <h6 class="card-subtitle mb-2 text-body-secondary">حضور اليوم</h6>
-                                    <h2 class="fs-1 fw-bold text-info">{{ today_attendance }}</h2>
-                                </div>
-                                <div class="card-icon rounded-circle bg-info text-white">
-                                    <i class="fas fa-calendar-check"></i>
-                                </div>
-                            </div>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card slide-up" style="animation-delay: 0.3s;">
+                <div class="card-body position-relative">
+                    <div class="card-icon-bg bg-info position-absolute rounded-circle"></div>
+                    <div class="d-flex justify-content-between align-items-center position-relative">
+                        <div class="flex-grow-1">
+                            <h6 class="card-subtitle mb-2 text-body-secondary fw-bold">حضور اليوم</h6>
+                            <h2 class="counter-value text-info" data-target="{{ today_attendance }}">0</h2>
+                            <small class="text-muted">موظف حاضر</small>
                         </div>
-                        <div class="card-footer bg-transparent border-0">
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-info w-100 dropdown-toggle" type="button" id="attendanceDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    خيارات الحضور
-                                </button>
-                                <ul class="dropdown-menu w-100 text-end" aria-labelledby="attendanceDropdown">
-                                    <li><a class="dropdown-item" href="{{ url_for('attendance.index') }}"><i class="fas fa-list-ul ms-1"></i> عرض سجلات الحضور</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('attendance.record') }}"><i class="fas fa-user-check ms-1"></i> تسجيل حضور لموظف</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('attendance.department_attendance') }}"><i class="fas fa-users ms-1"></i> تسجيل حضور لقسم</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('attendance.multi_day_department_attendance') }}"><i class="fas fa-calendar-week ms-1"></i> تسجيل لعدة أيام</a></li>
-                                </ul>
+                        <div class="card-icon-wrapper">
+                            <div class="card-icon rounded-circle bg-info text-white">
+                                <i class="fas fa-calendar-check"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-md-3">
-                    <div class="card dashboard-card shadow-sm border-0 mb-3">
-                        <div class="card-body position-relative">
-                            <div class="card-icon-bg bg-warning-subtle position-absolute opacity-25 rounded-circle"></div>
-                            <div class="d-flex justify-content-between align-items-center position-relative">
-                                <div>
-                                    <h6 class="card-subtitle mb-2 text-body-secondary">إحصائيات الوثائق</h6>
-                                    <div class="d-flex flex-wrap gap-2 mt-2">
-                                        <span class="badge rounded-pill bg-success">سارية: <span id="valid-docs-count">{{ document_stats.valid }}</span></span>
-                                        <span class="badge rounded-pill bg-warning">قريبة الانتهاء: <span id="expiring-docs-count">{{ document_stats.expiring }}</span></span>
-                                        <span class="badge rounded-pill bg-danger">منتهية: <span id="expired-docs-count">{{ document_stats.expired }}</span></span>
-                                    </div>
-                                    <h3 class="fw-bold text-warning mt-2" id="total-docs-count">{{ document_stats.total }}</h3>
-                                    <small class="text-muted">إجمالي الوثائق</small>
-                                </div>
-                                <div class="card-icon rounded-circle bg-warning text-white">
-                                    <i class="fas fa-file-alt"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent border-0 d-flex">
-                            <a href="{{ url_for('documents.index') }}" class="btn btn-sm btn-outline-warning flex-grow-1 me-1">
-                                كل الوثائق
-                            </a>
-                            <a href="{{ url_for('documents.expiring') }}" class="btn btn-sm btn-outline-warning flex-grow-1">
-                                وثائق منتهية
-                            </a>
-                        </div>
+                <div class="card-footer bg-transparent border-0">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-info w-100 dropdown-toggle" type="button" id="attendanceDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog me-2"></i>خيارات الحضور
+                        </button>
+                        <ul class="dropdown-menu w-100" aria-labelledby="attendanceDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('attendance.index') }}"><i class="fas fa-list-ul me-2"></i>عرض سجلات الحضور</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('attendance.record') }}"><i class="fas fa-user-check me-2"></i>تسجيل حضور لموظف</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('attendance.department_attendance') }}"><i class="fas fa-users me-2"></i>تسجيل حضور لقسم</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('attendance.multi_day_department_attendance') }}"><i class="fas fa-calendar-week me-2"></i>تسجيل لعدة أيام</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            
-            <!-- Charts Row -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-chart-pie ms-1"></i>
-                                توزيع الموظفين حسب الأقسام
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="departmentChart" 
-                                    data-labels='{{ dept_labels|tojson if dept_labels else "[]" }}' 
-                                    data-values='{{ dept_data|tojson if dept_data else "[]" }}' 
-                                    height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
+        </div>
                 
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-money-bill-wave ms-1"></i>
-                                إجمالي الرواتب الشهرية
-                            </h5>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card slide-up" style="animation-delay: 0.4s;">
+                <div class="card-body position-relative">
+                    <div class="card-icon-bg bg-warning position-absolute rounded-circle"></div>
+                    <div class="d-flex justify-content-between align-items-center position-relative">
+                        <div class="flex-grow-1">
+                            <h6 class="card-subtitle mb-2 text-body-secondary fw-bold">إحصائيات الوثائق</h6>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-success">سارية: <span class="counter-value-small" data-target="{{ document_stats.valid }}">{{ document_stats.valid }}</span></span>
+                                <span class="badge bg-warning">قريبة الانتهاء: <span class="counter-value-small" data-target="{{ document_stats.expiring }}">{{ document_stats.expiring }}</span></span>
+                                <span class="badge bg-danger">منتهية: <span class="counter-value-small" data-target="{{ document_stats.expired }}">{{ document_stats.expired }}</span></span>
+                            </div>
+                            <h3 class="counter-value text-warning" data-target="{{ document_stats.total }}">0</h3>
+                            <small class="text-muted">إجمالي الوثائق</small>
                         </div>
-                        <div class="card-body">
-                            <canvas id="salaryChart" 
-                                    data-labels='{{ salary_labels|tojson if salary_labels else "[]" }}' 
-                                    data-values='{{ salary_data|tojson if salary_data else "[]" }}' 
-                                    height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-file-alt ms-1"></i>
-                                توزيع حالة الوثائق
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="documentChart" 
-                                    data-valid="{{ document_stats.valid }}" 
-                                    data-expiring="{{ document_stats.expiring }}" 
-                                    data-expired="{{ document_stats.expired }}" 
-                                    height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Recent Employees Table -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">موظفين جدد</h5>
-                            <div class="text-muted small">
-                                <i class="fas fa-info-circle"></i>
-                                <span>آخر الموظفين المضافين</span>
+                        <div class="card-icon-wrapper">
+                            <div class="card-icon rounded-circle bg-warning text-white">
+                                <i class="fas fa-file-alt"></i>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-fixed-header">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>الاسم</th>
-                                            <th>الرقم الوظيفي</th>
-                                            <th>المسمى الوظيفي</th>
-                                            <th>القسم</th>
-                                            <th>تاريخ التعيين</th>
-                                            <th>الإجراءات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for employee in recent_employees %}
-                                        <tr>
-                                            <td>{{ employee.name }}</td>
-                                            <td>{{ employee.employee_id }}</td>
-                                            <td>{{ employee.job_title }}</td>
-                                            <td>{{ employee.department.name if employee.department else '-' }}</td>
-                                            <td>
-                                                {% if employee.join_date %}
-                                                <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
-                                                <span class="hijri-date" style="display: none;">
-                                                    <!-- Will be filled by JavaScript -->
-                                                </span>
-                                                {% else %}
-                                                -
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex gap-2">
+                    <a href="{{ url_for('documents.index') }}" class="btn btn-outline-warning flex-grow-1">
+                        <i class="fas fa-folder me-1"></i>كل الوثائق
+                    </a>
+                    <a href="{{ url_for('documents.expiring') }}" class="btn btn-outline-warning flex-grow-1">
+                        <i class="fas fa-exclamation-triangle me-1"></i>منتهية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+            
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card chart-card slide-up" style="animation-delay: 0.5s;">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        توزيع الموظفين حسب الأقسام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="departmentChart" 
+                            data-labels='{{ dept_labels|tojson if dept_labels else "[]" }}' 
+                            data-values='{{ dept_data|tojson if dept_data else "[]" }}' 
+                            height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card chart-card slide-up" style="animation-delay: 0.6s;">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        إجمالي الرواتب الشهرية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="salaryChart" 
+                            data-labels='{{ salary_labels|tojson if salary_labels else "[]" }}' 
+                            data-values='{{ salary_data|tojson if salary_data else "[]" }}' 
+                            height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card chart-card slide-up" style="animation-delay: 0.7s;">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-file-alt me-2"></i>
+                        توزيع حالة الوثائق
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="documentChart" 
+                            data-valid="{{ document_stats.valid }}" 
+                            data-expiring="{{ document_stats.expiring }}" 
+                            data-expired="{{ document_stats.expired }}" 
+                            height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+            
+    <!-- Recent Employees Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card table-card slide-up" style="animation-delay: 0.8s;">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-plus me-2"></i>
+                            الموظفون الجدد
+                        </h5>
+                        <div class="text-white-50 small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span>آخر الموظفين المضافين</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover text-white">
+                            <thead>
+                                <tr>
+                                    <th class="text-info"><i class="fas fa-user me-2"></i>الاسم</th>
+                                    <th class="text-info"><i class="fas fa-id-card me-2"></i>الرقم الوظيفي</th>
+                                    <th class="text-info"><i class="fas fa-briefcase me-2"></i>المسمى الوظيفي</th>
+                                    <th class="text-info"><i class="fas fa-building me-2"></i>القسم</th>
+                                    <th class="text-info"><i class="fas fa-calendar me-2"></i>تاريخ التعيين</th>
+                                    <th class="text-info"><i class="fas fa-cog me-2"></i>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in recent_employees %}
+                                <tr>
+                                    <td class="fw-bold">{{ employee.name }}</td>
+                                    <td><span class="badge bg-primary">{{ employee.employee_id }}</span></td>
+                                    <td>{{ employee.job_title }}</td>
+                                    <td>{{ employee.department.name if employee.department else '-' }}</td>
+                                    <td>
+                                        {% if employee.join_date %}
+                                        <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
+                                        <span class="hijri-date" style="display: none;">
+                                            <!-- Will be filled by JavaScript -->
+                                        </span>
                                         {% else %}
-                                        <tr>
-                                            <td colspan="6" class="text-center">لا يوجد موظفين حديثين</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="text-center mt-3">
-                                <a href="{{ url_for('employees.index') }}" class="btn btn-primary">
-                                    <i class="fas fa-users me-1"></i> عرض كافة الموظفين
-                                </a>
-                            </div>
-                        </div>
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('employees.view', id=employee.id) }}" 
+                                           class="btn btn-sm btn-info" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="عرض تفاصيل الموظف">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                                        <br>
+                                        لا يوجد موظفين حديثين
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('employees.index') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-users me-2"></i>
+                            عرض كافة الموظفين
+                        </a>
                     </div>
                 </div>
             </div>
@@ -259,328 +282,374 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // تهيئة أدوات متطورة للواجهة
-        initializeTooltips();
-        
-        // تهيئة الرسوم البيانية
-        if (typeof Chart !== 'undefined') {
-            initializeDepartmentChart();
-            initializeSalaryChart();
-            initializeDocumentChart();
-        }
-        
-        // تهيئة عدادات الأرقام
-        setTimeout(function() {
-            animateCounters();
-            console.log("تم تشغيل عدادات الأرقام");
-            
-            // إضافة سجل تحميل
-            console.log("تم تحميل كافة مكونات لوحة المعلومات بنجاح");
-        }, 500);
-        
-        // عرض التاريخ الحالي
-        displayCurrentDate();
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    initializeTooltips();
     
-    function initializeTooltips() {
-        if (typeof bootstrap !== 'undefined') {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-        }
-    }
-    
-    function displayCurrentDate() {
-        const currentDateElement = document.getElementById('current-date');
-        if (currentDateElement) {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            currentDateElement.textContent = now.toLocaleDateString('ar-SA', options);
-        }
-    }
-    
-    function animateCounters() {
-        const counters = document.querySelectorAll('.counter-value');
-        console.log(`العثور على ${counters.length} عداد للتحديث`);
-        
-        // طباعة قيم البيانات المتاحة للتصحيح
-        console.log("قيم إحصائيات الوثائق:");
-        const validDocCount = document.querySelector('[data-target="{{ document_stats.valid }}"]');
-        const expiringDocCount = document.querySelector('[data-target="{{ document_stats.expiring }}"]');
-        const expiredDocCount = document.querySelector('[data-target="{{ document_stats.expired }}"]');
-        const totalDocCount = document.querySelector('[data-target="{{ document_stats.total }}"]');
-        
-        console.log("valid:", validDocCount ? validDocCount.getAttribute('data-target') : 'غير موجود');
-        console.log("expiring:", expiringDocCount ? expiringDocCount.getAttribute('data-target') : 'غير موجود');
-        console.log("expired:", expiredDocCount ? expiredDocCount.getAttribute('data-target') : 'غير موجود');
-        console.log("total:", totalDocCount ? totalDocCount.getAttribute('data-target') : 'غير موجود');
-        
-        counters.forEach(counter => {
-            // تخزين القيمة الأصلية قبل التعديل
-            const rawTarget = counter.getAttribute('data-target');
-            console.log(`عداد مع قيمة أصلية: ${rawTarget}`);
-            
-            // محاولة تحويل القيمة إلى رقم
-            const target = parseInt(rawTarget || 0);
-            
-            if (isNaN(target) || target <= 0) {
-                console.log(`  > قيمة غير صالحة، تعيين كـ 0`);
-                counter.textContent = '0';
-                return;
-            }
-            
-            console.log(`  > بدء التحريك إلى ${target}`);
-            
-            let count = 0;
-            const speed = Math.max(10, Math.floor(1000 / target)); // تسريع العد للأرقام الكبيرة
-            
-            const updateCount = setInterval(() => {
-                count += 1;
-                counter.textContent = count;
-                
-                if (count >= target) {
-                    counter.textContent = target;
-                    clearInterval(updateCount);
-                }
-            }, speed);
-        });
-    }
-    
-    function initializeDepartmentChart() {
-        const departmentChartElement = document.getElementById('departmentChart');
-        if (!departmentChartElement) return;
-        
-        // قراءة البيانات من السمات المخصصة
-        const labels = JSON.parse(departmentChartElement.getAttribute('data-labels') || '[]');
-        const values = JSON.parse(departmentChartElement.getAttribute('data-values') || '[]');
-        
-        // إذا لم تكن هناك بيانات، قم بعرض رسالة بدلاً من الرسم البياني
-        if (labels.length === 0 || values.length === 0) {
-            new Chart(departmentChartElement, {
-                type: 'doughnut',
-                data: {
-                    labels: ['لا توجد بيانات'],
-                    datasets: [{
-                        data: [1],
-                        backgroundColor: ['#e9ecef'],
-                        borderColor: ['#dee2e6'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-            return;
-        }
-        
-        // إنشاء رسم بياني دائري للأقسام
-        new Chart(departmentChartElement, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: [
-                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
-                        '#6f42c1', '#fd7e14', '#20c9a6', '#5a5c69', '#858796'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                let value = context.raw || 0;
-                                let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                let percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value} موظف (${percentage}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    function initializeSalaryChart() {
-        const salaryChartElement = document.getElementById('salaryChart');
-        if (!salaryChartElement) return;
-        
-        const labels = JSON.parse(salaryChartElement.getAttribute('data-labels') || '[]');
-        const values = JSON.parse(salaryChartElement.getAttribute('data-values') || '[]');
-        
-        // إذا لم تكن هناك بيانات، قم بعرض رسالة بدلاً من الرسم البياني
-        if (labels.length === 0 || values.length === 0) {
-            new Chart(salaryChartElement, {
-                type: 'bar',
-                data: {
-                    labels: ['لا توجد بيانات'],
-                    datasets: [{
-                        label: 'إجمالي الرواتب',
-                        data: [0],
-                        backgroundColor: 'rgba(33, 150, 243, 0.4)',
-                        borderColor: 'rgba(33, 150, 243, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            return;
-        }
-        
-        new Chart(salaryChartElement, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'إجمالي الرواتب',
-                    data: values,
-                    backgroundColor: 'rgba(33, 150, 243, 0.4)',
-                    borderColor: 'rgba(33, 150, 243, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                // تنسيق المبالغ المالية
-                                return value.toLocaleString('ar-SA') + ' ر.س';
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                // تنسيق المبلغ في tooltip
-                                let value = context.raw;
-                                return `إجمالي الرواتب: ${value.toLocaleString('ar-SA')} ر.س`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    function initializeDocumentChart() {
-        const documentChartElement = document.getElementById('documentChart');
-        if (!documentChartElement) return;
-        
-        const validCount = parseInt(documentChartElement.getAttribute('data-valid')) || 0;
-        const expiringCount = parseInt(documentChartElement.getAttribute('data-expiring')) || 0;
-        const expiredCount = parseInt(documentChartElement.getAttribute('data-expired')) || 0;
-        
-        // تعيين قيم افتراضية إذا لم تكن هناك بيانات
-        if (validCount === 0 && expiringCount === 0 && expiredCount === 0) {
-            new Chart(documentChartElement, {
-                type: 'doughnut',
-                data: {
-                    labels: ['لا توجد بيانات'],
-                    datasets: [{
-                        data: [1],
-                        backgroundColor: ['#e9ecef'],
-                        borderColor: ['#dee2e6'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            return;
-        }
-        
-        // إنشاء الرسم البياني مع البيانات الفعلية
-        new Chart(documentChartElement, {
-            type: 'doughnut',
-            data: {
-                labels: ['وثائق سارية', 'وثائق تنتهي قريباً', 'وثائق منتهية'],
-                datasets: [{
-                    data: [validCount, expiringCount, expiredCount],
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-                    borderColor: ['#28a745', '#ffc107', '#dc3545'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                let value = context.raw || 0;
-                                let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                let percentage = Math.round((value / total) * 100);
-                                return `${label}: ${value} (${percentage}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    // تشغيل جميع الدوال عند تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', function() {
-        updateDate();
-        initializeCounters();
+    // Initialize charts
+    if (typeof Chart !== 'undefined') {
         initializeDepartmentChart();
         initializeSalaryChart();
         initializeDocumentChart();
+    }
+    
+    // Display current date
+    displayCurrentDate();
+    
+    // Animate counters with delay
+    setTimeout(function() {
+        animateCounters();
+    }, 800);
+    
+    // Add loading complete log
+    console.log('تم تحميل كافة مكونات لوحة المعلومات بنجاح');
+});
+
+function initializeTooltips() {
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+}
+
+function displayCurrentDate() {
+    const currentDateElement = document.getElementById('current-date');
+    if (currentDateElement) {
+        const now = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        currentDateElement.textContent = now.toLocaleDateString('ar-SA', options);
+    }
+}
+
+function animateCounters() {
+    const counters = document.querySelectorAll('.counter-value');
+    
+    counters.forEach((counter, index) => {
+        const target = parseInt(counter.getAttribute('data-target')) || 0;
         
-        console.log('تم تحميل كافة مكونات لوحة المعلومات بنجاح');
+        // Add animation class
+        counter.classList.add('counter-animate');
+        
+        if (target <= 0) {
+            counter.textContent = '0';
+            return;
+        }
+        
+        let count = 0;
+        const increment = Math.ceil(target / 50);
+        const speed = Math.max(20, Math.floor(2000 / target));
+        
+        const updateCount = setInterval(() => {
+            count += increment;
+            
+            if (count >= target) {
+                counter.textContent = target.toLocaleString('ar-SA');
+                clearInterval(updateCount);
+                
+                // Add pulse effect when animation completes
+                counter.style.animation = 'counterPulse 0.6s ease-in-out';
+            } else {
+                counter.textContent = count.toLocaleString('ar-SA');
+            }
+        }, speed);
     });
+}
+
+function initializeDepartmentChart() {
+    const departmentChartElement = document.getElementById('departmentChart');
+    if (!departmentChartElement) return;
+    
+    const labels = JSON.parse(departmentChartElement.getAttribute('data-labels') || '[]');
+    const values = JSON.parse(departmentChartElement.getAttribute('data-values') || '[]');
+    
+    const colors = [
+        '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
+        '#43e97b', '#38f9d7', '#ffecd2', '#fcb69f', '#a8edea', '#fed6e3'
+    ];
+    
+    if (labels.length === 0 || values.length === 0) {
+        new Chart(departmentChartElement, {
+            type: 'doughnut',
+            data: {
+                labels: ['لا توجد بيانات'],
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['#e9ecef'],
+                    borderColor: ['#dee2e6'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+        return;
+    }
+    
+    new Chart(departmentChartElement, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 2,
+                hoverBorderWidth: 3,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#667eea',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.raw || 0;
+                            let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            let percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} موظف (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 1000
+            }
+        }
+    });
+}
+
+function initializeSalaryChart() {
+    const salaryChartElement = document.getElementById('salaryChart');
+    if (!salaryChartElement) return;
+    
+    const labels = JSON.parse(salaryChartElement.getAttribute('data-labels') || '[]');
+    const values = JSON.parse(salaryChartElement.getAttribute('data-values') || '[]');
+    
+    if (labels.length === 0 || values.length === 0) {
+        new Chart(salaryChartElement, {
+            type: 'bar',
+            data: {
+                labels: ['لا توجد بيانات'],
+                datasets: [{
+                    label: 'إجمالي الرواتب',
+                    data: [0],
+                    backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        return;
+    }
+    
+    new Chart(salaryChartElement, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'إجمالي الرواتب',
+                data: values,
+                backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+                hoverBackgroundColor: 'rgba(102, 126, 234, 0.4)',
+                hoverBorderColor: 'rgba(102, 126, 234, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('ar-SA') + ' ر.س';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#667eea',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.raw;
+                            return `إجمالي الرواتب: ${value.toLocaleString('ar-SA')} ر.س`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+}
+
+function initializeDocumentChart() {
+    const documentChartElement = document.getElementById('documentChart');
+    if (!documentChartElement) return;
+    
+    const validCount = parseInt(documentChartElement.getAttribute('data-valid')) || 0;
+    const expiringCount = parseInt(documentChartElement.getAttribute('data-expiring')) || 0;
+    const expiredCount = parseInt(documentChartElement.getAttribute('data-expired')) || 0;
+    
+    if (validCount === 0 && expiringCount === 0 && expiredCount === 0) {
+        new Chart(documentChartElement, {
+            type: 'doughnut',
+            data: {
+                labels: ['لا توجد بيانات'],
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['#e9ecef'],
+                    borderColor: ['#dee2e6'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+        return;
+    }
+    
+    new Chart(documentChartElement, {
+        type: 'doughnut',
+        data: {
+            labels: ['وثائق سارية', 'وثائق تنتهي قريباً', 'وثائق منتهية'],
+            datasets: [{
+                data: [validCount, expiringCount, expiredCount],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                borderColor: ['#28a745', '#ffc107', '#dc3545'],
+                borderWidth: 2,
+                hoverBorderWidth: 3,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#667eea',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            let value = context.raw || 0;
+                            let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            let percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 1000
+            }
+        }
+    });
+}
 </script>
 {% endblock %}
