@@ -1,7 +1,15 @@
 /* Custom CSS for Arabic Employee Management System */
 
+@font-face {
+    font-family: 'beIN-Normal';
+    src: url('../fonts/beIN-Normal.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 /* Base Styles & RTL Support */
 body {
+    font-family: 'beIN-Normal', sans-serif;
     direction: rtl;
     text-align: right;
     background-color: #eaeaea;
@@ -14,7 +22,7 @@ body {
 
 /* Arabic Font Enhancement */
 body, h1, h2, h3, h4, h5, h6, .nav-link, .btn, .form-control, .dropdown-item {
-    font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'beIN-Normal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Enhanced Typography */
@@ -155,11 +163,12 @@ table {
     font-weight: 600;
     border-top: none;
     background-color: rgba(var(--bs-primary-rgb), 0.05);
-    color: var(--bs-dark);
+    color: var(--bs-info);
     padding: 1rem;
 }
 
 .table td {
+    color: white;
     padding: 1rem;
     vertical-align: middle;
     border-color: rgba(0, 0, 0, 0.05);

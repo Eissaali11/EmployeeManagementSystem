@@ -1,0 +1,378 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>إدارة الموظفين</h1>
+        <div>
+            <a href="{{ url_for('employees.create') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i> إضافة موظف
+            </a>
+            <a href="{{ url_for('employees.import_excel') }}" class="btn btn-primary">
+                <i class="fas fa-file-import me-1"></i> استيراد من Excel
+            </a>
+            <a href="{{ url_for('employees.export_excel') }}" class="btn btn-secondary">
+                <i class="fas fa-file-export me-1"></i> تصدير إلى Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">قائمة الموظفين</h5>
+            <div class="text-muted small">
+                <i class="fas fa-info-circle"></i>
+                <span>يمكنك التمرير لعرض جميع البيانات</span>
+            </div>
+        </div>
+        
+        <!-- فلاتر البحث والفرز المحسنة -->
+        <div class="p-3 border-bottom bg-light">
+            <form method="GET" action="{{ url_for('employees.index') }}" id="filterForm">
+                <div class="row">
+                    <!-- البحث النصي -->
+                    <div class="col-md-6 mb-2">
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white border-0">
+                                <i class="fas fa-search text-primary"></i>
+                            </span>
+                            <input type="text" id="searchInput" class="form-control border-0 shadow-none" 
+                                   placeholder="ابحث عن موظف (الاسم، الرقم الوظيفي، رقم الهوية، رقم الجوال)" 
+                                   aria-label="البحث عن موظف">
+                        </div>
+                    </div>
+                    
+                    <!-- فلتر القسم -->
+                    <div class="col-md-2 mb-2">
+                        <select name="department" class="form-select" onchange="this.form.submit()">
+                            <option value="">جميع الأقسام</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if current_department == dept.id|string %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- فلتر الحالة -->
+                    <div class="col-md-2 mb-2">
+                        <select name="status" class="form-select" onchange="this.form.submit()">
+                            <option value="">جميع الحالات</option>
+                            <option value="active" {% if current_status == 'active' %}selected{% endif %}>نشط</option>
+                            <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>غير نشط</option>
+                            <option value="on_leave" {% if current_status == 'on_leave' %}selected{% endif %}>في إجازة</option>
+                            <option value="terminated" {% if current_status == 'terminated' %}selected{% endif %}>متوقف عن العمل</option>
+                        </select>
+                    </div>
+                    
+                    <!-- فلتر الأقسام المتعددة -->
+                    <div class="col-md-2 mb-2">
+                        <select name="multi_department" class="form-select" onchange="this.form.submit()">
+                            <option value="">جميع الموظفين</option>
+                            <option value="yes" {% if current_multi_department == 'yes' %}selected{% endif %}>
+                                أكثر من قسم ({{ multi_dept_count }})
+                            </option>
+                            <option value="no" {% if current_multi_department == 'no' %}selected{% endif %}>
+                                قسم واحد ({{ single_dept_count }})
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- صف ثاني للفلاتر الإضافية -->
+                <div class="row">
+                    <!-- فلتر الموظفين بدون أقسام -->
+                    <div class="col-md-3 mb-2">
+                        <select name="no_department" class="form-select" onchange="this.form.submit()">
+                            <option value="">بحسب الأقسام</option>
+                            <option value="yes" {% if current_no_department == 'yes' %}selected{% endif %}>
+                                ⚠️ بدون أقسام ({{ no_dept_count }})
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <!-- فلتر الأسماء المكررة -->
+                    <div class="col-md-3 mb-2">
+                        <select name="duplicate_names" class="form-select" onchange="this.form.submit()">
+                            <option value="">بحسب الأسماء</option>
+                            <option value="yes" {% if current_duplicate_names == 'yes' %}selected{% endif %}>
+                                🔄 أسماء مكررة ({{ duplicate_names_count }})
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            استخدم هذه الفلاتر لعرض الموظفين بدون أقسام أو بأسماء مكررة
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- معلومات النتائج والإحصائيات -->
+                <div class="row mt-2">
+                    <div class="col-md-8">
+                        <div id="searchResultsInfo" class="small text-muted" style="display:none;">
+                            نتائج البحث: <strong id="employeeCount">0</strong> موظف
+                        </div>
+                        
+                        <!-- إحصائيات الفلاتر النشطة -->
+                        {% if current_department or current_status or current_multi_department or current_no_department or current_duplicate_names %}
+                        <div class="small text-info">
+                            <i class="fas fa-filter me-1"></i>
+                            الفلاتر النشطة: 
+                            {% if current_department %}
+                                {% for dept in departments %}
+                                    {% if dept.id|string == current_department %}
+                                        <span class="badge bg-primary me-1">{{ dept.name }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            {% if current_status %}
+                                <span class="badge bg-success me-1">
+                                    {% if current_status == 'active' %}نشط
+                                    {% elif current_status == 'inactive' %}غير نشط
+                                    {% elif current_status == 'on_leave' %}في إجازة
+                                    {% elif current_status == 'terminated' %}متوقف عن العمل
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                            {% if current_multi_department %}
+                                <span class="badge bg-warning me-1">
+                                    {% if current_multi_department == 'yes' %}أكثر من قسم
+                                    {% else %}قسم واحد{% endif %}
+                                </span>
+                            {% endif %}
+                            {% if current_no_department %}
+                                <span class="badge bg-danger me-1">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>بدون أقسام
+                                </span>
+                            {% endif %}
+                            {% if current_duplicate_names %}
+                                <span class="badge bg-info me-1">
+                                    <i class="fas fa-copy me-1"></i>أسماء مكررة
+                                </span>
+                            {% endif %}
+                            <a href="{{ url_for('employees.index') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                <i class="fas fa-times me-1"></i> إزالة الفلاتر
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <small class="text-muted">
+                            إجمالي الموظفين: <strong>{{ employees|length }}</strong>
+                        </small>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card-body">
+            <div class="table-horizontal-scroll">
+                <table id="employeesTable" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>الرقم الوظيفي</th>
+                            <th>الاسم</th>
+                            <th>رقم الهوية</th>
+                            <th>الجوال</th>
+                            <th>المسمى الوظيفي</th>
+                            <th>القسم</th>
+                            <th>الحالة</th>
+                            <th>تاريخ التعيين</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in employees %}
+                        <tr class="{% if employee.status == 'inactive' %}table-secondary text-muted{% elif employee.status == 'on_leave' %}table-warning{% elif employee.status == 'terminated' %}text-muted{% endif %}">
+                            <td>{{ employee.employee_id }}</td>
+                            <td>
+                                {% if employee.status == 'terminated' %}
+                                    <del>{{ employee.name }}</del>
+                                {% else %}
+                                    {{ employee.name }}
+                                {% endif %}
+                                {% if employee.name in duplicate_names_set %}
+                                    <span class="badge bg-warning text-dark ms-1" title="اسم مكرر">
+                                        <i class="fas fa-copy"></i>
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ employee.national_id }}</td>
+                            <td>{{ employee.mobile }}</td>
+                            <td>{{ employee.job_title }}</td>
+                            <td>
+                                {%- if employee.departments -%}
+                                    {%- if employee.departments|length > 1 -%}
+                                        <div class="d-flex flex-wrap">
+                                            {%- for dept in employee.departments -%}
+                                                <span class="badge bg-primary me-1 mb-1">{{ dept.name }}</span>
+                                            {%- endfor -%}
+                                        </div>
+                                        <small class="text-success">
+                                            <i class="fas fa-layer-group me-1"></i>متعدد الأقسام
+                                        </small>
+                                    {%- else -%}
+                                        <span class="badge bg-secondary">{{ employee.departments[0].name }}</span>
+                                    {%- endif -%}
+                                {%- else -%}
+                                    <span class="text-muted">-</span>
+                                {%- endif -%}
+                            </td>
+                            <td>
+                                {% if employee.status == 'active' %}
+                                <span class="badge bg-success">نشط</span>
+                                {% elif employee.status == 'inactive' %}
+                                <span class="badge bg-danger">غير نشط</span>
+                                {% elif employee.status == 'on_leave' %}
+                                <span class="badge bg-warning">في إجازة</span>
+                                {% elif employee.status == 'terminated' %}
+                                <span class="badge bg-dark">متوقف عن العمل</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ employee.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if employee.join_date %}
+                                <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="hijri-date" style="display: none;"></span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-sm btn-info" title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-sm btn-primary" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('employees.confirm_delete', id=employee.id) }}" class="btn btn-sm btn-danger" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                                
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- إضافة نص التنبيهات -->
+<div id="alertContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 5"></div>
+
+<script>
+// عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // عناصر البحث
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const searchResultsInfo = document.getElementById('searchResultsInfo');
+    const employeeCountElement = document.getElementById('employeeCount');
+    const employeeRows = document.querySelectorAll('table#employeesTable tbody tr');
+    
+    // ربط أحداث البحث
+    if (searchButton && searchInput) {
+        // البحث عند النقر على زر البحث
+        searchButton.addEventListener('click', function() {
+            performSearch();
+        });
+        
+        // البحث عند الضغط على Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+    }
+    
+    // دالة البحث
+    function performSearch() {
+        // الحصول على نص البحث
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        let foundCount = 0;
+        
+        // إذا كان البحث فارغاً، أظهر جميع الصفوف
+        if (searchTerm === '') {
+            employeeRows.forEach(row => {
+                row.style.display = '';
+                row.classList.remove('table-primary');
+            });
+            searchResultsInfo.style.display = 'none';
+            return;
+        }
+        
+        // البحث في كل صف
+        employeeRows.forEach(row => {
+            // البحث في جميع خلايا الصف
+            const cells = row.querySelectorAll('td');
+            let rowText = '';
+            
+            cells.forEach(cell => {
+                // استثناء خلية الإجراءات من البحث
+                if (!cell.querySelector('.btn-group')) {
+                    rowText += cell.textContent.trim() + ' ';
+                }
+            });
+            
+            // التحقق من وجود كلمة البحث
+            if (rowText.toLowerCase().includes(searchTerm)) {
+                row.style.display = '';
+                row.classList.add('table-primary'); // تمييز الصفوف المطابقة
+                foundCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // عرض نتائج البحث
+        searchResultsInfo.style.display = 'block';
+        if (employeeCountElement) {
+            employeeCountElement.textContent = foundCount;
+        }
+        
+        // عرض تنبيه بالنتائج
+        if (foundCount > 0) {
+            showAlert(`تم العثور على ${foundCount} موظف يطابق البحث`, 'success');
+        } else {
+            showAlert('لم يتم العثور على نتائج', 'warning');
+        }
+    }
+    
+    // دالة عرض تنبيه
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertId = `alert-${Date.now()}`;
+        
+        const alertHtml = `
+            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button>
+            </div>
+        `;
+        
+        alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // إخفاء التنبيه تلقائياً بعد 5 ثوانٍ
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

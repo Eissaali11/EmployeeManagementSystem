@@ -1,50 +1,441 @@
 {% extends 'layout.html' %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Enhanced Page Header */
+    .salary-header {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        animation: slideDown 0.6s ease-out;
+    }
+
+    .salary-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .salary-header h1 {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 2.5rem;
+    }
+
+    /* Enhanced Action Buttons */
+    .btn-enhanced {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--card-shadow);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 140px;
+        justify-content: center;
+    }
+
+    .btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-enhanced:hover::before {
+        left: 100%;
+    }
+
+    .btn-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+        text-decoration: none;
+    }
+
+    .btn-success-enhanced {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    .btn-primary-enhanced {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .btn-secondary-enhanced {
+        background: #6c757d;
+        color: white;
+    }
+
+    /* Enhanced Filter Card */
+    .filter-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        animation: slideUp 0.6s ease-out 0.2s both;
+    }
+
+    .filter-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding: 1.5rem;
+    }
+
+    .filter-card .card-header h5 {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .filter-card .card-body {
+        padding: 1.5rem;
+    }
+
+    /* Enhanced Summary Card */
+    .summary-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .summary-card .card-header {
+        background: var(--success-gradient);
+        color: white;
+        padding: 1.5rem;
+        border: none;
+    }
+
+    .summary-card .card-header h5 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .summary-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .summary-item {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .summary-item:hover {
+        background: rgba(0,0,0,0.03);
+        transform: translateY(-3px);
+    }
+
+    .summary-item h6 {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-item h4 {
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+
+    .summary-item.net-salary {
+        background: rgba(56, 239, 125, 0.1);
+        border: 1px solid rgba(56, 239, 125, 0.3);
+    }
+
+    .summary-item.net-salary h4 {
+        color: #11998e;
+    }
+
+    /* Enhanced Table Card */
+    .table-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .table-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding: 1.5rem;
+    }
+
+    .table-card .card-body {
+        padding: 0;
+    }
+
+    /* Enhanced Table */
+    .table-enhanced {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-enhanced thead th {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1rem;
+        font-weight: 600;
+        border: none;
+    }
+
+    .table-enhanced tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .table-enhanced tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-enhanced .employee-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .table-enhanced .employee-avatar {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        color: white;
+        font-weight: 600;
+        margin-left: 0.75rem;
+    }
+
+    .table-enhanced .salary-value {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .table-enhanced .net-salary-value {
+        font-weight: 700;
+        color: #11998e;
+    }
+
+    .table-enhanced .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .table-enhanced .btn-action {
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .table-enhanced .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Enhanced Empty State */
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #ccc;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    /* Enhanced Input Fields */
+    .salary-input {
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #ddd;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .salary-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+
+    /* Enhanced Smart Save Alert */
+    .smart-save-alert {
+        background: rgba(23, 162, 184, 0.1);
+        border-left: 4px solid #17a2b8;
+        border-radius: 8px;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .salary-header {
+            padding: 1.5rem;
+        }
+        
+        .salary-header h1 {
+            font-size: 2rem;
+        }
+        
+        .summary-item {
+            padding: 0.75rem;
+        }
+        
+        .table-enhanced thead th,
+        .table-enhanced tbody td {
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .table-enhanced .action-buttons {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .empty-state-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>إدارة الرواتب</h1>
-        <div>
-            <a href="{{ url_for('salaries.create') }}" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i> إضافة راتب
-            </a>
-            <a href="{{ url_for('salaries.import_excel') }}" class="btn btn-primary">
-                <i class="fas fa-file-import me-1"></i> استيراد من Excel
-            </a>
-            <div class="btn-group">
-                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-file-export me-1"></i> تصدير
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('salaries.export_excel', month=selected_month, year=selected_year, department_id=selected_department, employee_id=selected_employee) }}">
-                            <i class="fas fa-file-excel text-success me-1"></i> تصدير الرواتب (Excel)
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('salaries.export_simple_employees_salary', month=selected_month, year=selected_year, department_id=selected_department) }}">
-                            <i class="fas fa-users text-primary me-1"></i> تصدير بيانات الموظفين مع الرواتب
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('salaries.export_excel') }}">
-                            <i class="fas fa-database text-info me-1"></i> تصدير جميع البيانات
-                        </a>
-                    </li>
-                </ul>
+<div class="container-fluid py-4">
+    <!-- Enhanced Header -->
+    <div class="salary-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h1>إدارة الرواتب</h1>
+                <p class="text-muted mb-0">نظام متكامل لإدارة رواتب الموظفين</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('salaries.create') }}" class="btn-enhanced btn-success-enhanced">
+                    <i class="fas fa-plus me-1"></i> إضافة راتب
+                </a>
+                <a href="{{ url_for('salaries.import_excel') }}" class="btn-enhanced btn-primary-enhanced">
+                    <i class="fas fa-file-import me-1"></i> استيراد
+                </a>
+                <div class="dropdown">
+                    <button class="btn-enhanced btn-secondary-enhanced dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export me-1"></i> تصدير
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('salaries.export_excel', month=selected_month, year=selected_year, department_id=selected_department, employee_id=selected_employee) }}">
+                                <i class="fas fa-file-excel text-success me-1"></i> تصدير الرواتب (Excel)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('salaries.export_simple_employees_salary', month=selected_month, year=selected_year, department_id=selected_department) }}">
+                                <i class="fas fa-users text-primary me-1"></i> تصدير بيانات الموظفين مع الرواتب
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('salaries.export_excel') }}">
+                                <i class="fas fa-database text-info me-1"></i> تصدير جميع البيانات
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- فلاتر البحث -->
-    <div class="card mb-4">
+    <!-- Enhanced Filter Card -->
+    <div class="filter-card">
         <div class="card-header">
-            <h5 class="card-title mb-0">خيارات البحث</h5>
+            <h5 class="card-title mb-0 text-primary"><i class="fas fa-filter me-2"></i> خيارات البحث</h5>
         </div>
         <div class="card-body">
-            <form method="get" action="{{ url_for('salaries.index') }}" class="row">
-                <div class="col-md-3 mb-3">
+            <form method="get" action="{{ url_for('salaries.index') }}" class="row g-3">
+                <div class="col-md-3">
                     <label for="month" class="form-label">الشهر</label>
                     <select class="form-select" id="month" name="month">
                         <option value="">جميع الشهور</option>
@@ -61,7 +452,7 @@
                     </select>
                 </div>
                 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-3">
                     <label for="year" class="form-label">السنة</label>
                     <select class="form-select" id="year" name="year">
                         <option value="">جميع السنوات</option>
@@ -73,7 +464,7 @@
                     </select>
                 </div>
                 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-3">
                     <label for="department_id" class="form-label">القسم</label>
                     <select class="form-select" id="department_id" name="department_id">
                         <option value="">جميع الأقسام</option>
@@ -85,7 +476,7 @@
                     </select>
                 </div>
                 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-3">
                     <label for="employee_id" class="form-label">الموظف</label>
                     <select class="form-select" id="employee_id" name="employee_id">
                         <option value="">جميع الموظفين</option>
@@ -97,11 +488,11 @@
                     </select>
                 </div>
                 
-                <div class="col-12 text-center">
-                    <button type="submit" class="btn btn-primary">
+                <div class="col-12 text-center mt-3">
+                    <button type="submit" class="btn btn-primary px-4">
                         <i class="fas fa-search me-1"></i> بحث
                     </button>
-                    <a href="{{ url_for('salaries.index') }}" class="btn btn-secondary">
+                    <a href="{{ url_for('salaries.index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-undo me-1"></i> إعادة تعيين
                     </a>
                 </div>
@@ -109,78 +500,92 @@
         </div>
     </div>
 
-    <!-- ملخص الرواتب -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="card-title mb-0">ملخص الرواتب</h5>
+    <!-- Enhanced Summary Card -->
+    <div class="summary-card">
+        <div class="card-header">
+            <h5 class="card-title mb-0"><i class="fas fa-chart-pie me-2"></i> ملخص الرواتب</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="summary-item">
+                        <h6>إجمالي الرواتب الأساسية</h6>
+                        <h4>{{ total_basic|round(2) }}</h4>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-2">
-                            <h6 class="salary-heading mb-1">إجمالي الرواتب الأساسية</h6>
-                            <h4>{{ total_basic|round(2) }}</h4>
-                        </div>
-                        <div class="col-md-2">
-                            <h6 class="salary-heading mb-1">إجمالي البدلات</h6>
-                            <h4>{{ total_allowances|round(2) }}</h4>
-                        </div>
-                        <div class="col-md-2">
-                            <h6 class="salary-heading mb-1">إجمالي الخصومات</h6>
-                            <h4>{{ total_deductions|round(2) }}</h4>
-                        </div>
-                        <div class="col-md-2">
-                            <h6 class="salary-heading mb-1">إجمالي المكافآت</h6>
-                            <h4>{{ total_bonus|round(2) }}</h4>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="salary-heading mb-1">إجمالي صافي الرواتب</h6>
-                            <h4 class="text-success fw-bold">{{ total_net|round(2) }}</h4>
-                        </div>
+                <div class="col-md-2">
+                    <div class="summary-item">
+                        <h6>إجمالي البدلات</h6>
+                        <h4>{{ total_allowances|round(2) }}</h4>
                     </div>
-                    
-                    <div class="mt-3 text-center">
-                        <a href="{{ url_for('salaries.report', month=selected_month, year=selected_year) }}" class="btn btn-info">
-                            <i class="fas fa-file-alt me-1"></i> عرض تقرير مفصل
-                        </a>
-                        <a href="{{ url_for('salaries.report_pdf', month=selected_month, year=selected_year, department_id=selected_department) }}" class="btn btn-danger">
-                            <i class="fas fa-file-pdf me-1"></i> تصدير PDF
-                        </a>
-                        <div class="btn-group">
-                            <a href="{{ url_for('salaries.batch_salary_notifications') }}" class="btn btn-success">
-                                <i class="fas fa-envelope me-1"></i> إشعارات الرواتب
-                            </a>
-                            <a href="{{ url_for('salaries.batch_deduction_notifications') }}" class="btn btn-danger">
-                                <i class="fab fa-whatsapp me-1"></i> إشعارات الخصومات
-                            </a>
-                        </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="summary-item">
+                        <h6>إجمالي الخصومات</h6>
+                        <h4>{{ total_deductions|round(2) }}</h4>
                     </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="summary-item">
+                        <h6>إجمالي المكافآت</h6>
+                        <h4>{{ total_bonus|round(2) }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="summary-item net-salary">
+                        <h6>إجمالي صافي الرواتب</h6>
+                        <h4>{{ total_net|round(2) }}</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url_for('salaries.report', month=selected_month, year=selected_year) }}" class="btn btn-info">
+                        <i class="fas fa-file-alt me-1"></i> عرض تقرير مفصل
+                    </a>
+                    <a href="{{ url_for('salaries.report_pdf', month=selected_month, year=selected_year, department_id=selected_department) }}" class="btn btn-danger">
+                        <i class="fas fa-file-pdf me-1"></i> تصدير PDF
+                    </a>
+                    <a href="{{ url_for('salaries.batch_salary_notifications') }}" class="btn btn-success">
+                        <i class="fas fa-envelope me-1"></i> إشعارات الرواتب
+                    </a>
+                    <a href="{{ url_for('salaries.batch_deduction_notifications') }}" class="btn btn-warning">
+                        <i class="fab fa-whatsapp me-1"></i> إشعارات الخصومات
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- تنبيه نظام الحفظ الذكي -->
+    <!-- Smart Save Alert -->
     {% if not has_salary_data and salaries %}
-    <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
-        <i class="fas fa-lightbulb me-2"></i>
-        <strong>نظام الحفظ الذكي:</strong> 
-        يمكنك إدخال البيانات في الحقول المطلوبة فقط. الحقول الفارغة ستبقى فارغة ولن يتم حفظ قيم افتراضية لها.
-        سيظهر تنبيه قبل الحفظ لتأكيد الحقول التي ستُحفظ.
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="alert smart-save-alert alert-dismissible fade show mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-lightbulb me-3 fa-2x text-info"></i>
+            <div>
+                <h5 class="alert-heading mb-1">نظام الحفظ الذكي</h5>
+                <p class="mb-0">يمكنك إدخال البيانات في الحقول المطلوبة فقط. الحقول الفارغة ستبقى فارغة ولن يتم حفظ قيم افتراضية لها.</p>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     </div>
     {% endif %}
 
-    <!-- جدول الرواتب -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">سجلات الرواتب</h5>
+    <!-- Enhanced Table Card -->
+    <div class="table-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 text-primary"><i class="fas fa-clipboard-list me-2"></i> سجلات الرواتب</h5>
+            <div>
+                <button class="btn btn-outline-primary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> طباعة
+                </button>
+            </div>
         </div>
         <div class="card-body">
             {% if salaries %}
             <div class="table-responsive">
-                <table class="table table-striped table-hover datatable">
+                <table class="table table-enhanced">
                     <thead>
                         <tr>
                             <th>الموظف</th>
@@ -197,15 +602,20 @@
                     <tbody>
                         {% for salary in salaries %}
                         <tr>
-                            <td>{{ salary.employee.name }}</td>
+                            <td>
+                                <div class="employee-info">
+                                    <span class="employee-avatar">{{ salary.employee.name[0] }}</span>
+                                    <span>{{ salary.employee.name }}</span>
+                                </div>
+                            </td>
                             <td>{{ salary.employee.employee_id }}</td>
                             <td>{{ salary.month }}/{{ salary.year }}</td>
                             {% if has_salary_data and salary.id %}
-                            <td>{{ salary.basic_salary }}</td>
-                            <td>{{ salary.allowances }}</td>
-                            <td>{{ salary.deductions }}</td>
-                            <td>{{ salary.bonus }}</td>
-                            <td class="fw-bold">{{ salary.net_salary }}</td>
+                            <td class="salary-value">{{ salary.basic_salary }}</td>
+                            <td class="salary-value">{{ salary.allowances }}</td>
+                            <td class="salary-value">{{ salary.deductions }}</td>
+                            <td class="salary-value">{{ salary.bonus }}</td>
+                            <td class="net-salary-value">{{ salary.net_salary }}</td>
                             {% else %}
                             <td>
                                 <input type="number" class="form-control form-control-sm salary-input" data-field="basic_salary" data-employee="{{ salary.employee.id }}" placeholder="الراتب الأساسي" required>
@@ -219,38 +629,31 @@
                             <td>
                                 <input type="number" class="form-control form-control-sm salary-input" data-field="bonus" data-employee="{{ salary.employee.id }}" placeholder="المكافآت">
                             </td>
-                            <td class="fw-bold">
+                            <td class="net-salary-value">
                                 <span class="net-salary-display" data-employee="{{ salary.employee.id }}">0</span>
                             </td>
                             {% endif %}
-                            <td class="text-center">
+                            <td>
                                 {% if has_salary_data and salary.id %}
-                                <!-- زر تعديل الراتب -->
-                                <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn btn-sm btn-info mb-1" title="تعديل الراتب">
-                                    <i class="fas fa-edit me-1"></i> تعديل
-                                </a>
-                                
-                                <!-- زر طباعة الراتب -->
-                                <a href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}" class="btn btn-sm btn-primary mb-1" title="طباعة الراتب">
-                                    <i class="fas fa-print me-1"></i> طباعة الراتب
-                                </a>
-                                
-                                <!-- زر مشاركة عبر الواتساب -->
-                                <a href="{{ url_for('salaries.share_salary_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-success mb-1" title="مشاركة عبر الواتساب">
-                                    <i class="fab fa-whatsapp me-1"></i> واتساب
-                                </a>
-                                
-                                {% if salary.deductions > 0 %}
-                                <!-- زر مشاركة إشعار الخصم عبر الواتساب -->
-                                <a href="{{ url_for('salaries.share_deduction_via_whatsapp', id=salary.id) }}" class="btn btn-sm btn-danger mb-1" title="مشاركة إشعار الخصم عبر الواتساب">
-                                    <i class="fab fa-whatsapp me-1"></i> إشعار الخصم
-                                </a>
-                                {% endif %}
-                                
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('salaries.edit', id=salary.id) }}" class="btn-action btn-info" title="تعديل الراتب">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('salaries.salary_notification_pdf', id=salary.id) }}" class="btn-action btn-primary" title="طباعة الراتب">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{{ url_for('salaries.share_salary_via_whatsapp', id=salary.id) }}" class="btn-action btn-success" title="مشاركة عبر الواتساب">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                    {% if salary.deductions > 0 %}
+                                    <a href="{{ url_for('salaries.share_deduction_via_whatsapp', id=salary.id) }}" class="btn-action btn-danger" title="مشاركة إشعار الخصم">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
                                 {% else %}
-                                <!-- زر لإضافة راتب جديد للموظف -->
-                                <button class="btn btn-sm btn-success mb-1 save-salary-btn" data-employee="{{ salary.employee.id }}" data-month="{{ salary.month }}" data-year="{{ salary.year }}" title="حفظ الراتب">
-                                    <i class="fas fa-save me-1"></i> حفظ
+                                <button class="btn-action btn-success save-salary-btn" data-employee="{{ salary.employee.id }}" data-month="{{ salary.month }}" data-year="{{ salary.year }}" title="حفظ الراتب">
+                                    <i class="fas fa-save"></i> حفظ
                                 </button>
                                 {% endif %}
                             </td>
@@ -259,7 +662,7 @@
                     </tbody>
                 </table>
                 
-                <!-- زر إنهاء وحفظ جميع البيانات -->
+                <!-- Finish and Save All Button -->
                 {% if not has_salary_data and salaries %}
                 <div class="mt-4 text-center">
                     <button class="btn btn-lg btn-primary finish-and-save-all" id="finishAndSaveAll">
@@ -270,14 +673,17 @@
                 {% endif %}
             </div>
             {% else %}
-            <div class="text-center py-4">
-                <i class="fas fa-money-bill-wave text-muted fs-1 mb-3"></i>
-                <p>لا توجد سجلات رواتب للفترة المحددة</p>
-                <div class="mt-3">
-                    <a href="{{ url_for('salaries.create') }}" class="btn btn-success mx-2">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h5>لا توجد سجلات رواتب للفترة المحددة</h5>
+                <p class="text-muted">يمكنك البدء بإضافة رواتب جديدة أو استيرادها من ملف Excel</p>
+                <div class="empty-state-actions">
+                    <a href="{{ url_for('salaries.create') }}" class="btn btn-success">
                         <i class="fas fa-plus me-1"></i> إضافة راتب
                     </a>
-                    <a href="{{ url_for('salaries.import_excel') }}" class="btn btn-primary mx-2">
+                    <a href="{{ url_for('salaries.import_excel') }}" class="btn btn-primary">
                         <i class="fas fa-file-import me-1"></i> استيراد من Excel
                     </a>
                 </div>
@@ -350,7 +756,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // التحقق من الراتب الأساسي
                 if (!basicSalary || basicSalary.trim() === '') {
-                    alert('يجب إدخال الراتب الأساسي على الأقل');
+                    showErrorAlert('يجب إدخال الراتب الأساسي على الأقل');
                     return;
                 }
                 
@@ -379,43 +785,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     
                     if (result.success) {
-                        // تغيير شكل الصف ليظهر أنه تم الحفظ مع خلفية فاتحة
+                        // تغيير شكل الصف ليظهر أنه تم الحفظ
                         const row = this.closest('tr');
-                        row.style.backgroundColor = '#f8f9fa'; // خلفية رمادية فاتحة
-                        row.style.border = '2px solid #28a745'; // حدود خضراء للإشارة للحفظ
+                        row.style.backgroundColor = '#f8f9fa';
+                        row.style.borderLeft = '4px solid #28a745';
                         this.innerHTML = '<i class="fas fa-check me-1"></i> تم الحفظ';
-                        this.className = 'btn btn-sm btn-outline-success mb-1';
-                        this.disabled = true; // الحفاظ على التعطيل بعد الحفظ
+                        this.className = 'btn-action btn-outline-success';
+                        this.disabled = true;
                         
                         // تحويل حقول الإدخال إلى نص عادي مع الحفاظ على القيم
                         const inputs = row.querySelectorAll('.salary-input');
                         inputs.forEach(input => {
                             const value = input.value || '0';
                             const cell = input.parentElement;
-                            cell.innerHTML = `<div class="saved-value p-2 text-center" style="background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 4px;">
-                                <span style="color: #000000; font-weight: bold; font-size: 14px;">${parseFloat(value).toFixed(2)}</span>
-                            </div>`;
+                            cell.innerHTML = `<span class="salary-value">${parseFloat(value).toFixed(2)}</span>`;
                         });
                         
                         // تحديث صافي الراتب
                         const netSalaryDisplay = row.querySelector('.net-salary-display');
                         if (netSalaryDisplay) {
                             const netValue = netSalaryDisplay.textContent;
-                            netSalaryDisplay.innerHTML = `<div class="saved-value p-2 text-center" style="background-color: #d1f2d1; border: 2px solid #28a745; border-radius: 4px;">
-                                <span style="color: #155724; font-weight: bold; font-size: 14px;">${netValue}</span>
-                            </div>`;
+                            netSalaryDisplay.innerHTML = `<span class="net-salary-value">${netValue}</span>`;
                         }
                         
                         showSuccessAlert(result.message);
                     } else {
-                        alert('حدث خطأ: ' + result.message);
+                        showErrorAlert('حدث خطأ: ' + result.message);
                         this.disabled = false;
                         this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
                     }
                     
                 } catch (error) {
                     console.error('خطأ في حفظ الراتب:', error);
-                    alert('حدث خطأ في الاتصال');
+                    showErrorAlert('حدث خطأ في الاتصال');
                     this.disabled = false;
                     this.innerHTML = '<i class="fas fa-save me-1"></i> حفظ';
                 }
@@ -456,7 +858,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (allSalaryData.length === 0) {
-                alert('لا توجد بيانات رواتب مُدخلة للحفظ');
+                showErrorAlert('لا توجد بيانات رواتب مُدخلة للحفظ');
                 return;
             }
             
@@ -489,13 +891,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.reload();
                     }, 2000);
                 } else {
-                    alert('حدث خطأ: ' + result.message);
+                    showErrorAlert('حدث خطأ: ' + result.message);
                     this.disabled = false;
                     this.innerHTML = '<i class="fas fa-check-double me-2"></i> إنهاء وحفظ جميع البيانات المُدخلة';
                 }
             } catch (error) {
                 console.error('خطأ في حفظ جميع البيانات:', error);
-                alert('حدث خطأ في الاتصال');
+                showErrorAlert('حدث خطأ في الاتصال');
                 this.disabled = false;
                 this.innerHTML = '<i class="fas fa-check-double me-2"></i> إنهاء وحفظ جميع البيانات المُدخلة';
             }
@@ -507,6 +909,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const alertHtml = `
             <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
                 <i class="fas fa-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // إزالة التنبيه تلقائياً بعد 5 ثوان
+        setTimeout(() => {
+            const alert = document.querySelector('.alert:last-of-type');
+            if (alert) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+    
+    // دالة لإظهار رسائل الخطأ
+    function showErrorAlert(message) {
+        const alertHtml = `
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas fa-exclamation-circle me-2"></i>${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;

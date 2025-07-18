@@ -120,6 +120,10 @@
     {% block styles %}
     
     {% endblock %}
+
+    <!-- Other head elements -->
+    {% block extra_css %}{% endblock %}
+</head>
 </head>
 <body>
     <div class="container-fluid">
@@ -307,7 +311,7 @@
                 <!-- Top bar with calendar toggle -->
                 <div class="action-bar">
                     <div>
-                        <h4 class="mb-0 page-title">
+                        <h4 class="mb-0 page-title text-white">
                             {% if request.path == '/' %}
                                 لوحة التحكم
                             {% elif '/employees' in request.path %}
