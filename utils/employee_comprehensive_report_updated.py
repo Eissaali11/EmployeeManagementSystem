@@ -131,6 +131,17 @@ def generate_employee_comprehensive_pdf(employee_id):
     pdf.add_info_row('البريد الإلكتروني', employee.email)
     pdf.add_info_row('رقم الجوال', employee.mobile)
     
+    # معلومات الكفالة
+    pdf.ln(5)
+    pdf.add_section_title('معلومات الكفالة')
+    sponsorship_status_text = 'على الكفالة' if employee.sponsorship_status != 'outside' else 'خارج الكفالة'
+    pdf.add_info_row('حالة الكفالة', sponsorship_status_text)
+    
+    if employee.sponsorship_status != 'outside' and employee.current_sponsor_name:
+        pdf.add_info_row('اسم الكفيل الحالي', employee.current_sponsor_name)
+    elif employee.sponsorship_status != 'outside':
+        pdf.add_info_row('اسم الكفيل الحالي', 'غير محدد')
+    
     # معلومات الوثائق
     pdf.ln(5)
     pdf.add_section_title('معلومات الوثائق')
@@ -295,7 +306,8 @@ def generate_employee_comprehensive_excel(employee_id):
     employee_data = {
         'المعلومة': [
             'اسم الموظف', 'الرقم الوظيفي', 'رقم الهوية', 'تاريخ الالتحاق', 'الجنسية',
-            'القسم', 'المشروع', 'الموقع', 'البريد الإلكتروني', 'رقم الجوال'
+            'القسم', 'المشروع', 'الموقع', 'البريد الإلكتروني', 'رقم الجوال',
+            'حالة الكفالة', 'اسم الكفيل الحالي'
         ],
         'القيمة': [
             employee.name,
@@ -308,7 +320,9 @@ def generate_employee_comprehensive_excel(employee_id):
             employee.project,
             employee.location,
             employee.email,
-            employee.mobile
+            employee.mobile,
+            'على الكفالة' if employee.sponsorship_status != 'outside' else 'خارج الكفالة',
+            employee.current_sponsor_name if employee.sponsorship_status != 'outside' and employee.current_sponsor_name else 'غير محدد'
         ]
     }
     

@@ -546,11 +546,13 @@
                     <thead>
                         <tr>
                             <th>الموظف</th>
+                            <th>الرقم الوظيفي</th>
                             <th>نوع الوثيقة</th>
                             <th>رقم الوثيقة</th>
                             <th>تاريخ الإصدار</th>
                             <th>تاريخ الانتهاء</th>
                             <th>الحالة</th>
+                            <th>حالة الكفالة</th>
                             <th>ملاحظات</th>
                             <th>الإجراءات</th>
                         </tr>
@@ -601,6 +603,15 @@
                                     {% else %}
                                     <span class="status-badge bg-success">سارية</span>
                                     {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if document.employee.sponsorship_status == 'inside' %}
+                                <span class="badge bg-success">على الكفالة</span>
+                                {% elif document.employee.sponsorship_status == 'outside' %}
+                                <span class="badge bg-warning">خارج الكفالة</span>
+                                {% else %}
+                                <span class="badge bg-secondary">غير محدد</span>
                                 {% endif %}
                             </td>
                             <td>{{ document.notes or '-' }}</td>
