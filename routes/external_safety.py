@@ -9,10 +9,69 @@ from app import db
 from utils.audit_logger import log_audit
 from flask_login import current_user
 from sqlalchemy import func, select
+from sqlalchemy.orm import aliased, contains_eager
+
+from dotenv import load_dotenv
+import resend
+
+
+
+
+# قم بتحميل المتغيرات من ملف .env
+load_dotenv()
+# قم بإعداد مفتاح Resend مرة واحدة عند بدء التطبيق
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 external_safety_bp = Blueprint('external_safety', __name__)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def get_all_current_driversWithEmil():
+    """
+    تسترجع قاموساً يحتوي على معلومات السائق الحالي لكل مركبة.
+    المفتاح هو ID المركبة، والقيمة هي قاموس يحتوي على (name, email, mobile).
+    """
+    # 1. نحدد أنواع التسليم
+    delivery_handover_types = ['delivery', 'تسليم', 'handover']
+    
+    # 2. إنشاء استعلام فرعي لتحديد أحدث سجل تسليم لكل مركبة
+    # (نفس منطق Window Function السابق)
+    subq = select(
+        VehicleHandover.id,
+        func.row_number().over(
+            partition_by=VehicleHandover.vehicle_id,
+            order_by=VehicleHandover.handover_date.desc()
+        ).label('row_num')
+    ).where(
+        VehicleHandover.handover_type.in_(delivery_handover_types)
+    ).subquery()
+
+    # 3. إنشاء الاستعلام الرئيسي
+    # سنربط (JOIN) بين السجلات الأحدث والموظفين المرتبطين بها
+    # ونستخدم `contains_eager` لجلب بيانات الموظف بكفاءة عالية في نفس الاستعلام
+    stmt = select(VehicleHandover).join(
+        subq, VehicleHandover.id == subq.c.id
+    ).join(
+        VehicleHandover.driver_employee  # الربط باستخدام العلاقة driver_employee
+    ).options(
+        contains_eager(VehicleHandover.driver_employee) # جلب بيانات الموظف في نفس الاستعلام
+    ).where(subq.c.row_num == 1)
+
+    # 4. تنفيذ الاستعلام وجلب النتائج
+    latest_handovers_with_drivers = db.session.execute(stmt).scalars().all()
+    
+    # 5. تحويل النتائج إلى القاموس (dictionary) بالصيغة الجديدة
+    current_drivers_map = {
+        record.vehicle_id: {
+            'name': record.driver_employee.name,
+            'email': record.driver_employee.email,
+            'mobile': record.driver_employee.mobile
+        }
+        for record in latest_handovers_with_drivers if record.driver_employee # نتأكد من وجود سائق
+    }
+    
+    return current_drivers_map
+
 
 
 def get_all_current_drivers():
@@ -216,6 +275,7 @@ def share_links():
     # الحصول على قائمة السيارات
     vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
     all_current_drivers = get_all_current_drivers()
+    all_current_drivers_with_emil = get_all_current_driversWithEmil()
     
     # قائمة حالات السيارات
     statuses = ['available', 'rented', 'in_project', 'in_workshop', 'accident']
@@ -229,9 +289,141 @@ def share_links():
                            makes=makes,
                            projects=projects,
                            statuses=statuses,
-                           all_current_drivers=all_current_drivers
+                           all_current_drivers=all_current_drivers,
+                           all_current_drivers_with_emil=all_current_drivers_with_emil
                            )
 
+
+# # ----- أضف هذه الدالة الجديدة لمشروعك -----
+@external_safety_bp.route('/api/send-email', methods=['POST'])
+def send_vehicle_email():
+    """
+    نقطة نهاية (API endpoint) متكاملة لتلقي طلب إرسال بريد إلكتروني
+    احترافي ومصمم لفحص المركبة عبر Resend.
+    """
+    # 1. استلام البيانات من الطلب القادم من JavaScript
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'الطلب فارغ أو ليس بصيغة JSON'}), 400
+
+    driver_email = data.get('driver_email')
+    driver_name = data.get('driver_name', 'زميلنا العزيز') # اسم افتراضي
+    plate_number = data.get('plate_number')
+    vehicle_model = data.get('vehicle_model')
+    form_url = data.get('form_url')
+
+    # التحقق من وجود جميع البيانات الضرورية
+    if not all([driver_email, plate_number, vehicle_model, form_url]):
+        error_message = "بيانات ناقصة في الطلب. تأكد من إرسال كل من: driver_email, plate_number, vehicle_model, form_url."
+        return jsonify({'success': False, 'error': error_message}), 400
+
+    # 2. إعداد المتغيرات الخاصة بالرسالة (الشعار والاسم)
+    company_name = "شركة رأس السعودية المحدوده"  # <--- يمكنك تغيير هذا
+    # تأكد من أن مسار الشعار صحيح. _external=True ضروري لتوليد رابط كامل.
+    logo_path = 'images/logo.png' # <--- يمكنك تغيير هذا
+    try:
+        logo_url = url_for('static', filename=logo_path, _external=True)
+
+    except RuntimeError:
+        # هذا الحل الاحتياطي يعمل إذا تم استدعاء الدالة خارج سياق الطلب
+        # (على الرغم من أنه في حالتك لن يحدث ذلك مع استدعاء API)
+        logo_url = "https://your-fallback-domain.com" + url_for('static', filename=logo_path)
+
+
+    # 3. بناء قالب HTML الكامل للبريد الإلكتروني
+    email_html_content = f"""
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{ margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }}
+            .email-container {{ max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
+            .email-header {{ background-color: #171e3f; color: #ffffff; padding: 20px; text-align: center; }}
+            .email-header img {{ max-width: 150px; margin-bottom: 10px; }}
+            .email-body {{ padding: 30px; color: #333333; line-height: 1.6; text-align: right; }}
+            .email-body h2 {{ color: #2c3e50; font-size: 22px; }}
+            .vehicle-info {{ background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 20px 0; }}
+            .button-container {{ text-align: center; margin: 30px 0; }}
+            .button {{ background-color: #3498db; color: #ffffff !important; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; font-size: 16px; }}
+            .instructions-section {{ margin-top: 25px; border-top: 1px solid #eeeeee; padding-top: 20px; }}
+            .instructions-section h3 {{ color: #e67e22; font-size: 18px; }}
+            .instructions-section ul {{ padding-right: 20px; list-style-type: '✔️ '; }}
+            .email-footer {{ background-color: #2c3e50; color: #bdc3c7; padding: 20px; text-align: center; font-size: 12px; }}
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="email-header">
+                <img src="https://i.postimg.cc/LXzD6b0N/logo.png" alt="نُــظــم  للحلول البرمجية">
+                <h1>{company_name}</h1>
+            </div>
+            <div class="email-body">
+                <h2>إجراء مطلوب: فحص السلامة الخارجي للمركبة</h2>
+                <p>مرحباً <strong>{driver_name}</strong> 👋،</p>
+                <p>نرجو منك تعبئة نموذج فحص السلامة الخارجي للمركبة التالية بدقة وعناية.</p>
+                <div class="vehicle-info">
+                    🚗 <strong>المركبة:</strong> {plate_number} ({vehicle_model})
+                </div>
+                <p><strong>👇 الرابط المباشر للنموذج:</strong></p>
+                <div class="button-container">
+                    <a href="{form_url}" class="button">فتح نموذج الفحص</a>
+                </div>
+                <div class="instructions-section">
+                    <h3>📋 التعليمات المطلوبة (مهم جدًا):</h3>
+                    <h4>1️⃣ الصور الأساسية (إلزامية):</h4>
+                    <ul>
+                        <li>صورة من <strong>الأمام</strong> (تظهر كامل واجهة المركبة).</li>
+                        <li>صورة من <strong>الخلف</strong> (تظهر كامل خلفية المركبة).</li>
+                        <li>صورة من <strong>الجانب الأيمن والأيسر</strong> (من الزاوية).</li>
+                        <li>صورة <strong>لسقف</strong> المركبة.</li>
+                        <li>صورة لـ <strong>أسفل المركبة من الأمام</strong>.</li>
+                    </ul>
+                    <h4>2️⃣ صور الملاحظات (إن وجدت):</h4>
+                    <ul>
+                        <li>إذا وجدت أي خدوش، صدمات، أو عيوب، قم بتصويرها عن قرب.</li>
+                        <li><strong>هام:</strong> قم بالإشارة بإصبعك إلى مكان الملاحظة في الصورة.</li>
+                        <li>اكتب وصفاً لكل ملاحظة أسفل الصورة المرفوعة.</li>
+                    </ul>
+                </div>
+                <div class="instructions-section">
+                    <h3>✅ ما بعد إرسال النموذج:</h3>
+                    <ul>
+                        <li><strong>في حال القبول:</strong> سيتم إعلامك وتفعيل إجراءات الوقود.</li>
+                        <li><strong>في حال الرفض:</strong> ستصلك رسالة بالسبب. يرجى الدخول على نفس الرابط مجدداً وتصحيح الملاحظات.</li>
+                    </ul>
+                </div>
+                <p>شكرًا لتعاونكم وحرصكم على السلامة.</p>
+            </div>
+            <div class="email-footer">
+                <p>هذه رسالة آلية من {company_name}.</p>
+                <p>© {datetime.now().year} جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    # 4. بناء طلب الإرسال واستدعاء Resend API
+    try:
+        params = {
+            "from": f"{company_name} <onboarding@resend.dev>",
+            "to": [driver_email],
+            "subject": f"إجراء مطلوب: فحص السلامة للمركبة {plate_number}",
+            "html": email_html_content,
+        }
+        sent_email = resend.Emails.send(params)
+        
+        # يمكنك تفعيل هذه للتشخيص
+        # print(f"Email sent successfully. ID: {sent_email['id']}")
+        
+        return jsonify({'success': True, 'message': f"تم إرسال البريد الإلكتروني بنجاح إلى {driver_email}"})
+
+    except Exception as e:
+        # في حال حدوث خطأ من Resend أو غيره
+        print(f"Error sending email with Resend: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @external_safety_bp.route('/api/verify-employee/<national_id>')

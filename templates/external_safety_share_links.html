@@ -3,6 +3,62 @@
 {% block title %}مشاركة روابط فحص السلامة الخارجي{% endblock %}
 
 {% block content %}
+
+<style>
+
+    /* ### بداية كود CSS المخصص لزر النسخ ### */
+
+/* 1. تصميم الزر الأساسي */
+.copy-btn {
+    /* نستخدم flexbox لمحاذاة الأيقونة والنص بسهولة */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* مسافة بين الأيقونة والنص */
+    
+    /* نسخ تصميم Bootstrap الأساسي ليتناسق مع باقي الأزرار */
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    border-radius: .2rem;
+    border: 1px solid #6c757d; /* لون حدود رمادي */
+    color: #6c757d; /* لون النص رمادي */
+    background-color: transparent;
+    cursor: pointer;
+    
+    /* تأثير انتقال ناعم عند التغيير */
+    transition: all 0.2s ease-in-out;
+}
+
+.copy-btn:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* 2. تصميم الزر بعد نجاح النسخ (عند إضافة كلاس 'copied') */
+.copy-btn.copied {
+    background-color: #198754; /* لون النجاح الأخضر */
+    border-color: #198754;
+    color: white;
+}
+
+/* 3. إخفاء الأيقونة الأصلية وإظهار أيقونة النجاح */
+
+/* في الحالة العادية، أيقونة النسخ ظاهرة وأيقونة الصح مخفية */
+.copy-btn .icon-copy { display: inline-block; }
+.copy-btn .icon-success { display: none; }
+.copy-btn .text-success { display: none; } /* إخفاء نص "تم النسخ" */
+.copy-btn .text-original { display: inline-block; } /* إظهار النص الأصلي */
+
+
+/* عند إضافة كلاس 'copied'، نعكس الإظهار */
+.copy-btn.copied .icon-copy { display: none; }
+.copy-btn.copied .icon-success { display: inline-block; }
+.copy-btn.copied .text-success { display: inline-block; }
+.copy-btn.copied .text-original { display: none; }
+
+/* ### نهاية كود CSS المخصص ### */
+</style>
+
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
@@ -129,7 +185,6 @@
                             <th>اللون</th>
                             <th>المشروع</th>
                             <th>الحالة</th>
-                            <th>رابط النموذج</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
@@ -168,23 +223,43 @@
                                     <span class="badge bg-secondary">{{ vehicle.status }}</span>
                                 {% endif %}
                             </td>
+                         
                             <td>
-                                <div class="input-group">
-                                    <input type="text" class="form-control form-control-sm" 
-                                           value="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}" 
-                                           readonly id="url-{{ vehicle.id }}">
-                                    <button class="btn btn-outline-secondary btn-sm" type="button" 
-                                            onclick="copyUrl('url-{{ vehicle.id }}', this)">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                </div>
-                            </td>
-                            <td>
+
+                                <!-- === الزر الجديد المصمم خصيصًا === -->
+        <button type="button" class="copy-btn" 
+                title="نسخ رابط النموذج"
+                onclick="copyToClipboard('{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}', this)">
+            
+            <!-- أيقونة النسخ (الأصلية) -->
+            <span class="icon-copy">
+                <i class="fas fa-copy"></i>
+            </span>
+            <!-- أيقونة الصح (للنجاح) -->
+            <span class="icon-success">
+                <i class="fas fa-check"></i>
+            </span>
+            
+            <!-- نص الزر الأصلي الذي يظهر على الشاشات الكبيرة -->
+            <span class="text-original d-none d-md-inline">
+                نسخ
+            </span>
+            <!-- نص النجاح الذي يظهر مؤقتًا -->
+            <span class="text-success">
+                تم النسخ
+            </span>
+        </button>
+ 
                                 <button class="btn btn-primary btn-sm" 
                                        onclick="shareSafetyCheckForm('{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
                                     <i class="fas fa-share-alt ms-1"></i>
                                     مشاركة
                                 </button>
+                               <button class="btn btn-outline-secondary btn-sm"
+                    title="إرسال طلب الفحص عبر البريد"
+                    onclick="sendSafetyCheckEmail(this, '{{ vehicle.id }}' , '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+                <i class="fas fa-envelope ms-1"></i> إرسال بالبريد
+            </button>
                                 <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
                                    class="btn btn-success btn-sm ms-1" target="_blank">
                                     <i class="fas fa-external-link-alt ms-1"></i>
@@ -208,12 +283,16 @@
             </div>
             {% endif %}
         </div>
+        <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
+
     </div>
 </div>
 
 <script>
 
     const allDriversData = {{ all_current_drivers | tojson | safe }};
+    const allDriversDataWithEmil = {{ all_current_drivers_with_emil | tojson | safe }};
+
 
     // دالة نسخ الرابط
     function copyUrl(inputId, button) {
@@ -234,6 +313,154 @@
         showToast('تم نسخ الرابط بنجاح!', 'success');
     }
 
+    // يمكنك وضع هذا الكود داخل وسم <script> في نهاية ملف الـ HTML
+
+// دالة عامة لعرض إشعار بسيط (Toast). يمكنك استخدام مكتبة مثل Toastify أو إنشاء واحدة بنفسك.
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast show align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>`;
+    
+    // تأكد من أن لديك حاوية للأشعارات في الـ HTML
+    const toastContainer = document.getElementById('toast-container');
+    if (toastContainer) {
+        toastContainer.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        setTimeout(() => toast.remove(), 5000); // إخفاء الإشعار بعد 5 ثوان
+    } else {
+        alert(message); // بديل بسيط في حال عدم وجود حاوية
+    }
+}
+
+
+/**
+ * الدالة الكاملة والنهائية لإرسال طلب فحص السلامة عبر البريد.
+ * تستقبل فقط عنصر الزر الذي تم النقر عليه ومعرف المركبة.
+ */
+async function sendSafetyCheckEmail(buttonElement, vehicleId, plateNumber, vehicleModel) {
+    // 1. استخراج بيانات السائق من القاموس العام الذي أعددناه في بايثون
+    // (يجب أن يكون allDriversData متاحًا في الصفحة)
+    const driver = allDriversDataWithEmil[vehicleId];
+    
+    // التحقق من وجود سائق وبريد إلكتروني صالح
+    if (!driver || !driver.email) {
+        showToast("خطأ: لا يوجد سائق أو بريد إلكتروني مسجل لهذه المركبة.", 'danger');
+        return;
+    }
+
+    // 2. استخراج بيانات المركبة من "data attributes" في أقرب صف جدول
+    const vehicleRow = buttonElement.closest('tr');
+    if (!vehicleRow) {
+        showToast("خطأ: لم يتم العثور على بيانات المركبة في الصفحة.", 'danger');
+        return;
+    }
+
+    // 3. توليد رابط نموذج الفحص الديناميكي
+    const formUrl = `${window.location.origin}/external-safety-check/${vehicleId}`;
+
+
+    // 4. تغيير حالة الزر لإعلام المستخدم بوجود عملية جارية
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+    
+    try {
+        // 5. إرسال طلب إلى الواجهة الخلفية (الخادم)
+        const response = await fetch('/api/send-email', { // هذا هو الرابط الذي عرفناه في فلاسك
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            // بناء جسم الطلب بالبيانات التي استخرجناها
+            body: JSON.stringify({
+                driver_email: driver.email,
+                driver_name: driver.name,
+                plate_number: plateNumber,
+                vehicle_model: vehicleModel,
+                form_url: formUrl
+            })
+        });
+        
+        const result = await response.json();
+        
+        // 6. معالجة الاستجابة وعرض إشعار للمستخدم
+        if (response.ok && result.success) {
+            showToast(result.message, 'success');
+        } else {
+            // عرض رسالة الخطأ القادمة من الخادم إذا كانت موجودة
+            showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
+        }
+
+    } catch (error) {
+        // هذا الجزء يعالج أخطاء الشبكة (إذا لم يتمكن المتصفح من الوصول للخادم)
+        console.error('فشل الاتصال بالخادم:', error);
+        showToast('فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.', 'danger');
+    } finally {
+        // 7. إعادة الزر إلى حالته الأصلية دائمًا، سواء نجحت العملية أو فشلت
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = '<i class="fas fa-envelope ms-1"></i> إرسال عبر البريد';
+    }
+}
+
+
+/**
+ * الدالة النهائية والمبسطة التي تستخدم كلاسات CSS مخصصة.
+ * تقوم بإضافة وإزالة كلاس 'copied' للتحكم في المظهر.
+ */
+function copyToClipboard(textToCopy, buttonElement) {
+    // التحقق من أننا نتعامل مع عنصر صحيح
+    if (!buttonElement) {
+        console.error("لم يتم تمرير عنصر الزر إلى الدالة.");
+        return;
+    }
+
+    navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+            // 1. أضف الكلاس 'copied' لتطبيق التنسيق الجديد
+            buttonElement.classList.add('copied');
+
+            // 2. إظهار إشعار Toast
+            showToast('تم نسخ الرابط بنجاح!', 'success');
+            
+            // 3. أزل الكلاس بعد ثانيتين لإعادة الزر إلى حالته الأصلية
+            setTimeout(() => {
+                buttonElement.classList.remove('copied');
+            }, 2000); 
+
+        })
+        .catch(err => {
+            console.error('فشل في نسخ الرابط: ', err);
+            showToast('حدث خطأ أثناء محاولة نسخ الرابط.', 'danger');
+        });
+}
+
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        alert(message); // fallback بسيط
+        return;
+    }
+
+    const toastId = 'toast-' + Math.random().toString(36).substr(2, 9);
+    const toastHTML = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+
+    const toastElement = document.getElementById(toastId);
+    const bsToast = new bootstrap.Toast(toastElement, { delay: 5000 });
+    bsToast.show();
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
     // دالة مشاركة رابط نموذج فحص السلامة الخارجي
     function shareSafetyCheckForm(vehicleId, plateNumber, vehicleModel) {
         const formUrl = window.location.origin + '/external-safety-check/' + vehicleId;
