@@ -309,15 +309,88 @@
             border-width: 0.3em;
             border-color: #667eea transparent #667eea transparent;
         }
-        
+
+
+.instructions-box {
+    background-color: rgba(255, 193, 7, 0.1); /* خلفية صفراء خفيفة للتنبيه */
+    border-right: 4px solid #ffc107; /* شريط جانبي أصفر */
+    border-left: none; /* تأكد من عدم وجود شريط آخر */
+}
+
+.instructions-box h4 {
+    color: #b08800; /* لون أغمق للنص ليتناسب مع الخلفية */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.instructions-box h4 i {
+    margin-left: 10px;
+}
+
+.instructions-content {
+    display: flex;
+    align-items: center; /* محاذاة عمودية للمحتوى */
+    gap: 20px; /* مسافة بين النص والصورة */
+    margin-top: 15px;
+}
+
+.instructions-text {
+    flex-grow: 1; /* النص يأخذ المساحة المتبقية */
+}
+
+.instructions-text p {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.instructions-text ul {
+    padding-right: 20px; /* مسافة للداخل لقائمة النقاط */
+    margin-top: 10px;
+}
+
+.instructions-text li {
+    margin-bottom: 10px;
+}
+
+.instructions-image {
+    flex-shrink: 0; /* نمنع الصورة من التقلص */
+    width: 150px; /* عرض ثابت للصورة التوضيحية */
+}
+
+.instructions-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background-color: #fff;
+    padding: 5px;
+    border: 1px solid #ddd;
+}
+
+/* تعديل مهم للهواتف والشاشات الصغيرة */
+@media (max-width: 768px) {
+    .instructions-content {
+        flex-direction: column-reverse; /* وضع الصورة فوق النص في الهواتف */
+    }
+
+    .instructions-image {
+        width: 120px; /* تصغير حجم الصورة قليلاً على الهواتف */
+        margin-bottom: 15px;
+    }
+}
+/* ### نهاية كود CSS الخاص بإرشادات التصوير (جديد) ### */
+
         @media (max-width: 768px) {
             body {
-                padding: 5px 0;
+                padding-top: 5px;
+                padding-bottom: 5px;
             }
             
             .main-container {
-                margin: 0 5px;
-                border-radius: 15px;
+                margin-left: 5px;
+                margin-right: 5px;
+                /* استخدم calc لضمان وجود هوامش وعدم الالتصاق بالحواف */
+                width: calc(100% - 10px);
                 max-width: calc(100% - 10px);
             }
             
@@ -325,96 +398,41 @@
                 font-size: 1.8rem;
             }
             
-            .form-container {
+            .form-container, .section {
                 padding: 15px;
             }
             
-            .section {
-                padding: 10px;
-                margin-bottom: 15px;
-            }
-            
-            .image-preview {
-                flex-direction: column !important;
-                gap: 15px !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            
-            .image-preview-item {
-                width: 100% !important;
-                max-width: 100% !important;
-                margin-bottom: 15px !important;
-                padding: 10px !important;
-                border-radius: 8px !important;
-            }
-            
-            .image-container {
-                height: auto !important;
-                min-height: 150px !important;
-                margin-bottom: 15px !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            
-            .image-preview-item img {
-                max-height: 250px !important;
-                object-fit: contain !important;
-            }
-            
-            .description-input {
-                width: 100% !important;
-                max-width: 100% !important;
-                font-size: 1.1rem !important;
-                padding: 15px !important;
-                margin-top: 15px !important;
-                margin-bottom: 15px !important;
-                box-sizing: border-box !important;
-                min-height: 55px !important;
-                border: 2px solid #667eea !important;
-                border-radius: 8px !important;
-                background: #ffffff !important;
-                color: #333 !important;
-                font-family: 'Cairo', sans-serif !important;
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-            }
-            
-            .image-preview-item {
-                width: 100px;
-                height: 100px;
-            }
-            
             .image-upload-area {
-                padding: 20px !important;
-                margin-bottom: 20px !important;
+                padding: 20px;
             }
             
             .image-upload-area i {
-                font-size: 2rem !important;
+                font-size: 2rem;
             }
             
             .image-upload-area p {
-                font-size: 1rem !important;
+                font-size: 1rem;
             }
             
-            .section {
-                border-radius: 10px !important;
+            /* --- هذا هو الإصلاح الرئيسي للمشكلة --- */
+            /* لقد تم حذف القاعدة الخاطئة التي كانت تحدد العرض والارتفاع بـ 100px */
+            /* وتم تبسيط القواعد لتعمل بشكل صحيح على الهواتف */
+            
+            .image-preview {
+                /* هذا الكلاس يضمن أن الحاويات الفرعية ستكون تحت بعضها البعض */
+                flex-direction: column;
+                gap: 15px;
             }
             
-            .form-group {
-                margin-bottom: 15px !important;
+            .image-preview-item {
+                /* العرض الكامل للحاوية على الشاشات الصغيرة */
+                width: 100%;
+                padding: 10px;
             }
-            
-            .form-control {
-                font-size: 1rem !important;
-                padding: 12px !important;
-            }
-            
-            .btn {
-                font-size: 1rem !important;
-                padding: 10px 20px !important;
+
+            .image-container {
+                 /* الحاوية الداخلية للصورة، الارتفاع يتحدد تلقائيا */
+                min-height: 150px;
             }
         }
     </style>
@@ -533,6 +551,30 @@
                                readonly>
                     </div>
                 </div>
+
+                                <!-- ### بداية قسم إرشادات التصوير (جديد) ### -->
+                <div class="section instructions-box">
+                    <h4><i class="fas fa-camera-retro"></i> طريقة التقاط صور جوانب السيارة</h4>
+                    <div class="instructions-content">
+                        <div class="instructions-text">
+                            <p>لضمان تغطية كاملة للمركبة، يرجى التقاط الصور الجانبية من الزاوية (بشكل مائل 45 درجة تقريبًا) كما هو موضح في الرسم:</p>
+                            <ul>
+                                <li>
+                                    <strong>الجانب الأيمن:</strong> قف عند الزاوية الأمامية اليمنى والتقط صورة تُظهر كامل الجانب الأيمن مع الإطارين الأمامي والخلفي.
+                                </li>
+                                <li>
+                                    <strong>الجانب الأيسر:</strong> قف عند الزاوية الأمامية اليسرى والتقط صورة تُظهر كامل الجانب الأيسر مع الإطارين الأمامي والخلفي.
+                                </li>
+                            </ul>
+                        </div>
+<div class="instructions-image">
+    <img src="{{ url_for('static', filename='images/vehicles/diagrams.png') }}" alt="طريقة تصوير السيارة من الزوايا">
+</div>
+
+                    </div>
+                </div>
+                <!-- ### نهاية قسم إرشادات التصوير (جديد) ### -->
+
                 
                 <!-- رفع الصور -->
                 <div class="section">
@@ -545,12 +587,13 @@
                     </div>
                     
                     <input type="file" 
-                           id="safety_images" 
-                           name="safety_images" 
-                           multiple 
-                           accept="image/*" 
-                           style="display: none;" 
-                           onchange="handleImageUpload(this)">
+       id="safety_images" 
+       name="safety_images" 
+       multiple 
+       accept="image/*"
+       capture="environment" 
+       style="display: none;" 
+       onchange="handleImageUpload(this)">
                     
                     <div id="imagePreview" class="image-preview"></div>
                 </div>
@@ -570,9 +613,6 @@
                 </div>
                 
                 <!-- الحقول المخفية -->
-                <input type="hidden" name="vehicle_id" value="{{ vehicle.id }}">
-                <input type="hidden" name="vehicle_plate_number" value="{{ vehicle.plate_number }}">
-                <input type="hidden" name="vehicle_make_model" value="{{ vehicle.make }} {{ vehicle.model }}">
                 <input type="hidden" name="current_delegate" value="{{ vehicle.driver_name or '' }}">
                 
                 <div class="loading-spinner" id="loadingSpinner">

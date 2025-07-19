@@ -4,14 +4,53 @@ import os
 import uuid
 from datetime import datetime
 from PIL import Image
-from models import VehicleExternalSafetyCheck, VehicleSafetyImage, Vehicle, Employee, User, UserRole
+from models import VehicleExternalSafetyCheck, VehicleSafetyImage, Vehicle, Employee, User, UserRole, VehicleHandover
 from app import db
 from utils.audit_logger import log_audit
 from flask_login import current_user
+from sqlalchemy import func, select
 
 external_safety_bp = Blueprint('external_safety', __name__)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+
+def get_all_current_drivers():
+    """
+    تسترجع قاموساً يحتوي على السائق الحالي لكل مركبة. (بصيغة حديثة)
+    المفتاح هو ID المركبة، والقيمة هي اسم السائق.
+    """
+    
+    # 1. نحدد أنواع التسليم
+    delivery_handover_types = ['delivery', 'تسليم', 'handover']
+    
+    # 2. إنشاء استعلام فرعي (Subquery) باستخدام Window Function
+    subq = select(
+        VehicleHandover.id,
+        func.row_number().over(
+            partition_by=VehicleHandover.vehicle_id,
+            order_by=VehicleHandover.handover_date.desc()
+        ).label('row_num')
+    ).where(
+        VehicleHandover.handover_type.in_(delivery_handover_types)
+    ).subquery()
+
+    # 3. الآن، نحصل على أحدث السجلات عن طريق اختيار التي لها row_num = 1
+    stmt = select(VehicleHandover).join(
+        subq, VehicleHandover.id == subq.c.id
+    ).where(subq.c.row_num == 1)
+
+    # 4. تنفيذ الاستعلام وجلب النتائج
+    # .scalars() تجلب الكائنات (objects) مباشرة بدلاً من الصفوف (rows)
+    latest_handovers = db.session.execute(stmt).scalars().all()
+    
+    # 5. تحويل النتائج إلى قاموس (dictionary) سهل الاستخدام
+    current_drivers_map = {
+        record.vehicle_id: record.person_name for record in latest_handovers
+    }
+    
+    return current_drivers_map
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -133,6 +172,10 @@ def handle_safety_check_submission(vehicle):
         current_app.logger.error(f'خطأ في معالجة طلب فحص السلامة: {str(e)}')
         return jsonify({'error': 'حدث خطأ أثناء معالجة الطلب'}), 500
 
+
+
+
+
 @external_safety_bp.route('/share-links')
 def share_links():
     """صفحة مشاركة روابط النماذج الخارجية لجميع السيارات مع الفلاتر"""
@@ -141,6 +184,7 @@ def share_links():
     make_filter = request.args.get('make', '')
     search_plate = request.args.get('search_plate', '')
     project_filter = request.args.get('project', '')
+
     
     # قاعدة الاستعلام الأساسية
     query = Vehicle.query
@@ -171,6 +215,7 @@ def share_links():
     
     # الحصول على قائمة السيارات
     vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
+    all_current_drivers = get_all_current_drivers()
     
     # قائمة حالات السيارات
     statuses = ['available', 'rented', 'in_project', 'in_workshop', 'accident']
@@ -183,7 +228,9 @@ def share_links():
                            project_filter=project_filter,
                            makes=makes,
                            projects=projects,
-                           statuses=statuses)
+                           statuses=statuses,
+                           all_current_drivers=all_current_drivers
+                           )
 
 
 

@@ -18,7 +18,7 @@ from app import db
 from models import (
         Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
-        VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
+        VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee, VehicleExternalSafetyCheck,
         Department, ExternalAuthorization, Module, Permission, UserRole
 )
 from utils.audit_logger import log_activity
@@ -775,6 +775,10 @@ def view(id):
         departments = Department.query.all()
         employees = Employee.query.all()
 
+        vehicle_safety_checks = VehicleExternalSafetyCheck.query.filter_by(vehicle_id=id, approval_status='approved').order_by(VehicleExternalSafetyCheck.created_at.desc()).all()
+
+
+
         
 
 
@@ -913,7 +917,8 @@ def view(id):
                 inspection_warnings=inspection_warnings,
                 current_driver=current_driver,
                 previous_drivers=previous_drivers,
-                today=today
+                today=today,
+                vehicle_safety_checks=vehicle_safety_checks
         )
 
 @vehicles_bp.route('/<int:id>/sidebar')
@@ -3860,13 +3865,17 @@ def vehicle_safety_checks(id):
         # تنسيق التواريخ
         for check in checks:
                 check.formatted_check_date = format_date_arabic(check.check_date)
+
+        vehicle_safety_checks = VehicleExternalSafetyCheck.query.filter_by(vehicle_id=id, approval_status='approved').order_by(VehicleExternalSafetyCheck.created_at.desc()).all()
+
         
         return render_template(
                 'vehicles/safety_checks.html',
                 vehicle=vehicle,
                 checks=checks,
                 check_types=SAFETY_CHECK_TYPE_CHOICES,
-                check_statuses=SAFETY_CHECK_STATUS_CHOICES
+                check_statuses=SAFETY_CHECK_STATUS_CHOICES,
+                vehicle_safety_checks=vehicle_safety_checks
         )
 
 @vehicles_bp.route('/<int:id>/safety-checks/create', methods=['GET', 'POST'])
