@@ -2,26 +2,288 @@
 
 {% block title %}السيارات المخصصة حالياً{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --dark-gradient: linear-gradient(135deg, #343a40 0%, #212529 100%);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Enhanced Card Header */
+    .card-header-enhanced {
+        background: var(--dark-gradient);
+        color: white;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-header-enhanced::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #38ef7d, #667eea);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease infinite;
+    }
+
+    .card-title-enhanced {
+        font-weight: 700;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Enhanced Card */
+    .card-enhanced {
+        border: none;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+    }
+
+    /* Enhanced Table */
+    .table-enhanced {
+        margin-bottom: 0;
+    }
+
+    .table-enhanced thead th {
+        background: var(--dark-gradient);
+        color: white;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+        padding: 1rem;
+        white-space: nowrap;
+    }
+
+    .table-enhanced tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .table-enhanced tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05) !important;
+        transform: translateX(5px);
+    }
+
+    .table-enhanced td {
+        vertical-align: middle;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Enhanced Badges */
+    .badge-enhanced {
+        padding: 0.5rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 600;
+        box-shadow: var(--card-shadow);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .badge-success-enhanced {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    .badge-warning-enhanced {
+        background: var(--warning-gradient);
+        color: white;
+    }
+
+    .badge-info-enhanced {
+        background: var(--info-gradient);
+        color: white;
+    }
+
+    /* Enhanced Buttons */
+    .btn-enhanced {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: var(--card-shadow);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    .btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-enhanced:hover::before {
+        left: 100%;
+    }
+
+    .btn-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .btn-outline-info-enhanced {
+        border: 1px solid #3b82f6;
+        color: #3b82f6;
+        background: transparent;
+    }
+
+    .btn-outline-info-enhanced:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-outline-primary-enhanced {
+        border: 1px solid #667eea;
+        color: #667eea;
+        background: transparent;
+    }
+
+    .btn-outline-primary-enhanced:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary-enhanced {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    /* Enhanced Empty State */
+    .empty-state-enhanced {
+        padding: 3rem;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 12px;
+        margin: 1rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .empty-state-enhanced i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Enhanced Form Button */
+    .form-btn-enhanced {
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 1px solid;
+    }
+
+    .form-btn-primary {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .form-btn-primary:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .form-btn-success {
+        border-color: #10b981;
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+    }
+
+    .form-btn-success:hover {
+        background: #10b981;
+        color: white;
+    }
+
+    /* Animations */
+    @keyframes gradientFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .table-enhanced thead th,
+        .table-enhanced td {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .btn-group-enhanced {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .btn-group-enhanced .btn {
+            width: 100%;
+            margin: 0;
+        }
+        
+        .empty-state-enhanced {
+            padding: 2rem 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title mb-0">
+            <div class="card card-enhanced">
+                <div class="card-header card-header-enhanced d-flex justify-content-between align-items-center">
+                    <h4 class="card-title card-title-enhanced">
                         <i class="fas fa-car ms-2"></i>
                         السيارات المخصصة حالياً
                     </h4>
                     <div>
-                        <span class="badge bg-info">{{ vehicles_data|length }} سيارة</span>
+                        <span class="badge badge-enhanced badge-info-enhanced">
+                            <i class="fas fa-car me-1"></i>
+                            {{ vehicles_data|length }} سيارة
+                        </span>
                     </div>
                 </div>
                 
                 <div class="card-body">
                     {% if vehicles_data %}
                         <div class="table-responsive">
-                            <table class="table table-hover table-striped">
-                                <thead class="table-dark">
+                            <table class="table table-enhanced table-hover">
+                                <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>رقم اللوحة</th>
@@ -44,15 +306,23 @@
                                         <td>{{ data.vehicle.make }} {{ data.vehicle.model }}</td>
                                         <td>
                                             {% if data.current_status == 'مُسلم' %}
-                                                <span class="badge bg-warning">مُسلم</span>
+                                                <span class="badge badge-enhanced badge-warning-enhanced">
+                                                    <i class="fas fa-hand-holding me-1"></i>
+                                                    مُسلم
+                                                </span>
                                             {% else %}
-                                                <span class="badge bg-success">متاح</span>
+                                                <span class="badge badge-enhanced badge-success-enhanced">
+                                                    <i class="fas fa-check-circle me-1"></i>
+                                                    متاح
+                                                </span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             {% if data.current_employee %}
-                                                <i class="fas fa-user ms-1"></i>
-                                                {{ data.current_employee }}
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-user ms-1 text-primary"></i>
+                                                    <span class="fw-bold">{{ data.current_employee }}</span>
+                                                </div>
                                             {% else %}
                                                 <span class="text-muted">غير مخصص</span>
                                             {% endif %}
@@ -60,7 +330,7 @@
                                         <td>
                                             {% if data.latest_delivery %}
                                                 <div class="text-sm">
-                                                    <div><strong>{{ data.latest_delivery.handover_date.strftime('%Y-%m-%d') }}</strong></div>
+                                                    <div class="fw-bold">{{ data.latest_delivery.handover_date.strftime('%Y-%m-%d') }}</div>
                                                     <div class="text-muted">{{ data.latest_delivery.employee_name }}</div>
                                                 </div>
                                             {% else %}
@@ -70,7 +340,7 @@
                                         <td>
                                             {% if data.latest_return %}
                                                 <div class="text-sm">
-                                                    <div><strong>{{ data.latest_return.handover_date.strftime('%Y-%m-%d') }}</strong></div>
+                                                    <div class="fw-bold">{{ data.latest_return.handover_date.strftime('%Y-%m-%d') }}</div>
                                                     <div class="text-muted">{{ data.latest_return.employee_name }}</div>
                                                 </div>
                                             {% else %}
@@ -79,26 +349,24 @@
                                         </td>
                                         <td class="text-center">
                                             {% if data.latest_delivery %}
-                                                <div class="d-flex flex-column gap-1">
+                                                <div class="d-flex flex-column gap-1 align-items-center">
                                                     <a href="{{ url_for('employee_portal.view_handover', handover_id=data.latest_delivery.id) }}" 
-                                                       class="btn btn-light border btn-sm text-primary fw-bold" 
+                                                       class="form-btn-enhanced form-btn-primary" 
                                                        target="_blank"
-                                                       style="border-radius: 20px; padding: 8px 16px;"
                                                        title="فتح النموذج الإلكتروني للتسليم">
-                                                        <i class="fas fa-external-link-alt ms-1"></i>
-                                                        فتح النموذج الإلكتروني
+                                                        <i class="fas fa-external-link-alt me-1"></i>
+                                                        فتح النموذج
                                                     </a>
                                                     <small class="text-muted">تسليم</small>
                                                 </div>
                                             {% elif data.latest_return %}
-                                                <div class="d-flex flex-column gap-1">
+                                                <div class="d-flex flex-column gap-1 align-items-center">
                                                     <a href="{{ url_for('employee_portal.view_handover', handover_id=data.latest_return.id) }}" 
-                                                       class="btn btn-light border btn-sm text-success fw-bold" 
+                                                       class="form-btn-enhanced form-btn-success" 
                                                        target="_blank"
-                                                       style="border-radius: 20px; padding: 8px 16px;"
                                                        title="فتح النموذج الإلكتروني للاستلام">
-                                                        <i class="fas fa-external-link-alt ms-1"></i>
-                                                        فتح النموذج الإلكتروني
+                                                        <i class="fas fa-external-link-alt me-1"></i>
+                                                        فتح النموذج
                                                     </a>
                                                     <small class="text-muted">استلام</small>
                                                 </div>
@@ -107,14 +375,14 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div class="btn-group" role="group">
+                                            <div class="btn-group btn-group-enhanced" role="group">
                                                 <a href="{{ url_for('vehicles.view', id=data.vehicle.id) }}" 
-                                                   class="btn btn-outline-info btn-sm" 
+                                                   class="btn btn-enhanced btn-outline-info-enhanced" 
                                                    title="عرض تفاصيل السيارة">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="{{ url_for('vehicles.create_handover', id=data.vehicle.id) }}" 
-                                                   class="btn btn-outline-primary btn-sm" 
+                                                   class="btn btn-enhanced btn-outline-primary-enhanced" 
                                                    title="إضافة تسليم/استلام">
                                                     <i class="fas fa-plus"></i>
                                                 </a>
@@ -126,12 +394,13 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                        <div class="empty-state-enhanced">
+                            <i class="fas fa-car"></i>
                             <h5 class="text-muted">لا توجد سيارات مسجلة</h5>
-                            <p class="text-muted">قم بإضافة سيارات جديدة لعرضها هنا</p>
-                            <a href="{{ url_for('vehicles.add') }}" class="btn btn-primary">
-                                <i class="fas fa-plus ms-2"></i>إضافة سيارة جديدة
+                            <p class="text-muted mb-3">قم بإضافة سيارات جديدة لعرضها هنا</p>
+                            <a href="{{ url_for('vehicles.add') }}" class="btn btn-enhanced btn-primary-enhanced">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة سيارة جديدة
                             </a>
                         </div>
                     {% endif %}
@@ -140,82 +409,26 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- إضافة CSS مخصص -->
-<style>
-.table th {
-    background-color: var(--bs-dark);
-    color: var(--bs-light);
-    border-color: var(--bs-border-color);
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.table td {
-    vertical-align: middle;
-    font-size: 0.9rem;
-}
-
-.text-sm {
-    font-size: 0.8rem;
-}
-
-.badge {
-    font-size: 0.75rem;
-}
-
-.btn-group .btn {
-    margin: 0 1px;
-}
-
-.card {
-    border: 1px solid var(--bs-border-color);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.card-header {
-    background-color: var(--bs-dark);
-    border-bottom: 1px solid var(--bs-border-color);
-}
-
-.card-title {
-    color: var(--bs-light);
-}
-
-@media (max-width: 768px) {
-    .table-responsive {
-        font-size: 0.8rem;
-    }
-    
-    .btn-group {
-        flex-direction: column;
-    }
-    
-    .btn-group .btn {
-        margin: 1px 0;
-    }
-}
-</style>
-
-<!-- JavaScript لتحسين التفاعل -->
+{% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // إضافة تأثيرات hover للصفوف
-    const tableRows = document.querySelectorAll('tbody tr');
-    tableRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = 'var(--bs-light)';
+    // Initialize tooltips
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
+    }
+    
+    // Add animation to table rows
+    const tableRows = document.querySelectorAll('.table-enhanced tbody tr');
+    tableRows.forEach((row, index) => {
+        row.style.animation = `fadeIn 0.5s ease ${index * 0.05}s both`;
     });
     
-    // إضافة تلميحات للأزرار
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    console.log('تم تحميل صفحة السيارات المخصصة بنجاح');
 });
 </script>
 {% endblock %}

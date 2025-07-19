@@ -473,41 +473,37 @@
         <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" fill-opacity="0.18" d="M0,64L48,74.7C96,85,192,107,288,117.3C384,128,480,128,576,112C672,96,768,64,864,53.3C960,43,1056,53,1152,69.3C1248,85,1344,107,1392,117.3L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>
     </div>
     <!-- شريط التقويم العلوي -->
-    <div class="topbar">
+     <!-- 
+     <div class="topbar">
         <div class="calendar-switch">
             <i class="fas fa-calendar-alt"></i> التقويم الهجري
         </div>
     </div>
+     -->
+   
     
     <!-- محتوى الصفحة الرئيسي -->
     <div class="main-container">
         <div class="login-page">
             <!-- قسم نموذج تسجيل الدخول (الجانب الأيسر) -->
             <div class="login-form">
-                <div class="logo-container">
+                
+                <div class="container">
+
+                    <div class="logo-container">
                     <div class="logo-img">
                         <span class="logo-text">نُظم</span>
                     </div>
                     <h2 class="system-name">نظام إدارة متكامل</h2>
                 </div>
-                
-                <h1>تسجيل الدخول</h1>
-                
-                <div class="login-tabs">
-                    <div class="login-tab active" id="email-tab" onclick="switchTab('email')">البريد الإلكتروني</div>
-                    <div class="login-tab" id="google-tab" onclick="switchTab('google')">Google</div>
-                </div>
-                
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                
-                <!-- تسجيل الدخول بالبريد الإلكتروني -->
-                <div id="email-login" class="tab-content active">
+                    <h1>تسجيل الدخول</h1>
+
+                    <div class="login-tabs">
+                      <div class="login-tab active" id="email-tab" onclick="switchTab('email')">البريد الإلكتروني</div>
+                      <div class="login-tab" id="google-tab" onclick="switchTab('google')">Google</div>
+                    </div>
+
+                      <div id="email-login" class="tab-content active">
                     <form id="login-form" method="POST" action="{{ url_for('auth.login') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="form-group">
@@ -530,23 +526,8 @@
                         <button type="submit" class="btn-login">
                             <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                         </button>
-                    </form>
-                </div>
-                
-                <!-- تسجيل الدخول باستخدام Google -->
-                <div id="google-login" class="tab-content" style="display: none;">
-                    <div class="text-center py-3">
-                        <div class="mb-4">
-                            <i class="fab fa-google text-danger fa-3x mb-3"></i>
-                            <p>يمكنك تسجيل الدخول باستخدام حساب Google الخاص بك للوصول السريع والآمن</p>
-                        </div>
-                        <button id="googleSignIn" class="btn-login" onclick="handleGoogleLogin()">
-                            <i class="fab fa-google"></i> تسجيل الدخول باستخدام Google
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="employee-portal-link">
+
+                              <div class="employee-portal-link">
                     <a href="{{ url_for('employee_portal.employee_login') }}">
                         <i class="fas fa-user-tie"></i>
                         بوابة الموظفين
@@ -564,6 +545,36 @@
                 <div class="login-footer">
                     نُظم &copy; 2024 | نظام إدارة متكامل
                 </div>
+                    </form>
+                </div>
+                </div>   
+                             
+               
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- تسجيل الدخول بالبريد الإلكتروني -->
+              
+                
+                <!-- تسجيل الدخول باستخدام Google -->
+                <div id="google-login" class="tab-content" style="display: none;">
+                    <div class="text-center py-3">
+                        <div class="mb-4">
+                            <i class="fab fa-google text-danger fa-3x mb-3"></i>
+                            <p>يمكنك تسجيل الدخول باستخدام حساب Google الخاص بك للوصول السريع والآمن</p>
+                        </div>
+                        <button id="googleSignIn" class="btn-login" onclick="handleGoogleLogin()">
+                            <i class="fab fa-google"></i> تسجيل الدخول باستخدام Google
+                        </button>
+                    </div>
+                </div>
+                
             </div>
             
             <!-- قسم المعلومات (الجانب الأيمن) -->

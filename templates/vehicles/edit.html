@@ -2,21 +2,235 @@
 
 {% block title %}تعديل السيارة: {{ vehicle.plate_number }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --dark-gradient: linear-gradient(135deg, #343a40 0%, #212529 100%);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Enhanced Card Header */
+    .card-header-enhanced {
+        background: var(--dark-gradient);
+        color: white;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-header-enhanced::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #38ef7d, #667eea);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease infinite;
+    }
+
+    .card-title-enhanced {
+        font-weight: 700;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Enhanced Card */
+    .card-enhanced {
+        border: none;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+    }
+
+    /* Danger Zone Card */
+    .danger-zone-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        background: rgba(220, 53, 69, 0.05);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
+    .danger-zone-header {
+        background: var(--danger-gradient);
+        color: white;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1rem 1.5rem;
+    }
+
+    /* Enhanced Form Elements */
+    .form-control-enhanced {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-control-enhanced:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-select-enhanced {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-position: right 1rem center;
+        background-size: 16px 12px;
+    }
+
+    .form-select-enhanced:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-label-enhanced {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-label-enhanced.required::after {
+        content: '*';
+        color: #dc3545;
+        margin-right: 0.5rem;
+    }
+
+    .form-text-enhanced {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    /* Enhanced Buttons */
+    .btn-enhanced {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--card-shadow);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-enhanced:hover::before {
+        left: 100%;
+    }
+
+    .btn-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .btn-primary-enhanced {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .btn-secondary-enhanced {
+        background: var(--dark-gradient);
+        color: white;
+    }
+
+    .btn-outline-primary-enhanced {
+        border: 1px solid #667eea;
+        color: #667eea;
+        background: transparent;
+    }
+
+    .btn-outline-primary-enhanced:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-outline-danger-enhanced {
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        background: transparent;
+    }
+
+    .btn-outline-danger-enhanced:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    /* Animations */
+    @keyframes gradientFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .card-header-enhanced {
+            padding: 1rem;
+        }
+        
+        .btn-enhanced {
+            padding: 0.5rem 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">
+    <div class="card card-enhanced mb-4">
+        <div class="card-header card-header-enhanced d-flex justify-content-between align-items-center">
+            <h3 class="card-title-enhanced mb-0">
                 <i class="fas fa-edit ms-2"></i>
                 تعديل السيارة: {{ vehicle.plate_number }}
             </h3>
-            <div>
-                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary">
-                    <i class="fas fa-eye ms-1"></i>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-enhanced btn-outline-primary-enhanced">
+                    <i class="fas fa-eye me-1"></i>
                     عرض التفاصيل
                 </a>
-                <a href="{{ url_for('vehicles.index') }}" class="btn btn-outline-secondary me-2">
-                    <i class="fas fa-arrow-right ms-1"></i>
+                <a href="{{ url_for('vehicles.index') }}" class="btn btn-enhanced btn-secondary-enhanced">
+                    <i class="fas fa-arrow-right me-1"></i>
                     العودة للقائمة
                 </a>
             </div>
@@ -25,46 +239,46 @@
             <form method="post" action="{{ url_for('vehicles.edit', id=vehicle.id) }}">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="plate_number" class="form-label required">رقم اللوحة</label>
-                        <input type="text" class="form-control" id="plate_number" name="plate_number" value="{{ vehicle.plate_number }}" required>
-                        <div class="form-text">أدخل رقم لوحة السيارة بالكامل</div>
+                        <label for="plate_number" class="form-label-enhanced required">رقم اللوحة</label>
+                        <input type="text" class="form-control form-control-enhanced" id="plate_number" name="plate_number" value="{{ vehicle.plate_number }}" required>
+                        <div class="form-text-enhanced">أدخل رقم لوحة السيارة بالكامل</div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="make" class="form-label required">الشركة المصنعة</label>
-                        <input type="text" class="form-control" id="make" name="make" value="{{ vehicle.make }}" required>
-                        <div class="form-text">مثال: تويوتا، هيونداي، نيسان</div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="model" class="form-label required">الموديل</label>
-                        <input type="text" class="form-control" id="model" name="model" value="{{ vehicle.model }}" required>
-                        <div class="form-text">مثال: كامري، كورولا، إلنترا</div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="year" class="form-label required">سنة الصنع</label>
-                        <input type="number" class="form-control" id="year" name="year" min="1990" max="{{ 2030 }}" value="{{ vehicle.year }}" required>
+                        <label for="make" class="form-label-enhanced required">الشركة المصنعة</label>
+                        <input type="text" class="form-control form-control-enhanced" id="make" name="make" value="{{ vehicle.make }}" required>
+                        <div class="form-text-enhanced">مثال: تويوتا، هيونداي، نيسان</div>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="color" class="form-label required">اللون</label>
-                        <input type="text" class="form-control" id="color" name="color" value="{{ vehicle.color }}" required>
-                        <div class="form-text">مثال: أبيض، أسود، فضي</div>
+                        <label for="model" class="form-label-enhanced required">الموديل</label>
+                        <input type="text" class="form-control form-control-enhanced" id="model" name="model" value="{{ vehicle.model }}" required>
+                        <div class="form-text-enhanced">مثال: كامري، كورولا، إلنترا</div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="driver_name" class="form-label">اسم السائق</label>
-                        <input type="text" class="form-control" id="driver_name" name="driver_name" value="{{ vehicle.driver_name or '' }}">
-                        <div class="form-text">اختياري - اسم السائق المعين لهذه السيارة</div>
+                        <label for="year" class="form-label-enhanced required">سنة الصنع</label>
+                        <input type="number" class="form-control form-control-enhanced" id="year" name="year" min="1990" max="{{ 2030 }}" value="{{ vehicle.year }}" required>
                     </div>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="status" class="form-label required">الحالة</label>
-                        <select class="form-select" id="status" name="status" required>
+                        <label for="color" class="form-label-enhanced required">اللون</label>
+                        <input type="text" class="form-control form-control-enhanced" id="color" name="color" value="{{ vehicle.color }}" required>
+                        <div class="form-text-enhanced">مثال: أبيض، أسود، فضي</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="driver_name" class="form-label-enhanced">اسم السائق</label>
+                        <input type="text" class="form-control form-control-enhanced" id="driver_name" name="driver_name" value="{{ vehicle.driver_name or '' }}">
+                        <div class="form-text-enhanced">اختياري - اسم السائق المعين لهذه السيارة</div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label-enhanced required">الحالة</label>
+                        <select class="form-select form-select-enhanced" id="status" name="status" required>
                             {% for status in statuses %}
                             <option value="{{ status }}" {% if status == vehicle.status %}selected{% endif %}>
                                 {% if status == 'available' %}متاحة
@@ -78,8 +292,8 @@
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="project" class="form-label">المشروع</label>
-                        <select class="form-select" id="project" name="project">
+                        <label for="project" class="form-label-enhanced">المشروع</label>
+                        <select class="form-select form-select-enhanced" id="project" name="project">
                             <option value="">اختر المشروع</option>
                             {% for department in departments %}
                             <option value="{{ department.name }}" {% if department.name == vehicle.project %}selected{% endif %}>
@@ -87,22 +301,22 @@
                             </option>
                             {% endfor %}
                         </select>
-                        <div class="form-text">اختياري - المشروع المرتبط بهذه السيارة</div>
+                        <div class="form-text-enhanced">اختياري - المشروع المرتبط بهذه السيارة</div>
                     </div>
                 </div>
                 
                 <div class="mb-3">
-                    <label for="notes" class="form-label">ملاحظات</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ vehicle.notes }}</textarea>
+                    <label for="notes" class="form-label-enhanced">ملاحظات</label>
+                    <textarea class="form-control form-control-enhanced" id="notes" name="notes" rows="3">{{ vehicle.notes }}</textarea>
                 </div>
                 
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary px-5">
-                        <i class="fas fa-save ms-1"></i>
+                    <button type="submit" class="btn btn-enhanced btn-primary-enhanced px-5">
+                        <i class="fas fa-save me-1"></i>
                         حفظ التغييرات
                     </button>
-                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-secondary ms-2">
-                        <i class="fas fa-times ms-1"></i>
+                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-enhanced btn-secondary-enhanced ms-2">
+                        <i class="fas fa-times me-1"></i>
                         إلغاء
                     </a>
                 </div>
@@ -110,76 +324,57 @@
         </div>
     </div>
     
-    <!-- قسم خاص بإجراءات الحذف -->
-    <div class="card shadow-sm mt-4">
-        <div class="card-header bg-white">
-            <h4 class="mb-0 text-danger">
-                <i class="fas fa-exclamation-triangle ms-2"></i>
+    <!-- Danger Zone Card -->
+    <div class="card danger-zone-card">
+        <div class="danger-zone-header">
+            <h4 class="mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
                 منطقة الخطر
             </h4>
         </div>
         <div class="card-body">
-            <p class="text-danger">حذف هذه السيارة سيؤدي إلى حذف جميع البيانات المرتبطة بها بما في ذلك سجلات الإيجار والورشة والمشاريع وسجلات التسليم والاستلام. هذا الإجراء نهائي ولا يمكن التراجع عنه.</p>
-            <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-outline-danger">
-                <i class="fas fa-trash ms-1"></i>
-                حذف السيارة
-            </a>
+            <div class="alert alert-danger border-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <div>
+                        <h5 class="alert-heading">تحذير!</h5>
+                        <p class="mb-0">حذف هذه السيارة سيؤدي إلى حذف جميع البيانات المرتبطة بها بما في ذلك سجلات الإيجار والورشة والمشاريع وسجلات التسليم والاستلام. هذا الإجراء نهائي ولا يمكن التراجع عنه.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn btn-enhanced btn-outline-danger-enhanced">
+                    <i class="fas fa-trash me-1"></i>
+                    حذف السيارة
+                </a>
+            </div>
         </div>
     </div>
-    
-
 </div>
 {% endblock %}
 
 {% block scripts %}
-<style>
-/* إصلاح تنسيق القائمة المنسدلة للمشروع */
-#project {
-    background-color: #ffffff !important;
-    color: #495057 !important;
-    border: 1px solid #dee2e6 !important;
-    border-radius: 0.375rem !important;
-    padding: 0.375rem 0.75rem !important;
-    font-size: 1rem !important;
-    line-height: 1.5 !important;
-}
-
-#project option {
-    background-color: #ffffff !important;
-    color: #495057 !important;
-    padding: 8px 12px !important;
-}
-
-#project option:hover {
-    background-color: #f8f9fa !important;
-    color: #495057 !important;
-}
-
-#project option:selected {
-    background-color: #0d6efd !important;
-    color: #ffffff !important;
-}
-
-/* إصلاح عام للقوائم المنسدلة */
-.form-select {
-    background-color: #ffffff !important;
-    color: #495057 !important;
-    border: 1px solid #dee2e6 !important;
-}
-
-.form-select option {
-    background-color: #ffffff !important;
-    color: #495057 !important;
-}
-</style>
-
 <script>
-$(document).ready(function() {
-    // إضافة وظيفة بحث بسيطة للقائمة المنسدلة
-    $('#project').on('focus', function() {
-        $(this).css('background-color', '#ffffff');
-        $(this).css('color', '#495057');
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    if (typeof bootstrap !== 'undefined') {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+    
+    // Add confirmation for delete button
+    const deleteBtn = document.querySelector('.btn-outline-danger-enhanced');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            if (!confirm('هل أنت متأكد أنك تريد حذف هذه السيارة؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    console.log('تم تحميل صفحة تعديل السيارة بنجاح');
 });
 </script>
 {% endblock %}
