@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from werkzeug.utils import secure_filename
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 import io
@@ -369,7 +369,7 @@ def index():
     employee_id = request.args.get('employee_id', '')
     department_id = request.args.get('department_id', '')
     sponsorship_status = request.args.get('sponsorship_status', '')
-    expiring = request.args.get('expiring', '')
+    status_filter = request.args.get('status_filter', '')
     show_all = request.args.get('show_all', 'false')
     
     # Build query
@@ -394,29 +394,54 @@ def index():
         if sponsorship_status:
             query = query.filter(Employee.sponsorship_status == sponsorship_status)
     
-    if expiring:
-        # Get documents expiring in the next 30, 60, or 90 days
-        days = 30
-        if expiring == '60':
-            days = 60
-        elif expiring == '90':
-            days = 90
-        
-        future_date = datetime.now().date() + timedelta(days=days)
-        query = query.filter(Document.expiry_date.isnot(None))  # استبعاد الوثائق بدون تاريخ انتهاء
-        query = query.filter(Document.expiry_date <= future_date, 
-                             Document.expiry_date >= datetime.now().date())
-    
-    # فلترة الوثائق التي باقي على انتهائها أكثر من 30 يوماً
+    # تطبيق فلتر حالة الصلاحية
     today = datetime.now().date()
-    if show_all.lower() != 'true':
-        # عرض الوثائق التي تنتهي في خلال 30 يوم أو أقل أو المنتهية بالفعل
+    
+    if status_filter == 'expired':
+        # الوثائق المنتهية فقط
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date < today
+        )
+    elif status_filter == 'expiring_30':
+        # الوثائق التي تنتهي خلال 30 يوم
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_60':
+        # الوثائق التي تنتهي خلال 60 يوم
+        future_date = today + timedelta(days=60)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_90':
+        # الوثائق التي تنتهي خلال 90 يوم
+        future_date = today + timedelta(days=90)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'valid':
+        # الوثائق السارية (أكثر من 30 يوم للانتهاء)
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            or_(
+                Document.expiry_date.is_(None),  # الوثائق بدون تاريخ انتهاء
+                Document.expiry_date > future_date  # الوثائق التي تنتهي بعد أكثر من 30 يوم
+            )
+        )
+    elif show_all.lower() != 'true':
+        # العرض الافتراضي: الوثائق المنتهية أو القريبة من الانتهاء (خلال 30 يوم)
         future_date_30_days = today + timedelta(days=30)
         query = query.filter(
-            # تتضمن الوثائق التي لها تاريخ انتهاء ويكون ضمن المدى المحدد
-            Document.expiry_date.isnot(None) & 
-            ((Document.expiry_date <= future_date_30_days) | 
-             (Document.expiry_date < today))
+            Document.expiry_date.isnot(None),
+            Document.expiry_date <= future_date_30_days
         )
     
     # Execute query
@@ -461,7 +486,7 @@ def index():
                           selected_employee=employee_id,
                           selected_department=department_id,
                           selected_sponsorship=sponsorship_status,
-                          selected_expiring=expiring,
+                          selected_status_filter=status_filter,
                           show_all=show_all.lower() == 'true',
                           total_docs=total_docs,
                           expired_docs=expired_docs,
@@ -1451,7 +1476,7 @@ def export_excel():
     """Export all documents to Excel"""
     # Get filter parameters
     document_type = request.args.get('document_type', '')
-    days = int(request.args.get('days', '0'))
+    status_filter = request.args.get('status_filter', '')
     show_all = request.args.get('show_all', 'false').lower() == 'true'
     employee_id = request.args.get('employee_id', '')
     department_id = request.args.get('department_id', '')
@@ -1464,13 +1489,54 @@ def export_excel():
     if document_type:
         query = query.filter(Document.document_type == document_type)
     
-    # Apply days filter for expiration
-    if days > 0 and not show_all:
-        today = datetime.now().date()
-        future_date = today + timedelta(days=days)
+    # Apply status filter
+    today = datetime.now().date()
+    
+    if status_filter == 'expired':
+        # الوثائق المنتهية فقط
         query = query.filter(
-            Document.expiry_date <= future_date,
-            Document.expiry_date >= today
+            Document.expiry_date.isnot(None),
+            Document.expiry_date < today
+        )
+    elif status_filter == 'expiring_30':
+        # الوثائق التي تنتهي خلال 30 يوم
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_60':
+        # الوثائق التي تنتهي خلال 60 يوم
+        future_date = today + timedelta(days=60)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_90':
+        # الوثائق التي تنتهي خلال 90 يوم
+        future_date = today + timedelta(days=90)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'valid':
+        # الوثائق السارية (أكثر من 30 يوم للانتهاء)
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            or_(
+                Document.expiry_date.is_(None),  # الوثائق بدون تاريخ انتهاء
+                Document.expiry_date > future_date  # الوثائق التي تنتهي بعد أكثر من 30 يوم
+            )
+        )
+    elif not show_all:
+        # العرض الافتراضي: الوثائق المنتهية أو القريبة من الانتهاء (خلال 30 يوم)
+        future_date_30_days = today + timedelta(days=30)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date <= future_date_30_days
         )
     
     # Apply employee filter
