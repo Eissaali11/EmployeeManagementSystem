@@ -2004,8 +2004,9 @@ from datetime import datetime, date
 # --- دالة الموبايل الجديدة والمحدثة بالكامل ---
 
 @mobile_bp.route('/vehicles/checklist', methods=['GET', 'POST'])
+@mobile_bp.route('/vehicles/checklist/<int:handover_id>', methods=['GET', 'POST'])
 @login_required
-def create_handover_mobile():
+def create_handover_mobile(handover_id=None):
     """
     عرض ومعالجة نموذج تسليم/استلام السيارة (نسخة الهواتف المحمولة).
     هذه النسخة مطابقة للمنطق الشامل الموجود في نسخة الويب.
@@ -2050,7 +2051,15 @@ def create_handover_mobile():
             handover_type = request.form.get('handover_type')
             handover_date_str = request.form.get('handover_date')
             handover_time_str = request.form.get('handover_time')
-
+            
+            # --- تحديد ما إذا كنا نعدل سجل موجود أم ننشئ جديد ---
+            is_editing = handover_id is not None
+            existing_handover = None
+            action = request.form.get('action', 'create')  # 'update', 'save_as_new', or 'create'
+            
+            if is_editing:
+                existing_handover = VehicleHandover.query.get_or_404(handover_id)
+            
             # --- معرفات الموظفين (السائق والمشرف) ---
             employee_id_str = request.form.get('employee_id')
             supervisor_employee_id_str = request.form.get('supervisor_employee_id')
@@ -2104,21 +2113,96 @@ def create_handover_mobile():
             # === 2. جلب الكائنات الكاملة من قاعدة البيانات ===
             driver = Employee.query.get(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
             supervisor = Employee.query.get(supervisor_employee_id_str) if supervisor_employee_id_str and supervisor_employee_id_str.isdigit() else None
+            
+            # === 3. إنشاء أو تحديث كائن VehicleHandover ===
+            if is_editing and action == 'update':
+                # تحديث السجل الموجود
+                handover = existing_handover
+                handover.vehicle_id = vehicle.id
+                handover.handover_type = handover_type
+                handover.handover_date = handover_date
+                handover.handover_time = handover_time
+                handover.mileage = mileage
+                handover.project_name = project_name
+                handover.city = city
+                
+                # تحديث بيانات المركبة
+                handover.vehicle_car_type = f"{vehicle.make} {vehicle.model}"
+                handover.vehicle_plate_number = vehicle.plate_number
+                handover.vehicle_model_year = str(vehicle.year)
 
-            # === 3. إنشاء كائن VehicleHandover وتعبئته بالبيانات المنسوخة (الأهم) ===
-            handover = VehicleHandover(
-                vehicle_id=vehicle.id,
-                handover_type=handover_type,
-                handover_date=handover_date,
-                handover_time=handover_time,
-                mileage=mileage,
-                project_name=project_name,
-                city=city,
+                # تحديث بيانات السائق
+                handover.employee_id = driver.id if driver else None
+                handover.person_name = driver.name if driver else person_name_from_form
+                handover.driver_company_id = driver.employee_id if driver else None
+                handover.driver_phone_number = driver.mobile if driver else None
+                handover.driver_residency_number = driver.national_id if driver else None
+                handover.driver_contract_status = driver.contract_status if driver else None
+                handover.driver_license_status = driver.license_status if driver else None
+                if saved_driver_sig_path:
+                    handover.driver_signature_path = saved_driver_sig_path
 
-                # نسخ بيانات المركبة "وقت التسليم"
-                vehicle_car_type=f"{vehicle.make} {vehicle.model}",
-                vehicle_plate_number=vehicle.plate_number,
-                vehicle_model_year=str(vehicle.year),
+                # تحديث بيانات المشرف
+                handover.supervisor_employee_id = supervisor.id if supervisor else None
+                handover.supervisor_name = supervisor.name if supervisor else supervisor_name_from_form
+                handover.supervisor_company_id = supervisor.employee_id if supervisor else None
+                handover.supervisor_phone_number = supervisor.mobile if supervisor else None
+                handover.supervisor_residency_number = supervisor.national_id if supervisor else None
+                handover.supervisor_contract_status = supervisor.contract_status if supervisor else None
+                handover.supervisor_license_status = supervisor.license_status if supervisor else None
+                if saved_supervisor_sig_path:
+                    handover.supervisor_signature_path = saved_supervisor_sig_path
+                
+                # تحديث باقي الحقول
+                handover.reason_for_change = reason_for_change
+                handover.vehicle_status_summary = vehicle_status_summary
+                handover.notes = notes
+                handover.reason_for_authorization = reason_for_authorization
+                handover.authorization_details = authorization_details
+                handover.fuel_level = fuel_level
+                
+                # تحديث قائمة الفحص
+                handover.has_spare_tire = has_spare_tire
+                handover.has_fire_extinguisher = has_fire_extinguisher
+                handover.has_first_aid_kit = has_first_aid_kit
+                handover.has_warning_triangle = has_warning_triangle
+                handover.has_tools = has_tools
+                handover.has_oil_leaks = has_oil_leaks
+                handover.has_gear_issue = has_gear_issue
+                handover.has_clutch_issue = has_clutch_issue
+                handover.has_engine_issue = has_engine_issue
+                handover.has_windows_issue = has_windows_issue
+                handover.has_tires_issue = has_tires_issue
+                handover.has_body_issue = has_body_issue
+                handover.has_electricity_issue = has_electricity_issue
+                handover.has_lights_issue = has_lights_issue
+                handover.has_ac_issue = has_ac_issue
+                
+                # تحديث الحقول الإضافية
+                handover.movement_officer_name = movement_officer_name
+                if movement_officer_signature_path:
+                    handover.movement_officer_signature_path = movement_officer_signature_path
+                if saved_diagram_path:
+                    handover.damage_diagram_path = saved_diagram_path
+                handover.form_link = form_link
+                handover.custom_company_name = custom_company_name
+                if saved_custom_logo_path:
+                    handover.custom_logo_path = saved_custom_logo_path
+            else:
+                # إنشاء سجل جديد (إما إنشاء جديد أو حفظ كنسخة جديدة)
+                handover = VehicleHandover(
+                    vehicle_id=vehicle.id,
+                    handover_type=handover_type,
+                    handover_date=handover_date,
+                    handover_time=handover_time,
+                    mileage=mileage,
+                    project_name=project_name,
+                    city=city,
+                    
+                    # نسخ بيانات المركبة "وقت التسليم"
+                    vehicle_car_type=f"{vehicle.make} {vehicle.model}",
+                    vehicle_plate_number=vehicle.plate_number,
+                    vehicle_model_year=str(vehicle.year),
 
                 # نسخ بيانات السائق "وقت التسليم"
                 employee_id=driver.id if driver else None,
@@ -2196,33 +2280,16 @@ def create_handover_mobile():
             db.session.commit()
 
             action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
-            log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
-
-
-
+            if is_editing and action == 'update':
+                log_audit('update', 'vehicle_handover', handover.id, f'تم تعديل نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
+                flash(f'تم تحديث نموذج {action_type} بنجاح!', 'success')
+            elif is_editing and action == 'save_as_new':
+                log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نسخة جديدة من نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
+                flash(f'تم حفظ نسخة جديدة من نموذج {action_type} بنجاح!', 'success')
+            else:
+                log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
+                flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
             
-            # إنشاء طلب عملية للموافقة الإدارية
-            try:
-                operation = create_operation_request(
-                    operation_type='handover',
-                    related_record_id=handover.id,
-                    vehicle_id=vehicle.id,
-                    title=f'طلب موافقة على {action_type} مركبة {vehicle.plate_number}',
-                    description=f'تم إنشاء {action_type} للمركبة {vehicle.plate_number} من قبل {current_user.email or current_user.id} ويحتاج للموافقة الإدارية',
-                    requested_by=current_user.id,
-                    priority='normal'
-                )
-                # commit العملية والإشعارات
-                db.session.commit()
-                print(f"تم تسجيل العملية بنجاح: {operation.id}")
-            except Exception as op_error:
-                print(f"خطأ في تسجيل العملية: {str(op_error)}")
-                import traceback
-                traceback.print_exc()
-                # لا نتوقف عند فشل تسجيل العملية، فقط نسجل الخطأ
-            
-
-            flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
 
         except Exception as e:
@@ -2247,7 +2314,20 @@ def create_handover_mobile():
     now = datetime.now()
     now_date = now.strftime('%Y-%m-%d')
     now_time = now.strftime('%H:%M')
-
+    
+    # جلب بيانات التعديل إذا كان موجوداً
+    existing_handover = None
+    is_editing = False
+    if handover_id:
+        existing_handover = VehicleHandover.query.get(handover_id)
+        if existing_handover:
+            is_editing = True
+            # استخدام بيانات السجل الموجود للتاريخ والوقت
+            now_date = existing_handover.handover_date.strftime('%Y-%m-%d') if existing_handover.handover_date else now_date
+            now_time = existing_handover.handover_time.strftime('%H:%M') if existing_handover.handover_time else now_time
+            # تحويل الكائن إلى قاموس للاستخدام في JavaScript
+            existing_handover = existing_handover.to_dict()
+    
     return render_template(
         'mobile/vehicle_checklist.html', 
         vehicles=vehicles,
@@ -2256,7 +2336,9 @@ def create_handover_mobile():
         handover_types=HANDOVER_TYPE_CHOICES, # استخدام نفس قائمة الويب
         employeeData=employees_as_dicts,
         now_date=now_date,
-        now_time=now_time
+        now_time=now_time,
+        existing_handover=existing_handover,  # تمرير بيانات التعديل
+        is_editing=is_editing  # تمرير حالة التعديل
     )
 
 
