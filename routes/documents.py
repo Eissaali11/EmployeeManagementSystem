@@ -962,6 +962,9 @@ def expiring():
     days = int(request.args.get('days', '30'))
     document_type = request.args.get('document_type', '')
     status = request.args.get('status', 'expiring')  # 'expiring' or 'expired'
+    employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
+    sponsorship_status = request.args.get('sponsorship_status', '')
     
     # Calculate expiry date range
     today = datetime.now().date()
@@ -984,6 +987,22 @@ def expiring():
     if document_type:
         query = query.filter(Document.document_type == document_type)
     
+    # Apply employee filter if provided
+    if employee_id and employee_id.isdigit():
+        query = query.filter(Document.employee_id == int(employee_id))
+    
+    # Apply filters that require Employee join
+    needs_employee_join = department_id or sponsorship_status
+    
+    if needs_employee_join:
+        query = query.join(Employee)
+        
+        if department_id and department_id.isdigit():
+            query = query.filter(Employee.department_id == int(department_id))
+        
+        if sponsorship_status:
+            query = query.filter(Employee.sponsorship_status == sponsorship_status)
+    
     # Execute query
     documents = query.all()
     
@@ -1002,11 +1021,20 @@ def expiring():
         'annual_leave', 'other'
     ]
     
+    # Get all employees and departments for filter dropdowns
+    employees = Employee.query.all()
+    departments = Department.query.all()
+    
     return render_template('documents/expiring.html',
                           documents=documents,
                           days=days,
                           document_types=document_types,
+                          employees=employees,
+                          departments=departments,
                           selected_type=document_type,
+                          selected_employee=employee_id,
+                          selected_department=department_id,
+                          selected_sponsorship=sponsorship_status,
                           status=status)
 
 @documents_bp.route('/expiry_stats')
