@@ -230,56 +230,19 @@ styles %} {{ super() }}
                 </div>
             </div>
 
-            <!-- البطاقة 4: المشرف -->
-            <div class="card shadow-sm mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0 fw-bold">4. المشرف (المسلّم/المستلم)</h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="supervisor_name" class="form-label"
-                            >اسم المشرف</label
-                        >
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="supervisor_name"
-                            name="supervisor_name"
-                            autocomplete="off"
-                            placeholder="اكتب الاسم أو ابحث"
-                        />
-                        <input
-                            type="hidden"
-                            id="supervisor_employee_id"
-                            name="supervisor_employee_id"
-                        />
-                    </div>
-                    <div class="accordion" id="supervisorSearchAccordion">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header">
-                                <button
-                                    class="accordion-button collapsed py-2"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#collapseSupervisorSearch"
-                                >
-                                    بحث عن مشرف
-                                </button>
-                            </h2>
-                            <div
-                                id="collapseSupervisorSearch"
-                                class="accordion-collapse collapse"
-                                data-bs-parent="#supervisorSearchAccordion"
-                            >
-                                <div
-                                    class="accordion-body"
-                                    id="supervisor_search_body"
-                                ></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- البطاقة 4: المشرف (مخفية - تأتي من بيانات المستخدم) -->
+            <input
+                type="hidden"
+                id="supervisor_name"
+                name="supervisor_name"
+                value="{{ current_user.name if current_user else '' }}"
+            />
+            <input
+                type="hidden"
+                id="supervisor_employee_id"
+                name="supervisor_employee_id"
+                value="{{ current_user.id if current_user else '' }}"
+            />
 
             <!-- قوالب البحث المخفية -->
             <div id="search-template" class="d-none">
@@ -802,10 +765,10 @@ styles %} {{ super() }}
                     <!-- توقيع المشرف -->
                     <div class="mb-4">
                         <h5 class="mb-0">توقيع المشرف</h5>
-                        <small
-                            class="text-muted"
-                            id="supervisor-name-display"
-                        ></small>
+                        <small class="text-muted" id="supervisor-name-display"
+                            >{{ current_user.name if current_user else 'غير
+                            محدد' }}</small
+                        >
                         <ul class="nav nav-pills nav-fill my-2">
                             <li class="nav-item">
                                 <button
@@ -1120,9 +1083,8 @@ styles %} {{ super() }}
         function initializeAllInteractiveElements() {
             if (areElementsInitialized) return; // تشغيل مرة واحدة فقط
 
-            // أ. تفعيل بحث السائق والمشرف
+            // أ. تفعيل بحث السائق فقط (المشرف يأتي من بيانات المستخدم)
             setupEmployeeSearch('driver');
-            setupEmployeeSearch('supervisor');
 
             // ب. تفعيل مخطط الضرر
             initializeDamageDiagram();
@@ -1136,17 +1098,17 @@ styles %} {{ super() }}
             areElementsInitialized = true;
         }
 
-        // === 3. إدارة البحث عن الموظفين (سائق ومشرف) ===
+        // === 3. إدارة البحث عن الموظفين (سائق فقط) ===
         const employeeData = {{ employeeData | tojson }};
         function setupEmployeeSearch(type) {
-             const searchBody = document.getElementById(`${type}_search_body`);
+            const searchBody = document.getElementById(`${type}_search_body`);
             if (!searchBody.innerHTML) { // لإنشاء الواجهة مرة واحدة فقط
                 const template = document.getElementById('search-template').innerHTML;
                 searchBody.innerHTML = template;
             }
 
-            const nameInput = document.getElementById(type === 'driver' ? 'person_name' : 'supervisor_name');
-            const idInput = document.getElementById(type === 'driver' ? 'employee_id' : 'supervisor_employee_id');
+            const nameInput = document.getElementById('person_name');
+            const idInput = document.getElementById('employee_id');
             const departmentSelect = searchBody.querySelector('.department-select');
             const searchInput = searchBody.querySelector('.search-input');
             const listContainer = searchBody.querySelector('.list-container');
@@ -1171,8 +1133,9 @@ styles %} {{ super() }}
                     a.innerHTML = `<div class="d-flex w-100 justify-content-between"><h6 class="mb-1">${emp.name}</h6><small class="text-muted">${emp.employee_id||''}</small></div><small>${departmentNames}</small>`;
                     a.onclick = (e) => {
                         e.preventDefault();
-                        nameInput.value = emp.name; idInput.value = emp.id;
-                        document.getElementById(`${type}-name-display`).textContent = emp.name; // تحديث اسم التوقيع
+                        nameInput.value = emp.name;
+                        idInput.value = emp.id;
+                        document.getElementById('driver-name-display').textContent = emp.name; // تحديث اسم التوقيع
                         new bootstrap.Collapse(accordionCollapse).hide();
                     };
                     listContainer.appendChild(a);
@@ -1444,6 +1407,15 @@ styles %} {{ super() }}
                     if (canvas.getObjects().length > 0) {
                         hiddenInput.value = canvas.toDataURL({ format: 'png' });
                     }
+                }
+            }
+
+            // ج. حفظ توقيع المشرف (من بيانات المستخدم الحالي)
+            const supervisorSignatureInput = document.getElementById('supervisor-signature-data');
+            if (supervisorSignatureInput) {
+                const supervisorCanvas = signaturePads['supervisor-signature-canvas'];
+                if (supervisorCanvas && supervisorCanvas.getObjects().length > 0) {
+                    supervisorSignatureInput.value = supervisorCanvas.toDataURL({ format: 'png' });
                 }
             }
         });
