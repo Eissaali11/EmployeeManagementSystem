@@ -16,137 +16,130 @@ from PIL import Image, ImageDraw
 class EmployeeBasicReportPDF(FPDF):
     def __init__(self):
         super().__init__()
-        # مسار الخطوط يتكيف مع البيئة
-        possible_font_paths = [
-            'fonts',  # للبيئة المحلية والخادم
-            'static/fonts',  # مسار بديل
-            '/home/runner/workspace/static/fonts',  # للـ Replit
-            os.path.join(os.getcwd(), 'fonts'),  # مسار نسبي
-            os.path.join(os.getcwd(), 'static', 'fonts')  # مسار نسبي آخر
-        ]
+        # Use beIN-Normal.ttf from static/fonts/
+        self.font_path = os.path.join('static', 'fonts')
+        self.bein_font = os.path.join(self.font_path, 'beIN-Normal.ttf')
+        if not os.path.exists(self.bein_font):
+            raise FileNotFoundError('beIN-Normal.ttf not found in static/fonts/')
+        self.add_font('Arabic', '', self.bein_font, uni=True)
+        self.add_font('Arabic', 'B', self.bein_font, uni=True)
         
-        self.font_path = None
-        for path in possible_font_paths:
-            if os.path.exists(path):
-                self.font_path = path
-                break
-        
-        # إذا لم نجد الخطوط، استخدم Cairo.ttf من المجلد الجذر
-        if not self.font_path:
-            if os.path.exists('Cairo.ttf'):
-                self.font_path = '.'
-            else:
-                self.font_path = 'fonts'  # مسار افتراضي
+    def _ensure_str(self, text):
+        return text.decode('utf-8') if isinstance(text, bytes) else text
         
     def header(self):
-        """رأس الصفحة"""
-        # إضافة الخط العربي
+        """رأس الصفحة مع شعار المشروع (الصفحة الأولى فقط)"""
         try:
-            if self.font_path:
-                # محاولة استخدام خطوط Amiri أولاً
-                amiri_regular = os.path.join(self.font_path, 'Amiri-Regular.ttf')
-                amiri_bold = os.path.join(self.font_path, 'Amiri-Bold.ttf')
-                
-                if os.path.exists(amiri_regular) and os.path.exists(amiri_bold):
-                    self.add_font('Arabic', '', amiri_regular, uni=True)
-                    self.add_font('Arabic', 'B', amiri_bold, uni=True)
-                else:
-                    # استخدام Cairo.ttf كبديل
-                    cairo_font = os.path.join(self.font_path, 'Cairo.ttf')
-                    if os.path.exists(cairo_font):
-                        self.add_font('Arabic', '', cairo_font, uni=True)
-                        self.add_font('Arabic', 'B', cairo_font, uni=True)
-                    elif os.path.exists('Cairo.ttf'):
-                        self.add_font('Arabic', '', 'Cairo.ttf', uni=True)
-                        self.add_font('Arabic', 'B', 'Cairo.ttf', uni=True)
-                    else:
-                        # محاولة العثور على خط عربي في النظام
-                        self.set_font('Arial', 'B', 20)
-                        return
+            self.set_font('Arabic', 'B', 20)
         except Exception as e:
             print(f"خطأ في تحميل الخط: {e}")
             self.set_font('Arial', 'B', 20)
             return
-        
-        self.set_font('Arabic', 'B', 20)
+        # إضافة الشعار في الأعلى (فقط الصفحة الأولى)
+        if self.page_no() == 1:
+            logo_path = os.path.join('static', 'images', 'logo_new.png')
+            if os.path.exists(logo_path):
+                self.image(logo_path, x=10, y=8, w=30, h=30)
         # العنوان الرئيسي
-        title = get_display(reshape('تقرير المعلومات الأساسية للموظف'))
-        self.cell(0, 15, title, 0, 1, 'C')
+        title = self._ensure_str(get_display(reshape('تقرير المعلومات الأساسية للموظف')))
+        self.set_xy(0, 12)
+        self.set_text_color(40, 70, 120)
+        self.cell(0, 20, title, 0, 1, 'C')
         self.ln(5)
+        self.set_text_color(0, 0, 0)
         
     def footer(self):
         """تذييل الصفحة"""
         self.set_y(-15)
         self.set_font('Arabic', '', 10)
-        page_text = get_display(reshape(f'صفحة {self.page_no()}'))
+        page_text = self._ensure_str(get_display(reshape(f'صفحة {self.page_no()}')))
         self.cell(0, 10, page_text, 0, 0, 'C')
         
         # تاريخ الطباعة
         current_date = datetime.now().strftime('%Y/%m/%d')
-        date_text = get_display(reshape(f'تاريخ الطباعة: {current_date}'))
+        date_text = self._ensure_str(get_display(reshape(f'تاريخ الطباعة: {current_date}')))
         self.cell(0, 10, date_text, 0, 0, 'L')
         
     def add_section_title(self, title):
         """إضافة عنوان قسم"""
-        self.ln(5)
-        self.set_font('Arabic', 'B', 16)
-        self.set_fill_color(70, 130, 180)  # لون أزرق فاتح
-        self.set_text_color(255, 255, 255)  # نص أبيض
-        
-        title_text = get_display(reshape(title))
-        self.cell(0, 12, title_text, 1, 1, 'C', True)
-        self.set_text_color(0, 0, 0)  # إعادة النص للأسود
-        self.ln(5)
+        self.ln(8)
+        self.set_font('Arabic', 'B', 18)
+        self.set_fill_color(70, 130, 180)
+        self.set_text_color(255, 255, 255)
+        title_text = self._ensure_str(get_display(reshape(title)))
+        # إضافة ظل خفيف خلف العنوان
+        y = self.get_y()
+        self.set_fill_color(220, 230, 245)
+        self.rect(10, y, self.w - 20, 18, 'F')
+        self.set_fill_color(70, 130, 180)
+        self.set_xy(10, y)
+        self.cell(self.w - 20, 18, title_text, 0, 1, 'C', True)
+        self.set_text_color(0, 0, 0)
+        self.ln(4)
         
     def add_info_row(self, label, value, is_bold=False):
         """إضافة صف معلومات"""
         font_style = 'B' if is_bold else ''
-        self.set_font('Arabic', font_style, 12)
+        self.set_font('Arabic', font_style, 13)
         
         # التسمية
-        label_text = get_display(reshape(f'{label}:'))
-        self.cell(60, 8, label_text, 1, 0, 'R')
+        label_text = self._ensure_str(get_display(reshape(f'{label}:')))
         
         # القيمة
-        value_text = get_display(reshape(str(value) if value else 'غير محدد'))
-        self.cell(120, 8, value_text, 1, 1, 'R')
+        value_text = self._ensure_str(get_display(reshape(str(value) if value else 'غير محدد')))
+        
+        # Modern table row with subtle background and padding
+        self.set_fill_color(245, 248, 255)
+        self.set_draw_color(180, 200, 230)
+        self.set_line_width(0.5)
+        self.cell(120, 12, value_text, 1, 0, 'R', True)
+        self.cell(60, 12, label_text, 1, 1, 'R', True)
+        self.set_line_width(0.2)
         
     def add_vehicle_record(self, record):
         """إضافة سجل مركبة"""
-        self.set_font('Arabic', '', 10)
+        self.set_font('Arabic', '', 11)
         
         # رقم اللوحة
-        plate_text = get_display(reshape(record.vehicle.plate_number if record.vehicle else 'غير محدد'))
-        self.cell(40, 8, plate_text, 1, 0, 'C')
+        plate_text = self._ensure_str(get_display(reshape(record.vehicle.plate_number if record.vehicle else 'غير محدد')))
         
         # نوع العملية
         operation_map = {'delivery': 'تسليم', 'return': 'استلام'}
-        operation_text = get_display(reshape(operation_map.get(record.handover_type, record.handover_type)))
-        self.cell(30, 8, operation_text, 1, 0, 'C')
+        operation_text = self._ensure_str(get_display(reshape(operation_map.get(record.handover_type, record.handover_type))))
         
         # التاريخ
         date_text = record.handover_date.strftime('%Y/%m/%d') if record.handover_date else 'غير محدد'
-        self.cell(40, 8, date_text, 1, 0, 'C')
         
         # الملاحظات
-        notes_text = get_display(reshape(record.notes[:50] + '...' if record.notes and len(record.notes) > 50 else record.notes or 'لا توجد'))
-        self.cell(70, 8, notes_text, 1, 1, 'R')
+        notes_text = self._ensure_str(get_display(reshape(record.notes[:50] + '...' if record.notes and len(record.notes) > 50 else record.notes or 'لا توجد')))
         
-    def add_employee_image(self, image_path, title, max_width=60, max_height=60, is_profile=False):
+        # Draw in RTL order: notes, date, operation, plate
+        self.set_fill_color(255, 255, 255)
+        self.set_draw_color(200, 220, 240)
+        self.set_line_width(0.4)
+        self.cell(70, 10, notes_text, 1, 0, 'R', True)
+        self.cell(40, 10, date_text, 1, 0, 'C', True)
+        self.cell(30, 10, operation_text, 1, 0, 'C', True)
+        self.cell(40, 10, plate_text, 1, 1, 'C', True)
+        self.set_line_width(0.2)
+        
+    def add_employee_image(self, image_path, title, max_width=70, max_height=70, is_profile=False):
         """إضافة صورة الموظف إلى التقرير مع تصميم جميل"""
         if image_path:
             try:
-                # التحقق من وجود الملف
-                full_path = os.path.join('/home/runner/workspace/static', image_path)
+                # بناء المسار الصحيح للصورة
+                full_path = os.path.join('static', image_path) if not image_path.startswith('static') else image_path
                 if os.path.exists(full_path):
                     # إضافة عنوان الصورة مع تصميم جميل
                     self.set_font('Arabic', 'B', 14)
-                    title_text = get_display(reshape(title))
+                    title_text = self._ensure_str(get_display(reshape(title)))
                     
                     # إطار للعنوان
-                    self.set_fill_color(240, 248, 255)  # لون أزرق فاتح جداً
-                    self.cell(0, 10, title_text, 1, 1, 'C', True)
-                    self.ln(5)
+                    self.set_fill_color(240, 248, 255)
+                    self.set_draw_color(180, 200, 230)
+                    self.set_line_width(0.8)
+                    self.cell(0, 12, title_text, 0, 1, 'C', True)
+                    self.ln(3)
                     
                     # حساب موضع الصورة في المنتصف
                     x = (self.w - max_width) / 2
@@ -179,7 +172,7 @@ class EmployeeBasicReportPDF(FPDF):
                             temp_path = temp_file.name
                         
                         # رسم إطار دائري أزرق
-                        self.set_line_width(3)
+                        self.set_line_width(2)
                         self.set_draw_color(70, 130, 180)  # لون أزرق
                         center_x = x + max_width/2
                         center_y = y + max_height/2
@@ -204,19 +197,19 @@ class EmployeeBasicReportPDF(FPDF):
                         
                     else:
                         # للوثائق - إطار مستطيل مزخرف
-                        self.set_line_width(2)
+                        self.set_line_width(1.2)
                         self.set_draw_color(34, 139, 34)  # لون أخضر
                         
                         # إطار خارجي مزدوج
                         self.rect(x-4, y-4, max_width+8, max_height+8)
-                        self.set_line_width(1)
+                        self.set_line_width(0.7)
                         self.set_draw_color(220, 220, 220)  # رمادي فاتح
                         self.rect(x-2, y-2, max_width+4, max_height+4)
                         
                         # إضافة زخرفة في الزوايا
                         corner_size = 8
                         self.set_draw_color(34, 139, 34)
-                        self.set_line_width(1.5)
+                        self.set_line_width(1)
                         
                         # الزاوية العلوية اليسرى
                         self.line(x-4, y-4+corner_size, x-4, y-4)
@@ -242,7 +235,7 @@ class EmployeeBasicReportPDF(FPDF):
                     shadow_offset = 3
                     self.rect(x + shadow_offset, y + max_height + shadow_offset, max_width, 2, 'F')
                     
-                    self.ln(max_height + 20)
+                    self.ln(max_height + 15)
                     
                     # إعادة تعيين إعدادات الرسم
                     self.set_line_width(0.2)
@@ -257,7 +250,7 @@ class EmployeeBasicReportPDF(FPDF):
         else:
             # عرض رسالة عدم وجود صورة مع تصميم جميل
             self.set_font('Arabic', 'B', 12)
-            title_text = get_display(reshape(title))
+            title_text = self._ensure_str(get_display(reshape(title)))
             
             # إطار للعنوان
             self.set_fill_color(255, 240, 240)  # لون وردي فاتح
@@ -267,7 +260,7 @@ class EmployeeBasicReportPDF(FPDF):
             # رسالة عدم التوفر
             self.set_font('Arabic', '', 11)
             self.set_text_color(128, 128, 128)  # رمادي
-            no_image_text = get_display(reshape('غير متوفرة'))
+            no_image_text = self._ensure_str(get_display(reshape('غير متوفرة')))
             self.cell(0, 8, no_image_text, 0, 1, 'C')
             self.set_text_color(0, 0, 0)  # إعادة النص للأسود
             self.ln(8)
@@ -277,95 +270,67 @@ class EmployeeBasicReportPDF(FPDF):
         """إضافة صور الوثائق في صف واحد مع تنسيق احترافي"""
         # إضافة عنوان للوثائق
         self.set_font('Arabic', 'B', 14)
-        docs_title = get_display(reshape('وثائق الموظف'))
+        docs_title = self._ensure_str(get_display(reshape('وثائق الموظف')))
         self.set_fill_color(230, 240, 250)
-        self.cell(0, 10, docs_title, 1, 1, 'C', True)
-        self.ln(8)
-        
-        # تحديد أبعاد الصور
-        doc_width = 55
-        doc_height = 40
-        spacing = 15
-        
-        # حساب المواضع للصور الثلاث
+        self.set_draw_color(180, 200, 230)
+        self.set_line_width(0.7)
+        self.cell(0, 10, docs_title, 0, 1, 'C', True)
+        self.ln(6)
+        # تقليل حجم الصور والإطارات
+        doc_width = 45
+        doc_height = 32
+        spacing = 12
         total_width = 3 * doc_width + 2 * spacing
         start_x = (self.w - total_width) / 2
-        
         current_y = self.get_y()
-        
-        # الوثائق المطلوب عرضها
         documents = [
             (employee.national_id_image, 'الهوية الوطنية'),
             (employee.license_image, 'رخصة القيادة'),
             (employee.profile_image, 'صورة إضافية')
         ]
-        
-        # عرض الصور والعناوين
         for i, (image_path, title) in enumerate(documents):
             x_pos = start_x + i * (doc_width + spacing)
-            
-            # رسم إطار للصورة مع تدرج لوني
             self.set_draw_color(70, 130, 180)
-            self.set_line_width(1.5)
-            
-            # إطار خارجي
+            self.set_line_width(1)
             self.rect(x_pos - 2, current_y - 2, doc_width + 4, doc_height + 4)
-            
-            # إطار داخلي
             self.set_draw_color(200, 220, 240)
             self.set_line_width(0.5)
             self.rect(x_pos - 1, current_y - 1, doc_width + 2, doc_height + 2)
-            
-            # إضافة العنوان أسفل الإطار
-            self.set_xy(x_pos, current_y + doc_height + 5)
+            self.set_xy(x_pos, current_y + doc_height + 4)
             self.set_font('Arabic', 'B', 10)
             self.set_text_color(70, 130, 180)
-            title_text = get_display(reshape(title))
+            title_text = self._ensure_str(get_display(reshape(title)))
             self.cell(doc_width, 6, title_text, 0, 0, 'C')
-            
-            # إضافة الصورة إذا كانت متوفرة
             if image_path:
                 try:
-                    full_path = os.path.join('/home/runner/workspace/static', image_path)
+                    full_path = os.path.join('static', image_path) if not image_path.startswith('static') else image_path
                     if os.path.exists(full_path):
-                        # إضافة الصورة مع هوامش داخلية
                         margin = 3
-                        self.image(full_path, x=x_pos + margin, y=current_y + margin, 
-                                 w=doc_width - 2*margin, h=doc_height - 2*margin)
+                        self.image(full_path, x=x_pos + margin, y=current_y + margin, w=doc_width - 2*margin, h=doc_height - 2*margin)
                     else:
-                        # إضافة نص "غير متوفرة" مع تصميم أنيق
                         self.set_xy(x_pos + 5, current_y + doc_height/2 - 3)
                         self.set_font('Arabic', '', 9)
                         self.set_text_color(150, 150, 150)
-                        error_text = get_display(reshape('غير متوفرة'))
+                        error_text = self._ensure_str(get_display(reshape('غير متوفرة')))
                         self.cell(doc_width - 10, 6, error_text, 0, 0, 'C')
-                        
-                        # إضافة أيقونة بديلة
                         self.set_draw_color(200, 200, 200)
                         self.set_line_width(2)
                         center_x = x_pos + doc_width/2
                         center_y = current_y + doc_height/2
-                        # رسم X بسيط
                         self.line(center_x - 8, center_y - 8, center_x + 8, center_y + 8)
                         self.line(center_x - 8, center_y + 8, center_x + 8, center_y - 8)
-                        
                 except Exception as e:
                     print(f"خطأ في عرض الصورة {image_path}: {str(e)}")
             else:
-                # إضافة نص "غير متوفرة" مع أيقونة
                 self.set_xy(x_pos + 5, current_y + doc_height/2 - 3)
                 self.set_font('Arabic', '', 9)
                 self.set_text_color(150, 150, 150)
-                no_img_text = get_display(reshape('غير متوفرة'))
+                no_img_text = self._ensure_str(get_display(reshape('غير متوفرة')))
                 self.cell(doc_width - 10, 6, no_img_text, 0, 0, 'C')
-        
-        # إعادة تعيين الألوان والخط
         self.set_text_color(0, 0, 0)
         self.set_draw_color(0, 0, 0)
         self.set_line_width(0.2)
-        
-        # الانتقال لأسفل قسم الوثائق
-        self.set_y(current_y + doc_height + 25)
+        self.set_y(current_y + doc_height + 18)
 
 
 def generate_employee_basic_pdf(employee_id):
@@ -434,10 +399,11 @@ def generate_employee_basic_pdf(employee_id):
             
             # رؤوس الجدول
             pdf.set_font('Arabic', 'B', 10)
-            pdf.cell(40, 10, get_display(reshape('رقم اللوحة')), 1, 0, 'C')
-            pdf.cell(30, 10, get_display(reshape('نوع العملية')), 1, 0, 'C')
-            pdf.cell(40, 10, get_display(reshape('التاريخ')), 1, 0, 'C')
-            pdf.cell(70, 10, get_display(reshape('الملاحظات')), 1, 1, 'C')
+            # RTL order: notes, date, operation, plate
+            pdf.cell(70, 10, pdf._ensure_str(get_display(reshape('الملاحظات'))), 1, 0, 'C')
+            pdf.cell(40, 10, pdf._ensure_str(get_display(reshape('التاريخ'))), 1, 0, 'C')
+            pdf.cell(30, 10, pdf._ensure_str(get_display(reshape('نوع العملية'))), 1, 0, 'C')
+            pdf.cell(40, 10, pdf._ensure_str(get_display(reshape('رقم اللوحة'))), 1, 1, 'C')
             
             # البيانات
             for record in vehicle_records:
@@ -445,7 +411,7 @@ def generate_employee_basic_pdf(employee_id):
         else:
             pdf.add_section_title('سجلات تسليم/استلام المركبات')
             pdf.set_font('Arabic', '', 12)
-            no_records_text = get_display(reshape('لا توجد سجلات لتسليم أو استلام المركبات'))
+            no_records_text = pdf._ensure_str(get_display(reshape('لا توجد سجلات لتسليم أو استلام المركبات')))
             pdf.cell(0, 10, no_records_text, 0, 1, 'C')
         
         # إحصائيات الوثائق المرفقة

@@ -1,432 +1,261 @@
 {% extends 'layout.html' %}
 
-{% block extra_css %}
+{% block styles %}
 <style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
-        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        --glass-bg: rgba(255, 255, 255, 0.95);
-        --glass-border: rgba(255, 255, 255, 0.2);
+    .attendance-stats-card .card-body {
+        min-height: 300px;
     }
-
-    /* Enhanced Header */
-    .employee-header {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        padding: 2rem;
-        margin-bottom: 2rem;
-        position: relative;
-        overflow: hidden;
-        animation: slideDown 0.6s ease-out;
+    .document-status-card .list-group-item {
+        border-radius: 6px;
+        margin-bottom: 5px;
     }
-
-    .employee-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--primary-gradient);
-    }
-
-    .employee-header h1 {
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        font-size: 2.5rem;
-    }
-
-    /* Enhanced Action Buttons */
-    .btn-action-group {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .btn-enhanced {
-        position: relative;
-        overflow: hidden;
-        border: none;
-        border-radius: 12px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: var(--card-shadow);
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-width: 140px;
-        justify-content: center;
-    }
-
-    .btn-enhanced::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .btn-enhanced:hover::before {
-        left: 100%;
-    }
-
-    .btn-enhanced:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--card-shadow-hover);
-        text-decoration: none;
-    }
-
-    .btn-primary-enhanced {
-        background: var(--primary-gradient);
-        color: white;
-    }
-
-    .btn-success-enhanced {
-        background: var(--success-gradient);
-        color: white;
-    }
-
-    .btn-info-enhanced {
-        background: var(--info-gradient);
-        color: white;
-    }
-
-    .btn-warning-enhanced {
-        background: var(--warning-gradient);
-        color: white;
-    }
-
-    .btn-danger-enhanced {
-        background: var(--danger-gradient);
-        color: white;
-    }
-
-    /* Enhanced Cards */
     .dashboard-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        overflow: hidden;
-        height: 100%;
+        transition: all 0.3s;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-
     .dashboard-card:hover {
         transform: translateY(-5px);
-        box-shadow: var(--card-shadow-hover);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
     }
-
-    .dashboard-card .card-header {
-        background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-bottom: none;
+    .stat-box {
+        border-radius: 8px;
+        transition: all 0.3s;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     }
-
-    .dashboard-card .card-header h5 {
-        margin: 0;
-        font-weight: 600;
-    }
-
-    /* Enhanced Stats Cards */
-    .stat-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s ease;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.4);
-    }
-
-    .stat-card .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Enhanced Images Section */
-    .image-upload-card {
-        background: var(--glass-bg);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-
-    .image-upload-card:hover {
+    .stat-box:hover {
         transform: translateY(-3px);
-        box-shadow: var(--card-shadow-hover);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
-
-    .image-preview {
-        min-height: 200px;
-        background-color: #f8f9fa;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-
-    /* Enhanced Table */
-    .enhanced-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .enhanced-table thead th {
-        background: rgba(102, 126, 234, 0.1);
-        color: #05122D;
-        font-weight: 600;
-        padding: 1rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .enhanced-table tbody td {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        vertical-align: middle;
-    }
-
-    .enhanced-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .enhanced-table tbody tr:hover {
-        background: rgba(102, 126, 234, 0.05);
-    }
-
-    /* Enhanced Badges */
-    .badge-enhanced {
-        padding: 0.5rem 0.75rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .badge-enhanced:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Department Pills */
-    .department-pills-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        background: rgba(102, 126, 234, 0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(102, 126, 234, 0.2);
-    }
-
-    .department-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5em 0.9em;
-        font-size: 0.9rem;
-        cursor: pointer;
-        border-radius: 50rem;
-        transition: all 0.2s ease-in-out;
-        background-color: #495057;
-        color: #ced4da;
-        border: 1px solid #495057;
-    }
-
-    .department-pill .fa-check-circle {
-        display: none;
-    }
-
-    .department-pill.active {
-        background: var(--primary-gradient);
-        color: white;
-        border-color: #0a58ca;
-        font-weight: 500;
-    }
-
-    .department-pill.active .fa-check-circle {
-        display: inline-block;
-    }
-
-    .department-pill:not(.active):hover {
-        background-color: #6c757d;
-    }
-
-    /* Chart Container */
     .chart-container {
         position: relative;
         height: 200px;
         width: 100%;
         margin-top: 15px;
     }
-
-    /* Animations */
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .employee-header {
-            padding: 1.5rem;
-        }
-        
-        .btn-action-group {
-            flex-direction: column;
-            width: 100%;
-        }
-        
-        .btn-enhanced {
-            width: 100%;
-        }
-        
-        .stat-card .stat-value {
-            font-size: 2rem;
-        }
-        
-        .enhanced-table thead {
-            display: none;
-        }
-        
-        .enhanced-table tbody tr {
-            display: block;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-        }
-        
-        .enhanced-table tbody td {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        
-        .enhanced-table tbody td::before {
-            content: attr(data-label);
-            font-weight: 600;
-            margin-right: 1rem;
-            color: #667eea;
-        }
+    /* تعليمات خاصة لعدم تأثر عناصر التاريخ في جدول الحضور */
+    .attendance-date span {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 </style>
+
+<style>
+    /* ... أي ستايلات أخرى ... */
+    .department-pills-container {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .department-pill {
+        display: inline-flex; align-items: center; padding: 0.5em 0.9em;
+        font-size: 0.9rem; cursor: pointer; border-radius: 50rem;
+        transition: all 0.2s ease-in-out;
+        /* ستايل السمة الداكنة الافتراضي */
+        background-color: #495057; color: #ced4da; border: 1px solid #495057;
+    }
+    .department-pill .fa-check-circle { display: none; }
+    .department-pill.active {
+        background-color: #0d6efd; color: white; border-color: #0a58ca; font-weight: 500;
+    }
+    .department-pill.active .fa-check-circle { display: inline-block; }
+    .department-pill:not(.active):hover { background-color: #6c757d; }
+</style>
+
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // بيانات الحضور للرسم البياني
+        {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
+        {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
+        {% set leave_count = attendances|selectattr('status', 'eq', 'leave')|list|length %}
+        {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
+        
+        // رسم بياني دائري للحضور
+        const attendanceCtx = document.getElementById('attendanceChart');
+        if (attendanceCtx) {
+            const attendanceChart = new Chart(attendanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['حاضر', 'غائب', 'إجازة', 'مرضي'],
+                    datasets: [{
+                        data: [{{ present_count }}, {{ absent_count }}, {{ leave_count }}, {{ sick_count }}],
+                        backgroundColor: [
+                            '#28a745', // أخضر (حاضر)
+                            '#dc3545', // أحمر (غائب)
+                            '#ffc107', // أصفر (إجازة)
+                            '#17a2b8'  // أزرق (مرضي)
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            rtl: true,
+                            labels: {
+                                font: {
+                                    family: 'Cairo, sans-serif'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            bodyFont: {
+                                family: 'Cairo, sans-serif'
+                            },
+                            titleFont: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // تطبيق تأثيرات حركية على بطاقات لوحة المعلومات
+        const dashboardCards = document.querySelectorAll('.dashboard-card');
+        dashboardCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.classList.add('shadow-lg');
+            });
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('shadow-lg');
+            });
+        });
+        
+        // زر عرض كل الأيام
+        const showAllDaysBtn = document.getElementById('showAllDaysBtn');
+        if (showAllDaysBtn) {
+            let allDaysShown = false;
+            
+            showAllDaysBtn.addEventListener('click', function() {
+                const extraRows = document.querySelectorAll('.extra-attendance-row');
+                if (!allDaysShown) {
+                    // عرض جميع السجلات
+                    extraRows.forEach(row => {
+                        row.classList.remove('d-none');
+                    });
+                    this.innerHTML = '<i class="fas fa-compress-alt me-1"></i>عرض أقل';
+                    allDaysShown = true;
+                } else {
+                    // إخفاء السجلات الإضافية
+                    extraRows.forEach(row => {
+                        row.classList.add('d-none');
+                    });
+                    this.innerHTML = '<i class="fas fa-calendar-alt me-1"></i>عرض كل الأيام';
+                    allDaysShown = false;
+                }
+            });
+        }
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM is ready. Initializing employee edit scripts...");
+
+    // --- بداية منطق شارات الأقسام التفاعلية ---
+    const departmentPills = document.querySelectorAll('.department-pill');
+    
+    // التحقق مما إذا تم العثور على أي شارات
+    console.log(`Found ${departmentPills.length} department pills.`);
+
+    departmentPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            // 1. تبديل المظهر البصري للشارة
+            this.classList.toggle('active');
+
+            // 2. العثور على معرف مربع الاختيار المرتبط
+            const targetCheckboxId = this.dataset.targetId;
+            const targetCheckbox = document.getElementById(targetCheckboxId);
+
+            if (targetCheckbox) {
+                // 3. عكس حالة مربع الاختيار المخفي
+                targetCheckbox.checked = !targetCheckbox.checked;
+                console.log(`Checkbox #${targetCheckboxId} is now ${targetCheckbox.checked ? 'checked' : 'unchecked'}`);
+            } else {
+                console.error(`Could not find checkbox with ID: ${targetCheckboxId}`);
+            }
+        });
+    });
+    // --- نهاية منطق شارات الأقسام التفاعلية ---
+
+
+    // --- كود إضافي آخر (مثل إظهار/إخفاء كلمة المرور) يمكن أن يكون هنا ---
+    const togglePassword = document.getElementById('togglePassword');
+    if (togglePassword) {
+        // ... (منطق زر كلمة المرور)
+    }
+
+});
+</script>
+
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Enhanced Header -->
-    <div class="employee-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h1>بيانات الموظف</h1>
-                <p class="text-muted mb-0">عرض وتعديل بيانات الموظف {{ employee.name }}</p>
-            </div>
-            <div class="btn-action-group">
-                <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn-enhanced btn-primary-enhanced">
-                    <i class="fas fa-edit"></i> تعديل البيانات
-                </a>
-                <a href="{{ url_for('salaries.create', employee_id=employee.id) }}" class="btn-enhanced btn-success-enhanced">
-                    <i class="fas fa-money-bill-wave"></i> إضافة راتب
-                </a>
-                <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="btn-enhanced btn-warning-enhanced">
-                    <i class="fas fa-id-card"></i> إضافة وثيقة
-                </a>
-
-                <div class="btn-group" role="group" aria-label="تقارير الموظف">
-                <a href="{{ url_for('employees.basic_report', id=employee.id) }}" class="btn-enhanced btn-primary-enhanced">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>بيانات الموظف</h1>
+        <div>
+            <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> تعديل البيانات
+            </a>
+            <a href="{{ url_for('salaries.create', employee_id=employee.id) }}" class="btn btn-success">
+                <i class="fas fa-money-bill-wave me-1"></i> إضافة راتب
+            </a>
+            <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="btn btn-warning">
+                <i class="fas fa-id-card me-1"></i> إضافة وثيقة
+            </a>
+            <!-- أزرار تقرير الموظف -->
+            <div class="btn-group" role="group" aria-label="تقارير الموظف">
+                <a href="{{ url_for('employees.basic_report', id=employee.id) }}" class="btn btn-primary">
                     <i class="fas fa-file-alt me-1"></i> تقرير أساسي
                 </a>
-                <a href="{{ url_for('employees.comprehensive_report', id=employee.id) }}" class="btn-enhanced btn-info-enhanced">
+                <a href="{{ url_for('employees.comprehensive_report', id=employee.id) }}" class="btn btn-info">
                     <i class="fas fa-file-pdf me-1"></i> تقرير شامل
                 </a>
-                <a href="{{ url_for('employees.comprehensive_report_excel', id=employee.id) }}" class="btn-enhanced btn-success-enhanced">
+                <a href="{{ url_for('employees.comprehensive_report_excel', id=employee.id) }}" class="btn btn-success">
                     <i class="fas fa-file-excel me-1"></i> تصدير إكسل
                 </a>
             </div>
-                <a href="{{ url_for('employees.index') }}" class="btn-enhanced btn-secondary">
-                    <i class="fas fa-arrow-right"></i> العودة للقائمة
-                </a>
-            </div>
+            <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
+            </a>
         </div>
     </div>
 
-    <!-- Images and Documents Section -->
-    <div class="dashboard-card card mb-4">
-        <div class="card-header">
+    <!-- قسم الصور الشخصية والوثائق -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
             <h5 class="card-title mb-0">
                 <i class="fas fa-images me-2"></i>الصور والوثائق
             </h5>
         </div>
         <div class="card-body">
             <div class="row">
-                <!-- Profile Image -->
-                <div class="col-md-4 mb-4">
-                    <div class="image-upload-card text-center">
-                        <h6 class="text-muted mb-3">الصورة الشخصية</h6>
-                        <div class="image-preview mb-3">
+                <!-- الصورة الشخصية -->
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h6 class="text-muted">الصورة الشخصية</h6>
+                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
                             {% if employee.profile_image %}
                                 <img src="{{ url_for('static', filename=employee.profile_image) }}" 
                                      alt="الصورة الشخصية" 
                                      class="img-fluid rounded" 
                                      style="max-height: 180px; width: auto;">
                             {% else %}
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-user fa-3x mb-2"></i>
-                                    <p>لا توجد صورة شخصية</p>
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-user fa-3x mb-2"></i>
+                                        <p>لا توجد صورة شخصية</p>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>
@@ -435,27 +264,29 @@
                             <div class="mb-2">
                                 <input type="file" name="image" class="form-control form-control-sm" accept="image/*" required>
                             </div>
-                            <button type="submit" class="btn-enhanced btn-primary-enhanced btn-sm w-100">
-                                <i class="fas fa-upload"></i> رفع الصورة الشخصية
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-upload me-1"></i>رفع الصورة الشخصية
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <!-- National ID Image -->
-                <div class="col-md-4 mb-4">
-                    <div class="image-upload-card text-center">
-                        <h6 class="text-muted mb-3">صورة الهوية الوطنية</h6>
-                        <div class="image-preview mb-3">
+                <!-- صورة الهوية الوطنية -->
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h6 class="text-muted">صورة الهوية الوطنية</h6>
+                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
                             {% if employee.national_id_image %}
                                 <img src="{{ url_for('static', filename=employee.national_id_image) }}" 
                                      alt="صورة الهوية الوطنية" 
                                      class="img-fluid rounded" 
                                      style="max-height: 180px; width: auto;">
                             {% else %}
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-id-card fa-3x mb-2"></i>
-                                    <p>لا توجد صورة الهوية</p>
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-id-card fa-3x mb-2"></i>
+                                        <p>لا توجد صورة الهوية</p>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>
@@ -464,27 +295,29 @@
                             <div class="mb-2">
                                 <input type="file" name="image" class="form-control form-control-sm" accept="image/*" required>
                             </div>
-                            <button type="submit" class="btn-enhanced btn-info-enhanced btn-sm w-100">
-                                <i class="fas fa-upload"></i> رفع صورة الهوية
+                            <button type="submit" class="btn btn-info btn-sm w-100">
+                                <i class="fas fa-upload me-1"></i>رفع صورة الهوية
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <!-- License Image -->
-                <div class="col-md-4 mb-4">
-                    <div class="image-upload-card text-center">
-                        <h6 class="text-muted mb-3">صورة رخصة القيادة</h6>
-                        <div class="image-preview mb-3">
+                <!-- صورة رخصة القيادة -->
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <h6 class="text-muted">صورة رخصة القيادة</h6>
+                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
                             {% if employee.license_image %}
                                 <img src="{{ url_for('static', filename=employee.license_image) }}" 
                                      alt="صورة رخصة القيادة" 
                                      class="img-fluid rounded" 
                                      style="max-height: 180px; width: auto;">
                             {% else %}
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-car fa-3x mb-2"></i>
-                                    <p>لا توجد صورة الرخصة</p>
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-car fa-3x mb-2"></i>
+                                        <p>لا توجد صورة الرخصة</p>
+                                    </div>
                                 </div>
                             {% endif %}
                         </div>
@@ -493,8 +326,8 @@
                             <div class="mb-2">
                                 <input type="file" name="image" class="form-control form-control-sm" accept="image/*" required>
                             </div>
-                            <button type="submit" class="btn-enhanced btn-success-enhanced btn-sm w-100">
-                                <i class="fas fa-upload"></i> رفع صورة الرخصة
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-upload me-1"></i>رفع صورة الرخصة
                             </button>
                         </form>
                     </div>
@@ -503,19 +336,19 @@
         </div>
     </div>
 
-    <!-- Performance Dashboard -->
-    <div class="dashboard-card card mb-4">
-        <div class="card-header">
+    <!-- لوحة معلومات أداء الموظف (داشبورد) -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
             <h5 class="card-title mb-0">
                 <i class="fas fa-chart-bar me-2"></i>لوحة معلومات الأداء
             </h5>
         </div>
         <div class="card-body">
             <div class="row">
-                <!-- Attendance Statistics -->
-                <div class="col-md-6 mb-4">
-                    <div class="dashboard-card card">
-                        <div class="card-header">
+                <!-- إحصائيات الحضور والغياب -->
+                <div class="col-md-6">
+                    <div class="card border-info mb-3">
+                        <div class="card-header bg-info text-white">
                             <h6 class="mb-0">إحصائيات الحضور للشهر الحالي</h6>
                         </div>
                         <div class="card-body">
@@ -526,32 +359,32 @@
                                 {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
                                 {% set total_count = present_count + absent_count + leave_count + sick_count %}
                                 
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-success text-white rounded">
-                                        <h3 class="stat-value">{{ present_count }}</h3>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-success text-white rounded">
+                                        <h3>{{ present_count }}</h3>
                                         <small>أيام الحضور</small>
                                     </div>
                                 </div>
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-danger text-white rounded">
-                                        <h3 class="stat-value">{{ absent_count }}</h3>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-danger text-white rounded">
+                                        <h3>{{ absent_count }}</h3>
                                         <small>أيام الغياب</small>
                                     </div>
                                 </div>
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-warning text-white rounded">
-                                        <h3 class="stat-value">{{ leave_count }}</h3>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-warning text-white rounded">
+                                        <h3>{{ leave_count }}</h3>
                                         <small>إجازات</small>
                                     </div>
                                 </div>
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-info text-white rounded">
-                                        <h3 class="stat-value">{{ sick_count }}</h3>
+                                <div class="col-md-3 text-center">
+                                    <div class="p-3 bg-info text-white rounded">
+                                        <h3>{{ sick_count }}</h3>
                                         <small>إجازات مرضية</small>
                                     </div>
                                 </div>
                                 
-                                <!-- Attendance Rate -->
+                                <!-- نسبة الحضور -->
                                 <div class="col-12 mt-3">
                                     {% set attendance_rate = (present_count / total_count * 100)|round|int if total_count > 0 else 0 %}
                                     <p class="mb-1">نسبة الحضور: {{ attendance_rate }}%</p>
@@ -568,7 +401,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Average Working Hours -->
+                                <!-- متوسط ساعات العمل -->
                                 <div class="col-12 mt-3">
                                     <p class="mb-1">متوسط ساعات العمل اليومية: <span class="fw-bold">8.5</span> ساعة</p>
                                     <div class="progress">
@@ -579,7 +412,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Attendance Chart -->
+                                <!-- الرسم البياني لحالة الحضور -->
                                 <div class="col-12 mt-4">
                                     <h6>توزيع حالات الحضور</h6>
                                     <div class="chart-container">
@@ -591,15 +424,15 @@
                     </div>
                 </div>
                 
-                <!-- Documents and Financial Status -->
-                <div class="col-md-6 mb-4">
-                    <div class="dashboard-card card">
-                        <div class="card-header">
+                <!-- حالة الوثائق والرواتب -->
+                <div class="col-md-6">
+                    <div class="card border-warning mb-3">
+                        <div class="card-header bg-warning text-white">
                             <h6 class="mb-0">حالة الوثائق والمعلومات المالية</h6>
                         </div>
                         <div class="card-body">
                             <div class="row g-2">
-                                <!-- Documents Status -->
+                                <!-- حالة الوثائق -->
                                 <div class="col-12 mb-3">
                                     <h6>حالة الوثائق</h6>
                                     <ul class="list-group">
@@ -610,31 +443,31 @@
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                             الهوية الوطنية
                                             {% if has_national_id %}
-                                            <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
+                                            <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
                                             {% else %}
-                                            <span class="badge-enhanced bg-danger"><i class="fas fa-times"></i></span>
+                                            <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
                                             {% endif %}
                                         </li>
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                             جواز السفر
                                             {% if has_passport %}
-                                            <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
+                                            <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
                                             {% else %}
-                                            <span class="badge-enhanced bg-danger"><i class="fas fa-times"></i></span>
+                                            <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
                                             {% endif %}
                                         </li>
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                             الشهادة الصحية
                                             {% if has_health_cert %}
-                                            <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
+                                            <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
                                             {% else %}
-                                            <span class="badge-enhanced bg-danger"><i class="fas fa-times"></i></span>
+                                            <span class="badge bg-danger rounded-pill"><i class="fas fa-times"></i></span>
                                             {% endif %}
                                         </li>
                                     </ul>
                                 </div>
                                 
-                                <!-- Financial Information -->
+                                <!-- معلومات مالية -->
                                 <div class="col-12">
                                     <h6>المعلومات المالية</h6>
                                     {% if salaries %}
@@ -660,10 +493,10 @@
     </div>
 
     <div class="row">
-        <!-- Basic Information Card -->
+        <!-- بطاقة المعلومات الأساسية -->
         <div class="col-md-6 mb-4">
-            <div class="dashboard-card card">
-                <div class="card-header">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-user me-2"></i>المعلومات الأساسية
                     </h5>
@@ -702,7 +535,7 @@
                             </p>
                         </div>
                         
-                        <!-- Employee Type and Custody -->
+                        <!-- نوع الموظف وبيانات العهدة -->
                         <div class="col-12">
                             <div class="border-top pt-3 mt-3">
                                 <h6 class="mb-3 text-primary">
@@ -713,11 +546,11 @@
                                         <p class="mb-1 text-muted">نوع الموظف</p>
                                         <p class="fs-5">
                                             {% if employee.employee_type == 'driver' %}
-                                            <span class="badge-enhanced bg-info">
+                                            <span class="badge bg-info px-3 py-2">
                                                 <i class="fas fa-car me-1"></i>موظف سائق
                                             </span>
                                             {% else %}
-                                            <span class="badge-enhanced bg-secondary">
+                                            <span class="badge bg-secondary px-3 py-2">
                                                 <i class="fas fa-user me-1"></i>موظف عادي
                                             </span>
                                             {% endif %}
@@ -729,11 +562,11 @@
                                         <p class="mb-1 text-muted">عهدة الجوال</p>
                                         <p class="fs-5">
                                             {% if employee.has_mobile_custody %}
-                                            <span class="badge-enhanced bg-success">
+                                            <span class="badge bg-success px-3 py-2">
                                                 <i class="fas fa-mobile-alt me-1"></i>يحمل جوال عمل
                                             </span>
                                             {% else %}
-                                            <span class="badge-enhanced bg-warning">
+                                            <span class="badge bg-warning px-3 py-2">
                                                 <i class="fas fa-times me-1"></i>لا يحمل جوال عمل
                                             </span>
                                             {% endif %}
@@ -789,7 +622,7 @@
                             </div>
                         </div>
                         
-                        <!-- Sponsorship Information -->
+                        <!-- معلومات الكفالة -->
                         <div class="col-12">
                             <div class="border-top pt-3 mt-3">
                                 <h6 class="mb-3 text-warning">
@@ -800,11 +633,11 @@
                                         <p class="mb-1 text-muted">حالة الكفالة</p>
                                         <p class="fs-5">
                                             {% if employee.sponsorship_status == 'outside' %}
-                                            <span class="badge-enhanced bg-danger">
+                                            <span class="badge bg-danger px-3 py-2">
                                                 <i class="fas fa-times-circle me-1"></i>خارج الكفالة
                                             </span>
                                             {% else %}
-                                            <span class="badge-enhanced bg-success">
+                                            <span class="badge bg-success px-3 py-2">
                                                 <i class="fas fa-check-circle me-1"></i>على الكفالة
                                             </span>
                                             {% endif %}
@@ -834,10 +667,10 @@
             </div>
         </div>
 
-        <!-- Work Information Card -->
+        <!-- بطاقة معلومات العمل -->
         <div class="col-md-6 mb-4">
-            <div class="dashboard-card card">
-                <div class="card-header">
+            <div class="card">
+                <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-briefcase me-2"></i>معلومات العمل
                     </h5>
@@ -849,40 +682,49 @@
                             <p class="fs-5 fw-bold">{{ employee.job_title }}</p>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">الأقسام المرتبط بها الموظف</label>
-                            <div class="department-pills-container">
-                                {% if departments %}
-                                    {% set assigned_dept_ids = employee.departments|map(attribute='id')|list %}
-                                    
-                                    {% for dept in departments %}
-                                    <div class="d-none">
-                                        <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ dept.id }}" id="dept-edit-{{ employee.id }}-{{ dept.id }}"
-                                               {% if dept.id in assigned_dept_ids %}checked{% endif %}>
-                                    </div>
-                                    <span class="department-pill {% if dept.id in assigned_dept_ids %}active{% endif %}" data-target-id="dept-edit-{{ employee.id }}-{{ dept.id }}">
-                                        <i class="fas fa-check-circle me-1"></i>
-                                        {{ dept.name }}
-                                    </span>
-                                    {% endfor %}
-                                {% else %}
-                                    <p class="text-muted small m-1">لا توجد أقسام معرفة في النظام لتعيينها.</p>
-                                {% endif %}
-                            </div>
-                            <div class="form-text mt-2">انقر على اسم القسم لتحديده أو إلغاء تحديده.</div>
-                        </div>
+                        <div class="mb-3"> <!-- تم إزالته من row/col لجعله أبسط -->
+    <label class="form-label fw-bold">الأقسام المرتبط بها الموظف</label>
+    <div class="department-pills-container p-2 rounded" style="border: 1px solid var(--bs-border-color-translucent);">
+        <!-- التحقق من وجود أقسام لعرضها -->
+        {% if departments %}
+            {% set assigned_dept_ids = employee.departments|map(attribute='id')|list %}
+            
+            {% for dept in departments %}
+            <!-- مربع اختيار مخفي فعليًا، لإرسال البيانات فقط -->
+            <div class="d-none">
+                <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ dept.id }}" id="dept-edit-{{ employee.id }}-{{ dept.id }}"
+                       {% if dept.id in assigned_dept_ids %}checked{% endif %}>
+            </div>
+            <!-- الشارة التفاعلية التي يراها المستخدم وينقر عليها -->
+            <span class="badge department-pill {% if dept.id in assigned_dept_ids %}active{% endif %}" data-target-id="dept-edit-{{ employee.id }}-{{ dept.id }}">
+                <i class="fas fa-check-circle me-1"></i>
+                {{ dept.name }}
+            </span>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted small m-1">لا توجد أقسام معرفة في النظام لتعيينها.</p>
+        {% endif %}
+    </div>
+    <div class="form-text mt-2">انقر على اسم القسم لتحديده أو إلغاء تحديده.</div>
+</div>
+
+                        <!-- <div class="col-md-6">
+                            <p class="mb-1 text-muted">القسم</p>
+                            <p class="fs-5 fw-bold">{{ employee.department.name if employee.department else '-' }}</p>
+                        </div> -->
+
 
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">الحالة</p>
                             <p class="fs-5">
                                 {% if employee.status == 'active' %}
-                                <span class="badge-enhanced bg-success">نشط</span>
+                                <span class="badge bg-success">نشط</span>
                                 {% elif employee.status == 'inactive' %}
-                                <span class="badge-enhanced bg-danger">غير نشط</span>
+                                <span class="badge bg-danger">غير نشط</span>
                                 {% elif employee.status == 'on_leave' %}
-                                <span class="badge-enhanced bg-warning">في إجازة</span>
+                                <span class="badge bg-warning">في إجازة</span>
                                 {% else %}
-                                <span class="badge-enhanced bg-secondary">{{ employee.status }}</span>
+                                <span class="badge bg-secondary">{{ employee.status }}</span>
                                 {% endif %}
                             </p>
                         </div>
@@ -910,12 +752,12 @@
         </div>
     </div>
 
-    <!-- Additional Information Cards -->
+    <!-- بطاقات معلومات إضافية -->
     <div class="row">
-        <!-- Attendance Records -->
+        <!-- سجلات الحضور -->
         <div class="col-md-4 mb-4">
-            <div class="dashboard-card card">
-                <div class="card-header">
+            <div class="card">
+                <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-calendar-check me-2"></i>سجلات الحضور الأخيرة
                     </h5>
@@ -923,7 +765,7 @@
                 <div class="card-body">
                     {% if attendances %}
                     <div class="table-responsive">
-                        <table class="enhanced-table table-sm">
+                        <table class="table table-sm">
                             <thead>
                                 <tr>
                                     <th>التاريخ</th>
@@ -935,42 +777,42 @@
                             <tbody>
                                 {% for attendance in attendances %}
                                 <tr class="status-{{ attendance.status }} attendance-row {% if loop.index > 5 %}d-none extra-attendance-row{% endif %}">
-                                    <td class="attendance-date" data-date="{{ attendance.date }}" data-label="التاريخ">
+                                    <td class="attendance-date" data-date="{{ attendance.date }}">
                                         {% if attendance.date %}
-                                        <span>{{ attendance.date.strftime('%d/%m/%Y') }}</span>
+                                        <span style="display: inline-block;">{{ attendance.date.strftime('%d/%m/%Y') }}</span>
                                         {% else %}
-                                        <span>-</span>
+                                        <span style="display: inline-block;">-</span>
                                         {% endif %}
                                     </td>
-                                    <td data-label="الحالة">
+                                    <td>
                                         {% if attendance.status == 'present' %}
-                                        <span class="badge-enhanced bg-success">حاضر</span>
+                                        <span class="badge bg-success">حاضر</span>
                                         {% elif attendance.status == 'absent' %}
-                                        <span class="badge-enhanced bg-danger">غائب</span>
+                                        <span class="badge bg-danger">غائب</span>
                                         {% elif attendance.status == 'leave' %}
-                                        <span class="badge-enhanced bg-warning">إجازة</span>
+                                        <span class="badge bg-warning">إجازة</span>
                                         {% elif attendance.status == 'sick' %}
-                                        <span class="badge-enhanced bg-info">مرضي</span>
+                                        <span class="badge bg-info">مرضي</span>
                                         {% else %}
-                                        <span class="badge-enhanced bg-secondary">{{ attendance.status }}</span>
+                                        <span class="badge bg-secondary">{{ attendance.status }}</span>
                                         {% endif %}
                                     </td>
-                                    <td data-label="الحضور">{{ attendance.check_in.strftime('%H:%M') if attendance.check_in else '-' }}</td>
-                                    <td data-label="الانصراف">{{ attendance.check_out.strftime('%H:%M') if attendance.check_out else '-' }}</td>
+                                    <td>{{ attendance.check_in.strftime('%H:%M') if attendance.check_in else '-' }}</td>
+                                    <td>{{ attendance.check_out.strftime('%H:%M') if attendance.check_out else '-' }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     <div class="text-center mt-2">
-                        <a href="{{ url_for('employees.export_attendance_excel', id=employee.id) }}" class="btn-enhanced btn-success-enhanced btn-sm">
-                            <i class="fas fa-file-excel"></i> تصدير إلى إكسل
+                        <a href="{{ url_for('employees.export_attendance_excel', id=employee.id) }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-excel me-1"></i>تصدير إلى إكسل
                         </a>
-                        <a href="{{ url_for('attendance.employee_attendance', employee_id=employee.id) }}" class="btn-enhanced btn-info-enhanced btn-sm">
-                            <i class="fas fa-calendar-check"></i> عرض التفصيلية
+                        <a href="{{ url_for('attendance.employee_attendance', employee_id=employee.id) }}" class="btn btn-sm btn-info">
+                            <i class="fas fa-calendar-check me-1"></i>عرض سجلات الحضور التفصيلية
                         </a>
-                        <button id="showAllDaysBtn" class="btn-enhanced btn-primary-enhanced btn-sm">
-                            <i class="fas fa-eye"></i> عرض كل الأيام
+                        <button id="showAllDaysBtn" class="btn btn-sm btn-primary me-2">
+                            <i class="fas fa-eye me-1"></i>عرض كل الأيام
                         </button>
                     </div>
                     {% else %}
@@ -980,18 +822,18 @@
             </div>
         </div>
 
-        <!-- Documents -->
+        <!-- الوثائق -->
         <div class="col-md-12 mb-4">
-            <div class="dashboard-card card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card">
+                <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-file-alt me-2"></i>الوثائق
                     </h5>
                     <div>
-                        <a href="{{ url_for('documents.export_employee_documents_pdf', employee_id=employee.id) }}" class="btn-enhanced btn-danger-enhanced btn-sm" title="تصدير PDF">
+                        <a href="{{ url_for('documents.export_employee_documents_pdf', employee_id=employee.id) }}" class="btn btn-sm btn-light" title="تصدير PDF">
                             <i class="fas fa-file-pdf"></i> PDF
                         </a>
-                        <a href="{{ url_for('documents.export_employee_documents_excel', employee_id=employee.id) }}" class="btn-enhanced btn-success-enhanced btn-sm" title="تصدير Excel">
+                        <a href="{{ url_for('documents.export_employee_documents_excel', employee_id=employee.id) }}" class="btn btn-sm btn-light" title="تصدير Excel">
                             <i class="fas fa-file-excel"></i> Excel
                         </a>
                     </div>
@@ -1001,7 +843,7 @@
                     <div class="row">
                         {% for doc_type, doc_name in document_types_map.items() %}
                         <div class="col-md-4 mb-3">
-                            <div class="dashboard-card card h-100 {% if documents_by_type[doc_type] %}border-{{ documents_by_type[doc_type].status_class }}{% else %}border-light{% endif %}">
+                            <div class="card h-100 {% if documents_by_type[doc_type] %}border-{{ documents_by_type[doc_type].status_class }}{% else %}border-light{% endif %}">
                                 <div class="card-header {% if documents_by_type[doc_type] %}bg-{{ documents_by_type[doc_type].status_class }} text-white{% else %}bg-light{% endif %}">
                                     <h6 class="card-title mb-0">{{ doc_name }}</h6>
                                 </div>
@@ -1012,7 +854,7 @@
                                     <p class="mb-2"><strong>تاريخ الانتهاء:</strong> {{ documents_by_type[doc_type].expiry_date.strftime('%d/%m/%Y') }}</p>
                                     <p class="mb-2">
                                         <strong>الحالة:</strong> 
-                                        <span class="badge-enhanced bg-{{ documents_by_type[doc_type].status_class }}">{{ documents_by_type[doc_type].status_text }}</span>
+                                        <span class="badge bg-{{ documents_by_type[doc_type].status_class }}">{{ documents_by_type[doc_type].status_text }}</span>
                                     </p>
                                     {% if documents_by_type[doc_type].notes %}
                                     <p class="mb-0"><strong>ملاحظات:</strong> {{ documents_by_type[doc_type].notes }}</p>
@@ -1024,12 +866,12 @@
                                 <div class="card-footer d-flex justify-content-between">
                                     {% if documents_by_type[doc_type] %}
                                     <form action="{{ url_for('documents.delete', id=documents_by_type[doc_type].id) }}" method="post" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟');">
-                                        <button type="submit" class="btn-enhanced btn-danger-enhanced btn-sm">
+                                        <button type="submit" class="btn btn-sm btn-danger">
                                             <i class="fas fa-trash-alt"></i> حذف
                                         </button>
                                     </form>
                                     {% endif %}
-                                    <a href="{{ url_for('documents.create', employee_id=employee.id, document_type=doc_type) }}" class="btn-enhanced {% if documents_by_type[doc_type] %}btn-primary-enhanced{% else %}btn-success-enhanced{% endif %} btn-sm">
+                                    <a href="{{ url_for('documents.create', employee_id=employee.id, document_type=doc_type) }}" class="btn btn-sm {% if documents_by_type[doc_type] %}btn-primary{% else %}btn-success{% endif %}">
                                         <i class="fas fa-{% if documents_by_type[doc_type] %}edit{% else %}plus{% endif %}"></i> 
                                         {% if documents_by_type[doc_type] %}تعديل{% else %}إضافة{% endif %}
                                     </a>
@@ -1049,10 +891,10 @@
             </div>
         </div>
 
-        <!-- Salary Records -->
+        <!-- الرواتب -->
         <div class="col-md-4 mb-4">
-            <div class="dashboard-card card">
-                <div class="card-header">
+            <div class="card">
+                <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-money-bill-wave me-2"></i>سجلات الرواتب
                     </h5>
@@ -1060,7 +902,7 @@
                 <div class="card-body">
                     {% if salaries %}
                     <div class="table-responsive">
-                        <table class="enhanced-table table-sm">
+                        <table class="table table-sm">
                             <thead>
                                 <tr>
                                     <th>الشهر/السنة</th>
@@ -1071,16 +913,16 @@
                             <tbody>
                                 {% for salary in salaries[:5] %}
                                 <tr>
-                                    <td data-label="الشهر/السنة">{{ salary.month }}/{{ salary.year }}</td>
-                                    <td data-label="الراتب الأساسي">{{ salary.basic_salary }}</td>
-                                    <td data-label="إجمالي المستحقات">{{ salary.net_salary }}</td>
+                                    <td>{{ salary.month }}/{{ salary.year }}</td>
+                                    <td>{{ salary.basic_salary }}</td>
+                                    <td>{{ salary.net_salary }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     <div class="text-center mt-2">
-                        <a href="{{ url_for('salaries.index', employee_id=employee.id) }}" class="btn-enhanced btn-success-enhanced btn-sm">
+                        <a href="{{ url_for('salaries.index', employee_id=employee.id) }}" class="btn btn-sm btn-success">
                             عرض جميع الرواتب
                         </a>
                     </div>
@@ -1092,11 +934,11 @@
         </div>
     </div>
 
-    <!-- Vehicle Handover Records -->
+    <!-- سجلات تسليم واستلام المركبات -->
     <div class="row mt-4">
         <div class="col-12">
-            <div class="dashboard-card card">
-                <div class="card-header">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-car me-2"></i>سجلات تسليم/استلام المركبات
                     </h5>
@@ -1104,7 +946,7 @@
                 <div class="card-body">
                     {% if vehicle_handovers %}
                     <div class="table-responsive">
-                        <table class="enhanced-table table-sm">
+                        <table class="table table-sm table-striped">
                             <thead>
                                 <tr>
                                     <th>رقم اللوحة</th>
@@ -1118,27 +960,27 @@
                             <tbody>
                                 {% for handover in vehicle_handovers %}
                                 <tr>
-                                    <td data-label="رقم اللوحة">{{ handover.vehicle.plate_number if handover.vehicle else 'غير محدد' }}</td>
-                                    <td data-label="نوع المركبة">{{ (handover.vehicle.make + ' ' + handover.vehicle.model) if handover.vehicle else 'غير محدد' }}</td>
-                                    <td data-label="نوع العملية">
+                                    <td>{{ handover.vehicle.plate_number if handover.vehicle else 'غير محدد' }}</td>
+                                    <td>{{ (handover.vehicle.make + ' ' + handover.vehicle.model) if handover.vehicle else 'غير محدد' }}</td>
+                                    <td>
                                         {% if handover.handover_type == 'handover' %}
-                                            <span class="badge-enhanced bg-success">تسليم</span>
+                                            <span class="badge bg-success">تسليم</span>
                                         {% else %}
-                                            <span class="badge-enhanced bg-info">استلام</span>
+                                            <span class="badge bg-info">استلام</span>
                                         {% endif %}
                                     </td>
-                                    <td data-label="تاريخ العملية">{{ handover.handover_date.strftime('%Y-%m-%d') }}</td>
-                                    <td data-label="الحالة">
+                                    <td>{{ handover.handover_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
                                         {% if handover.status == 'complete' %}
-                                            <span class="badge-enhanced bg-success">مكتملة</span>
+                                            <span class="badge bg-success">مكتملة</span>
                                         {% elif handover.status == 'pending' %}
-                                            <span class="badge-enhanced bg-warning">قيد الانتظار</span>
+                                            <span class="badge bg-warning">قيد الانتظار</span>
                                         {% else %}
-                                            <span class="badge-enhanced bg-secondary">{{ handover.status }}</span>
+                                            <span class="badge bg-secondary">{{ handover.status }}</span>
                                         {% endif %}
                                     </td>
-                                    <td data-label="الإجراءات">
-                                        <a href="{{ url_for('vehicles.view_handover', id=handover.id) }}" class="btn-enhanced btn-info-enhanced btn-sm">
+                                    <td>
+                                        <a href="{{ url_for('vehicles.view_handover', id=handover.id) }}" class="btn btn-sm btn-info">
                                             <i class="fas fa-eye"></i> عرض
                                         </a>
                                     </td>
@@ -1158,101 +1000,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Attendance Chart Data
-        {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
-        {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
-        {% set leave_count = attendances|selectattr('status', 'eq', 'leave')|list|length %}
-        {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
-        
-        // Attendance Chart
-        const attendanceCtx = document.getElementById('attendanceChart');
-        if (attendanceCtx) {
-            const attendanceChart = new Chart(attendanceCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['حاضر', 'غائب', 'إجازة', 'مرضي'],
-                    datasets: [{
-                        data: [{{ present_count }}, {{ absent_count }}, {{ leave_count }}, {{ sick_count }}],
-                        backgroundColor: [
-                            '#28a745', // Green (Present)
-                            '#dc3545', // Red (Absent)
-                            '#ffc107', // Yellow (Leave)
-                            '#17a2b8'  // Blue (Sick)
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            rtl: true,
-                            labels: {
-                                font: {
-                                    family: 'Cairo, sans-serif'
-                                }
-                            }
-                        },
-                        tooltip: {
-                            bodyFont: {
-                                family: 'Cairo, sans-serif'
-                            },
-                            titleFont: {
-                                family: 'Cairo, sans-serif'
-                            }
-                        }
-                    }
-                }
-            });
-        }
 
-        // Show All Days Button
-        const showAllDaysBtn = document.getElementById('showAllDaysBtn');
-        if (showAllDaysBtn) {
-            let allDaysShown = false;
-            
-            showAllDaysBtn.addEventListener('click', function() {
-                const extraRows = document.querySelectorAll('.extra-attendance-row');
-                if (!allDaysShown) {
-                    extraRows.forEach(row => row.classList.remove('d-none'));
-                    this.innerHTML = '<i class="fas fa-compress-alt me-1"></i>عرض أقل';
-                    allDaysShown = true;
-                } else {
-                    extraRows.forEach(row => row.classList.add('d-none'));
-                    this.innerHTML = '<i class="fas fa-calendar-alt me-1"></i>عرض كل الأيام';
-                    allDaysShown = false;
-                }
-            });
-        }
-
-        // Department Pills Logic
-        const departmentPills = document.querySelectorAll('.department-pill');
-        departmentPills.forEach(pill => {
-            pill.addEventListener('click', function() {
-                this.classList.toggle('active');
-                const targetCheckboxId = this.dataset.targetId;
-                const targetCheckbox = document.getElementById(targetCheckboxId);
-                if (targetCheckbox) {
-                    targetCheckbox.checked = !targetCheckbox.checked;
-                }
-            });
-        });
-
-        // Initialize tooltips
-        if (typeof bootstrap !== 'undefined') {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-            tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-        }
-    });
-</script>
 {% endblock %}

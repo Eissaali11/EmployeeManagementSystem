@@ -385,18 +385,6 @@
                 <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="btn-enhanced btn-warning-enhanced">
                     <i class="fas fa-id-card"></i> إضافة وثيقة
                 </a>
-
-                <div class="btn-group" role="group" aria-label="تقارير الموظف">
-                <a href="{{ url_for('employees.basic_report', id=employee.id) }}" class="btn-enhanced btn-primary-enhanced">
-                    <i class="fas fa-file-alt me-1"></i> تقرير أساسي
-                </a>
-                <a href="{{ url_for('employees.comprehensive_report', id=employee.id) }}" class="btn-enhanced btn-info-enhanced">
-                    <i class="fas fa-file-pdf me-1"></i> تقرير شامل
-                </a>
-                <a href="{{ url_for('employees.comprehensive_report_excel', id=employee.id) }}" class="btn-enhanced btn-success-enhanced">
-                    <i class="fas fa-file-excel me-1"></i> تصدير إكسل
-                </a>
-            </div>
                 <a href="{{ url_for('employees.index') }}" class="btn-enhanced btn-secondary">
                     <i class="fas fa-arrow-right"></i> العودة للقائمة
                 </a>
