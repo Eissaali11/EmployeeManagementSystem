@@ -1453,6 +1453,9 @@ def export_excel():
     document_type = request.args.get('document_type', '')
     days = int(request.args.get('days', '0'))
     show_all = request.args.get('show_all', 'false').lower() == 'true'
+    employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
+    sponsorship_status = request.args.get('sponsorship_status', '')
     
     # Build query
     query = Document.query
@@ -1470,8 +1473,21 @@ def export_excel():
             Document.expiry_date >= today
         )
     
+    # Apply employee filter
+    if employee_id and employee_id.isdigit():
+        query = query.filter(Document.employee_id == int(employee_id))
+    
     # Get documents with employee information
     query = query.join(Employee).options(selectinload(Document.employee))
+    
+    # Apply department filter
+    if department_id and department_id.isdigit():
+        query = query.filter(Employee.department_id == int(department_id))
+    
+    # Apply sponsorship status filter
+    if sponsorship_status:
+        query = query.filter(Employee.sponsorship_status == sponsorship_status)
+    
     documents = query.order_by(Document.expiry_date).all()
     
     # Create Excel in memory
@@ -1566,7 +1582,7 @@ def export_excel():
     })
     
     # Headers definition
-    headers = ['اسم الموظف', 'الرقم الوظيفي', 'القسم', 'نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'ملاحظات']
+    headers = ['اسم الموظف', 'الرقم الوظيفي', 'القسم', 'نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'حالة الكفالة', 'ملاحظات']
     
     # Add main worksheet with all documents (sorted by expiry date)
     main_worksheet = workbook.add_worksheet("جميع الوثائق")
@@ -1581,7 +1597,8 @@ def export_excel():
     main_worksheet.set_column(5, 5, 15)  # تاريخ الإصدار
     main_worksheet.set_column(6, 6, 15)  # تاريخ الانتهاء
     main_worksheet.set_column(7, 7, 15)  # الأيام المتبقية
-    main_worksheet.set_column(8, 8, 30)  # ملاحظات
+    main_worksheet.set_column(8, 8, 15)  # حالة الكفالة
+    main_worksheet.set_column(9, 9, 30)  # ملاحظات
     
     # Write headers for main worksheet
     for col_num, data in enumerate(headers):
@@ -1640,7 +1657,17 @@ def export_excel():
             main_worksheet.write(row_num, 6, "غير محدد", cell_format)
             
         main_worksheet.write(row_num, 7, days_remaining, days_format)
-        main_worksheet.write(row_num, 8, doc.notes or '', cell_format)
+        
+        # كتابة حالة الكفالة
+        sponsorship_status_ar = "غير محدد"
+        if doc.employee and doc.employee.sponsorship_status:
+            if doc.employee.sponsorship_status == 'inside':
+                sponsorship_status_ar = "على الكفالة"
+            elif doc.employee.sponsorship_status == 'outside':
+                sponsorship_status_ar = "خارج الكفالة"
+        main_worksheet.write(row_num, 8, sponsorship_status_ar, cell_format)
+        
+        main_worksheet.write(row_num, 9, doc.notes or '', cell_format)
         row_num += 1
         
     # إنشاء تنسيق للمستندات بدون تاريخ انتهاء (نقلناه هنا ليكون متاحاً للدالة الفرعية)
@@ -1662,7 +1689,7 @@ def export_excel():
         ws.right_to_left()
         
         # Set column widths
-        for i, width in enumerate([25, 15, 20, 20, 20, 15, 15, 15, 30]):
+        for i, width in enumerate([25, 15, 20, 20, 20, 15, 15, 15, 15, 30]):
             ws.set_column(i, i, width)
         
         # Custom title format for this category
@@ -1676,7 +1703,7 @@ def export_excel():
         })
         
         # Add title
-        ws.merge_range('A1:I1', f"{name} ({len(docs)})", title_format)
+        ws.merge_range('A1:J1', f"{name} ({len(docs)})", title_format)
         
         # Write headers
         for col_num, data in enumerate(headers):
@@ -1735,7 +1762,17 @@ def export_excel():
                 
             # كتابة الأيام المتبقية
             ws.write(row_num, 7, days_remaining, days_format)
-            ws.write(row_num, 8, doc.notes or '', cell_format)
+            
+            # كتابة حالة الكفالة
+            sponsorship_status_ar = "غير محدد"
+            if doc.employee and doc.employee.sponsorship_status:
+                if doc.employee.sponsorship_status == 'inside':
+                    sponsorship_status_ar = "على الكفالة"
+                elif doc.employee.sponsorship_status == 'outside':
+                    sponsorship_status_ar = "خارج الكفالة"
+            ws.write(row_num, 8, sponsorship_status_ar, cell_format)
+            
+            ws.write(row_num, 9, doc.notes or '', cell_format)
     
     # Create worksheets for each category
     create_category_worksheet(expired_docs, "وثائق منتهية", '#FFD9D9', '🔴 ')
