@@ -759,6 +759,68 @@ class VehicleHandover(db.Model):
         # استخدام البيانات المنسوخة في الـ repr لضمان عدم حدوث خطأ إذا حُذفت المركبة
         return f'<VehicleHandover {self.id} for vehicle {self.vehicle_plate_number} on {self.handover_date}>'
 
+    def to_dict(self):
+        """
+        تحويل كائن VehicleHandover إلى قاموس قابل للتحويل إلى JSON
+        """
+        return {
+            'id': self.id,
+            'vehicle_id': self.vehicle_id,
+            'handover_type': self.handover_type,
+            'handover_date': self.handover_date.strftime('%Y-%m-%d') if self.handover_date else None,
+            'handover_time': self.handover_time.strftime('%H:%M') if self.handover_time else None,
+            'mileage': self.mileage,
+            'project_name': self.project_name,
+            'city': self.city,
+            'vehicle_car_type': self.vehicle_car_type,
+            'vehicle_plate_number': self.vehicle_plate_number,
+            'vehicle_model_year': self.vehicle_model_year,
+            'employee_id': self.employee_id,
+            'person_name': self.person_name,
+            'driver_company_id': self.driver_company_id,
+            'driver_phone_number': self.driver_phone_number,
+            'driver_residency_number': self.driver_residency_number,
+            'driver_contract_status': self.driver_contract_status,
+            'driver_license_status': self.driver_license_status,
+            'driver_signature_path': self.driver_signature_path,
+            'supervisor_employee_id': self.supervisor_employee_id,
+            'supervisor_name': self.supervisor_name,
+            'supervisor_company_id': self.supervisor_company_id,
+            'supervisor_phone_number': self.supervisor_phone_number,
+            'supervisor_residency_number': self.supervisor_residency_number,
+            'supervisor_contract_status': self.supervisor_contract_status,
+            'supervisor_license_status': self.supervisor_license_status,
+            'supervisor_signature_path': self.supervisor_signature_path,
+            'reason_for_change': self.reason_for_change,
+            'vehicle_status_summary': self.vehicle_status_summary,
+            'notes': self.notes,
+            'reason_for_authorization': self.reason_for_authorization,
+            'authorization_details': self.authorization_details,
+            'fuel_level': self.fuel_level,
+            'has_spare_tire': self.has_spare_tire,
+            'has_fire_extinguisher': self.has_fire_extinguisher,
+            'has_first_aid_kit': self.has_first_aid_kit,
+            'has_warning_triangle': self.has_warning_triangle,
+            'has_tools': self.has_tools,
+            'has_oil_leaks': self.has_oil_leaks,
+            'has_gear_issue': self.has_gear_issue,
+            'has_clutch_issue': self.has_clutch_issue,
+            'has_engine_issue': self.has_engine_issue,
+            'has_windows_issue': self.has_windows_issue,
+            'has_tires_issue': self.has_tires_issue,
+            'has_body_issue': self.has_body_issue,
+            'has_electricity_issue': self.has_electricity_issue,
+            'has_lights_issue': self.has_lights_issue,
+            'has_ac_issue': self.has_ac_issue,
+            'movement_officer_name': self.movement_officer_name,
+            'movement_officer_signature_path': self.movement_officer_signature_path,
+            'damage_diagram_path': self.damage_diagram_path,
+            'form_link': self.form_link,
+            'custom_company_name': self.custom_company_name,
+            'custom_logo_path': self.custom_logo_path,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
+        }
+
 
 
 # class VehicleHandover(db.Model):
