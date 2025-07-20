@@ -26,7 +26,7 @@ styles %} {{ super() }}
 <div class="container-fluid py-3" style="background-color: #f0f2f5">
     <form
         method="post"
-        action="{{ url_for('mobile.create_handover_mobile') }}"
+        action="{{ url_for('mobile.create_handover_mobile', handover_id=existing_handover.id if existing_handover else None) }}"
         enctype="multipart/form-data"
         id="main-handover-form"
     >
@@ -1421,6 +1421,129 @@ styles %} {{ super() }}
         });
 
     }); // نهاية DOMContentLoaded
+
+    // === 8. ملء البيانات الموجودة عند التعديل ===
+    {% if existing_handover %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const handover = {{ existing_handover|tojson|safe }};
+
+        // ملء بيانات المركبة
+        if (handover.vehicle_id) {
+            const vehicleSelect = document.getElementById('vehicle_id');
+            vehicleSelect.value = handover.vehicle_id;
+            vehicleSelect.dispatchEvent(new Event('change'));
+        }
+
+        // ملء نوع العملية
+        if (handover.handover_type) {
+            const typeSelect = document.getElementById('handover_type');
+            typeSelect.value = handover.handover_type;
+        }
+
+        // ملء البيانات الأساسية
+        if (handover.project_name) {
+            document.getElementById('project_name').value = handover.project_name;
+        }
+        if (handover.city) {
+            document.getElementById('city').value = handover.city;
+        }
+        if (handover.mileage) {
+            document.getElementById('mileage').value = handover.mileage;
+        }
+        if (handover.fuel_level) {
+            document.getElementById('fuel_level').value = handover.fuel_level;
+        }
+        if (handover.reason_for_change) {
+            document.getElementById('reason_for_change').value = handover.reason_for_change;
+        }
+
+        // ملء بيانات السائق
+        if (handover.person_name) {
+            document.getElementById('person_name').value = handover.person_name;
+        }
+        if (handover.employee_id) {
+            document.getElementById('employee_id').value = handover.employee_id;
+        }
+
+        // ملء بيانات المشرف
+        if (handover.supervisor_name) {
+            document.getElementById('supervisor_name').value = handover.supervisor_name;
+        }
+        if (handover.supervisor_employee_id) {
+            document.getElementById('supervisor_employee_id').value = handover.supervisor_employee_id;
+        }
+
+        // ملء قائمة الفحص
+        const checklistItems = [
+            'has_spare_tire', 'has_fire_extinguisher', 'has_first_aid_kit',
+            'has_warning_triangle', 'has_tools', 'has_oil_leaks', 'has_gear_issue',
+            'has_clutch_issue', 'has_engine_issue', 'has_windows_issue',
+            'has_tires_issue', 'has_body_issue', 'has_electricity_issue',
+            'has_lights_issue', 'has_ac_issue'
+        ];
+
+        checklistItems.forEach(item => {
+            if (handover[item]) {
+                const checkbox = document.getElementById(item);
+                if (checkbox) {
+                    checkbox.checked = handover[item];
+                }
+            }
+        });
+
+        // ملء الملاحظات والحقول الإضافية
+        if (handover.notes) {
+            const notesField = document.getElementById('notes');
+            if (notesField) {
+                notesField.value = handover.notes;
+            }
+        }
+        if (handover.vehicle_status_summary) {
+            const statusField = document.getElementById('vehicle_status_summary');
+            if (statusField) {
+                statusField.value = handover.vehicle_status_summary;
+            }
+        }
+        if (handover.reason_for_authorization) {
+            const authField = document.getElementById('reason_for_authorization');
+            if (authField) {
+                authField.value = handover.reason_for_authorization;
+            }
+        }
+        if (handover.authorization_details) {
+            const detailsField = document.getElementById('authorization_details');
+            if (detailsField) {
+                detailsField.value = handover.authorization_details;
+            }
+        }
+        if (handover.movement_officer_name) {
+            const officerField = document.getElementById('movement_officer_name');
+            if (officerField) {
+                officerField.value = handover.movement_officer_name;
+            }
+        }
+        if (handover.form_link) {
+            const linkField = document.getElementById('form_link');
+            if (linkField) {
+                linkField.value = handover.form_link;
+            }
+        }
+        if (handover.custom_company_name) {
+            const companyField = document.getElementById('custom_company_name');
+            if (companyField) {
+                companyField.value = handover.custom_company_name;
+            }
+        }
+
+        // إظهار النموذج بعد ملء البيانات
+        setTimeout(() => {
+            const container = document.getElementById('handover-form-container');
+            if (container) {
+                container.classList.remove('d-none');
+            }
+        }, 500);
+    });
+    {% endif %}
 </script>
 
 <!-- Template للبحث عن الموظفين -->
