@@ -1,413 +1,575 @@
 {% extends "layout.html" %}
 
-{% block title %}تفاصيل العملية{% endblock %}
+{% block title %}تفاصيل العملية #{{ operation.id }}{% endblock %}
 
 {% block content %}
+<style>
+/* تصميم مميز للصفحة */
+.operation-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.operation-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.operation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.status-badge {
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: 8px;
+}
+
+.action-btn {
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    margin: 0.25rem;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.info-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #667eea;
+}
+
+.vehicle-plate {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.driver-info {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-item {
+    border-left: 3px solid #667eea;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #667eea;
+}
+
+.delete-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    background: linear-gradient(45deg, #ee5a52, #ff6b6b);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+}
+</style>
+
 <div class="container-fluid mt-4">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2>
-                    <i class="fas fa-eye me-2"></i>
+    <!-- Header المحسن -->
+    <div class="operation-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-cogs me-3"></i>
                     تفاصيل العملية #{{ operation.id }}
-                </h2>
-                <div>
-                    <a href="{{ url_for('operations.operations_list') }}" class="btn btn-outline-secondary me-2">
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">{{ operation.title }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex flex-wrap justify-content-end">
+                    {% if operation.status == 'pending' %}
+                        <span class="status-badge bg-warning text-dark">
+                            <i class="fas fa-clock me-2"></i>معلقة
+                        </span>
+                    {% elif operation.status == 'under_review' %}
+                        <span class="status-badge bg-info">
+                            <i class="fas fa-search me-2"></i>تحت المراجعة
+                        </span>
+                    {% elif operation.status == 'approved' %}
+                        <span class="status-badge bg-success">
+                            <i class="fas fa-check-circle me-2"></i>موافق عليها
+                        </span>
+                    {% elif operation.status == 'rejected' %}
+                        <span class="status-badge bg-danger">
+                            <i class="fas fa-times-circle me-2"></i>مرفوضة
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- المعلومات الأساسية -->
+        <div class="col-lg-8">
+            <!-- معلومات العملية -->
+            <div class="operation-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    معلومات العملية
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong><i class="fas fa-tag me-2"></i>نوع العملية:</strong>
+                            <div class="mt-2">
+                                {% if operation.operation_type == 'handover' %}
+                                    <span class="badge bg-info fs-6">
+                                        <i class="fas fa-exchange-alt me-1"></i>تسليم/استلام مركبة
+                                    </span>
+                                {% elif operation.operation_type == 'workshop' %}
+                                    <span class="badge bg-warning fs-6">
+                                        <i class="fas fa-tools me-1"></i>عملية ورشة
+                                    </span>
+                                {% elif operation.operation_type == 'external_authorization' %}
+                                    <span class="badge bg-primary fs-6">
+                                        <i class="fas fa-file-contract me-1"></i>تفويض خارجي
+                                    </span>
+                                {% elif operation.operation_type == 'safety_inspection' %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-shield-alt me-1"></i>فحص سلامة
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong><i class="fas fa-flag me-2"></i>الأولوية:</strong>
+                            <div class="mt-2">
+                                {% if operation.priority == 'urgent' %}
+                                    <span class="badge bg-danger fs-6">
+                                        <span class="priority-indicator bg-danger"></span>عاجل
+                                    </span>
+                                {% elif operation.priority == 'high' %}
+                                    <span class="badge bg-warning fs-6">
+                                        <span class="priority-indicator bg-warning"></span>عالي
+                                    </span>
+                                {% elif operation.priority == 'normal' %}
+                                    <span class="badge bg-info fs-6">
+                                        <span class="priority-indicator bg-info"></span>عادي
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">
+                                        <span class="priority-indicator bg-secondary"></span>منخفض
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <strong><i class="fas fa-calendar-alt me-2"></i>تاريخ الطلب:</strong>
+                    <div class="mt-2">{{ operation.requested_at.strftime('%Y/%m/%d %H:%M:%S') }}</div>
+                </div>
+                
+                {% if operation.description %}
+                <div class="info-item">
+                    <strong><i class="fas fa-align-left me-2"></i>وصف العملية:</strong>
+                    <div class="mt-2">{{ operation.description }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- بيانات السائق المحسنة -->
+            {% if related_record and (related_record.person_name or related_record.driver_name) %}
+            <div class="driver-info">
+                <h5 class="mb-3">
+                    <i class="fas fa-user-circle me-2"></i>
+                    بيانات السائق
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-user me-2"></i>
+                            <strong>الاسم:</strong>
+                            <div class="mt-1">{{ related_record.person_name or related_record.driver_name }}</div>
+                        </div>
+                        
+                        {% if related_record.driver_phone_number %}
+                        <div class="mb-3">
+                            <i class="fas fa-phone me-2"></i>
+                            <strong>رقم الهاتف:</strong>
+                            <div class="mt-1">{{ related_record.driver_phone_number }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        {% if related_record.driver_residency_number %}
+                        <div class="mb-3">
+                            <i class="fas fa-id-card me-2"></i>
+                            <strong>رقم الإقامة/الهوية:</strong>
+                            <div class="mt-1">{{ related_record.driver_residency_number }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if related_record.driver_company_id %}
+                        <div class="mb-3">
+                            <i class="fas fa-building me-2"></i>
+                            <strong>رقم الشركة:</strong>
+                            <div class="mt-1">{{ related_record.driver_company_id }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    {% if related_record.driver_contract_status %}
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-file-contract me-2"></i>
+                            <strong>حالة العقد:</strong>
+                            <span class="badge bg-light text-dark ms-2">{{ related_record.driver_contract_status }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if related_record.driver_license_status %}
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-id-badge me-2"></i>
+                            <strong>حالة الرخصة:</strong>
+                            <span class="badge bg-light text-dark ms-2">{{ related_record.driver_license_status }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- تفاصيل السجل المرتبط -->
+            {% if related_record %}
+            <div class="operation-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-file-alt me-2 text-success"></i>
+                    تفاصيل السجل المرتبط
+                </h5>
+                
+                {% if operation.operation_type == 'handover' %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>نوع العملية:</strong>
+                            <div class="mt-2">{{ related_record.handover_type_ar or related_record.handover_type }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>تاريخ العملية:</strong>
+                            <div class="mt-2">{{ related_record.handover_date.strftime('%Y/%m/%d') if related_record.handover_date else 'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    {% if related_record.mileage %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>الكيلومترات:</strong>
+                            <div class="mt-2">{{ related_record.mileage }} كم</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if related_record.fuel_level %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>مستوى الوقود:</strong>
+                            <div class="mt-2">{{ related_record.fuel_level }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if related_record.notes %}
+                <div class="info-item">
+                    <strong>الملاحظات:</strong>
+                    <div class="mt-2">{{ related_record.notes }}</div>
+                </div>
+                {% endif %}
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ operation.get_operation_url() }}" class="action-btn btn btn-outline-primary" target="_blank">
+                        <i class="fas fa-external-link-alt me-2"></i>
+                        عرض السجل الكامل
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- الشريط الجانبي -->
+        <div class="col-lg-4">
+            <!-- معلومات السيارة -->
+            {% if operation.vehicle %}
+            <div class="operation-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-car me-2 text-success"></i>
+                    معلومات السيارة
+                </h6>
+                
+                <div class="vehicle-plate mb-3">
+                    {{ operation.vehicle.plate_number }}
+                </div>
+                
+                <div class="info-item">
+                    <strong>النوع:</strong> {{ operation.vehicle.type or 'غير محدد' }}
+                </div>
+                <div class="info-item">
+                    <strong>الماركة:</strong> {{ operation.vehicle.make or 'غير محدد' }}
+                </div>
+                <div class="info-item">
+                    <strong>الموديل:</strong> {{ operation.vehicle.model or 'غير محدد' }}
+                </div>
+                <div class="info-item">
+                    <strong>السنة:</strong> {{ operation.vehicle.year or 'غير محدد' }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- معلومات الطالب -->
+            {% if operation.requester %}
+            <div class="operation-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-user me-2 text-primary"></i>
+                    معلومات الطالب
+                </h6>
+                
+                <div class="info-item">
+                    <strong>اسم المستخدم:</strong> {{ operation.requester.username }}
+                </div>
+                {% if operation.requester.email %}
+                <div class="info-item">
+                    <strong>البريد الإلكتروني:</strong> {{ operation.requester.email }}
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <strong>الدور:</strong> 
+                    {% if operation.requester.role %}
+                        {{ operation.requester.role.value }}
+                    {% else %}
+                        غير محدد
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Timeline العملية -->
+            <div class="operation-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-history me-2 text-info"></i>
+                    تاريخ العملية
+                </h6>
+                
+                <div class="timeline-item">
+                    <strong>إنشاء العملية</strong>
+                    <div class="text-muted small">{{ operation.created_at.strftime('%Y/%m/%d %H:%M') }}</div>
+                </div>
+                
+                {% if operation.reviewed_at %}
+                <div class="timeline-item">
+                    <strong>مراجعة العملية</strong>
+                    <div class="text-muted small">{{ operation.reviewed_at.strftime('%Y/%m/%d %H:%M') }}</div>
+                    {% if operation.reviewer %}
+                        <div class="text-muted small">بواسطة: {{ operation.reviewer.username }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if operation.review_notes %}
+                <div class="info-item">
+                    <strong>ملاحظات المراجعة:</strong>
+                    <div class="mt-2">{{ operation.review_notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- أزرار الإجراءات -->
+            <div class="operation-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-tools me-2 text-warning"></i>
+                    إجراءات العملية
+                </h6>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('operations.operations_list') }}" class="action-btn btn btn-outline-secondary">
                         <i class="fas fa-arrow-right me-2"></i>
                         العودة للقائمة
                     </a>
-                    <a href="{{ url_for('operations.operations_dashboard') }}" class="btn btn-outline-primary">
+                    
+                    <a href="{{ url_for('operations.operations_dashboard') }}" class="action-btn btn btn-outline-primary">
                         <i class="fas fa-tachometer-alt me-2"></i>
                         لوحة الإدارة
                     </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Operation Details -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        معلومات العملية
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">نوع العملية:</label>
-                            <div>
-                                {% if operation.operation_type == 'handover' %}
-                                    <span class="badge bg-info fs-6">تسليم/استلام مركبة</span>
-                                {% elif operation.operation_type == 'workshop' %}
-                                    <span class="badge bg-warning fs-6">عملية ورشة</span>
-                                {% elif operation.operation_type == 'external_authorization' %}
-                                    <span class="badge bg-primary fs-6">تفويض خارجي</span>
-                                {% elif operation.operation_type == 'safety_inspection' %}
-                                    <span class="badge bg-success fs-6">فحص سلامة</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">الحالة:</label>
-                            <div>
-                                {% if operation.status == 'pending' %}
-                                    <span class="badge bg-warning fs-6">معلقة</span>
-                                {% elif operation.status == 'under_review' %}
-                                    <span class="badge bg-info fs-6">تحت المراجعة</span>
-                                {% elif operation.status == 'approved' %}
-                                    <span class="badge bg-success fs-6">موافق عليها</span>
-                                {% elif operation.status == 'rejected' %}
-                                    <span class="badge bg-danger fs-6">مرفوضة</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">الأولوية:</label>
-                            <div>
-                                {% if operation.priority == 'urgent' %}
-                                    <span class="badge bg-danger fs-6">عاجل</span>
-                                {% elif operation.priority == 'high' %}
-                                    <span class="badge bg-warning fs-6">عالي</span>
-                                {% elif operation.priority == 'normal' %}
-                                    <span class="badge bg-info fs-6">عادي</span>
-                                {% else %}
-                                    <span class="badge bg-secondary fs-6">منخفض</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold">تاريخ الطلب:</label>
-                            <div>{{ operation.requested_at.strftime('%Y/%m/%d %H:%M:%S') }}</div>
-                        </div>
-                        
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-bold">عنوان العملية:</label>
-                            <div class="border rounded p-3 bg-light">{{ operation.title }}</div>
-                        </div>
-                        
-                        {% if operation.description %}
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-bold">وصف العملية:</label>
-                            <div class="border rounded p-3 bg-light">{{ operation.description }}</div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <!-- Vehicle Info -->
-            {% if operation.vehicle %}
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">
-                        <i class="fas fa-car me-2"></i>
-                        معلومات السيارة
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-3">
-                        <span class="badge bg-primary fs-6">{{ operation.vehicle.plate_number }}</span>
-                    </div>
-                    <div class="mb-2">
-                        <strong>النوع:</strong> {{ operation.vehicle.type or 'غير محدد' }}
-                    </div>
-                    <div class="mb-2">
-                        <strong>الماركة:</strong> {{ operation.vehicle.make or 'غير محدد' }}
-                    </div>
-                    <div class="mb-2">
-                        <strong>الموديل:</strong> {{ operation.vehicle.model or 'غير محدد' }}
-                    </div>
-                    <div>
-                        <strong>السنة:</strong> {{ operation.vehicle.year or 'غير محدد' }}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Requester Info -->
-            {% if operation.requester %}
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">
-                        <i class="fas fa-user me-2"></i>
-                        معلومات الطالب
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <strong>اسم المستخدم:</strong> {{ operation.requester.username }}
-                    </div>
-                    <div class="mb-2">
-                        <strong>البريد الإلكتروني:</strong> {{ operation.requester.email or 'غير محدد' }}
-                    </div>
-                    <div>
-                        <strong>الدور:</strong> 
-                        {% if operation.requester.role %}
-                            {{ operation.requester.role.value }}
-                        {% else %}
-                            غير محدد
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Review Info -->
-            {% if operation.reviewed_by %}
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0">
-                        <i class="fas fa-user-check me-2"></i>
-                        معلومات المراجعة
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <strong>المراجع:</strong> {{ operation.reviewer.username if operation.reviewer else 'غير محدد' }}
-                    </div>
-                    <div class="mb-2">
-                        <strong>تاريخ المراجعة:</strong> 
-                        {% if operation.reviewed_at %}
-                            {{ operation.reviewed_at.strftime('%Y/%m/%d %H:%M:%S') }}
-                        {% else %}
-                            غير محدد
-                        {% endif %}
-                    </div>
-                    {% if operation.review_notes %}
-                    <div>
-                        <strong>ملاحظات المراجعة:</strong>
-                        <div class="border rounded p-2 bg-light mt-1">{{ operation.review_notes }}</div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Related Record Details -->
-    {% if related_record %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        <i class="fas fa-file-alt me-2"></i>
-                        تفاصيل السجل المرتبط
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if operation.operation_type == 'handover' %}
-                        <!-- Handover Details -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>نوع العملية:</strong> {{ related_record.handover_type_ar or related_record.handover_type }}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>تاريخ العملية:</strong> {{ related_record.handover_date.strftime('%Y/%m/%d') if related_record.handover_date else 'غير محدد' }}
-                            </div>
-                            {% if related_record.driver_name %}
-                            <div class="col-md-6 mt-2">
-                                <strong>اسم السائق:</strong> {{ related_record.driver_name }}
-                            </div>
-                            {% endif %}
-                            {% if related_record.id_number %}
-                            <div class="col-md-6 mt-2">
-                                <strong>رقم الهوية:</strong> {{ related_record.id_number }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                    {% elif operation.operation_type == 'workshop' %}
-                        <!-- Workshop Details -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>تاريخ التسليم:</strong> {{ related_record.delivery_date.strftime('%Y/%m/%d') if related_record.delivery_date else 'غير محدد' }}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>حالة الإصلاح:</strong> {{ related_record.repair_status or 'غير محدد' }}
-                            </div>
-                            {% if related_record.delivered_by %}
-                            <div class="col-md-6 mt-2">
-                                <strong>المُسلم:</strong> {{ related_record.delivered_by }}
-                            </div>
-                            {% endif %}
-                            {% if related_record.notes %}
-                            <div class="col-12 mt-2">
-                                <strong>الملاحظات:</strong>
-                                <div class="border rounded p-2 bg-light mt-1">{{ related_record.notes }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                    {% elif operation.operation_type == 'external_authorization' %}
-                        <!-- External Authorization Details -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>نوع التفويض:</strong> {{ related_record.authorization_type or 'غير محدد' }}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>المدينة:</strong> {{ related_record.city or 'غير محدد' }}
-                            </div>
-                            {% if related_record.project_name %}
-                            <div class="col-md-6 mt-2">
-                                <strong>المشروع:</strong> {{ related_record.project_name }}
-                            </div>
-                            {% endif %}
-                            {% if related_record.external_link %}
-                            <div class="col-md-6 mt-2">
-                                <strong>الرابط الخارجي:</strong> 
-                                <a href="{{ related_record.external_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-external-link-alt me-1"></i>
-                                    فتح الرابط
-                                </a>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                    {% elif operation.operation_type == 'safety_inspection' %}
-                        <!-- Safety Inspection Details -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>تاريخ الفحص:</strong> {{ related_record.inspection_date.strftime('%Y/%m/%d %H:%M') if related_record.inspection_date else 'غير محدد' }}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>اسم السائق:</strong> {{ related_record.driver_name or 'غير محدد' }}
-                            </div>
-                            {% if related_record.issues_found %}
-                            <div class="col-12 mt-2">
-                                <strong>المشاكل المكتشفة:</strong>
-                                <div class="border rounded p-2 bg-light mt-1">{{ related_record.issues_found }}</div>
-                            </div>
-                            {% endif %}
-                            {% if related_record.recommendations %}
-                            <div class="col-12 mt-2">
-                                <strong>التوصيات:</strong>
-                                <div class="border rounded p-2 bg-light mt-1">{{ related_record.recommendations }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
+                    
+                    {% if operation.status == 'pending' or operation.status == 'under_review' %}
+                    <button class="action-btn btn btn-success" onclick="quickApprove({{ operation.id }})">
+                        <i class="fas fa-check me-2"></i>
+                        موافقة سريعة
+                    </button>
+                    
+                    <button class="action-btn btn btn-warning" onclick="quickReject({{ operation.id }})">
+                        <i class="fas fa-times me-2"></i>
+                        رفض العملية
+                    </button>
                     {% endif %}
                     
-                    <div class="mt-3">
-                        <a href="{{ operation.get_operation_url() }}" class="btn btn-outline-primary" target="_blank">
-                            <i class="fas fa-external-link-alt me-2"></i>
-                            عرض السجل الكامل
-                        </a>
-                    </div>
+                    <!-- زر الحذف المطلوب -->
+                    <button class="delete-btn" onclick="deleteOperation({{ operation.id }})">
+                        <i class="fas fa-trash-alt me-2"></i>
+                        حذف العملية
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
-    
-    <!-- Action Buttons -->
-    {% if operation.status == 'pending' or operation.status == 'under_review' %}
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        <i class="fas fa-tasks me-2"></i>
-                        إجراءات العملية
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        {% if operation.status == 'pending' %}
-                        <div class="col-md-4">
-                            <button class="btn btn-info w-100" onclick="setUnderReview()">
-                                <i class="fas fa-eye me-2"></i>
-                                وضع تحت المراجعة
-                            </button>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="col-md-4">
-                            <button class="btn btn-success w-100" onclick="showApprovalModal()">
-                                <i class="fas fa-check me-2"></i>
-                                الموافقة على العملية
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <button class="btn btn-danger w-100" onclick="showRejectionModal()">
-                                <i class="fas fa-times me-2"></i>
-                                رفض العملية
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
-<!-- Approval Modal -->
-<div class="modal fade" id="approvalModal" tabindex="-1">
+<!-- Modal للموافقة السريعة -->
+<div class="modal fade" id="approveModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">الموافقة على العملية</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="approvalNotes" class="form-label">ملاحظات الموافقة (اختياري):</label>
-                    <textarea class="form-control" id="approvalNotes" rows="3" 
-                              placeholder="أدخل أي ملاحظات أو تعليقات حول الموافقة..."></textarea>
-                </div>
-                <div class="alert alert-success">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
                     <i class="fas fa-check-circle me-2"></i>
-                    سيتم إشعار الطالب بالموافقة وستظهر العملية في القسم المناسب من تفاصيل السيارة.
+                    الموافقة على العملية
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="approveForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات الموافقة (اختياري):</label>
+                        <textarea name="review_notes" class="form-control" rows="3" placeholder="أدخل أي ملاحظات إضافية..."></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-success" onclick="approveOperation()">
-                    <i class="fas fa-check me-2"></i>
-                    تأكيد الموافقة
-                </button>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>
+                        تأكيد الموافقة
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Rejection Modal -->
-<div class="modal fade" id="rejectionModal" tabindex="-1">
+<!-- Modal للرفض -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">رفض العملية</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-times-circle me-2"></i>
+                    رفض العملية
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">سبب الرفض (مطلوب):</label>
+                        <textarea name="review_notes" class="form-control" rows="3" placeholder="أدخل سبب رفض العملية..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>
+                        تأكيد الرفض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal للحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    تأكيد حذف العملية
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="rejectionReason" class="form-label">سبب الرفض (مطلوب):</label>
-                    <textarea class="form-control" id="rejectionReason" rows="3" required
-                              placeholder="يجب إدخال سبب واضح لرفض العملية..."></textarea>
+                <div class="alert alert-danger">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه!
                 </div>
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    سيتم إشعار الطالب بالرفض والسبب، والعملية ستبقى معلقة.
-                </div>
+                <p>هل أنت متأكد من حذف هذه العملية؟</p>
+                <p><strong>العملية:</strong> {{ operation.title }}</p>
+                <p><strong>الرقم:</strong> #{{ operation.id }}</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-danger" onclick="rejectOperation()">
-                    <i class="fas fa-times me-2"></i>
-                    تأكيد الرفض
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash-alt me-2"></i>
+                    حذف العملية
                 </button>
             </div>
         </div>
@@ -415,90 +577,123 @@
 </div>
 
 <script>
-function setUnderReview() {
-    if (confirm('هل تريد وضع هذه العملية تحت المراجعة؟')) {
-        fetch(`/operations/{{ operation.id }}/under-review`, {
-            method: 'POST'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('تم وضع العملية تحت المراجعة');
-                location.reload();
-            } else {
-                alert('حدث خطأ: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('حدث خطأ في الشبكة');
-            console.error(error);
-        });
-    }
+let currentOperationId = null;
+
+function quickApprove(operationId) {
+    currentOperationId = operationId;
+    $('#approveModal').modal('show');
 }
 
-function showApprovalModal() {
-    const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
-    modal.show();
+function quickReject(operationId) {
+    currentOperationId = operationId;
+    $('#rejectModal').modal('show');
 }
 
-function showRejectionModal() {
-    const modal = new bootstrap.Modal(document.getElementById('rejectionModal'));
-    modal.show();
+function deleteOperation(operationId) {
+    currentOperationId = operationId;
+    $('#deleteModal').modal('show');
 }
 
-function approveOperation() {
-    const notes = document.getElementById('approvalNotes').value.trim();
+function confirmDelete() {
+    if (!currentOperationId) return;
     
-    const formData = new FormData();
-    formData.append('review_notes', notes);
+    fetch(`/operations/${currentOperationId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#deleteModal').modal('hide');
+            showToast('تم حذف العملية بنجاح', 'success');
+            setTimeout(() => {
+                window.location.href = '/operations/';
+            }, 1500);
+        } else {
+            showToast(data.message || 'حدث خطأ أثناء الحذف', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
+    });
+}
+
+// معالجة نموذج الموافقة
+document.getElementById('approveForm').addEventListener('submit', function(e) {
+    e.preventDefault();
     
-    fetch(`/operations/{{ operation.id }}/approve`, {
+    const formData = new FormData(this);
+    
+    fetch(`/operations/${currentOperationId}/approve`, {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('تمت الموافقة على العملية بنجاح');
-            location.reload();
+            $('#approveModal').modal('hide');
+            showToast('تمت الموافقة على العملية بنجاح', 'success');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('حدث خطأ: ' + data.message);
+            showToast(data.message || 'حدث خطأ', 'error');
         }
     })
     .catch(error => {
-        alert('حدث خطأ في الشبكة');
-        console.error(error);
+        console.error('Error:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
     });
-}
+});
 
-function rejectOperation() {
-    const reason = document.getElementById('rejectionReason').value.trim();
+// معالجة نموذج الرفض
+document.getElementById('rejectForm').addEventListener('submit', function(e) {
+    e.preventDefault();
     
-    if (!reason) {
-        alert('يجب إدخال سبب الرفض');
-        return;
-    }
+    const formData = new FormData(this);
     
-    const formData = new FormData();
-    formData.append('review_notes', reason);
-    
-    fetch(`/operations/{{ operation.id }}/reject`, {
+    fetch(`/operations/${currentOperationId}/reject`, {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('تم رفض العملية');
-            location.reload();
+            $('#rejectModal').modal('hide');
+            showToast('تم رفض العملية', 'success');
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('حدث خطأ: ' + data.message);
+            showToast(data.message || 'حدث خطأ', 'error');
         }
     })
     .catch(error => {
-        alert('حدث خطأ في الشبكة');
-        console.error(error);
+        console.error('Error:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
     });
+});
+
+function showToast(message, type) {
+    // إنشاء toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // إزالة التنبيه بعد 3 ثوان
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
 }
 </script>
 {% endblock %}

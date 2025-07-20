@@ -220,6 +220,41 @@ def set_under_review(operation_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
 
+@operations_bp.route('/<int:operation_id>/delete', methods=['POST'])
+@login_required
+def delete_operation(operation_id):
+    """حذف العملية"""
+    
+    if current_user.role != UserRole.ADMIN:
+        return jsonify({'success': False, 'message': 'غير مسموح لك بحذف العمليات'})
+    
+    operation = OperationRequest.query.get_or_404(operation_id)
+    
+    try:
+        # تسجيل العملية قبل الحذف
+        operation_title = operation.title
+        operation_type = operation.operation_type
+        
+        # حذف الإشعارات المرتبطة بالعملية أولاً
+        notifications = Notification.query.filter_by(operation_id=operation_id).all()
+        for notification in notifications:
+            db.session.delete(notification)
+        
+        # حذف العملية
+        db.session.delete(operation)
+        db.session.commit()
+        
+        # تسجيل عملية الحذف
+        log_audit('delete', 'operation_request', operation_id, 
+                 f'تم حذف العملية: {operation_title} من النوع {operation_type}')
+        
+        flash('تم حذف العملية بنجاح', 'success')
+        return jsonify({'success': True, 'message': 'تم حذف العملية بنجاح'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'حدث خطأ أثناء الحذف: {str(e)}'})
+
 @operations_bp.route('/notifications')
 @login_required
 def notifications():
