@@ -2035,6 +2035,8 @@ def create_handover_mobile(handover_id=None):
             # --- تحديد ما إذا كنا نعدل سجل موجود أم ننشئ جديد ---
             is_editing = handover_id is not None
             existing_handover = None
+            action = request.form.get('action', 'create')  # 'update', 'save_as_new', or 'create'
+            
             if is_editing:
                 existing_handover = VehicleHandover.query.get_or_404(handover_id)
             
@@ -2093,7 +2095,7 @@ def create_handover_mobile(handover_id=None):
             supervisor = Employee.query.get(supervisor_employee_id_str) if supervisor_employee_id_str and supervisor_employee_id_str.isdigit() else None
             
             # === 3. إنشاء أو تحديث كائن VehicleHandover ===
-            if is_editing:
+            if is_editing and action == 'update':
                 # تحديث السجل الموجود
                 handover = existing_handover
                 handover.vehicle_id = vehicle.id
@@ -2167,7 +2169,7 @@ def create_handover_mobile(handover_id=None):
                 if saved_custom_logo_path:
                     handover.custom_logo_path = saved_custom_logo_path
             else:
-                # إنشاء سجل جديد
+                # إنشاء سجل جديد (إما إنشاء جديد أو حفظ كنسخة جديدة)
                 handover = VehicleHandover(
                     vehicle_id=vehicle.id,
                     handover_type=handover_type,
@@ -2250,9 +2252,12 @@ def create_handover_mobile(handover_id=None):
             db.session.commit()
             
             action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
-            if is_editing:
+            if is_editing and action == 'update':
                 log_audit('update', 'vehicle_handover', handover.id, f'تم تعديل نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
                 flash(f'تم تحديث نموذج {action_type} بنجاح!', 'success')
+            elif is_editing and action == 'save_as_new':
+                log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نسخة جديدة من نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
+                flash(f'تم حفظ نسخة جديدة من نموذج {action_type} بنجاح!', 'success')
             else:
                 log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
                 flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
@@ -2286,9 +2291,11 @@ def create_handover_mobile(handover_id=None):
     
     # جلب بيانات التعديل إذا كان موجوداً
     existing_handover = None
+    is_editing = False
     if handover_id:
         existing_handover = VehicleHandover.query.get(handover_id)
         if existing_handover:
+            is_editing = True
             # استخدام بيانات السجل الموجود للتاريخ والوقت
             now_date = existing_handover.handover_date.strftime('%Y-%m-%d') if existing_handover.handover_date else now_date
             now_time = existing_handover.handover_time.strftime('%H:%M') if existing_handover.handover_time else now_time
@@ -2304,7 +2311,8 @@ def create_handover_mobile(handover_id=None):
         employeeData=employees_as_dicts,
         now_date=now_date,
         now_time=now_time,
-        existing_handover=existing_handover  # تمرير بيانات التعديل
+        existing_handover=existing_handover,  # تمرير بيانات التعديل
+        is_editing=is_editing  # تمرير حالة التعديل
     )
 
 
@@ -2461,7 +2469,7 @@ def create_handover_mobile(handover_id=None):
 #     # 3. تحديد نوع العملية الافتراضي (إذا تم تمريره كمعلمة)
 #     # هذا مفيد إذا أتيت من زر "تسليم" أو "استلام" محدد
     
-#     # تعريف أنواع العمليات كنص удобочитаемый
+#     # تعريف أنواع العمليات كنص удоبوعمي
 #     handover_types = {
 #         'delivery': 'تسليم السيارة',
 #         'return': 'استلام السيارة'

@@ -1045,11 +1045,38 @@ styles %} {{ super() }}
                 id="movement-officer-signature-data"
             />
 
-            <!-- زر الحفظ النهائي -->
+            <!-- أزرار الحفظ النهائية -->
             <div class="d-grid p-2 sticky-bottom">
+                {% if is_editing %}
+                <!-- أزرار التعديل -->
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button
+                            type="submit"
+                            name="action"
+                            value="update"
+                            class="btn btn-primary btn-lg shadow w-100"
+                        >
+                            <i class="fas fa-edit me-2"></i>تحديث السجل الحالي
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button
+                            type="submit"
+                            name="action"
+                            value="save_as_new"
+                            class="btn btn-success btn-lg shadow w-100"
+                        >
+                            <i class="fas fa-copy me-2"></i>حفظ كنسخة جديدة
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <!-- زر الإنشاء -->
                 <button type="submit" class="btn btn-primary btn-lg shadow">
                     <i class="fas fa-save me-2"></i>حفظ وإنشاء التقرير
                 </button>
+                {% endif %}
             </div>
         </div>
     </form>
@@ -1221,7 +1248,7 @@ styles %} {{ super() }}
         }
 
         // === 3. إدارة البحث عن الموظفين (سائق فقط) ===
-        const employeeData = {{ employeeData | tojson }};
+        const employeeData = JSON.parse('{{ employeeData | tojson | safe }}');
         function setupEmployeeSearch(type) {
             const searchBody = document.getElementById(`${type}_search_body`);
             if (!searchBody.innerHTML) { // لإنشاء الواجهة مرة واحدة فقط
@@ -1659,7 +1686,7 @@ styles %} {{ super() }}
     // === 8. ملء البيانات الموجودة عند التعديل ===
     {% if existing_handover %}
     document.addEventListener('DOMContentLoaded', function() {
-        const handover = {{ existing_handover|tojson|safe }};
+        const handover = JSON.parse('{{ existing_handover|tojson|safe }}');
 
         // ملء بيانات المركبة
         if (handover.vehicle_id) {
