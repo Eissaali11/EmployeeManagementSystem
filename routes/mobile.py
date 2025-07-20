@@ -2485,8 +2485,15 @@ def vehicle_checklist_details(checklist_id):
     # الحصول على بيانات الفحص من قاعدة البيانات
     checklist = VehicleChecklist.query.get_or_404(checklist_id)
 
-    # الحصول على بيانات السيارة
+    
+    # الحصول على بيانات السيارة وإضافة تحذير عند المراجعة
     vehicle = Vehicle.query.get(checklist.vehicle_id)
+    
+    # فحص حالة السيارة لإضافة تحذير في واجهة المراجعة
+    from routes.vehicles import check_vehicle_operation_restrictions
+    restrictions = check_vehicle_operation_restrictions(vehicle)
+    vehicle_warning = restrictions['message'] if restrictions['blocked'] else None
+    
 
     # جمع بيانات عناصر الفحص مرتبة حسب الفئة
     checklist_items = {}
@@ -2507,7 +2514,8 @@ def vehicle_checklist_details(checklist_id):
                           vehicle=vehicle,
                           checklist_items=checklist_items,
                           damage_markers=damage_markers,
-                          checklist_images=checklist_images)
+                          checklist_images=checklist_images,
+                          vehicle_warning=vehicle_warning)
 
 # تصدير فحص السيارة إلى PDF - النسخة المحمولة
 @mobile_bp.route('/vehicles/checklist/<int:checklist_id>/pdf')
@@ -2517,10 +2525,23 @@ def mobile_vehicle_checklist_pdf(checklist_id):
     try:
         # الحصول على بيانات الفحص
         checklist = VehicleChecklist.query.get_or_404(checklist_id)
+<<<<<<< HEAD
 
         # الحصول على بيانات المركبة
         vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
 
+=======
+        
+        # الحصول على بيانات المركبة وفحص حالتها
+        vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
+        
+        # فحص حالة السيارة - إضافة تحذير للسيارات خارج الخدمة
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            print(f"تحذير: {restrictions['message']}")
+        
+>>>>>>> 63a0172 (Improve handling of out-of-service vehicles and display clear warnings)
         # جمع بيانات عناصر الفحص مرتبة حسب الفئة
         checklist_items = {}
         for item in checklist.checklist_items:
@@ -2624,7 +2645,18 @@ def add_vehicle_checklist():
         # التحقق من وجود البيانات المطلوبة
         if not all([vehicle_id, inspection_date, inspector_name, inspection_type]):
             return jsonify({'status': 'error', 'message': 'بيانات غير مكتملة، يرجى ملء جميع الحقول المطلوبة'})
+<<<<<<< HEAD
 
+=======
+        
+        # الحصول على السيارة وفحص قيود العمليات
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            return jsonify({'status': 'error', 'message': restrictions['message']})
+        
+>>>>>>> 63a0172 (Improve handling of out-of-service vehicles and display clear warnings)
         try:
             # تحويل التاريخ إلى كائن Date
             inspection_date = datetime.strptime(inspection_date, '%Y-%m-%d').date()

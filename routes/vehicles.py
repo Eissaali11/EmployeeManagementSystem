@@ -4636,7 +4636,7 @@ def check_vehicle_operation_restrictions(vehicle):
     if not is_vehicle_operational(vehicle):
         return {
             'blocked': True,
-            'message': 'لا يمكن تنفيذ عمليات على هذه السيارة لأنها خارج الخدمة',
+            'message': f'❌ عذراً، السيارة "{vehicle.plate_number}" خارج الخدمة ولا يمكن تنفيذ أي عمليات عليها حالياً. يرجى تغيير حالة السيارة أولاً.',
             'status': 'out_of_service'
         }
     return {'blocked': False}
