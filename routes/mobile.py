@@ -2193,7 +2193,8 @@ def create_handover_mobile():
                     requested_by=current_user.id,
                     priority='normal'
                 )
-                # لا نحتاج commit هنا لأن العملية ستُحفظ مع بقية البيانات
+                # commit العملية والإشعارات
+                db.session.commit()
                 print(f"تم تسجيل العملية بنجاح: {operation.id}")
             except Exception as op_error:
                 print(f"خطأ في تسجيل العملية: {str(op_error)}")
