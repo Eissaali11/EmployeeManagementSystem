@@ -2021,6 +2021,13 @@ def create_handover_mobile():
             return redirect(url_for('mobile.create_handover_mobile')) # أعد توجيه المستخدم لنفس الصفحة
 
         vehicle = Vehicle.query.get_or_404(int(vehicle_id_str))
+        
+        # فحص قيود العمليات للمركبات خارج الخدمة
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            flash(restrictions['message'], 'danger')
+            return redirect(url_for('mobile.create_handover_mobile'))
 
         try:
             # === 1. استخراج كل البيانات من النموذج (نفس منطق الويب) ===
