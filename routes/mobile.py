@@ -2178,7 +2178,28 @@ def create_handover_mobile():
 
             action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
             log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
+<<<<<<< HEAD
 
+=======
+            
+            # إنشاء طلب عملية للموافقة الإدارية
+            try:
+                operation = create_operation_request(
+                    operation_type='handover',
+                    related_record_id=handover.id,
+                    vehicle_id=vehicle.id,
+                    title=f'طلب موافقة على {action_type} مركبة {vehicle.plate_number}',
+                    description=f'تم إنشاء {action_type} للمركبة {vehicle.plate_number} من قبل {current_user.username} ويحتاج للموافقة الإدارية',
+                    requested_by=current_user.id,
+                    priority='normal'
+                )
+                db.session.commit()
+                print(f"تم تسجيل العملية بنجاح: {operation.id}")
+            except Exception as op_error:
+                print(f"خطأ في تسجيل العملية: {str(op_error)}")
+                # لا نتوقف عند فشل تسجيل العملية، فقط نسجل الخطأ
+            
+>>>>>>> ee67da2 (Ensure vehicle handovers require administrative approval for added security)
             flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
 
@@ -2655,9 +2676,9 @@ def add_vehicle_checklist():
         # التحقق من وجود البيانات المطلوبة
         if not all([vehicle_id, inspection_date, inspector_name, inspection_type]):
             return jsonify({'status': 'error', 'message': 'بيانات غير مكتملة، يرجى ملء جميع الحقول المطلوبة'})
-<<<<<<< HEAD
 
-=======
+
+
         
         # الحصول على السيارة وفحص قيود العمليات
         vehicle = Vehicle.query.get_or_404(vehicle_id)
@@ -2666,7 +2687,7 @@ def add_vehicle_checklist():
         if restrictions['blocked']:
             return jsonify({'status': 'error', 'message': restrictions['message']})
         
->>>>>>> 63a0172 (Improve handling of out-of-service vehicles and display clear warnings)
+
         try:
             # تحويل التاريخ إلى كائن Date
             inspection_date = datetime.strptime(inspection_date, '%Y-%m-%d').date()
