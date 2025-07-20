@@ -813,6 +813,9 @@
 
             <div>
 
+                <button onclick="printPage()" class="btn btn-sm btn-info me-2">
+                    <i class="fas fa-print me-1"></i> طباعة
+                </button>
 
                 <a href="{{ url_for('documents.export_excel', 
                      document_type=request.args.get('document_type', ''),
@@ -847,7 +850,7 @@
                             <th>الحالة</th>
                             <th>حالة الكفالة</th>
                             <th>ملاحظات</th>
-                            <th>الإجراءات</th>
+                            <th class="actions-column">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -904,7 +907,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ document.notes or '-' }}</td>
-                            <td>
+                            <td class="actions-column">
                                 <!-- زر تحديث تاريخ انتهاء الوثيقة -->
                                 <a href="{{ url_for('documents.update_expiry', id=document.id) }}" class="btn btn-sm btn-info mb-1" title="تحديث تاريخ الانتهاء">
                                     <i class="fas fa-calendar-alt"></i>
@@ -945,6 +948,7 @@
     </div>
 </div>
 {% endblock %}
+
 
 
                 <h1>إدارة الوثائق</h1>
@@ -1703,6 +1707,135 @@
 
 {% endblock %} {% block extra_js %}
 
+
+{% block extra_css %}
+<style>
+/* أنماط الطباعة */
+@media print {
+    /* إخفاء العناصر غير المرغوب فيها */
+    .navbar, .sidebar, .btn, .pagination, .no-print,
+    .card-header .btn, .actions-column, .breadcrumb {
+        display: none !important;
+    }
+    
+    /* تحسين تخطيط الصفحة */
+    body {
+        font-size: 12px !important;
+        color: #000 !important;
+        background: white !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .card-body {
+        padding: 10px !important;
+    }
+    
+    /* تحسين الجدول للطباعة */
+    .table {
+        font-size: 10px !important;
+        border-collapse: collapse !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    .table th, .table td {
+        border: 1px solid #000 !important;
+        padding: 5px !important;
+        text-align: center !important;
+        word-wrap: break-word !important;
+    }
+    
+    .table th {
+        background-color: #f0f0f0 !important;
+        font-weight: bold !important;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+    
+    /* إخفاء عمود الإجراءات */
+    .table th:last-child,
+    .table td:last-child {
+        display: none !important;
+    }
+    
+    /* تحسين العرض للبيانات المهمة */
+    .badge {
+        border: 1px solid #000 !important;
+        padding: 2px 4px !important;
+        background: white !important;
+        color: #000 !important;
+        font-size: 9px !important;
+    }
+    
+    /* رأس الصفحة */
+    .print-header {
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    
+    /* تذييل الصفحة */
+    .print-footer {
+        margin-top: 20px;
+        text-align: center;
+        border-top: 1px solid #000;
+        padding-top: 10px;
+        font-size: 10px;
+    }
+    
+    /* تجنب كسر الصفحة في منتصف الصف */
+    .table tr {
+        page-break-inside: avoid !important;
+    }
+    
+    /* تحسين التخطيط للطباعة */
+    @page {
+        margin: 1cm;
+        size: A4 landscape;
+    }
+    
+    /* إضافة عنوان للطباعة */
+    body::before {
+        content: "تقرير الوثائق - نُظم";
+        display: block;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    
+    /* إضافة تاريخ الطباعة */
+    .container::after {
+        content: "تاريخ الطباعة: " attr(data-print-date);
+        display: block;
+        text-align: left;
+        font-size: 10px;
+        margin-top: 20px;
+        border-top: 1px solid #000;
+        padding-top: 10px;
+    }
+}
+
+/* أنماط الشاشة العادية */
+@media screen {
+    .print-only {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+
 <script>
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -1796,6 +1929,61 @@
 
         }
 
+    });
+
+
+
+    
+    // دالة الطباعة
+    function printPage() {
+        // إضافة تاريخ الطباعة
+        const container = document.querySelector('.container');
+        if (container) {
+            const currentDate = new Date().toLocaleDateString('ar-SA');
+            container.setAttribute('data-print-date', currentDate);
+        }
+        
+        // إخفاء فلاتر البحث مؤقتاً
+        const searchCard = document.querySelector('.card:first-of-type');
+        if (searchCard) {
+            searchCard.style.display = 'none';
+        }
+        
+        // تحسين عنوان الصفحة للطباعة
+        const originalTitle = document.title;
+        document.title = 'تقرير الوثائق - نُظم';
+        
+        // بدء عملية الطباعة
+        window.print();
+        
+        // استعادة العنوان الأصلي والعناصر المخفية
+        document.title = originalTitle;
+        if (searchCard) {
+            searchCard.style.display = 'block';
+        }
+    }
+    
+    // تحسين تنسيق الطباعة عند فتح مربع حوار الطباعة
+    window.addEventListener('beforeprint', function() {
+        // إضافة معلومات إضافية للطباعة
+        const printInfo = document.createElement('div');
+        printInfo.className = 'print-only';
+        printInfo.innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+                <h2>تقرير الوثائق - نُظم</h2>
+                <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</p>
+                <p>وقت الطباعة: ${new Date().toLocaleTimeString('ar-SA')}</p>
+            </div>
+        `;
+        document.body.insertBefore(printInfo, document.body.firstChild);
+    });
+    
+    window.addEventListener('afterprint', function() {
+        // إزالة معلومات الطباعة بعد انتهاء الطباعة
+        const printInfo = document.querySelector('.print-only');
+        if (printInfo) {
+            printInfo.remove();
+        }
     });
 
 </script>
