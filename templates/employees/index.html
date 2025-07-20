@@ -2,6 +2,7 @@
 
 {% block extra_css %}
 <style>
+
     /* Modern Employee Management Styles */
     :root {
         --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
@@ -523,6 +524,252 @@
         from { box-shadow: 0 0 5px rgba(255, 193, 7, 0.5); }
         to { box-shadow: 0 0 10px rgba(255, 193, 7, 0.8); }
     }
+
+/* أنماط الاستجابة للموبايل */
+@media (max-width: 768px) {
+    /* تحسين رأس الصفحة للموبايل */
+    .d-flex.justify-content-between.align-items-center {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px;
+    }
+    
+    .d-flex.justify-content-between.align-items-center h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* تحسين الأزرار للموبايل */
+    .d-flex.justify-content-between.align-items-center > div {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 8px;
+    }
+    
+    .d-flex.justify-content-between.align-items-center .btn {
+        width: 100% !important;
+        text-align: center !important;
+        padding: 12px 15px !important;
+        font-size: 14px !important;
+    }
+    
+    /* تحسين card header للموبايل */
+    .card-header.d-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+    
+    .card-header .text-muted {
+        font-size: 12px !important;
+    }
+    
+    /* تحسين الفلاتر للموبايل */
+    .col-md-6, .col-md-2, .col-md-3 {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .form-select {
+        padding: 12px 15px !important;
+        font-size: 16px !important; /* منع التكبير التلقائي في iOS */
+    }
+    
+    .input-group .form-control {
+        padding: 12px 15px !important;
+        font-size: 16px !important;
+    }
+    
+    /* تحسين placeholder للموبايل */
+    #searchInput::placeholder {
+        font-size: 14px !important;
+    }
+    
+    /* تحسين الجدول للموبايل */
+    .table-responsive {
+        border: none !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .table {
+        min-width: 800px !important;
+        font-size: 12px !important;
+    }
+    
+    .table th, .table td {
+        padding: 8px 4px !important;
+        white-space: nowrap !important;
+        vertical-align: middle !important;
+    }
+    
+    /* تحسين العمود الأول (الاسم) */
+    .table td:first-child, .table th:first-child {
+        position: sticky !important;
+        left: 0 !important;
+        background: white !important;
+        z-index: 1 !important;
+        min-width: 120px !important;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1) !important;
+    }
+    
+    .table thead th:first-child {
+        background: #f8f9fa !important;
+    }
+    
+    /* تحسين badges للموبايل */
+    .badge {
+        font-size: 10px !important;
+        padding: 3px 6px !important;
+        margin: 1px !important;
+        display: inline-block !important;
+    }
+    
+    /* تحسين أزرار الإجراءات للموبايل */
+    .btn-sm {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+        margin: 1px !important;
+    }
+    
+    /* تحسين الفلاتر النشطة للموبايل */
+    .badge.bg-primary, .badge.bg-success, .badge.bg-warning, 
+    .badge.bg-danger, .badge.bg-info {
+        margin: 2px !important;
+        font-size: 10px !important;
+    }
+    
+    /* تحسين النص الصغير للموبايل */
+    .small, .text-muted {
+        font-size: 12px !important;
+        line-height: 1.3 !important;
+    }
+    
+    /* تحسين pagination للموبايل */
+    .pagination {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .pagination .page-link {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        margin: 2px !important;
+    }
+    
+    /* إخفاء النص الإضافي في الأزرار للموبايل */
+    .btn .fas + span {
+        display: none !important;
+    }
+    
+    .btn .fas {
+        margin: 0 !important;
+    }
+    
+    /* تحسين container للموبايل */
+    .container-fluid {
+        padding: 10px !important;
+    }
+    
+    .card {
+        margin: 0 !important;
+        border-radius: 8px !important;
+    }
+    
+    .card-body {
+        padding: 15px !important;
+    }
+}
+
+/* تحسينات للأجهزة اللوحية */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .col-md-6 {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .col-md-2, .col-md-3 {
+        width: 50% !important;
+        margin-bottom: 10px !important;
+    }
+    
+    .table {
+        font-size: 13px !important;
+    }
+    
+    .table th, .table td {
+        padding: 10px 6px !important;
+    }
+}
+
+/* تحسينات عامة للاستجابة */
+.table-responsive {
+    border-radius: 8px !important;
+}
+
+/* تحسين عرض الصور الشخصية للموبايل */
+@media (max-width: 768px) {
+    .table .profile-image {
+        width: 30px !important;
+        height: 30px !important;
+    }
+}
+
+/* تحسين عرض البيانات الطويلة */
+.employee-name {
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+    .employee-name {
+        max-width: 100px;
+    }
+}
+
+/* تحسين تمرير الجدول */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* مؤشر التمرير للجدول */
+.scroll-indicator {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .scroll-indicator {
+        display: block !important;
+    }
+}
+
 </style>
 {% endblock %}
 
@@ -713,10 +960,16 @@
             </form>
         </div>
         
+<<<<<<< HEAD
         <!-- Enhanced Table Section -->
         <div class="card-body p-0">
             <div class="table-horizontal-scroll p-3">
                 <table id="employeesTable" class="table table-enhanced">
+=======
+        <div class="card-body">
+            <div class="table-responsive table-horizontal-scroll position-relative">
+                <table id="employeesTable" class="table table-striped table-hover">
+>>>>>>> 2cdab69 (Improve the display of the employee list page on mobile and smaller screens)
                     <thead>
                         <tr>
                             <th><i class="fas fa-id-card me-1"></i>الرقم الوظيفي</th>
@@ -732,11 +985,17 @@
                     </thead>
                     <tbody>
                         {% for employee in employees %}
+<<<<<<< HEAD
                         <tr class="{% if employee.status == 'inactive' %}row-inactive{% elif employee.status == 'on_leave' %}row-on-leave{% elif employee.status == 'terminated' %}row-terminated{% endif %}">
                             <td>
                                 <span class="badge badge-secondary-enhanced">{{ employee.employee_id }}</span>
                             </td>
                             <td>
+=======
+                        <tr class="{% if employee.status == 'inactive' %}table-secondary text-muted{% elif employee.status == 'on_leave' %}table-warning{% elif employee.status == 'terminated' %}text-muted{% endif %}">
+                            <td>{{ employee.employee_id }}</td>
+                            <td class="employee-name">
+>>>>>>> 2cdab69 (Improve the display of the employee list page on mobile and smaller screens)
                                 {% if employee.status == 'terminated' %}
                                     <del>{{ employee.name }}</del>
                                 {% else %}
@@ -834,6 +1093,12 @@
 <!-- Enhanced Alert Container -->
 <div id="alertContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050"></div>
 
+<!-- مؤشر التمرير للجدول -->
+<div class="scroll-indicator" id="scrollIndicator">
+    <i class="fas fa-arrows-alt-h me-1"></i>
+    اسحب لعرض المزيد
+</div>
+
 <script>
 // Enhanced JavaScript with improved functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -866,6 +1131,7 @@ function initializeSearch() {
     const employeeCountElement = document.getElementById('employeeCount');
     const employeeRows = document.querySelectorAll('table#employeesTable tbody tr');
     
+<<<<<<< HEAD
     if (!searchInput) return;
     
     // Real-time search with debouncing
@@ -886,10 +1152,111 @@ function initializeSearch() {
         }
     });
     
+=======
+    // تحسينات الموبايل
+    initMobileEnhancements();
+    
+    // ربط أحداث البحث
+    if (searchInput) {
+        // البحث الفوري أثناء الكتابة
+        searchInput.addEventListener('input', function() {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                performSearch();
+            }, 300); // تأخير 300ms لتحسين الأداء
+        });
+        
+        // البحث عند الضغط على Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+    }
+    
+    // دالة تحسينات الموبايل
+    function initMobileEnhancements() {
+        // تحسين التمرير الأفقي للجدول
+        const tableContainer = document.querySelector('.table-responsive, .table-horizontal-scroll');
+        const scrollIndicator = document.getElementById('scrollIndicator');
+        
+        if (tableContainer && window.innerWidth <= 768) {
+            // إظهار مؤشر التمرير
+            if (scrollIndicator) {
+                scrollIndicator.style.display = 'block';
+                
+                // إخفاء المؤشر بعد التمرير
+                let scrollTimeout;
+                tableContainer.addEventListener('scroll', function() {
+                    scrollIndicator.style.opacity = '0.5';
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        scrollIndicator.style.opacity = '1';
+                    }, 1000);
+                });
+                
+                // إخفاء المؤشر نهائياً بعد 10 ثوان
+                setTimeout(() => {
+                    if (scrollIndicator) {
+                        scrollIndicator.style.display = 'none';
+                    }
+                }, 10000);
+            }
+        }
+        
+        // تحسين لمس الأزرار للموبايل
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('touchstart', function() {
+                this.style.opacity = '0.7';
+            });
+            
+            button.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.opacity = '1';
+                }, 100);
+            });
+        });
+        
+        // تحسين الفلاتر للموبايل
+        const selects = document.querySelectorAll('.form-select');
+        selects.forEach(select => {
+            select.addEventListener('change', function() {
+                // إضافة تأثير بصري عند التغيير
+                this.style.borderColor = '#0d6efd';
+                setTimeout(() => {
+                    this.style.borderColor = '';
+                }, 500);
+            });
+        });
+        
+        // تحسين البحث للموبايل
+        if (searchInput) {
+            // منع التكبير في iOS
+            searchInput.addEventListener('focus', function() {
+                if (window.innerWidth <= 768) {
+                    document.querySelector('meta[name=viewport]').setAttribute('content', 
+                        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                }
+            });
+            
+            searchInput.addEventListener('blur', function() {
+                if (window.innerWidth <= 768) {
+                    document.querySelector('meta[name=viewport]').setAttribute('content', 
+                        'width=device-width, initial-scale=1.0');
+                }
+            });
+        }
+    }
+    
+    // دالة البحث المحسنة
+>>>>>>> 2cdab69 (Improve the display of the employee list page on mobile and smaller screens)
     function performSearch() {
         const searchTerm = searchInput.value.trim().toLowerCase();
         let foundCount = 0;
         
+<<<<<<< HEAD
         // Show loading indicator
         searchInput.style.background = 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iOCIgc3Ryb2tlPSIjNjY3ZWVhIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTE2IDE2bDQgNCIgc3Ryb2tlPSIjNjY3ZWVhIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K") no-repeat right 10px center';
         
@@ -932,6 +1299,52 @@ function initializeSearch() {
             searchResultsInfo.style.display = 'block';
             if (employeeCountElement) {
                 employeeCountElement.textContent = foundCount;
+=======
+        // إذا كان البحث فارغاً، أظهر جميع الصفوف
+        if (searchTerm === '') {
+            employeeRows.forEach(row => {
+                row.style.display = '';
+                row.classList.remove('table-primary', 'search-highlight');
+            });
+            if (searchResultsInfo) {
+                searchResultsInfo.style.display = 'none';
+            }
+            return;
+        }
+        
+        // البحث في كل صف مع تمييز النتائج
+        employeeRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            let rowText = '';
+            let hasMatch = false;
+            
+            // إزالة التمييز السابق
+            cells.forEach(cell => {
+                cell.innerHTML = cell.innerHTML.replace(/<mark[^>]*>/g, '').replace(/<\/mark>/g, '');
+            });
+            
+            cells.forEach(cell => {
+                if (!cell.querySelector('.btn-group')) {
+                    const cellText = cell.textContent.trim();
+                    rowText += cellText + ' ';
+                    
+                    // تمييز النص المطابق
+                    if (cellText.toLowerCase().includes(searchTerm)) {
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        cell.innerHTML = cell.innerHTML.replace(regex, '<mark style="background-color: #ffeb3b; color: #000;">$1</mark>');
+                        hasMatch = true;
+                    }
+                }
+            });
+            
+            if (hasMatch) {
+                row.style.display = '';
+                row.classList.add('search-highlight');
+                foundCount++;
+            } else {
+                row.style.display = 'none';
+                row.classList.remove('search-highlight');
+>>>>>>> 2cdab69 (Improve the display of the employee list page on mobile and smaller screens)
             }
             
             // Show result alert
@@ -980,10 +1393,103 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'scale(1.01)';
         });
         
+<<<<<<< HEAD
         row.addEventListener('mouseleave', function() {
             this.style.transform = 'scale(1)';
         });
     });
+=======
+        // عرض نتائج البحث
+        if (searchResultsInfo) {
+            searchResultsInfo.style.display = 'block';
+            if (employeeCountElement) {
+                employeeCountElement.textContent = foundCount;
+            }
+        }
+        
+        // عرض تنبيه بالنتائج للموبايل
+        if (window.innerWidth <= 768) {
+            if (foundCount > 0) {
+                showAlert(`✓ ${foundCount} موظف`, 'success');
+            } else {
+                showAlert('❌ لا توجد نتائج', 'warning');
+            }
+        }
+    }
+    
+    // دالة عرض تنبيه محسنة
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertId = `alert-${Date.now()}`;
+        
+        const alertHtml = `
+            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert" style="font-size: 14px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button>
+            </div>
+        `;
+        
+        alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // إخفاء التنبيه تلقائياً
+        const duration = window.innerWidth <= 768 ? 3000 : 5000; // أسرع للموبايل
+        setTimeout(() => {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                const bsAlert = new bootstrap.Alert(alertElement);
+                bsAlert.close();
+            }
+        }, duration);
+    }
+    
+    // تحسين استجابة الصفحة عند تغيير الاتجاه
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            initMobileEnhancements();
+        }, 100);
+    });
+    
+    // تحسين التمرير السلس للجدول
+    const tableContainer = document.querySelector('.table-responsive, .table-horizontal-scroll');
+    if (tableContainer) {
+        tableContainer.style.scrollBehavior = 'smooth';
+    }
+>>>>>>> 2cdab69 (Improve the display of the employee list page on mobile and smaller screens)
 });
+
+// إضافة أنماط ديناميكية للبحث
+const style = document.createElement('style');
+style.textContent = `
+    .search-highlight {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        border-left: 3px solid #0d6efd !important;
+    }
+    
+    mark {
+        animation: highlight 0.3s ease-in-out;
+    }
+    
+    @keyframes highlight {
+        from { background-color: #fff3cd; }
+        to { background-color: #ffeb3b; }
+    }
+    
+    @media (max-width: 768px) {
+        .table-responsive {
+            position: relative;
+        }
+        
+        .scroll-indicator {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}
