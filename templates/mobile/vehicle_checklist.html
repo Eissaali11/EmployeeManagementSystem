@@ -21,6 +21,22 @@ styles %} {{ super() }}
         margin-right: -2.5em;
         margin-left: 0;
     }
+
+    /* Expand button styling */
+    #expand-canvas-btn {
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+    }
+    #expand-canvas-btn:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    /* Modal canvas styling */
+    #modal-damage-canvas {
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+    }
 </style>
 {% endblock %} {% block content %}
 <div class="container-fluid py-3" style="background-color: #f0f2f5">
@@ -532,7 +548,7 @@ styles %} {{ super() }}
                 </div>
                 <div class="card-body text-center">
                     <div
-                        class="mb-3 mx-auto"
+                        class="mb-3 mx-auto position-relative"
                         style="
                             border: 1px solid #ddd;
                             background-color: #fff;
@@ -540,6 +556,15 @@ styles %} {{ super() }}
                         "
                     >
                         <canvas id="damage-canvas"></canvas>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary position-absolute"
+                            style="top: 5px; right: 5px; z-index: 10"
+                            id="expand-canvas-btn"
+                            title="عرض بحجم أكبر"
+                        >
+                            <i class="fas fa-expand-alt"></i>
+                        </button>
                     </div>
                     <div
                         class="btn-toolbar justify-content-center"
@@ -1029,6 +1054,103 @@ styles %} {{ super() }}
         </div>
     </form>
 </div>
+
+<!-- Modal for expanded damage canvas -->
+<div
+    class="modal fade"
+    id="damageCanvasModal"
+    tabindex="-1"
+    aria-labelledby="damageCanvasModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="damageCanvasModalLabel">
+                    <i class="fas fa-car me-2"></i>مخطط الضرر - عرض موسع
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <canvas id="modal-damage-canvas"></canvas>
+                </div>
+                <div class="btn-toolbar justify-content-center" role="toolbar">
+                    <div class="btn-group me-2 mb-2" role="group">
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm active"
+                            id="modal-draw-mode-btn"
+                        >
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            id="modal-select-mode-btn"
+                        >
+                            <i class="fas fa-mouse-pointer"></i>
+                        </button>
+                    </div>
+                    <div
+                        class="input-group input-group-sm me-2 mb-2"
+                        style="width: auto"
+                    >
+                        <span class="input-group-text">اللون</span>
+                        <input
+                            type="color"
+                            class="form-control-color"
+                            id="modal-draw-color-picker"
+                            value="#E53935"
+                            title="اختر لون الخط"
+                        />
+                    </div>
+                    <div
+                        class="input-group input-group-sm mb-2"
+                        style="width: auto"
+                    >
+                        <input
+                            type="range"
+                            class="form-range"
+                            min="2"
+                            max="20"
+                            value="4"
+                            id="modal-draw-line-width"
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm ms-auto mb-2"
+                        id="modal-clear-canvas-btn"
+                    >
+                        <i class="fas fa-trash-alt"></i> مسح
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    إغلاق
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="sync-canvas-btn"
+                >
+                    <i class="fas fa-sync-alt me-2"></i>مزامنة مع النموذج
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %} {% block scripts %} {{ super() }}
 <!-- لا حاجة لتحميل المكتبات هنا، layout.html يوفرها -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1175,6 +1297,8 @@ styles %} {{ super() }}
 
         // === 4. إدارة مخطط الضرر ===
         let damageCanvas = null;
+        let modalDamageCanvas = null;
+
         function initializeDamageDiagram() {
             if (damageCanvas) return;
             const diagramEl = document.getElementById('damage-canvas');
@@ -1193,11 +1317,114 @@ styles %} {{ super() }}
                 damageCanvas.setBackgroundImage(img, damageCanvas.renderAll.bind(damageCanvas), { scaleX: scale, scaleY: scale });
             }, { crossOrigin: 'anonymous' });
 
+            // Main canvas controls
             document.getElementById('draw-mode-btn').onclick = () => { damageCanvas.isDrawingMode = true; };
             document.getElementById('select-mode-btn').onclick = () => { damageCanvas.isDrawingMode = false; };
             document.getElementById('draw-color-picker').oninput = e => { damageCanvas.freeDrawingBrush.color = e.target.value; };
             document.getElementById('draw-line-width').oninput = e => { damageCanvas.freeDrawingBrush.width = parseInt(e.target.value); };
             document.getElementById('clear-canvas-btn').onclick = () => { if (confirm("هل تريد مسح كل الرسوم؟")) damageCanvas.remove(...damageCanvas.getObjects()); };
+
+            // Expand button functionality
+            document.getElementById('expand-canvas-btn').onclick = openDamageModal;
+        }
+
+        function openDamageModal() {
+            const modal = new bootstrap.Modal(document.getElementById('damageCanvasModal'));
+            modal.show();
+
+            // Initialize modal canvas after modal is shown
+            document.getElementById('damageCanvasModal').addEventListener('shown.bs.modal', function() {
+                initializeModalCanvas();
+            }, { once: true });
+        }
+
+        function initializeModalCanvas() {
+            if (modalDamageCanvas) {
+                // Update existing modal canvas with current data
+                syncCanvasToModal();
+                return;
+            }
+
+            const modalCanvasEl = document.getElementById('modal-damage-canvas');
+            if (!modalCanvasEl) return;
+
+            // Set modal canvas size
+            const modalBody = modalCanvasEl.closest('.modal-body');
+            const maxWidth = Math.min(modalBody.offsetWidth - 40, 600);
+            const maxHeight = Math.min(window.innerHeight * 0.6, 400);
+
+            modalDamageCanvas = new fabric.Canvas('modal-damage-canvas', {
+                isDrawingMode: true,
+                backgroundColor: '#fff',
+                width: maxWidth,
+                height: maxHeight
+            });
+
+            modalDamageCanvas.freeDrawingBrush.color = "#E53935";
+            modalDamageCanvas.freeDrawingBrush.width = 4;
+
+            // Load background image
+            const imageUrl = "{{ url_for('static', filename='images/vehicle_diagram.png') }}";
+            fabric.Image.fromURL(imageUrl, (img) => {
+                const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                const scaledWidth = img.width * scale;
+                const scaledHeight = img.height * scale;
+
+                modalDamageCanvas.setWidth(scaledWidth).setHeight(scaledHeight);
+                modalDamageCanvas.setBackgroundImage(img, modalDamageCanvas.renderAll.bind(modalDamageCanvas), {
+                    scaleX: scale,
+                    scaleY: scale
+                });
+
+                // Copy existing drawings from main canvas
+                syncCanvasToModal();
+            }, { crossOrigin: 'anonymous' });
+
+            // Modal canvas controls
+            document.getElementById('modal-draw-mode-btn').onclick = () => { modalDamageCanvas.isDrawingMode = true; };
+            document.getElementById('modal-select-mode-btn').onclick = () => { modalDamageCanvas.isDrawingMode = false; };
+            document.getElementById('modal-draw-color-picker').oninput = e => { modalDamageCanvas.freeDrawingBrush.color = e.target.value; };
+            document.getElementById('modal-draw-line-width').oninput = e => { modalDamageCanvas.freeDrawingBrush.width = parseInt(e.target.value); };
+            document.getElementById('modal-clear-canvas-btn').onclick = () => {
+                if (confirm("هل تريد مسح كل الرسوم؟")) modalDamageCanvas.remove(...modalDamageCanvas.getObjects());
+            };
+
+            // Sync button functionality
+            document.getElementById('sync-canvas-btn').onclick = syncModalToCanvas;
+        }
+
+        function syncCanvasToModal() {
+            if (!modalDamageCanvas || !damageCanvas) return;
+
+            // Clear modal canvas objects
+            modalDamageCanvas.remove(...modalDamageCanvas.getObjects());
+
+            // Copy objects from main canvas to modal
+            damageCanvas.getObjects().forEach(obj => {
+                const clonedObj = fabric.util.object.clone(obj);
+                modalDamageCanvas.add(clonedObj);
+            });
+
+            modalDamageCanvas.renderAll();
+        }
+
+        function syncModalToCanvas() {
+            if (!modalDamageCanvas || !damageCanvas) return;
+
+            // Clear main canvas objects
+            damageCanvas.remove(...damageCanvas.getObjects());
+
+            // Copy objects from modal to main canvas
+            modalDamageCanvas.getObjects().forEach(obj => {
+                const clonedObj = fabric.util.object.clone(obj);
+                damageCanvas.add(clonedObj);
+            });
+
+            damageCanvas.renderAll();
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('damageCanvasModal'));
+            if (modal) modal.hide();
         }
 
         // === 5. إدارة التواقيع (شاملة) ===
@@ -1395,9 +1622,16 @@ styles %} {{ super() }}
                 return false;
             }
 
-            // أ. حفظ مخطط الضرر
-            if (damageCanvas && damageCanvas.getObjects().length > 0) {
-                document.getElementById('damage-diagram-data').value = damageCanvas.toDataURL({ format: 'png', quality: 0.8 });
+            // أ. حفظ مخطط الضرر (من الكانفاس الرئيسي أو المودال)
+            let canvasToSave = damageCanvas;
+            if (modalDamageCanvas && modalDamageCanvas.getObjects().length > 0) {
+                canvasToSave = modalDamageCanvas;
+            } else if (damageCanvas && damageCanvas.getObjects().length > 0) {
+                canvasToSave = damageCanvas;
+            }
+
+            if (canvasToSave && canvasToSave.getObjects().length > 0) {
+                document.getElementById('damage-diagram-data').value = canvasToSave.toDataURL({ format: 'png', quality: 0.8 });
             }
             // ب. حفظ التواقيع المرسومة فقط (التي تم رفعها محفوظة بالفعل)
             for (const id in signaturePads) {
