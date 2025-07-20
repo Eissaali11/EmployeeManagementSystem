@@ -251,7 +251,9 @@ def create_operation_request(operation_type, related_record_id, vehicle_id,
         title=title,
         description=description,
         requested_by=requested_by,
-        priority=priority
+        requested_at=datetime.utcnow(),
+        priority=priority,
+        status='pending'
     )
     
     try:
