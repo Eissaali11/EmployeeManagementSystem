@@ -1346,3 +1346,110 @@ class SafetyInspection(db.Model):
     def __repr__(self):
         return f'<SafetyInspection {self.vehicle_id} by {self.driver_name}>'
 
+
+
+class OperationRequest(db.Model):
+    """نموذج لتتبع جميع العمليات التي تحتاج موافقة إدارية"""
+    __tablename__ = "operation_requests"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # نوع العملية
+    operation_type = db.Column(db.String(50), nullable=False)  # handover, workshop, external_authorization, safety_inspection
+    
+    # معرف السجل المرتبط بالعملية
+    related_record_id = db.Column(db.Integer, nullable=False)
+    
+    # معرف السيارة
+    vehicle_id = db.Column(db.Integer, db.ForeignKey("vehicle.id", ondelete="CASCADE"), nullable=False)
+    
+    # معلومات العملية
+    title = db.Column(db.String(200), nullable=False)  # عنوان العملية
+    description = db.Column(db.Text)  # وصف العملية
+    
+    # معلومات الطالب
+    requested_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # حالة العملية
+    status = db.Column(db.String(20), default="pending")  # pending, approved, rejected, under_review
+    
+    # معلومات المراجع
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    review_notes = db.Column(db.Text)  # ملاحظات المراجع
+    
+    # أولوية العملية
+    priority = db.Column(db.String(20), default="normal")  # low, normal, high, urgent
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship("Vehicle", backref="operation_requests")
+    requester = db.relationship("User", foreign_keys=[requested_by], backref="operation_requests")
+    reviewer = db.relationship("User", foreign_keys=[reviewed_by], backref="reviewed_operations")
+    
+    def get_related_record(self):
+        """جلب السجل المرتبط بالعملية حسب نوعها"""
+        if self.operation_type == "handover":
+            return VehicleHandover.query.get(self.related_record_id)
+        elif self.operation_type == "workshop":
+            return VehicleWorkshop.query.get(self.related_record_id)
+        elif self.operation_type == "external_authorization":
+            return ExternalAuthorization.query.get(self.related_record_id)
+        elif self.operation_type == "safety_inspection":
+            return SafetyInspection.query.get(self.related_record_id)
+        return None
+    
+    def get_operation_url(self):
+        """الحصول على رابط العملية للمراجعة"""
+        if self.operation_type == "handover":
+            return f"/vehicles/{self.vehicle_id}/handover/{self.related_record_id}"
+        elif self.operation_type == "workshop":
+            return f"/mobile/workshop/{self.related_record_id}"
+        elif self.operation_type == "external_authorization":
+            return f"/mobile/vehicles/{self.vehicle_id}/external-authorization/{self.related_record_id}"
+        elif self.operation_type == "safety_inspection":
+            return f"/admin/external-safety-check/{self.related_record_id}"
+        return "#"
+    
+    def __repr__(self):
+        return f"<OperationRequest {self.operation_type} for Vehicle {self.vehicle_id}>"
+
+
+class OperationNotification(db.Model):
+    """نموذج للإشعارات المرتبطة بالعمليات"""
+    __tablename__ = "operation_notifications"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # معرف العملية
+    operation_request_id = db.Column(db.Integer, db.ForeignKey("operation_requests.id", ondelete="CASCADE"), nullable=False)
+    
+    # معرف المستلم
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    
+    # نوع الإشعار
+    notification_type = db.Column(db.String(50), nullable=False)  # new_operation, status_change, reminder
+    
+    # محتوى الإشعار
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    
+    # حالة الإشعار
+    is_read = db.Column(db.Boolean, default=False)
+    is_sent = db.Column(db.Boolean, default=False)
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    read_at = db.Column(db.DateTime, nullable=True)
+    
+    # العلاقات
+    operation_request = db.relationship("OperationRequest", backref="notifications")
+    user = db.relationship("User", backref="notifications")
+    
+    def __repr__(self):
+        return f"<OperationNotification {self.title} to {self.user_id}>"
+

@@ -1,0 +1,346 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة العمليات{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h2 class="card-title mb-1">
+                                <i class="fas fa-cogs me-2"></i>
+                                إدارة العمليات
+                            </h2>
+                            <p class="card-text mb-0">مراجعة والموافقة على العمليات المعلقة</p>
+                        </div>
+                        <div class="col-auto">
+                            <div class="text-center">
+                                <h3 class="mb-0">{{ stats.pending }}</h3>
+                                <small>عملية معلقة</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h4 class="text-warning">{{ stats.pending }}</h4>
+                    <p class="text-muted mb-0">معلقة</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-eye fa-2x"></i>
+                    </div>
+                    <h4 class="text-info">{{ stats.under_review }}</h4>
+                    <p class="text-muted mb-0">تحت المراجعة</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h4 class="text-success">{{ stats.approved }}</h4>
+                    <p class="text-muted mb-0">موافق عليها</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                    <h4 class="text-danger">{{ stats.rejected }}</h4>
+                    <p class="text-muted mb-0">مرفوضة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        إجراءات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{{ url_for('operations.operations_list') }}" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="fas fa-list me-2"></i>
+                                جميع العمليات
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('operations.operations_list', status='pending') }}" class="btn btn-outline-warning btn-lg w-100">
+                                <i class="fas fa-clock me-2"></i>
+                                العمليات المعلقة
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ url_for('operations.notifications') }}" class="btn btn-outline-info btn-lg w-100 position-relative">
+                                <i class="fas fa-bell me-2"></i>
+                                الإشعارات
+                                {% if stats.unread_notifications > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ stats.unread_notifications }}
+                                </span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success btn-lg w-100" onclick="refreshNotifications()">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                تحديث
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pending Operations -->
+    {% if pending_requests %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-hourglass-half me-2"></i>
+                        العمليات المعلقة (أحدث 10)
+                    </h5>
+                    <span class="badge bg-warning">{{ pending_requests|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>نوع العملية</th>
+                                    <th>العنوان</th>
+                                    <th>السيارة</th>
+                                    <th>الطالب</th>
+                                    <th>التاريخ</th>
+                                    <th>الأولوية</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for operation in pending_requests %}
+                                <tr>
+                                    <td>
+                                        {% if operation.operation_type == 'handover' %}
+                                            <span class="badge bg-info">تسليم/استلام</span>
+                                        {% elif operation.operation_type == 'workshop' %}
+                                            <span class="badge bg-warning">ورشة</span>
+                                        {% elif operation.operation_type == 'external_authorization' %}
+                                            <span class="badge bg-primary">تفويض خارجي</span>
+                                        {% elif operation.operation_type == 'safety_inspection' %}
+                                            <span class="badge bg-success">فحص سلامة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ operation.title }}</td>
+                                    <td>
+                                        {% if operation.vehicle %}
+                                            <span class="badge bg-secondary">{{ operation.vehicle.plate_number }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if operation.requester %}
+                                            {{ operation.requester.username }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ operation.requested_at.strftime('%Y/%m/%d %H:%M') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if operation.priority == 'urgent' %}
+                                            <span class="badge bg-danger">عاجل</span>
+                                        {% elif operation.priority == 'high' %}
+                                            <span class="badge bg-warning">عالي</span>
+                                        {% elif operation.priority == 'normal' %}
+                                            <span class="badge bg-info">عادي</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">منخفض</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('operations.view_operation', operation_id=operation.id) }}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button class="btn btn-outline-success btn-sm" 
+                                                    onclick="quickApprove({{ operation.id }})">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    onclick="quickReject({{ operation.id }})">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="text-muted mb-3">
+                        <i class="fas fa-check-circle fa-3x"></i>
+                    </div>
+                    <h5 class="text-muted">لا توجد عمليات معلقة</h5>
+                    <p class="text-muted">جميع العمليات تمت مراجعتها</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Sound notification -->
+<audio id="notificationSound" preload="auto" style="display: none;">
+    <source src="{{ url_for('static', filename='sounds/notification.mp3') }}" type="audio/mpeg">
+    <source src="{{ url_for('static', filename='sounds/notification.wav') }}" type="audio/wav">
+</audio>
+
+<script>
+let lastOperationCount = {{ stats.pending }};
+
+// تحديث الإشعارات كل 30 ثانية
+setInterval(checkForNewOperations, 30000);
+
+function checkForNewOperations() {
+    fetch('/operations/api/count')
+        .then(response => response.json())
+        .then(data => {
+            if (data.pending > lastOperationCount) {
+                // عملية جديدة!
+                playNotificationSound();
+                showNotificationBanner(data.pending - lastOperationCount);
+                lastOperationCount = data.pending;
+            }
+        })
+        .catch(console.error);
+}
+
+function playNotificationSound() {
+    const audio = document.getElementById('notificationSound');
+    if (audio) {
+        audio.play().catch(e => console.log('Cannot play sound:', e));
+    }
+}
+
+function showNotificationBanner(newCount) {
+    const banner = `
+        <div class="alert alert-info alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="fas fa-bell me-2"></i>
+            <strong>عملية جديدة!</strong> 
+            ${newCount} عملية جديدة تحتاج مراجعة
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', banner);
+    
+    // إزالة الإشعار بعد 5 ثوان
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) alert.remove();
+    }, 5000);
+}
+
+function refreshNotifications() {
+    location.reload();
+}
+
+function quickApprove(operationId) {
+    if (confirm('هل أنت متأكد من الموافقة على هذه العملية؟')) {
+        const formData = new FormData();
+        formData.append('review_notes', 'موافقة سريعة من لوحة الإدارة');
+        
+        fetch(`/operations/${operationId}/approve`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تمت الموافقة بنجاح');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+
+function quickReject(operationId) {
+    const reason = prompt('أدخل سبب الرفض:');
+    if (reason && reason.trim()) {
+        const formData = new FormData();
+        formData.append('review_notes', reason.trim());
+        
+        fetch(`/operations/${operationId}/reject`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم رفض العملية');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+</script>
+{% endblock %}
