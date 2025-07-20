@@ -1871,13 +1871,16 @@ def export_expiring_excel():
     days = int(request.args.get('days', '30'))
     document_type = request.args.get('document_type', '')
     status = request.args.get('status', 'expiring')  # 'expiring' or 'expired'
+    employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
+    sponsorship_status = request.args.get('sponsorship_status', '')
     
     # تحديد نطاق التاريخ
     today = datetime.now().date()
     future_date = today + timedelta(days=days)
     
     # بناء الاستعلام بناءً على الحالة
-    query = Document.query
+    query = Document.query.filter(Document.expiry_date.isnot(None))
     
     if status == 'expired':
         # الوثائق المنتهية
@@ -1894,6 +1897,22 @@ def export_expiring_excel():
     # فلتر نوع الوثيقة
     if document_type:
         query = query.filter(Document.document_type == document_type)
+    
+    # فلتر الموظف
+    if employee_id and employee_id.isdigit():
+        query = query.filter(Document.employee_id == int(employee_id))
+    
+    # تطبيق الفلاتر التي تحتاج join مع Employee
+    needs_employee_join = department_id or sponsorship_status
+    
+    if needs_employee_join:
+        query = query.join(Employee)
+        
+        if department_id and department_id.isdigit():
+            query = query.filter(Employee.department_id == int(department_id))
+        
+        if sponsorship_status:
+            query = query.filter(Employee.sponsorship_status == sponsorship_status)
     
     # تنفيذ الاستعلام مع تحميل بيانات الموظف والأقسام
     query = query.options(selectinload(Document.employee).selectinload(Employee.departments))
@@ -1976,7 +1995,7 @@ def export_expiring_excel():
     }
     
     # كتابة عنوان الملف
-    worksheet.merge_range('A1:H1', title, header_format)
+    worksheet.merge_range('A1:I1', title, header_format)
     
     # كتابة رؤوس الأعمدة
     headers = [
@@ -1987,6 +2006,7 @@ def export_expiring_excel():
         'تاريخ الإصدار',
         'تاريخ الانتهاء',
         'المدة المتبقية',
+        'حالة الكفالة',
         'ملاحظات'
     ]
     
@@ -2001,7 +2021,8 @@ def export_expiring_excel():
     worksheet.set_column(4, 4, 15)  # تاريخ الإصدار
     worksheet.set_column(5, 5, 15)  # تاريخ الانتهاء
     worksheet.set_column(6, 6, 15)  # المدة المتبقية
-    worksheet.set_column(7, 7, 30)  # ملاحظات
+    worksheet.set_column(7, 7, 15)  # حالة الكفالة
+    worksheet.set_column(8, 8, 30)  # ملاحظات
     
     # كتابة البيانات
     for row_num, doc in enumerate(documents, 2):
@@ -2051,8 +2072,17 @@ def export_expiring_excel():
             worksheet.write(row_num, 6, days_display, days_format)
         else:
             worksheet.write(row_num, 6, "غير محدد", no_expiry_format)
+        
+        # كتابة حالة الكفالة
+        sponsorship_status_ar = "غير محدد"
+        if doc.employee and doc.employee.sponsorship_status:
+            if doc.employee.sponsorship_status == 'inside':
+                sponsorship_status_ar = "على الكفالة"
+            elif doc.employee.sponsorship_status == 'outside':
+                sponsorship_status_ar = "خارج الكفالة"
+        worksheet.write(row_num, 7, sponsorship_status_ar, cell_format)
             
-        worksheet.write(row_num, 7, doc.notes or '', cell_format)
+        worksheet.write(row_num, 8, doc.notes or '', cell_format)
     
     # إغلاق المصنف
     workbook.close()
