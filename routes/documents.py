@@ -1953,8 +1953,15 @@ def export_excel():
     filename_parts = []
     if document_type:
         filename_parts.append(document_types_map.get(document_type, document_type))
-    if days > 0 and not show_all:
-        filename_parts.append(f"خلال_{days}_يوم")
+    if status_filter:
+        status_names = {
+            'expired': 'المنتهية',
+            'expiring_30': 'تنتهي_خلال_30_يوم',
+            'expiring_60': 'تنتهي_خلال_60_يوم', 
+            'expiring_90': 'تنتهي_خلال_90_يوم',
+            'valid': 'السارية'
+        }
+        filename_parts.append(status_names.get(status_filter, status_filter))
     if not filename_parts:
         filename_parts.append("جميع_الوثائق")
     
