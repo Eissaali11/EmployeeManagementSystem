@@ -677,7 +677,9 @@ const galleryEl = document.getElementById('gallery');
 const ctx = canvasEl.getContext('2d');
 
 // 1. Request camera
-navigator.mediaDevices.getUserMedia({ video: true })
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: { ideal: "environment" } }  // Use back camera if available
+})
   .then(stream => {
     videoEl.srcObject = stream;
     return videoEl.play();
@@ -708,7 +710,8 @@ captureBtn.addEventListener('click', () => {
   uploadedImages.push({
   file: null,
   src: dataURL,
-  id: Date.now()
+  id: Date.now(),
+  note: note || ''
 });
 displayImagePreview();
 });
@@ -883,66 +886,90 @@ function uploadImage(dataURL) {
         
         // عرض معاينة الصور
         function displayImagePreview() {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
+            // const preview = document.getElementById('imagePreview');
+            // preview.innerHTML = '';
             
-            uploadedImages.forEach((image, index) => {
-                const item = document.createElement('div');
-                item.className = 'image-preview-item';
+            // uploadedImages.forEach((image, index) => {
+            //     const item = document.createElement('div');
+            //     item.className = 'image-preview-item';
                 
-                // إنشاء حاوية الصورة
-                const imageContainer = document.createElement('div');
-                imageContainer.className = 'image-container';
+            //     // إنشاء حاوية الصورة
+            //     const imageContainer = document.createElement('div');
+            //     imageContainer.className = 'image-container';
                 
-                // إنشاء عنصر الصورة
-                const img = document.createElement('img');
-                img.src = image.src;
-                img.alt = `صورة ${index + 1}`;
+            //     // إنشاء عنصر الصورة
+            //     const img = document.createElement('img');
+            //     img.src = image.src;
+            //     img.alt = `صورة ${index + 1}`;
                 
-                // إنشاء زر الحذف
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'remove-btn';
-                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                removeBtn.onclick = () => removeImage(image.id);
+            //     // إنشاء زر الحذف
+            //     const removeBtn = document.createElement('button');
+            //     removeBtn.type = 'button';
+            //     removeBtn.className = 'remove-btn';
+            //     removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            //     removeBtn.onclick = () => removeImage(image.id);
                 
-                // إضافة الصورة وزر الحذف لحاوية الصورة
-                imageContainer.appendChild(img);
-                imageContainer.appendChild(removeBtn);
+            //     // إضافة الصورة وزر الحذف لحاوية الصورة
+            //     imageContainer.appendChild(img);
+            //     imageContainer.appendChild(removeBtn);
                 
-                // إنشاء حقل الوصف
-                const descInput = document.createElement('input');
-                descInput.type = 'text';
-                descInput.className = 'description-input';
-                descInput.placeholder = `وصف الصورة ${index + 1} (اختياري)`;
-                descInput.name = 'image_descriptions';
-                descInput.value = image.description || '';
-                descInput.style.display = 'block';
-                descInput.style.width = '100%';
-                descInput.style.maxWidth = '100%';
-                descInput.style.boxSizing = 'border-box';
-                descInput.style.marginTop = '15px';
-                descInput.style.marginBottom = '15px';
-                descInput.style.padding = '15px';
-                descInput.style.border = '2px solid #667eea';
-                descInput.style.borderRadius = '8px';
-                descInput.style.fontSize = '1.1rem';
-                descInput.style.backgroundColor = 'white';
-                descInput.style.color = '#333';
-                descInput.style.minHeight = '55px';
-                descInput.style.outline = 'none';
-                descInput.style.fontFamily = 'Cairo, sans-serif';
-                descInput.style.visibility = 'visible';
-                descInput.style.opacity = '1';
-                descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
-                descInput.oninput = (e) => updateImageDescription(image.id, e.target.value);
+            //     // إنشاء حقل الوصف
+            //     const descInput = document.createElement('input');
+            //     descInput.type = 'text';
+            //     descInput.className = 'description-input';
+            //     descInput.placeholder = `وصف الصورة ${index + 1} (اختياري)`;
+            //     descInput.name = 'image_descriptions';
+            //     descInput.value = image.description || '';
+            //     descInput.style.display = 'block';
+            //     descInput.style.width = '100%';
+            //     descInput.style.maxWidth = '100%';
+            //     descInput.style.boxSizing = 'border-box';
+            //     descInput.style.marginTop = '15px';
+            //     descInput.style.marginBottom = '15px';
+            //     descInput.style.padding = '15px';
+            //     descInput.style.border = '2px solid #667eea';
+            //     descInput.style.borderRadius = '8px';
+            //     descInput.style.fontSize = '1.1rem';
+            //     descInput.style.backgroundColor = 'white';
+            //     descInput.style.color = '#333';
+            //     descInput.style.minHeight = '55px';
+            //     descInput.style.outline = 'none';
+            //     descInput.style.fontFamily = 'Cairo, sans-serif';
+            //     descInput.style.visibility = 'visible';
+            //     descInput.style.opacity = '1';
+            //     descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
+            //     descInput.oninput = (e) => updateImageDescription(image.id, e.target.value);
                 
-                // إضافة العناصر للحاوية الرئيسية
-                item.appendChild(imageContainer);
-                item.appendChild(descInput);
+            //     // إضافة العناصر للحاوية الرئيسية
+            //     item.appendChild(imageContainer);
+            //     item.appendChild(descInput);
                 
-                preview.appendChild(item);
+            //     preview.appendChild(item);
+            galleryEl.innerHTML = '';
+
+  uploadedImages.forEach(image => {
+    const container = document.createElement('div');
+    container.style.margin = '6px';
+    container.style.display = 'inline-block';
+    container.style.textAlign = 'center';
+
+    const img = document.createElement('img');
+    img.src = image.src;
+    img.style.maxWidth = '160px';
+    img.style.display = 'block';
+    img.style.marginBottom = '4px';
+    img.alt = 'Captured image';
+
+    const caption = document.createElement('p');
+    caption.textContent = image.note;
+    caption.style.fontSize = '0.9em';
+    caption.style.color = '#555';
+
+    container.appendChild(img);
+    container.appendChild(caption);
+    galleryEl.appendChild(container);
             });
+            
         }
         
         // حذف صورة
