@@ -811,6 +811,13 @@
     </div>
 
 
+
+
+    <!-- جدول الوثائق -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 print-title">قائمة الوثائق</h5>
+
             <div>
 
                 <button onclick="printPage()" class="btn btn-sm btn-info me-2">
@@ -1710,19 +1717,42 @@
 
 {% block extra_css %}
 <style>
-/* أنماط الطباعة */
+/* أنماط الطباعة المحسنة */
 @media print {
+    /* إعدادات الصفحة */
+    @page {
+        margin: 1.5cm;
+        size: A4 landscape;
+    }
+    
+    /* إعادة تعيين كامل للصفحة */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+    
     /* إخفاء العناصر غير المرغوب فيها */
     .navbar, .sidebar, .btn, .pagination, .no-print,
-    .card-header .btn, .actions-column, .breadcrumb {
+    .card-header .btn, .actions-column, .breadcrumb,
+    .form-control, .form-select, form, .card:first-child {
         display: none !important;
     }
     
     /* تحسين تخطيط الصفحة */
     body {
-        font-size: 12px !important;
+        font-family: 'Arial', sans-serif !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
         color: #000 !important;
         background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     .card {
@@ -1730,64 +1760,101 @@
         box-shadow: none !important;
         margin: 0 !important;
         padding: 0 !important;
+        background: white !important;
+    }
+    
+    .card-header {
+        background: white !important;
+        border: none !important;
+        text-align: center !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .card-header h5 {
+        font-size: 22px !important;
+        font-weight: bold !important;
+        color: #000 !important;
+        margin: 0 !important;
+        padding: 15px 0 !important;
+        border-bottom: 3px solid #000 !important;
     }
     
     .card-body {
-        padding: 10px !important;
+        padding: 0 !important;
     }
     
     /* تحسين الجدول للطباعة */
+    .table-responsive {
+        overflow: visible !important;
+    }
+    
     .table {
-        font-size: 10px !important;
+        font-size: 12px !important;
         border-collapse: collapse !important;
         width: 100% !important;
         margin: 0 !important;
-    }
-    
-    .table th, .table td {
-        border: 1px solid #000 !important;
-        padding: 5px !important;
-        text-align: center !important;
-        word-wrap: break-word !important;
+        background: white !important;
     }
     
     .table th {
-        background-color: #f0f0f0 !important;
+        background-color: #e9ecef !important;
         font-weight: bold !important;
-        -webkit-print-color-adjust: exact !important;
-        color-adjust: exact !important;
+        font-size: 13px !important;
+        border: 2px solid #000 !important;
+        padding: 8px 6px !important;
+        text-align: center !important;
+        color: #000 !important;
+        white-space: nowrap !important;
+    }
+    
+    .table td {
+        border: 1px solid #333 !important;
+        padding: 6px 4px !important;
+        text-align: center !important;
+        color: #000 !important;
+        vertical-align: middle !important;
+        word-wrap: break-word !important;
+        max-width: 120px !important;
     }
     
     /* إخفاء عمود الإجراءات */
-    .table th:last-child,
-    .table td:last-child {
+    .actions-column {
         display: none !important;
     }
     
-    /* تحسين العرض للبيانات المهمة */
+    /* تحسين العرض للـ badges */
     .badge {
-        border: 1px solid #000 !important;
-        padding: 2px 4px !important;
+        border: 1px solid #333 !important;
+        padding: 3px 6px !important;
         background: white !important;
         color: #000 !important;
-        font-size: 9px !important;
+        font-size: 10px !important;
+        font-weight: bold !important;
+        border-radius: 0 !important;
     }
     
-    /* رأس الصفحة */
-    .print-header {
-        text-align: center;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #000;
-        padding-bottom: 10px;
+    .badge.bg-success {
+        background: #d4edda !important;
+        border-color: #28a745 !important;
+        color: #155724 !important;
     }
     
-    /* تذييل الصفحة */
-    .print-footer {
-        margin-top: 20px;
-        text-align: center;
-        border-top: 1px solid #000;
-        padding-top: 10px;
-        font-size: 10px;
+    .badge.bg-warning {
+        background: #fff3cd !important;
+        border-color: #ffc107 !important;
+        color: #856404 !important;
+    }
+    
+    .badge.bg-danger {
+        background: #f8d7da !important;
+        border-color: #dc3545 !important;
+        color: #721c24 !important;
+    }
+    
+    .badge.bg-secondary {
+        background: #e2e3e5 !important;
+        border-color: #6c757d !important;
+        color: #383d41 !important;
     }
     
     /* تجنب كسر الصفحة في منتصف الصف */
@@ -1795,33 +1862,58 @@
         page-break-inside: avoid !important;
     }
     
-    /* تحسين التخطيط للطباعة */
-    @page {
-        margin: 1cm;
-        size: A4 landscape;
+    .table thead {
+        display: table-header-group !important;
     }
     
-    /* إضافة عنوان للطباعة */
-    body::before {
-        content: "تقرير الوثائق - نُظم";
+    .table tbody tr:nth-child(even) {
+        background-color: #f8f9fa !important;
+    }
+    
+    /* رأس الصفحة */
+    .print-header {
+        text-align: center;
+        margin-bottom: 25px;
+        border-bottom: 3px solid #000;
+        padding-bottom: 15px;
+    }
+    
+    /* إضافة معلومات الطباعة */
+    .container::before {
+        content: "شركة نُظم - تقرير الوثائق";
         display: block;
         text-align: center;
-        font-size: 18px;
+        font-size: 24px;
         font-weight: bold;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #000;
-        padding-bottom: 10px;
+        margin-bottom: 10px;
+        color: #000;
     }
     
-    /* إضافة تاريخ الطباعة */
     .container::after {
-        content: "تاريخ الطباعة: " attr(data-print-date);
+        content: "تاريخ الطباعة: " attr(data-print-date) " | وقت الطباعة: " attr(data-print-time);
         display: block;
-        text-align: left;
-        font-size: 10px;
-        margin-top: 20px;
-        border-top: 1px solid #000;
+        text-align: center;
+        font-size: 12px;
+        margin-top: 15px;
         padding-top: 10px;
+        border-top: 2px solid #000;
+        color: #000;
+    }
+    
+    /* تحسين عرض النصوص الطويلة */
+    .table td:nth-child(1), /* اسم الموظف */
+    .table td:nth-child(9) { /* الملاحظات */
+        max-width: 150px !important;
+        word-wrap: break-word !important;
+        white-space: normal !important;
+    }
+    
+    .table td:nth-child(3) { /* القسم */
+        max-width: 100px !important;
+    }
+    
+    .table td:nth-child(4) { /* نوع الوثيقة */
+        max-width: 90px !important;
     }
 }
 
@@ -1934,33 +2026,53 @@
 
 
     
-    // دالة الطباعة
+    // دالة الطباعة المحسنة
     function printPage() {
-        // إضافة تاريخ الطباعة
+        // إضافة تاريخ ووقت الطباعة
         const container = document.querySelector('.container');
         if (container) {
-            const currentDate = new Date().toLocaleDateString('ar-SA');
+            const now = new Date();
+            const currentDate = now.toLocaleDateString('ar-SA');
+            const currentTime = now.toLocaleTimeString('ar-SA');
             container.setAttribute('data-print-date', currentDate);
+            container.setAttribute('data-print-time', currentTime);
         }
         
-        // إخفاء فلاتر البحث مؤقتاً
-        const searchCard = document.querySelector('.card:first-of-type');
-        if (searchCard) {
-            searchCard.style.display = 'none';
-        }
+        // إخفاء جميع العناصر غير المرغوب فيها
+        const elementsToHide = [
+            '.card:first-of-type', // فلاتر البحث
+            '.navbar',
+            '.sidebar', 
+            '.btn:not(.print-btn)',
+            '.pagination',
+            '.breadcrumb'
+        ];
+        
+        const hiddenElements = [];
+        elementsToHide.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                if (element && element.style.display !== 'none') {
+                    hiddenElements.push({element, originalDisplay: element.style.display});
+                    element.style.display = 'none';
+                }
+            });
+        });
         
         // تحسين عنوان الصفحة للطباعة
         const originalTitle = document.title;
-        document.title = 'تقرير الوثائق - نُظم';
+        document.title = 'تقرير الوثائق - شركة نُظم';
         
         // بدء عملية الطباعة
-        window.print();
-        
-        // استعادة العنوان الأصلي والعناصر المخفية
-        document.title = originalTitle;
-        if (searchCard) {
-            searchCard.style.display = 'block';
-        }
+        setTimeout(() => {
+            window.print();
+            
+            // استعادة العنوان الأصلي والعناصر المخفية
+            document.title = originalTitle;
+            hiddenElements.forEach(({element, originalDisplay}) => {
+                element.style.display = originalDisplay || 'block';
+            });
+        }, 100);
     }
     
     // تحسين تنسيق الطباعة عند فتح مربع حوار الطباعة
