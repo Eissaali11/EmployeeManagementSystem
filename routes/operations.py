@@ -254,21 +254,28 @@ def create_operation_request(operation_type, related_record_id, vehicle_id,
         priority=priority
     )
     
-    db.session.add(operation)
-    db.session.flush()  # للحصول على ID
-    
-    # إنشاء إشعارات للمديرين
-    admins = User.query.filter_by(role=UserRole.ADMIN).all()
-    for admin in admins:
-        create_notification(
-            operation_id=operation.id,
-            user_id=admin.id,
-            notification_type='new_operation',
-            title=f'عملية جديدة تحتاج موافقة: {title}',
-            message=f'عملية جديدة من نوع {get_operation_type_name(operation_type)} تحتاج للمراجعة والموافقة.'
-        )
-    
-    return operation
+    try:
+        db.session.add(operation)
+        db.session.flush()  # للحصول على ID
+        
+        # إنشاء إشعارات للمديرين
+        admins = User.query.filter_by(role=UserRole.ADMIN).all()
+        for admin in admins:
+            create_notification(
+                operation_id=operation.id,
+                user_id=admin.id,
+                notification_type='new_operation',
+                title=f'عملية جديدة تحتاج موافقة: {title}',
+                message=f'عملية جديدة من نوع {get_operation_type_name(operation_type)} تحتاج للمراجعة والموافقة.'
+            )
+        
+        # لا نحفظ هنا، الدالة المستدعية مسؤولة عن الحفظ
+        return operation
+    except Exception as e:
+        print(f"خطأ في create_operation_request: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise e
 
 def create_notification(operation_id, user_id, notification_type, title, message):
     """إنشاء إشعار جديد"""

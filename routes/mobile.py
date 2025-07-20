@@ -2189,14 +2189,16 @@ def create_handover_mobile():
                     related_record_id=handover.id,
                     vehicle_id=vehicle.id,
                     title=f'طلب موافقة على {action_type} مركبة {vehicle.plate_number}',
-                    description=f'تم إنشاء {action_type} للمركبة {vehicle.plate_number} من قبل {current_user.username} ويحتاج للموافقة الإدارية',
+                    description=f'تم إنشاء {action_type} للمركبة {vehicle.plate_number} من قبل {current_user.email or current_user.id} ويحتاج للموافقة الإدارية',
                     requested_by=current_user.id,
                     priority='normal'
                 )
-                db.session.commit()
+                # لا نحتاج commit هنا لأن العملية ستُحفظ مع بقية البيانات
                 print(f"تم تسجيل العملية بنجاح: {operation.id}")
             except Exception as op_error:
                 print(f"خطأ في تسجيل العملية: {str(op_error)}")
+                import traceback
+                traceback.print_exc()
                 # لا نتوقف عند فشل تسجيل العملية، فقط نسجل الخطأ
             
 >>>>>>> ee67da2 (Ensure vehicle handovers require administrative approval for added security)
