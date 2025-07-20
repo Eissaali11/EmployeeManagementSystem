@@ -2192,13 +2192,20 @@ def create_handover_mobile():
     # تحويل بيانات الموظفين إلى JSON لاستخدامها في JavaScript
     employees_as_dicts = [e.to_dict() for e in employees]
 
+    # إضافة التاريخ والوقت الحاليين
+    now = datetime.now()
+    now_date = now.strftime('%Y-%m-%d')
+    now_time = now.strftime('%H:%M')
+    
     return render_template(
         'mobile/vehicle_checklist.html', 
         vehicles=vehicles,
         employees=employees,
         departments=departments,
         handover_types=HANDOVER_TYPE_CHOICES, # استخدام نفس قائمة الويب
-        employeeData=employees_as_dicts 
+        employeeData=employees_as_dicts,
+        now_date=now_date,
+        now_time=now_time
     )
 
 
