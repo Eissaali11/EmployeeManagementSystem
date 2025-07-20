@@ -2358,8 +2358,9 @@ def create_handover(id):
 
 
 @vehicles_bp.route('/handover/<int:id>/view')
+@vehicles_bp.route('/<int:vehicle_id>/handover/<int:id>')
 @login_required
-def view_handover(id):
+def view_handover(id, vehicle_id=None):
         """عرض تفاصيل نموذج تسليم/استلام"""
         handover = VehicleHandover.query.get_or_404(id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
