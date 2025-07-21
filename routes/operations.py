@@ -248,7 +248,7 @@ def delete_operation(operation_id):
         operation_type = operation.operation_type
         
         # حذف الإشعارات المرتبطة بالعملية أولاً
-        notifications = Notification.query.filter_by(operation_id=operation_id).all()
+        notifications = OperationNotification.query.filter_by(operation_id=operation_id).all()
         for notification in notifications:
             db.session.delete(notification)
         
@@ -291,17 +291,16 @@ def create_operation_request(operation_type, related_record_id, vehicle_id,
                            title, description, requested_by, priority='normal'):
     """إنشاء طلب عملية جديد"""
     
-    operation = OperationRequest(
-        operation_type=operation_type,
-        related_record_id=related_record_id,
-        vehicle_id=vehicle_id,
-        title=title,
-        description=description,
-        requested_by=requested_by,
-        requested_at=datetime.utcnow(),
-        priority=priority,
-        status='pending'
-    )
+    operation = OperationRequest()
+    operation.operation_type = operation_type
+    operation.related_record_id = related_record_id
+    operation.vehicle_id = vehicle_id
+    operation.title = title
+    operation.description = description
+    operation.requested_by = requested_by
+    operation.requested_at = datetime.utcnow()
+    operation.priority = priority
+    operation.status = 'pending'
     
     try:
         db.session.add(operation)
@@ -329,13 +328,12 @@ def create_operation_request(operation_type, related_record_id, vehicle_id,
 def create_notification(operation_id, user_id, notification_type, title, message):
     """إنشاء إشعار جديد"""
     
-    notification = OperationNotification(
-        operation_request_id=operation_id,
-        user_id=user_id,
-        notification_type=notification_type,
-        title=title,
-        message=message
-    )
+    notification = OperationNotification()
+    notification.operation_request_id = operation_id
+    notification.user_id = user_id
+    notification.notification_type = notification_type
+    notification.title = title
+    notification.message = message
     
     db.session.add(notification)
     return notification
