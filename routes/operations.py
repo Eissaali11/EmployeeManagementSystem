@@ -100,9 +100,39 @@ def view_operation(operation_id):
     
     # توجيه عمليات الورشة إلى صفحة منفصلة
     if operation.operation_type == 'workshop_record':
+        # جلب معلومات السائق الحالي من آخر تسليم
+        driver_employee = None
+        current_driver_info = None
+        
+        # البحث عن آخر تسليم للمركبة للحصول على السائق الحالي
+        last_handover = VehicleHandover.query.filter_by(
+            vehicle_id=operation.vehicle_id,
+            handover_type='تسليم'
+        ).order_by(VehicleHandover.handover_date.desc()).first()
+        
+        if last_handover:
+            current_driver_info = {
+                'name': last_handover.person_name,
+                'phone': last_handover.driver_phone_number,
+                'residency_number': last_handover.driver_residency_number
+            }
+            
+            # محاولة العثور على بيانات الموظف في النظام
+            if last_handover.driver_residency_number:
+                driver_employee = Employee.query.filter_by(
+                    national_id=last_handover.driver_residency_number
+                ).first()
+            
+            if not driver_employee and last_handover.person_name:
+                driver_employee = Employee.query.filter_by(
+                    name=last_handover.person_name
+                ).first()
+        
         return render_template('operations/view_workshop.html', 
                              operation=operation,
-                             related_record=related_record)
+                             related_record=related_record,
+                             driver_employee=driver_employee,
+                             current_driver_info=current_driver_info)
     
     # جلب بيانات الموظف إذا كانت متاحة
     employee = None

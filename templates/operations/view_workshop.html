@@ -171,7 +171,29 @@
                         <div class="col-md-3">
                             <div class="info-item">
                                 <label class="text-muted small">السائق الحالي:</label>
-                                <div class="fw-bold">{{ operation.vehicle.current_driver or 'غير محدد' }}</div>
+                                <div class="fw-bold">
+                                    {% if current_driver_info %}
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-primary">{{ current_driver_info.name }}</span>
+                                            {% if driver_employee %}
+                                                <a href="{{ url_for('employees.view_employee', employee_id=driver_employee.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="fas fa-user me-1"></i>عرض الملف
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted d-block mt-1">
+                                            {% if current_driver_info.phone %}
+                                                <i class="fas fa-phone me-1"></i>{{ current_driver_info.phone }}
+                                            {% endif %}
+                                            {% if current_driver_info.residency_number %}
+                                                <br><i class="fas fa-id-card me-1"></i>{{ current_driver_info.residency_number }}
+                                            {% endif %}
+                                        </small>
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -179,6 +201,63 @@
             </div>
         </div>
     </div>
+
+    <!-- تحذير خاص بعمليات تسليم الورشة -->
+    {% if related_record and related_record.reason in ['maintenance', 'breakdown', 'accident'] and current_driver_info %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert border-0 shadow-lg" style="background: linear-gradient(135deg, #FFC107 0%, #FF8F00 100%); color: #212529;">
+                <div class="d-flex align-items-start">
+                    <div class="me-3">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="alert-heading mb-3 fw-bold">
+                            <i class="fas fa-tools me-2"></i>
+                            تنبيه هام - عملية تسليم ورشة
+                        </h4>
+                        <p class="mb-3 fs-5 fw-bold text-danger">
+                            نرجو إلغاء التفويض من السائق وإغلاق الوقود عن السيارة
+                        </p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="bg-white p-3 rounded shadow-sm border-start border-danger border-4">
+                                    <h6 class="fw-bold text-danger mb-2">
+                                        <i class="fas fa-user-times me-2"></i>إلغاء التفويض
+                                    </h6>
+                                    <p class="small mb-1">تأكد من سحب جميع التفويضات من السائق:</p>
+                                    <div class="fw-bold text-primary">{{ current_driver_info.name }}</div>
+                                    {% if current_driver_info.phone %}
+                                        <small class="text-muted"><i class="fas fa-phone me-1"></i>{{ current_driver_info.phone }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-white p-3 rounded shadow-sm border-start border-warning border-4">
+                                    <h6 class="fw-bold text-warning mb-2">
+                                        <i class="fas fa-gas-pump me-2"></i>إغلاق الوقود
+                                    </h6>
+                                    <p class="small mb-1">تأكد من إيقاف بطاقة الوقود للسيارة:</p>
+                                    <div class="fw-bold text-primary">{{ operation.vehicle.plate_number }}</div>
+                                    <small class="text-muted">حتى انتهاء أعمال الورشة</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                هذا التحذير يظهر تلقائياً لجميع عمليات دخول الورشة
+                            </small>
+                            <span class="badge bg-danger px-3 py-2">عاجل</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- تفاصيل عملية الورشة -->
     {% if related_record %}
