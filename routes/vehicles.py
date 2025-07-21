@@ -611,6 +611,16 @@ def index():
         # قاعدة الاستعلام الأساسية
         query = Vehicle.query
 
+        
+        # تطبيق فلترة وصول المستخدمين (المديرون يرون جميع المركبات)
+        if current_user.role != UserRole.ADMIN:
+            # المستخدمون العاديون يرون فقط المركبات المخصصة لهم
+            from models import vehicle_user_access
+            query = query.join(vehicle_user_access).filter(
+                vehicle_user_access.c.user_id == current_user.id
+            )
+        
+
         # إضافة التصفية حسب الحالة إذا تم تحديدها
         if status_filter:
                 query = query.filter(Vehicle.status == status_filter)
@@ -758,6 +768,15 @@ def create():
 def view(id):
         """عرض تفاصيل سيارة معينة"""
         vehicle = Vehicle.query.get_or_404(id)
+
+        
+        # التحقق من صلاحية الوصول للمركبة
+        if current_user.role != UserRole.ADMIN:
+            # التحقق من أن المستخدم مخول للوصول لهذه المركبة
+            if current_user not in vehicle.authorized_users:
+                flash('ليس لديك صلاحية للوصول لهذه المركبة', 'danger')
+                return redirect(url_for('vehicles.index'))
+        
 
         # الحصول على سجلات مختلفة للسيارة
         rental = VehicleRental.query.filter_by(vehicle_id=id, is_active=True).first()
@@ -1096,6 +1115,15 @@ def edit(id):
         """تعديل بيانات سيارة"""
         vehicle = Vehicle.query.get_or_404(id)
 
+        
+        # التحقق من صلاحية الوصول للمركبة  
+        if current_user.role != UserRole.ADMIN:
+            # التحقق من أن المستخدم مخول للوصول لهذه المركبة
+            if current_user not in vehicle.authorized_users:
+                flash('ليس لديك صلاحية لتعديل هذه المركبة', 'danger')
+                return redirect(url_for('vehicles.index'))
+        
+
         if request.method == 'POST':
                 # استخراج البيانات من النموذج
                 plate_number = request.form.get('plate_number')
@@ -1136,7 +1164,50 @@ def edit(id):
 
         # جلب الأقسام لقائمة المشاريع
         departments = Department.query.all()
-        return render_template('vehicles/edit.html', vehicle=vehicle, statuses=VEHICLE_STATUS_CHOICES, departments=departments)
+        
+        # جلب جميع المستخدمين لإدارة الوصول
+        from models import User
+        all_users = User.query.filter_by(is_active=True).all()
+        
+        return render_template('vehicles/edit.html', 
+                             vehicle=vehicle, 
+                             statuses=VEHICLE_STATUS_CHOICES, 
+                             departments=departments,
+                             all_users=all_users)
+
+@vehicles_bp.route('/<int:id>/manage-user-access', methods=['POST'])
+@login_required
+def manage_user_access(id):
+    """إدارة وصول المستخدمين للمركبة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    # التحقق من صلاحيات الإدارة
+    if current_user.role != UserRole.ADMIN:
+        flash('ليس لديك صلاحية لإدارة وصول المستخدمين', 'danger')
+        return redirect(url_for('vehicles.edit', id=id))
+    
+    # الحصول على المستخدمين المحددين
+    authorized_user_ids = request.form.getlist('authorized_users')
+    
+    # مسح العلاقات الحالية
+    vehicle.authorized_users.clear()
+    
+    # إضافة المستخدمين الجدد
+    if authorized_user_ids:
+        from models import User
+        authorized_users = User.query.filter(User.id.in_(authorized_user_ids)).all()
+        for user in authorized_users:
+            vehicle.authorized_users.append(user)
+    
+    db.session.commit()
+    
+    # تسجيل الإجراء
+    user_names = [user.name or user.username or user.email for user in vehicle.authorized_users]
+    log_audit('update', 'vehicle_user_access', vehicle.id, 
+              f'تم تحديث وصول المستخدمين للمركبة {vehicle.plate_number}. المستخدمون: {", ".join(user_names) if user_names else "لا يوجد"}')
+    
+    flash(f'تم تحديث إعدادات الوصول بنجاح! المستخدمون المخولون: {len(vehicle.authorized_users)}', 'success')
+    return redirect(url_for('vehicles.edit', id=id))
 
 @vehicles_bp.route('/<int:id>/confirm-delete')
 @login_required
