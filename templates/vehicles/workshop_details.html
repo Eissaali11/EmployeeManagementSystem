@@ -356,32 +356,38 @@
                     <div class="card-body">
                         <ul class="nav nav-tabs mb-4" id="workshopImageTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="before-tab" data-bs-toggle="tab" data-bs-target="#before-images" type="button" role="tab" aria-controls="before-images" aria-selected="true">
-                                    <i class="fas fa-tools ms-1"></i>
-                                    صور قبل الإصلاح
+                                <button class="nav-link active" id="delivery-tab" data-bs-toggle="tab" data-bs-target="#delivery-images" type="button" role="tab" aria-controls="delivery-images" aria-selected="true">
+                                    <i class="fas fa-truck ms-1"></i>
+                                    صور التسليم
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="after-tab" data-bs-toggle="tab" data-bs-target="#after-images" type="button" role="tab" aria-controls="after-images" aria-selected="false">
+                                <button class="nav-link" id="pickup-tab" data-bs-toggle="tab" data-bs-target="#pickup-images" type="button" role="tab" aria-controls="pickup-images" aria-selected="false">
                                     <i class="fas fa-check-circle ms-1"></i>
-                                    صور بعد الإصلاح
+                                    صور الاستلام
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes-images" type="button" role="tab" aria-controls="notes-images" aria-selected="false">
+                                    <i class="fas fa-sticky-note ms-1"></i>
+                                    صور الملاحظات
                                 </button>
                             </li>
                         </ul>
                         
                         <div class="tab-content" id="workshopImageTabsContent">
-                            <!-- صور قبل الإصلاح -->
-                            <div class="tab-pane fade show active" id="before-images" role="tabpanel" aria-labelledby="before-tab">
+                            <!-- صور التسليم -->
+                            <div class="tab-pane fade show active" id="delivery-images" role="tabpanel" aria-labelledby="delivery-tab">
                                 <div class="row">
-                                    {% set has_before_images = false %}
+                                    {% set has_delivery_images = false %}
                                     {% for image in record.images %}
-                                        {% if image.image_type == 'before' %}
-                                            {% set has_before_images = true %}
+                                        {% if image.image_type == 'delivery' %}
+                                            {% set has_delivery_images = true %}
                                             <div class="col-md-4 col-lg-3 mb-4">
                                                 <div class="image-card">
-                                                    <div class="image-badge before-badge">قبل الإصلاح</div>
-                                                    <a href="{{ url_for('static', filename=image.image_path) }}" data-fancybox="before-gallery" class="gallery-link">
-                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة قبل الإصلاح">
+                                                    <div class="image-badge before-badge">تسليم للورشة</div>
+                                                    <a href="{{ url_for('static', filename=image.image_path) }}" data-fancybox="delivery-gallery" class="gallery-link">
+                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة تسليم للورشة">
                                                     </a>
                                                     {% if image.notes %}
                                                     <div class="image-notes">{{ image.notes }}</div>
@@ -391,29 +397,29 @@
                                         {% endif %}
                                     {% endfor %}
                                     
-                                    {% if not has_before_images %}
+                                    {% if not has_delivery_images %}
                                     <div class="col-12">
                                         <div class="no-images-alert">
                                             <i class="fas fa-exclamation-circle ms-2"></i>
-                                            لا توجد صور قبل الإصلاح
+                                            لا توجد صور تسليم للورشة
                                         </div>
                                     </div>
                                     {% endif %}
                                 </div>
                             </div>
                             
-                            <!-- صور بعد الإصلاح -->
-                            <div class="tab-pane fade" id="after-images" role="tabpanel" aria-labelledby="after-tab">
+                            <!-- صور الاستلام -->
+                            <div class="tab-pane fade" id="pickup-images" role="tabpanel" aria-labelledby="pickup-tab">
                                 <div class="row">
-                                    {% set has_after_images = false %}
+                                    {% set has_pickup_images = false %}
                                     {% for image in record.images %}
-                                        {% if image.image_type == 'after' %}
-                                            {% set has_after_images = true %}
+                                        {% if image.image_type == 'pickup' %}
+                                            {% set has_pickup_images = true %}
                                             <div class="col-md-4 col-lg-3 mb-4">
                                                 <div class="image-card">
-                                                    <div class="image-badge after-badge">بعد الإصلاح</div>
-                                                    <a href="{{ url_for('static', filename=image.image_path) }}" data-fancybox="after-gallery" class="gallery-link">
-                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة بعد الإصلاح">
+                                                    <div class="image-badge after-badge">استلام من الورشة</div>
+                                                    <a href="{{ url_for('static', filename=image.image_path) }}" data-fancybox="pickup-gallery" class="gallery-link">
+                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة استلام من الورشة">
                                                     </a>
                                                     {% if image.notes %}
                                                     <div class="image-notes">{{ image.notes }}</div>
@@ -423,11 +429,43 @@
                                         {% endif %}
                                     {% endfor %}
                                     
-                                    {% if not has_after_images %}
+                                    {% if not has_pickup_images %}
                                     <div class="col-12">
                                         <div class="no-images-alert">
                                             <i class="fas fa-exclamation-circle ms-2"></i>
-                                            لا توجد صور بعد الإصلاح
+                                            لا توجد صور استلام من الورشة
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- صور الملاحظات -->
+                            <div class="tab-pane fade" id="notes-images" role="tabpanel" aria-labelledby="notes-tab">
+                                <div class="row">
+                                    {% set has_notes_images = false %}
+                                    {% for image in record.images %}
+                                        {% if image.image_type == 'notes' %}
+                                            {% set has_notes_images = true %}
+                                            <div class="col-md-4 col-lg-3 mb-4">
+                                                <div class="image-card">
+                                                    <div class="image-badge" style="background-color: #f39c12; color: white;">ملاحظات</div>
+                                                    <a href="{{ url_for('static', filename=image.image_path) }}" data-fancybox="notes-gallery" class="gallery-link">
+                                                        <img src="{{ url_for('static', filename=image.image_path) }}" class="gallery-image" alt="صورة ملاحظات">
+                                                    </a>
+                                                    {% if image.notes %}
+                                                    <div class="image-notes">{{ image.notes }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if not has_notes_images %}
+                                    <div class="col-12">
+                                        <div class="no-images-alert">
+                                            <i class="fas fa-exclamation-circle ms-2"></i>
+                                            لا توجد صور ملاحظات
                                         </div>
                                     </div>
                                     {% endif %}
