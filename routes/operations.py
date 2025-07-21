@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
 from models import (OperationRequest, OperationNotification, VehicleHandover, 
@@ -107,7 +107,7 @@ def view_operation(operation_id):
         # البحث عن آخر تسليم للمركبة للحصول على السائق الحالي
         last_handover = VehicleHandover.query.filter_by(
             vehicle_id=operation.vehicle_id,
-            handover_type='تسليم'
+            handover_type='delivery'
         ).order_by(VehicleHandover.handover_date.desc()).first()
         
         if last_handover:
