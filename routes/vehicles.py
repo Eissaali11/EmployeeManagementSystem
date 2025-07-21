@@ -1048,18 +1048,29 @@ def edit_documents(id):
                             operation.reviewer_id = current_user.id
                             operation.review_notes = f'تم تحديد فترة التفويض وإنشاء سجل التسليم'
                             
+                            # حفظ التغييرات أولاً
+                            db.session.commit()
+                            
+                            # تحديث اسم السائق في معلومات السيارة الأساسية
+                            update_vehicle_driver(vehicle.id)
+                            
                             # تسجيل في العمليات
                             log_audit('create', 'vehicle_handover', handover.id, 
                                      f'تم إنشاء سجل تسليم من العملية #{operation_id}')
                             log_audit('update', 'operation', operation.id, 
                                      f'تم إكمال العملية وإنشاء سجل التسليم')
+                            log_audit('update', 'vehicle', vehicle.id, 
+                                     f'تم تحديث اسم السائق تلقائياً بعد إنشاء سجل التسليم')
                     
                     except Exception as e:
                         current_app.logger.error(f'خطأ في إنشاء سجل التسليم: {str(e)}')
                         flash('تم تحديث التفويض ولكن حدث خطأ في إنشاء سجل التسليم', 'warning')
                 
 
-                db.session.commit()
+                # حفظ التغييرات للوثائق إذا لم تكن محفوظة مسبقاً
+                if not from_operations or not operation_id:
+                    db.session.commit()
+                
 
                 # تسجيل الإجراء
 
