@@ -66,11 +66,17 @@
                         </div>
                         
                         <div class="col-md-3">
-                            <label class="form-label">&nbsp;</label>
+                            <label class="form-label">البحث حسب السيارة</label>
+                            <input type="text" name="vehicle_search" class="form-control" 
+                                   placeholder="رقم اللوحة أو نوع السيارة..." 
+                                   value="{{ vehicle_search or '' }}">
+                        </div>
+                        
+                        <div class="col-md-12 mt-3">
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-search me-2"></i>
-                                    بحث
+                                    بحث وفلترة
                                 </button>
                             </div>
                         </div>

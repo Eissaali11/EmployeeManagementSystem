@@ -62,6 +62,7 @@ def operations_list():
     status_filter = request.args.get('status', 'all')
     operation_type_filter = request.args.get('operation_type', 'all')
     priority_filter = request.args.get('priority', 'all')
+    vehicle_search = request.args.get('vehicle_search', '').strip()
     
     query = OperationRequest.query
     
@@ -74,6 +75,14 @@ def operations_list():
     if priority_filter != 'all':
         query = query.filter_by(priority=priority_filter)
     
+    # البحث حسب السيارة
+    if vehicle_search:
+        # البحث في عنوان العملية أو الوصف حيث يتم ذكر رقم السيارة عادة
+        query = query.filter(
+            OperationRequest.title.contains(vehicle_search) |
+            OperationRequest.description.contains(vehicle_search)
+        )
+    
     # ترتيب العمليات
     operations = query.order_by(
         OperationRequest.priority.desc(),
@@ -84,7 +93,8 @@ def operations_list():
                          operations=operations,
                          status_filter=status_filter,
                          operation_type_filter=operation_type_filter,
-                         priority_filter=priority_filter)
+                         priority_filter=priority_filter,
+                         vehicle_search=vehicle_search)
 
 @operations_bp.route('/<int:operation_id>')
 @login_required
@@ -205,7 +215,7 @@ def approve_operation(operation_id):
         db.session.commit()
         
         # تسجيل العملية
-        log_audit('approve', 'operation_request', operation.id, 
+        log_audit(current_user.id, 'approve', 'operation_request', operation.id, 
                  f'تمت الموافقة على العملية: {operation.title}')
         
         flash('تمت الموافقة على العملية بنجاح', 'success')
@@ -248,7 +258,7 @@ def reject_operation(operation_id):
         db.session.commit()
         
         # تسجيل العملية
-        log_audit('reject', 'operation_request', operation.id, 
+        log_audit(current_user.id, 'reject', 'operation_request', operation.id, 
                  f'تم رفض العملية: {operation.title} - السبب: {review_notes}')
         
         flash('تم رفض العملية', 'warning')
@@ -284,7 +294,7 @@ def set_under_review(operation_id):
         
         db.session.commit()
         
-        log_audit('review', 'operation_request', operation.id, 
+        log_audit(current_user.id, 'review', 'operation_request', operation.id, 
                  f'العملية تحت المراجعة: {operation.title}')
         
         return jsonify({'success': True, 'message': 'تم وضع العملية تحت المراجعة'})
@@ -318,7 +328,7 @@ def delete_operation(operation_id):
         db.session.commit()
         
         # تسجيل عملية الحذف
-        log_audit('delete', 'operation_request', operation_id, 
+        log_audit(current_user.id, 'delete', 'operation_request', operation_id, 
                  f'تم حذف العملية: {operation_title} من النوع {operation_type}')
         
         flash('تم حذف العملية بنجاح', 'success')
