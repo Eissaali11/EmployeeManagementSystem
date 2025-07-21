@@ -20,11 +20,14 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Selec
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 from markupsafe import Markup
 import base64
-from models import VehicleProject, VehicleWorkshop, VehicleWorkshopImage, db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker, ExternalAuthorization, Project
-from app import app
+from models import VehicleProject, VehicleWorkshop, VehicleWorkshopImage, db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker, ExternalAuthorization, Project, OperationRequest, OperationNotification
+# from app import app
+from flask import current_app
+
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
 from utils.audit_logger import log_activity
+from routes.operations import create_operation_request
 
 # from flask import render_template, request, redirect, url_for, flash
 # from flask_login import login_required
@@ -53,22 +56,22 @@ def update_vehicle_driver(vehicle_id):
                         vehicle_id=vehicle_id, 
                         handover_type='delivery'
                 ).order_by(VehicleHandover.handover_date.desc()).all()
-                
+
                 if delivery_records:
                         # أخذ أحدث سجل تسليم (delivery)
                         latest_delivery = delivery_records[0]
-                        
+
                         # تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
                         driver_name = None
                         if latest_delivery.employee_id:
                                 employee = Employee.query.get(latest_delivery.employee_id)
                                 if employee:
                                         driver_name = employee.name
-                        
+
                         # إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
                         if not driver_name and latest_delivery.person_name:
                                 driver_name = latest_delivery.person_name
-                        
+
                         # تحديث اسم السائق في جدول السيارات
                         vehicle = Vehicle.query.get(vehicle_id)
                         if vehicle:
@@ -80,7 +83,7 @@ def update_vehicle_driver(vehicle_id):
                         if vehicle:
                                 vehicle.driver_name = None
                                 db.session.commit()
-                                
+
         except Exception as e:
                 print(f"خطأ في تحديث اسم السائق: {e}")
                 # لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
@@ -110,7 +113,7 @@ def index():
     """الصفحة الرئيسية للنسخة المحمولة"""
     # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم
     from models import Module, UserRole
-    
+
     # إذا كان المستخدم لا يملك صلاحيات لرؤية لوحة التحكم، توجيهه إلى أول وحدة مصرح له بالوصول إليها
     if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.DASHBOARD)):
         # توجيه المستخدم إلى أول وحدة مصرح له بالوصول إليها
@@ -140,22 +143,22 @@ def index():
         'documents_count': Document.query.count(),
         'vehicles_count': Vehicle.query.count(),
     }
-    
+
     # التحقق من وجود إشعارات غير مقروءة (يمكن استبداله بالتنفيذ الفعلي)
     notifications_count = 3  # مثال: 3 إشعارات غير مقروءة
-    
+
     # الوثائق التي ستنتهي قريباً
     today = datetime.now().date()
     expiring_documents = Document.query.filter(Document.expiry_date >= today).order_by(Document.expiry_date).limit(5).all()
-    
+
     # إضافة عدد الأيام المتبقية لكل وثيقة
     for doc in expiring_documents:
         doc.days_remaining = (doc.expiry_date - today).days
-    
+
     # السجلات الغائبة اليوم
     today_str = today.strftime('%Y-%m-%d')
     absences = Attendance.query.filter_by(date=today_str, status='غائب').all()
-    
+
     return render_template('mobile/index.html', 
                             stats=stats,
                             expiring_documents=expiring_documents,
@@ -170,19 +173,19 @@ def login():
     if current_user.is_authenticated:
         # نستخدم لوجيك التوجيه المدمج في mobile.index
         return redirect(url_for('mobile.index'))
-    
+
     form = LoginForm()
-    
+
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.username.data).first()
-        
+
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('mobile.index'))
         else:
             flash('اسم المستخدم أو كلمة المرور غير صحيحة', 'danger')
-    
+
     return render_template('mobile/login.html', form=form)
 
 # تسجيل الدخول باستخدام Google - النسخة المحمولة
@@ -215,10 +218,10 @@ def employees():
     """صفحة الموظفين للنسخة المحمولة"""
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # إنشاء الاستعلام الأساسي
     query = Employee.query
-    
+
     # تطبيق الفلترة حسب الاستعلام
     if request.args.get('search'):
         search_term = f"%{request.args.get('search')}%"
@@ -227,20 +230,20 @@ def employees():
             (Employee.employee_id.like(search_term)) |
             (Employee.job_title.like(search_term))
         )
-    
+
     if request.args.get('department_id'):
         query = query.filter_by(department_id=request.args.get('department_id'))
-    
+
     # ترتيب النتائج حسب الاسم
     query = query.order_by(Employee.name)
-    
+
     # تنفيذ الاستعلام مع الصفحات
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     employees = pagination.items
-    
+
     # الحصول على قائمة الأقسام للفلترة
     departments = Department.query.order_by(Department.name).all()
-    
+
     return render_template('mobile/employees.html',
                            employees=employees,
                            pagination=pagination,
@@ -260,28 +263,28 @@ def add_employee():
 def employee_details(employee_id):
     """صفحة تفاصيل الموظف للنسخة المحمولة"""
     employee = Employee.query.get_or_404(employee_id)
-    
+
     # الحصول على التاريخ الحالي وتاريخ بداية ونهاية الشهر الحالي
     current_date = datetime.now().date()
     current_month_start = date(current_date.year, current_date.month, 1)
     next_month = current_date.month + 1 if current_date.month < 12 else 1
     next_year = current_date.year if current_date.month < 12 else current_date.year + 1
     current_month_end = date(next_year, next_month, 1) - timedelta(days=1)
-    
+
     # استعلام سجلات الحضور للموظف خلال الشهر الحالي
     attendance_records = Attendance.query.filter(
         Attendance.employee_id == employee_id,
         Attendance.date >= current_month_start.strftime('%Y-%m-%d'),
         Attendance.date <= current_month_end.strftime('%Y-%m-%d')
     ).order_by(Attendance.date.desc()).all()
-    
+
     # استعلام أحدث راتب للموظف
     # ترتيب حسب السنة ثم الشهر بترتيب تنازلي
     salary = Salary.query.filter_by(employee_id=employee_id).order_by(Salary.year.desc(), Salary.month.desc()).first()
-    
+
     # استعلام الوثائق الخاصة بالموظف
     documents = Document.query.filter_by(employee_id=employee_id).all()
-    
+
     return render_template('mobile/employee_details.html', 
                           employee=employee,
                           attendance_records=attendance_records,
@@ -305,15 +308,15 @@ def attendance():
     """صفحة الحضور والغياب للنسخة المحمولة"""
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # بيانات مؤقتة - يمكن استبدالها بالبيانات الفعلية من قاعدة البيانات
     employees = Employee.query.order_by(Employee.name).all()
     attendance_records = []
-    
+
     # إحصائيات اليوم
     current_date = datetime.now().date()
     today_stats = {'present': 0, 'absent': 0, 'leave': 0, 'total': len(employees)}
-    
+
     return render_template('mobile/attendance.html',
                           employees=employees,
                           attendance_records=attendance_records,
@@ -328,29 +331,29 @@ def export_attendance():
     """صفحة تصدير بيانات الحضور إلى Excel للنسخة المحمولة"""
     # الحصول على قائمة الأقسام للاختيار
     departments = Department.query.order_by(Department.name).all()
-    
+
     if request.method == 'POST':
         # معالجة النموذج المرسل
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
         department_id = request.form.get('department_id')
-        
+
         # إعادة توجيه إلى مسار التصدير في النسخة غير المحمولة مع وسيطات البحث
         redirect_url = url_for('attendance.export_excel')
         params = []
-        
+
         if start_date:
             params.append(f'start_date={start_date}')
         if end_date:
             params.append(f'end_date={end_date}')
         if department_id:
             params.append(f'department_id={department_id}')
-        
+
         if params:
             redirect_url = f"{redirect_url}?{'&'.join(params)}"
-        
+
         return redirect(redirect_url)
-    
+
     return render_template('mobile/attendance_export.html', departments=departments)
 
 # إضافة سجل حضور جديد - النسخة المحمولة
@@ -361,7 +364,7 @@ def add_attendance():
     # الحصول على قائمة الموظفين
     employees = Employee.query.order_by(Employee.name).all()
     current_date = datetime.now().date()
-    
+
     if request.method == 'POST':
         # معالجة النموذج المرسل
         employee_id = request.form.get('employee_id')
@@ -373,19 +376,19 @@ def add_attendance():
         quick = request.form.get('quick') == 'true'
         action = request.form.get('action')
         all_employees = request.form.get('all_employees') == 'true'
-        
+
         # تحديد التاريخ
         if date_str:
             attendance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         else:
             attendance_date = current_date
-        
+
         # معالجة تسجيل حضور الجميع
         if all_employees:
             # الحصول على جميع الموظفين
             all_emps = Employee.query.order_by(Employee.name).all()
             success_count = 0
-            
+
             if all_emps and status:
                 for emp in all_emps:
                     # إنشاء سجل حضور لكل موظف
@@ -397,13 +400,13 @@ def add_attendance():
                         check_out=check_out if status == 'حاضر' else None,
                         notes=notes
                     )
-                    
+
                     try:
                         db.session.add(new_attendance)
                         success_count += 1
                     except Exception as e:
                         print(f"خطأ في إضافة سجل الحضور للموظف {emp.name}: {str(e)}")
-                
+
                 if success_count > 0:
                     try:
                         db.session.commit()
@@ -420,12 +423,12 @@ def add_attendance():
         else:
             # التحقق من أن الموظف موجود
             employee = Employee.query.get(employee_id) if employee_id else None
-            
+
             if employee:
                 if quick and action:
                     # معالجة التسجيل السريع
                     now_time = datetime.now().time()
-                    
+
                     if action == 'check_in':
                         status = 'حاضر'
                         check_in = now_time.strftime('%H:%M')
@@ -436,7 +439,7 @@ def add_attendance():
                         check_in = None
                         check_out = now_time.strftime('%H:%M')
                         notes = "تم تسجيل الانصراف عبر النظام المحمول."
-                
+
                 # إنشاء سجل الحضور الجديد
                 new_attendance = Attendance(
                     employee_id=employee.id,
@@ -446,7 +449,7 @@ def add_attendance():
                     check_out=check_out,
                     notes=notes
                 )
-                
+
                 try:
                     db.session.add(new_attendance)
                     db.session.commit()
@@ -458,7 +461,7 @@ def add_attendance():
                     print(f"خطأ في إضافة سجل الحضور: {str(e)}")
             else:
                 flash('يرجى اختيار موظف صالح', 'warning')
-    
+
     # المتغيرات المطلوبة لعرض الصفحة - استخدام الصفحة الجديدة لتجنب الخطأ
     return render_template('mobile/add_attendance_new.html',
                           employees=employees,
@@ -473,7 +476,7 @@ def edit_attendance(record_id):
     attendance = Attendance.query.get_or_404(record_id)
     employees = Employee.query.order_by(Employee.name).all()
     current_date = datetime.now().date()
-    
+
     return render_template('mobile/edit_attendance.html',
                           attendance=attendance,
                           employees=employees,
@@ -487,7 +490,7 @@ def departments():
     # الحصول على قائمة الأقسام
     departments = Department.query.all()
     employees_count = Employee.query.count()
-    
+
     return render_template('mobile/departments.html',
                           departments=departments,
                           employees_count=employees_count)
@@ -499,7 +502,7 @@ def add_department():
     """صفحة إضافة قسم جديد للنسخة المحمولة"""
     # الموظفين كمديرين محتملين للقسم
     employees = Employee.query.order_by(Employee.name).all()
-    
+
     # ستتم إضافة وظيفة إضافة قسم جديد لاحقاً
     return render_template('mobile/add_department.html', 
                           employees=employees)
@@ -519,25 +522,25 @@ def salaries():
     """صفحة الرواتب للنسخة المحمولة"""
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # جلب بيانات الموظفين والأقسام
     employees = Employee.query.order_by(Employee.name).all()
     departments = Department.query.order_by(Department.name).all()
-    
+
     # إحصائيات الرواتب
     current_year = datetime.now().year
     current_month = datetime.now().month
     selected_year = request.args.get('year', current_year, type=int)
     selected_month = request.args.get('month', current_month, type=int)
-    
+
     # فلترة الموظف
     employee_id_str = request.args.get('employee_id', '')
     employee_id = int(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
-    
+
     # فلترة القسم
     department_id_str = request.args.get('department_id', '')
     department_id = int(department_id_str) if department_id_str and department_id_str.isdigit() else None
-    
+
     # تحويل الشهر إلى اسمه بالعربية
     month_names = {
         1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
@@ -545,39 +548,39 @@ def salaries():
         9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
     }
     selected_month_name = month_names.get(selected_month, '')
-    
+
     # قاعدة الاستعلام الأساسية للرواتب
     query = Salary.query.filter(
         Salary.year == selected_year,
         Salary.month == selected_month
     )
-    
+
     # تطبيق فلتر الموظف إذا تم تحديده
     if employee_id:
         query = query.filter(Salary.employee_id == employee_id)
-    
+
     # تطبيق فلتر القسم إذا تم تحديده
     if department_id:
         # فلترة الموظفين في القسم المحدد
         department_employee_ids = db.session.query(Employee.id).join(Employee.departments).filter(Department.id == department_id).subquery()
         query = query.filter(Salary.employee_id.in_(department_employee_ids))
-        
+
     # تطبيق فلتر حالة الدفع إذا تم تحديده
     is_paid = request.args.get('is_paid')
     if is_paid is not None:
         is_paid_bool = True if is_paid == '1' else False
         query = query.filter(Salary.is_paid == is_paid_bool)
-        
+
     # تطبيق فلتر البحث إذا تم تحديده
     search_term = request.args.get('search', '')
     if search_term:
         search_pattern = f"%{search_term}%"
         query = query.join(Employee).filter(Employee.name.like(search_pattern))
-    
+
     # تنفيذ الاستعلام والحصول على نتائج مع التصفح
     paginator = query.order_by(Salary.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
     salaries = paginator.items
-    
+
     # حساب إجماليات الرواتب
     total_salaries = query.all()
     salary_stats = {
@@ -586,7 +589,7 @@ def salaries():
         'total_deductions': sum(salary.deductions for salary in total_salaries),
         'total_net': sum(salary.net_salary for salary in total_salaries)
     }
-    
+
     return render_template('mobile/salaries.html',
                           employees=employees,
                           departments=departments,
@@ -616,7 +619,7 @@ def salary_details(salary_id):
     """تفاصيل الراتب للنسخة المحمولة"""
     # جلب بيانات الراتب مع بيانات الموظف
     salary = Salary.query.options(joinedload(Salary.employee)).get_or_404(salary_id)
-    
+
     # تحويل الشهر إلى اسمه بالعربية
     month_names = {
         1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
@@ -624,7 +627,7 @@ def salary_details(salary_id):
         9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
     }
     month_name = month_names.get(salary.month, '')
-    
+
     # حساب إحصائيات أخرى للموظف
     employee_salaries = Salary.query.filter_by(employee_id=salary.employee_id).all()
     employee_stats = {
@@ -633,7 +636,7 @@ def salary_details(salary_id):
         'total_unpaid': sum(1 for s in employee_salaries if not s.is_paid),
         'avg_net_salary': sum(s.net_salary for s in employee_salaries) / len(employee_salaries) if employee_salaries else 0
     }
-    
+
     return render_template('mobile/salary_details.html',
                           salary=salary,
                           month_name=month_name,
@@ -645,7 +648,7 @@ def salary_details(salary_id):
 def edit_salary(salary_id):
     """تعديل الراتب للنسخة المحمولة"""
     salary = Salary.query.options(joinedload(Salary.employee)).get_or_404(salary_id)
-    
+
     if request.method == 'POST':
         try:
             # تحديث بيانات الراتب
@@ -656,19 +659,19 @@ def edit_salary(salary_id):
             salary.overtime_hours = float(request.form.get('overtime_hours', 0))
             salary.is_paid = 'is_paid' in request.form
             salary.notes = request.form.get('notes', '')
-            
+
             # حساب صافي الراتب
             salary.net_salary = salary.basic_salary + salary.allowances + salary.bonus - salary.deductions
             salary.updated_at = datetime.utcnow()
-            
+
             db.session.commit()
             flash('تم تحديث بيانات الراتب بنجاح', 'success')
             return redirect(url_for('mobile.salary_details', salary_id=salary.id))
-            
+
         except Exception as e:
             db.session.rollback()
             flash('حدث خطأ أثناء تحديث الراتب', 'error')
-            
+
     # تحويل الشهر إلى اسمه بالعربية
     month_names = {
         1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل', 
@@ -676,7 +679,7 @@ def edit_salary(salary_id):
         9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
     }
     month_name = month_names.get(salary.month, '')
-    
+
     return render_template('mobile/edit_salary.html',
                           salary=salary,
                           month_name=month_name)
@@ -693,17 +696,17 @@ def documents():
     status = request.args.get('status')  # valid, expiring, expired
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # قم باستعلام قاعدة البيانات للحصول على قائمة الموظفين
     employees = Employee.query.order_by(Employee.name).all()
-    
+
     # إنشاء استعلام أساسي للوثائق مع جلب بيانات الموظف
     query = Document.query.join(Employee)
-    
+
     # إضافة فلاتر إلى الاستعلام إذا تم توفيرها
     if employee_id:
         query = query.filter(Document.employee_id == employee_id)
-    
+
     # معالجة نوع الوثيقة - تحويل من العربية إلى الإنجليزية للبحث في قاعدة البيانات
     if document_type:
         document_type_mapping = {
@@ -717,10 +720,10 @@ def documents():
         }
         english_type = document_type_mapping.get(document_type, document_type)
         query = query.filter(Document.document_type == english_type)
-    
+
     # الحصول على التاريخ الحالي
     current_date = datetime.now().date()
-    
+
     # إضافة فلتر حالة الوثيقة
     if status:
         if status == 'valid':
@@ -736,14 +739,14 @@ def documents():
         elif status == 'expired':
             # وثائق منتهية الصلاحية (تاريخ انتهاء الصلاحية قبل اليوم)
             query = query.filter(Document.expiry_date < current_date)
-    
+
     # تنفيذ الاستعلام مع ترتيب النتائج حسب تاريخ انتهاء الصلاحية
     query = query.order_by(Document.expiry_date)
-    
+
     # تقسيم النتائج إلى صفحات
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     documents = pagination.items
-    
+
     # إضافة حالة الوثيقة لكل وثيقة
     for document in documents:
         if document.expiry_date:
@@ -755,7 +758,7 @@ def documents():
                 document.status = 'expired'
         else:
             document.status = 'no_expiry'
-        
+
         # تحويل نوع الوثيقة من الإنجليزية للعربية للعرض
         document_type_display = {
             'national_id': 'هوية وطنية',
@@ -767,21 +770,21 @@ def documents():
             'other': 'أخرى'
         }
         document.document_type_display = document_type_display.get(document.document_type, document.document_type)
-    
+
     # حساب إحصائيات الوثائق
     valid_count = Document.query.filter(Document.expiry_date >= current_date + timedelta(days=60)).count()
     expiring_count = Document.query.filter(Document.expiry_date >= current_date, 
                                           Document.expiry_date <= current_date + timedelta(days=60)).count()
     expired_count = Document.query.filter(Document.expiry_date < current_date).count()
     total_count = Document.query.count()
-    
+
     document_stats = {
         'valid': valid_count,
         'expiring': expiring_count,
         'expired': expired_count,
         'total': total_count
     }
-    
+
     return render_template('mobile/documents.html',
                           employees=employees,
                           documents=documents,
@@ -797,7 +800,7 @@ def add_document():
     # قائمة الموظفين للاختيار
     employees = Employee.query.order_by(Employee.name).all()
     current_date = datetime.now().date()
-    
+
     # أنواع الوثائق المتاحة
     document_types = [
         'هوية وطنية',
@@ -808,7 +811,7 @@ def add_document():
         'شهادة تأمين',
         'أخرى'
     ]
-    
+
     # يمكن تنفيذ هذه الوظيفة لاحقًا
     return render_template('mobile/add_document.html',
                           employees=employees,
@@ -822,15 +825,15 @@ def document_details(document_id):
     """تفاصيل وثيقة للنسخة المحمولة"""
     # الحصول على بيانات الوثيقة من قاعدة البيانات
     document = Document.query.get_or_404(document_id)
-    
+
     # الحصول على التاريخ الحالي للمقارنة مع تاريخ انتهاء الصلاحية
     current_date = datetime.now().date()
-    
+
     # حساب المدة المتبقية (أو المنقضية) لصلاحية الوثيقة
     days_remaining = None
     if document.expiry_date:
         days_remaining = (document.expiry_date - current_date).days
-        
+
     return render_template('mobile/document_details.html',
                           document=document,
                           current_date=current_date,
@@ -851,23 +854,23 @@ def reports():
 def report_employees():
     """تقرير الموظفين للنسخة المحمولة"""
     departments = Department.query.order_by(Department.name).all()
-    
+
     # استخراج معلمات الاستعلام
     department_id = request.args.get('department_id')
     status = request.args.get('status')
     search = request.args.get('search')
     export_format = request.args.get('export')
-    
+
     # إنشاء الاستعلام الأساسي
     query = Employee.query
-    
+
     # تطبيق الفلترة
     if department_id:
         query = query.filter_by(department_id=department_id)
-    
+
     if status:
         query = query.filter_by(status=status)
-    
+
     if search:
         search_term = f"%{search}%"
         query = query.filter(
@@ -876,10 +879,10 @@ def report_employees():
             (Employee.national_id.like(search_term)) |
             (Employee.job_title.like(search_term))
         )
-    
+
     # الحصول على جميع الموظفين المطابقين
     employees = query.order_by(Employee.name).all()
-    
+
     # معالجة طلبات التصدير
     if export_format:
         try:
@@ -890,7 +893,7 @@ def report_employees():
                                        department_id=department_id,
                                        status=status,
                                        search=search))
-                                       
+
             elif export_format == 'excel':
                 # استدعاء مسار التصدير Excel في النسخة الرئيسية
                 return redirect(url_for('reports.export_employees_report',
@@ -901,7 +904,7 @@ def report_employees():
         except Exception as e:
             # تسجيل الخطأ في السجل
             print(f"خطأ في تصدير تقرير الموظفين: {str(e)}")
-    
+
     # عرض الصفحة مع نتائج التقرير
     return render_template('mobile/report_employees.html', 
                          departments=departments,
@@ -914,7 +917,7 @@ def report_attendance():
     """تقرير الحضور للنسخة المحمولة"""
     # الحصول على قائمة الأقسام للفلترة
     departments = Department.query.order_by(Department.name).all()
-    
+
     # استخراج معلمات الاستعلام
     department_id = request.args.get('department_id')
     employee_id = request.args.get('employee_id')
@@ -922,35 +925,35 @@ def report_attendance():
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     export_format = request.args.get('export')
-    
+
     # استخراج الموظفين المطابقين للفلترة
     employees_query = Employee.query
     if department_id:
         employees_query = employees_query.filter_by(department_id=department_id)
     employees = employees_query.order_by(Employee.name).all()
-    
+
     # إنشاء استعلام سجلات الحضور
     attendance_query = Attendance.query
-    
+
     # تطبيق الفلترة على سجلات الحضور
     if employee_id:
         attendance_query = attendance_query.filter_by(employee_id=employee_id)
     elif department_id:
         # فلترة حسب القسم عن طريق الانضمام مع جدول الموظفين
         attendance_query = attendance_query.join(Employee).filter(Employee.department_id == department_id)
-    
+
     if status:
         attendance_query = attendance_query.filter_by(status=status)
-    
+
     if start_date:
         attendance_query = attendance_query.filter(Attendance.date >= start_date)
-    
+
     if end_date:
         attendance_query = attendance_query.filter(Attendance.date <= end_date)
-    
+
     # الحصول على سجلات الحضور المرتبة حسب التاريخ (تنازلياً)
     attendance_records = attendance_query.order_by(Attendance.date.desc()).all()
-    
+
     # معالجة طلبات التصدير
     if export_format:
         try:
@@ -962,7 +965,7 @@ def report_attendance():
                                        status=status,
                                        start_date=start_date,
                                        end_date=end_date))
-                                       
+
             elif export_format == 'excel':
                 # استدعاء مسار التصدير Excel في النسخة الرئيسية
                 return redirect(url_for('reports.attendance_excel',
@@ -974,7 +977,7 @@ def report_attendance():
         except Exception as e:
             # تسجيل الخطأ في السجل
             print(f"خطأ في تصدير تقرير الحضور: {str(e)}")
-    
+
     # عرض الصفحة مع نتائج التقرير
     return render_template('mobile/report_attendance.html',
                          departments=departments,
@@ -988,7 +991,7 @@ def report_salaries():
     """تقرير الرواتب للنسخة المحمولة"""
     # الحصول على قائمة الأقسام والموظفين للفلترة
     departments = Department.query.order_by(Department.name).all()
-    
+
     # استخراج معلمات البحث
     department_id = request.args.get('department_id')
     employee_id = request.args.get('employee_id')
@@ -996,36 +999,36 @@ def report_salaries():
     year = request.args.get('year')
     month = request.args.get('month')
     export_format = request.args.get('export')
-    
+
     # استخراج الموظفين المطابقين للفلترة
     employees_query = Employee.query
     if department_id:
         employees_query = employees_query.filter_by(department_id=department_id)
     employees = employees_query.order_by(Employee.name).all()
-    
+
     # إنشاء استعلام الرواتب
     query = Salary.query
-    
+
     # تطبيق الفلترة على الرواتب
     if employee_id:
         query = query.filter_by(employee_id=employee_id)
     elif department_id:
         # فلترة حسب القسم عن طريق الانضمام مع جدول الموظفين
         query = query.join(Employee).filter(Employee.department_id == department_id)
-    
+
     if is_paid:
         is_paid_bool = (is_paid.lower() == 'true' or is_paid == '1')
         query = query.filter(Salary.is_paid == is_paid_bool)
-    
+
     if year:
         query = query.filter(Salary.year == year)
-    
+
     if month:
         query = query.filter(Salary.month == month)
-    
+
     # الحصول على سجلات الرواتب المرتبة حسب التاريخ (تنازلياً)
     salaries = query.order_by(Salary.year.desc(), Salary.month.desc()).all()
-    
+
     # معالجة طلبات التصدير
     if export_format:
         try:
@@ -1037,7 +1040,7 @@ def report_salaries():
                                       is_paid=is_paid,
                                       year=year,
                                       month=month))
-                                      
+
             elif export_format == 'excel':
                 # استدعاء مسار التصدير Excel في النسخة الرئيسية
                 return redirect(url_for('reports.salaries_excel',
@@ -1049,16 +1052,16 @@ def report_salaries():
         except Exception as e:
             # تسجيل الخطأ في السجل
             print(f"خطأ في تصدير تقرير الرواتب: {str(e)}")
-    
+
     # استخراج قائمة بالسنوات والأشهر المتاحة
     years_months = db.session.query(Salary.year, Salary.month)\
                   .order_by(Salary.year.desc(), Salary.month.desc())\
                   .distinct().all()
-    
+
     # تجميع السنوات والأشهر
     available_years = sorted(list(set([ym[0] for ym in years_months])), reverse=True)
     available_months = sorted(list(set([ym[1] for ym in years_months])))
-    
+
     return render_template('mobile/report_salaries.html',
                          departments=departments,
                          employees=employees,
@@ -1074,7 +1077,7 @@ def share_salary_via_whatsapp(id):
         # الحصول على سجل الراتب
         salary = Salary.query.get_or_404(id)
         employee = salary.employee
-        
+
         # الحصول على اسم الشهر بالعربية
         month_names = {
             1: 'يناير', 2: 'فبراير', 3: 'مارس', 4: 'أبريل',
@@ -1082,10 +1085,10 @@ def share_salary_via_whatsapp(id):
             9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
         }
         month_name = month_names.get(salary.month, str(salary.month))
-        
+
         # إنشاء رابط لتحميل ملف PDF
         pdf_url = url_for('salaries.salary_notification_pdf', id=salary.id, _external=True)
-        
+
         # إعداد نص الرسالة مع رابط التحميل
         message_text = f"""*إشعار راتب - نُظم*
 
@@ -1105,7 +1108,7 @@ def share_salary_via_whatsapp(id):
 
 مع تحيات إدارة الموارد البشرية
 نُظم - نظام إدارة متكامل"""
-        
+
         # تسجيل العملية
         from models import SystemAudit
         audit = SystemAudit(
@@ -1117,10 +1120,10 @@ def share_salary_via_whatsapp(id):
         )
         db.session.add(audit)
         db.session.commit()
-        
+
         # إنشاء رابط الواتس اب مع نص الرسالة
         from urllib.parse import quote
-        
+
         # التحقق مما إذا كان رقم الهاتف متوفر للموظف
         if employee.mobile:
             # تنسيق رقم الهاتف (إضافة رمز الدولة +966 إذا لم يكن موجودًا)
@@ -1131,16 +1134,16 @@ def share_salary_via_whatsapp(id):
                     to_phone = "+966" + to_phone[1:]
                 else:
                     to_phone = "+966" + to_phone
-            
+
             # إنشاء رابط مباشر للموظف
             whatsapp_url = f"https://wa.me/{to_phone}?text={quote(message_text)}"
         else:
             # إذا لم يكن هناك رقم هاتف، استخدم الطريقة العادية
             whatsapp_url = f"https://wa.me/?text={quote(message_text)}"
-        
+
         # إعادة توجيه المستخدم إلى رابط الواتس اب
         return redirect(whatsapp_url)
-        
+
     except Exception as e:
         flash(f'حدث خطأ أثناء مشاركة إشعار الراتب عبر الواتس اب: {str(e)}', 'danger')
         return redirect(url_for('mobile.report_salaries'))
@@ -1153,33 +1156,33 @@ def report_documents():
     # الحصول على قائمة الأقسام والموظفين للفلترة
     departments = Department.query.order_by(Department.name).all()
     current_date = datetime.now().date()
-    
+
     # استخراج معلمات البحث
     department_id = request.args.get('department_id')
     employee_id = request.args.get('employee_id')
     document_type = request.args.get('document_type')
     status = request.args.get('status')  # valid, expiring, expired
     export_format = request.args.get('export')
-    
+
     # استخراج الموظفين المطابقين للفلترة
     employees_query = Employee.query
     if department_id:
         employees_query = employees_query.filter_by(department_id=department_id)
     employees = employees_query.order_by(Employee.name).all()
-    
+
     # إنشاء استعلام الوثائق
     query = Document.query
-    
+
     # تطبيق الفلترة على الوثائق
     if employee_id:
         query = query.filter_by(employee_id=employee_id)
     elif department_id:
         # فلترة حسب القسم عن طريق الانضمام مع جدول الموظفين
         query = query.join(Employee).filter(Employee.department_id == department_id)
-    
+
     if document_type:
         query = query.filter_by(document_type=document_type)
-    
+
     # فلترة حسب حالة الوثيقة (صالحة، على وشك الانتهاء، منتهية)
     if status:
         if status == 'valid':
@@ -1195,10 +1198,10 @@ def report_documents():
         elif status == 'expired':
             # وثائق منتهية الصلاحية
             query = query.filter(Document.expiry_date < current_date)
-    
+
     # الحصول على الوثائق المرتبة حسب تاريخ انتهاء الصلاحية
     documents = query.order_by(Document.expiry_date).all()
-    
+
     # معالجة طلبات التصدير
     if export_format:
         if export_format == 'pdf':
@@ -1208,7 +1211,7 @@ def report_documents():
                                   employee_id=employee_id,
                                   document_type=document_type,
                                   status=status))
-                                  
+
         elif export_format == 'excel':
             # استدعاء مسار التصدير Excel في النسخة الرئيسية
             return redirect(url_for('reports.documents_excel',
@@ -1216,19 +1219,19 @@ def report_documents():
                                   employee_id=employee_id,
                                   document_type=document_type,
                                   status=status))
-    
+
     # استخراج أنواع الوثائق المتاحة
     document_types = db.session.query(Document.document_type)\
                     .distinct().order_by(Document.document_type).all()
     document_types = [d[0] for d in document_types if d[0]]
-    
+
     # إضافة عدد الأيام المتبقية لكل وثيقة
     for doc in documents:
         if doc.expiry_date:
             doc.days_remaining = (doc.expiry_date - current_date).days
         else:
             doc.days_remaining = None
-    
+
     return render_template('mobile/report_documents.html',
                          departments=departments,
                          employees=employees,
@@ -1246,17 +1249,17 @@ def report_vehicles():
     status = request.args.get('status')
     search = request.args.get('search')
     export_format = request.args.get('export')
-    
+
     # إنشاء استعلام المركبات
     query = Vehicle.query
-    
+
     # تطبيق الفلترة على المركبات
     if vehicle_type:
         query = query.filter_by(make=vehicle_type)  # نستخدم make بدلاً من vehicle_type
-    
+
     if status:
         query = query.filter_by(status=status)
-    
+
     if search:
         search_term = f"%{search}%"
         query = query.filter(
@@ -1265,10 +1268,10 @@ def report_vehicles():
             (Vehicle.model.like(search_term)) |
             (Vehicle.color.like(search_term))
         )
-    
+
     # الحصول على المركبات المرتبة حسب الترتيب
     vehicles = query.order_by(Vehicle.plate_number).all()
-    
+
     # معالجة طلبات التصدير
     if export_format:
         try:
@@ -1279,7 +1282,7 @@ def report_vehicles():
                                       vehicle_type=vehicle_type,
                                       status=status,
                                       search=search))
-                                      
+
             elif export_format == 'excel':
                 # استدعاء مسار التصدير Excel في النسخة الرئيسية
                 return redirect(url_for('reports.export_vehicles_report',
@@ -1290,34 +1293,34 @@ def report_vehicles():
         except Exception as e:
             # تسجيل الخطأ في السجل
             print(f"خطأ في تصدير تقرير المركبات: {str(e)}")
-    
+
     # استخراج انواع المركبات وحالات المركبات المتاحة
     # استخراج الشركات المصنعة من قاعدة البيانات
     vehicle_types = db.session.query(Vehicle.make)\
                     .distinct().order_by(Vehicle.make).all()
     vehicle_types = [vt[0] for vt in vehicle_types if vt[0]]
-    
+
     vehicle_statuses = db.session.query(Vehicle.status)\
                       .distinct().order_by(Vehicle.status).all()
     vehicle_statuses = [vs[0] for vs in vehicle_statuses if vs[0]]
-    
+
     # إحصائيات تفصيلية للماركات
     make_stats = db.session.query(Vehicle.make, func.count(Vehicle.id))\
                 .filter(Vehicle.make.isnot(None))\
                 .group_by(Vehicle.make)\
                 .order_by(func.count(Vehicle.id).desc()).all()
-    
+
     # إحصائيات تفصيلية للألوان
     color_stats = db.session.query(Vehicle.color, func.count(Vehicle.id))\
                  .filter(Vehicle.color.isnot(None))\
                  .group_by(Vehicle.color)\
                  .order_by(func.count(Vehicle.id).desc()).all()
-    
+
     # إحصائيات عامة
     total_vehicles = len(vehicles)
     active_vehicles = len([v for v in vehicles if v.status in ['نشط', 'متاح', 'available']])
     maintenance_vehicles = len([v for v in vehicles if 'صيانة' in (v.status or '') or 'maintenance' in (v.status or '')])
-    
+
     return render_template('mobile/report_vehicles.html',
                          vehicles=vehicles,
                          vehicle_types=vehicle_types,
@@ -1339,27 +1342,27 @@ def report_fees():
     date_to = request.args.get('date_to')
     status = request.args.get('status')  # paid/unpaid
     export_format = request.args.get('export')
-    
+
     # إنشاء استعلام الرسوم
     query = Fee.query
-    
+
     # تطبيق الفلترة على الرسوم
     if fee_type:
         query = query.filter_by(fee_type=fee_type)
-    
+
     if date_from:
         query = query.filter(Fee.due_date >= date_from)
-    
+
     if date_to:
         query = query.filter(Fee.due_date <= date_to)
-    
+
     if status:
         is_paid_bool = (status.lower() == 'paid')
         query = query.filter(Fee.is_paid == is_paid_bool)
-    
+
     # الحصول على قائمة الرسوم المرتبة حسب تاريخ الاستحقاق
     fees = query.order_by(Fee.due_date).all()
-    
+
     # معالجة طلبات التصدير
     if export_format:
         try:
@@ -1371,7 +1374,7 @@ def report_fees():
                                       date_from=date_from,
                                       date_to=date_to,
                                       status=status))
-                                  
+
             elif export_format == 'excel':
                 # استدعاء مسار التصدير Excel في النسخة الرئيسية
                 return redirect(url_for('reports.export_fees_report',
@@ -1383,20 +1386,20 @@ def report_fees():
         except Exception as e:
             # تسجيل الخطأ في السجل
             print(f"خطأ في تصدير تقرير الرسوم: {str(e)}")
-    
+
     # استخراج أنواع الرسوم المتاحة
     fee_types = db.session.query(Fee.fee_type)\
                 .distinct().order_by(Fee.fee_type).all()
     fee_types = [f[0] for f in fee_types if f[0]]
-    
+
     # احتساب إجماليات الرسوم
     total_fees = sum(fee.amount for fee in fees if fee.amount)
     total_paid = sum(fee.amount for fee in fees if fee.amount and fee.is_paid)
     total_unpaid = sum(fee.amount for fee in fees if fee.amount and not fee.is_paid)
-    
+
     # الحصول على التاريخ الحالي
     current_date = datetime.now().date()
-    
+
     return render_template('mobile/report_fees.html',
                          fees=fees,
                          fee_types=fee_types,
@@ -1416,18 +1419,18 @@ def vehicles():
     search_filter = request.args.get('search', '')
     page = request.args.get('page', 1, type=int)
     per_page = 10  # عدد السيارات في الصفحة الواحدة
-    
+
     # قاعدة الاستعلام الأساسية
     query = Vehicle.query
-    
+
     # إضافة التصفية حسب الحالة إذا تم تحديدها
     if status_filter:
         query = query.filter(Vehicle.status == status_filter)
-    
+
     # إضافة التصفية حسب الشركة المصنعة إذا تم تحديدها
     if make_filter:
         query = query.filter(Vehicle.make == make_filter)
-    
+
     # إضافة التصفية حسب البحث
     if search_filter:
         search_pattern = f"%{search_filter}%"
@@ -1436,15 +1439,15 @@ def vehicles():
             (Vehicle.make.like(search_pattern)) |
             (Vehicle.model.like(search_pattern))
         )
-    
+
     # الحصول على قائمة الشركات المصنعة المتوفرة
     makes = db.session.query(Vehicle.make).distinct().order_by(Vehicle.make).all()
     makes = [make[0] for make in makes if make[0]]  # استخراج أسماء الشركات وتجاهل القيم الفارغة
-    
+
     # تنفيذ الاستعلام مع الترقيم
     pagination = query.order_by(Vehicle.status, Vehicle.plate_number).paginate(page=page, per_page=per_page, error_out=False)
     vehicles = pagination.items
-    
+
     # إحصائيات سريعة - نعدل المسميات لتتوافق مع النسخة المحمولة
     stats = {
         'total': Vehicle.query.count(),
@@ -1452,7 +1455,7 @@ def vehicles():
         'maintenance': Vehicle.query.filter_by(status='in_workshop').count(),
         'inactive': Vehicle.query.filter_by(status='accident').count() + Vehicle.query.filter_by(status='rented').count() + Vehicle.query.filter_by(status='in_project').count()
     }
-    
+
     return render_template('mobile/vehicles.html', 
                           vehicles=vehicles, 
                           stats=stats,
@@ -1471,44 +1474,44 @@ def vehicle_details(vehicle_id):
         vehicle = Vehicle.query.get_or_404(vehicle_id)
 
         maintenance_records = VehicleMaintenance.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleMaintenance.date.desc()).all()
-        
+
             # الحصول على سجلات الورشة - جميع السجلات بدون حد
         workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleWorkshop.entry_date.desc()).all()
         print(f"DEBUG: عدد سجلات الورشة للسيارة {vehicle_id}: {len(workshop_records)}")
-        
+
             # الحصول على تعيينات المشاريع
         project_assignments = VehicleProject.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleProject.start_date.desc()).limit(5).all()
-            
+
             # الحصول على سجلات التسليم والاستلام مع بيانات الموظف والأقسام
         handover_records = VehicleHandover.query.filter_by(vehicle_id=vehicle_id)\
             .options(joinedload(VehicleHandover.driver_employee).joinedload(Employee.departments))\
             .order_by(VehicleHandover.handover_date.desc()).all()
-        
+
         # الحصول على التفويضات الخارجية مع معالجة القيم الفارغة
         external_authorizations = ExternalAuthorization.query.filter_by(vehicle_id=vehicle_id).all()
         # ترتيب آمن للتفويضات (القيم الفارغة في النهاية)
         external_authorizations = sorted(external_authorizations, 
                                        key=lambda x: x.created_at or datetime.min, 
                                        reverse=True)
-        
+
         # الحصول على الأقسام والموظفين للنموذج
         departments = Department.query.all()
         employees = Employee.query.all()
-    
+
         # الحصول على سجل الصيانة الخاص بالسيارة
-       
+
         # handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
 
-        
+
         # الحصول على سجلات الفحص الدوري
         periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=vehicle_id).order_by(VehiclePeriodicInspection.inspection_date.desc()).limit(3).all()
-        
+
         # الحصول على سجلات فحص السلامة
         safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleSafetyCheck.check_date.desc()).limit(3).all()
-        
+
         # حساب تكلفة الإصلاحات الإجمالية
         total_maintenance_cost = db.session.query(func.sum(VehicleWorkshop.cost)).filter_by(vehicle_id=vehicle_id).scalar() or 0
-        
+
         # حساب عدد الأيام في الورشة (للسنة الحالية)
         current_year = datetime.now().year
         days_in_workshop = 0
@@ -1518,7 +1521,7 @@ def vehicle_details(vehicle_id):
                     days_in_workshop += (record.exit_date - record.entry_date).days
                 else:
                     days_in_workshop += (datetime.now().date() - record.entry_date).days
-        
+
         # ملاحظات تنبيهية عن انتهاء الفحص الدوري
         inspection_warnings = []
         for inspection in periodic_inspections:
@@ -1529,7 +1532,7 @@ def vehicle_details(vehicle_id):
                 days_remaining = (inspection.expiry_date - datetime.now().date()).days
                 inspection_warnings.append(f"الفحص الدوري سينتهي خلال {days_remaining} يومًا")
                 break
-            
+
     except Exception as e:
         print(f"خطأ في جلب بيانات السيارة: {str(e)}")
         maintenance_records = []
@@ -1544,15 +1547,15 @@ def vehicle_details(vehicle_id):
         total_maintenance_cost = 0
         days_in_workshop = 0
         inspection_warnings = []
-    
+
     # الحصول على وثائق السيارة
     documents = []
     # سيتم إضافة منطق لجلب الوثائق لاحقًا
-    
+
     # الحصول على رسوم السيارة
     fees = []
     # سيتم إضافة منطق لجلب الرسوم لاحقًا
-    
+
     return render_template('mobile/vehicle_details.html',
                          vehicle=vehicle,
                          maintenance_records=maintenance_records,
@@ -1576,7 +1579,7 @@ def vehicle_details(vehicle_id):
 def edit_vehicle(vehicle_id):
     """تعديل بيانات السيارة - واجهة الموبايل"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
+
     if request.method == 'POST':
         try:
             # تحديث البيانات الأساسية
@@ -1590,25 +1593,25 @@ def edit_vehicle(vehicle_id):
             vehicle.fuel_type = request.form.get('fuel_type', '').strip()
             vehicle.status = request.form.get('status', '').strip()
             vehicle.notes = request.form.get('notes', '').strip()
-            
+
             # تحديث تواريخ انتهاء الوثائق
             registration_expiry = request.form.get('registration_expiry_date')
             if registration_expiry:
                 vehicle.registration_expiry_date = datetime.strptime(registration_expiry, '%Y-%m-%d').date()
-            
+
             authorization_expiry = request.form.get('authorization_expiry_date')
             if authorization_expiry:
                 vehicle.authorization_expiry_date = datetime.strptime(authorization_expiry, '%Y-%m-%d').date()
-            
+
             inspection_expiry = request.form.get('inspection_expiry_date')
             if inspection_expiry:
                 vehicle.inspection_expiry_date = datetime.strptime(inspection_expiry, '%Y-%m-%d').date()
-            
+
             # تحديث تاريخ التعديل
             vehicle.updated_at = datetime.utcnow()
-            
+
             db.session.commit()
-            
+
             # تسجيل العملية في سجل النشاط
             log_activity(
                 user_id=current_user.id,
@@ -1616,14 +1619,14 @@ def edit_vehicle(vehicle_id):
                 details=f"تم تحديث بيانات السيارة {vehicle.plate_number}",
                 ip_address=request.remote_addr
             )
-            
+
             flash('تم تحديث بيانات السيارة بنجاح', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء تحديث السيارة: {str(e)}', 'error')
-    
+
     return render_template('mobile/edit_vehicle.html', vehicle=vehicle)
 
 # حذف السيارة - النسخة المحمولة
@@ -1632,14 +1635,14 @@ def edit_vehicle(vehicle_id):
 def delete_vehicle(vehicle_id):
     """حذف السيارة - واجهة الموبايل"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
+
     try:
         plate_number = vehicle.plate_number
-        
+
         # حذف السيارة من قاعدة البيانات
         db.session.delete(vehicle)
         db.session.commit()
-        
+
         # تسجيل العملية في سجل النشاط
         log_activity(
             user_id=current_user.id,
@@ -1647,10 +1650,10 @@ def delete_vehicle(vehicle_id):
             details=f"تم حذف السيارة {plate_number}",
             ip_address=request.remote_addr
         )
-        
+
         flash(f'تم حذف السيارة {plate_number} بنجاح', 'success')
         return redirect(url_for('mobile.vehicles'))
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f'حدث خطأ أثناء حذف السيارة: {str(e)}', 'error')
@@ -1672,12 +1675,12 @@ def maintenance_details(maintenance_id):
     """تفاصيل الصيانة للنسخة المحمولة"""
     # جلب سجل الصيانة من قاعدة البيانات
     maintenance = VehicleMaintenance.query.get_or_404(maintenance_id)
-    
+
     print(f"DEBUG: Maintenance ID: {maintenance.id}, Type: {type(maintenance)}")
-    
+
     # جلب بيانات السيارة
     vehicle = Vehicle.query.get(maintenance.vehicle_id)
-    
+
     # تحديد الفئة المناسبة لحالة الصيانة
     status_class = ""
     if maintenance.status == "قيد التنفيذ":
@@ -1691,15 +1694,15 @@ def maintenance_details(maintenance_id):
             status_class = "scheduled"
     elif maintenance.status == "ملغية":
         status_class = "canceled"
-    
+
     # جلب صور الصيانة إن وجدت
     images = VehicleMaintenanceImage.query.filter_by(maintenance_id=maintenance_id).all()
-    
+
     # تعيين حالة الصيانة لاستخدامها في العرض
     maintenance.status_class = status_class
     # إضافة الصور إلى كائن الصيانة
     maintenance.images = images
-    
+
     return render_template('mobile/maintenance_details.html',
                            maintenance=maintenance,
                            vehicle=vehicle)
@@ -1712,10 +1715,10 @@ def edit_maintenance(maintenance_id):
     """تعديل سجل صيانة للنسخة المحمولة"""
     # جلب سجل الصيانة
     maintenance = VehicleMaintenance.query.get_or_404(maintenance_id)
-    
+
     # الحصول على قائمة السيارات
     vehicles = Vehicle.query.all()
-    
+
     if request.method == 'POST':
         try:
             # استخراج البيانات من النموذج
@@ -1729,7 +1732,7 @@ def edit_maintenance(maintenance_id):
             notes = request.form.get('notes', '')
             parts_replaced = request.form.get('parts_replaced', '')
             actions_taken = request.form.get('actions_taken', '')
-            
+
             # التحقق من تعبئة الحقول المطلوبة
             if not vehicle_id or not maintenance_type or not description or not date_str or not status or not technician:
                 flash('يرجى ملء جميع الحقول المطلوبة', 'warning')
@@ -1737,15 +1740,15 @@ def edit_maintenance(maintenance_id):
                                      maintenance=maintenance,
                                      vehicles=vehicles, 
                                      now=datetime.now())
-            
+
             # تحويل التاريخ إلى كائن Date
             maintenance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            
+
             # استخراج روابط الإيصالات
             receipt_image_url = request.form.get('receipt_image_url', '')
             delivery_receipt_url = request.form.get('delivery_receipt_url', '')
             pickup_receipt_url = request.form.get('pickup_receipt_url', '')
-            
+
             # تحديث سجل الصيانة
             maintenance.vehicle_id = vehicle_id
             maintenance.date = maintenance_date
@@ -1760,17 +1763,17 @@ def edit_maintenance(maintenance_id):
             maintenance.parts_replaced = parts_replaced
             maintenance.actions_taken = actions_taken
             maintenance.notes = notes
-            
+
             # حفظ التغييرات في قاعدة البيانات
             db.session.commit()
-            
+
             flash('تم تحديث سجل الصيانة بنجاح', 'success')
             return redirect(url_for('mobile.maintenance_details', maintenance_id=maintenance.id))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء تحديث سجل الصيانة: {str(e)}', 'danger')
-    
+
     # عرض نموذج تعديل سجل الصيانة
     return render_template('mobile/edit_maintenance.html', 
                          maintenance=maintenance, 
@@ -1783,23 +1786,23 @@ def edit_maintenance(maintenance_id):
 def vehicle_documents():
     """صفحة وثائق المركبات"""
     from datetime import datetime, timedelta
-    
+
     # جلب جميع المركبات
     vehicles = Vehicle.query.all()
-    
+
     # تحديد تاريخ اليوم و30 يوم قادم
     today = datetime.now().date()
     thirty_days_later = today + timedelta(days=30)
-    
+
     # تحليل الوثائق
     documents = []
-    
+
     for vehicle in vehicles:
         # رخصة السير
         if vehicle.registration_expiry_date:
             days_remaining = (vehicle.registration_expiry_date - today).days
             status = 'valid' if days_remaining > 30 else 'warning' if days_remaining > 0 else 'expired'
-            
+
             documents.append({
                 'vehicle': vehicle,
                 'type': 'registration',
@@ -1809,12 +1812,12 @@ def vehicle_documents():
                 'days_remaining': days_remaining,
                 'status': status
             })
-        
+
         # التفويض
         if vehicle.authorization_expiry_date:
             days_remaining = (vehicle.authorization_expiry_date - today).days
             status = 'valid' if days_remaining > 30 else 'warning' if days_remaining > 0 else 'expired'
-            
+
             documents.append({
                 'vehicle': vehicle,
                 'type': 'authorization',
@@ -1824,12 +1827,12 @@ def vehicle_documents():
                 'days_remaining': days_remaining,
                 'status': status
             })
-        
+
         # الفحص الدوري
         if vehicle.inspection_expiry_date:
             days_remaining = (vehicle.inspection_expiry_date - today).days
             status = 'valid' if days_remaining > 30 else 'warning' if days_remaining > 0 else 'expired'
-            
+
             documents.append({
                 'vehicle': vehicle,
                 'type': 'inspection',
@@ -1839,16 +1842,16 @@ def vehicle_documents():
                 'days_remaining': days_remaining,
                 'status': status
             })
-    
+
     # حساب الإحصائيات
     valid_docs = len([d for d in documents if d['status'] == 'valid'])
     warning_docs = len([d for d in documents if d['status'] == 'warning'])
     expired_docs = len([d for d in documents if d['status'] == 'expired'])
     total_docs = len(documents)
-    
+
     # ترتيب الوثائق حسب تاريخ الانتهاء
     documents.sort(key=lambda x: x['expiry_date'])
-    
+
     return render_template('mobile/vehicle_documents.html',
                          documents=documents,
                          valid_docs=valid_docs,
@@ -1866,7 +1869,7 @@ def delete_maintenance(maintenance_id):
     try:
         # جلب سجل الصيانة
         maintenance = VehicleMaintenance.query.get_or_404(maintenance_id)
-        
+
         # حذف جميع الصور المرتبطة (إن وجدت)
         images = VehicleMaintenanceImage.query.filter_by(maintenance_id=maintenance_id).all()
         for image in images:
@@ -1874,19 +1877,19 @@ def delete_maintenance(maintenance_id):
             # image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image.image_path)
             # if os.path.exists(image_path):
             #    os.remove(image_path)
-            
+
             # حذف السجل من قاعدة البيانات
             db.session.delete(image)
-        
+
         # حذف سجل الصيانة
         db.session.delete(maintenance)
         db.session.commit()
-        
+
         flash('تم حذف سجل الصيانة بنجاح', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'حدث خطأ أثناء محاولة حذف سجل الصيانة: {str(e)}', 'danger')
-    
+
     return redirect(url_for('mobile.vehicles'))
 
 # وثائق السيارات - تم نقل الوظيفة في نهاية الملف
@@ -1914,10 +1917,10 @@ def save_base64_image(base64_string, subfolder):
         file_path = os.path.join(upload_folder, filename)
         with open(file_path, 'wb') as f:
             f.write(image_data)
-        
+
         # إرجاع المسار النسبي (مهم لقاعدة البيانات و HTML)
         return os.path.join(subfolder, filename)
-        
+
     except Exception as e:
         print(f"Error saving Base64 image: {e}")
         return None
@@ -1944,10 +1947,10 @@ def save_uploaded_file(file, subfolder):
         name, ext = os.path.splitext(filename_secure)
         # إنشاء اسم فريد لمنع الكتابة فوق الملفات
         unique_filename = f"{name}_{uuid.uuid4().hex[:8]}{ext}"
-        
+
         file_path = os.path.join(upload_folder, unique_filename)
         file.save(file_path)
-        
+
         # إرجاع المسار النسبي
         return os.path.join(subfolder, unique_filename)
 
@@ -1961,22 +1964,22 @@ def save_file(file, folder):
         return None, None
     if not file.filename:
         folder='vehicles'
-    
+
     # إنشاء اسم فريد للملف
     filename = secure_filename(file.filename)
     unique_filename = f"{uuid.uuid4()}_{filename}"
-    
+
     # التأكد من وجود المجلد
     upload_folder = os.path.join(current_app.static_folder, 'uploads', folder)
     os.makedirs(upload_folder, exist_ok=True)
-    
+
     # حفظ الملف
     file_path = os.path.join(upload_folder, unique_filename)
     file.save(file_path)
-    
+
     # تحديد نوع الملف (صورة أو PDF)
     file_type = 'pdf' if filename.lower().endswith('.pdf') else 'image'
-    
+
     # إرجاع المسار النسبي للملف ونوعه
     return f"uploads/{folder}/{unique_filename}", file_type
 
@@ -1999,13 +2002,11 @@ from datetime import datetime, date
 # --- دالة الموبايل الجديدة والمحدثة بالكامل ---
 
 @mobile_bp.route('/vehicles/checklist', methods=['GET', 'POST'])
-@mobile_bp.route('/vehicles/checklist/<int:handover_id>', methods=['GET', 'POST'])
 @login_required
-def create_handover_mobile(handover_id=None):
+def create_handover_mobile():
     """
     عرض ومعالجة نموذج تسليم/استلام السيارة (نسخة الهواتف المحمولة).
     هذه النسخة مطابقة للمنطق الشامل الموجود في نسخة الويب.
-    يمكن استخدامها لإنشاء جديد أو تعديل موجود.
     """
     # === معالجة طلب POST (عند إرسال النموذج) ===
     if request.method == 'POST':
@@ -2015,14 +2016,21 @@ def create_handover_mobile(handover_id=None):
             size_mb = content_length / (1024 * 1024)
             flash(f'حجم البيانات كبير جداً ({size_mb:.1f} ميجابايت). الحد الأقصى 20 ميجابايت. يرجى تقليل عدد الصور أو ضغطها قبل الإرسال.', 'danger')
             return redirect(url_for('mobile.create_handover_mobile'))
-        
+
         # يجب اختيار المركبة أولاً في نسخة الموبايل
         vehicle_id_str = request.form.get('vehicle_id')
         if not vehicle_id_str:
             flash('يجب اختيار مركبة أولاً.', 'danger')
             return redirect(url_for('mobile.create_handover_mobile')) # أعد توجيه المستخدم لنفس الصفحة
-            
+
         vehicle = Vehicle.query.get_or_404(int(vehicle_id_str))
+        
+        # فحص قيود العمليات للمركبات خارج الخدمة
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            flash(restrictions['message'], 'danger')
+            return redirect(url_for('mobile.create_handover_mobile'))
 
         try:
             # === 1. استخراج كل البيانات من النموذج (نفس منطق الويب) ===
@@ -2031,15 +2039,7 @@ def create_handover_mobile(handover_id=None):
             handover_type = request.form.get('handover_type')
             handover_date_str = request.form.get('handover_date')
             handover_time_str = request.form.get('handover_time')
-            
-            # --- تحديد ما إذا كنا نعدل سجل موجود أم ننشئ جديد ---
-            is_editing = handover_id is not None
-            existing_handover = None
-            action = request.form.get('action', 'create')  # 'update', 'save_as_new', or 'create'
-            
-            if is_editing:
-                existing_handover = VehicleHandover.query.get_or_404(handover_id)
-            
+
             # --- معرفات الموظفين (السائق والمشرف) ---
             employee_id_str = request.form.get('employee_id')
             supervisor_employee_id_str = request.form.get('supervisor_employee_id')
@@ -2086,157 +2086,82 @@ def create_handover_mobile(handover_id=None):
             saved_supervisor_sig_path = save_base64_image(request.form.get('supervisor_signature_data'), 'signatures')
             saved_driver_sig_path = save_base64_image(request.form.get('driver_signature_data'), 'signatures')
             movement_officer_signature_path = save_base64_image(request.form.get('movement_officer_signature'), 'signatures')
-            
+
             custom_logo_file = request.files.get('custom_logo_file')
             saved_custom_logo_path = save_uploaded_file(custom_logo_file, 'logos')
 
             # === 2. جلب الكائنات الكاملة من قاعدة البيانات ===
             driver = Employee.query.get(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
             supervisor = Employee.query.get(supervisor_employee_id_str) if supervisor_employee_id_str and supervisor_employee_id_str.isdigit() else None
-            
-            # === 3. إنشاء أو تحديث كائن VehicleHandover ===
-            if is_editing and action == 'update':
-                # تحديث السجل الموجود
-                handover = existing_handover
-                handover.vehicle_id = vehicle.id
-                handover.handover_type = handover_type
-                handover.handover_date = handover_date
-                handover.handover_time = handover_time
-                handover.mileage = mileage
-                handover.project_name = project_name
-                handover.city = city
-                
-                # تحديث بيانات المركبة
-                handover.vehicle_car_type = f"{vehicle.make} {vehicle.model}"
-                handover.vehicle_plate_number = vehicle.plate_number
-                handover.vehicle_model_year = str(vehicle.year)
 
-                # تحديث بيانات السائق
-                handover.employee_id = driver.id if driver else None
-                handover.person_name = driver.name if driver else person_name_from_form
-                handover.driver_company_id = driver.employee_id if driver else None
-                handover.driver_phone_number = driver.mobile if driver else None
-                handover.driver_residency_number = driver.national_id if driver else None
-                handover.driver_contract_status = driver.contract_status if driver else None
-                handover.driver_license_status = driver.license_status if driver else None
-                if saved_driver_sig_path:
-                    handover.driver_signature_path = saved_driver_sig_path
+            # === 3. إنشاء كائن VehicleHandover وتعبئته بالبيانات المنسوخة (الأهم) ===
+            handover = VehicleHandover(
+                vehicle_id=vehicle.id,
+                handover_type=handover_type,
+                handover_date=handover_date,
+                handover_time=handover_time,
+                mileage=mileage,
+                project_name=project_name,
+                city=city,
 
-                # تحديث بيانات المشرف
-                handover.supervisor_employee_id = supervisor.id if supervisor else None
-                handover.supervisor_name = supervisor.name if supervisor else supervisor_name_from_form
-                handover.supervisor_company_id = supervisor.employee_id if supervisor else None
-                handover.supervisor_phone_number = supervisor.mobile if supervisor else None
-                handover.supervisor_residency_number = supervisor.national_id if supervisor else None
-                handover.supervisor_contract_status = supervisor.contract_status if supervisor else None
-                handover.supervisor_license_status = supervisor.license_status if supervisor else None
-                if saved_supervisor_sig_path:
-                    handover.supervisor_signature_path = saved_supervisor_sig_path
-                
-                # تحديث باقي الحقول
-                handover.reason_for_change = reason_for_change
-                handover.vehicle_status_summary = vehicle_status_summary
-                handover.notes = notes
-                handover.reason_for_authorization = reason_for_authorization
-                handover.authorization_details = authorization_details
-                handover.fuel_level = fuel_level
-                
-                # تحديث قائمة الفحص
-                handover.has_spare_tire = has_spare_tire
-                handover.has_fire_extinguisher = has_fire_extinguisher
-                handover.has_first_aid_kit = has_first_aid_kit
-                handover.has_warning_triangle = has_warning_triangle
-                handover.has_tools = has_tools
-                handover.has_oil_leaks = has_oil_leaks
-                handover.has_gear_issue = has_gear_issue
-                handover.has_clutch_issue = has_clutch_issue
-                handover.has_engine_issue = has_engine_issue
-                handover.has_windows_issue = has_windows_issue
-                handover.has_tires_issue = has_tires_issue
-                handover.has_body_issue = has_body_issue
-                handover.has_electricity_issue = has_electricity_issue
-                handover.has_lights_issue = has_lights_issue
-                handover.has_ac_issue = has_ac_issue
-                
-                # تحديث الحقول الإضافية
-                handover.movement_officer_name = movement_officer_name
-                if movement_officer_signature_path:
-                    handover.movement_officer_signature_path = movement_officer_signature_path
-                if saved_diagram_path:
-                    handover.damage_diagram_path = saved_diagram_path
-                handover.form_link = form_link
-                handover.custom_company_name = custom_company_name
-                if saved_custom_logo_path:
-                    handover.custom_logo_path = saved_custom_logo_path
-            else:
-                # إنشاء سجل جديد (إما إنشاء جديد أو حفظ كنسخة جديدة)
-                handover = VehicleHandover(
-                    vehicle_id=vehicle.id,
-                    handover_type=handover_type,
-                    handover_date=handover_date,
-                    handover_time=handover_time,
-                    mileage=mileage,
-                    project_name=project_name,
-                    city=city,
-                    
-                    # نسخ بيانات المركبة "وقت التسليم"
-                    vehicle_car_type=f"{vehicle.make} {vehicle.model}",
-                    vehicle_plate_number=vehicle.plate_number,
-                    vehicle_model_year=str(vehicle.year),
+                # نسخ بيانات المركبة "وقت التسليم"
+                vehicle_car_type=f"{vehicle.make} {vehicle.model}",
+                vehicle_plate_number=vehicle.plate_number,
+                vehicle_model_year=str(vehicle.year),
 
-                    # نسخ بيانات السائق "وقت التسليم"
-                    employee_id=driver.id if driver else None,
-                    person_name=driver.name if driver else person_name_from_form,
-                    driver_company_id=driver.employee_id if driver else None,
-                    driver_phone_number=driver.mobile if driver else None,
-                    driver_residency_number=driver.national_id if driver else None,
-                    driver_contract_status=driver.contract_status if driver else None,
-                    driver_license_status=driver.license_status if driver else None,
-                    driver_signature_path=saved_driver_sig_path,
+                # نسخ بيانات السائق "وقت التسليم"
+                employee_id=driver.id if driver else None,
+                person_name=driver.name if driver else person_name_from_form,
+                driver_company_id=driver.employee_id if driver else None,
+                driver_phone_number=driver.mobile if driver else None,
+                driver_residency_number=driver.national_id if driver else None,
+                driver_contract_status=driver.contract_status if driver else None,
+                driver_license_status=driver.license_status if driver else None,
+                driver_signature_path=saved_driver_sig_path,
 
-                    # نسخ بيانات المشرف "وقت التسليم"
-                    supervisor_employee_id=supervisor.id if supervisor else None,
-                    supervisor_name=supervisor.name if supervisor else supervisor_name_from_form,
-                    supervisor_company_id=supervisor.employee_id if supervisor else None,
-                    supervisor_phone_number=supervisor.mobile if supervisor else None,
-                    supervisor_residency_number=supervisor.national_id if supervisor else None,
-                    supervisor_contract_status=supervisor.contract_status if supervisor else None,
-                    supervisor_license_status=supervisor.license_status if supervisor else None,
-                    supervisor_signature_path=saved_supervisor_sig_path,
-                    
-                    # باقي الحقول التفصيلية
-                    reason_for_change=reason_for_change,
-                    vehicle_status_summary=vehicle_status_summary,
-                    notes=notes,
-                    reason_for_authorization=reason_for_authorization,
-                    authorization_details=authorization_details,
-                    fuel_level=fuel_level,
-                    
-                    # قائمة الفحص
-                    has_spare_tire=has_spare_tire, has_fire_extinguisher=has_fire_extinguisher,
-                    has_first_aid_kit=has_first_aid_kit, has_warning_triangle=has_warning_triangle,
-                    has_tools=has_tools, has_oil_leaks=has_oil_leaks, has_gear_issue=has_gear_issue,
-                    has_clutch_issue=has_clutch_issue, has_engine_issue=has_engine_issue,
-                    has_windows_issue=has_windows_issue, has_tires_issue=has_tires_issue,
-                    has_body_issue=has_body_issue, has_electricity_issue=has_electricity_issue,
-                    has_lights_issue=has_lights_issue, has_ac_issue=has_ac_issue,
-                    
-                    # حقول إضافية
-                    movement_officer_name=movement_officer_name,
-                    movement_officer_signature_path=movement_officer_signature_path,
-                    damage_diagram_path=saved_diagram_path,
-                    form_link=form_link,
-                    custom_company_name=custom_company_name,
-                    custom_logo_path=saved_custom_logo_path
-                )
-                db.session.add(handover)
-            
+                # نسخ بيانات المشرف "وقت التسليم"
+                supervisor_employee_id=supervisor.id if supervisor else None,
+                supervisor_name=supervisor.name if supervisor else supervisor_name_from_form,
+                supervisor_company_id=supervisor.employee_id if supervisor else None,
+                supervisor_phone_number=supervisor.mobile if supervisor else None,
+                supervisor_residency_number=supervisor.national_id if supervisor else None,
+                supervisor_contract_status=supervisor.contract_status if supervisor else None,
+                supervisor_license_status=supervisor.license_status if supervisor else None,
+                supervisor_signature_path=saved_supervisor_sig_path,
+
+                # باقي الحقول التفصيلية
+                reason_for_change=reason_for_change,
+                vehicle_status_summary=vehicle_status_summary,
+                notes=notes,
+                reason_for_authorization=reason_for_authorization,
+                authorization_details=authorization_details,
+                fuel_level=fuel_level,
+
+                # قائمة الفحص
+                has_spare_tire=has_spare_tire, has_fire_extinguisher=has_fire_extinguisher,
+                has_first_aid_kit=has_first_aid_kit, has_warning_triangle=has_warning_triangle,
+                has_tools=has_tools, has_oil_leaks=has_oil_leaks, has_gear_issue=has_gear_issue,
+                has_clutch_issue=has_clutch_issue, has_engine_issue=has_engine_issue,
+                has_windows_issue=has_windows_issue, has_tires_issue=has_tires_issue,
+                has_body_issue=has_body_issue, has_electricity_issue=has_electricity_issue,
+                has_lights_issue=has_lights_issue, has_ac_issue=has_ac_issue,
+
+                # حقول إضافية
+                movement_officer_name=movement_officer_name,
+                movement_officer_signature_path=movement_officer_signature_path,
+                damage_diagram_path=saved_diagram_path,
+                form_link=form_link,
+                custom_company_name=custom_company_name,
+                custom_logo_path=saved_custom_logo_path
+            )
+
+            db.session.add(handover)
             db.session.commit()
-            
+
             # === 4. حفظ المرفقات الإضافية وتحديث حالة السائق ===
             # (استخدام نفس منطق الويب المنظم)
             update_vehicle_driver(vehicle.id) # دالة مساعدة لتحديث السائق المرتبط بالمركبة
-            
+
             files = request.files.getlist('files')
             for file in files:
                 if file and file.filename:
@@ -2250,18 +2175,35 @@ def create_handover_mobile(handover_id=None):
                         )
                         db.session.add(file_record)
             db.session.commit()
-            
+
             action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
-            if is_editing and action == 'update':
-                log_audit('update', 'vehicle_handover', handover.id, f'تم تعديل نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
-                flash(f'تم تحديث نموذج {action_type} بنجاح!', 'success')
-            elif is_editing and action == 'save_as_new':
-                log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نسخة جديدة من نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
-                flash(f'تم حفظ نسخة جديدة من نموذج {action_type} بنجاح!', 'success')
-            else:
-                log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
-                flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
+            log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
+
+
+
             
+            # إنشاء طلب عملية للموافقة الإدارية
+            try:
+                operation = create_operation_request(
+                    operation_type='handover',
+                    related_record_id=handover.id,
+                    vehicle_id=vehicle.id,
+                    title=f'طلب موافقة على {action_type} مركبة {vehicle.plate_number}',
+                    description=f'تم إنشاء {action_type} للمركبة {vehicle.plate_number} من قبل {current_user.email or current_user.id} ويحتاج للموافقة الإدارية',
+                    requested_by=current_user.id,
+                    priority='normal'
+                )
+                # commit العملية والإشعارات
+                db.session.commit()
+                print(f"تم تسجيل العملية بنجاح: {operation.id}")
+            except Exception as op_error:
+                print(f"خطأ في تسجيل العملية: {str(op_error)}")
+                import traceback
+                traceback.print_exc()
+                # لا نتوقف عند فشل تسجيل العملية، فقط نسجل الخطأ
+            
+
+            flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
 
         except Exception as e:
@@ -2275,7 +2217,7 @@ def create_handover_mobile(handover_id=None):
     # === معالجة طلب GET (عند عرض الصفحة لأول مرة) ===
     # جلب القوائم اللازمة لعرضها في النموذج
     vehicles = Vehicle.query.order_by(Vehicle.plate_number).all()
-    
+
     # جلب الموظفين مع تحميل علاقة الأقسام
     from sqlalchemy.orm import joinedload
     employees = Employee.query.options(joinedload(Employee.departments)).order_by(Employee.name).all()
@@ -2283,25 +2225,10 @@ def create_handover_mobile(handover_id=None):
 
     # تحويل بيانات الموظفين إلى JSON لاستخدامها في JavaScript
     employees_as_dicts = [e.to_dict() for e in employees]
-
-    # إضافة التاريخ والوقت الحاليين
     now = datetime.now()
     now_date = now.strftime('%Y-%m-%d')
     now_time = now.strftime('%H:%M')
-    
-    # جلب بيانات التعديل إذا كان موجوداً
-    existing_handover = None
-    is_editing = False
-    if handover_id:
-        existing_handover = VehicleHandover.query.get(handover_id)
-        if existing_handover:
-            is_editing = True
-            # استخدام بيانات السجل الموجود للتاريخ والوقت
-            now_date = existing_handover.handover_date.strftime('%Y-%m-%d') if existing_handover.handover_date else now_date
-            now_time = existing_handover.handover_time.strftime('%H:%M') if existing_handover.handover_time else now_time
-            # تحويل الكائن إلى قاموس للاستخدام في JavaScript
-            existing_handover = existing_handover.to_dict()
-    
+
     return render_template(
         'mobile/vehicle_checklist.html', 
         vehicles=vehicles,
@@ -2310,9 +2237,7 @@ def create_handover_mobile(handover_id=None):
         handover_types=HANDOVER_TYPE_CHOICES, # استخدام نفس قائمة الويب
         employeeData=employees_as_dicts,
         now_date=now_date,
-        now_time=now_time,
-        existing_handover=existing_handover,  # تمرير بيانات التعديل
-        is_editing=is_editing  # تمرير حالة التعديل
+        now_time=now_time
     )
 
 
@@ -2345,9 +2270,9 @@ def create_handover_mobile(handover_id=None):
 #             vehicle_id = request.form.get('vehicle_id')
 #             if not vehicle_id:
 #                 flash('يجب اختيار مركبة أولاً.', 'danger')
-            
+
 #                 # إعادة تحميل الصفحة مع البيانات القديمة (سنتعامل مع هذا لاحقاً إذا لزم الأمر)
-                
+
 #             # --- استخراج البيانات من النموذج ---
 #             # القسم 1: معلومات أساسية
 #             handover_type = request.form.get('handover_type')
@@ -2356,7 +2281,7 @@ def create_handover_mobile(handover_id=None):
 #             fuel_level = request.form.get('fuel_level')
 #             person_name = request.form.get('person_name')
 #             employee_id = request.form.get('employee_id')
-            
+
 #             # القسم 2: فحص وتجهيزات
 #             # التجهيزات
 #             has_spare_tire = 'has_spare_tire' in request.form
@@ -2375,7 +2300,7 @@ def create_handover_mobile(handover_id=None):
 #             has_body_issue = 'has_body_issue' in request.form
 #             has_electricity_issue = 'has_electricity_issue' in request.form
 #             has_lights_issue = 'has_lights_issue' in request.form
-            
+
 #             # القسم 4: ملاحظات وتوثيق
 #             vehicle_condition = request.form.get('vehicle_condition')
 #             notes = request.form.get('notes')
@@ -2383,14 +2308,14 @@ def create_handover_mobile(handover_id=None):
 
 #             # القسم 5: تخصيص التقرير
 #             custom_company_name = request.form.get('custom_company_name', '').strip() or None
-            
+
 #             # --- معالجة الملفات المرفوعة والتواقيع المرسومة ---
 #             # (سنستخدم نفس الدوال المساعدة التي أنشأناها سابقاً)
 #             custom_logo_file = request.files.get('custom_logo_file')
 #             damage_diagram_base64 = request.form.get('damage_diagram_data')
 #             supervisor_sig_base64 = request.form.get('supervisor_signature_data')
 #             driver_sig_base64 = request.form.get('driver_signature_data')
-            
+
 #             saved_custom_logo_path = save_uploaded_file(custom_logo_file, 'logos')
 #             saved_diagram_path = save_base64_image(damage_diagram_base64, 'diagrams')
 #             saved_supervisor_sig_path = save_base64_image(supervisor_sig_base64, 'signatures')
@@ -2426,10 +2351,10 @@ def create_handover_mobile(handover_id=None):
 #                 supervisor_signature_path=saved_supervisor_sig_path,
 #                 driver_signature_path=saved_driver_sig_path
 #             )
-            
+
 #             db.session.add(new_handover)
 #             db.session.commit()
-            
+
 #             # معالجة رفع الملفات المتعددة
 #             files = request.files.getlist('files')
 #             for file in files:
@@ -2454,7 +2379,7 @@ def create_handover_mobile(handover_id=None):
 
 
 
-   
+
 #     # 2. جلب القوائم اللازمة للنموذج (الموظفين، الأقسام)
 #     # من الأفضل جلبها دائماً لتعمل واجهة البحث بشكل صحيح
 #     employees = Employee.query.order_by(Employee.name).all()
@@ -2468,8 +2393,8 @@ def create_handover_mobile(handover_id=None):
 
 #     # 3. تحديد نوع العملية الافتراضي (إذا تم تمريره كمعلمة)
 #     # هذا مفيد إذا أتيت من زر "تسليم" أو "استلام" محدد
-    
-#     # تعريف أنواع العمليات كنص удоبوعمي
+
+#     # تعريف أنواع العمليات كنص удобочитаемый
 #     handover_types = {
 #         'delivery': 'تسليم السيارة',
 #         'return': 'استلام السيارة'
@@ -2481,7 +2406,7 @@ def create_handover_mobile(handover_id=None):
 #       # داخل دالة create_handover_mobile، عند استدعاء render_template
 #     # الكود الجديد والأبسط في route
 #     employees_as_dicts = [e.to_dict() for e in employees]
- 
+
 #    # 4. عرض القالب وتمرير قائمة المركبات إليه
 
 #     # 5. عرض القالب للـ GET request
@@ -2506,7 +2431,7 @@ def vehicle_checklist_list():
     """قائمة فحوصات السيارة للنسخة المحمولة"""
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # فلترة حسب السيارة
     vehicle_id = request.args.get('vehicle_id', '')
     # فلترة حسب نوع الفحص
@@ -2514,38 +2439,38 @@ def vehicle_checklist_list():
     # فلترة حسب التاريخ
     from_date = request.args.get('from_date', '')
     to_date = request.args.get('to_date', '')
-    
+
     # بناء استعلام قاعدة البيانات
     query = VehicleChecklist.query
-    
+
     # تطبيق الفلاتر إذا تم تحديدها
     if vehicle_id:
         query = query.filter(VehicleChecklist.vehicle_id == vehicle_id)
-    
+
     if inspection_type:
         query = query.filter(VehicleChecklist.inspection_type == inspection_type)
-    
+
     if from_date:
         try:
             from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
             query = query.filter(VehicleChecklist.inspection_date >= from_date_obj)
         except ValueError:
             pass
-    
+
     if to_date:
         try:
             to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
             query = query.filter(VehicleChecklist.inspection_date <= to_date_obj)
         except ValueError:
             pass
-    
+
     # تنفيذ الاستعلام مع الترتيب والتصفح
     paginator = query.order_by(VehicleChecklist.inspection_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
     checklists = paginator.items
-    
+
     # الحصول على بيانات السيارات لعرضها في القائمة
     vehicles = Vehicle.query.all()
-    
+
     # تحويل بيانات الفحوصات إلى تنسيق مناسب للعرض
     checklists_data = []
     for checklist in checklists:
@@ -2563,7 +2488,7 @@ def vehicle_checklist_list():
                 'summary': checklist.summary
             }
             checklists_data.append(checklist_data)
-    
+
     return render_template('mobile/vehicle_checklist_list.html',
                           checklists=checklists_data,
                           pagination=paginator,
@@ -2593,30 +2518,38 @@ def vehicle_checklist_details(checklist_id):
     """تفاصيل فحص السيارة للنسخة المحمولة"""
     # الحصول على بيانات الفحص من قاعدة البيانات
     checklist = VehicleChecklist.query.get_or_404(checklist_id)
+
     
-    # الحصول على بيانات السيارة
+    # الحصول على بيانات السيارة وإضافة تحذير عند المراجعة
     vehicle = Vehicle.query.get(checklist.vehicle_id)
     
+    # فحص حالة السيارة لإضافة تحذير في واجهة المراجعة
+    from routes.vehicles import check_vehicle_operation_restrictions
+    restrictions = check_vehicle_operation_restrictions(vehicle)
+    vehicle_warning = restrictions['message'] if restrictions['blocked'] else None
+    
+
     # جمع بيانات عناصر الفحص مرتبة حسب الفئة
     checklist_items = {}
     for item in checklist.checklist_items:
         if item.category not in checklist_items:
             checklist_items[item.category] = []
-        
+
         checklist_items[item.category].append(item)
-    
+
     # الحصول على علامات التلف المرتبطة بهذا الفحص
     damage_markers = VehicleDamageMarker.query.filter_by(checklist_id=checklist_id).all()
-    
+
     # الحصول على صور الفحص المرفقة
     checklist_images = VehicleChecklistImage.query.filter_by(checklist_id=checklist_id).all()
-    
+
     return render_template('mobile/vehicle_checklist_details.html',
                           checklist=checklist,
                           vehicle=vehicle,
                           checklist_items=checklist_items,
                           damage_markers=damage_markers,
-                          checklist_images=checklist_images)
+                          checklist_images=checklist_images,
+                          vehicle_warning=vehicle_warning)
 
 # تصدير فحص السيارة إلى PDF - النسخة المحمولة
 @mobile_bp.route('/vehicles/checklist/<int:checklist_id>/pdf')
@@ -2626,27 +2559,35 @@ def mobile_vehicle_checklist_pdf(checklist_id):
     try:
         # الحصول على بيانات الفحص
         checklist = VehicleChecklist.query.get_or_404(checklist_id)
+
         
-        # الحصول على بيانات المركبة
+        # الحصول على بيانات المركبة وفحص حالتها
         vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
         
+        # فحص حالة السيارة - إضافة تحذير للسيارات خارج الخدمة
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            print(f"تحذير: {restrictions['message']}")
+        
+
         # جمع بيانات عناصر الفحص مرتبة حسب الفئة
         checklist_items = {}
         for item in checklist.checklist_items:
             if item.category not in checklist_items:
                 checklist_items[item.category] = []
-            
+
             checklist_items[item.category].append(item)
-        
+
         # الحصول على علامات التلف المرتبطة بهذا الفحص
         damage_markers = VehicleDamageMarker.query.filter_by(checklist_id=checklist_id).all()
-        
+
         # الحصول على صور الفحص المرفقة
         checklist_images = VehicleChecklistImage.query.filter_by(checklist_id=checklist_id).all()
-        
+
         # استيراد تابع إنشاء PDF
         from utils.vehicle_checklist_pdf import create_vehicle_checklist_pdf
-        
+
         # إنشاء ملف PDF
         pdf_buffer = create_vehicle_checklist_pdf(
             checklist=checklist,
@@ -2655,15 +2596,15 @@ def mobile_vehicle_checklist_pdf(checklist_id):
             damage_markers=damage_markers,
             checklist_images=checklist_images
         )
-        
+
         # إنشاء استجابة تحميل للملف
         from flask import make_response
         response = make_response(pdf_buffer.getvalue())
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = f'attachment; filename=vehicle_checklist_{checklist_id}.pdf'
-        
+
         return response
-        
+
     except Exception as e:
         # تسجيل الخطأ للمساعدة في تشخيص المشكلة
         import traceback
@@ -2683,10 +2624,10 @@ def add_vehicle_checklist():
         if request.is_json:
             # استلام بيانات الفحص من طلب JSON
             data = request.get_json()
-            
+
             if not data:
                 return jsonify({'status': 'error', 'message': 'لم يتم استلام بيانات'})
-                
+
             vehicle_id = data.get('vehicle_id')
             inspection_date = data.get('inspection_date')
             inspector_name = data.get('inspector_name')
@@ -2694,50 +2635,61 @@ def add_vehicle_checklist():
             general_notes = data.get('general_notes', '')
             items_data = data.get('items', [])
             damage_markers_data = data.get('damage_markers', [])
-            
+
         elif request.content_type and 'multipart/form-data' in request.content_type:
             # استلام بيانات النموذج مع الصور
             try:
                 form_data = request.form.get('data')
                 if not form_data:
                     return jsonify({'status': 'error', 'message': 'لم يتم استلام بيانات النموذج'})
-                
+
                 # تحويل بيانات النموذج من JSON string إلى dict
                 data = json.loads(form_data)
-                
+
                 vehicle_id = data.get('vehicle_id')
                 inspection_date = data.get('inspection_date')
                 inspector_name = data.get('inspector_name')
                 inspection_type = data.get('inspection_type')
                 general_notes = data.get('general_notes', '')
                 items_data = data.get('items', [])
-                
+
                 # استلام علامات التلف إذا كانت موجودة
                 damage_markers_str = request.form.get('damage_markers')
                 damage_markers_data = json.loads(damage_markers_str) if damage_markers_str else []
-                
+
                 # معالجة الصور المرفقة
                 images = []
                 for key in request.files:
                     if key.startswith('image_'):
                         images.append(request.files[key])
-                
+
                 print(f"تم استلام {len(images)} صورة و {len(damage_markers_data)} علامة تلف")
-                
+
             except Exception as e:
                 app.logger.error(f"خطأ في معالجة بيانات النموذج: {str(e)}")
                 return jsonify({'status': 'error', 'message': f'خطأ في معالجة البيانات: {str(e)}'})
         else:
             return jsonify({'status': 'error', 'message': 'نوع المحتوى غير مدعوم'})
-        
+
         # التحقق من وجود البيانات المطلوبة
         if not all([vehicle_id, inspection_date, inspector_name, inspection_type]):
             return jsonify({'status': 'error', 'message': 'بيانات غير مكتملة، يرجى ملء جميع الحقول المطلوبة'})
+
+
+
         
+        # الحصول على السيارة وفحص قيود العمليات
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            return jsonify({'status': 'error', 'message': restrictions['message']})
+        
+
         try:
             # تحويل التاريخ إلى كائن Date
             inspection_date = datetime.strptime(inspection_date, '%Y-%m-%d').date()
-            
+
             # إنشاء فحص جديد
             new_checklist = VehicleChecklist(
                 vehicle_id=vehicle_id,
@@ -2746,21 +2698,21 @@ def add_vehicle_checklist():
                 inspection_type=inspection_type,
                 notes=general_notes
             )
-            
+
             db.session.add(new_checklist)
             db.session.flush()  # للحصول على معرّف الفحص الجديد
-            
+
             # إضافة عناصر الفحص
             for item_data in items_data:
                 category = item_data.get('category')
                 item_name = item_data.get('item_name')
                 status = item_data.get('status')
                 notes = item_data.get('notes', '')
-                
+
                 # التحقق من وجود البيانات المطلوبة
                 if not all([category, item_name, status]):
                     continue
-                
+
                 # إنشاء عنصر فحص جديد
                 new_item = VehicleChecklistItem(
                     checklist_id=new_checklist.id,
@@ -2769,23 +2721,23 @@ def add_vehicle_checklist():
                     status=status,
                     notes=notes
                 )
-                
+
                 db.session.add(new_item)
-            
+
             # إضافة علامات التلف على صورة السيارة
             if damage_markers_data:
                 app.logger.info(f"إضافة {len(damage_markers_data)} علامة تلف للفحص رقم {new_checklist.id}")
-                
+
                 for marker_data in damage_markers_data:
                     # التحقق من وجود البيانات المطلوبة
                     marker_type = marker_data.get('type', 'damage')
                     x = marker_data.get('x')
                     y = marker_data.get('y')
                     notes = marker_data.get('notes', '')
-                    
+
                     if x is None or y is None:
                         continue
-                    
+
                     # إنشاء علامة تلف جديدة
                     damage_marker = VehicleDamageMarker(
                         checklist_id=new_checklist.id,
@@ -2795,18 +2747,18 @@ def add_vehicle_checklist():
                         notes=notes,
                         color='red' if marker_type == 'damage' else 'yellow'
                     )
-                    
+
                     db.session.add(damage_marker)
-            
+
             # معالجة الصور المرفقة إذا وجدت
             if request.files and 'images' in request.files:
                 # إنشاء مجلد لتخزين الصور إذا لم يكن موجودًا
                 vehicle_images_dir = os.path.join(app.static_folder, 'uploads', 'vehicles', 'checklists')
                 os.makedirs(vehicle_images_dir, exist_ok=True)
-                
+
                 # الحصول على الصور من الطلب
                 images = request.files.getlist('images')
-                
+
                 for i, image in enumerate(images):
                     if image and image.filename:
                         # حفظ الصورة بإسم فريد في المجلد المناسب
@@ -2814,14 +2766,14 @@ def add_vehicle_checklist():
                         unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex}_{filename}"
                         image_path = os.path.join('uploads', 'vehicles', 'checklists', unique_filename)
                         full_path = os.path.join(app.static_folder, image_path)
-                        
+
                         # حفظ الصورة
                         image.save(full_path)
-                        
+
                         # الحصول على وصف الصورة (إذا وجد)
                         description_key = f'image_description_{i}'
                         description = request.form.get(description_key, f"صورة فحص بتاريخ {inspection_date}")
-                        
+
                         # إنشاء سجل لصورة الفحص
                         checklist_image = VehicleChecklistImage(
                             checklist_id=new_checklist.id,
@@ -2829,23 +2781,23 @@ def add_vehicle_checklist():
                             image_type='inspection',
                             description=description
                         )
-                        
+
                         db.session.add(checklist_image)
                         app.logger.info(f"تم حفظ صورة فحص: {full_path}")
-            
+
             # حفظ التغييرات في قاعدة البيانات
             db.session.commit()
-            
+
             return jsonify({
                 'status': 'success',
                 'message': 'تم إضافة الفحص بنجاح',
                 'checklist_id': new_checklist.id
             })
-            
+
         except Exception as e:
             db.session.rollback()
             return jsonify({'status': 'error', 'message': f'حدث خطأ أثناء إضافة الفحص: {str(e)}'})
-    
+
     return jsonify({'status': 'error', 'message': 'طريقة غير مسموح بها'})
 
 # صفحة الرسوم والتكاليف - النسخة المحمولة (النسخة الأصلية)
@@ -2855,7 +2807,7 @@ def fees_old():
     """صفحة الرسوم والتكاليف للنسخة المحمولة (النسخة القديمة)"""
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # فلترة حسب نوع الوثيقة
     document_type = request.args.get('document_type', '')
     # فلترة حسب حالة الرسوم
@@ -2863,39 +2815,39 @@ def fees_old():
     # فلترة حسب التاريخ
     from_date = request.args.get('from_date', '')
     to_date = request.args.get('to_date', '')
-    
+
     # بناء استعلام قاعدة البيانات
     query = Fee.query
-    
+
     # تطبيق الفلاتر إذا تم تحديدها
     if document_type:
         query = query.filter(Fee.document_type == document_type)
-    
+
     if status:
         query = query.filter(Fee.payment_status == status)
-    
+
     if from_date:
         try:
             from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
             query = query.filter(Fee.due_date >= from_date_obj)
         except ValueError:
             pass
-    
+
     if to_date:
         try:
             to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
             query = query.filter(Fee.due_date <= to_date_obj)
         except ValueError:
             pass
-    
+
     # تنفيذ الاستعلام مع الترتيب والتصفح
     paginator = query.order_by(Fee.due_date.asc()).paginate(page=page, per_page=per_page, error_out=False)
     fees = paginator.items
-    
+
     # الحصول على أنواع الوثائق المتاحة
     document_types = db.session.query(Fee.document_type).distinct().all()
     document_types = [d[0] for d in document_types if d[0]]
-    
+
     # حساب إجماليات الرسوم
     all_fees = query.all()
     fees_summary = {
@@ -2903,7 +2855,7 @@ def fees_old():
         'paid_fees': sum(fee.total_fees for fee in all_fees if fee.payment_status == 'paid'),
         'total_fees': sum(fee.total_fees for fee in all_fees)
     }
-    
+
     return render_template('mobile/fees.html', 
                           fees=fees, 
                           fees_summary=fees_summary,
@@ -2921,7 +2873,7 @@ def add_fee():
     """إضافة رسم جديد للنسخة المحمولة"""
     # يمكن تنفيذ هذه الوظيفة لاحقًا
     return render_template('mobile/add_fee.html')
-    
+
 # تعديل رسم - النسخة المحمولة
 @mobile_bp.route('/fees/<int:fee_id>/edit', methods=['POST'])
 @login_required
@@ -2929,19 +2881,19 @@ def edit_fee(fee_id):
     """تعديل رسم قائم للنسخة المحمولة"""
     # الحصول على بيانات الرسم من قاعدة البيانات
     fee = Fee.query.get_or_404(fee_id)
-    
+
     if request.method == 'POST':
         # تحديث بيانات الرسم من النموذج
         fee.document_type = request.form.get('document_type')
-        
+
         # تحديث تاريخ الاستحقاق
         due_date_str = request.form.get('due_date')
         if due_date_str:
             fee.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-        
+
         # تحديث حالة الدفع
         fee.payment_status = request.form.get('payment_status')
-        
+
         # تحديث تاريخ السداد إذا كانت الحالة "مدفوع"
         if fee.payment_status == 'paid':
             payment_date_str = request.form.get('payment_date')
@@ -2949,19 +2901,19 @@ def edit_fee(fee_id):
                 fee.payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
         else:
             fee.payment_date = None
-        
+
         # تحديث قيم الرسوم
         fee.passport_fee = float(request.form.get('passport_fee', 0))
         fee.labor_office_fee = float(request.form.get('labor_office_fee', 0))
         fee.insurance_fee = float(request.form.get('insurance_fee', 0))
         fee.social_insurance_fee = float(request.form.get('social_insurance_fee', 0))
-        
+
         # تحديث حالة نقل الكفالة
         fee.transfer_sponsorship = 'transfer_sponsorship' in request.form
-        
+
         # تحديث الملاحظات
         fee.notes = request.form.get('notes', '')
-        
+
         # حفظ التغييرات في قاعدة البيانات
         try:
             db.session.commit()
@@ -2969,7 +2921,7 @@ def edit_fee(fee_id):
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء تحديث الرسم: {str(e)}', 'danger')
-        
+
     # العودة إلى صفحة تفاصيل الرسم
     return redirect(url_for('mobile.fee_details', fee_id=fee_id))
 
@@ -2980,18 +2932,18 @@ def mark_fee_as_paid(fee_id):
     """تسجيل رسم كمدفوع للنسخة المحمولة"""
     # الحصول على بيانات الرسم من قاعدة البيانات
     fee = Fee.query.get_or_404(fee_id)
-    
+
     if request.method == 'POST':
         # تحديث حالة الدفع
         fee.payment_status = 'paid'
-        
+
         # تحديث تاريخ السداد
         payment_date_str = request.form.get('payment_date')
         if payment_date_str:
             fee.payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
         else:
             fee.payment_date = datetime.now().date()
-        
+
         # إضافة ملاحظات السداد إلى ملاحظات الرسم
         payment_notes = request.form.get('payment_notes')
         if payment_notes:
@@ -2999,7 +2951,7 @@ def mark_fee_as_paid(fee_id):
                 fee.notes = f"{fee.notes}\n\nملاحظات السداد ({fee.payment_date}):\n{payment_notes}"
             else:
                 fee.notes = f"ملاحظات السداد ({fee.payment_date}):\n{payment_notes}"
-        
+
         # حفظ التغييرات في قاعدة البيانات
         try:
             db.session.commit()
@@ -3007,7 +2959,7 @@ def mark_fee_as_paid(fee_id):
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء تسجيل الرسم كمدفوع: {str(e)}', 'danger')
-    
+
     # العودة إلى صفحة تفاصيل الرسم
     return redirect(url_for('mobile.fee_details', fee_id=fee_id))
 
@@ -3018,10 +2970,10 @@ def fee_details(fee_id):
     """تفاصيل الرسم للنسخة المحمولة"""
     # الحصول على بيانات الرسم من قاعدة البيانات
     fee = Fee.query.get_or_404(fee_id)
-    
+
     # إرسال التاريخ الحالي لاستخدامه في النموذج
     now = datetime.now()
-    
+
     return render_template('mobile/fee_details.html', fee=fee, now=now)
 
 # صفحة الإشعارات - النسخة المحمولة
@@ -3055,7 +3007,7 @@ def notifications():
             'is_read': True
         }
     ]
-    
+
     pagination = {
         'page': 1,
         'per_page': 20,
@@ -3067,7 +3019,7 @@ def notifications():
         'next_num': None,
         'iter_pages': lambda: range(1, 2)
     }
-    
+
     return render_template('mobile/notifications.html',
                           notifications=notifications,
                           pagination=pagination)
@@ -3077,14 +3029,14 @@ def notifications():
 def mark_notification_as_read(notification_id):
     """تعليم إشعار كمقروء"""
     # في الإصدار الحقيقي سيتم حفظ حالة قراءة الإشعارات في قاعدة البيانات
-    
+
     # للإصدار الحالي البسيط نستخدم session لتخزين الإشعارات المقروءة
     read_notifications = session.get('read_notifications', [])
-    
+
     if notification_id not in read_notifications:
         read_notifications.append(notification_id)
         session['read_notifications'] = read_notifications
-        
+
     return jsonify({'success': True})
 
 # API endpoint لتعليم جميع الإشعارات كمقروءة
@@ -3094,7 +3046,7 @@ def mark_all_notifications_as_read():
     # في الإصدار التجريبي، نعلم فقط الإشعارات التجريبية كمقروءة
     read_notifications = ['1', '2', '3']
     session['read_notifications'] = read_notifications
-    
+
     return jsonify({'success': True})
 
 # API endpoint لحذف إشعار
@@ -3102,20 +3054,20 @@ def mark_all_notifications_as_read():
 def delete_notification(notification_id):
     """حذف إشعار"""
     # في الإصدار الحقيقي سيتم حذف الإشعار من قاعدة البيانات أو تحديث حالته
-    
+
     # للإصدار الحالي البسيط نستخدم session لتخزين الإشعارات المحذوفة
     deleted_notifications = session.get('deleted_notifications', [])
-    
+
     if notification_id not in deleted_notifications:
         deleted_notifications.append(notification_id)
         session['deleted_notifications'] = deleted_notifications
-    
+
     # إذا كان الإشعار مقروءاً، نحذفه من قائمة الإشعارات المقروءة
     read_notifications = session.get('read_notifications', [])
     if notification_id in read_notifications:
         read_notifications.remove(notification_id)
         session['read_notifications'] = read_notifications
-    
+
     return jsonify({'success': True})
 
 # صفحة الإعدادات - النسخة المحمولة
@@ -3187,13 +3139,13 @@ def check_connection():
 @module_access_required('users')
 def users_new():
     """صفحة إدارة المستخدمين للنسخة المحمولة المطورة"""
-    
+
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # إنشاء الاستعلام الأساسي
     query = User.query
-    
+
     # تطبيق الفلترة حسب الاستعلام
     if request.args.get('search'):
         search_term = f"%{request.args.get('search')}%"
@@ -3201,14 +3153,14 @@ def users_new():
             (User.name.like(search_term)) |
             (User.email.like(search_term))
         )
-    
+
     # ترتيب النتائج
     query = query.order_by(User.name)
-    
+
     # تنفيذ الاستعلام مع الصفحات
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     users = pagination.items
-    
+
     return render_template('mobile/users_new.html',
                           users=users,
                           pagination=pagination)
@@ -3219,24 +3171,24 @@ def users_new():
 @module_access_required('users')
 def add_user_new():
     """إضافة مستخدم جديد للنسخة المحمولة المطورة"""
-    
+
     # معالجة النموذج المرسل
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         role = request.form.get('role')
-        
+
         # التحقق من البيانات المطلوبة
         if not (username and email and password and role):
             flash('جميع الحقول المطلوبة يجب ملؤها', 'danger')
             return render_template('mobile/add_user_new.html', roles=UserRole)
-        
+
         # التحقق من عدم وجود البريد الإلكتروني مسبقاً
         if User.query.filter_by(email=email).first():
             flash('البريد الإلكتروني مستخدم بالفعل', 'danger')
             return render_template('mobile/add_user_new.html', roles=UserRole)
-        
+
         # إنشاء مستخدم جديد
         new_user = User(
             username=username,
@@ -3244,17 +3196,17 @@ def add_user_new():
             role=role
         )
         new_user.set_password(password)
-        
+
         try:
             db.session.add(new_user)
             db.session.commit()
-            
+
             flash('تم إضافة المستخدم بنجاح', 'success')
             return redirect(url_for('mobile.users_new'))
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء إضافة المستخدم: {str(e)}', 'danger')
-    
+
     # عرض النموذج
     return render_template('mobile/add_user_new.html', roles=UserRole)
 
@@ -3264,9 +3216,9 @@ def add_user_new():
 @module_access_required('users')
 def user_details_new(user_id):
     """تفاصيل المستخدم للنسخة المحمولة المطورة"""
-    
+
     user = User.query.get_or_404(user_id)
-    
+
     return render_template('mobile/user_details_new.html', user=user)
 
 # تعديل بيانات المستخدم - النسخة المحمولة المطورة
@@ -3275,38 +3227,38 @@ def user_details_new(user_id):
 @module_access_required('users')
 def edit_user_new(user_id):
     """تعديل بيانات المستخدم للنسخة المحمولة المطورة"""
-    
+
     user = User.query.get_or_404(user_id)
-    
+
     # معالجة النموذج المرسل
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         role = request.form.get('role')
         is_active = request.form.get('is_active') == 'on'
-        
+
         # التحقق من البيانات المطلوبة
         if not (username and email and role):
             flash('جميع الحقول المطلوبة يجب ملؤها', 'danger')
             return render_template('mobile/edit_user_new.html', user=user, roles=UserRole)
-        
+
         # التحقق من عدم وجود البريد الإلكتروني لمستخدم آخر
         email_user = User.query.filter_by(email=email).first()
         if email_user and email_user.id != user.id:
             flash('البريد الإلكتروني مستخدم بالفعل', 'danger')
             return render_template('mobile/edit_user_new.html', user=user, roles=UserRole)
-        
+
         # تحديث بيانات المستخدم
         user.name = username
         user.email = email
         user.role = role
         user.is_active = is_active
-        
+
         # تحديث كلمة المرور إذا تم تقديمها
         new_password = request.form.get('password')
         if new_password:
             user.set_password(new_password)
-        
+
         try:
             db.session.commit()
             flash('تم تحديث بيانات المستخدم بنجاح', 'success')
@@ -3314,7 +3266,7 @@ def edit_user_new(user_id):
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء تحديث بيانات المستخدم: {str(e)}', 'danger')
-    
+
     # عرض النموذج
     return render_template('mobile/edit_user_new.html', user=user, roles=UserRole)
 
@@ -3324,27 +3276,27 @@ def edit_user_new(user_id):
 @permission_required('users', 'delete')
 def delete_user_new(user_id):
     """حذف مستخدم من النسخة المحمولة المطورة"""
-    
+
     user = User.query.get_or_404(user_id)
-    
+
     # منع حذف المستخدم الحالي
     if user.id == current_user.id:
         flash('لا يمكنك حذف المستخدم الحالي', 'danger')
         return redirect(url_for('mobile.users_new'))
-    
+
     if request.method == 'POST':
         try:
             # حذف المستخدم
             db.session.delete(user)
             db.session.commit()
-            
+
             flash('تم حذف المستخدم بنجاح', 'success')
             return redirect(url_for('mobile.users_new'))
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء حذف المستخدم: {str(e)}', 'danger')
             return redirect(url_for('mobile.user_details_new', user_id=user.id))
-    
+
     return render_template('mobile/delete_user_new.html', user=user)
 
 
@@ -3356,22 +3308,22 @@ def delete_user_new(user_id):
 @module_access_required('fees')
 def fees_new():
     """صفحة الرسوم والتكاليف للنسخة المحمولة المطورة"""
-    
+
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
     status = request.args.get('status', 'all')
     document_type = request.args.get('document_type', 'all')
-    
+
     # إنشاء الاستعلام الأساسي
     query = Fee.query.join(Document)
-    
+
     # تطبيق الفلاتر
     if status != 'all':
         query = query.filter(Fee.payment_status == status)
-    
+
     if document_type != 'all':
         query = query.filter(Fee.document_type == document_type)
-    
+
     # البحث
     if request.args.get('search'):
         search_term = f"%{request.args.get('search')}%"
@@ -3380,27 +3332,27 @@ def fees_new():
             (Employee.employee_id.like(search_term)) |
             (Document.document_number.like(search_term))
         )
-    
+
     # ترتيب النتائج حسب تاريخ الاستحقاق (الأقرب أولاً)
     query = query.order_by(Fee.due_date)
-    
+
     # تنفيذ الاستعلام مع الصفحات
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     fees = pagination.items
-    
+
     # حساب إحصائيات الرسوم
     current_date = datetime.now().date()
     due_count = Fee.query.filter(Fee.due_date <= current_date, Fee.payment_status == 'pending').count()
     paid_count = Fee.query.filter(Fee.payment_status == 'paid').count()
     overdue_count = Fee.query.filter(Fee.due_date < current_date, Fee.payment_status == 'pending').count()
-    
+
     stats = {
         'due': due_count,
         'paid': paid_count,
         'overdue': overdue_count,
         'total': Fee.query.count()
     }
-    
+
     # أنواع الوثائق للفلترة
     document_types = [
         'هوية وطنية',
@@ -3411,7 +3363,7 @@ def fees_new():
         'شهادة تأمين',
         'أخرى'
     ]
-    
+
     return render_template('mobile/fees_new.html',
                           fees=fees,
                           pagination=pagination,
@@ -3429,9 +3381,9 @@ def notifications_new():
     """صفحة الإشعارات للنسخة المحمولة المطورة"""
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
-    
+
     # هنا يمكن تنفيذ استعلام الإشعارات بناءً على نظام الإشعارات المستخدم
-    
+
     # مثال: استعلام للوثائق التي على وشك الانتهاء كإشعارات
     current_date = datetime.now().date()
     expiring_30_days = current_date + timedelta(days=30)
@@ -3439,17 +3391,17 @@ def notifications_new():
         Document.expiry_date > current_date,
         Document.expiry_date <= expiring_30_days
     ).order_by(Document.expiry_date).all()
-    
+
     # مثال: الرسوم المستحقة (استخدام النموذج المتاح Fee المستورد من FeesCost)
     # ملاحظة: تم تعديل هذا الجزء لاستخدام النموذج المتاح بدلاً من الأصلي
     due_fees = Fee.query.join(Document).filter(
         Document.expiry_date > current_date,
         Document.expiry_date <= current_date + timedelta(days=30)
     ).order_by(Document.expiry_date).all()
-    
+
     # تحضير قائمة الإشعارات المدمجة
     notifications = []
-    
+
     for doc in expiring_documents:
         remaining_days = (doc.expiry_date - current_date).days
         notifications.append({
@@ -3461,13 +3413,13 @@ def notifications_new():
             'url': url_for('mobile.document_details', document_id=doc.id),
             'is_read': False  # يمكن تنفيذ حالة القراءة لاحقاً
         })
-    
+
     for fee in due_fees:
         # استخدام تاريخ انتهاء الوثيقة المرتبطة بالرسوم
         doc = Document.query.get(fee.document_id)
         if not doc:
             continue
-            
+
         remaining_days = (doc.expiry_date - current_date).days
         document_type = fee.document_type
         total_amount = sum([
@@ -3485,16 +3437,16 @@ def notifications_new():
             'url': url_for('mobile.fee_details', fee_id=fee.id),
             'is_read': False
         })
-    
+
     # ترتيب الإشعارات حسب التاريخ (الأقرب أولاً)
     notifications.sort(key=lambda x: x['date'])
-    
+
     # تقسيم النتائج
     total_notifications = len(notifications)
     start_idx = (page - 1) * per_page
     end_idx = min(start_idx + per_page, total_notifications)
     current_notifications = notifications[start_idx:end_idx]
-    
+
     # إنشاء كائن تقسيم صفحات بسيط
     # نستخدم قاموس بدلاً من كائن Pagination لتبسيط التنفيذ
     pagination = {
@@ -3508,7 +3460,7 @@ def notifications_new():
         'prev_num': page - 1 if page > 1 else None,
         'next_num': page + 1 if page < ((total_notifications + per_page - 1) // per_page) else None
     }
-    
+
     return render_template('mobile/notifications_new.html',
                           notifications=current_notifications,
                           pagination=pagination,
@@ -3520,7 +3472,14 @@ def notifications_new():
 def create_handover(vehicle_id):
     """إنشاء نموذج تسليم/استلام للسيارة للنسخة المحمولة"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
+
+    # فحص قيود العمليات للسيارات خارج الخدمة
+    from routes.vehicles import check_vehicle_operation_restrictions
+    restrictions = check_vehicle_operation_restrictions(vehicle)
+    if restrictions['blocked']:
+        flash(restrictions['message'], 'error')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+
     if request.method == 'POST':
         # استخراج البيانات من النموذج
         handover_type = request.form.get('handover_type')
@@ -3538,7 +3497,7 @@ def create_handover(vehicle_id):
         has_first_aid_kit = 'has_first_aid_kit' in request.form
         has_warning_triangle = 'has_warning_triangle' in request.form
         notes = request.form.get('notes', '')
-        
+
         # إنشاء سجل تسليم/استلام جديد
         handover = VehicleHandover(
             vehicle_id=vehicle_id,
@@ -3557,11 +3516,11 @@ def create_handover(vehicle_id):
             has_warning_triangle=has_warning_triangle,
             notes=notes
         )
-        
+
         try:
             db.session.add(handover)
             db.session.commit()
-            
+
             # تسجيل نشاط النظام
             description = f"تم إنشاء نموذج {'تسليم' if handover_type == 'delivery' else 'استلام'} للسيارة {vehicle.plate_number}"
             SystemAudit.create_audit_record(
@@ -3572,13 +3531,13 @@ def create_handover(vehicle_id):
                 description,
                 entity_name=f"سيارة: {vehicle.plate_number}"
             )
-            
+
             flash('تم إنشاء نموذج التسليم/الاستلام بنجاح', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء إنشاء النموذج: {str(e)}', 'danger')
-    
+
     # عرض نموذج إنشاء تسليم/استلام
     return render_template('mobile/create_handover.html', 
                            vehicle=vehicle,
@@ -3592,12 +3551,12 @@ def view_handover(handover_id):
     handover = VehicleHandover.query.get_or_404(handover_id)
     vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
     images = VehicleHandoverImage.query.filter_by(handover_record_id=handover_id).all()
-    
+
     # تنسيق التاريخ للعرض
     handover.formatted_handover_date = handover.handover_date.strftime('%Y-%m-%d')
-    
+
     handover_type_name = 'تسليم' if handover.handover_type == 'delivery' else 'استلام'
-    
+
     return render_template('mobile/handover_view.html',
                            handover=handover,
                            vehicle=vehicle,
@@ -3614,13 +3573,13 @@ def handover_pdf(handover_id):
     import os
     from datetime import datetime
     from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
-    
+
     try:
         # الحصول على بيانات التسليم/الاستلام
         handover = VehicleHandover.query.get_or_404(handover_id)
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
         images = VehicleHandoverImage.query.filter_by(handover_record_id=handover_id).all()
-        
+
         # تجهيز البيانات لملف PDF
         handover_data = {
             'vehicle': {
@@ -3646,17 +3605,17 @@ def handover_pdf(handover_id):
             'form_link': str(handover.form_link) if handover.form_link else "",
             'image_paths': [image.image_path for image in images] if images else []
         }
-        
+
         # إنشاء ملف PDF باستخدام WeasyPrint مع خط beIN-Normal
         pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
-        
+
         if not pdf_buffer:
             flash('حدث خطأ أثناء إنشاء ملف PDF', 'danger')
             return redirect(url_for('mobile.view_handover', handover_id=handover_id))
-        
+
         # تحديد اسم الملف
         filename = f"handover_form_{vehicle.plate_number}.pdf"
-        
+
         # إرسال الملف للمستخدم
         return send_file(
             pdf_buffer,
@@ -3664,7 +3623,7 @@ def handover_pdf(handover_id):
             as_attachment=True,
             mimetype='application/pdf'
         )
-        
+
     except Exception as e:
         flash(f'حدث خطأ أثناء إنشاء ملف PDF: {str(e)}', 'danger')
         return redirect(url_for('mobile.view_handover', handover_id=handover_id))
@@ -3675,7 +3634,7 @@ def handover_pdf(handover_id):
 def create_periodic_inspection(vehicle_id):
     """إنشاء فحص دوري جديد للسيارة - النسخة المحمولة"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
+
     if request.method == 'POST':
         try:
             # استخراج البيانات من النموذج
@@ -3686,7 +3645,7 @@ def create_periodic_inspection(vehicle_id):
             driver_name = request.form.get('driver_name', '')
             supervisor_name = request.form.get('supervisor_name', '')
             notes = request.form.get('notes', '')
-            
+
             # إنشاء سجل فحص دوري جديد
             inspection = VehiclePeriodicInspection(
                 vehicle_id=vehicle_id,
@@ -3698,10 +3657,10 @@ def create_periodic_inspection(vehicle_id):
                 supervisor_name=supervisor_name,
                 notes=notes
             )
-            
+
             db.session.add(inspection)
             db.session.commit()
-            
+
             # تسجيل نشاط النظام
             SystemAudit.create_audit_record(
                 current_user.id,
@@ -3711,13 +3670,13 @@ def create_periodic_inspection(vehicle_id):
                 f"تم إضافة سجل فحص دوري للسيارة: {vehicle.plate_number}",
                 entity_name=f"سيارة: {vehicle.plate_number}"
             )
-            
+
             flash('تم إضافة سجل الفحص الدوري بنجاح', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء إضافة سجل الفحص: {str(e)}', 'danger')
-    
+
     # عرض صفحة إنشاء فحص دوري
     return render_template('mobile/create_periodic_inspection.html',
                            vehicle=vehicle,
@@ -3729,7 +3688,7 @@ def create_periodic_inspection(vehicle_id):
 def create_safety_check(vehicle_id):
     """إنشاء فحص سلامة جديد للسيارة - النسخة المحمولة"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
+
     if request.method == 'POST':
         try:
             # استخراج البيانات من النموذج
@@ -3739,7 +3698,7 @@ def create_safety_check(vehicle_id):
             supervisor_name = request.form.get('supervisor_name', '')
             result = request.form.get('result')
             notes = request.form.get('notes', '')
-            
+
             # إنشاء سجل فحص سلامة جديد
             safety_check = VehicleSafetyCheck(
                 vehicle_id=vehicle_id,
@@ -3750,10 +3709,10 @@ def create_safety_check(vehicle_id):
                 result=result,
                 notes=notes
             )
-            
+
             db.session.add(safety_check)
             db.session.commit()
-            
+
             # تسجيل نشاط النظام
             SystemAudit.create_audit_record(
                 current_user.id,
@@ -3763,17 +3722,17 @@ def create_safety_check(vehicle_id):
                 f"تم إضافة سجل فحص سلامة للسيارة: {vehicle.plate_number}",
                 entity_name=f"سيارة: {vehicle.plate_number}"
             )
-            
+
             flash('تم إضافة سجل فحص السلامة بنجاح', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء إضافة سجل الفحص: {str(e)}', 'danger')
-    
+
     # الحصول على قائمة السائقين والمشرفين
     drivers = Employee.query.filter(Employee.job_title.like('%سائق%')).order_by(Employee.name).all()
     supervisors = Employee.query.filter(Employee.job_title.like('%مشرف%')).order_by(Employee.name).all()
-    
+
     # عرض صفحة إنشاء فحص سلامة
     return render_template('mobile/create_safety_check.html',
                            vehicle=vehicle,
@@ -3801,13 +3760,13 @@ def test_workshop_save(vehicle_id):
             reception_link='https://example.com/pickup',
             notes='سجل تجريبي للاختبار - تم إنشاؤه تلقائياً'
         )
-        
+
         db.session.add(workshop_record)
         db.session.commit()
-        
+
         flash(f'تم إضافة سجل الورشة التجريبي رقم {workshop_record.id} بنجاح!', 'success')
         return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
-        
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"خطأ في الاختبار التجريبي للسيارة {vehicle_id}: {str(e)}")
@@ -3820,11 +3779,18 @@ def test_workshop_save(vehicle_id):
 def add_workshop_record(vehicle_id):
     """إضافة سجل ورشة جديد للسيارة من النسخة المحمولة"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
+
+    # فحص قيود العمليات للسيارات خارج الخدمة
+    from routes.vehicles import check_vehicle_operation_restrictions
+    restrictions = check_vehicle_operation_restrictions(vehicle)
+    if restrictions['blocked']:
+        flash(restrictions['message'], 'error')
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+
     if request.method == 'POST':
         try:
             current_app.logger.debug(f"تجهيز بيانات النموذج لسجل الورشة للسيارة {vehicle_id}")
-            
+
             # استخراج البيانات من النموذج
             entry_date = datetime.strptime(request.form.get('entry_date'), '%Y-%m-%d').date()
             exit_date_str = request.form.get('exit_date')
@@ -3838,9 +3804,9 @@ def add_workshop_record(vehicle_id):
             notes = request.form.get('notes')
             delivery_link = request.form.get('delivery_form_link')
             reception_link = request.form.get('pickup_form_link')
-            
+
             current_app.logger.debug(f"البيانات المستخرجة: {reason}, {description}, {repair_status}")
-            
+
             # إنشاء سجل ورشة جديد
             workshop_record = VehicleWorkshop(
                 vehicle_id=vehicle_id,
@@ -3856,10 +3822,10 @@ def add_workshop_record(vehicle_id):
                 delivery_link=delivery_link,
                 reception_link=reception_link
             )
-            
+
             db.session.add(workshop_record)
             db.session.flush()  # للحصول على معرف سجل الورشة
-            
+
             # معالجة الصور قبل الإصلاح
             before_images = request.files.getlist('before_images')
             for image in before_images:
@@ -3871,7 +3837,7 @@ def add_workshop_record(vehicle_id):
                     os.makedirs(folder_path, exist_ok=True)
                     image_path = os.path.join(folder_path, unique_filename)
                     image.save(image_path)
-                    
+
                     # إنشاء سجل الصورة
                     workshop_image = VehicleWorkshopImage(
                         workshop_record_id=workshop_record.id,
@@ -3880,7 +3846,7 @@ def add_workshop_record(vehicle_id):
                         notes='صورة قبل الإصلاح'
                     )
                     db.session.add(workshop_image)
-            
+
             # معالجة الصور بعد الإصلاح
             after_images = request.files.getlist('after_images')
             for image in after_images:
@@ -3892,7 +3858,7 @@ def add_workshop_record(vehicle_id):
                     os.makedirs(folder_path, exist_ok=True)
                     image_path = os.path.join(folder_path, unique_filename)
                     image.save(image_path)
-                    
+
                     # إنشاء سجل الصورة
                     workshop_image = VehicleWorkshopImage(
                         workshop_record_id=workshop_record.id,
@@ -3901,39 +3867,67 @@ def add_workshop_record(vehicle_id):
                         notes='صورة بعد الإصلاح'
                     )
                     db.session.add(workshop_image)
-            
+
             # تحديث حالة السيارة
             if not exit_date:
                 vehicle.status = 'in_workshop'
             vehicle.updated_at = datetime.utcnow()
-            
+
             db.session.commit()
-            
+
             # تسجيل الإجراء
             log_activity('create', 'vehicle_workshop', workshop_record.id, 
                        f'تم إضافة سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال')
+
             
+            # إنشاء طلب عملية تلقائياً لإدارة العمليات
+            try:
+                operation_title = f"ورشة جديدة - {vehicle.plate_number}"
+                operation_description = f"تم إنشاء سجل ورشة جديد: {reason} - {description}"
+                
+                operation = create_operation_request(
+                    operation_type='workshop_record',
+                    related_record_id=workshop_record.id,
+                    vehicle_id=vehicle_id,
+                    title=operation_title,
+                    description=operation_description,
+                    requested_by=current_user.id,
+                    priority='normal'
+                )
+                
+                # حفظ طلب العملية والإشعارات
+                db.session.commit()
+                
+                current_app.logger.debug(f"تم إنشاء طلب عملية للورشة: {workshop_record.id} برقم عملية: {operation.id}")
+                
+            except Exception as e:
+                current_app.logger.error(f"خطأ في إنشاء طلب العملية للورشة: {str(e)}")
+                import traceback
+                current_app.logger.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
+                # لا نوقف العملية إذا فشل إنشاء طلب العملية
+            
+
             flash('تم إضافة سجل الورشة بنجاح!', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
-            
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"خطأ في إضافة سجل الورشة للسيارة {vehicle_id}: {str(e)}")
             flash(f'حدث خطأ أثناء إضافة سجل الورشة: {str(e)}', 'danger')
-    
+
     # قوائم الخيارات
     workshop_reasons = [
         ('maintenance', 'صيانة دورية'),
         ('breakdown', 'عطل'),
         ('accident', 'حادث')
     ]
-    
+
     repair_statuses = [
         ('in_progress', 'قيد التنفيذ'),
         ('completed', 'تم الإصلاح'),
         ('pending_approval', 'بانتظار الموافقة')
     ]
-    
+
     return render_template('mobile/add_workshop_record.html',
                          vehicle=vehicle,
                          workshop_reasons=workshop_reasons,
@@ -3947,7 +3941,7 @@ def edit_workshop_record(workshop_id):
     """تعديل سجل ورشة موجود للنسخة المحمولة"""
     workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
     vehicle = workshop_record.vehicle
-    
+
     # تسجيل debug للبيانات الحالية
     current_app.logger.debug(f"تحرير سجل الورشة {workshop_id} - البيانات الحالية:")
     current_app.logger.debug(f"السبب: {workshop_record.reason}")
@@ -3959,7 +3953,7 @@ def edit_workshop_record(workshop_id):
     current_app.logger.debug(f"رابط التسليم: {workshop_record.delivery_link}")
     current_app.logger.debug(f"رابط الاستلام: {workshop_record.reception_link}")
     current_app.logger.debug(f"الملاحظات: {workshop_record.notes}")
-    
+
     if request.method == 'POST':
         try:
             # تحديث البيانات
@@ -3976,109 +3970,123 @@ def edit_workshop_record(workshop_id):
             workshop_record.reception_link = request.form.get('pickup_form_link')
             workshop_record.notes = request.form.get('notes')
             workshop_record.updated_at = datetime.utcnow()
-            
+
             # معالجة الصور المرفوعة
             import os
             from PIL import Image
             import uuid
-            
+
             uploaded_images = []
+
             
-            # معالجة صور قبل الإصلاح
+            # دالة مساعدة لرفع الصور
+            def process_workshop_images(files_list, image_type, type_name):
+                uploaded_count = 0
+                if files_list:
+                    for file in files_list:
+                        if file and file.filename and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                            try:
+                                # إنشاء اسم ملف فريد
+                                filename = f"workshop_{image_type}_{workshop_record.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
+                                
+                                # إنشاء المجلد إذا لم يكن موجوداً
+                                upload_dir = os.path.join('static', 'uploads', 'workshop')
+                                os.makedirs(upload_dir, exist_ok=True)
+                                
+                                # حفظ الملف
+                                file_path = os.path.join(upload_dir, filename)
+                                file.save(file_path)
+                                
+                                # ضغط الصورة إذا كانت كبيرة
+                                try:
+                                    with Image.open(file_path) as img:
+                                        if img.width > 1200 or img.height > 1200:
+                                            img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                                            img.save(file_path, optimize=True, quality=85)
+                                except Exception as e:
+                                    current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
+                                
+                                # إضافة سجل الصورة لقاعدة البيانات
+                                image_record = VehicleWorkshopImage(
+                                    workshop_record_id=workshop_record.id,
+                                    image_type=image_type,
+                                    image_path=f"uploads/workshop/{filename}",
+                                    notes=f"{type_name} - تم الرفع في {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                                )
+                                db.session.add(image_record)
+                                uploaded_images.append(filename)
+                                uploaded_count += 1
+                                
+                            except Exception as e:
+                                current_app.logger.error(f"خطأ في رفع {type_name}: {str(e)}")
+                return uploaded_count
+
+            # معالجة الصور الجديدة
+            delivery_count = 0
+            pickup_count = 0
+            notes_count = 0
+            
+            # صور إيصال التسليم للورشة
+            if 'delivery_images' in request.files:
+                delivery_files = request.files.getlist('delivery_images')
+                delivery_count = process_workshop_images(delivery_files, 'delivery', 'صورة إيصال التسليم للورشة')
+            
+            # صور إيصال الاستلام من الورشة
+            if 'pickup_images' in request.files:
+                pickup_files = request.files.getlist('pickup_images')
+                pickup_count = process_workshop_images(pickup_files, 'pickup', 'صورة إيصال الاستلام من الورشة')
+            
+            # صور ملاحظات السيارة قبل التسليم للورشة
+            if 'notes_images' in request.files:
+                notes_files = request.files.getlist('notes_images')
+                notes_count = process_workshop_images(notes_files, 'notes', 'صورة ملاحظات السيارة قبل التسليم')
+            
+            # معالجة الصور القديمة (للتوافق مع النظام القديم)
             if 'before_images' in request.files:
                 before_files = request.files.getlist('before_images')
-                for file in before_files:
-                    if file and file.filename and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                        try:
-                            # إنشاء اسم ملف فريد
-                            filename = f"workshop_before_{workshop_record.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
-                            
-                            # إنشاء المجلد إذا لم يكن موجوداً
-                            upload_dir = os.path.join('static', 'uploads', 'workshop')
-                            os.makedirs(upload_dir, exist_ok=True)
-                            
-                            # حفظ الملف
-                            file_path = os.path.join(upload_dir, filename)
-                            file.save(file_path)
-                            
-                            # ضغط الصورة إذا كانت كبيرة
-                            try:
-                                with Image.open(file_path) as img:
-                                    if img.width > 1200 or img.height > 1200:
-                                        img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
-                                        img.save(file_path, optimize=True, quality=85)
-                            except Exception as e:
-                                current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
-                            
-                            # إضافة سجل الصورة لقاعدة البيانات
-                            image_record = VehicleWorkshopImage(
-                                workshop_record_id=workshop_record.id,
-                                image_type='before',
-                                image_path=f"uploads/workshop/{filename}",
-                                notes=f"صورة قبل الإصلاح - تم الرفع في {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-                            )
-                            db.session.add(image_record)
-                            uploaded_images.append(filename)
-                            
-                        except Exception as e:
-                            current_app.logger.error(f"خطأ في رفع صورة قبل الإصلاح: {str(e)}")
+                process_workshop_images(before_files, 'before', 'صورة قبل الإصلاح')
             
-            # معالجة صور بعد الإصلاح
             if 'after_images' in request.files:
                 after_files = request.files.getlist('after_images')
-                for file in after_files:
-                    if file and file.filename and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                        try:
-                            # إنشاء اسم ملف فريد
-                            filename = f"workshop_after_{workshop_record.id}_{uuid.uuid4().hex[:8]}_{file.filename}"
-                            
-                            # حفظ الملف
-                            file_path = os.path.join('static', 'uploads', 'workshop', filename)
-                            file.save(file_path)
-                            
-                            # ضغط الصورة
-                            try:
-                                with Image.open(file_path) as img:
-                                    if img.width > 1200 or img.height > 1200:
-                                        img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
-                                        img.save(file_path, optimize=True, quality=85)
-                            except Exception as e:
-                                current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
-                            
-                            # إضافة سجل الصورة لقاعدة البيانات
-                            image_record = VehicleWorkshopImage(
-                                workshop_record_id=workshop_record.id,
-                                image_type='after',
-                                image_path=f"uploads/workshop/{filename}",
-                                notes=f"صورة بعد الإصلاح - تم الرفع في {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-                            )
-                            db.session.add(image_record)
-                            uploaded_images.append(filename)
-                            
-                        except Exception as e:
-                            current_app.logger.error(f"خطأ في رفع صورة بعد الإصلاح: {str(e)}")
+                process_workshop_images(after_files, 'after', 'صورة بعد الإصلاح')
             
+
             db.session.commit()
-            
+
             # تسجيل العملية
             log_activity(
                 action='update',
                 entity_type='vehicle_workshop',
                 details=f'تم تعديل سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال وإضافة {len(uploaded_images)} صورة'
             )
-            
+
             success_message = f'تم تحديث سجل الورشة بنجاح!'
             if uploaded_images:
-                success_message += f' تم رفع {len(uploaded_images)} صورة جديدة.'
+
+
+
+                details = []
+                if delivery_count > 0:
+                    details.append(f'{delivery_count} صورة إيصال تسليم')
+                if pickup_count > 0:
+                    details.append(f'{pickup_count} صورة إيصال استلام')
+                if notes_count > 0:
+                    details.append(f'{notes_count} صورة ملاحظات')
+                
+                if details:
+                    success_message += f' تم رفع {" و ".join(details)}.'
+                else:
+                    success_message += f' تم رفع {len(uploaded_images)} صورة جديدة.'
             
+
             flash(success_message, 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
-            
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"خطأ في تعديل سجل الورشة {workshop_id}: {str(e)}")
             flash(f'حدث خطأ أثناء تحديث سجل الورشة: {str(e)}', 'danger')
-    
+
     # خيارات النموذج
     workshop_reasons = [
         ('maintenance', 'صيانة دورية'),
@@ -4087,13 +4095,13 @@ def edit_workshop_record(workshop_id):
         ('periodic_inspection', 'فحص دوري'),
         ('other', 'أخرى')
     ]
-    
+
     repair_statuses = [
         ('in_progress', 'قيد التنفيذ'),
         ('completed', 'تم الإصلاح'),
         ('pending_approval', 'بانتظار الموافقة')
     ]
-    
+
     return render_template('mobile/edit_workshop_record.html',
                            workshop_record=workshop_record,
                            vehicle=vehicle,
@@ -4109,24 +4117,24 @@ def delete_workshop_record(workshop_id):
     try:
         workshop_record = VehicleWorkshop.query.get_or_404(workshop_id)
         vehicle = workshop_record.vehicle
-        
+
         # تسجيل العملية قبل الحذف
         log_activity(
             action='delete',
             entity_type='vehicle_workshop',
             details=f'تم حذف سجل دخول الورشة للسيارة: {vehicle.plate_number} - الوصف: {workshop_record.description[:50]} من الجوال'
         )
-        
+
         db.session.delete(workshop_record)
         db.session.commit()
-        
+
         flash('تم حذف سجل الورشة بنجاح!', 'success')
-        
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"خطأ في حذف سجل الورشة {workshop_id}: {str(e)}")
         flash(f'حدث خطأ أثناء حذف سجل الورشة: {str(e)}', 'danger')
-    
+
     return redirect(url_for('mobile.vehicle_details', vehicle_id=workshop_record.vehicle.id))
 
 # عرض تفاصيل سجل الورشة - النسخة المحمولة
@@ -4138,14 +4146,14 @@ def view_workshop_details(workshop_id):
         joinedload(VehicleWorkshop.images)
     ).get_or_404(workshop_id)
     vehicle = workshop_record.vehicle
-    
+
     # فحص وجود الصور الفعلي على الخادم مع البحث في مسارات متعددة
     valid_images = []
     if workshop_record.images:
         for image in workshop_record.images:
             # محاولة أولى: المسار المحفوظ في قاعدة البيانات
             image_path = os.path.join(current_app.static_folder, image.image_path)
-            
+
             # إذا لم يوجد، نبحث عن نفس الملف في مجلد الورشة
             if not os.path.exists(image_path):
                 filename = os.path.basename(image.image_path)
@@ -4159,16 +4167,16 @@ def view_workshop_details(workshop_id):
                             image.image_path = f'uploads/workshop/{file}'
                             image_path = os.path.join(current_app.static_folder, image.image_path)
                             break
-            
+
             if os.path.exists(image_path):
                 valid_images.append(image)
                 current_app.logger.info(f"الصورة موجودة: {image.image_path}")
             else:
                 current_app.logger.warning(f"الصورة غير موجودة: {image_path}")
-    
+
     # تحديث قائمة الصور بالصور الموجودة فقط
     workshop_record.valid_images = valid_images
-    
+
     return render_template('mobile/workshop_details.html',
                            workshop_record=workshop_record,
                            vehicle=vehicle)
@@ -4178,11 +4186,47 @@ def view_workshop_details(workshop_id):
 @login_required
 def edit_handover_mobile(handover_id):
     """تعديل سجل التسليم والاستلام للنسخة المحمولة"""
-    # التحقق من وجود السجل
     handover = VehicleHandover.query.get_or_404(handover_id)
-    
-    # إعادة التوجيه إلى صفحة إنشاء/تعديل النموذج مع معرف السجل
-    return redirect(url_for('mobile.create_handover_mobile', handover_id=handover_id))
+    vehicle = handover.vehicle
+
+    if request.method == 'POST':
+        try:
+            # تحديث البيانات
+            handover.handover_type = request.form.get('handover_type')
+            handover.person_name = request.form.get('person_name')
+            handover.person_phone = request.form.get('person_phone')
+            handover.person_national_id = request.form.get('person_national_id')
+            handover.notes = request.form.get('notes')
+
+            # تحديث التاريخ إذا تم تقديمه
+            handover_date = request.form.get('handover_date')
+            if handover_date:
+                handover.handover_date = datetime.strptime(handover_date, '%Y-%m-%d').date()
+
+            # تحديث الحقول الاختيارية
+            handover.mileage = request.form.get('mileage', type=int)
+            handover.vehicle_condition = request.form.get('vehicle_condition')
+            handover.fuel_level = request.form.get('fuel_level')
+
+            # تسجيل النشاط
+            log_activity(
+                action='update',
+                entity_type='vehicle_handover',
+                details=f'تم تعديل سجل {handover.handover_type} للسيارة: {vehicle.plate_number} - الشخص: {handover.person_name} من الجوال'
+            )
+
+            db.session.commit()
+            flash('تم تحديث سجل التسليم والاستلام بنجاح!', 'success')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطأ في تعديل سجل التسليم والاستلام {handover_id}: {str(e)}")
+            flash(f'حدث خطأ أثناء تحديث السجل: {str(e)}', 'danger')
+
+    return render_template('mobile/edit_handover.html',
+                           handover=handover,
+                           vehicle=vehicle)
 
 
 
@@ -4193,7 +4237,7 @@ def view_external_authorization(vehicle_id, auth_id):
     """عرض تفاصيل التفويض الخارجي في الموبايل"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     authorization = ExternalAuthorization.query.get_or_404(auth_id)
-    
+
     return render_template('mobile/view_external_authorization.html',
                          vehicle=vehicle,
                          authorization=authorization)
@@ -4204,7 +4248,7 @@ def edit_external_authorization(vehicle_id, auth_id):
     """تعديل التفويض الخارجي في الموبايل"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     authorization = ExternalAuthorization.query.get_or_404(auth_id)
-    
+
     if request.method == 'POST':
         try:
             # تحديث البيانات
@@ -4214,7 +4258,7 @@ def edit_external_authorization(vehicle_id, auth_id):
             authorization.city = request.form.get('city')
             authorization.external_link = request.form.get('form_link')
             authorization.notes = request.form.get('notes')
-            
+
             # معالجة رفع الملف الجديد
             if 'file' in request.files and request.files['file'].filename:
                 file = request.files['file']
@@ -4222,34 +4266,34 @@ def edit_external_authorization(vehicle_id, auth_id):
                     filename = secure_filename(file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     filename = f"{timestamp}_{filename}"
-                    
+
                     # إنشاء مجلد الرفع إذا لم يكن موجوداً
                     upload_dir = os.path.join(current_app.static_folder, 'uploads', 'authorizations')
                     os.makedirs(upload_dir, exist_ok=True)
-                    
+
                     file_path = os.path.join(upload_dir, filename)
                     file.save(file_path)
-                    
+
                     # حذف الملف القديم إذا كان موجوداً
                     if authorization.file_path:
                         old_file_path = os.path.join(current_app.static_folder, 'uploads', 'authorizations', authorization.file_path.split('/')[-1])
                         if os.path.exists(old_file_path):
                             os.remove(old_file_path)
-                    
+
                     authorization.file_path = f"uploads/authorizations/{filename}"
-            
+
             db.session.commit()
             flash('تم تحديث التفويض بنجاح', 'success')
             return redirect(url_for('mobile.view_external_authorization', vehicle_id=vehicle_id, auth_id=auth_id))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ أثناء تحديث التفويض: {str(e)}', 'error')
-    
+
     # الحصول على البيانات للنموذج
     departments = Department.query.all()
     employees = Employee.query.all()
-    
+
     return render_template('mobile/edit_external_authorization.html',
                          vehicle=vehicle,
                          authorization=authorization,
@@ -4262,21 +4306,21 @@ def delete_external_authorization(vehicle_id, auth_id):
     """حذف التفويض الخارجي من الموبايل"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     authorization = ExternalAuthorization.query.get_or_404(auth_id)
-    
+
     try:
         # حذف الملف المرفق إذا كان موجوداً
         if authorization.file_path:
             file_path = os.path.join(current_app.static_folder, 'uploads', 'authorizations', authorization.file_path.split('/')[-1])
             if os.path.exists(file_path):
                 os.remove(file_path)
-        
+
         db.session.delete(authorization)
         db.session.commit()
         flash('تم حذف التفويض بنجاح', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'حدث خطأ أثناء حذف التفويض: {str(e)}', 'error')
-    
+
     return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
 
 @mobile_bp.route('/vehicles/<int:vehicle_id>/external-authorization/create', methods=['GET', 'POST'])
@@ -4286,15 +4330,22 @@ def create_external_authorization(vehicle_id):
     from models import Vehicle, Employee, Department, ExternalAuthorization
     from werkzeug.utils import secure_filename
     import os
-    
+
     try:
         # الحصول على السيارة
         vehicle = Vehicle.query.get_or_404(vehicle_id)
-        
+
+        # فحص قيود العمليات للسيارات خارج الخدمة
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            flash(restrictions['message'], 'error')
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+
         # الحصول على الموظفين والأقسام
         employees = Employee.query.all()
         departments = Department.query.all()
-        
+
         if request.method == 'POST':
             # إنشاء تفويض جديد
             authorization = ExternalAuthorization(
@@ -4308,7 +4359,7 @@ def create_external_authorization(vehicle_id):
                 notes=request.form.get('notes'),
                 status='pending'
             )
-            
+
             # معالجة رفع الملف
             if 'file' in request.files:
                 file = request.files['file']
@@ -4317,25 +4368,25 @@ def create_external_authorization(vehicle_id):
                     filename = secure_filename(file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     filename = f"{timestamp}_{filename}"
-                    
+
                     upload_dir = os.path.join('static', 'uploads', 'authorizations')
                     os.makedirs(upload_dir, exist_ok=True)
-                    
+
                     file_path = os.path.join(upload_dir, filename)
                     file.save(file_path)
                     authorization.file_path = file_path
-            
+
             db.session.add(authorization)
             db.session.commit()
-            
+
             flash('تم إنشاء التفويض بنجاح', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
-        
+
         return render_template('mobile/create_external_authorization.html',
                              vehicle=vehicle,
                              employees=employees,
                              departments=departments)
-        
+
     except Exception as e:
         print(f"خطأ في إنشاء التفويض: {str(e)}")
         flash(f'خطأ في إنشاء التفويض: {str(e)}', 'error')
@@ -4350,18 +4401,18 @@ def approve_external_authorization(vehicle_id, auth_id):
             id=auth_id, 
             vehicle_id=vehicle_id
         ).first()
-        
+
         if not authorization:
             flash('التفويض غير موجود', 'error')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
-        
+
         authorization.status = 'approved'
         authorization.updated_at = datetime.utcnow()
         db.session.commit()
-        
+
         flash('تم الموافقة على التفويض بنجاح', 'success')
         return redirect(url_for('mobile.view_external_authorization', vehicle_id=vehicle_id, auth_id=auth_id))
-        
+
     except Exception as e:
         print(f"خطأ في موافقة التفويض: {str(e)}")
         flash(f'خطأ في موافقة التفويض: {str(e)}', 'error')
@@ -4376,18 +4427,18 @@ def reject_external_authorization(vehicle_id, auth_id):
             id=auth_id, 
             vehicle_id=vehicle_id
         ).first()
-        
+
         if not authorization:
             flash('التفويض غير موجود', 'error')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
-        
+
         authorization.status = 'rejected'
         authorization.updated_at = datetime.utcnow()
         db.session.commit()
-        
+
         flash('تم رفض التفويض', 'info')
         return redirect(url_for('mobile.view_external_authorization', vehicle_id=vehicle_id, auth_id=auth_id))
-        
+
     except Exception as e:
         print(f"خطأ في رفض التفويض: {str(e)}")
         flash(f'خطأ في رفض التفويض: {str(e)}', 'error')
@@ -4403,7 +4454,7 @@ def delete_handover(handover_id):
         vehicle_id = handover.vehicle_id
         handover_type = handover.handover_type
         person_name = handover.person_name
-        
+
         # حذف الصور المرتبطة أولاً
         images = VehicleHandoverImage.query.filter_by(handover_record_id=handover_id).all()
         for image in images:
@@ -4419,11 +4470,11 @@ def delete_handover(handover_id):
                 except:
                     pass
             db.session.delete(image)
-        
+
         # حذف سجل التسليم/الاستلام
         db.session.delete(handover)
         db.session.commit()
-        
+
         # تسجيل العملية في السجل
         log_activity(
             action='delete',
@@ -4431,16 +4482,15 @@ def delete_handover(handover_id):
             entity_id=handover_id,
             details=f'تم حذف سجل {"تسليم" if handover_type == "delivery" else "استلام"} للسيارة - الشخص: {person_name}'
         )
-        
+
         # تحديث اسم السائق في السيارة بعد الحذف
         update_vehicle_driver(vehicle_id)
-        
+
         flash(f'تم حذف سجل {"التسليم" if handover_type == "delivery" else "الاستلام"} بنجاح', 'success')
         return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
-        
+
     except Exception as e:
         db.session.rollback()
         print(f"خطأ في حذف سجل التسليم/الاستلام: {str(e)}")
         flash(f'خطأ في حذف السجل: {str(e)}', 'error')
         return redirect(url_for('mobile.view_handover', handover_id=handover_id))
-

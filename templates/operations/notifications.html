@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+
+{% block title %}الإشعارات{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-bell me-2"></i>
+                    الإشعارات
+                </h2>
+                <div>
+                    <a href="{{ url_for('operations.operations_dashboard') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للوحة الإدارة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-inbox me-2"></i>
+                        جميع الإشعارات
+                    </h5>
+                    <span class="badge bg-primary">{{ notifications|length }} إشعار</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if notifications %}
+                    <div class="list-group list-group-flush">
+                        {% for notification in notifications %}
+                        <div class="list-group-item {% if not notification.is_read %}list-group-item-light{% endif %}">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    {% if notification.notification_type == 'new_operation' %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-plus"></i>
+                                        </div>
+                                    {% elif notification.notification_type == 'status_change' %}
+                                        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </div>
+                                    {% elif notification.notification_type == 'reminder' %}
+                                        <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-bell"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0 fw-bold">{{ notification.title }}</h6>
+                                        <div class="text-end">
+                                            <small class="text-muted">
+                                                {{ notification.created_at.strftime('%Y/%m/%d %H:%M') }}
+                                            </small>
+                                            {% if not notification.is_read %}
+                                                <span class="badge bg-primary ms-2">جديد</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="mb-2 text-muted">{{ notification.message }}</p>
+                                    
+                                    {% if notification.operation_request %}
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('operations.view_operation', operation_id=notification.operation_request.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>
+                                            عرض العملية
+                                        </a>
+                                        
+                                        {% if notification.operation_request.status == 'pending' %}
+                                        <button class="btn btn-sm btn-outline-success ms-2" 
+                                                onclick="quickApprove({{ notification.operation_request.id }})">
+                                            <i class="fas fa-check me-1"></i>
+                                            موافقة سريعة
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted mb-3">
+                            <i class="fas fa-bell-slash fa-3x"></i>
+                        </div>
+                        <h5 class="text-muted">لا توجد إشعارات</h5>
+                        <p class="text-muted">لم تتلق أي إشعارات بعد</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function quickApprove(operationId) {
+    if (confirm('هل أنت متأكد من الموافقة على هذه العملية؟')) {
+        const formData = new FormData();
+        formData.append('review_notes', 'موافقة سريعة من الإشعارات');
+        
+        fetch(`/operations/${operationId}/approve`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تمت الموافقة بنجاح');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -68,18 +68,23 @@ styles %} {{ super() }}
                             --- يرجى اختيار مركبة ---
                         </option>
                         {% for vehicle in vehicles %}
-                        <option
-                            value="{{ vehicle.id }}"
-                            data-plate="{{ vehicle.plate_number }}"
-                            data-project="{{ vehicle.project or '' }}"
-                            data-location="{{ vehicle.location or '' }}"
-                            data-status="{{ vehicle.status }}"
-                        >
-                            {{ vehicle.plate_number }} - ({{ vehicle.make }} {{
-                            vehicle.model }})
-                        </option>
+
+                            <option value="{{ vehicle.id }}" 
+                                    data-plate="{{ vehicle.plate_number }}"
+                                    data-project="{{ vehicle.project or '' }}"
+                                    data-location="{{ vehicle.location or '' }}"
+                                    data-status="{{ vehicle.status }}"
+                                    {% if vehicle.status == 'out_of_service' %}style="color: #dc3545; font-weight: bold;"{% endif %}>
+                                {{ vehicle.plate_number }} - ({{ vehicle.make }} {{ vehicle.model }})
+                                {% if vehicle.status == 'out_of_service' %} ⚠️ [خارج الخدمة]{% endif %}
+                            </option>
+
                         {% endfor %}
                     </select>
+                    <div id="vehicle-status-alert" class="alert alert-danger mt-2 d-none">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تحذير:</strong> السيارة المختارة خارج الخدمة ولا يمكن تنفيذ عمليات تسليم أو استلام عليها.
+                    </div>
                 </div>
             </div>
         </div>
@@ -1213,10 +1218,26 @@ styles %} {{ super() }}
         vehicleSelect.on('select2:select', function (e) {
             const selectedOption = $(e.params.data.element);
 
+            const vehicleStatus = selectedOption.data('status');
+            const statusAlert = document.getElementById('vehicle-status-alert');
+            
+            // فحص المركبات خارج الخدمة
+            if (vehicleStatus === 'out_of_service') {
+                statusAlert.classList.remove('d-none');
+                formContainer.addClass('d-none');
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            } else {
+                statusAlert.classList.add('d-none');
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = false;
+            }
+            
             document.getElementById('project_name').value = selectedOption.data('project');
             document.getElementById('city').value = selectedOption.data('location');
+            
 
-            const vehicleStatus = selectedOption.data('status');
             const handoverTypeSelect = document.getElementById('handover_type');
             if (vehicleStatus === 'available') { handoverTypeSelect.value = 'delivery'; }
             else { handoverTypeSelect.value = 'return'; }

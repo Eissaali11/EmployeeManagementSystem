@@ -1,0 +1,1179 @@
+{% extends "layout.html" %}
+
+{% block title %}تفاصيل العملية #{{ operation.id }}{% endblock %}
+
+{% block content %}
+<style>
+/* تصميم مميز يتناسق مع النظام */
+body {
+    background: #1a1a1a;
+    color: #ffffff;
+}
+
+.operation-header {
+    background: linear-gradient(135deg, #1e3a5c 0%, #2d5aa0 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.operation-card {
+    background: #2d2d2d;
+    color: #ffffff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    border: 1px solid #444;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.operation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(45, 90, 160, 0.2);
+}
+
+.status-badge {
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: 8px;
+}
+
+.action-btn {
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    margin: 0.25rem;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.info-item {
+    background: #3a3a3a;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #2d5aa0;
+}
+
+.vehicle-plate {
+    background: linear-gradient(45deg, #2d5aa0, #1e3a5c);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(45, 90, 160, 0.5);
+}
+
+.driver-info {
+    background: linear-gradient(135deg, #1e3a5c 0%, #2d5aa0 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-info-card {
+    background: linear-gradient(135deg, #1e3a5c 0%, #2d5aa0 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 2px solid #2d5aa0;
+}
+
+.timeline-item {
+    border-left: 3px solid #2d5aa0;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    color: #ffffff;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2d5aa0;
+}
+
+.delete-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    background: linear-gradient(45deg, #ee5a52, #ff6b6b);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+}
+
+.container-fluid {
+    background: #1a1a1a;
+    min-height: 100vh;
+    color: #ffffff;
+}
+
+.badge {
+    color: #ffffff !important;
+}
+
+.text-muted {
+    color: #cccccc !important;
+}
+
+.modal-content {
+    background: #2d2d2d;
+    color: #ffffff;
+    border: 1px solid #444;
+}
+
+.modal-header {
+    border-bottom: 1px solid #444;
+}
+
+.modal-footer {
+    border-top: 1px solid #444;
+}
+
+.form-control {
+    background: #3a3a3a;
+    color: #ffffff;
+    border: 1px solid #555;
+}
+
+.form-control:focus {
+    background: #3a3a3a;
+    color: #ffffff;
+    border-color: #2d5aa0;
+    box-shadow: 0 0 0 0.2rem rgba(45, 90, 160, 0.25);
+}
+
+.btn-outline-secondary {
+    color: #ffffff;
+    border-color: #555;
+}
+
+.btn-outline-secondary:hover {
+    background: #555;
+    border-color: #555;
+    color: #ffffff;
+}
+
+.btn-outline-primary {
+    color: #2d5aa0;
+    border-color: #2d5aa0;
+}
+
+.btn-outline-primary:hover {
+    background: #2d5aa0;
+    border-color: #2d5aa0;
+    color: #ffffff;
+}
+
+/* تأثيرات الصورة الدائرية */
+@keyframes pulse-glow {
+    0% { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes pulse-status {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.employee-photo-container:hover .photo-zoom-icon {
+    opacity: 1 !important;
+}
+
+.employee-photo-wrapper:hover .photo-glow-ring {
+    animation: pulse-glow 1s infinite alternate;
+}
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Header المحسن -->
+    <div class="operation-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-0">
+                    <i class="fas fa-cogs me-3"></i>
+                    تفاصيل العملية #{{ operation.id }}
+                </h1>
+                <p class="mb-0 mt-2 opacity-75">{{ operation.title }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex flex-wrap justify-content-end">
+                    {% if operation.status == 'pending' %}
+                        <span class="status-badge bg-warning text-dark">
+                            <i class="fas fa-clock me-2"></i>معلقة
+                        </span>
+                    {% elif operation.status == 'under_review' %}
+                        <span class="status-badge bg-info">
+                            <i class="fas fa-search me-2"></i>تحت المراجعة
+                        </span>
+                    {% elif operation.status == 'approved' %}
+                        <span class="status-badge bg-success">
+                            <i class="fas fa-check-circle me-2"></i>موافق عليها
+                        </span>
+                    {% elif operation.status == 'rejected' %}
+                        <span class="status-badge bg-danger">
+                            <i class="fas fa-times-circle me-2"></i>مرفوضة
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- المعلومات الأساسية -->
+        <div class="col-lg-8">
+            <!-- معلومات العملية -->
+            <div class="operation-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    معلومات العملية
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong><i class="fas fa-tag me-2"></i>نوع العملية:</strong>
+                            <div class="mt-2">
+                                {% if operation.operation_type == 'handover' %}
+                                    <span class="badge bg-info fs-6">
+                                        <i class="fas fa-exchange-alt me-1"></i>تسليم/استلام مركبة
+                                    </span>
+                                {% elif operation.operation_type == 'workshop' %}
+                                    <span class="badge bg-warning fs-6">
+                                        <i class="fas fa-tools me-1"></i>عملية ورشة
+                                    </span>
+                                {% elif operation.operation_type == 'external_authorization' %}
+                                    <span class="badge bg-primary fs-6">
+                                        <i class="fas fa-file-contract me-1"></i>تفويض خارجي
+                                    </span>
+                                {% elif operation.operation_type == 'safety_inspection' %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-shield-alt me-1"></i>فحص سلامة
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong><i class="fas fa-flag me-2"></i>الأولوية:</strong>
+                            <div class="mt-2">
+                                {% if operation.priority == 'urgent' %}
+                                    <span class="badge bg-danger fs-6">
+                                        <span class="priority-indicator bg-danger"></span>عاجل
+                                    </span>
+                                {% elif operation.priority == 'high' %}
+                                    <span class="badge bg-warning fs-6">
+                                        <span class="priority-indicator bg-warning"></span>عالي
+                                    </span>
+                                {% elif operation.priority == 'normal' %}
+                                    <span class="badge bg-info fs-6">
+                                        <span class="priority-indicator bg-info"></span>عادي
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">
+                                        <span class="priority-indicator bg-secondary"></span>منخفض
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <strong><i class="fas fa-calendar-alt me-2"></i>تاريخ الطلب:</strong>
+                    <div class="mt-2">{{ operation.requested_at.strftime('%Y/%m/%d %H:%M:%S') }}</div>
+                </div>
+                
+                {% if operation.description %}
+                <div class="info-item">
+                    <strong><i class="fas fa-align-left me-2"></i>وصف العملية:</strong>
+                    <div class="mt-2">{{ operation.description }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- بيانات السائق المحسنة والشاملة -->
+            {% if employee or (related_record and (related_record.person_name or related_record.driver_name)) %}
+            <div class="driver-info">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>
+                        بيانات السائق
+                    </h5>
+                    {% if employee %}
+                    <a href="{{ url_for('employees.view', id=employee.id) }}" 
+                       class="btn btn-outline-light btn-sm" 
+                       title="عرض صفحة الموظف">
+                        <i class="fas fa-external-link-alt me-1"></i>
+                        صفحة الموظف
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- صورة الموظف الدائرية الجذابة -->
+                {% if employee and employee.profile_image %}
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <div class="employee-photo-wrapper" style="display: inline-block; position: relative;">
+                            <!-- الحلقة الخارجية المتوهجة -->
+                            <div class="photo-glow-ring" 
+                                 style="position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px; 
+                                        border-radius: 50%; background: linear-gradient(45deg, #2d5aa0, #1e3a5c, #4a90e2); 
+                                        animation: pulse-glow 2s infinite alternate; z-index: 1;"></div>
+                            
+                            <!-- الحلقة الوسطية -->
+                            <div class="photo-border-ring" 
+                                 style="position: absolute; top: -4px; left: -4px; right: -4px; bottom: -4px; 
+                                        border-radius: 50%; background: linear-gradient(135deg, #ffffff, #e0e0e0); 
+                                        z-index: 2;"></div>
+                            
+                            <!-- حاوي الصورة -->
+                            <div class="employee-photo-container" 
+                                 style="position: relative; width: 120px; height: 120px; border-radius: 50%; 
+                                        overflow: hidden; z-index: 3; cursor: pointer; transition: transform 0.3s ease;"
+                                 onmouseover="this.style.transform='scale(1.05)'" 
+                                 onmouseout="this.style.transform='scale(1)'"
+                                 onclick="showEmployeePhoto('{{ url_for('static', filename=employee.profile_image) }}', '{{ employee.name }}')">
+                                
+                                <img src="{{ url_for('static', filename=employee.profile_image) }}" 
+                                     alt="صورة {{ employee.name }}" 
+                                     class="employee-photo"
+                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                
+                                <!-- التأثير المتدرج في الأسفل -->
+                                <div class="photo-gradient-overlay" 
+                                     style="position: absolute; bottom: 0; left: 0; right: 0; height: 40%; 
+                                            background: linear-gradient(transparent, rgba(0,0,0,0.6)); 
+                                            border-radius: 0 0 50% 50%;"></div>
+                                
+                                <!-- أيقونة التكبير -->
+                                <div class="photo-zoom-icon" 
+                                     style="position: absolute; bottom: 8px; right: 8px; 
+                                            width: 24px; height: 24px; background: rgba(255,255,255,0.9); 
+                                            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                                            opacity: 0; transition: opacity 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"
+                                     onmouseover="this.style.opacity='1'" 
+                                     onmouseout="this.style.opacity='0.7'">
+                                    <i class="fas fa-search-plus" style="font-size: 10px; color: #2d5aa0;"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- شارة الحالة -->
+                            <div class="status-badge-photo" 
+                                 style="position: absolute; top: 8px; right: 8px; 
+                                        width: 20px; height: 20px; background: #28a745; 
+                                        border-radius: 50%; border: 2px solid #ffffff; 
+                                        z-index: 4; animation: pulse-status 1.5s infinite;"></div>
+                        </div>
+                        
+                        <!-- اسم الموظف تحت الصورة -->
+                        <div class="mt-3">
+                            <h6 class="text-white mb-1" style="font-weight: 600;">{{ employee.name }}</h6>
+                            <small class="text-white-50">{{ employee.job_title if employee.job_title else 'موظف' }}</small>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <small class="text-white-50" style="font-size: 0.75rem;">
+                                <i class="fas fa-hand-pointer me-1"></i>انقر للتكبير
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <!-- العمود الأول -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-user me-2 text-light"></i>
+                            <strong>الاسم الكامل:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee %}
+                                    {{ employee.name }}
+                                {% else %}
+                                    {{ related_record.person_name or related_record.driver_name }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-id-card me-2 text-light"></i>
+                            <strong>رقم الهوية:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.national_id %}
+                                    {{ employee.national_id }}
+                                {% elif related_record.driver_residency_number %}
+                                    {{ related_record.driver_residency_number }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-badge me-2 text-light"></i>
+                            <strong>الرقم الوظيفي:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.employee_id %}
+                                    {{ employee.employee_id }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-mobile-alt me-2 text-light"></i>
+                            <strong>رقم الجوال:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.mobile %}
+                                    {{ employee.mobile }}
+                                {% elif related_record.driver_phone_number %}
+                                    {{ related_record.driver_phone_number }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- العمود الثاني -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-birthday-cake me-2 text-light"></i>
+                            <strong>تاريخ الميلاد:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.birth_date %}
+                                    {{ employee.birth_date.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-phone me-2 text-light"></i>
+                            <strong>رقم جوال العمل:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.mobilePersonal %}
+                                    {{ employee.mobilePersonal }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-shield-alt me-2 text-light"></i>
+                            <strong>على الكفالة:</strong>
+                            <div class="mt-1">
+                                {% if employee and employee.contract_type == 'foreign' %}
+                                    <span class="badge bg-warning text-dark">نعم - وافد</span>
+                                {% elif employee and employee.contract_type == 'saudi' %}
+                                    <span class="badge bg-success">لا - سعودي</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير محدد</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-user-tie me-2 text-light"></i>
+                            <strong>اسم الكفيل الحالي:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.contract_type == 'foreign' %}
+                                    شركة نُظم (افتراضي)
+                                {% elif employee and employee.contract_type == 'saudi' %}
+                                    لا يوجد - سعودي
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- صف إضافي لرقم IMEI -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <i class="fas fa-barcode me-2 text-light"></i>
+                            <strong>رقم IMEI:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee %}
+                                    غير متوفر حالياً
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- معلومات إضافية من السجل المرتبط -->
+                {% if related_record %}
+                <div class="row">
+                    {% if related_record.driver_contract_status %}
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-file-contract me-2 text-light"></i>
+                            <strong>حالة العقد:</strong>
+                            <span class="badge bg-light text-dark ms-2">{{ related_record.driver_contract_status }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if related_record.driver_license_status %}
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-id-badge me-2 text-light"></i>
+                            <strong>حالة الرخصة:</strong>
+                            <span class="badge bg-light text-dark ms-2">{{ related_record.driver_license_status }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- تفاصيل السجل المرتبط -->
+            {% if related_record %}
+            <div class="operation-card">
+                <h5 class="mb-4">
+                    <i class="fas fa-file-alt me-2 text-success"></i>
+                    تفاصيل السجل المرتبط
+                </h5>
+                
+                {% if operation.operation_type == 'handover' %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>نوع العملية:</strong>
+                            <div class="mt-2">{{ related_record.handover_type_ar or related_record.handover_type }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>تاريخ العملية:</strong>
+                            <div class="mt-2">{{ related_record.handover_date.strftime('%Y/%m/%d') if related_record.handover_date else 'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    {% if related_record.mileage %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>الكيلومترات:</strong>
+                            <div class="mt-2">{{ related_record.mileage }} كم</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if related_record.fuel_level %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong>مستوى الوقود:</strong>
+                            <div class="mt-2">{{ related_record.fuel_level }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if related_record.notes %}
+                <div class="info-item">
+                    <strong>الملاحظات:</strong>
+                    <div class="mt-2">{{ related_record.notes }}</div>
+                </div>
+                {% endif %}
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ operation.get_operation_url() }}" class="action-btn btn btn-outline-primary" target="_blank">
+                        <i class="fas fa-external-link-alt me-2"></i>
+                        عرض السجل الكامل
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- الشريط الجانبي -->
+        <div class="col-lg-4">
+            <!-- معلومات السيارة -->
+            {% if operation.vehicle %}
+            <div class="operation-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-car me-2 text-success"></i>
+                    معلومات السيارة
+                </h6>
+                
+                <div class="vehicle-plate mb-3">
+                    {{ operation.vehicle.plate_number }}
+                </div>
+                
+                <div class="info-item">
+                    <strong>النوع:</strong> {{ operation.vehicle.type or 'غير محدد' }}
+                </div>
+                <div class="info-item">
+                    <strong>الماركة:</strong> {{ operation.vehicle.make or 'غير محدد' }}
+                </div>
+                <div class="info-item">
+                    <strong>الموديل:</strong> {{ operation.vehicle.model or 'غير محدد' }}
+                </div>
+                <div class="info-item">
+                    <strong>السنة:</strong> {{ operation.vehicle.year or 'غير محدد' }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- معلومات الطالب المحسنة -->
+            {% if operation.requester %}
+            <div class="operation-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2 text-primary"></i>
+                        معلومات الطالب
+                    </h6>
+                    <span class="badge bg-primary">{{ operation.requester.role.value if operation.requester.role else 'مستخدم' }}</span>
+                </div>
+                
+                <!-- صورة المستخدم الطالب -->
+                <div class="text-center mb-3">
+                    {% if operation.requester.profile_image %}
+                    <img src="{{ url_for('static', filename=operation.requester.profile_image) }}" 
+                         alt="صورة {{ operation.requester.name or operation.requester.email }}" 
+                         class="rounded-circle border"
+                         style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #2d5aa0 !important;">
+                    {% else %}
+                    <div class="d-inline-block bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="info-item">
+                    <strong>الاسم الكامل:</strong> 
+                    <div class="mt-1">{{ operation.requester.name or operation.requester.email }}</div>
+                </div>
+                
+                {% if operation.requester.email %}
+                <div class="info-item">
+                    <strong>البريد الإلكتروني:</strong> 
+                    <div class="mt-1">
+                        <a href="mailto:{{ operation.requester.email }}" class="text-primary text-decoration-none">
+                            <i class="fas fa-envelope me-1"></i>{{ operation.requester.email }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if operation.requester.phone %}
+                <div class="info-item">
+                    <strong>رقم الهاتف:</strong> 
+                    <div class="mt-1">
+                        <a href="tel:{{ operation.requester.phone }}" class="text-success text-decoration-none">
+                            <i class="fas fa-phone me-1"></i>{{ operation.requester.phone }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <strong>الدور في النظام:</strong> 
+                    <div class="mt-1">
+                        {% if operation.requester.role %}
+                            {% if operation.requester.role.value == 'admin' %}
+                                <span class="badge bg-danger"><i class="fas fa-crown me-1"></i>مدير النظام</span>
+                            {% elif operation.requester.role.value == 'manager' %}
+                                <span class="badge bg-warning"><i class="fas fa-user-tie me-1"></i>مدير</span>
+                            {% elif operation.requester.role.value == 'employee' %}
+                                <span class="badge bg-info"><i class="fas fa-user me-1"></i>موظف</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ operation.requester.role.value }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">غير محدد</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if operation.requester.department %}
+                <div class="info-item">
+                    <strong>القسم:</strong> 
+                    <div class="mt-1">
+                        <span class="badge bg-success">{{ operation.requester.department }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <strong>تاريخ الطلب:</strong> 
+                    <div class="mt-1">
+                        <i class="fas fa-calendar me-1 text-muted"></i>
+                        {{ operation.requested_at.strftime('%Y/%m/%d') if operation.requested_at else 'غير محدد' }}
+                        <small class="text-muted ms-2">
+                            {{ operation.requested_at.strftime('%H:%M') if operation.requested_at else '' }}
+                        </small>
+                    </div>
+                </div>
+                
+                {% if operation.requester.last_login %}
+                <div class="info-item">
+                    <strong>آخر دخول:</strong> 
+                    <div class="mt-1">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ operation.requester.last_login.strftime('%Y/%m/%d %H:%M') }}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- زر التواصل مع الطالب -->
+                <div class="mt-3 text-center">
+                    {% if operation.requester.email %}
+                    <a href="mailto:{{ operation.requester.email }}?subject=بخصوص طلب العملية: {{ operation.title }}" 
+                       class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fas fa-envelope me-1"></i>إرسال إيميل
+                    </a>
+                    {% endif %}
+                    {% if operation.requester.phone %}
+                    <a href="tel:{{ operation.requester.phone }}" 
+                       class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-phone me-1"></i>اتصال
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- معلومات الإدمان/المراجع -->
+            {% if operation.reviewer %}
+            <div class="admin-info-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-user-shield me-2"></i>
+                    معلومات المراجع (مدير النظام)
+                </h6>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-user-cog me-2"></i>
+                            <strong>اسم المراجع:</strong>
+                            <div class="mt-1">{{ operation.reviewer.username }}</div>
+                        </div>
+                        
+                        {% if operation.reviewer.email %}
+                        <div class="mb-3">
+                            <i class="fas fa-envelope me-2"></i>
+                            <strong>البريد الإلكتروني:</strong>
+                            <div class="mt-1">{{ operation.reviewer.email }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            <strong>تاريخ المراجعة:</strong>
+                            <div class="mt-1">{{ operation.reviewed_at.strftime('%Y/%m/%d %H:%M') if operation.reviewed_at else 'لم تتم المراجعة بعد' }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-crown me-2"></i>
+                            <strong>صلاحية:</strong>
+                            <span class="badge bg-warning text-dark ms-2">مدير النظام</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if operation.review_notes %}
+                <div class="mt-2">
+                    <strong><i class="fas fa-comment-alt me-2"></i>ملاحظات المراجع:</strong>
+                    <div class="mt-2 p-3" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
+                        {{ operation.review_notes }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Timeline العملية -->
+            <div class="operation-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-history me-2 text-info"></i>
+                    تاريخ العملية
+                </h6>
+                
+                <div class="timeline-item">
+                    <strong>إنشاء العملية</strong>
+                    <div class="text-muted small">{{ operation.created_at.strftime('%Y/%m/%d %H:%M') }}</div>
+                </div>
+                
+                {% if operation.reviewed_at %}
+                <div class="timeline-item">
+                    <strong>مراجعة العملية</strong>
+                    <div class="text-muted small">{{ operation.reviewed_at.strftime('%Y/%m/%d %H:%M') }}</div>
+                    {% if operation.reviewer %}
+                        <div class="text-muted small">بواسطة: {{ operation.reviewer.username }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if operation.review_notes %}
+                <div class="info-item">
+                    <strong>ملاحظات المراجعة:</strong>
+                    <div class="mt-2">{{ operation.review_notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- أزرار الإجراءات -->
+            <div class="operation-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-tools me-2 text-warning"></i>
+                    إجراءات العملية
+                </h6>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('operations.operations_list') }}" class="action-btn btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                    
+                    <a href="{{ url_for('operations.operations_dashboard') }}" class="action-btn btn btn-outline-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        لوحة الإدارة
+                    </a>
+                    
+                    {% if operation.status == 'pending' or operation.status == 'under_review' %}
+                    <button class="action-btn btn btn-success" onclick="quickApprove({{ operation.id }})">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        تحديد فترة التفويض
+                    </button>
+                    
+                    <button class="action-btn btn btn-warning" onclick="quickReject({{ operation.id }})">
+                        <i class="fas fa-times me-2"></i>
+                        رفض العملية
+                    </button>
+                    {% endif %}
+                    
+                    <!-- زر الحذف المطلوب -->
+                    <button class="delete-btn" onclick="deleteOperation({{ operation.id }})">
+                        <i class="fas fa-trash-alt me-2"></i>
+                        حذف العملية
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal للموافقة السريعة -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>
+                    الموافقة على العملية
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="approveForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات الموافقة (اختياري):</label>
+                        <textarea name="review_notes" class="form-control" rows="3" placeholder="أدخل أي ملاحظات إضافية..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>
+                        تأكيد الموافقة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal للرفض -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-times-circle me-2"></i>
+                    رفض العملية
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">سبب الرفض (مطلوب):</label>
+                        <textarea name="review_notes" class="form-control" rows="3" placeholder="أدخل سبب رفض العملية..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>
+                        تأكيد الرفض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal للحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    تأكيد حذف العملية
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه!
+                </div>
+                <p>هل أنت متأكد من حذف هذه العملية؟</p>
+                <p><strong>العملية:</strong> {{ operation.title }}</p>
+                <p><strong>الرقم:</strong> #{{ operation.id }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash-alt me-2"></i>
+                    حذف العملية
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOperationId = null;
+
+function quickApprove(operationId) {
+    // التوجه إلى صفحة تعديل تواريخ الوثائق للسيارة الخاصة بالعملية
+    window.location.href = '/vehicles/documents/edit/{{ operation.vehicle_id }}?from_operations=' + operationId;
+}
+
+function quickReject(operationId) {
+    currentOperationId = operationId;
+    $('#rejectModal').modal('show');
+}
+
+function deleteOperation(operationId) {
+    currentOperationId = operationId;
+    $('#deleteModal').modal('show');
+}
+
+function confirmDelete() {
+    if (!currentOperationId) return;
+    
+    fetch(`/operations/${currentOperationId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#deleteModal').modal('hide');
+            showToast('تم حذف العملية بنجاح', 'success');
+            setTimeout(() => {
+                window.location.href = '/operations/';
+            }, 1500);
+        } else {
+            showToast(data.message || 'حدث خطأ أثناء الحذف', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
+    });
+}
+
+// معالجة نموذج الموافقة
+document.getElementById('approveForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/operations/${currentOperationId}/approve`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#approveModal').modal('hide');
+            showToast('تمت الموافقة على العملية بنجاح', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message || 'حدث خطأ', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
+    });
+});
+
+// معالجة نموذج الرفض
+document.getElementById('rejectForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/operations/${currentOperationId}/reject`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#rejectModal').modal('hide');
+            showToast('تم رفض العملية', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.message || 'حدث خطأ', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
+    });
+});
+
+function showToast(message, type) {
+    // إنشاء toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // إزالة التنبيه بعد 3 ثوان
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+</script>
+
+<!-- Modal لعرض صورة الموظف -->
+<div class="modal fade" id="employeePhotoModal" tabindex="-1" aria-labelledby="employeePhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="employeePhotoModalLabel">
+                    <i class="fas fa-user-circle me-2"></i>
+                    صورة الموظف
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <img id="employeePhotoImg" src="" alt="صورة الموظف" class="img-fluid rounded-circle" style="max-width: 300px; max-height: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <h5 id="employeePhotoName" class="mt-3 text-white"></h5>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showEmployeePhoto(imageSrc, employeeName) {
+    const modal = document.getElementById('employeePhotoModal');
+    const img = document.getElementById('employeePhotoImg');
+    const nameElement = document.getElementById('employeePhotoName');
+    
+    img.src = imageSrc;
+    nameElement.textContent = employeeName;
+    
+    // عرض المودال باستخدام Bootstrap
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+}
+
+// تحسين تجربة المستخدم مع الصورة
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة تأثير loading للصورة
+    const employeePhoto = document.querySelector('.employee-photo');
+    if (employeePhoto) {
+        employeePhoto.addEventListener('load', function() {
+            this.style.opacity = '1';
+        });
+        
+        employeePhoto.addEventListener('error', function() {
+            // في حالة فشل تحميل الصورة، عرض أيقونة افتراضية
+            this.style.display = 'none';
+            const container = this.closest('.employee-photo-container');
+            container.innerHTML = '<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #2d5aa0, #1e3a5c); display: flex; align-items: center; justify-content: center; border-radius: 50%;"><i class="fas fa-user text-white" style="font-size: 3rem;"></i></div>';
+        });
+    }
+});
+</script>
+{% endblock %}

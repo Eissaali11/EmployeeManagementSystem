@@ -82,6 +82,8 @@
                                         {% elif vehicle.status == 'in_project' %} <span class="badge bg-info">في المشروع</span>
                                         {% elif vehicle.status == 'in_workshop' %} <span class="badge bg-warning text-dark">في الورشة</span>
                                         {% elif vehicle.status == 'accident' %} <span class="badge bg-danger">حادث</span>
+
+                                        {% elif vehicle.status == 'out_of_service' %} <span class="badge bg-danger text-white"><i class="fas fa-exclamation-triangle me-1"></i>خارج الخدمة</span>
                                         {% else %} <span class="badge bg-secondary">{{ vehicle.status }}</span> {% endif %}
                                     </span>
                                 </li>

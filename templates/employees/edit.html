@@ -271,6 +271,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="birth_date" class="form-label">تاريخ الميلاد</label>
+                            <input type="date" class="form-control date-picker" id="birth_date" name="birth_date" 
+                                  value="{{ employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else '' }}">
+                            <div class="form-text text-muted">
+                                <i class="fas fa-birthday-cake"></i>
+                                تاريخ ميلاد الموظف
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mt-4">

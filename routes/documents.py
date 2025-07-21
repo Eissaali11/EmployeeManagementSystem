@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from werkzeug.utils import secure_filename
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta
 import io
@@ -369,7 +369,7 @@ def index():
     employee_id = request.args.get('employee_id', '')
     department_id = request.args.get('department_id', '')
     sponsorship_status = request.args.get('sponsorship_status', '')
-    expiring = request.args.get('expiring', '')
+    status_filter = request.args.get('status_filter', '')
     show_all = request.args.get('show_all', 'false')
     
     # Build query
@@ -394,29 +394,54 @@ def index():
         if sponsorship_status:
             query = query.filter(Employee.sponsorship_status == sponsorship_status)
     
-    if expiring:
-        # Get documents expiring in the next 30, 60, or 90 days
-        days = 30
-        if expiring == '60':
-            days = 60
-        elif expiring == '90':
-            days = 90
-        
-        future_date = datetime.now().date() + timedelta(days=days)
-        query = query.filter(Document.expiry_date.isnot(None))  # استبعاد الوثائق بدون تاريخ انتهاء
-        query = query.filter(Document.expiry_date <= future_date, 
-                             Document.expiry_date >= datetime.now().date())
-    
-    # فلترة الوثائق التي باقي على انتهائها أكثر من 30 يوماً
+    # تطبيق فلتر حالة الصلاحية
     today = datetime.now().date()
-    if show_all.lower() != 'true':
-        # عرض الوثائق التي تنتهي في خلال 30 يوم أو أقل أو المنتهية بالفعل
+    
+    if status_filter == 'expired':
+        # الوثائق المنتهية فقط
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date < today
+        )
+    elif status_filter == 'expiring_30':
+        # الوثائق التي تنتهي خلال 30 يوم
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_60':
+        # الوثائق التي تنتهي خلال 60 يوم
+        future_date = today + timedelta(days=60)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_90':
+        # الوثائق التي تنتهي خلال 90 يوم
+        future_date = today + timedelta(days=90)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'valid':
+        # الوثائق السارية (أكثر من 30 يوم للانتهاء)
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            or_(
+                Document.expiry_date.is_(None),  # الوثائق بدون تاريخ انتهاء
+                Document.expiry_date > future_date  # الوثائق التي تنتهي بعد أكثر من 30 يوم
+            )
+        )
+    elif show_all.lower() != 'true':
+        # العرض الافتراضي: الوثائق المنتهية أو القريبة من الانتهاء (خلال 30 يوم)
         future_date_30_days = today + timedelta(days=30)
         query = query.filter(
-            # تتضمن الوثائق التي لها تاريخ انتهاء ويكون ضمن المدى المحدد
-            Document.expiry_date.isnot(None) & 
-            ((Document.expiry_date <= future_date_30_days) | 
-             (Document.expiry_date < today))
+            Document.expiry_date.isnot(None),
+            Document.expiry_date <= future_date_30_days
         )
     
     # Execute query
@@ -461,12 +486,15 @@ def index():
                           selected_employee=employee_id,
                           selected_department=department_id,
                           selected_sponsorship=sponsorship_status,
-                          selected_expiring=expiring,
+                          selected_status_filter=status_filter,
                           show_all=show_all.lower() == 'true',
                           total_docs=total_docs,
                           expired_docs=expired_docs,
                           expiring_soon=expiring_soon,
                           safe_docs=safe_docs,
+                          valid_docs=safe_docs,
+                          status_filter=status_filter,
+                          today=today,
                           now=datetime.now())
 
 @documents_bp.route('/create', methods=['GET', 'POST'])
@@ -962,6 +990,9 @@ def expiring():
     days = int(request.args.get('days', '30'))
     document_type = request.args.get('document_type', '')
     status = request.args.get('status', 'expiring')  # 'expiring' or 'expired'
+    employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
+    sponsorship_status = request.args.get('sponsorship_status', '')
     
     # Calculate expiry date range
     today = datetime.now().date()
@@ -984,6 +1015,22 @@ def expiring():
     if document_type:
         query = query.filter(Document.document_type == document_type)
     
+    # Apply employee filter if provided
+    if employee_id and employee_id.isdigit():
+        query = query.filter(Document.employee_id == int(employee_id))
+    
+    # Apply filters that require Employee join
+    needs_employee_join = department_id or sponsorship_status
+    
+    if needs_employee_join:
+        query = query.join(Employee)
+        
+        if department_id and department_id.isdigit():
+            query = query.filter(Employee.department_id == int(department_id))
+        
+        if sponsorship_status:
+            query = query.filter(Employee.sponsorship_status == sponsorship_status)
+    
     # Execute query
     documents = query.all()
     
@@ -1002,11 +1049,20 @@ def expiring():
         'annual_leave', 'other'
     ]
     
+    # Get all employees and departments for filter dropdowns
+    employees = Employee.query.all()
+    departments = Department.query.all()
+    
     return render_template('documents/expiring.html',
                           documents=documents,
                           days=days,
                           document_types=document_types,
+                          employees=employees,
+                          departments=departments,
                           selected_type=document_type,
+                          selected_employee=employee_id,
+                          selected_department=department_id,
+                          selected_sponsorship=sponsorship_status,
                           status=status)
 
 @documents_bp.route('/expiry_stats')
@@ -1423,8 +1479,11 @@ def export_excel():
     """Export all documents to Excel"""
     # Get filter parameters
     document_type = request.args.get('document_type', '')
-    days = int(request.args.get('days', '0'))
+    status_filter = request.args.get('status_filter', '')
     show_all = request.args.get('show_all', 'false').lower() == 'true'
+    employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
+    sponsorship_status = request.args.get('sponsorship_status', '')
     
     # Build query
     query = Document.query
@@ -1433,17 +1492,71 @@ def export_excel():
     if document_type:
         query = query.filter(Document.document_type == document_type)
     
-    # Apply days filter for expiration
-    if days > 0 and not show_all:
-        today = datetime.now().date()
-        future_date = today + timedelta(days=days)
+    # Apply status filter
+    today = datetime.now().date()
+    
+    if status_filter == 'expired':
+        # الوثائق المنتهية فقط
         query = query.filter(
-            Document.expiry_date <= future_date,
-            Document.expiry_date >= today
+            Document.expiry_date.isnot(None),
+            Document.expiry_date < today
         )
+    elif status_filter == 'expiring_30':
+        # الوثائق التي تنتهي خلال 30 يوم
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_60':
+        # الوثائق التي تنتهي خلال 60 يوم
+        future_date = today + timedelta(days=60)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'expiring_90':
+        # الوثائق التي تنتهي خلال 90 يوم
+        future_date = today + timedelta(days=90)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date >= today,
+            Document.expiry_date <= future_date
+        )
+    elif status_filter == 'valid':
+        # الوثائق السارية (أكثر من 30 يوم للانتهاء)
+        future_date = today + timedelta(days=30)
+        query = query.filter(
+            or_(
+                Document.expiry_date.is_(None),  # الوثائق بدون تاريخ انتهاء
+                Document.expiry_date > future_date  # الوثائق التي تنتهي بعد أكثر من 30 يوم
+            )
+        )
+    elif not show_all:
+        # العرض الافتراضي: الوثائق المنتهية أو القريبة من الانتهاء (خلال 30 يوم)
+        future_date_30_days = today + timedelta(days=30)
+        query = query.filter(
+            Document.expiry_date.isnot(None),
+            Document.expiry_date <= future_date_30_days
+        )
+    
+    # Apply employee filter
+    if employee_id and employee_id.isdigit():
+        query = query.filter(Document.employee_id == int(employee_id))
     
     # Get documents with employee information
     query = query.join(Employee).options(selectinload(Document.employee))
+    
+    # Apply department filter
+    if department_id and department_id.isdigit():
+        query = query.filter(Employee.department_id == int(department_id))
+    
+    # Apply sponsorship status filter
+    if sponsorship_status:
+        query = query.filter(Employee.sponsorship_status == sponsorship_status)
+    
     documents = query.order_by(Document.expiry_date).all()
     
     # Create Excel in memory
@@ -1538,7 +1651,7 @@ def export_excel():
     })
     
     # Headers definition
-    headers = ['اسم الموظف', 'الرقم الوظيفي', 'القسم', 'نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'ملاحظات']
+    headers = ['اسم الموظف', 'الرقم الوظيفي', 'القسم', 'نوع الوثيقة', 'رقم الوثيقة', 'تاريخ الإصدار', 'تاريخ الانتهاء', 'الأيام المتبقية', 'حالة الكفالة', 'ملاحظات']
     
     # Add main worksheet with all documents (sorted by expiry date)
     main_worksheet = workbook.add_worksheet("جميع الوثائق")
@@ -1553,7 +1666,8 @@ def export_excel():
     main_worksheet.set_column(5, 5, 15)  # تاريخ الإصدار
     main_worksheet.set_column(6, 6, 15)  # تاريخ الانتهاء
     main_worksheet.set_column(7, 7, 15)  # الأيام المتبقية
-    main_worksheet.set_column(8, 8, 30)  # ملاحظات
+    main_worksheet.set_column(8, 8, 15)  # حالة الكفالة
+    main_worksheet.set_column(9, 9, 30)  # ملاحظات
     
     # Write headers for main worksheet
     for col_num, data in enumerate(headers):
@@ -1612,7 +1726,17 @@ def export_excel():
             main_worksheet.write(row_num, 6, "غير محدد", cell_format)
             
         main_worksheet.write(row_num, 7, days_remaining, days_format)
-        main_worksheet.write(row_num, 8, doc.notes or '', cell_format)
+        
+        # كتابة حالة الكفالة
+        sponsorship_status_ar = "غير محدد"
+        if doc.employee and doc.employee.sponsorship_status:
+            if doc.employee.sponsorship_status == 'inside':
+                sponsorship_status_ar = "على الكفالة"
+            elif doc.employee.sponsorship_status == 'outside':
+                sponsorship_status_ar = "خارج الكفالة"
+        main_worksheet.write(row_num, 8, sponsorship_status_ar, cell_format)
+        
+        main_worksheet.write(row_num, 9, doc.notes or '', cell_format)
         row_num += 1
         
     # إنشاء تنسيق للمستندات بدون تاريخ انتهاء (نقلناه هنا ليكون متاحاً للدالة الفرعية)
@@ -1634,7 +1758,7 @@ def export_excel():
         ws.right_to_left()
         
         # Set column widths
-        for i, width in enumerate([25, 15, 20, 20, 20, 15, 15, 15, 30]):
+        for i, width in enumerate([25, 15, 20, 20, 20, 15, 15, 15, 15, 30]):
             ws.set_column(i, i, width)
         
         # Custom title format for this category
@@ -1648,7 +1772,7 @@ def export_excel():
         })
         
         # Add title
-        ws.merge_range('A1:I1', f"{name} ({len(docs)})", title_format)
+        ws.merge_range('A1:J1', f"{name} ({len(docs)})", title_format)
         
         # Write headers
         for col_num, data in enumerate(headers):
@@ -1707,7 +1831,17 @@ def export_excel():
                 
             # كتابة الأيام المتبقية
             ws.write(row_num, 7, days_remaining, days_format)
-            ws.write(row_num, 8, doc.notes or '', cell_format)
+            
+            # كتابة حالة الكفالة
+            sponsorship_status_ar = "غير محدد"
+            if doc.employee and doc.employee.sponsorship_status:
+                if doc.employee.sponsorship_status == 'inside':
+                    sponsorship_status_ar = "على الكفالة"
+                elif doc.employee.sponsorship_status == 'outside':
+                    sponsorship_status_ar = "خارج الكفالة"
+            ws.write(row_num, 8, sponsorship_status_ar, cell_format)
+            
+            ws.write(row_num, 9, doc.notes or '', cell_format)
     
     # Create worksheets for each category
     create_category_worksheet(expired_docs, "وثائق منتهية", '#FFD9D9', '🔴 ')
@@ -1822,8 +1956,15 @@ def export_excel():
     filename_parts = []
     if document_type:
         filename_parts.append(document_types_map.get(document_type, document_type))
-    if days > 0 and not show_all:
-        filename_parts.append(f"خلال_{days}_يوم")
+    if status_filter:
+        status_names = {
+            'expired': 'المنتهية',
+            'expiring_30': 'تنتهي_خلال_30_يوم',
+            'expiring_60': 'تنتهي_خلال_60_يوم', 
+            'expiring_90': 'تنتهي_خلال_90_يوم',
+            'valid': 'السارية'
+        }
+        filename_parts.append(status_names.get(status_filter, status_filter))
     if not filename_parts:
         filename_parts.append("جميع_الوثائق")
     
@@ -1843,13 +1984,16 @@ def export_expiring_excel():
     days = int(request.args.get('days', '30'))
     document_type = request.args.get('document_type', '')
     status = request.args.get('status', 'expiring')  # 'expiring' or 'expired'
+    employee_id = request.args.get('employee_id', '')
+    department_id = request.args.get('department_id', '')
+    sponsorship_status = request.args.get('sponsorship_status', '')
     
     # تحديد نطاق التاريخ
     today = datetime.now().date()
     future_date = today + timedelta(days=days)
     
     # بناء الاستعلام بناءً على الحالة
-    query = Document.query
+    query = Document.query.filter(Document.expiry_date.isnot(None))
     
     if status == 'expired':
         # الوثائق المنتهية
@@ -1866,6 +2010,22 @@ def export_expiring_excel():
     # فلتر نوع الوثيقة
     if document_type:
         query = query.filter(Document.document_type == document_type)
+    
+    # فلتر الموظف
+    if employee_id and employee_id.isdigit():
+        query = query.filter(Document.employee_id == int(employee_id))
+    
+    # تطبيق الفلاتر التي تحتاج join مع Employee
+    needs_employee_join = department_id or sponsorship_status
+    
+    if needs_employee_join:
+        query = query.join(Employee)
+        
+        if department_id and department_id.isdigit():
+            query = query.filter(Employee.department_id == int(department_id))
+        
+        if sponsorship_status:
+            query = query.filter(Employee.sponsorship_status == sponsorship_status)
     
     # تنفيذ الاستعلام مع تحميل بيانات الموظف والأقسام
     query = query.options(selectinload(Document.employee).selectinload(Employee.departments))
@@ -1948,7 +2108,7 @@ def export_expiring_excel():
     }
     
     # كتابة عنوان الملف
-    worksheet.merge_range('A1:H1', title, header_format)
+    worksheet.merge_range('A1:I1', title, header_format)
     
     # كتابة رؤوس الأعمدة
     headers = [
@@ -1959,6 +2119,7 @@ def export_expiring_excel():
         'تاريخ الإصدار',
         'تاريخ الانتهاء',
         'المدة المتبقية',
+        'حالة الكفالة',
         'ملاحظات'
     ]
     
@@ -1973,7 +2134,8 @@ def export_expiring_excel():
     worksheet.set_column(4, 4, 15)  # تاريخ الإصدار
     worksheet.set_column(5, 5, 15)  # تاريخ الانتهاء
     worksheet.set_column(6, 6, 15)  # المدة المتبقية
-    worksheet.set_column(7, 7, 30)  # ملاحظات
+    worksheet.set_column(7, 7, 15)  # حالة الكفالة
+    worksheet.set_column(8, 8, 30)  # ملاحظات
     
     # كتابة البيانات
     for row_num, doc in enumerate(documents, 2):
@@ -2023,8 +2185,17 @@ def export_expiring_excel():
             worksheet.write(row_num, 6, days_display, days_format)
         else:
             worksheet.write(row_num, 6, "غير محدد", no_expiry_format)
+        
+        # كتابة حالة الكفالة
+        sponsorship_status_ar = "غير محدد"
+        if doc.employee and doc.employee.sponsorship_status:
+            if doc.employee.sponsorship_status == 'inside':
+                sponsorship_status_ar = "على الكفالة"
+            elif doc.employee.sponsorship_status == 'outside':
+                sponsorship_status_ar = "خارج الكفالة"
+        worksheet.write(row_num, 7, sponsorship_status_ar, cell_format)
             
-        worksheet.write(row_num, 7, doc.notes or '', cell_format)
+        worksheet.write(row_num, 8, doc.notes or '', cell_format)
     
     # إغلاق المصنف
     workbook.close()
