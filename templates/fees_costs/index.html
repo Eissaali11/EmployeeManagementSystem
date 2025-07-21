@@ -383,7 +383,8 @@
                                     <td>{{ doc.issue_date|display_date('%Y-%m-%d', 'غير محدد') }}</td>
                                     <td>
                                         <span class="badge bg-danger">
-                                            {{ doc.expiry_date|format_date('%Y-%m-%d', 'غير محدد') }}
+                                            {{ doc.expiry_date|format_date('%Y-%m-%d') if doc.expiry_date else 'غير محدد' }}
+
                                         </span>
                                     </td>
                                     <td>
