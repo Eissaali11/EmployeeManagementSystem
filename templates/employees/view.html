@@ -691,21 +691,21 @@
                             <p class="fs-5">{{ employee.email or '-' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="mb-1 text-muted">تاريخ الالتحاق</p>
-                            <p class="fs-5">
-                                {% if employee.join_date %}
-                                <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
-                                <span class="hijri-date" style="display: none;"></span>
-                                {% else %}
-                                -
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
                             <p class="mb-1 text-muted">تاريخ الميلاد</p>
                             <p class="fs-5">
                                 {% if employee.birth_date %}
                                 <span class="gregorian-date">{{ employee.birth_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="hijri-date" style="display: none;"></span>
+                                {% else %}
+                                <span class="text-warning">غير محدد</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">تاريخ الالتحاق</p>
+                            <p class="fs-5">
+                                {% if employee.join_date %}
+                                <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
                                 <span class="hijri-date" style="display: none;"></span>
                                 {% else %}
                                 -
