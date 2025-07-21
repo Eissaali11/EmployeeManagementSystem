@@ -294,9 +294,9 @@
                     <div class="row g-4">
                         <!-- بطاقة التواريخ -->
                         <div class="col-lg-6">
-                            <div class="info-card h-100" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 12px; border-left: 5px solid #2196f3;">
-                                <div class="info-card-header p-3 border-bottom" style="background: rgba(33, 150, 243, 0.1);">
-                                    <h6 class="mb-0 fw-bold text-primary">
+                            <div class="info-card h-100" style="background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%); border-radius: 12px; border-left: 5px solid #1e3a5c;">
+                                <div class="info-card-header p-3 border-bottom" style="background: rgba(30, 58, 92, 0.1);">
+                                    <h6 class="mb-0 fw-bold" style="color: #1e3a5c;">
                                         <i class="fas fa-calendar-alt me-2"></i>
                                         معلومات التواريخ
                                     </h6>
@@ -352,9 +352,9 @@
                         
                         <!-- بطاقة معلومات الورشة -->
                         <div class="col-lg-6">
-                            <div class="info-card h-100" style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-radius: 12px; border-left: 5px solid #9c27b0;">
-                                <div class="info-card-header p-3 border-bottom" style="background: rgba(156, 39, 176, 0.1);">
-                                    <h6 class="mb-0 fw-bold text-purple">
+                            <div class="info-card h-100" style="background: linear-gradient(135deg, #f0f7ff 0%, #e6f3ff 100%); border-radius: 12px; border-left: 5px solid #2c5282;">
+                                <div class="info-card-header p-3 border-bottom" style="background: rgba(44, 82, 130, 0.1);">
+                                    <h6 class="mb-0 fw-bold" style="color: #2c5282;">
                                         <i class="fas fa-building me-2"></i>
                                         معلومات الورشة
                                     </h6>
@@ -392,9 +392,9 @@
                     <!-- بطاقة تفاصيل العمل -->
                     <div class="row mt-4">
                         <div class="col-lg-6">
-                            <div class="work-details-card" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); border-radius: 12px; border-left: 5px solid #4caf50;">
-                                <div class="card-header p-3 border-bottom" style="background: rgba(76, 175, 80, 0.1);">
-                                    <h6 class="mb-0 fw-bold text-success">
+                            <div class="work-details-card" style="background: linear-gradient(135deg, #f8fbff 0%, #eef7ff 100%); border-radius: 12px; border-left: 5px solid #1e3a5c;">
+                                <div class="card-header p-3 border-bottom" style="background: rgba(30, 58, 92, 0.1);">
+                                    <h6 class="mb-0 fw-bold" style="color: #1e3a5c;">
                                         <i class="fas fa-exclamation-triangle me-2"></i>
                                         سبب دخول الورشة
                                     </h6>
@@ -403,24 +403,24 @@
                                     <div class="text-center">
                                         {% if related_record.reason == 'maintenance' %}
                                             <div class="mb-2">
-                                                <i class="fas fa-tools fa-2x text-info"></i>
+                                                <i class="fas fa-tools fa-2x" style="color: #1e3a5c;"></i>
                                             </div>
-                                            <span class="badge bg-info px-3 py-2 fs-6">صيانة دورية</span>
+                                            <span class="badge px-3 py-2 fs-6" style="background: #1e3a5c; color: white;">صيانة دورية</span>
                                         {% elif related_record.reason == 'breakdown' %}
                                             <div class="mb-2">
-                                                <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                                <i class="fas fa-exclamation-triangle fa-2x" style="color: #FF6B35;"></i>
                                             </div>
-                                            <span class="badge bg-warning text-dark px-3 py-2 fs-6">عطل</span>
+                                            <span class="badge px-3 py-2 fs-6" style="background: #FF6B35; color: white;">عطل</span>
                                         {% elif related_record.reason == 'accident' %}
                                             <div class="mb-2">
-                                                <i class="fas fa-car-crash fa-2x text-danger"></i>
+                                                <i class="fas fa-car-crash fa-2x" style="color: #dc3545;"></i>
                                             </div>
                                             <span class="badge bg-danger px-3 py-2 fs-6">حادث</span>
                                         {% else %}
                                             <div class="mb-2">
-                                                <i class="fas fa-question-circle fa-2x text-secondary"></i>
+                                                <i class="fas fa-question-circle fa-2x" style="color: #2c5282;"></i>
                                             </div>
-                                            <span class="badge bg-secondary px-3 py-2 fs-6">{{ related_record.reason or 'غير محدد' }}</span>
+                                            <span class="badge px-3 py-2 fs-6" style="background: #2c5282; color: white;">{{ related_record.reason or 'غير محدد' }}</span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -428,9 +428,9 @@
                         </div>
                         
                         <div class="col-lg-6">
-                            <div class="work-description-card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-radius: 12px; border-left: 5px solid #ffc107;">
-                                <div class="card-header p-3 border-bottom" style="background: rgba(255, 193, 7, 0.1);">
-                                    <h6 class="mb-0 fw-bold text-warning">
+                            <div class="work-description-card" style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); border-radius: 12px; border-left: 5px solid #2c5282;">
+                                <div class="card-header p-3 border-bottom" style="background: rgba(44, 82, 130, 0.1);">
+                                    <h6 class="mb-0 fw-bold" style="color: #2c5282;">
                                         <i class="fas fa-clipboard-list me-2"></i>
                                         وصف العمل
                                     </h6>
@@ -448,9 +448,9 @@
                     {% if related_record.notes %}
                     <div class="row mt-4">
                         <div class="col-12">
-                            <div class="notes-card" style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); border-radius: 12px; border-left: 5px solid #e91e63;">
-                                <div class="notes-header p-3 border-bottom" style="background: rgba(233, 30, 99, 0.1);">
-                                    <h6 class="mb-0 fw-bold" style="color: #e91e63;">
+                            <div class="notes-card" style="background: linear-gradient(135deg, #f1f8ff 0%, #e7f4ff 100%); border-radius: 12px; border-left: 5px solid #1e3a5c;">
+                                <div class="notes-header p-3 border-bottom" style="background: rgba(30, 58, 92, 0.1);">
+                                    <h6 class="mb-0 fw-bold" style="color: #1e3a5c;">
                                         <i class="fas fa-sticky-note me-2"></i>
                                         ملاحظات إضافية
                                     </h6>
@@ -655,6 +655,17 @@
 
 .text-purple {
     color: #9c27b0 !important;
+}
+
+/* ألوان التطبيق المتناسقة */
+.app-primary-color {
+    color: #1e3a5c !important;
+}
+.app-secondary-color {
+    color: #2c5282 !important;
+}
+.app-accent-color {
+    color: #FF6B35 !important;
 }
 </style>
 
