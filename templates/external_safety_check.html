@@ -618,12 +618,17 @@
                     <canvas id="snapshotCanvas" style="display:none;"></canvas>
                     
                     <div class="mb-3">
-                      <button type="button" id="startCamera" class="btn btn-outline-primary me-2">
+                      
+                      <video id="cam" autoplay playsinline></video>
+                      <canvas id="snap" width="640" height="480" style="display:none;"></canvas>
+                      <button type="button" id="captureBtn" class="btn btn-outline-primary me-2">
                         ابدأ الكاميرا
                       </button>
-                      <button type="button" id="takeSnapshot" class="btn btn-primary" style="display:none;">
-                        التقط صورة
-                      </button>
+                      <div class="imagePreview">
+
+                          <div id="gallery"></div>
+                        </div>
+                       
                     </div>
                     
                     <div id="instantPreview" class="d-flex flex-wrap"></div>
@@ -665,9 +670,93 @@
     <script>
         let uploadedImages = [];
 
+        const videoEl = document.getElementById('cam');
+const canvasEl = document.getElementById('snap');
+const captureBtn = document.getElementById('captureBtn');
+const galleryEl = document.getElementById('gallery');
+const ctx = canvasEl.getContext('2d');
 
+// 1. Request camera
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    videoEl.srcObject = stream;
+    return videoEl.play();
+  })
+  .catch(err => {
+    alert("Camera error: " + err);
+  });
 
+// 2. Capture frame + save
+captureBtn.addEventListener('click', () => {
+  // Draw current video frame onto canvas
+  // Resize canvas to video’s actual dimensions (once stream metadata is ready)
+  if (videoEl.videoWidth && videoEl.videoHeight) {
+    canvasEl.width = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+  }
+  ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+  // Convert to data URL (PNG). For JPEG: toDataURL('image/jpeg', 0.92)
+  const dataURL = canvasEl.toDataURL('image/png');
 
+  // 2a. Download locally
+  downloadImage(dataURL);
+
+  // 2b. Show thumbnail in page
+  addThumbnail(dataURL);
+
+  // 2c. (Optional) Upload to your server
+  uploadedImages.push({
+  file: null,
+  src: dataURL,
+  id: Date.now()
+});
+displayImagePreview();
+});
+
+// ----- Helpers -----
+function downloadImage(dataURL) {
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = `snapshot-${Date.now()}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function addThumbnail(dataURL) {
+  const img = document.createElement('img');
+  img.src = dataURL;
+  img.alt = 'Captured snapshot';
+  img.style.maxWidth = '160px';
+  img.style.margin = '4px';
+  galleryEl.appendChild(img);
+}
+
+// Example upload: send base64 payload to server
+function uploadImage(dataURL) {
+  // Strip "data:image/png;base64," prefix
+  const base64 = dataURL.split(',')[1];
+
+  fetch('/upload-snapshot', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename: `snapshot-${Date.now()}.png`,
+      image_base64: base64
+    })
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('Upload failed');
+    return r.json();
+  })
+  .then(result => {
+    console.log('Uploaded:', result);
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Upload error: ' + err.message);
+  });
+}
 
         
         

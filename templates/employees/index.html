@@ -12,7 +12,7 @@
         --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         --secondary-gradient: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --card-shadow-hover: 0 20px 25px -5px rgba(255, 255, 255, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         --glass-bg: rgba(255, 255, 255, 0.95);
         --glass-border: rgba(255, 255, 255, 0.2);
     }
@@ -233,7 +233,7 @@
         border-radius: 20px;
         font-weight: 600;
         font-size: 0.75rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(255, 255, 255, 0.9);
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
@@ -297,7 +297,7 @@
     }
 
     .table-enhanced tbody tr:hover {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 9) 100%);
         transform: scale(1.01);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
@@ -324,7 +324,7 @@
 
     .btn-group-enhanced .btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 1);
         text-decoration: none;
     }
 
@@ -374,7 +374,7 @@
     .table-horizontal-scroll {
         overflow-x: auto;
         border-radius: 12px;
-        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
     }
 
     .table-horizontal-scroll::-webkit-scrollbar {
@@ -436,13 +436,13 @@
 
     /* Search Results Highlight */
     .table-primary-enhanced {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%) !important;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.9) 100%) !important;
         border-left: 4px solid #667eea;
     }
 
     /* Status-specific row styling */
     .row-inactive {
-        background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(73, 80, 87, 0.1) 100%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.9) 100%);
     }
 
     .row-on-leave {
@@ -450,7 +450,7 @@
     }
 
     .row-terminated {
-        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(176, 42, 55, 0.1) 100%);
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.5) 0%, rgba(176, 42, 55, 0.1) 100%);
     }
 
     /* Responsive Design */
@@ -614,7 +614,7 @@
         box-shadow: 2px 0 5px rgba(0,0,0,0.1) !important;
     }
     
-    .table thead th:first-child {
+    .table thead th:first-child .table th:first-child {
         background: #f8f9fa !important;
     }
     
@@ -749,6 +749,8 @@
     background: #a8a8a8;
 }
 
+.table.td
+
 /* مؤشر التمرير للجدول */
 .scroll-indicator {
     display: none;
@@ -768,6 +770,15 @@
     .scroll-indicator {
         display: block !important;
     }
+}
+
+.th {
+ color:#dee2e6
+ 
+}
+
+.th :hover{
+    color:#f1f1f1
 }
 
 </style>
@@ -1036,7 +1047,7 @@
                             </td>
                             <td>
                                 {% if employee.join_date %}
-                                <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="gregorian-date ">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
                                 <span class="hijri-date" style="display: none;"></span>
                                 {% else %}
                                 <span class="text-muted">-</span>
