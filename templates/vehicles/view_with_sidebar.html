@@ -811,7 +811,7 @@ function loadHandoversContent(targetSection) {
             <div class="text-center py-4">
                 <h5>سجلات التسليم والاستلام</h5>
                 <p class="text-muted">سيتم تحميل محتوى سجلات التسليم والاستلام هنا</p>
-                <a href="{{ url_for('vehicles.handover_create', id=vehicle.id) }}" class="btn btn-info">
+                <a href="/mobile/vehicles/{{ vehicle.id }}/handover/create" class="btn btn-info">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة سجل تسليم
                 </a>
@@ -828,7 +828,7 @@ function loadWorkshopContent(targetSection) {
             <div class="text-center py-4">
                 <h5>سجلات الورشة</h5>
                 <p class="text-muted">سيتم تحميل محتوى سجلات الورشة هنا</p>
-                <a href="{{ url_for('vehicles.workshop_create', id=vehicle.id) }}" class="btn btn-danger">
+                <a href="/mobile/vehicles/{{ vehicle.id }}/workshop/create" class="btn btn-danger">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة سجل ورشة
                 </a>
@@ -953,7 +953,7 @@ function loadDriverStatsContent(targetSection) {
                 </div>
                 {% else %}
                 <p class="text-muted">لا توجد معلومات سائق حالي</p>
-                <a href="{{ url_for('vehicles.handover_create', id=vehicle.id) }}" class="btn btn-primary">
+                <a href="/mobile/vehicles/{{ vehicle.id }}/handover/create" class="btn btn-primary">
                     <i class="fas fa-user-plus ms-1"></i>
                     تسليم لسائق
                 </a>
