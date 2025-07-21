@@ -129,22 +129,31 @@
                         إضافة صور جديدة
                     </h6>
                     
-                    <!-- صور قبل الإصلاح -->
+                    <!-- صور إيصال التسليم للورشة -->
                     <div class="mb-3">
-                        <label for="before_images" class="form-label">صور قبل الإصلاح</label>
-                        <input type="file" class="form-control" id="before_images" name="before_images" 
-                               multiple accept="image/*" onchange="previewImages(this, 'before-preview')">
-                        <div class="form-text">اختر عدة صور لعرض حالة السيارة قبل الإصلاح</div>
-                        <div id="before-preview" class="image-preview-container mt-2"></div>
+                        <label for="delivery_images" class="form-label">صور إيصال التسليم للورشة</label>
+                        <input type="file" class="form-control" id="delivery_images" name="delivery_images" 
+                               multiple accept="image/*" onchange="previewImages(this, 'delivery-preview')">
+                        <div class="form-text">اختر صور إيصال تسليم السيارة للورشة</div>
+                        <div id="delivery-preview" class="image-preview-container mt-2"></div>
                     </div>
 
-                    <!-- صور بعد الإصلاح -->
+                    <!-- صور إيصال الاستلام من الورشة -->
                     <div class="mb-3">
-                        <label for="after_images" class="form-label">صور بعد الإصلاح</label>
-                        <input type="file" class="form-control" id="after_images" name="after_images" 
-                               multiple accept="image/*" onchange="previewImages(this, 'after-preview')">
-                        <div class="form-text">اختر عدة صور لعرض حالة السيارة بعد الإصلاح</div>
-                        <div id="after-preview" class="image-preview-container mt-2"></div>
+                        <label for="pickup_images" class="form-label">صور إيصال الاستلام من الورشة</label>
+                        <input type="file" class="form-control" id="pickup_images" name="pickup_images" 
+                               multiple accept="image/*" onchange="previewImages(this, 'pickup-preview')">
+                        <div class="form-text">اختر صور إيصال استلام السيارة من الورشة</div>
+                        <div id="pickup-preview" class="image-preview-container mt-2"></div>
+                    </div>
+
+                    <!-- صور ملاحظات السيارة قبل التسليم للورشة -->
+                    <div class="mb-3">
+                        <label for="notes_images" class="form-label">صور ملاحظات السيارة قبل التسليم للورشة</label>
+                        <input type="file" class="form-control" id="notes_images" name="notes_images" 
+                               multiple accept="image/*" onchange="previewImages(this, 'notes-preview')">
+                        <div class="form-text">اختر صور لتوثيق حالة السيارة وملاحظاتها قبل التسليم للورشة</div>
+                        <div id="notes-preview" class="image-preview-container mt-2"></div>
                     </div>
                 </div>
 
@@ -178,7 +187,21 @@
                     <div class="card">
                         <img src="{{ url_for('static', filename=image.image_path) }}" class="card-img-top" alt="صورة الورشة" style="height: 120px; object-fit: cover;">
                         <div class="card-body p-2">
-                            <small class="text-muted">{{ image.image_type }}</small>
+                            <small class="text-muted">
+                                {% if image.image_type == 'delivery' %}
+                                    <span class="badge bg-primary">إيصال التسليم</span>
+                                {% elif image.image_type == 'pickup' %}
+                                    <span class="badge bg-success">إيصال الاستلام</span>
+                                {% elif image.image_type == 'notes' %}
+                                    <span class="badge bg-warning">ملاحظات السيارة</span>
+                                {% elif image.image_type == 'before' %}
+                                    <span class="badge bg-info">قبل الإصلاح</span>
+                                {% elif image.image_type == 'after' %}
+                                    <span class="badge bg-success">بعد الإصلاح</span>
+                                {% else %}
+                                    {{ image.image_type }}
+                                {% endif %}
+                            </small>
                             <br>
                             <small>{{ image.notes or 'بدون وصف' }}</small>
                         </div>

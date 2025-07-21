@@ -494,15 +494,51 @@
                     </div>
                     {% endif %}
 
-                    <!-- الصور المرفقة -->
-                    {% if related_record.images %}
+                    <!-- صور ملاحظات السيارة -->
+                    {% set notes_images = related_record.images|selectattr('image_type', 'equalto', 'notes')|list %}
+                    {% if notes_images %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="notes-images-card" style="background: linear-gradient(135deg, #fff8e1 0%, #ffe0b2 100%); border-radius: 12px; border-left: 5px solid #FF6B35;">
+                                <div class="card-header p-3 border-bottom" style="background: rgba(255, 107, 53, 0.1);">
+                                    <h6 class="mb-0 fw-bold" style="color: #FF6B35;">
+                                        <i class="fas fa-camera me-2"></i>
+                                        صور ملاحظات السيارة قبل التسليم للورشة ({{ notes_images|length }})
+                                    </h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="row">
+                                        {% for image in notes_images %}
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card border-0 shadow-sm">
+                                                <img src="{{ url_for('static', filename=image.image_path) }}" 
+                                                     class="card-img-top" 
+                                                     style="height: 150px; object-fit: cover; cursor: pointer;"
+                                                     onclick="showImageModal('{{ url_for('static', filename=image.image_path) }}', '{{ image.notes or 'صورة ملاحظات السيارة' }}')">
+                                                <div class="card-body p-2">
+                                                    <small><span class="badge" style="background: #FF6B35; color: white;">ملاحظات السيارة</span></small>
+                                                    <div class="small">{{ image.notes or 'بدون وصف' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- الصور المرفقة الأخرى -->
+                    {% set other_images = related_record.images|rejectattr('image_type', 'equalto', 'notes')|list %}
+                    {% if other_images %}
                     <div class="row mt-4">
                         <div class="col-12">
                             <h6 class="text-orange fw-bold mb-3">
-                                <i class="fas fa-images me-2"></i>الصور المرفقة ({{ related_record.images|length }})
+                                <i class="fas fa-images me-2"></i>صور الورشة والإيصالات ({{ other_images|length }})
                             </h6>
                             <div class="row">
-                                {% for image in related_record.images %}
+                                {% for image in other_images %}
                                 <div class="col-md-3 mb-3">
                                     <div class="card border-0 shadow-sm">
                                         <img src="{{ url_for('static', filename=image.image_path) }}" 
@@ -511,10 +547,18 @@
                                              onclick="showImageModal('{{ url_for('static', filename=image.image_path) }}', '{{ image.notes or 'صورة من الورشة' }}')">
                                         <div class="card-body p-2">
                                             <small class="text-muted">
-                                                {% if image.image_type == 'before' %}
+                                                {% if image.image_type == 'delivery' %}
+                                                    <span class="badge" style="background: #1e3a5c; color: white;">إيصال التسليم</span>
+                                                {% elif image.image_type == 'pickup' %}
+                                                    <span class="badge" style="background: #2c5282; color: white;">إيصال الاستلام</span>
+                                                {% elif image.image_type == 'notes' %}
+                                                    <span class="badge" style="background: #FF6B35; color: white;">ملاحظات السيارة</span>
+                                                {% elif image.image_type == 'before' %}
                                                     <span class="badge bg-warning text-dark">قبل الإصلاح</span>
                                                 {% elif image.image_type == 'after' %}
                                                     <span class="badge bg-success">بعد الإصلاح</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ image.image_type }}</span>
                                                 {% endif %}
                                             </small>
                                             <div class="small">{{ image.notes or 'بدون وصف' }}</div>
