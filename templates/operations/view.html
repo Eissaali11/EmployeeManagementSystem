@@ -312,8 +312,8 @@ body {
                 {% endif %}
             </div>
 
-            <!-- بيانات السائق المحسنة -->
-            {% if related_record and (related_record.person_name or related_record.driver_name) %}
+            <!-- بيانات السائق المحسنة والشاملة -->
+            {% if employee or (related_record and (related_record.person_name or related_record.driver_name)) %}
             <div class="driver-info">
                 <h5 class="mb-3">
                     <i class="fas fa-user-circle me-2"></i>
@@ -321,46 +321,141 @@ body {
                 </h5>
                 
                 <div class="row">
+                    <!-- العمود الأول -->
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <i class="fas fa-user me-2"></i>
-                            <strong>الاسم:</strong>
-                            <div class="mt-1">{{ related_record.person_name or related_record.driver_name }}</div>
+                            <i class="fas fa-user me-2 text-light"></i>
+                            <strong>الاسم الكامل:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee %}
+                                    {{ employee.name }}
+                                {% else %}
+                                    {{ related_record.person_name or related_record.driver_name }}
+                                {% endif %}
+                            </div>
                         </div>
                         
-                        {% if related_record.driver_phone_number %}
                         <div class="mb-3">
-                            <i class="fas fa-phone me-2"></i>
-                            <strong>رقم الهاتف:</strong>
-                            <div class="mt-1">{{ related_record.driver_phone_number }}</div>
+                            <i class="fas fa-id-card me-2 text-light"></i>
+                            <strong>رقم الهوية:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.national_id %}
+                                    {{ employee.national_id }}
+                                {% elif related_record.driver_residency_number %}
+                                    {{ related_record.driver_residency_number }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
                         </div>
-                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-badge me-2 text-light"></i>
+                            <strong>الرقم الوظيفي:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.employee_id %}
+                                    {{ employee.employee_id }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-mobile-alt me-2 text-light"></i>
+                            <strong>رقم الجوال:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.mobile %}
+                                    {{ employee.mobile }}
+                                {% elif related_record.driver_phone_number %}
+                                    {{ related_record.driver_phone_number }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     
+                    <!-- العمود الثاني -->
                     <div class="col-md-6">
-                        {% if related_record.driver_residency_number %}
                         <div class="mb-3">
-                            <i class="fas fa-id-card me-2"></i>
-                            <strong>رقم الإقامة/الهوية:</strong>
-                            <div class="mt-1">{{ related_record.driver_residency_number }}</div>
+                            <i class="fas fa-birthday-cake me-2 text-light"></i>
+                            <strong>تاريخ الميلاد:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.birth_date %}
+                                    {{ employee.birth_date.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
                         </div>
-                        {% endif %}
                         
-                        {% if related_record.driver_company_id %}
                         <div class="mb-3">
-                            <i class="fas fa-building me-2"></i>
-                            <strong>رقم الشركة:</strong>
-                            <div class="mt-1">{{ related_record.driver_company_id }}</div>
+                            <i class="fas fa-phone me-2 text-light"></i>
+                            <strong>رقم جوال العمل:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.mobilePersonal %}
+                                    {{ employee.mobilePersonal }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
                         </div>
-                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-shield-alt me-2 text-light"></i>
+                            <strong>على الكفالة:</strong>
+                            <div class="mt-1">
+                                {% if employee and employee.contract_type == 'foreign' %}
+                                    <span class="badge bg-warning text-dark">نعم - وافد</span>
+                                {% elif employee and employee.contract_type == 'saudi' %}
+                                    <span class="badge bg-success">لا - سعودي</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير محدد</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-user-tie me-2 text-light"></i>
+                            <strong>اسم الكفيل الحالي:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee and employee.contract_type == 'foreign' %}
+                                    شركة نُظم (افتراضي)
+                                {% elif employee and employee.contract_type == 'saudi' %}
+                                    لا يوجد - سعودي
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
+                <!-- صف إضافي لرقم IMEI -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <i class="fas fa-barcode me-2 text-light"></i>
+                            <strong>رقم IMEI:</strong>
+                            <div class="mt-1 text-white-50">
+                                {% if employee %}
+                                    غير متوفر حالياً
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- معلومات إضافية من السجل المرتبط -->
+                {% if related_record %}
                 <div class="row">
                     {% if related_record.driver_contract_status %}
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <i class="fas fa-file-contract me-2"></i>
+                            <i class="fas fa-file-contract me-2 text-light"></i>
                             <strong>حالة العقد:</strong>
                             <span class="badge bg-light text-dark ms-2">{{ related_record.driver_contract_status }}</span>
                         </div>
@@ -370,13 +465,14 @@ body {
                     {% if related_record.driver_license_status %}
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <i class="fas fa-id-badge me-2"></i>
+                            <i class="fas fa-id-badge me-2 text-light"></i>
                             <strong>حالة الرخصة:</strong>
                             <span class="badge bg-light text-dark ms-2">{{ related_record.driver_license_status }}</span>
                         </div>
                     </div>
                     {% endif %}
                 </div>
+                {% endif %}
             </div>
             {% endif %}
 

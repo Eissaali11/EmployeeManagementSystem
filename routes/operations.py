@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from models import (OperationRequest, OperationNotification, VehicleHandover, 
                    VehicleWorkshop, ExternalAuthorization, SafetyInspection, 
-                   Vehicle, User, UserRole)
+                   Vehicle, User, UserRole, Employee)
 from datetime import datetime
 from utils.audit_logger import log_audit
 
@@ -98,9 +98,21 @@ def view_operation(operation_id):
     operation = OperationRequest.query.get_or_404(operation_id)
     related_record = operation.get_related_record()
     
+    # جلب بيانات الموظف إذا كانت متاحة
+    employee = None
+    if related_record:
+        # محاولة العثور على الموظف من خلال رقم الهوية أو الاسم
+        if hasattr(related_record, 'driver_residency_number') and related_record.driver_residency_number:
+            employee = Employee.query.filter_by(national_id=related_record.driver_residency_number).first()
+        if not employee and hasattr(related_record, 'person_name') and related_record.person_name:
+            employee = Employee.query.filter_by(name=related_record.person_name).first()
+        if not employee and hasattr(related_record, 'driver_name') and related_record.driver_name:
+            employee = Employee.query.filter_by(name=related_record.driver_name).first()
+    
     return render_template('operations/view.html', 
                          operation=operation,
-                         related_record=related_record)
+                         related_record=related_record,
+                         employee=employee)
 
 @operations_bp.route('/<int:operation_id>/approve', methods=['POST'])
 @login_required
