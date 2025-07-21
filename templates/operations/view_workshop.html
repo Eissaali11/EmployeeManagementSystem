@@ -176,7 +176,7 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="text-primary">{{ current_driver_info.name }}</span>
                                             {% if driver_employee %}
-                                                <a href="{{ url_for('employees.view_employee', employee_id=driver_employee.id) }}" 
+                                                <a href="{{ url_for('employees.view', id=driver_employee.id) }}" 
                                                    class="btn btn-sm btn-outline-primary" target="_blank">
                                                     <i class="fas fa-user me-1"></i>عرض الملف
                                                 </a>
