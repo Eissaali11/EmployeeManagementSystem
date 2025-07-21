@@ -492,6 +492,9 @@ def index():
                           expired_docs=expired_docs,
                           expiring_soon=expiring_soon,
                           safe_docs=safe_docs,
+                          valid_docs=safe_docs,
+                          status_filter=status_filter,
+                          today=today,
                           now=datetime.now())
 
 @documents_bp.route('/create', methods=['GET', 'POST'])
