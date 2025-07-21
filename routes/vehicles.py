@@ -805,7 +805,30 @@ def view(id):
         rental = VehicleRental.query.filter_by(vehicle_id=id, is_active=True).first()
         workshop_records = VehicleWorkshop.query.filter_by(vehicle_id=id).order_by(VehicleWorkshop.entry_date.desc()).all()
         project_assignments = VehicleProject.query.filter_by(vehicle_id=id).order_by(VehicleProject.start_date.desc()).all()
-        handover_records = VehicleHandover.query.filter_by(vehicle_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+        # جلب سجلات التسليم والاستلام المعتمدة فقط
+        # البحث في OperationRequest للحصول على العمليات المعتمدة
+        from models import OperationRequest
+        approved_handover_ids = []
+        approved_operations = OperationRequest.query.filter_by(
+            vehicle_id=id, 
+            operation_type='handover',
+            status='approved'
+        ).all()
+        
+        for operation in approved_operations:
+            approved_handover_ids.append(operation.related_record_id)
+        
+        # جلب جميع operation requests للمركبة من نوع handover للفحص
+        all_handover_operations = OperationRequest.query.filter_by(vehicle_id=id, operation_type='handover').all()
+        all_handover_operation_ids = [op.related_record_id for op in all_handover_operations]
+        
+        # جلب السجلات المعتمدة + السجلات القديمة (قبل تطبيق نظام الموافقة)
+        handover_records = VehicleHandover.query.filter(
+            VehicleHandover.vehicle_id == id,
+            # إما أن يكون السجل معتمد، أو لا يوجد له operation request (سجل قديم)
+            (VehicleHandover.id.in_(approved_handover_ids)) | 
+            (~VehicleHandover.id.in_(all_handover_operation_ids))
+        ).order_by(VehicleHandover.handover_date.desc()).all()
 
         # الحصول على سجلات الفحص الدوري وفحص السلامة والحوادث
         periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
