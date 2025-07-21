@@ -1020,6 +1020,52 @@ def export_excel():
     except Exception as e:
         flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
         return redirect(url_for('employees.index'))
+
+@employees_bp.route('/export_comprehensive')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def export_comprehensive():
+    """تصدير شامل لبيانات الموظفين مع جميع التفاصيل والعُهد والمعلومات البنكية"""
+    try:
+        from utils.comprehensive_employee_export import generate_comprehensive_employee_excel
+        
+        employees = Employee.query.options(
+            db.joinedload(Employee.departments),
+            db.joinedload(Employee.nationality_rel),
+            db.joinedload(Employee.salaries),
+            db.joinedload(Employee.attendances),
+            db.joinedload(Employee.documents)
+        ).all()
+        
+        output = generate_comprehensive_employee_excel(employees)
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='export_comprehensive',
+            entity_type='employee',
+            entity_id=0,
+            details=f'تم التصدير الشامل لبيانات {len(employees)} موظف مع جميع التفاصيل'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إنشاء اسم الملف مع التاريخ
+        current_date = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'تصدير_شامل_الموظفين_{current_date}.xlsx'
+        
+        return send_file(
+            output,
+            download_name=filename,
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in comprehensive export: {str(e)}")
+        print(traceback.format_exc())
+        flash(f'حدث خطأ أثناء التصدير الشامل: {str(e)}', 'danger')
+        return redirect(url_for('employees.index'))
         
 @employees_bp.route('/<int:id>/export_attendance_excel')
 @login_required

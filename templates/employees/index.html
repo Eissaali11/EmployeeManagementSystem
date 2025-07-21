@@ -775,26 +775,26 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Enhanced Header -->
+
     <div class="page-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h5 class="text-primary">إدارة الموظفين</h5>
-                <p class="text-muted mb-0">إدارة شاملة لبيانات الموظفين والأقسام</p>
-            </div>
-            <div class="action-buttons">
-                <a href="{{ url_for('employees.create') }}" class="btn-enhanced btn-success-enhanced">
-                    <i class="fas fa-plus"></i>
-                    إضافة موظف
-                </a>
-                <a href="{{ url_for('employees.import_excel') }}" class="btn-enhanced btn-primary-enhanced">
-                    <i class="fas fa-file-import"></i>
-                    استيراد من Excel
-                </a>
-                <a href="{{ url_for('employees.export_excel') }}" class="btn-enhanced btn-secondary-enhanced">
-                    <i class="fas fa-file-export"></i>
-                    تصدير إلى Excel
-                </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>إدارة الموظفين</h1>
+        <div>
+            <a href="{{ url_for('employees.create') }}" class="btn btn-success-enhanced">
+                <i class="fas fa-plus me-1"></i> إضافة موظف
+            </a>
+            <a href="{{ url_for('employees.import_excel') }}" class="btn btn-primary-enhanced">
+                <i class="fas fa-file-import me-1"></i> استيراد من Excel
+            </a>
+            <a href="{{ url_for('employees.export_excel') }}" class="btn btn-secondary-enhanced" 
+               title="تصدير البيانات الأساسية فقط (الاسم، القسم، الوظيفة، إلخ)">
+                <i class="fas fa-file-export me-1"></i> تصدير أساسي
+            </a>
+            <a href="{{ url_for('employees.export_comprehensive') }}" class="btn btn-info" 
+               title="تصدير شامل يشمل: البيانات الأساسية، العُهد، المعلومات البنكية، الرواتب، الحضور، الوثائق">
+                <i class="fas fa-file-excel me-1"></i> تصدير شامل
+            </a>
+
             </div>
         </div>
     </div>
