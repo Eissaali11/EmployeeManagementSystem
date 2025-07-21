@@ -1,0 +1,478 @@
+{% extends "layout.html" %}
+
+{% block title %}تفاصيل عملية الورشة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">
+                                <i class="fas fa-tools me-2"></i>
+                                تفاصيل عملية الورشة
+                            </h3>
+                            <p class="mb-0 fs-5">{{ operation.title }}</p>
+                        </div>
+                        <div class="text-end">
+                            {% if operation.status == 'pending' %}
+                                <span class="badge bg-warning fs-6 px-3 py-2">
+                                    <i class="fas fa-clock me-1"></i>قيد المراجعة
+                                </span>
+                            {% elif operation.status == 'approved' %}
+                                <span class="badge bg-success fs-6 px-3 py-2">
+                                    <i class="fas fa-check me-1"></i>موافق عليها
+                                </span>
+                            {% elif operation.status == 'rejected' %}
+                                <span class="badge bg-danger fs-6 px-3 py-2">
+                                    <i class="fas fa-times me-1"></i>مرفوضة
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- معلومات أساسية -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-orange text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات العملية الأساسية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-muted small">رقم العملية:</label>
+                                <div class="fw-bold text-primary fs-5">#{{ operation.id }}</div>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-muted small">نوع العملية:</label>
+                                <div class="fw-bold">
+                                    <span class="badge bg-orange text-white px-3 py-2">
+                                        <i class="fas fa-wrench me-1"></i>سجل ورشة
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-muted small">تاريخ الطلب:</label>
+                                <div class="fw-bold">{{ operation.requested_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="text-muted small">الأولوية:</label>
+                                <div>
+                                    {% if operation.priority == 'urgent' %}
+                                        <span class="badge bg-danger px-3 py-2">عاجل</span>
+                                    {% elif operation.priority == 'high' %}
+                                        <span class="badge bg-warning px-3 py-2">مرتفع</span>
+                                    {% else %}
+                                        <span class="badge bg-info px-3 py-2">عادي</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="text-muted small">طالب العملية:</label>
+                                <div class="fw-bold">{{ operation.requester.username }}</div>
+                            </div>
+                            {% if operation.reviewed_by %}
+                            <div class="info-item mb-3">
+                                <label class="text-muted small">تمت المراجعة بواسطة:</label>
+                                <div class="fw-bold text-success">{{ operation.reviewer.username }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- إجراءات العملية -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        إجراءات العملية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.role.name == 'admin' and operation.status == 'pending' %}
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg" onclick="approveOperation({{ operation.id }})">
+                                <i class="fas fa-check me-2"></i>موافقة
+                            </button>
+                            <button class="btn btn-danger btn-lg" onclick="rejectOperation({{ operation.id }})">
+                                <i class="fas fa-times me-2"></i>رفض
+                            </button>
+                            <hr>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ operation.get_operation_url() }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-edit me-2"></i>
+                            تحديث وثائق السيارة
+                        </a>
+                        <a href="{{ url_for('mobile.vehicle_details', vehicle_id=operation.vehicle_id) }}" class="btn btn-info btn-lg">
+                            <i class="fas fa-car me-2"></i>
+                            عرض تفاصيل السيارة
+                        </a>
+                        <a href="{{ url_for('operations.operations_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            العودة لإدارة العمليات
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات السيارة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-car me-2"></i>
+                        معلومات السيارة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="info-item">
+                                <label class="text-muted small">رقم اللوحة:</label>
+                                <div class="fw-bold fs-4 text-primary">{{ operation.vehicle.plate_number }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-item">
+                                <label class="text-muted small">نوع السيارة:</label>
+                                <div class="fw-bold">{{ operation.vehicle.vehicle_type or 'غير محدد' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-item">
+                                <label class="text-muted small">الماركة:</label>
+                                <div class="fw-bold">{{ operation.vehicle.make or 'غير محدد' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-item">
+                                <label class="text-muted small">السائق الحالي:</label>
+                                <div class="fw-bold">{{ operation.vehicle.current_driver or 'غير محدد' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تفاصيل عملية الورشة -->
+    {% if related_record %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header" style="background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); color: white;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        تفاصيل عملية الورشة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="workshop-info">
+                                <h6 class="text-orange fw-bold mb-3">
+                                    <i class="fas fa-calendar-alt me-2"></i>معلومات التواريخ
+                                </h6>
+                                <div class="info-item mb-2">
+                                    <label class="text-muted small">تاريخ الدخول:</label>
+                                    <div class="fw-bold">{{ related_record.entry_date.strftime('%Y-%m-%d') if related_record.entry_date else 'غير محدد' }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <label class="text-muted small">تاريخ الخروج:</label>
+                                    <div class="fw-bold">{{ related_record.exit_date.strftime('%Y-%m-%d') if related_record.exit_date else 'لم يتم تحديده بعد' }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <label class="text-muted small">حالة الإصلاح:</label>
+                                    <div>
+                                        {% if related_record.repair_status == 'in_progress' %}
+                                            <span class="badge bg-warning text-dark px-3 py-2">قيد التنفيذ</span>
+                                        {% elif related_record.repair_status == 'completed' %}
+                                            <span class="badge bg-success px-3 py-2">تم الإصلاح</span>
+                                        {% elif related_record.repair_status == 'pending_approval' %}
+                                            <span class="badge bg-info px-3 py-2">بانتظار الموافقة</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="workshop-info">
+                                <h6 class="text-orange fw-bold mb-3">
+                                    <i class="fas fa-building me-2"></i>معلومات الورشة
+                                </h6>
+                                <div class="info-item mb-2">
+                                    <label class="text-muted small">اسم الورشة:</label>
+                                    <div class="fw-bold">{{ related_record.workshop_name or 'غير محدد' }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <label class="text-muted small">اسم الفني:</label>
+                                    <div class="fw-bold">{{ related_record.technician_name or 'غير محدد' }}</div>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <label class="text-muted small">التكلفة:</label>
+                                    <div class="fw-bold text-success">{{ '{:,.2f}'.format(related_record.cost) if related_record.cost else '0.00' }} ريال</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted small">سبب دخول الورشة:</label>
+                                <div class="fw-bold">
+                                    {% if related_record.reason == 'maintenance' %}
+                                        <span class="badge bg-info px-3 py-2">صيانة دورية</span>
+                                    {% elif related_record.reason == 'breakdown' %}
+                                        <span class="badge bg-warning text-dark px-3 py-2">عطل</span>
+                                    {% elif related_record.reason == 'accident' %}
+                                        <span class="badge bg-danger px-3 py-2">حادث</span>
+                                    {% else %}
+                                        {{ related_record.reason }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <label class="text-muted small">وصف العمل:</label>
+                                <div class="fw-bold">{{ related_record.description or 'لا يوجد وصف' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if related_record.notes %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="info-item">
+                                <label class="text-muted small">ملاحظات إضافية:</label>
+                                <div class="fw-bold bg-light p-3 rounded">{{ related_record.notes }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- روابط النماذج الخارجية -->
+                    {% if related_record.delivery_link or related_record.reception_link %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6 class="text-orange fw-bold mb-3">
+                                <i class="fas fa-link me-2"></i>الروابط الخارجية
+                            </h6>
+                            <div class="row">
+                                {% if related_record.delivery_link %}
+                                <div class="col-md-6 mb-2">
+                                    <a href="{{ related_record.delivery_link }}" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="fas fa-external-link-alt me-2"></i>
+                                        نموذج التسليم للورشة
+                                    </a>
+                                </div>
+                                {% endif %}
+                                {% if related_record.reception_link %}
+                                <div class="col-md-6 mb-2">
+                                    <a href="{{ related_record.reception_link }}" target="_blank" class="btn btn-outline-success btn-sm w-100">
+                                        <i class="fas fa-external-link-alt me-2"></i>
+                                        نموذج استلام من الورشة
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- الصور المرفقة -->
+                    {% if related_record.images %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6 class="text-orange fw-bold mb-3">
+                                <i class="fas fa-images me-2"></i>الصور المرفقة ({{ related_record.images|length }})
+                            </h6>
+                            <div class="row">
+                                {% for image in related_record.images %}
+                                <div class="col-md-3 mb-3">
+                                    <div class="card border-0 shadow-sm">
+                                        <img src="{{ url_for('static', filename=image.image_path) }}" 
+                                             class="card-img-top" 
+                                             style="height: 150px; object-fit: cover; cursor: pointer;"
+                                             onclick="showImageModal('{{ url_for('static', filename=image.image_path) }}', '{{ image.notes or 'صورة من الورشة' }}')">
+                                        <div class="card-body p-2">
+                                            <small class="text-muted">
+                                                {% if image.image_type == 'before' %}
+                                                    <span class="badge bg-warning text-dark">قبل الإصلاح</span>
+                                                {% elif image.image_type == 'after' %}
+                                                    <span class="badge bg-success">بعد الإصلاح</span>
+                                                {% endif %}
+                                            </small>
+                                            <div class="small">{{ image.notes or 'بدون وصف' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ملاحظات المراجعة -->
+    {% if operation.review_notes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comment me-2"></i>
+                        ملاحظات المراجعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="bg-light p-3 rounded">
+                        {{ operation.review_notes }}
+                    </div>
+                    {% if operation.reviewed_at %}
+                    <small class="text-muted mt-2 d-block">
+                        تمت المراجعة في: {{ operation.reviewed_at.strftime('%Y-%m-%d %H:%M') }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal لعرض الصور -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">عرض الصورة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" style="max-height: 500px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-orange {
+    background-color: #FF6B35 !important;
+}
+
+.text-orange {
+    color: #FF6B35 !important;
+}
+
+.info-item label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.workshop-info {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #FF6B35;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.badge {
+    font-size: 0.8rem;
+}
+</style>
+
+<script>
+function showImageModal(imageSrc, title) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModalTitle').textContent = title;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+
+function approveOperation(operationId) {
+    if (confirm('هل أنت متأكد من الموافقة على هذه العملية؟')) {
+        const notes = prompt('ملاحظات الموافقة (اختياري):');
+        
+        fetch(`/operations/${operationId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `review_notes=${encodeURIComponent(notes || '')}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        });
+    }
+}
+
+function rejectOperation(operationId) {
+    const notes = prompt('سبب الرفض (مطلوب):');
+    if (notes && notes.trim()) {
+        fetch(`/operations/${operationId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `review_notes=${encodeURIComponent(notes)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        });
+    } else {
+        alert('يجب إدخال سبب الرفض');
+    }
+}
+</script>
+{% endblock %}

@@ -98,6 +98,12 @@ def view_operation(operation_id):
     operation = OperationRequest.query.get_or_404(operation_id)
     related_record = operation.get_related_record()
     
+    # توجيه عمليات الورشة إلى صفحة منفصلة
+    if operation.operation_type == 'workshop_record':
+        return render_template('operations/view_workshop.html', 
+                             operation=operation,
+                             related_record=related_record)
+    
     # جلب بيانات الموظف إذا كانت متاحة
     employee = None
     if related_record:
