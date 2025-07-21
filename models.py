@@ -240,6 +240,7 @@ class User(UserMixin, db.Model):
     """User model for authentication"""
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(100), nullable=True)  # اسم المستخدم
     name = db.Column(db.String(100))
     phone = db.Column(db.String(20), nullable=True)  # رقم الهاتف
     firebase_uid = db.Column(db.String(128), unique=True, nullable=True)  # جعلها اختيارية للسماح بتسجيل الدخول المحلي
