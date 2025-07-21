@@ -595,8 +595,8 @@ body {
                     
                     {% if operation.status == 'pending' or operation.status == 'under_review' %}
                     <button class="action-btn btn btn-success" onclick="quickApprove({{ operation.id }})">
-                        <i class="fas fa-check me-2"></i>
-                        موافقة سريعة
+                        <i class="fas fa-calendar-check me-2"></i>
+                        تحديد فترة التفويض
                     </button>
                     
                     <button class="action-btn btn btn-warning" onclick="quickReject({{ operation.id }})">
@@ -711,8 +711,8 @@ body {
 let currentOperationId = null;
 
 function quickApprove(operationId) {
-    currentOperationId = operationId;
-    $('#approveModal').modal('show');
+    // التوجه إلى صفحة تحرير الوثائق لتحديد فترة انتهاء التفويض
+    window.location.href = '/vehicles/documents/edit/12';
 }
 
 function quickReject(operationId) {
