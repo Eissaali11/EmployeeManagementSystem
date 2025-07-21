@@ -1406,16 +1406,9 @@ class OperationRequest(db.Model):
         return None
     
     def get_operation_url(self):
-        """الحصول على رابط العملية للمراجعة"""
-        if self.operation_type == "handover":
-            return f"/vehicles/{self.vehicle_id}/handover/{self.related_record_id}"
-        elif self.operation_type == "workshop":
-            return f"/mobile/workshop/{self.related_record_id}"
-        elif self.operation_type == "external_authorization":
-            return f"/mobile/vehicles/{self.vehicle_id}/external-authorization/{self.related_record_id}"
-        elif self.operation_type == "safety_inspection":
-            return f"/admin/external-safety-check/{self.related_record_id}"
-        return "#"
+        """الحصول على رابط إدارة الوثائق للسيارة الخاصة بالعملية"""
+        # توجيه جميع العمليات إلى صفحة تفاصيل السيارة (التي تحتوي على إدارة الوثائق)
+        return f"/vehicles/{self.vehicle_id}"
     
     def __repr__(self):
         return f"<OperationRequest {self.operation_type} for Vehicle {self.vehicle_id}>"
