@@ -1406,9 +1406,9 @@ class OperationRequest(db.Model):
         return None
     
     def get_operation_url(self):
-        """الحصول على رابط إدارة الوثائق للسيارة الخاصة بالعملية"""
-        # توجيه جميع العمليات إلى صفحة تفاصيل السيارة (التي تحتوي على إدارة الوثائق)
-        return f"/vehicles/{self.vehicle_id}"
+        """الحصول على رابط تعديل تواريخ الوثائق للسيارة الخاصة بالعملية"""
+        # توجيه جميع العمليات إلى صفحة تعديل تواريخ الوثائق مباشرة
+        return f"/vehicles/documents/edit/{self.vehicle_id}"
     
     def __repr__(self):
         return f"<OperationRequest {self.operation_type} for Vehicle {self.vehicle_id}>"

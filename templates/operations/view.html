@@ -1003,8 +1003,8 @@ body {
 let currentOperationId = null;
 
 function quickApprove(operationId) {
-    // التوجه إلى صفحة إدارة الوثائق للسيارة الخاصة بالعملية
-    window.location.href = '/vehicles/{{ operation.vehicle_id }}?from_operations=' + operationId;
+    // التوجه إلى صفحة تعديل تواريخ الوثائق للسيارة الخاصة بالعملية
+    window.location.href = '/vehicles/documents/edit/{{ operation.vehicle_id }}?from_operations=' + operationId;
 }
 
 function quickReject(operationId) {
