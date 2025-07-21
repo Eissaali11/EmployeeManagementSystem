@@ -37,7 +37,7 @@ from routes.operations import create_operation_request
 # from datetime import datetime
 
 # إنشاء مخطط المسارات
-mobile_bps = Blueprint('mobile', __name__)
+mobile_bp = Blueprint('mobile', __name__)
 
 # نموذج تسجيل الدخول
 class LoginForm(FlaskForm):
