@@ -1027,7 +1027,7 @@ def export_excel():
 def export_comprehensive():
     """تصدير شامل لبيانات الموظفين مع جميع التفاصيل والعُهد والمعلومات البنكية"""
     try:
-        from utils.comprehensive_employee_export_fixed import generate_comprehensive_employee_excel
+        from utils.simple_comprehensive_export import generate_comprehensive_employee_excel
         
         employees = Employee.query.options(
             db.joinedload(Employee.departments),
