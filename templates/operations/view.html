@@ -4,29 +4,35 @@
 
 {% block content %}
 <style>
-/* تصميم مميز للصفحة */
+/* تصميم مميز يتناسق مع النظام */
+body {
+    background: #1a1a1a;
+    color: #ffffff;
+}
+
 .operation-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3a5c 0%, #2d5aa0 100%);
     color: white;
     border-radius: 15px;
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .operation-card {
-    background: white;
+    background: #2d2d2d;
+    color: #ffffff;
     border-radius: 15px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-    border: none;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    border: 1px solid #444;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .operation-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    box-shadow: 0 10px 30px rgba(45, 90, 160, 0.2);
 }
 
 .status-badge {
@@ -61,37 +67,48 @@
 }
 
 .info-item {
-    background: #f8f9fa;
+    background: #3a3a3a;
+    color: #ffffff;
     border-radius: 10px;
     padding: 1rem;
     margin-bottom: 1rem;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #2d5aa0;
 }
 
 .vehicle-plate {
-    background: linear-gradient(45deg, #4CAF50, #45a049);
+    background: linear-gradient(45deg, #2d5aa0, #1e3a5c);
     color: white;
     padding: 1rem 2rem;
     border-radius: 10px;
     font-size: 1.2rem;
     font-weight: bold;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 4px 15px rgba(45, 90, 160, 0.5);
 }
 
 .driver-info {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #1e3a5c 0%, #2d5aa0 100%);
     color: white;
     border-radius: 15px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
+.admin-info-card {
+    background: linear-gradient(135deg, #1e3a5c 0%, #2d5aa0 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 2px solid #2d5aa0;
+}
+
 .timeline-item {
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #2d5aa0;
     padding-left: 1rem;
     margin-bottom: 1rem;
     position: relative;
+    color: #ffffff;
 }
 
 .timeline-item::before {
@@ -102,7 +119,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #667eea;
+    background: #2d5aa0;
 }
 
 .delete-btn {
@@ -119,6 +136,69 @@
     background: linear-gradient(45deg, #ee5a52, #ff6b6b);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+}
+
+.container-fluid {
+    background: #1a1a1a;
+    min-height: 100vh;
+    color: #ffffff;
+}
+
+.badge {
+    color: #ffffff !important;
+}
+
+.text-muted {
+    color: #cccccc !important;
+}
+
+.modal-content {
+    background: #2d2d2d;
+    color: #ffffff;
+    border: 1px solid #444;
+}
+
+.modal-header {
+    border-bottom: 1px solid #444;
+}
+
+.modal-footer {
+    border-top: 1px solid #444;
+}
+
+.form-control {
+    background: #3a3a3a;
+    color: #ffffff;
+    border: 1px solid #555;
+}
+
+.form-control:focus {
+    background: #3a3a3a;
+    color: #ffffff;
+    border-color: #2d5aa0;
+    box-shadow: 0 0 0 0.2rem rgba(45, 90, 160, 0.25);
+}
+
+.btn-outline-secondary {
+    color: #ffffff;
+    border-color: #555;
+}
+
+.btn-outline-secondary:hover {
+    background: #555;
+    border-color: #555;
+    color: #ffffff;
+}
+
+.btn-outline-primary {
+    color: #2d5aa0;
+    border-color: #2d5aa0;
+}
+
+.btn-outline-primary:hover {
+    background: #2d5aa0;
+    border-color: #2d5aa0;
+    color: #ffffff;
 }
 </style>
 
@@ -411,6 +491,57 @@
                         غير محدد
                     {% endif %}
                 </div>
+            </div>
+            {% endif %}
+
+            <!-- معلومات الإدمان/المراجع -->
+            {% if operation.reviewer %}
+            <div class="admin-info-card">
+                <h6 class="mb-3">
+                    <i class="fas fa-user-shield me-2"></i>
+                    معلومات المراجع (مدير النظام)
+                </h6>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-user-cog me-2"></i>
+                            <strong>اسم المراجع:</strong>
+                            <div class="mt-1">{{ operation.reviewer.username }}</div>
+                        </div>
+                        
+                        {% if operation.reviewer.email %}
+                        <div class="mb-3">
+                            <i class="fas fa-envelope me-2"></i>
+                            <strong>البريد الإلكتروني:</strong>
+                            <div class="mt-1">{{ operation.reviewer.email }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            <strong>تاريخ المراجعة:</strong>
+                            <div class="mt-1">{{ operation.reviewed_at.strftime('%Y/%m/%d %H:%M') if operation.reviewed_at else 'لم تتم المراجعة بعد' }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <i class="fas fa-crown me-2"></i>
+                            <strong>صلاحية:</strong>
+                            <span class="badge bg-warning text-dark ms-2">مدير النظام</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if operation.review_notes %}
+                <div class="mt-2">
+                    <strong><i class="fas fa-comment-alt me-2"></i>ملاحظات المراجع:</strong>
+                    <div class="mt-2 p-3" style="background: rgba(255,255,255,0.1); border-radius: 8px;">
+                        {{ operation.review_notes }}
+                    </div>
+                </div>
+                {% endif %}
             </div>
             {% endif %}
 
