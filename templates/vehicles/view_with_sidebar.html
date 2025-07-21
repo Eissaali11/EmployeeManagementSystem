@@ -79,6 +79,10 @@
                             <i class="fas fa-wrench text-danger ms-2"></i>
                             سجلات الورشة
                         </a>
+                        <a href="#section-vehicle-authorization" class="list-group-item list-group-item-action sidebar-item" data-section="vehicle-authorization">
+                            <i class="fas fa-certificate text-success ms-2"></i>
+                            تفويض المركبة
+                        </a>
                         <a href="#section-external-authorizations" class="list-group-item list-group-item-action sidebar-item" data-section="external-authorizations">
                             <i class="fas fa-file-signature text-dark ms-2"></i>
                             التفويضات الخارجية
@@ -514,6 +518,157 @@
                     </div>
                 </div>
 
+                <!-- قسم تفويض المركبة -->
+                <div id="content-vehicle-authorization" class="content-section d-none">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-certificate ms-2"></i>
+                                تفويض المركبة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if vehicle.authorization_status and vehicle.authorization_status != 'none' %}
+                                <div class="row">
+                                    <!-- معلومات التفويض الأساسية -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-success h-100">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-info-circle ms-1"></i>
+                                                    معلومات التفويض
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">حالة التفويض:</span>
+                                                    {% if vehicle.authorization_status == 'active' %}
+                                                        <span class="badge bg-success">نشط</span>
+                                                    {% elif vehicle.authorization_status == 'expired' %}
+                                                        <span class="badge bg-danger">منتهي الصلاحية</span>
+                                                    {% elif vehicle.authorization_status == 'suspended' %}
+                                                        <span class="badge bg-warning">معلق</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">{{ vehicle.authorization_status or 'غير محدد' }}</span>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                {% if vehicle.authorization_start_date %}
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">تاريخ البداية:</span>
+                                                    <span class="text-muted">{{ vehicle.authorization_start_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if vehicle.authorization_end_date %}
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">تاريخ النهاية:</span>
+                                                    <span class="text-muted">{{ vehicle.authorization_end_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if vehicle.authorized_by %}
+                                                <div class="mb-2">
+                                                    <span class="fw-bold">تم التفويض بواسطة:</span>
+                                                    <span class="text-muted">{{ vehicle.authorized_by }}</span>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- الشروط والملاحظات -->
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-info h-100">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-sticky-note ms-1"></i>
+                                                    الشروط والملاحظات
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                {% if vehicle.authorization_conditions %}
+                                                <div class="mb-3">
+                                                    <span class="fw-bold">شروط التفويض:</span>
+                                                    <p class="text-muted mt-1">{{ vehicle.authorization_conditions }}</p>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if vehicle.authorization_notes %}
+                                                <div>
+                                                    <span class="fw-bold">ملاحظات إضافية:</span>
+                                                    <p class="text-muted mt-1">{{ vehicle.authorization_notes }}</p>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if not vehicle.authorization_conditions and not vehicle.authorization_notes %}
+                                                <p class="text-muted fst-italic">لا توجد شروط أو ملاحظات مسجلة</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- إجراءات التفويض -->
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="card border-warning">
+                                            <div class="card-header bg-warning bg-opacity-10">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-cogs ms-1"></i>
+                                                    إجراءات التفويض
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex gap-2 flex-wrap">
+                                                    <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-warning btn-sm">
+                                                        <i class="fas fa-edit ms-1"></i>
+                                                        تعديل بيانات التفويض
+                                                    </a>
+                                                    <a href="{{ url_for('operations.dashboard') }}" class="btn btn-info btn-sm">
+                                                        <i class="fas fa-cogs ms-1"></i>
+                                                        نظام العمليات
+                                                    </a>
+                                                    {% if vehicle.authorization_status == 'active' %}
+                                                    <button class="btn btn-danger btn-sm" onclick="suspendAuthorization()">
+                                                        <i class="fas fa-pause ms-1"></i>
+                                                        تعليق التفويض
+                                                    </button>
+                                                    {% elif vehicle.authorization_status == 'suspended' %}
+                                                    <button class="btn btn-success btn-sm" onclick="reactivateAuthorization()">
+                                                        <i class="fas fa-play ms-1"></i>
+                                                        إعادة تفعيل التفويض
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- حالة عدم وجود تفويض -->
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-certificate text-muted" style="font-size: 4rem;"></i>
+                                    </div>
+                                    <h5 class="text-muted">لا يوجد تفويض نشط لهذه المركبة</h5>
+                                    <p class="text-muted">يمكن إنشاء تفويض جديد من خلال نظام العمليات عند الموافقة على العمليات</p>
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a href="{{ url_for('operations.dashboard') }}" class="btn btn-success">
+                                            <i class="fas fa-cogs ms-1"></i>
+                                            نظام العمليات
+                                        </a>
+                                        <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-edit ms-1"></i>
+                                            تعديل يدوي
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 <div id="content-external-authorizations" class="content-section d-none">
                     <div class="card shadow-sm">
                         <div class="card-header bg-dark text-white">
@@ -732,6 +887,9 @@ function loadSectionContent(sectionName, targetSection) {
         case 'attachments':
             loadAttachmentsContent(targetSection);
             break;
+        case 'vehicle-authorization':
+            loadVehicleAuthorizationContent(targetSection);
+            break;
     }
 }
 
@@ -740,13 +898,99 @@ function loadDocumentsContent(targetSection) {
     setTimeout(() => {
         const cardBody = targetSection.querySelector('.card-body');
         cardBody.innerHTML = `
-            <div class="text-center py-4">
-                <h5>وثائق المركبة</h5>
-                <p class="text-muted">سيتم تحميل محتوى الوثائق هنا</p>
-                <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-primary">
-                    <i class="fas fa-eye ms-1"></i>
-                    عرض جميع الوثائق
-                </a>
+            <div class="py-4">
+                <!-- قسم تفويض المركبة -->
+                <div class="card border-success mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-certificate ms-2"></i>
+                            تفويض المركبة
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if vehicle.authorization_status and vehicle.authorization_status != 'none' %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="mb-2">
+                                        <span class="fw-bold">حالة التفويض:</span>
+                                        {% if vehicle.authorization_status == 'active' %}
+                                            <span class="badge bg-success">نشط</span>
+                                        {% elif vehicle.authorization_status == 'expired' %}
+                                            <span class="badge bg-danger">منتهي الصلاحية</span>
+                                        {% elif vehicle.authorization_status == 'suspended' %}
+                                            <span class="badge bg-warning">معلق</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ vehicle.authorization_status }}</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if vehicle.authorization_start_date %}
+                                    <div class="mb-2">
+                                        <span class="fw-bold">تاريخ البداية:</span>
+                                        <span class="text-muted">{{ vehicle.authorization_start_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if vehicle.authorization_end_date %}
+                                    <div class="mb-2">
+                                        <span class="fw-bold">تاريخ النهاية:</span>
+                                        <span class="text-muted">{{ vehicle.authorization_end_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    {% if vehicle.authorized_by %}
+                                    <div class="mb-2">
+                                        <span class="fw-bold">تم التفويض بواسطة:</span>
+                                        <span class="text-muted">{{ vehicle.authorized_by }}</span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if vehicle.authorization_conditions %}
+                                    <div class="mb-2">
+                                        <span class="fw-bold">شروط التفويض:</span>
+                                        <p class="text-muted small mt-1">{{ vehicle.authorization_conditions }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if vehicle.authorization_notes %}
+                            <div class="alert alert-info mt-3">
+                                <strong>ملاحظات:</strong>
+                                {{ vehicle.authorization_notes }}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit ms-1"></i>
+                                    تعديل التفويض
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">
+                                <i class="fas fa-certificate fa-2x mb-2"></i>
+                                <p>لا يوجد تفويض نشط لهذه المركبة</p>
+                                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة تفويض
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- باقي الوثائق -->
+                <div class="text-center">
+                    <h5>باقي وثائق المركبة</h5>
+                    <p class="text-muted">عرض جميع الوثائق الأخرى للمركبة</p>
+                    <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn btn-primary">
+                        <i class="fas fa-eye ms-1"></i>
+                        عرض جميع الوثائق
+                    </a>
+                </div>
             </div>
         `;
         targetSection.setAttribute('data-loaded', 'true');
@@ -811,7 +1055,7 @@ function loadHandoversContent(targetSection) {
             <div class="text-center py-4">
                 <h5>سجلات التسليم والاستلام</h5>
                 <p class="text-muted">سيتم تحميل محتوى سجلات التسليم والاستلام هنا</p>
-                <a href="{{ url_for('vehicles.handover_create', id=vehicle.id) }}" class="btn btn-info">
+                <a href="/vehicles/${vehicle.id}/handover/create" class="btn btn-info">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة سجل تسليم
                 </a>
@@ -828,7 +1072,7 @@ function loadWorkshopContent(targetSection) {
             <div class="text-center py-4">
                 <h5>سجلات الورشة</h5>
                 <p class="text-muted">سيتم تحميل محتوى سجلات الورشة هنا</p>
-                <a href="{{ url_for('vehicles.workshop_create', id=vehicle.id) }}" class="btn btn-danger">
+                <a href="/vehicles/${vehicle.id}/workshop/create" class="btn btn-danger">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة سجل ورشة
                 </a>
@@ -997,6 +1241,43 @@ function loadAttachmentsContent(targetSection) {
                         <i class="fas fa-upload ms-1"></i>
                         رفع ملف جديد
                     </a>
+                </div>
+            </div>
+        `;
+        targetSection.setAttribute('data-loaded', 'true');
+    }, 500);
+}
+
+function loadVehicleAuthorizationContent(targetSection) {
+    setTimeout(() => {
+        const cardBody = targetSection.querySelector('.card-body');
+        cardBody.innerHTML = `
+            <div class="py-4">
+                <!-- قسم تفويض المركبة -->
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-certificate ms-2"></i>
+                            تفويض المركبة
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-certificate fa-3x mb-3"></i>
+                            <h5>بيانات التفويض</h5>
+                            <p>سيتم عرض بيانات التفويض المحفوظة من نظام العمليات هنا</p>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit ms-1"></i>
+                                    تعديل التفويض
+                                </a>
+                                <a href="{{ url_for('operations.dashboard') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cogs ms-1"></i>
+                                    نظام العمليات
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
