@@ -500,9 +500,145 @@
         </div>
     </div>
 
-    <!-- Performance Dashboard -->
+
+    <!-- قسم المعلومات البنكية - الإيبان -->
     <div class="dashboard-card card mb-4">
-        <div class="card-header">
+        <div class="card-header" style="background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%); color: white;">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-university me-2"></i>المعلومات البنكية
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- رقم الإيبان البنكي -->
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">رقم الإيبان البنكي</h6>
+                        <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa; min-height: 60px;">
+                            {% if employee.bank_iban %}
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-credit-card text-primary me-2"></i>
+                                    <span class="fw-bold" style="font-family: 'Courier New', monospace; font-size: 1.1em;">{{ employee.bank_iban }}</span>
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-credit-card fa-2x mb-2"></i>
+                                    <p class="mb-0">لم يتم إدخال رقم الإيبان</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- صورة الإيبان البنكي -->
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">صورة الإيبان البنكي</h6>
+                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
+                            {% if employee.bank_iban_image %}
+                                <div class="text-center">
+                                    <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
+                                         alt="صورة الإيبان البنكي" 
+                                         class="img-fluid rounded" 
+                                         style="max-height: 180px; width: auto; cursor: pointer;"
+                                         data-bs-toggle="modal" 
+                                         data-bs-target="#ibanImageModal">
+                                    <div class="mt-2">
+                                        <form action="{{ url_for('employees.delete_iban_image', id=employee.id) }}" method="post" 
+                                              onsubmit="return confirm('هل أنت متأكد من حذف صورة الإيبان؟')" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-trash me-1"></i>حذف الصورة
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-file-image fa-3x mb-2"></i>
+                                        <p>لا توجد صورة للإيبان</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نموذج إدخال/تحديث الإيبان -->
+            <div class="border-top pt-3">
+                <h6 class="text-primary mb-3">
+                    <i class="fas fa-edit me-1"></i>تحديث المعلومات البنكية
+                </h6>
+                <form action="{{ url_for('employees.upload_iban', id=employee.id) }}" method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="bank_iban" class="form-label">رقم الإيبان البنكي</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="bank_iban" 
+                                       name="bank_iban" 
+                                       value="{{ employee.bank_iban or '' }}" 
+                                       placeholder="SA0000000000000000000000"
+                                       maxlength="50"
+                                       style="font-family: 'Courier New', monospace;">
+                                <div class="form-text">أدخل رقم الإيبان البنكي كاملاً (24 رقم للبنوك السعودية)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="iban_image" class="form-label">صورة الإيبان البنكي</label>
+                                <input type="file" 
+                                       class="form-control" 
+                                       id="iban_image" 
+                                       name="iban_image" 
+                                       accept="image/*">
+                                <div class="form-text">اختر صورة واضحة لبطاقة الإيبان البنكي</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>حفظ المعلومات البنكية
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal لعرض صورة الإيبان -->
+    {% if employee.bank_iban_image %}
+    <div class="modal fade" id="ibanImageModal" tabindex="-1" aria-labelledby="ibanImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ibanImageModalLabel">صورة الإيبان البنكي - {{ employee.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
+                         alt="صورة الإيبان البنكي" 
+                         class="img-fluid rounded">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    <a href="{{ url_for('static', filename=employee.bank_iban_image) }}" 
+                       target="_blank" 
+                       class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-1"></i>فتح في تبويب جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- لوحة معلومات أداء الموظف (داشبورد) -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+
             <h5 class="card-title mb-0">
                 <i class="fas fa-chart-bar me-2"></i>لوحة معلومات الأداء
             </h5>

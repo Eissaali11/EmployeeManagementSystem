@@ -512,6 +512,79 @@ def view(id):
                           departments=all_departments
                           )
 
+@employees_bp.route('/<int:id>/upload_iban', methods=['POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.EDIT)
+def upload_iban(id):
+    """رفع صورة الإيبان البنكي للموظف"""
+    employee = Employee.query.get_or_404(id)
+    
+    try:
+        # الحصول على بيانات الإيبان والملف
+        bank_iban = request.form.get('bank_iban', '').strip()
+        iban_file = request.files.get('iban_image')
+        
+        # تحديث رقم الإيبان
+        if bank_iban:
+            employee.bank_iban = bank_iban
+        
+        # رفع صورة الإيبان إذا تم اختيارها
+        if iban_file and iban_file.filename:
+            # حذف الصورة القديمة إذا كانت موجودة
+            if employee.bank_iban_image:
+                old_image_path = os.path.join('static', employee.bank_iban_image)
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
+            
+            # حفظ الصورة الجديدة
+            image_path = save_employee_image(iban_file, employee.id, 'iban')
+            if image_path:
+                employee.bank_iban_image = image_path
+        
+        db.session.commit()
+        
+        # تسجيل العملية
+        log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الإيبان البنكي للموظف: {employee.name}')
+        
+        flash('تم حفظ بيانات الإيبان البنكي بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حفظ بيانات الإيبان: {str(e)}', 'danger')
+    
+    return redirect(url_for('employees.view', id=id))
+
+@employees_bp.route('/<int:id>/delete_iban_image', methods=['POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.EDIT)
+def delete_iban_image(id):
+    """حذف صورة الإيبان البنكي للموظف"""
+    employee = Employee.query.get_or_404(id)
+    
+    try:
+        if employee.bank_iban_image:
+            # حذف الملف من الخادم
+            image_path = os.path.join('static', employee.bank_iban_image)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+            
+            # حذف المسار من قاعدة البيانات
+            employee.bank_iban_image = None
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_activity('delete', 'Employee', employee.id, f'تم حذف صورة الإيبان البنكي للموظف: {employee.name}')
+            
+            flash('تم حذف صورة الإيبان البنكي بنجاح', 'success')
+        else:
+            flash('لا توجد صورة إيبان لحذفها', 'warning')
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حذف صورة الإيبان: {str(e)}', 'danger')
+    
+    return redirect(url_for('employees.view', id=id))
+
 @employees_bp.route('/<int:id>/confirm_delete')
 @login_required
 @require_module_access(Module.EMPLOYEES, Permission.DELETE)

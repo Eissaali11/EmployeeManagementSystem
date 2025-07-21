@@ -91,11 +91,17 @@ class Employee(db.Model):
     employee_type = db.Column(db.String(20), default='regular')  # 'regular' أو 'driver'
     has_mobile_custody = db.Column(db.Boolean, default=False)  # هل لديه عهدة جوال
     mobile_type = db.Column(db.String(100), nullable=True)  # نوع الجوال
+
     mobile_imei = db.Column(db.String(20), nullable=True)  # رقم IMEI
     
     # حقول الكفالة
     sponsorship_status = db.Column(db.String(20), default='inside', nullable=True)  # 'inside' = على الكفالة، 'outside' = خارج الكفالة
     current_sponsor_name = db.Column(db.String(100), nullable=True)  # اسم الكفيل الحالي
+    
+    # حقول المعلومات البنكية
+    bank_iban = db.Column(db.String(50), nullable=True)  # رقم الإيبان البنكي
+    bank_iban_image = db.Column(db.String(255), nullable=True)  # صورة الإيبان البنكي
+
 
     def to_dict(self):
         """
