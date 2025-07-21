@@ -712,7 +712,7 @@ let currentOperationId = null;
 
 function quickApprove(operationId) {
     // التوجه إلى صفحة تحرير الوثائق لتحديد فترة انتهاء التفويض
-    window.location.href = '/vehicles/documents/edit/12';
+    window.location.href = '/vehicles/documents/edit/12?from_operations=' + operationId;
 }
 
 function quickReject(operationId) {

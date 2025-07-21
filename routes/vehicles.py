@@ -22,6 +22,7 @@ from models import (
         Department, ExternalAuthorization, Module, Permission, UserRole
 )
 from utils.audit_logger import log_activity
+from utils.audit_logger import log_audit
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
@@ -986,6 +987,12 @@ def edit_documents(id):
         vehicle = Vehicle.query.get_or_404(id)
         form = VehicleDocumentsForm()
 
+        
+        # التحقق من القدوم من صفحة العمليات
+        from_operations = request.args.get('from_operations')
+        operation_id = from_operations if from_operations else None
+        
+
         if request.method == 'GET':
                 # ملء النموذج بالبيانات الحالية
                 form.authorization_expiry_date.data = vehicle.authorization_expiry_date
@@ -995,19 +1002,82 @@ def edit_documents(id):
         if form.validate_on_submit():
                 # تحديث البيانات
                 vehicle.authorization_expiry_date = form.authorization_expiry_date.data
-                vehicle.registration_expiry_date = form.registration_expiry_date.data
-                vehicle.inspection_expiry_date = form.inspection_expiry_date.data
+                
+                # إذا لم يكن قادماً من العمليات، حفظ جميع الحقول
+                if not from_operations:
+                    vehicle.registration_expiry_date = form.registration_expiry_date.data
+                    vehicle.inspection_expiry_date = form.inspection_expiry_date.data
+                
                 vehicle.updated_at = datetime.utcnow()
+
+
+
+                
+                # إذا كان قادماً من العمليات، إنشاء سجل تسليم/استلام جديد
+                if from_operations and operation_id:
+                    try:
+                        # البحث عن العملية
+                        from models import Operation
+                        operation = Operation.query.get(int(operation_id))
+                        
+                        if operation:
+                            # إنشاء سجل تسليم/استلام جديد
+                            handover = VehicleHandover(
+                                vehicle_id=vehicle.id,
+                                handover_type='delivery',  # تسليم
+                                handover_date=datetime.utcnow(),
+                                person_name=operation.employee.name if operation.employee else 'غير محدد',
+                                notes=f'تفويض من العملية #{operation_id} - صالح حتى {form.authorization_expiry_date.data}',
+                                created_by=current_user.id,
+                                updated_at=datetime.utcnow()
+                            )
+                            
+                            # إضافة معلومات إضافية إذا توفرت
+                            if operation.employee:
+                                handover.employee_id = operation.employee.id
+                                if hasattr(operation.employee, 'mobile'):
+                                    handover.driver_phone_number = operation.employee.mobile
+                                if hasattr(operation.employee, 'national_id'):
+                                    handover.driver_residency_number = operation.employee.national_id
+                            
+                            db.session.add(handover)
+                            
+                            # تحديث حالة العملية إلى مكتملة
+                            operation.status = 'completed'
+                            operation.completed_at = datetime.utcnow()
+                            operation.reviewer_id = current_user.id
+                            operation.review_notes = f'تم تحديد فترة التفويض وإنشاء سجل التسليم'
+                            
+                            # تسجيل في العمليات
+                            log_audit('create', 'vehicle_handover', handover.id, 
+                                     f'تم إنشاء سجل تسليم من العملية #{operation_id}')
+                            log_audit('update', 'operation', operation.id, 
+                                     f'تم إكمال العملية وإنشاء سجل التسليم')
+                    
+                    except Exception as e:
+                        current_app.logger.error(f'خطأ في إنشاء سجل التسليم: {str(e)}')
+                        flash('تم تحديث التفويض ولكن حدث خطأ في إنشاء سجل التسليم', 'warning')
+                
 
                 db.session.commit()
 
                 # تسجيل الإجراء
-                log_audit('update', 'vehicle_documents', vehicle.id, f'تم تحديث تواريخ وثائق المركبة: {vehicle.plate_number}')
 
-                flash('تم تحديث تواريخ الوثائق بنجاح!', 'success')
-                return redirect(url_for('vehicles.view', id=id))
+                log_audit('update', 'vehicle_documents', vehicle.id, 
+                        f'تم تحديث تواريخ وثائق المركبة: {vehicle.plate_number}')
+                
+                if from_operations:
+                    flash('تم تحديد فترة التفويض وإنشاء سجل التسليم بنجاح!', 'success')
+                    return redirect(url_for('operations.operations_list'))
+                else:
+                    flash('تم تحديث تواريخ الوثائق بنجاح!', 'success')
+                    return redirect(url_for('vehicles.view', id=id))
+        
+        return render_template('vehicles/edit_documents.html', 
+                             form=form, vehicle=vehicle, 
+                             from_operations=bool(from_operations), 
+                             operation_id=operation_id)
 
-        return render_template('vehicles/edit_documents.html', form=form, vehicle=vehicle)
 
 @vehicles_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
