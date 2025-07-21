@@ -664,28 +664,123 @@ body {
             </div>
             {% endif %}
 
-            <!-- معلومات الطالب -->
+            <!-- معلومات الطالب المحسنة -->
             {% if operation.requester %}
             <div class="operation-card">
-                <h6 class="mb-3">
-                    <i class="fas fa-user me-2 text-primary"></i>
-                    معلومات الطالب
-                </h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user me-2 text-primary"></i>
+                        معلومات الطالب
+                    </h6>
+                    <span class="badge bg-primary">{{ operation.requester.role.value if operation.requester.role else 'مستخدم' }}</span>
+                </div>
+                
+                <!-- صورة المستخدم الطالب -->
+                <div class="text-center mb-3">
+                    {% if operation.requester.profile_image %}
+                    <img src="{{ url_for('static', filename=operation.requester.profile_image) }}" 
+                         alt="صورة {{ operation.requester.name or operation.requester.email }}" 
+                         class="rounded-circle border"
+                         style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #2d5aa0 !important;">
+                    {% else %}
+                    <div class="d-inline-block bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    {% endif %}
+                </div>
                 
                 <div class="info-item">
-                    <strong>اسم المستخدم:</strong> {{ operation.requester.username }}
+                    <strong>الاسم الكامل:</strong> 
+                    <div class="mt-1">{{ operation.requester.name or operation.requester.email }}</div>
                 </div>
+                
                 {% if operation.requester.email %}
                 <div class="info-item">
-                    <strong>البريد الإلكتروني:</strong> {{ operation.requester.email }}
+                    <strong>البريد الإلكتروني:</strong> 
+                    <div class="mt-1">
+                        <a href="mailto:{{ operation.requester.email }}" class="text-primary text-decoration-none">
+                            <i class="fas fa-envelope me-1"></i>{{ operation.requester.email }}
+                        </a>
+                    </div>
                 </div>
                 {% endif %}
+                
+                {% if operation.requester.phone %}
                 <div class="info-item">
-                    <strong>الدور:</strong> 
-                    {% if operation.requester.role %}
-                        {{ operation.requester.role.value }}
-                    {% else %}
-                        غير محدد
+                    <strong>رقم الهاتف:</strong> 
+                    <div class="mt-1">
+                        <a href="tel:{{ operation.requester.phone }}" class="text-success text-decoration-none">
+                            <i class="fas fa-phone me-1"></i>{{ operation.requester.phone }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <strong>الدور في النظام:</strong> 
+                    <div class="mt-1">
+                        {% if operation.requester.role %}
+                            {% if operation.requester.role.value == 'admin' %}
+                                <span class="badge bg-danger"><i class="fas fa-crown me-1"></i>مدير النظام</span>
+                            {% elif operation.requester.role.value == 'manager' %}
+                                <span class="badge bg-warning"><i class="fas fa-user-tie me-1"></i>مدير</span>
+                            {% elif operation.requester.role.value == 'employee' %}
+                                <span class="badge bg-info"><i class="fas fa-user me-1"></i>موظف</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ operation.requester.role.value }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">غير محدد</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if operation.requester.department %}
+                <div class="info-item">
+                    <strong>القسم:</strong> 
+                    <div class="mt-1">
+                        <span class="badge bg-success">{{ operation.requester.department }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <strong>تاريخ الطلب:</strong> 
+                    <div class="mt-1">
+                        <i class="fas fa-calendar me-1 text-muted"></i>
+                        {{ operation.requested_at.strftime('%Y/%m/%d') if operation.requested_at else 'غير محدد' }}
+                        <small class="text-muted ms-2">
+                            {{ operation.requested_at.strftime('%H:%M') if operation.requested_at else '' }}
+                        </small>
+                    </div>
+                </div>
+                
+                {% if operation.requester.last_login %}
+                <div class="info-item">
+                    <strong>آخر دخول:</strong> 
+                    <div class="mt-1">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ operation.requester.last_login.strftime('%Y/%m/%d %H:%M') }}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- زر التواصل مع الطالب -->
+                <div class="mt-3 text-center">
+                    {% if operation.requester.email %}
+                    <a href="mailto:{{ operation.requester.email }}?subject=بخصوص طلب العملية: {{ operation.title }}" 
+                       class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fas fa-envelope me-1"></i>إرسال إيميل
+                    </a>
+                    {% endif %}
+                    {% if operation.requester.phone %}
+                    <a href="tel:{{ operation.requester.phone }}" 
+                       class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-phone me-1"></i>اتصال
+                    </a>
                     {% endif %}
                 </div>
             </div>

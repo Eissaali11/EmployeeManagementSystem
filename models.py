@@ -241,6 +241,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100))
+    phone = db.Column(db.String(20), nullable=True)  # رقم الهاتف
     firebase_uid = db.Column(db.String(128), unique=True, nullable=True)  # جعلها اختيارية للسماح بتسجيل الدخول المحلي
     password_hash = db.Column(db.String(256), nullable=True)  # حقل لتخزين هاش كلمة المرور
     profile_picture = db.Column(db.String(255))
