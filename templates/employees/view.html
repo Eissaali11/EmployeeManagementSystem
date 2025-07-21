@@ -367,27 +367,24 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Enhanced Header -->
-    <div class="employee-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h1>بيانات الموظف</h1>
-                <p class="text-muted mb-0">عرض وتعديل بيانات الموظف {{ employee.name }}</p>
-            </div>
-            <div class="btn-action-group">
-                <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn-enhanced btn-primary-enhanced">
-                    <i class="fas fa-edit"></i> تعديل البيانات
-                </a>
-                <a href="{{ url_for('salaries.create', employee_id=employee.id) }}" class="btn-enhanced btn-success-enhanced">
-                    <i class="fas fa-money-bill-wave"></i> إضافة راتب
-                </a>
-                <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="btn-enhanced btn-warning-enhanced">
-                    <i class="fas fa-id-card"></i> إضافة وثيقة
-                </a>
 
-                <div class="btn-group" role="group" aria-label="تقارير الموظف">
-                <a href="{{ url_for('employees.basic_report', id=employee.id) }}" class="btn-enhanced btn-primary-enhanced">
+<div class="container-fluid employee-view">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>بيانات الموظف</h1>
+        <div>
+            <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> تعديل البيانات
+            </a>
+            <a href="{{ url_for('salaries.create', employee_id=employee.id) }}" class="btn btn-success">
+                <i class="fas fa-money-bill-wave me-1"></i> إضافة راتب
+            </a>
+            <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="btn btn-warning">
+                <i class="fas fa-id-card me-1"></i> إضافة وثيقة
+            </a>
+            <!-- أزرار تقرير الموظف -->
+            <div class="btn-group" role="group" aria-label="تقارير الموظف">
+                <a href="{{ url_for('employees.basic_report', id=employee.id) }}" class="btn btn-primary">
+
                     <i class="fas fa-file-alt me-1"></i> تقرير أساسي
                 </a>
                 <a href="{{ url_for('employees.comprehensive_report', id=employee.id) }}" class="btn-enhanced btn-info-enhanced">
@@ -693,7 +690,6 @@
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">تاريخ الميلاد</p>
                             <p class="fs-5">
-                                <!-- تاريخ الميلاد: {{ employee.birth_date }} -->
                                 {% set birth_date = employee.birth_date %}
                                 {% if birth_date %}
                                 <span class="gregorian-date text-success fw-bold">
@@ -711,10 +707,12 @@
                             <p class="mb-1 text-muted">تاريخ الالتحاق</p>
                             <p class="fs-5">
                                 {% if employee.join_date %}
-                                <span class="gregorian-date">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="gregorian-date text-info fw-bold">
+                                    <i class="fas fa-calendar-check me-1"></i>{{ employee.join_date.strftime('%d/%m/%Y') }}
+                                </span>
                                 <span class="hijri-date" style="display: none;"></span>
                                 {% else %}
-                                -
+                                <span class="text-muted">-</span>
                                 {% endif %}
                             </p>
                         </div>
