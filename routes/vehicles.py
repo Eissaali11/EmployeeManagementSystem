@@ -23,6 +23,7 @@ from models import (
 )
 from utils.audit_logger import log_activity
 from utils.audit_logger import log_audit
+from utils.whatsapp_message_generator import generate_whatsapp_url
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
