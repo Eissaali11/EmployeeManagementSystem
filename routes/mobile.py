@@ -3885,7 +3885,7 @@ def add_workshop_record(vehicle_id):
                 operation_title = f"ورشة جديدة - {vehicle.plate_number}"
                 operation_description = f"تم إنشاء سجل ورشة جديد: {reason} - {description}"
                 
-                create_operation_request(
+                operation = create_operation_request(
                     operation_type='workshop_record',
                     related_record_id=workshop_record.id,
                     vehicle_id=vehicle_id,
@@ -3895,10 +3895,15 @@ def add_workshop_record(vehicle_id):
                     priority='normal'
                 )
                 
-                current_app.logger.debug(f"تم إنشاء طلب عملية للورشة: {workshop_record.id}")
+                # حفظ طلب العملية والإشعارات
+                db.session.commit()
+                
+                current_app.logger.debug(f"تم إنشاء طلب عملية للورشة: {workshop_record.id} برقم عملية: {operation.id}")
                 
             except Exception as e:
                 current_app.logger.error(f"خطأ في إنشاء طلب العملية للورشة: {str(e)}")
+                import traceback
+                current_app.logger.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
                 # لا نوقف العملية إذا فشل إنشاء طلب العملية
             
 

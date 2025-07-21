@@ -344,6 +344,7 @@ def get_operation_type_name(operation_type):
     type_names = {
         'handover': 'تسليم/استلام مركبة',
         'workshop': 'عملية ورشة',
+        'workshop_record': 'سجل ورشة',
         'external_authorization': 'تفويض خارجي',
         'safety_inspection': 'فحص سلامة'
     }

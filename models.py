@@ -1397,7 +1397,7 @@ class OperationRequest(db.Model):
         """جلب السجل المرتبط بالعملية حسب نوعها"""
         if self.operation_type == "handover":
             return VehicleHandover.query.get(self.related_record_id)
-        elif self.operation_type == "workshop":
+        elif self.operation_type == "workshop" or self.operation_type == "workshop_record":
             return VehicleWorkshop.query.get(self.related_record_id)
         elif self.operation_type == "external_authorization":
             return ExternalAuthorization.query.get(self.related_record_id)
