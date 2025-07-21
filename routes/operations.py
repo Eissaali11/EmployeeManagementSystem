@@ -128,9 +128,34 @@ def view_operation(operation_id):
                     name=last_handover.person_name
                 ).first()
         
+        # جلب الصور من قاعدة البيانات مباشرة إذا كانت العلاقة لا تعمل
+        from sqlalchemy import text
+        workshop_images = []
+        if related_record and hasattr(related_record, 'id'):
+            try:
+                # استعلام مباشر لجلب الصور
+                result = db.session.execute(
+                    text("SELECT id, image_type, image_path, notes, uploaded_at FROM vehicle_workshop_images WHERE workshop_record_id = :workshop_id ORDER BY uploaded_at DESC"),
+                    {'workshop_id': related_record.id}
+                )
+                workshop_images = [
+                    {
+                        'id': row[0],
+                        'image_type': row[1], 
+                        'image_path': row[2],
+                        'notes': row[3],
+                        'uploaded_at': row[4]
+                    } 
+                    for row in result
+                ]
+                current_app.logger.debug(f"تم جلب {len(workshop_images)} صور لسجل الورشة {related_record.id}")
+            except Exception as e:
+                current_app.logger.error(f"خطأ في جلب صور الورشة: {str(e)}")
+        
         return render_template('operations/view_workshop.html', 
                              operation=operation,
                              related_record=related_record,
+                             workshop_images=workshop_images,
                              driver_employee=driver_employee,
                              current_driver_info=current_driver_info)
     

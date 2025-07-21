@@ -495,7 +495,7 @@
                     {% endif %}
 
                     <!-- صور ملاحظات السيارة -->
-                    {% set notes_images = related_record.images|selectattr('image_type', 'equalto', 'notes')|list %}
+                    {% set notes_images = workshop_images|selectattr('image_type', 'equalto', 'notes')|list %}
                     {% if notes_images %}
                     <div class="row mt-4">
                         <div class="col-12">
@@ -511,10 +511,10 @@
                                         {% for image in notes_images %}
                                         <div class="col-md-3 mb-3">
                                             <div class="card border-0 shadow-sm">
-                                                <img src="{{ url_for('static', filename=image.image_path) }}" 
+                                                <img src="/static/{{ image.image_path }}" 
                                                      class="card-img-top" 
                                                      style="height: 150px; object-fit: cover; cursor: pointer;"
-                                                     onclick="showImageModal('{{ url_for('static', filename=image.image_path) }}', '{{ image.notes or 'صورة ملاحظات السيارة' }}')">
+                                                     onclick="showImageModal('/static/{{ image.image_path }}', '{{ image.notes or 'صورة ملاحظات السيارة' }}')">
                                                 <div class="card-body p-2">
                                                     <small><span class="badge" style="background: #FF6B35; color: white;">ملاحظات السيارة</span></small>
                                                     <div class="small">{{ image.notes or 'بدون وصف' }}</div>
@@ -530,7 +530,7 @@
                     {% endif %}
 
                     <!-- الصور المرفقة الأخرى -->
-                    {% set other_images = related_record.images|rejectattr('image_type', 'equalto', 'notes')|list %}
+                    {% set other_images = workshop_images|rejectattr('image_type', 'equalto', 'notes')|list %}
                     {% if other_images %}
                     <div class="row mt-4">
                         <div class="col-12">
@@ -541,10 +541,10 @@
                                 {% for image in other_images %}
                                 <div class="col-md-3 mb-3">
                                     <div class="card border-0 shadow-sm">
-                                        <img src="{{ url_for('static', filename=image.image_path) }}" 
+                                        <img src="/static/{{ image.image_path }}" 
                                              class="card-img-top" 
                                              style="height: 150px; object-fit: cover; cursor: pointer;"
-                                             onclick="showImageModal('{{ url_for('static', filename=image.image_path) }}', '{{ image.notes or 'صورة من الورشة' }}')">
+                                             onclick="showImageModal('/static/{{ image.image_path }}', '{{ image.notes or 'صورة من الورشة' }}')">
                                         <div class="card-body p-2">
                                             <small class="text-muted">
                                                 {% if image.image_type == 'delivery' %}
