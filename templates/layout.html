@@ -361,7 +361,30 @@
                                     <span>التقارير</span>
                                 </a>
                             </li>
-                            {% endif %} {# التحقق من صلاحيات المستخدمين #} {% if
+                            {% endif %} {# التحقق من صلاحيات المستخدمين #}
+                            
+                            
+                            {% if current_user.role == UserRole.ADMIN %}
+                            <li class="nav-item mb-1">
+
+                                <a
+
+                                    href="{{ url_for('operations.operations_dashboard') }}"
+
+                                    class="nav-link nav-link-custom {% if '/operations' in request.path %}active{% endif %}"
+
+                                >
+
+                                    <i class="fas fa-wrench me-2"></i>
+
+                                    <span>ادارة العمليات</span>
+
+                                </a>
+
+                            </li>
+
+                            {% endif %}
+                            {% if
                             current_user.role in [UserRole.ADMIN,
                             UserRole.MANAGER] or
                             current_user|check_module_access(Module.USERS) %}
@@ -480,6 +503,9 @@
                                 request.path %} التقارير والإحصائيات {% elif
                                 '/employee-stats' in request.path %} إحصائيات
                                 الموظفين {% elif '/users' in request.path %}
+                                إدارة المستخدمين {% elif '/operations' in
+
+                                request.path %} 
                                 إدارة المستخدمين {% endif %}
                             </h4>
                         </div>
