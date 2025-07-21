@@ -449,7 +449,10 @@ def edit(id):
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def view(id):
     """View detailed employee information"""
-    employee = Employee.query.get_or_404(id)
+    employee = Employee.query.options(
+        db.joinedload(Employee.departments),
+        db.joinedload(Employee.nationality_rel)
+    ).get_or_404(id)
     
     # Get employee documents
     documents = Document.query.filter_by(employee_id=id).all()
