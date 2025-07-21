@@ -822,18 +822,139 @@ function loadHandoversContent(targetSection) {
 }
 
 function loadWorkshopContent(targetSection) {
+    // استخدام البيانات المحملة مسبقاً
+    const workshopData = window.vehicleData.workshop_records;
+    const totalCost = window.vehicleData.total_maintenance_cost;
+    const daysInWorkshop = window.vehicleData.days_in_workshop;
+    const vehicleId = window.vehicleData.vehicle_id;
+    
     setTimeout(() => {
         const cardBody = targetSection.querySelector('.card-body');
-        cardBody.innerHTML = `
-            <div class="text-center py-4">
-                <h5>سجلات الورشة</h5>
-                <p class="text-muted">سيتم تحميل محتوى سجلات الورشة هنا</p>
-                <a href="#" onclick="window.open('/mobile/vehicles/' + {{ vehicle.id }} + '/workshop/create', '_blank')" class="btn btn-danger">
+        
+        let content = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools ms-2"></i>
+                    سجلات الورشة
+                    <span class="badge bg-secondary">${workshopData.length}</span>
+                </h5>
+                <a href="/mobile/vehicles/${vehicleId}/workshop/create" target="_blank" class="btn btn-sm btn-primary">
                     <i class="fas fa-plus ms-1"></i>
                     إضافة سجل ورشة
                 </a>
             </div>
         `;
+        
+        if (workshopData.length > 0) {
+            content += `
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>تاريخ الدخول</th>
+                                <th>سبب الدخول</th>
+                                <th>حالة الإصلاح</th>
+                                <th>التكلفة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            workshopData.forEach(record => {
+                // تحديد badge السبب
+                let reasonBadge = '';
+                if (record.reason === 'maintenance') {
+                    reasonBadge = '<span class="badge bg-info">صيانة دورية</span>';
+                } else if (record.reason === 'repair') {
+                    reasonBadge = '<span class="badge bg-warning">إصلاح</span>';
+                } else if (record.reason === 'accident') {
+                    reasonBadge = '<span class="badge bg-danger">حادث</span>';
+                } else {
+                    reasonBadge = `<span class="badge bg-secondary">${record.reason}</span>`;
+                }
+                
+                // تحديد badge الحالة
+                let statusBadge = '';
+                if (record.repair_status === 'completed') {
+                    statusBadge = '<span class="badge bg-success">مكتمل</span>';
+                } else if (record.repair_status === 'in_progress') {
+                    statusBadge = '<span class="badge bg-warning">قيد التنفيذ</span>';
+                } else if (record.repair_status === 'pending') {
+                    statusBadge = '<span class="badge bg-secondary">في الانتظار</span>';
+                } else {
+                    statusBadge = `<span class="badge bg-primary">${record.repair_status}</span>`;
+                }
+                
+                // تنسيق التكلفة
+                let costDisplay = record.cost ? 
+                    new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(record.cost) :
+                    '<span class="text-muted">غير محدد</span>';
+                
+                content += `
+                    <tr>
+                        <td>${record.formatted_entry_date}</td>
+                        <td>${reasonBadge}</td>
+                        <td>${statusBadge}</td>
+                        <td>${costDisplay}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/vehicles/workshop/${record.id}" class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-success" onclick="shareWorkshopRecord(${record.id})" title="مشاركة">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            content += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- الإحصائيات -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="small text-center p-2 bg-light rounded">
+                            <div class="fw-bold text-primary">${workshopData.length}</div>
+                            <small class="text-muted">إجمالي السجلات</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small text-center p-2 bg-light rounded">
+                            <div class="fw-bold text-success">${totalCost.toFixed(2)}</div>
+                            <small class="text-muted">إجمالي التكلفة (ريال)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small text-center p-2 bg-light rounded">
+                            <div class="fw-bold text-warning">${daysInWorkshop}</div>
+                            <small class="text-muted">أيام في الورشة</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            content += `
+                <div class="text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-tools fa-3x text-muted"></i>
+                    </div>
+                    <h6 class="text-muted">لا توجد سجلات ورشة للسيارة</h6>
+                    <p class="text-muted small">سيتم عرض سجلات الورشة والصيانة هنا عند إضافتها</p>
+                    <a href="/mobile/vehicles/${vehicleId}/workshop/create" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-plus ms-1"></i>
+                        إضافة أول سجل ورشة
+                    </a>
+                </div>
+            `;
+        }
+        
+        cardBody.innerHTML = content;
         targetSection.setAttribute('data-loaded', 'true');
     }, 500);
 }
@@ -1008,6 +1129,26 @@ function showLicenseModal() {
     const modal = new bootstrap.Modal(document.getElementById('licenseModal'));
     modal.show();
 }
+
+// إعداد البيانات العالمية للاستخدام في JavaScript
+window.vehicleData = {
+    vehicle_id: {{ vehicle.id }},
+    workshop_records: [
+        {% for record in workshop_records %}
+        {
+            id: {{ record.id }},
+            formatted_entry_date: "{{ record.formatted_entry_date }}",
+            reason: "{{ record.reason }}",
+            repair_status: "{{ record.repair_status }}",
+            cost: {{ record.cost if record.cost else 0 }},
+            workshop_name: "{{ record.workshop_name or '' }}",
+            description: "{{ record.description or '' }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    total_maintenance_cost: {{ total_maintenance_cost }},
+    days_in_workshop: {{ days_in_workshop }}
+};
 </script>
 
 {% endblock %}
