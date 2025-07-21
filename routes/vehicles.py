@@ -1068,7 +1068,7 @@ def edit_documents(id):
                 
                 if from_operations:
                     flash('تم تحديد فترة التفويض وإنشاء سجل التسليم بنجاح!', 'success')
-                    return redirect(url_for('operations.operations_list'))
+                    return redirect('/operations')
                 else:
                     flash('تم تحديث تواريخ الوثائق بنجاح!', 'success')
                     return redirect(url_for('vehicles.view', id=id))
