@@ -4313,7 +4313,9 @@ def vehicle_license_image(vehicle_id):
             flash('لم يتم اختيار ملف', 'danger')
             return redirect(url_for('vehicles.vehicle_license_image', vehicle_id=vehicle_id))
 
-        if file and allowed_file(file.filename, ['png', 'jpg', 'jpeg', 'gif', 'webp']):
+        
+        if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+
             try:
                 # إنشاء مجلد الرفع إذا لم يكن موجوداً
                 upload_dir = os.path.join('static', 'uploads', 'vehicles')
