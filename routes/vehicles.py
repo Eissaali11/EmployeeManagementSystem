@@ -721,6 +721,7 @@ def create():
                 color = request.form.get('color')
                 status = request.form.get('status')
                 notes = request.form.get('notes')
+                type_of_car = request.form.get('type_of_car')
                 
                 # التحقق من عدم وجود سيارة بنفس رقم اللوحة
                 if Vehicle.query.filter_by(plate_number=plate_number).first():
@@ -737,7 +738,8 @@ def create():
                         color=color,
                         status=status,
                         driver_name=driver_name,
-                        notes=notes
+                        notes=notes,
+                        type_of_car=type_of_car
                 )
                 
                 db.session.add(vehicle)
