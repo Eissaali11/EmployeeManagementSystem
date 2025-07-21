@@ -753,15 +753,36 @@ def create():
                 )
 
                 db.session.add(vehicle)
+                db.session.flush()  # للحصول على ID المركبة قبل الالتزام النهائي
+                
+                # معالجة المستخدمين المخولين
+                authorized_user_ids = request.form.getlist('authorized_users')
+                if authorized_user_ids:
+                    from models import User
+                    authorized_users = User.query.filter(User.id.in_(authorized_user_ids)).all()
+                    for user in authorized_users:
+                        vehicle.authorized_users.append(user)
+                
                 db.session.commit()
 
                 # تسجيل الإجراء
-                log_audit('create', 'vehicle', vehicle.id, f'تمت إضافة سيارة جديدة: {vehicle.plate_number}')
 
-                flash('تمت إضافة السيارة بنجاح!', 'success')
+
+                user_names = [user.name or user.username or user.email for user in vehicle.authorized_users]
+                log_audit('create', 'vehicle', vehicle.id, 
+                         f'تمت إضافة سيارة جديدة: {vehicle.plate_number}. المستخدمون المخولون: {", ".join(user_names) if user_names else "لا يوجد"}')
+                
+                flash(f'تمت إضافة السيارة بنجاح! المستخدمون المخولون: {len(vehicle.authorized_users)}', 'success')
                 return redirect(url_for('vehicles.index'))
+        
+        # جلب جميع المستخدمين لإدارة الوصول
+        from models import User
+        all_users = User.query.filter_by(is_active=True).all()
+        
+        return render_template('vehicles/create.html', 
+                             statuses=VEHICLE_STATUS_CHOICES,
+                             all_users=all_users)
 
-        return render_template('vehicles/create.html', statuses=VEHICLE_STATUS_CHOICES)
 
 @vehicles_bp.route('/<int:id>')
 @login_required

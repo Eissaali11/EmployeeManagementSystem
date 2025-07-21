@@ -259,10 +259,49 @@
                 </div>
                 
 
-                <!-- ملاحظة حول إدارة وصول المستخدمين -->
-                <div class="alert alert-info mt-3">
-                    <h6><i class="fas fa-info-circle"></i> ملاحظة مهمة:</h6>
-                    <p class="mb-0">بعد إنشاء المركبة، يمكنك تحديد المستخدمين المخولين للوصول إليها من خلال صفحة <strong>"تعديل المركبة"</strong> → قسم <strong>"إدارة وصول المستخدمين"</strong></p>
+                <!-- قسم إدارة وصول المستخدمين -->
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users ms-2"></i>
+                            إدارة وصول المستخدمين
+                        </h5>
+                        <small class="text-muted">يمكن للمديرين رؤية جميع المركبات - هذا القسم للمستخدمين العاديين فقط</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label class="form-label">المستخدمون المخولون للوصول لهذه المركبة:</label>
+                                {% for user in all_users %}
+                                    {% if user.role.name != 'ADMIN' %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="authorized_users" value="{{ user.id }}" 
+                                               id="user_{{ user.id }}">
+                                        <label class="form-check-label" for="user_{{ user.id }}">
+                                            {{ user.name or user.username or user.email }}
+                                            <small class="text-muted">({{ user.email }})</small>
+                                            {% if user.employee %}
+                                                <span class="badge bg-info">{{ user.employee.name }}</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle"></i> معلومات مهمة:</h6>
+                                    <ul class="small mb-0">
+                                        <li>المديرون يمكنهم رؤية جميع المركبات دائماً</li>
+                                        <li>المستخدمون المحددون هنا فقط يمكنهم رؤية هذه المركبة</li>
+                                        <li>إذا لم يتم تحديد أي مستخدم، فلن يتمكن أحد من رؤية المركبة عدا المديرين</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 
                 <div class="text-center mt-4">
