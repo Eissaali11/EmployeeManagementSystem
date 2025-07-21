@@ -701,6 +701,17 @@
                                 {% endif %}
                             </p>
                         </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">تاريخ الميلاد</p>
+                            <p class="fs-5">
+                                {% if employee.birth_date %}
+                                <span class="gregorian-date">{{ employee.birth_date.strftime('%d/%m/%Y') }}</span>
+                                <span class="hijri-date" style="display: none;"></span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </p>
+                        </div>
                         
                         <!-- Employee Type and Custody -->
                         <div class="col-12">

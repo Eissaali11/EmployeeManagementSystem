@@ -73,6 +73,7 @@ class Employee(db.Model):
     location = db.Column(db.String(100))
     project = db.Column(db.String(100))
     join_date = db.Column(db.Date)
+    birth_date = db.Column(db.Date, nullable=True)  # تاريخ الميلاد
     nationality = db.Column(db.String(50))  # جنسية الموظف
     nationality_id = db.Column(db.Integer, db.ForeignKey('nationalities.id', name='fk_employee_nationality_id'), nullable=True)
     contract_type = db.Column(db.String(20), default='foreign')  # سعودي / وافد - saudi / foreign

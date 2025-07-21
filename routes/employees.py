@@ -170,6 +170,7 @@ def create():
             email = request.form.get('email', '')
             department_id = request.form.get('department_id', None)
             join_date = parse_date(request.form.get('join_date', ''))
+            birth_date = parse_date(request.form.get('birth_date', ''))
             mobilePersonal = request.form.get('mobilePersonal')
             nationality_id = request.form.get('nationality_id')
             contract_status = request.form.get('contract_status')
@@ -200,6 +201,7 @@ def create():
                 email=email,
                 department_id=department_id,
                 join_date=join_date,
+                birth_date=birth_date,
                 mobilePersonal=mobilePersonal,
                 nationality_id=int(nationality_id) if nationality_id else None,
                 contract_status=contract_status,
@@ -300,6 +302,10 @@ def edit(id):
             
             join_date_str = request.form.get('join_date')
             employee.join_date = parse_date(join_date_str) if join_date_str else None
+            
+            # إضافة معالجة تاريخ الميلاد
+            birth_date_str = request.form.get('birth_date')
+            employee.birth_date = parse_date(birth_date_str) if birth_date_str else None
 
             selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
             current_dept_ids = {dept.id for dept in employee.departments}
