@@ -594,9 +594,9 @@ body {
                     </a>
                     
                     {% if operation.status == 'pending' or operation.status == 'under_review' %}
-                    <button class="action-btn btn btn-success" onclick="showApprovalForm({{ operation.id }})">
+                    <button class="action-btn btn btn-success" onclick="quickApprove({{ operation.id }})">
                         <i class="fas fa-check me-2"></i>
-                        موافقة العملية
+                        موافقة سريعة
                     </button>
                     
                     <button class="action-btn btn btn-warning" onclick="quickReject({{ operation.id }})">
@@ -616,129 +616,29 @@ body {
     </div>
 </div>
 
-<!-- Modal للموافقة مع تحديد فترة التفويض -->
+<!-- Modal للموافقة السريعة -->
 <div class="modal fade" id="approveModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">
                     <i class="fas fa-check-circle me-2"></i>
-                    الموافقة على العملية وتحديد فترة التفويض
+                    الموافقة على العملية
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="approveForm">
                 <div class="modal-body">
-                    <!-- معلومات العملية -->
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle me-2"></i>معلومات العملية:</h6>
-                        <p class="mb-1"><strong>العنوان:</strong> {{ operation.title }}</p>
-                        <p class="mb-1"><strong>النوع:</strong> 
-                            {% if operation.operation_type == 'handover' %}
-                                تسليم/استلام مركبة
-                            {% elif operation.operation_type == 'workshop' %}
-                                عملية ورشة
-                            {% elif operation.operation_type == 'external_authorization' %}
-                                تفويض خارجي
-                            {% elif operation.operation_type == 'safety_inspection' %}
-                                فحص سلامة
-                            {% endif %}
-                        </p>
-                        {% if operation.vehicle %}
-                        <p class="mb-0"><strong>السيارة:</strong> {{ operation.vehicle.plate_number }}</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- تحديد فترة التفويض -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-calendar-plus me-2"></i>
-                                    تاريخ بداية التفويض:
-                                </label>
-                                <input type="date" name="authorization_start_date" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-calendar-minus me-2"></i>
-                                    تاريخ نهاية التفويض:
-                                </label>
-                                <input type="date" name="authorization_end_date" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- وقت بداية ونهاية التفويض -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-clock me-2"></i>
-                                    وقت البداية:
-                                </label>
-                                <input type="time" name="authorization_start_time" class="form-control" value="08:00">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-clock me-2"></i>
-                                    وقت النهاية:
-                                </label>
-                                <input type="time" name="authorization_end_time" class="form-control" value="17:00">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ملاحظات الموافقة -->
                     <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-comment-alt me-2"></i>
-                            ملاحظات الموافقة:
-                        </label>
-                        <textarea name="review_notes" class="form-control" rows="3" placeholder="أدخل أي ملاحظات أو شروط خاصة بالتفويض..."></textarea>
-                    </div>
-
-                    <!-- شروط التفويض -->
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="fas fa-list-check me-2"></i>
-                            شروط التفويض:
-                        </label>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="conditions[]" value="driving_license" id="condition1" checked>
-                            <label class="form-check-label" for="condition1">
-                                التأكد من وجود رخصة قيادة سارية
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="conditions[]" value="vehicle_inspection" id="condition2" checked>
-                            <label class="form-check-label" for="condition2">
-                                فحص حالة المركبة قبل التسليم
-                            </label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="conditions[]" value="fuel_level" id="condition3">
-                            <label class="form-check-label" for="condition3">
-                                التأكد من مستوى الوقود
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="conditions[]" value="return_clean" id="condition4">
-                            <label class="form-check-label" for="condition4">
-                                إعادة المركبة نظيفة
-                            </label>
-                        </div>
+                        <label class="form-label">ملاحظات الموافقة (اختياري):</label>
+                        <textarea name="review_notes" class="form-control" rows="3" placeholder="أدخل أي ملاحظات إضافية..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-check me-2"></i>
-                        تأكيد الموافقة والتفويض
+                        تأكيد الموافقة
                     </button>
                 </div>
             </form>
@@ -810,18 +710,8 @@ body {
 <script>
 let currentOperationId = null;
 
-function showApprovalForm(operationId) {
+function quickApprove(operationId) {
     currentOperationId = operationId;
-    
-    // تعيين التاريخ الحالي كتاريخ افتراضي للبداية
-    const today = new Date().toISOString().split('T')[0];
-    document.querySelector('input[name="authorization_start_date"]').value = today;
-    
-    // تعيين تاريخ انتهاء افتراضي (أسبوع من الآن)
-    const nextWeek = new Date();
-    nextWeek.setDate(nextWeek.getDate() + 7);
-    document.querySelector('input[name="authorization_end_date"]').value = nextWeek.toISOString().split('T')[0];
-    
     $('#approveModal').modal('show');
 }
 
@@ -863,27 +753,13 @@ function confirmDelete() {
     });
 }
 
-// معالجة نموذج الموافقة مع التفويض
+// معالجة نموذج الموافقة
 document.getElementById('approveForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // التحقق من صحة التواريخ
-    const startDate = new Date(this.authorization_start_date.value);
-    const endDate = new Date(this.authorization_end_date.value);
-    
-    if (endDate <= startDate) {
-        showToast('تاريخ نهاية التفويض يجب أن يكون بعد تاريخ البداية', 'error');
-        return;
-    }
-    
-    // جمع الشروط المحددة
-    const conditions = Array.from(this.querySelectorAll('input[name="conditions[]"]:checked'))
-                           .map(checkbox => checkbox.value);
-    
     const formData = new FormData(this);
-    formData.append('conditions', JSON.stringify(conditions));
     
-    fetch(`/operations/${currentOperationId}/approve-with-authorization`, {
+    fetch(`/operations/${currentOperationId}/approve`, {
         method: 'POST',
         body: formData
     })
@@ -891,7 +767,7 @@ document.getElementById('approveForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             $('#approveModal').modal('hide');
-            showToast('تمت الموافقة على العملية وتحديد فترة التفويض بنجاح', 'success');
+            showToast('تمت الموافقة على العملية بنجاح', 'success');
             setTimeout(() => location.reload(), 1500);
         } else {
             showToast(data.message || 'حدث خطأ', 'error');

@@ -533,14 +533,6 @@ class Vehicle(db.Model):
     # إضافة حقل رابط مجلد Google Drive
     drive_folder_link = db.Column(db.String(500), nullable=True)  # رابط مجلد Google Drive
     
-    # حقول التفويض الجديدة
-    authorization_start_date = db.Column(db.DateTime, nullable=True)  # تاريخ ووقت بداية التفويض
-    authorization_end_date = db.Column(db.DateTime, nullable=True)  # تاريخ ووقت نهاية التفويض
-    authorization_status = db.Column(db.String(50), default='none', nullable=True)  # حالة التفويض: none, active, expired, suspended
-    authorization_conditions = db.Column(db.Text, nullable=True)  # شروط التفويض
-    authorized_by = db.Column(db.Integer, nullable=True)  # معرف المستخدم الذي أذن بالتفويض
-    authorization_notes = db.Column(db.Text, nullable=True)  # ملاحظات التفويض
-    
     notes = db.Column(db.Text)  # ملاحظات
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
