@@ -2178,9 +2178,9 @@ def create_handover_mobile():
 
             action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
             log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
-<<<<<<< HEAD
 
-=======
+
+
             
             # إنشاء طلب عملية للموافقة الإدارية
             try:
@@ -2202,7 +2202,7 @@ def create_handover_mobile():
                 traceback.print_exc()
                 # لا نتوقف عند فشل تسجيل العملية، فقط نسجل الخطأ
             
->>>>>>> ee67da2 (Ensure vehicle handovers require administrative approval for added security)
+
             flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
 
@@ -2559,12 +2559,7 @@ def mobile_vehicle_checklist_pdf(checklist_id):
     try:
         # الحصول على بيانات الفحص
         checklist = VehicleChecklist.query.get_or_404(checklist_id)
-<<<<<<< HEAD
 
-        # الحصول على بيانات المركبة
-        vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
-
-=======
         
         # الحصول على بيانات المركبة وفحص حالتها
         vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
@@ -2575,7 +2570,7 @@ def mobile_vehicle_checklist_pdf(checklist_id):
         if restrictions['blocked']:
             print(f"تحذير: {restrictions['message']}")
         
->>>>>>> 63a0172 (Improve handling of out-of-service vehicles and display clear warnings)
+
         # جمع بيانات عناصر الفحص مرتبة حسب الفئة
         checklist_items = {}
         for item in checklist.checklist_items:
@@ -3883,6 +3878,29 @@ def add_workshop_record(vehicle_id):
             # تسجيل الإجراء
             log_activity('create', 'vehicle_workshop', workshop_record.id, 
                        f'تم إضافة سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال')
+
+            
+            # إنشاء طلب عملية تلقائياً لإدارة العمليات
+            try:
+                operation_title = f"ورشة جديدة - {vehicle.plate_number}"
+                operation_description = f"تم إنشاء سجل ورشة جديد: {reason} - {description}"
+                
+                create_operation_request(
+                    operation_type='workshop_record',
+                    related_record_id=workshop_record.id,
+                    vehicle_id=vehicle_id,
+                    title=operation_title,
+                    description=operation_description,
+                    requested_by=current_user.id,
+                    priority='normal'
+                )
+                
+                current_app.logger.debug(f"تم إنشاء طلب عملية للورشة: {workshop_record.id}")
+                
+            except Exception as e:
+                current_app.logger.error(f"خطأ في إنشاء طلب العملية للورشة: {str(e)}")
+                # لا نوقف العملية إذا فشل إنشاء طلب العملية
+            
 
             flash('تم إضافة سجل الورشة بنجاح!', 'success')
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
