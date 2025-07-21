@@ -214,6 +214,14 @@ def approve_operation(operation_id):
         
         db.session.commit()
         
+        # تحديث السائق الحالي إذا كانت العملية من نوع handover
+        if operation.operation_type == 'handover' and operation.vehicle_id:
+            try:
+                from utils.vehicle_driver_utils import update_vehicle_driver_approved
+                update_vehicle_driver_approved(operation.vehicle_id)
+            except Exception as e:
+                print(f"خطأ في تحديث السائق بعد الموافقة: {e}")
+        
         # تسجيل العملية
         log_audit(current_user.id, 'approve', 'operation_request', operation.id, 
                  f'تمت الموافقة على العملية: {operation.title}')
