@@ -364,6 +364,333 @@
         }
     }
 </style>
+
+
+<style>
+    /* ... أي ستايلات أخرى ... */
+    .department-pills-container {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .department-pill {
+        display: inline-flex; align-items: center; padding: 0.5em 0.9em;
+        font-size: 0.9rem; cursor: pointer; border-radius: 50rem;
+        transition: all 0.2s ease-in-out;
+        /* ستايل السمة الداكنة الافتراضي */
+        background-color: #495057; color: #ced4da; border: 1px solid #495057;
+    }
+    .department-pill .fa-check-circle { display: none; }
+    .department-pill.active {
+        background-color: #0d6efd; color: white; border-color: #0a58ca; font-weight: 500;
+    }
+    .department-pill.active .fa-check-circle { display: inline-block; }
+    .department-pill:not(.active):hover { background-color: #6c757d; }
+
+    /* تحسينات خاصة بقسم المعلومات البنكية */
+    .banking-section {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .banking-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+        animation: banking-glow 3s ease-in-out infinite alternate;
+        pointer-events: none;
+    }
+
+    @keyframes banking-glow {
+        0% { transform: scale(1) rotate(0deg); }
+        100% { transform: scale(1.1) rotate(10deg); }
+    }
+
+    .banking-card {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+    .banking-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .banking-card:hover::before {
+        left: 100%;
+    }
+
+    .banking-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    .iban-display {
+        position: relative;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px solid #22c55e;
+        border-radius: 12px;
+        padding: 20px;
+        font-family: 'Courier New', monospace;
+        font-size: 1.2em;
+        letter-spacing: 2px;
+        font-weight: bold;
+        color: #1e40af;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .iban-display::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #22c55e, #3b82f6, #22c55e);
+        animation: iban-shimmer 2s linear infinite;
+    }
+
+    @keyframes iban-shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .form-floating label {
+        color: #1e40af;
+        font-weight: 600;
+    }
+
+    .form-floating .form-control:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+    }
+
+    .form-floating .form-control:focus ~ label {
+        color: #1e40af;
+    }
+
+    .banking-submit-btn {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .banking-submit-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.4s ease, height 0.4s ease;
+    }
+
+    .banking-submit-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .iban-image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+    }
+
+    .iban-image-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    .iban-image-container:hover::after {
+        transform: translateX(100%);
+    }
+
+    .success-check {
+        animation: checkmark 0.6s ease-in-out;
+    }
+
+    @keyframes checkmark {
+        0% { transform: scale(0) rotate(45deg); }
+        50% { transform: scale(1.2) rotate(45deg); }
+        100% { transform: scale(1) rotate(45deg); }
+    }
+
+    .alert-enhanced {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alert-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, #3b82f6, #1d4ed8);
+    }
+</style>
+
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // بيانات الحضور للرسم البياني
+        {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
+        {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
+        {% set leave_count = attendances|selectattr('status', 'eq', 'leave')|list|length %}
+        {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
+        
+        // رسم بياني دائري للحضور
+        const attendanceCtx = document.getElementById('attendanceChart');
+        if (attendanceCtx) {
+            const attendanceChart = new Chart(attendanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['حاضر', 'غائب', 'إجازة', 'مرضي'],
+                    datasets: [{
+                        data: [{{ present_count }}, {{ absent_count }}, {{ leave_count }}, {{ sick_count }}],
+                        backgroundColor: [
+                            '#28a745', // أخضر (حاضر)
+                            '#dc3545', // أحمر (غائب)
+                            '#ffc107', // أصفر (إجازة)
+                            '#17a2b8'  // أزرق (مرضي)
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            rtl: true,
+                            labels: {
+                                font: {
+                                    family: 'Cairo, sans-serif'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            bodyFont: {
+                                family: 'Cairo, sans-serif'
+                            },
+                            titleFont: {
+                                family: 'Cairo, sans-serif'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // تطبيق تأثيرات حركية على بطاقات لوحة المعلومات
+        const dashboardCards = document.querySelectorAll('.dashboard-card');
+        dashboardCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.classList.add('shadow-lg');
+            });
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('shadow-lg');
+            });
+        });
+        
+        // زر عرض كل الأيام
+        const showAllDaysBtn = document.getElementById('showAllDaysBtn');
+        if (showAllDaysBtn) {
+            let allDaysShown = false;
+            
+            showAllDaysBtn.addEventListener('click', function() {
+                const extraRows = document.querySelectorAll('.extra-attendance-row');
+                if (!allDaysShown) {
+                    // عرض جميع السجلات
+                    extraRows.forEach(row => {
+                        row.classList.remove('d-none');
+                    });
+                    this.innerHTML = '<i class="fas fa-compress-alt me-1"></i>عرض أقل';
+                    allDaysShown = true;
+                } else {
+                    // إخفاء السجلات الإضافية
+                    extraRows.forEach(row => {
+                        row.classList.add('d-none');
+                    });
+                    this.innerHTML = '<i class="fas fa-calendar-alt me-1"></i>عرض كل الأيام';
+                    allDaysShown = false;
+                }
+            });
+        }
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM is ready. Initializing employee edit scripts...");
+
+    // --- بداية منطق شارات الأقسام التفاعلية ---
+    const departmentPills = document.querySelectorAll('.department-pill');
+    
+    // التحقق مما إذا تم العثور على أي شارات
+    console.log(`Found ${departmentPills.length} department pills.`);
+
+    departmentPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            // 1. تبديل المظهر البصري للشارة
+            this.classList.toggle('active');
+
+            // 2. العثور على معرف مربع الاختيار المرتبط
+            const targetCheckboxId = this.dataset.targetId;
+            const targetCheckbox = document.getElementById(targetCheckboxId);
+
+            if (targetCheckbox) {
+                // 3. عكس حالة مربع الاختيار المخفي
+                targetCheckbox.checked = !targetCheckbox.checked;
+                console.log(`Checkbox #${targetCheckboxId} is now ${targetCheckbox.checked ? 'checked' : 'unchecked'}`);
+            } else {
+                console.error(`Could not find checkbox with ID: ${targetCheckboxId}`);
+            }
+        });
+    });
+    // --- نهاية منطق شارات الأقسام التفاعلية ---
+
+
+    // --- كود إضافي آخر (مثل إظهار/إخفاء كلمة المرور) يمكن أن يكون هنا ---
+    const togglePassword = document.getElementById('togglePassword');
+    if (togglePassword) {
+        // ... (منطق زر كلمة المرور)
+    }
+
+});
+</script>
+
+
 {% endblock %}
 
 {% block content %}
@@ -502,62 +829,90 @@
 
 
     <!-- قسم المعلومات البنكية - الإيبان -->
-    <div class="dashboard-card card mb-4">
-        <div class="card-header" style="background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%); color: white;">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-university me-2"></i>المعلومات البنكية
-            </h5>
+
+    <div class="card mb-4 shadow-lg banking-section" style="border: none; border-radius: 15px; overflow: hidden;">
+        <div class="card-header" style="background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 50%, #3182ce 100%); color: white; border: none; padding: 20px;">
+            <div class="d-flex align-items-center">
+                <div class="me-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-university fa-lg"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0" style="font-weight: 600;">المعلومات البنكية</h5>
+                    <small style="opacity: 0.9;">إدارة الإيبان البنكي وصورة البطاقة</small>
+                </div>
+            </div>
+
         </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- رقم الإيبان البنكي -->
+        <div class="card-body" style="padding: 30px; background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);">
+            <div class="row g-4">
+                <!-- بطاقة رقم الإيبان البنكي -->
                 <div class="col-md-6">
-                    <div class="mb-3">
-                        <h6 class="text-muted mb-2">رقم الإيبان البنكي</h6>
-                        <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa; min-height: 60px;">
+                    <div class="card h-100 banking-card" style="border: none; border-radius: 12px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                        <div class="card-header" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; border-radius: 12px 12px 0 0;">
+                            <h6 class="mb-0">
+                                <i class="fas fa-credit-card me-2"></i>رقم الإيبان البنكي
+                            </h6>
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 140px;">
                             {% if employee.bank_iban %}
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-credit-card text-primary me-2"></i>
-                                    <span class="fw-bold" style="font-family: 'Courier New', monospace; font-size: 1.1em;">{{ employee.bank_iban }}</span>
+                                <div class="text-center">
+                                    <div class="mb-3">
+                                        <i class="fas fa-check-circle text-success fa-2x mb-2 success-check"></i>
+                                        <p class="text-muted mb-0">الإيبان متوفر</p>
+                                    </div>
+                                    <div class="iban-display">
+                                        <span class="fw-bold text-dark">{{ employee.bank_iban }}</span>
+                                    </div>
                                 </div>
                             {% else %}
                                 <div class="text-center text-muted">
-                                    <i class="fas fa-credit-card fa-2x mb-2"></i>
-                                    <p class="mb-0">لم يتم إدخال رقم الإيبان</p>
+                                    <i class="fas fa-exclamation-circle text-warning fa-3x mb-2"></i>
+                                    <h6 class="text-warning">لم يتم إدخال رقم الإيبان</h6>
+                                    <p class="small mb-0">يرجى إدخال رقم الإيبان البنكي أدناه</p>
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- صورة الإيبان البنكي -->
+                <!-- بطاقة صورة الإيبان البنكي -->
                 <div class="col-md-6">
-                    <div class="mb-3">
-                        <h6 class="text-muted mb-2">صورة الإيبان البنكي</h6>
-                        <div class="border rounded p-3 mb-3" style="min-height: 200px; background-color: #f8f9fa;">
+                    <div class="card h-100 banking-card" style="border: none; border-radius: 12px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                        <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 12px 12px 0 0;">
+                            <h6 class="mb-0">
+                                <i class="fas fa-image me-2"></i>صورة بطاقة الإيبان
+                            </h6>
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 140px;">
                             {% if employee.bank_iban_image %}
                                 <div class="text-center">
-                                    <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
-                                         alt="صورة الإيبان البنكي" 
-                                         class="img-fluid rounded" 
-                                         style="max-height: 180px; width: auto; cursor: pointer;"
-                                         data-bs-toggle="modal" 
-                                         data-bs-target="#ibanImageModal">
+                                    <div class="position-relative d-inline-block iban-image-container">
+                                        <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
+                                             alt="صورة الإيبان البنكي" 
+                                             class="img-fluid rounded shadow" 
+                                             style="max-height: 120px; width: auto; cursor: pointer; border: 3px solid #3b82f6;"
+                                             data-bs-toggle="modal" 
+                                             data-bs-target="#ibanImageModal">
+                                        <div class="position-absolute top-0 end-0" style="transform: translate(50%, -50%);">
+                                            <span class="badge bg-success rounded-pill success-check">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                        </div>
+                                    </div>
                                     <div class="mt-2">
                                         <form action="{{ url_for('employees.delete_iban_image', id=employee.id) }}" method="post" 
                                               onsubmit="return confirm('هل أنت متأكد من حذف صورة الإيبان؟')" class="d-inline">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">
                                                 <i class="fas fa-trash me-1"></i>حذف الصورة
                                             </button>
                                         </form>
                                     </div>
                                 </div>
                             {% else %}
-                                <div class="d-flex align-items-center justify-content-center h-100">
-                                    <div class="text-center text-muted">
-                                        <i class="fas fa-file-image fa-3x mb-2"></i>
-                                        <p>لا توجد صورة للإيبان</p>
-                                    </div>
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-cloud-upload-alt text-info fa-3x mb-2"></i>
+                                    <h6 class="text-info">لا توجد صورة للإيبان</h6>
+                                    <p class="small mb-0">يرجى رفع صورة بطاقة الإيبان أدناه</p>
                                 </div>
                             {% endif %}
                         </div>
@@ -566,15 +921,21 @@
             </div>
 
             <!-- نموذج إدخال/تحديث الإيبان -->
-            <div class="border-top pt-3">
-                <h6 class="text-primary mb-3">
-                    <i class="fas fa-edit me-1"></i>تحديث المعلومات البنكية
-                </h6>
+            <div class="mt-4 p-4 rounded" style="background: white; border: 2px dashed #3b82f6; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-edit text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-primary mb-0" style="font-weight: 600;">تحديث المعلومات البنكية</h6>
+                        <small class="text-muted">قم بإدخال أو تحديث رقم الإيبان وصورة البطاقة</small>
+                    </div>
+                </div>
+                
                 <form action="{{ url_for('employees.upload_iban', id=employee.id) }}" method="post" enctype="multipart/form-data">
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="bank_iban" class="form-label">رقم الإيبان البنكي</label>
+                            <div class="form-floating mb-3">
                                 <input type="text" 
                                        class="form-control" 
                                        id="bank_iban" 
@@ -582,25 +943,45 @@
                                        value="{{ employee.bank_iban or '' }}" 
                                        placeholder="SA0000000000000000000000"
                                        maxlength="50"
-                                       style="font-family: 'Courier New', monospace;">
-                                <div class="form-text">أدخل رقم الإيبان البنكي كاملاً (24 رقم للبنوك السعودية)</div>
+                                       style="font-family: 'Courier New', monospace; font-size: 1.1em; letter-spacing: 1px; border: 2px solid #e2e8f0; border-radius: 10px;">
+                                <label for="bank_iban">
+                                    <i class="fas fa-credit-card me-1 text-primary"></i>رقم الإيبان البنكي
+                                </label>
+                            </div>
+                            <div class="alert alert-info alert-enhanced" style="border: none; background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%); border-radius: 8px;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <small>أدخل رقم الإيبان البنكي كاملاً (24 رقم للبنوك السعودية)</small>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="iban_image" class="form-label">صورة الإيبان البنكي</label>
+                                <label for="iban_image" class="form-label fw-bold text-primary">
+                                    <i class="fas fa-image me-1"></i>صورة بطاقة الإيبان البنكي
+                                </label>
                                 <input type="file" 
                                        class="form-control" 
                                        id="iban_image" 
                                        name="iban_image" 
-                                       accept="image/*">
-                                <div class="form-text">اختر صورة واضحة لبطاقة الإيبان البنكي</div>
+                                       accept="image/*"
+                                       style="border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px;">
+                            </div>
+                            <div class="alert alert-success alert-enhanced" style="border: none; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 8px;">
+                                <i class="fas fa-camera me-1"></i>
+                                <small>اختر صورة واضحة لبطاقة الإيبان البنكي (JPG, PNG, WebP)</small>
                             </div>
                         </div>
                     </div>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i>حفظ المعلومات البنكية
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-lg px-5 py-3 rounded-pill banking-submit-btn" 
+                                style="background: linear-gradient(135deg, #1e3a5c 0%, #3182ce 100%); 
+                                       border: none; 
+                                       color: white; 
+                                       font-weight: 600; 
+                                       box-shadow: 0 4px 15px rgba(30, 58, 92, 0.3);
+                                       transition: all 0.3s ease;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(30, 58, 92, 0.4)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(30, 58, 92, 0.3)'">
+                            <i class="fas fa-save me-2"></i>حفظ المعلومات البنكية
                         </button>
                     </div>
                 </form>
@@ -611,22 +992,46 @@
     <!-- Modal لعرض صورة الإيبان -->
     {% if employee.bank_iban_image %}
     <div class="modal fade" id="ibanImageModal" tabindex="-1" aria-labelledby="ibanImageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ibanImageModalLabel">صورة الإيبان البنكي - {{ employee.name }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content" style="border: none; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1e3a5c 0%, #3182ce 100%); color: white; border: none; padding: 20px;">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-credit-card fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="ibanImageModalLabel" style="font-weight: 600;">صورة الإيبان البنكي</h5>
+                            <small style="opacity: 0.9;">{{ employee.name }}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center">
-                    <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
-                         alt="صورة الإيبان البنكي" 
-                         class="img-fluid rounded">
+                <div class="modal-body text-center" style="padding: 40px; background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);">
+                    <div class="mb-3">
+                        <span class="badge bg-success rounded-pill px-3 py-2">
+                            <i class="fas fa-check me-1"></i>صورة الإيبان البنكي
+                        </span>
+                    </div>
+                    <div class="d-inline-block position-relative">
+                        <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
+                             alt="صورة الإيبان البنكي" 
+                             class="img-fluid rounded shadow-lg" 
+                             style="max-height: 70vh; width: auto; border: 3px solid #3b82f6;">
+                        <div class="position-absolute bottom-0 start-0 m-2">
+                            <span class="badge bg-dark bg-opacity-75 rounded-pill">
+                                <i class="fas fa-expand-alt me-1"></i>انقر للتكبير
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <div class="modal-footer" style="background: white; border: none; padding: 20px; justify-content: center;">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 me-2" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>إغلاق
+                    </button>
                     <a href="{{ url_for('static', filename=employee.bank_iban_image) }}" 
                        target="_blank" 
-                       class="btn btn-primary">
+                       class="btn rounded-pill px-4"
+                       style="background: linear-gradient(135deg, #1e3a5c 0%, #3182ce 100%); border: none; color: white;">
                         <i class="fas fa-external-link-alt me-1"></i>فتح في تبويب جديد
                     </a>
                 </div>
