@@ -2025,6 +2025,11 @@ def create_handover_mobile():
 
         vehicle = Vehicle.query.get_or_404(int(vehicle_id_str))
         
+        print(vehicle)
+        if vehicle.status != 'available':
+                flash('هذه المركبة غير متاحة حالياً.', 'danger')
+                return redirect(url_for('mobile.create_handover_mobile'))
+
         # فحص قيود العمليات للمركبات خارج الخدمة
         from routes.vehicles import check_vehicle_operation_restrictions
         restrictions = check_vehicle_operation_restrictions(vehicle)
@@ -2470,6 +2475,8 @@ def vehicle_checklist_list():
 
     # الحصول على بيانات السيارات لعرضها في القائمة
     vehicles = Vehicle.query.all()
+
+    print(vehicles)
 
     # تحويل بيانات الفحوصات إلى تنسيق مناسب للعرض
     checklists_data = []

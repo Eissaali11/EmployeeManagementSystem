@@ -74,16 +74,22 @@ styles %} {{ super() }}
                                     data-project="{{ vehicle.project or '' }}"
                                     data-location="{{ vehicle.location or '' }}"
                                     data-status="{{ vehicle.status }}"
-                                    {% if vehicle.status == 'out_of_service' %}style="color: #dc3545; font-weight: bold;"{% endif %}>
+                                    {% if vehicle.status == 'out_of_service' %}style="color: #dc3545; font-weight: bold;"{% endif %}
+                                    {% if vehicle.status != 'available' %}style="color: #dc3545; font-weight: bold;"{% endif %}>
                                 {{ vehicle.plate_number }} - ({{ vehicle.make }} {{ vehicle.model }})
                                 {% if vehicle.status == 'out_of_service' %} ⚠️ [خارج الخدمة]{% endif %}
-                            </option>
+
+                                                         </option>
 
                         {% endfor %}
                     </select>
                     <div id="vehicle-status-alert" class="alert alert-danger mt-2 d-none">
                         <i class="fas fa-exclamation-triangle"></i>
                         <strong>تحذير:</strong> السيارة المختارة خارج الخدمة ولا يمكن تنفيذ عمليات تسليم أو استلام عليها.
+                    </div>
+                    <div id="vehicle-status-alert-avaliable" class="alert alert-primary mt-2 d-none">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تحذير:</strong> السيارة المختارة ليست متاحة يجب تسليمها اولا.
                     </div>
                 </div>
             </div>
@@ -1220,6 +1226,8 @@ styles %} {{ super() }}
 
             const vehicleStatus = selectedOption.data('status');
             const statusAlert = document.getElementById('vehicle-status-alert');
+            const statusAlertSuccess = document.getElementById('vehicle-status-alert-avaliable');
+
             
             // فحص المركبات خارج الخدمة
             if (vehicleStatus === 'out_of_service') {
@@ -1228,7 +1236,15 @@ styles %} {{ super() }}
                 const submitBtn = document.querySelector('button[type="submit"]');
                 if (submitBtn) submitBtn.disabled = true;
                 return;
-            } else {
+            }
+            else if (vehicleStatus !== "available"){
+                statusAlertSuccess.classList.remove('d-none');
+                formContainer.addClass('d-none');
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+             else {
                 statusAlert.classList.add('d-none');
                 const submitBtn = document.querySelector('button[type="submit"]');
                 if (submitBtn) submitBtn.disabled = false;
