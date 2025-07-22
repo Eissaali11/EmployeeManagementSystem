@@ -593,7 +593,7 @@
                                             مشاهدة سجل التسليم
                                         </a>
                                         {% if current_driver.mobile %}
-                                        <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً%20{{ current_driver.name }}%20👋%0A%0A🚗%20المركبة:%20{{ vehicle.plate_number }}%0A📅%20{{ current_driver.handover_type_ar }}:%20{{ current_driver.formatted_date }}%0A%0A📋%20PDF:%20{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0A🙏%20شكراً%20لك"
+                                        <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط PDF للتسليم:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك"
                                            class="btn btn-sm btn-success ms-1"
                                            target="_blank"
                                            title="إرسال رسالة واتساب">
