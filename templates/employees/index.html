@@ -846,6 +846,7 @@
     background: white !important;
     border-radius: 8px;
     overflow: hidden;
+    table-layout: auto;
 }
 
 #employeesTable tbody {
@@ -863,6 +864,27 @@
     background: white !important;
     color: #333 !important;
     border-bottom: 1px solid #e9ecef;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: visible;
+}
+
+/* تحسين خاص لعمود الأسماء لإظهار النص بالكامل */
+.employee-name {
+    min-width: 200px !important;
+    max-width: none !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow: visible !important;
+    text-overflow: visible !important;
+}
+
+.employee-name strong {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #333 !important;
+    display: block !important;
+    line-height: 1.4 !important;
 }
 
 /* تحسين hover للصفوف البيضاء */
@@ -870,6 +892,30 @@
     background: rgba(102, 126, 234, 0.05) !important;
     transform: translateX(-2px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* تحسين إضافي لضمان وضوح جميع النصوص */
+#employeesTable th {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    padding: 15px 10px !important;
+}
+
+#employeesTable td {
+    font-size: 14px !important;
+    padding: 15px 10px !important;
+    line-height: 1.5 !important;
+}
+
+/* تحسين خاص للأعمدة المهمة */
+#employeesTable td:nth-child(2) { /* عمود الاسم */
+    font-weight: 600 !important;
+    color: #2c3e50 !important;
+}
+
+#employeesTable td:nth-child(1) { /* عمود الرقم الوظيفي */
+    font-weight: 500 !important;
+    color: #3498db !important;
 }
 
 </style>
@@ -1068,7 +1114,7 @@
                     <thead>
                         <tr>
                             <th><i class="fas fa-id-card me-1"></i>الرقم الوظيفي</th>
-                            <th><i class="fas fa-user me-1"></i>الاسم</th>
+                            <th style="min-width: 200px;"><i class="fas fa-user me-1"></i>الاسم</th>
                             <th><i class="fas fa-id-badge me-1"></i>رقم الهوية</th>
                             <th><i class="fas fa-mobile-alt me-1"></i>الجوال</th>
                             <th><i class="fas fa-briefcase me-1"></i>المسمى الوظيفي</th>
