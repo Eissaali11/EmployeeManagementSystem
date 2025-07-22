@@ -435,7 +435,7 @@ def assign():
         devices_query = MobileDevice.query.outerjoin(Employee).filter(
             or_(
                 MobileDevice.employee_id.is_(None),
-                Employee.status != 'نشط'
+                ~Employee.status.in_(['نشط', 'active'])
             )
         ).filter(MobileDevice.status != 'معطل')
         
@@ -451,8 +451,8 @@ def assign():
         
         available_devices = devices_query.all()
         
-        # جلب الموظفين النشطين مع فلترة
-        employees_query = Employee.query.filter_by(status='نشط')
+        # جلب الموظفين النشطين مع فلترة (active بالإنجليزي أو نشط بالعربي)
+        employees_query = Employee.query.filter(Employee.status.in_(['نشط', 'active']))
         
         # فلترة الموظفين حسب البحث
         if search:
@@ -475,6 +475,7 @@ def assign():
         
         # جلب جميع الأقسام للفلترة
         departments = Department.query.order_by(Department.name).all()
+        
         
         return render_template('mobile_devices/assign.html',
                              available_devices=available_devices,
@@ -501,7 +502,7 @@ def assign_device(device_id, employee_id):
             flash('لا يمكن ربط جهاز معطل', 'danger')
             return redirect(url_for('mobile_devices.assign'))
         
-        if employee.status != 'نشط':
+        if employee.status not in ['نشط', 'active']:
             flash('لا يمكن ربط الجهاز بموظف غير نشط', 'danger')
             return redirect(url_for('mobile_devices.assign'))
         
