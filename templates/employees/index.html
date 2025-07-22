@@ -806,10 +806,11 @@
     max-height: 75vh !important;
     min-height: 500px !important;
     overflow: auto !important;
-    border: 2px solid #e9ecef;
+    border: 2px solid #667eea;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    background: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    background: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+    padding: 0;
 }
 
 /* تحسين التمرير للجدول */
@@ -835,19 +836,40 @@
 /* تحسين عرض البيانات */
 #employeesTable tbody tr {
     transition: all 0.3s ease;
+    background: white !important;
 }
 
-#employeesTable tbody tr:hover {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(5, 18, 45, 0.1) 100%) !important;
-    transform: translateX(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+
+/* تحسين واضح للنصوص - بيانات بيضاء */
+#employeesTable {
+    background: white !important;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-/* تحسين واضح للنصوص */
+#employeesTable tbody {
+    background: white !important;
+}
+
+#employeesTable tbody tr {
+    background: white !important;
+}
+
 #employeesTable tbody td {
     font-size: 14px;
     padding: 12px 8px;
     vertical-align: middle;
+    background: white !important;
+    color: #333 !important;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* تحسين hover للصفوف البيضاء */
+#employeesTable tbody tr:hover {
+    background: rgba(102, 126, 234, 0.05) !important;
+    transform: translateX(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 </style>
