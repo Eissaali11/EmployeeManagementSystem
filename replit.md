@@ -968,6 +968,15 @@
 
 # نُظم - Arabic Employee Management System
 
+## Recent Update - July 22, 2025: نظام الإرجاع التلقائي للمركبات
+تم تطوير وتطبيق نظام شامل للإرجاع التلقائي للمركبات مع الميزات التالية:
+• تحديث تلقائي لحالة السيارة إلى "متاحة" بعد عملية الاستلام
+• API endpoint لجلب بيانات السائق الحالي: `/mobile/get_vehicle_driver_info/<vehicle_id>`
+• نظام JavaScript متقدم للتعبئة التلقائية للحقول مع زر "إرجاع سريع"
+• دعم عمليات الاستلام للسيارات غير المتاحة مع منع التسليم
+• تسجيل شامل للعمليات في audit log مع validation محسن
+• النظام جاهز للاستخدام مع 27 سيارة في قاعدة البيانات
+
 ## Overview
 
 نُظم is a comprehensive Arabic employee management system built with Flask, designed specifically for companies in Saudi Arabia. The system provides complete employee lifecycle management, vehicle tracking, attendance monitoring, and detailed reporting capabilities with full Arabic language support.

@@ -2027,8 +2027,12 @@ def create_handover_mobile():
         
         print(vehicle)
         if vehicle.status != 'available':
-                flash('هذه المركبة غير متاحة حالياً.', 'danger')
-                return redirect(url_for('mobile.create_handover_mobile'))
+                # تحقق من أن العملية استلام أو تسليم
+                handover_type = request.form.get('handover_type')
+                if handover_type != 'return':
+                    flash('هذه المركبة غير متاحة للتسليم. يمكن فقط إجراء عملية استلام.', 'warning')
+                    return redirect(url_for('mobile.create_handover_mobile'))
+
 
         # فحص قيود العمليات للمركبات خارج الخدمة
         from routes.vehicles import check_vehicle_operation_restrictions
@@ -2161,6 +2165,14 @@ def create_handover_mobile():
             )
 
             db.session.add(handover)
+            
+            # تحديث حالة السيارة تلقائياً إلى "متاحة" بعد عملية الاستلام
+            if handover_type == 'return':
+                vehicle.status = 'available'
+                vehicle.updated_at = datetime.utcnow()
+                log_audit('update', 'vehicle_status', vehicle.id, 
+                         f'تم تحديث حالة السيارة {vehicle.plate_number} إلى "متاحة" بعد عملية الاستلام')
+            
             db.session.commit()
 
             # === 4. حفظ المرفقات الإضافية وتحديث حالة السائق ===
