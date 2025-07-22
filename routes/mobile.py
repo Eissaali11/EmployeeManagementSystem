@@ -4501,3 +4501,116 @@ def delete_handover(handover_id):
         print(f"خطأ في حذف سجل التسليم/الاستلام: {str(e)}")
         flash(f'خطأ في حذف السجل: {str(e)}', 'error')
         return redirect(url_for('mobile.view_handover', handover_id=handover_id))
+
+# --- New Quick Return Functions ---
+
+def get_current_driver_info(vehicle_id):
+    """الحصول على معلومات السائق الحالي للسيارة"""
+    try:
+        # البحث عن آخر سجل تسليم (delivery) للسيارة
+        last_delivery = VehicleHandover.query.filter_by(
+            vehicle_id=vehicle_id,
+            handover_type='delivery'
+        ).order_by(VehicleHandover.handover_date.desc()).first()
+        
+        if last_delivery:
+            driver_info = {
+                'name': last_delivery.person_name,
+                'phone': last_delivery.person_phone,
+                'national_id': last_delivery.person_national_id,
+                'employee_id': last_delivery.employee_id
+            }
+            
+            # إذا كان هناك معرف موظف، اجلب معلومات إضافية
+            if last_delivery.employee_id:
+                employee = Employee.query.get(last_delivery.employee_id)
+                if employee:
+                    driver_info['name'] = employee.name
+                    driver_info['phone'] = employee.mobile_personal or employee.mobile_work
+                    driver_info['national_id'] = employee.national_id
+                    driver_info['department'] = employee.departments[0].name if employee.departments else 'غير محدد'
+            
+            return driver_info
+    except Exception as e:
+        current_app.logger.error(f'خطأ في جلب معلومات السائق الحالي: {str(e)}')
+    
+    return {'name': 'غير محدد', 'phone': '', 'national_id': ''}
+
+@mobile_bp.route('/vehicles/quick_return', methods=['POST'])
+@login_required
+def quick_vehicle_return():
+    """استلام سريع للسيارة لتحريرها للاستخدام"""
+    try:
+        vehicle_id = request.form.get('vehicle_id')
+        return_date = request.form.get('return_date')
+        return_time = request.form.get('return_time') 
+        return_reason = request.form.get('return_reason')
+        current_mileage = request.form.get('current_mileage')
+        notes = request.form.get('notes', '')
+        
+        if not vehicle_id or not return_date or not return_time:
+            flash('جميع الحقول مطلوبة', 'error')
+            return redirect(url_for('mobile.create_handover_mobile'))
+        
+        # التحقق من وجود السيارة
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        
+        # الحصول على معلومات السائق الحالي
+        current_driver = get_current_driver_info(vehicle_id)
+        
+        # إنشاء سجل استلام جديد
+        return_handover = VehicleHandover(
+            vehicle_id=vehicle_id,
+            handover_type='return',
+            handover_date=datetime.strptime(return_date, '%Y-%m-%d').date(),
+            handover_time=datetime.strptime(return_time, '%H:%M').time() if return_time else None,
+            person_name=current_driver.get('name', ''),
+            person_phone=current_driver.get('phone', ''),
+            person_national_id=current_driver.get('national_id', ''),
+            employee_id=current_driver.get('employee_id'),
+            mileage=int(current_mileage) if current_mileage else 0,
+            notes=f"استلام سريع - {return_reason}. {notes}".strip(),
+            created_by=current_user.id,
+            created_at=datetime.now()
+        )
+        
+        db.session.add(return_handover)
+        
+        # تحديث حالة السيارة لتصبح متاحة
+        vehicle.status = 'available'
+        vehicle.current_driver = None
+        
+        db.session.commit()
+        
+        flash(f'تم استلام السيارة {vehicle.plate_number} بنجاح وأصبحت متاحة للاستخدام', 'success')
+        return redirect(url_for('mobile.create_handover_mobile'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'خطأ في الاستلام السريع: {str(e)}')
+        flash('حدث خطأ أثناء استلام السيارة. يرجى المحاولة مرة أخرى.', 'error')
+        return redirect(url_for('mobile.create_handover_mobile'))
+
+@mobile_bp.route('/get_vehicle_driver_info/<int:vehicle_id>')
+@login_required
+def get_vehicle_driver_info(vehicle_id):
+    """API لجلب معلومات السائق الحالي للسيارة"""
+    try:
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        current_driver = get_current_driver_info(vehicle_id)
+        
+        return jsonify({
+            'success': True,
+            'vehicle_info': {
+                'plate_number': vehicle.plate_number,
+                'make': vehicle.make,
+                'model': vehicle.model,
+                'status': vehicle.status
+            },
+            'driver_info': current_driver
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
