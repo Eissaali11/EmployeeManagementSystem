@@ -1553,7 +1553,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 <div class="card-body">
-                    {% if documents %}
                     <div class="row">
                         {% for doc_type, doc_name in document_types_map.items() %}
                         <div class="col-md-4 mb-3">
@@ -1574,7 +1573,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <p class="mb-0"><strong>ملاحظات:</strong> {{ documents_by_type[doc_type].notes }}</p>
                                     {% endif %}
                                     {% else %}
-                                    <p class="text-muted text-center my-3">لا توجد وثيقة</p>
+                                    <div class="text-center text-muted my-3">
+                                        <i class="fas fa-file-alt fa-2x mb-2 opacity-50"></i>
+                                        <p class="mb-0">لا توجد وثيقة</p>
+                                        <small class="text-muted">قم بإضافة الوثيقة من الزر أدناه</small>
+                                    </div>
                                     {% endif %}
                                 </div>
                                 <div class="card-footer d-flex justify-content-between">
@@ -1594,13 +1597,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         {% endfor %}
                     </div>
-                    {% else %}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        لا توجد وثائق مسجلة لهذا الموظف. 
-                        <a href="{{ url_for('documents.create', employee_id=employee.id) }}" class="alert-link">أضف وثيقة جديدة</a>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
