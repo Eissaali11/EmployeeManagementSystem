@@ -508,6 +508,7 @@ def assign():
                 or_(
                     Employee.name.contains(search),
                     Employee.employee_id.contains(search),
+                    Employee.national_id.contains(search),
                     Employee.mobile.contains(search)
                 )
             )
@@ -520,6 +521,7 @@ def assign():
                 or_(
                     Employee.name.contains(search),
                     Employee.employee_id.contains(search),
+                    Employee.national_id.contains(search),
                     Employee.mobile.contains(search)
                 )
             )
@@ -534,6 +536,7 @@ def assign():
                 or_(
                     Employee.name.contains(search),
                     Employee.employee_id.contains(search),
+                    Employee.national_id.contains(search),
                     Employee.mobile.contains(search)
                 )
             )

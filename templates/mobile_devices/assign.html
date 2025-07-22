@@ -91,7 +91,8 @@
                         <div class="col-md-4">
                             <label for="search" class="form-label">البحث في الموظفين</label>
                             <input type="text" class="form-control" id="search" name="search" 
-                                   placeholder="اسم الموظف أو رقم الموظف أو الجوال" value="{{ search }}">
+                                   placeholder="الاسم، الرقم الوظيفي، رقم الهوية، الهاتف" value="{{ search }}">
+                            <div class="form-text">يمكن البحث بالاسم أو الرقم الوظيفي أو رقم الهوية أو رقم الهاتف</div>
                         </div>
                         <div class="col-md-4">
                             <label for="department" class="form-label">فلترة حسب القسم</label>
@@ -194,7 +195,8 @@
                                                 {% for employee in active_employees %}
                                                 <option value="{{ employee.id }}" 
                                                         {% if device.employee_id == employee.id %}selected{% endif %}>
-                                                    {{ employee.name }}
+                                                    {{ employee.name }} - {{ employee.employee_id or 'غير محدد' }}
+                                                    {% if employee.national_id %} - {{ employee.national_id }}{% endif %}
                                                 </option>
                                                 {% endfor %}
                                             {% else %}
