@@ -10,7 +10,7 @@ import os
 import uuid
 
 from app import db
-from models import MobileDevice, Employee, Department, AuditLog
+from models import MobileDevice, Employee, Department, AuditLog, employee_departments
 
 # إنشاء Blueprint
 mobile_devices_bp = Blueprint('mobile_devices', __name__)
@@ -426,20 +426,63 @@ def export_excel():
 def assign():
     """صفحة ربط الأجهزة بالموظفين"""
     try:
+        # معاملات البحث والفلترة
+        search = request.args.get('search', '').strip()
+        department_filter = request.args.get('department', '')
+        device_search = request.args.get('device_search', '').strip()
+        
         # جلب الأجهزة غير المربوطة أو المربوطة بموظفين غير نشطين
-        available_devices = MobileDevice.query.outerjoin(Employee).filter(
+        devices_query = MobileDevice.query.outerjoin(Employee).filter(
             or_(
                 MobileDevice.employee_id.is_(None),
                 Employee.status != 'نشط'
             )
-        ).filter(MobileDevice.status != 'معطل').all()
+        ).filter(MobileDevice.status != 'معطل')
         
-        # جلب الموظفين النشطين
-        active_employees = Employee.query.filter_by(status='نشط').order_by(Employee.name).all()
+        # فلترة الأجهزة
+        if device_search:
+            devices_query = devices_query.filter(
+                or_(
+                    MobileDevice.phone_number.contains(device_search),
+                    MobileDevice.imei.contains(device_search),
+                    MobileDevice.device_model.contains(device_search)
+                )
+            )
+        
+        available_devices = devices_query.all()
+        
+        # جلب الموظفين النشطين مع فلترة
+        employees_query = Employee.query.filter_by(status='نشط')
+        
+        # فلترة الموظفين حسب البحث
+        if search:
+            employees_query = employees_query.filter(
+                or_(
+                    Employee.name.contains(search),
+                    Employee.employee_id.contains(search),
+                    Employee.mobile.contains(search)
+                )
+            )
+        
+        # فلترة حسب القسم
+        if department_filter and department_filter.isdigit():
+            # الموظفون المرتبطون بالقسم المحدد
+            employees_query = employees_query.join(
+                employee_departments
+            ).filter(employee_departments.c.department_id == int(department_filter))
+        
+        active_employees = employees_query.order_by(Employee.name).all()
+        
+        # جلب جميع الأقسام للفلترة
+        departments = Department.query.order_by(Department.name).all()
         
         return render_template('mobile_devices/assign.html',
                              available_devices=available_devices,
-                             active_employees=active_employees)
+                             active_employees=active_employees,
+                             departments=departments,
+                             search=search,
+                             department_filter=department_filter,
+                             device_search=device_search)
                              
     except Exception as e:
         flash(f'حدث خطأ أثناء تحميل صفحة الربط: {str(e)}', 'danger')
