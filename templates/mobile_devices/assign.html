@@ -52,7 +52,13 @@
                         </div>
                     </div>
                     <h3 class="mb-1">{{ active_employees|length }}</h3>
-                    <p class="text-muted mb-0">موظفين نشطين</p>
+                    <p class="text-muted mb-0">
+                        {% if search or department_filter %}
+                            موظفين متاحين (مفلترة)
+                        {% else %}
+                            موظفين نشطين
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>
@@ -184,12 +190,16 @@
                                         <select class="form-select form-select-sm" id="employee_{{ device.id }}" 
                                                 onchange="assignDevice({{ device.id }}, this.value)">
                                             <option value="">اختر موظف</option>
-                                            {% for employee in active_employees %}
-                                            <option value="{{ employee.id }}" 
-                                                    {% if device.employee_id == employee.id %}selected{% endif %}>
-                                                {{ employee.name }}
-                                            </option>
-                                            {% endfor %}
+                                            {% if active_employees %}
+                                                {% for employee in active_employees %}
+                                                <option value="{{ employee.id }}" 
+                                                        {% if device.employee_id == employee.id %}selected{% endif %}>
+                                                    {{ employee.name }}
+                                                </option>
+                                                {% endfor %}
+                                            {% else %}
+                                                <option value="" disabled>لا يوجد موظفين متاحين</option>
+                                            {% endif %}
                                         </select>
                                     </td>
                                     <td>

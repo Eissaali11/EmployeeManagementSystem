@@ -454,7 +454,14 @@ def assign():
         # جلب الموظفين النشطين مع فلترة (active بالإنجليزي أو نشط بالعربي)
         employees_query = Employee.query.filter(Employee.status.in_(['نشط', 'active']))
         
-        # فلترة الموظفين حسب البحث
+        # فلترة حسب القسم أولاً (إذا كان محدد)
+        if department_filter and department_filter.isdigit():
+            # الموظفون المرتبطون بالقسم المحدد
+            employees_query = employees_query.join(
+                employee_departments
+            ).filter(employee_departments.c.department_id == int(department_filter))
+        
+        # ثم فلترة الموظفين حسب البحث
         if search:
             employees_query = employees_query.filter(
                 or_(
@@ -464,14 +471,19 @@ def assign():
                 )
             )
         
-        # فلترة حسب القسم
-        if department_filter and department_filter.isdigit():
-            # الموظفون المرتبطون بالقسم المحدد
-            employees_query = employees_query.join(
-                employee_departments
-            ).filter(employee_departments.c.department_id == int(department_filter))
-        
         active_employees = employees_query.order_by(Employee.name).all()
+        
+        # إذا لم تكن هناك نتائج مع الفلاترين معاً، جرب البحث بدون فلتر القسم
+        if not active_employees and search and department_filter:
+            employees_query_fallback = Employee.query.filter(Employee.status.in_(['نشط', 'active']))
+            employees_query_fallback = employees_query_fallback.filter(
+                or_(
+                    Employee.name.contains(search),
+                    Employee.employee_id.contains(search),
+                    Employee.mobile.contains(search)
+                )
+            )
+            active_employees = employees_query_fallback.order_by(Employee.name).all()
         
         # جلب جميع الأقسام للفلترة
         departments = Department.query.order_by(Department.name).all()
