@@ -1259,9 +1259,24 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p class="fs-5">{{ employee.mobile }}</p>
                         </div>
                         <div class="col-md-6">
+                            <p class="mb-1 text-muted">رقم الجوال العمل</p>
+                            <p class="fs-5">{{ employee.mobilePersonal or '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
                             <p class="mb-1 text-muted">البريد الإلكتروني</p>
                             <p class="fs-5">{{ employee.email or '-' }}</p>
                         </div>
+                        {% if mobile_devices %}
+                        {% set primary_device = mobile_devices[0] %}
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">نوع الموبايل</p>
+                            <p class="fs-5">{{ primary_device.device_brand }} {{ primary_device.device_model or '' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">IMEI</p>
+                            <p class="fs-5 text-primary">{{ primary_device.imei }}</p>
+                        </div>
+                        {% endif %}
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">تاريخ الميلاد</p>
                             <p class="fs-5">
