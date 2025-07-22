@@ -711,7 +711,7 @@ captureBtn.addEventListener('click', () => {
   file: null,
   src: dataURL,
   id: Date.now(),
-  note: note || ''
+  note: ''
 });
 displayImagePreview();
 });
@@ -1100,3 +1100,120 @@ function uploadImage(dataURL) {
     </script>
 </body>
 </html>
+<script>
+// عرض معاينة الصور مع حقول الملاحظات
+function displayImagePreview() {
+    const instantPreview = document.getElementById('instantPreview');
+    instantPreview.innerHTML = '';
+    
+    uploadedImages.forEach((image, index) => {
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'image-preview-item';
+        imageContainer.style.cssText = `
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        `;
+        
+        // إنشاء عنصر الصورة
+        const img = document.createElement('img');
+        img.src = image.src;
+        img.style.cssText = `
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        `;
+        
+        // زر حذف الصورة
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '×';
+        removeBtn.className = 'remove-btn';
+        removeBtn.style.cssText = `
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        removeBtn.onclick = () => removeImage(index);
+        
+        // حقل إدخال الملاحظة
+        const noteInput = document.createElement('textarea');
+        noteInput.placeholder = 'أضف ملاحظة للصورة...';
+        noteInput.value = image.note || '';
+        noteInput.className = 'description-input';
+        noteInput.rows = 3;
+        noteInput.style.cssText = `
+            width: 100%;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            background: white;
+            color: #333;
+            font-family: 'Cairo', sans-serif;
+            resize: vertical;
+            min-height: 60px;
+        `;
+        
+        // تحديث الملاحظة عند الكتابة
+        noteInput.addEventListener('input', function() {
+            uploadedImages[index].note = this.value;
+            updateImageDescriptions();
+        });
+        
+        // تجميع العناصر
+        imageContainer.appendChild(img);
+        imageContainer.appendChild(removeBtn);
+        imageContainer.appendChild(noteInput);
+        instantPreview.appendChild(imageContainer);
+    });
+    
+    updateImageDescriptions();
+}
+
+// حذف صورة
+function removeImage(index) {
+    uploadedImages.splice(index, 1);
+    displayImagePreview();
+}
+
+// تحديث بيانات الصور والملاحظات
+function updateImageDescriptions() {
+    const descriptions = uploadedImages.map(img => img.note || '').join('|||');
+    const imageData = uploadedImages.map(img => img.src).join('|||');
+    
+    // تحديث الحقول المخفية
+    document.getElementById('camera_images').value = imageData;
+    
+    // إضافة حقل مخفي للملاحظات إذا لم يكن موجوداً
+    let notesInput = document.getElementById('image_notes');
+    if (!notesInput) {
+        notesInput = document.createElement('input');
+        notesInput.type = 'hidden';
+        notesInput.name = 'image_notes';
+        notesInput.id = 'image_notes';
+        document.querySelector('form').appendChild(notesInput);
+    }
+    notesInput.value = descriptions;
+}
+</script>
