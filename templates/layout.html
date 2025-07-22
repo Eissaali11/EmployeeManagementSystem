@@ -236,24 +236,7 @@
                                             <span>لوحة المعلومات</span>
                                         </a>
                                     </li>
-                                    <li class="nav-item mb-1">
-                                        <a
-                                            href="{{ url_for('mobile_devices.index') }}"
-                                            class="nav-link nav-link-custom {% if '/mobile-devices' in request.path and '/dashboard' not in request.path and '/assign' not in request.path %}active{% endif %}"
-                                        >
-                                            <i class="fas fa-list me-2"></i>
-                                            <span>قائمة الأجهزة</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item mb-1">
-                                        <a
-                                            href="{{ url_for('mobile_devices.assign') }}"
-                                            class="nav-link nav-link-custom {% if '/mobile-devices/assign' in request.path %}active{% endif %}"
-                                        >
-                                            <i class="fas fa-link me-2"></i>
-                                            <span>ربط الأجهزة</span>
-                                        </a>
-                                    </li>
+
                                     <li class="nav-item mb-1">
                                         <a
                                             href="{{ url_for('mobile_devices.create') }}"
