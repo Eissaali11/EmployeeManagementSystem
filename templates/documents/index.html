@@ -265,22 +265,43 @@
     .action-buttons {
         display: flex;
         gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: nowrap;
     }
 
     .btn-sm-enhanced {
         border-radius: 8px;
         padding: 0.5rem;
         min-width: 36px;
+        width: 36px;
+        height: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         transition: all 0.3s ease;
         border: none;
+        text-decoration: none;
+        color: white;
     }
 
     .btn-sm-enhanced:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-sm-enhanced.btn-success {
+        background: var(--success-gradient);
+    }
+
+    .btn-sm-enhanced.btn-info {
+        background: var(--info-gradient);
+    }
+
+    .btn-sm-enhanced.btn-primary {
+        background: var(--primary-gradient);
     }
 
     /* Animations */
@@ -349,6 +370,23 @@
             font-weight: 600;
             margin-right: 1rem;
             color: #667eea;
+        }
+
+        /* Action buttons responsive adjustment */
+        @media (max-width: 768px) {
+            .action-buttons {
+                justify-content: flex-end;
+                margin-top: 0.5rem;
+            }
+            
+            .enhanced-table tbody td[data-label="الإجراءات"] {
+                justify-content: flex-end;
+                padding-top: 0.5rem;
+            }
+            
+            .enhanced-table tbody td[data-label="الإجراءات"]::before {
+                display: none;
+            }
         }
     }
 </style>
@@ -513,7 +551,7 @@
                             <th>تاريخ الانتهاء</th>
                             <th>الحالة</th>
                             <th>الملاحظات</th>
-                            <!-- Actions column temporarily disabled -->
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -576,7 +614,23 @@
                                 {% endif %}
                             </td>
                             <td data-label="الملاحظات">{{ document.notes or 'لا توجد' }}</td>
-                            <!-- Actions column temporarily disabled -->
+                            <td data-label="الإجراءات">
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('documents.update_expiry', id=document.id) }}" 
+                                       class="btn btn-sm-enhanced btn-success" 
+                                       title="تحديث تاريخ الانتهاء">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </a>
+                                    {% if document.file_path %}
+                                    <a href="{{ url_for('static', filename=document.file_path) }}" 
+                                       class="btn btn-sm-enhanced btn-info" 
+                                       title="عرض الملف"
+                                       target="_blank">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
