@@ -3,225 +3,252 @@
  * Quick Return System for Vehicles
  */
 
-// دالة لتحميل بيانات السائق الحالي تلقائياً
-async function loadDriverInfoForReturn(vehicleId) {
-    if (!vehicleId) {
-        console.warn('معرف السيارة مطلوب');
-        return;
-    }
-
-    try {
-        console.log(`🔍 جاري تحميل بيانات السائق للسيارة: ${vehicleId}`);
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 تم تحميل نظام الإرجاع السريع للسيارات');
+    
+    // ربط الأحداث بالأزرار
+    setupQuickReturnButtons();
+    
+    function setupQuickReturnButtons() {
+        const quickReturnBtn = document.getElementById('quick-return-btn');
         
-        const response = await fetch(`/mobile/get_vehicle_driver_info/${vehicleId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+        if (quickReturnBtn) {
+            quickReturnBtn.addEventListener('click', handleQuickReturn);
+        }
+        
+        // مراقبة تغيير السيارة لإضافة بيانات الحالة
+        const vehicleSelect = document.getElementById('vehicle_id');
+        if (vehicleSelect) {
+            vehicleSelect.addEventListener('change', handleVehicleChange);
+        }
+    }
+    
+    async function handleQuickReturn() {
+        const vehicleSelect = document.getElementById('vehicle_id');
+        const selectedVehicleId = vehicleSelect.value;
+        
+        if (!selectedVehicleId) {
+            showMessage('يرجى اختيار سيارة أولاً', 'warning');
+            return;
+        }
+        
+        const button = document.getElementById('quick-return-btn');
+        
+        // تعطيل الزر وإظهار مؤشر التحميل
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري تحميل البيانات...';
+        
+        try {
+            const response = await fetch(`/mobile/get_vehicle_driver_info/${selectedVehicleId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.driver_info) {
+                // تعبئة بيانات السائق
+                fillDriverData(data.driver_info);
+                
+                // تغيير نوع العملية إلى استلام
+                setOperationType('return');
+                
+                // إظهار النموذج
+                showHandoverForm();
+                
+                // إظهار رسالة نجاح
+                showMessage('تم تحميل بيانات السائق الحالي بنجاح ✓', 'success');
+                
+                // التمرير إلى النموذج
+                scrollToForm();
+                
+            } else {
+                showMessage(data.message || 'لم يتم العثور على بيانات السائق الحالي', 'warning');
+            }
+            
+        } catch (error) {
+            console.error('خطأ في تحميل بيانات السائق:', error);
+            showMessage('حدث خطأ في تحميل البيانات. يرجى المحاولة مرة أخرى.', 'error');
+        } finally {
+            // إعادة تفعيل الزر
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-undo me-2"></i> استلام سريع - تحميل بيانات السائق';
+        }
+    }
+    
+    function fillDriverData(driverInfo) {
+        const fields = [
+            { id: 'person_name', value: driverInfo.name },
+            { id: 'employee_id', value: driverInfo.employee_id },
+            { name: 'person_phone', value: driverInfo.phone },
+            { name: 'person_national_id', value: driverInfo.national_id }
+        ];
+        
+        fields.forEach(field => {
+            let element = null;
+            
+            if (field.id) {
+                element = document.getElementById(field.id);
+            } else if (field.name) {
+                element = document.querySelector(`[name="${field.name}"]`);
+            }
+            
+            if (element && field.value) {
+                element.value = field.value;
+                element.style.backgroundColor = '#d4edda'; // خلفية خضراء فاتحة
+                element.style.border = '2px solid #28a745';
+                
+                // إضافة علامة تأكيد
+                addCheckIcon(element);
             }
         });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            console.log('✅ تم تحميل بيانات السائق بنجاح:', data);
-            
-            // تعبئة حقول النموذج تلقائياً
-            fillReturnFormFields(data.driver_info);
-            
-            // إظهار رسالة نجاح
-            showSuccessMessage('تم تحميل بيانات السائق الحالي بنجاح');
-            
-            return data;
-        } else {
-            console.warn('⚠️ لم يتم العثور على بيانات السائق:', data.error);
-            showWarningMessage(data.error || 'لم يتم العثور على بيانات السائق الحالي');
-            return null;
-        }
-    } catch (error) {
-        console.error('❌ خطأ في تحميل بيانات السائق:', error);
-        showErrorMessage('حدث خطأ في تحميل بيانات السائق');
-        return null;
     }
-}
-
-// دالة لتعبئة حقول النموذج بناءً على بيانات السائق
-function fillReturnFormFields(driverInfo) {
-    if (!driverInfo) {
-        console.warn('بيانات السائق غير متوفرة');
-        return;
-    }
-
-    // تعبئة حقول النموذج
-    const fields = {
-        'person_name': driverInfo.name,
-        'person_phone': driverInfo.phone,
-        'person_national_id': driverInfo.national_id,
-        'employee_id': driverInfo.employee_id
-    };
-
-    Object.keys(fields).forEach(fieldName => {
-        const field = document.querySelector(`[name="${fieldName}"], #${fieldName}`);
-        if (field && fields[fieldName]) {
-            field.value = fields[fieldName];
-            
-            // إضافة تأثير بصري لإظهار أن الحقل تم تعبئته تلقائياً
-            field.classList.add('auto-filled');
-            field.style.backgroundColor = '#e8f5e8';
-            
-            console.log(`📝 تم تعبئة حقل ${fieldName}: ${fields[fieldName]}`);
-        }
-    });
-
-    // تغيير نوع العملية إلى استلام
-    const handoverTypeField = document.querySelector('[name="handover_type"], #handover_type');
-    if (handoverTypeField) {
-        handoverTypeField.value = 'return';
-        handoverTypeField.style.backgroundColor = '#fff3cd';
-        console.log('🔄 تم تغيير نوع العملية إلى: استلام');
-    }
-}
-
-// دالة لإظهار رسائل النجاح
-function showSuccessMessage(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-success alert-dismissible fade show';
-    alert.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
     
-    // إضافة الرسالة في أعلى النموذج
-    const form = document.querySelector('form');
-    if (form) {
-        form.insertBefore(alert, form.firstChild);
+    function setOperationType(type) {
+        const handoverTypeSelect = document.getElementById('handover_type');
+        if (handoverTypeSelect) {
+            handoverTypeSelect.value = type;
+            handoverTypeSelect.style.backgroundColor = '#cce5ff';
+            handoverTypeSelect.style.border = '2px solid #007bff';
+        }
+    }
+    
+    function showHandoverForm() {
+        const formContainer = document.getElementById('handover-form-container');
+        if (formContainer) {
+            formContainer.classList.remove('d-none');
+            
+            // إضافة تأثير انتقالي
+            formContainer.style.opacity = '0';
+            formContainer.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                formContainer.style.transition = 'all 0.5s ease';
+                formContainer.style.opacity = '1';
+                formContainer.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    }
+    
+    function scrollToForm() {
+        const formContainer = document.getElementById('handover-form-container');
+        if (formContainer) {
+            setTimeout(() => {
+                formContainer.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 600);
+        }
+    }
+    
+    function addCheckIcon(element) {
+        // إزالة أي أيقونة موجودة مسبقاً
+        const existingIcon = element.parentNode.querySelector('.check-icon');
+        if (existingIcon) {
+            existingIcon.remove();
+        }
         
-        // إخفاء الرسالة تلقائياً بعد 5 ثوان
+        // إنشاء أيقونة تأكيد
+        const checkIcon = document.createElement('i');
+        checkIcon.className = 'fas fa-check-circle text-success check-icon';
+        checkIcon.style.position = 'absolute';
+        checkIcon.style.left = '10px';
+        checkIcon.style.top = '50%';
+        checkIcon.style.transform = 'translateY(-50%)';
+        checkIcon.style.zIndex = '10';
+        checkIcon.style.fontSize = '1.2em';
+        
+        // التأكد من أن الحاوي له position relative
+        element.parentNode.style.position = 'relative';
+        element.parentNode.appendChild(checkIcon);
+    }
+    
+    function handleVehicleChange() {
+        const vehicleSelect = document.getElementById('vehicle_id');
+        const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+        const vehicleStatus = selectedOption.getAttribute('data-status');
+        
+        // إخفاء/إظهار رسائل التنبيه حسب حالة السيارة
+        const alertAvailable = document.getElementById('vehicle-status-alert-avaliable');
+        const alertOutOfService = document.getElementById('vehicle-status-alert');
+        
+        if (vehicleStatus === 'out_of_service') {
+            // السيارة خارج الخدمة
+            if (alertOutOfService) alertOutOfService.classList.remove('d-none');
+            if (alertAvailable) alertAvailable.classList.add('d-none');
+        } else if (vehicleStatus !== 'available') {
+            // السيارة غير متاحة (قيد الاستخدام، صيانة، إلخ)
+            if (alertAvailable) alertAvailable.classList.remove('d-none');
+            if (alertOutOfService) alertOutOfService.classList.add('d-none');
+        } else {
+            // السيارة متاحة
+            if (alertAvailable) alertAvailable.classList.add('d-none');
+            if (alertOutOfService) alertOutOfService.classList.add('d-none');
+        }
+    }
+    
+    function showMessage(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+        toast.style.top = '20px';
+        toast.style.right = '20px';
+        toast.style.zIndex = '9999';
+        toast.style.maxWidth = '350px';
+        toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+        
+        const iconMap = {
+            success: 'fa-check-circle',
+            warning: 'fa-exclamation-triangle',
+            error: 'fa-times-circle',
+            info: 'fa-info-circle'
+        };
+        
+        const icon = iconMap[type] || 'fa-info-circle';
+        
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${icon} me-2"></i>
+                <span>${message}</span>
+            </div>
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // إزالة تلقائية بعد 5 ثوان
         setTimeout(() => {
-            alert.remove();
+            if (toast.parentNode) {
+                toast.remove();
+            }
         }, 5000);
     }
-}
-
-// دالة لإظهار رسائل التحذير
-function showWarningMessage(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-warning alert-dismissible fade show';
-    alert.innerHTML = `
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
     
-    const form = document.querySelector('form');
-    if (form) {
-        form.insertBefore(alert, form.firstChild);
-        setTimeout(() => alert.remove(), 7000);
-    }
-}
-
-// دالة لإظهار رسائل الخطأ
-function showErrorMessage(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-danger alert-dismissible fade show';
-    alert.innerHTML = `
-        <i class="fas fa-times-circle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    const form = document.querySelector('form');
-    if (form) {
-        form.insertBefore(alert, form.firstChild);
-        setTimeout(() => alert.remove(), 10000);
-    }
-}
-
-// دالة لإضافة زر الإرجاع السريع
-function addQuickReturnButton(vehicleId) {
-    if (!vehicleId) return;
-
-    const container = document.querySelector('.quick-actions, .form-actions, .d-flex');
-    if (!container) return;
-
-    const quickReturnBtn = document.createElement('button');
-    quickReturnBtn.type = 'button';
-    quickReturnBtn.className = 'btn btn-warning me-2';
-    quickReturnBtn.innerHTML = `
-        <i class="fas fa-undo me-2"></i>
-        إرجاع سريع
-    `;
-    
-    quickReturnBtn.addEventListener('click', async () => {
-        quickReturnBtn.disabled = true;
-        quickReturnBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التحميل...';
-        
-        await loadDriverInfoForReturn(vehicleId);
-        
-        quickReturnBtn.disabled = false;
-        quickReturnBtn.innerHTML = '<i class="fas fa-undo me-2"></i>إرجاع سريع';
-    });
-
-    container.insertBefore(quickReturnBtn, container.firstChild);
-    console.log('✅ تم إضافة زر الإرجاع السريع');
-}
-
-// تهيئة النظام عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 تم تحميل نظام الإرجاع السريع');
-    
-    // البحث عن معرف السيارة في الصفحة
-    const vehicleIdField = document.querySelector('[name="vehicle_id"], #vehicle_id');
-    if (vehicleIdField) {
-        const vehicleId = vehicleIdField.value;
-        if (vehicleId) {
-            console.log(`🚗 تم اكتشاف السيارة: ${vehicleId}`);
-            
-            // إضافة زر الإرجاع السريع
-            addQuickReturnButton(vehicleId);
-            
-            // إضافة مستمع للتغييرات في حقل السيارة
-            vehicleIdField.addEventListener('change', function() {
-                if (this.value) {
-                    loadDriverInfoForReturn(this.value);
-                }
-            });
-        }
-    }
-    
-    // إضافة أنماط CSS للحقول المُعبأة تلقائياً
+    // إضافة أنماط CSS ديناميكية
     const style = document.createElement('style');
     style.textContent = `
-        .auto-filled {
-            border-left: 4px solid #28a745 !important;
-            transition: background-color 0.3s ease;
+        .check-icon {
+            animation: bounceIn 0.6s ease;
         }
         
-        .auto-filled:focus {
-            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+        @keyframes bounceIn {
+            0% { transform: translateY(-50%) scale(0); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
         }
         
-        .quick-return-indicator {
-            position: relative;
-        }
-        
-        .quick-return-indicator::after {
-            content: "🔄";
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+        .auto-filled-field {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745 !important;
         }
     `;
     document.head.appendChild(style);
 });
 
-// تصدير الوظائف للاستخدام الخارجي
+// تصدير الوظائف للاستخدام العام
 window.QuickReturnSystem = {
-    loadDriverInfoForReturn,
-    fillReturnFormFields,
-    addQuickReturnButton,
-    showSuccessMessage,
-    showWarningMessage,
-    showErrorMessage
+    init: function() {
+        console.log('تم تهيئة نظام الإرجاع السريع');
+    }
 };
