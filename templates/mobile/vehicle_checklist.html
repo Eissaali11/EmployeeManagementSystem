@@ -91,13 +91,67 @@ styles %} {{ super() }}
                         <i class="fas fa-exclamation-triangle"></i>
                         <strong>تحذير:</strong> السيارة المختارة ليست متاحة حالياً. يجب استلامها أولاً من السائق الحالي.
                         <div class="mt-3">
-                            <button type="button" class="btn btn-success btn-sm me-2" id="quick-return-btn">
+                            <button type="button" class="btn btn-success btn-sm me-2" id="quick-return-btn" onclick="handleQuickReturn()">
                                 <i class="fas fa-undo me-2"></i> استلام سريع - تحميل بيانات السائق
                             </button>
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="show-return-checklist-btn">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="show-return-checklist-btn" onclick="handleManualReturn()">
                                 <i class="fas fa-edit me-2"></i> استلام يدوي - إدخال البيانات يدوياً
                             </button>
                         </div>
+                        
+                        <script>
+                        function handleQuickReturn() {
+                            console.log('تم الضغط على الاستلام السريع');
+                            
+                            const vehicleSelect = document.getElementById('vehicle_id');
+                            if (!vehicleSelect.value) {
+                                alert('يرجى اختيار سيارة أولاً');
+                                return;
+                            }
+                            
+                            // تغيير نوع العملية إلى استلام
+                            const handoverType = document.getElementById('handover_type');
+                            if (handoverType) {
+                                handoverType.value = 'return';
+                                handoverType.style.backgroundColor = '#cce5ff';
+                                handoverType.style.border = '2px solid #007bff';
+                            }
+                            
+                            // إظهار النموذج
+                            const formContainer = document.getElementById('handover-form-container');
+                            if (formContainer) {
+                                formContainer.classList.remove('d-none');
+                                setTimeout(() => {
+                                    formContainer.scrollIntoView({ behavior: 'smooth' });
+                                }, 200);
+                            }
+                            
+                            alert('✅ تم تحديد العملية كاستلام. يرجى إكمال تعبئة بيانات السائق في النموذج أدناه.');
+                        }
+                        
+                        function handleManualReturn() {
+                            console.log('تم الضغط على الاستلام اليدوي');
+                            
+                            // تغيير نوع العملية إلى استلام
+                            const handoverType = document.getElementById('handover_type');
+                            if (handoverType) {
+                                handoverType.value = 'return';
+                                handoverType.style.backgroundColor = '#cce5ff';
+                                handoverType.style.border = '2px solid #007bff';
+                            }
+                            
+                            // إظهار النموذج
+                            const formContainer = document.getElementById('handover-form-container');
+                            if (formContainer) {
+                                formContainer.classList.remove('d-none');
+                                setTimeout(() => {
+                                    formContainer.scrollIntoView({ behavior: 'smooth' });
+                                }, 200);
+                            }
+                            
+                            alert('✅ يرجى تعبئة بيانات الاستلام يدوياً في النموذج أدناه');
+                        }
+                        </script>
                     </div>
                 </div>
             </div>
