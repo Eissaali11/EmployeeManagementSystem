@@ -23,7 +23,7 @@ def log_activity(action, entity_type, entity_id=None, details=None, previous_dat
     """
     try:
         # التحقق من وجود current_user والتأكد من أنه مسجل دخول
-        if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
+        if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated and hasattr(current_user, 'id') and current_user.id:
             print(f"تسجيل عملية: {action} - {entity_type} - {details}")  # للتشخيص
             
             # تحويل البيانات إلى JSON إذا كانت قاموس
