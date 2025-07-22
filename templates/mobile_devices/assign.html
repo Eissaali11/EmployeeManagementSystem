@@ -4,19 +4,54 @@
 
 {% block head %}
 <style>
-.employee-select {
-    min-width: 200px;
-    max-width: 300px;
+.employee-item {
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+    padding: 8px 12px;
+}
+
+.employee-item:hover {
+    background-color: #f8f9fa !important;
+    transform: translateX(-5px);
+}
+
+.dropdown-menu {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 12px;
+}
+
+.employee-list {
+    border-radius: 8px;
+}
+
+.employee-item strong {
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.employee-item small {
     font-size: 12px;
 }
 
-.employee-select option {
-    padding: 8px;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 12px;
+.dropdown-toggle::after {
+    margin-right: 0.5rem;
 }
 
-.employee-select:focus {
+/* تحسين المسافات في القائمة */
+.employee-item .d-flex {
+    padding: 4px 0;
+}
+
+/* تحسين شريط البحث */
+.dropdown-menu input[type="text"] {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: border-color 0.3s ease;
+}
+
+.dropdown-menu input[type="text"]:focus {
     border-color: #007bff;
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
 }
@@ -24,13 +59,6 @@
 /* تحسين تصميم الجدول */
 .table td {
     vertical-align: middle;
-}
-
-/* تحسين عرض النصوص الطويلة في القائمة */
-.employee-select option {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* ألوان مميزة للبيانات */
@@ -42,6 +70,17 @@
 .btn-group-sm .btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
+}
+
+/* تحسين عرض القائمة المنسدلة */
+.dropdown-toggle {
+    text-align: right !important;
+    direction: rtl;
+}
+
+/* منع إغلاق القائمة عند النقر على حقل البحث */
+.dropdown-menu input {
+    pointer-events: auto;
 }
 </style>
 {% endblock %}
@@ -232,24 +271,49 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <select class="form-select form-select-sm employee-select" id="employee_{{ device.id }}" 
-                                                onchange="assignDevice({{ device.id }}, this.value)" 
-                                                data-device-id="{{ device.id }}">
-                                            <option value="">اختر موظف</option>
-                                            {% if active_employees %}
-                                                {% for employee in active_employees|sort(attribute='name') %}
-                                                <option value="{{ employee.id }}" 
-                                                        {% if device.employee_id == employee.id %}selected{% endif %}
-                                                        data-name="{{ employee.name }}"
-                                                        data-employee-id="{{ employee.employee_id or '' }}"
-                                                        data-national-id="{{ employee.national_id or '' }}">
-                                                    {{ employee.name }} | {{ employee.employee_id or 'غير محدد' }}{% if employee.national_id %} | {{ employee.national_id }}{% endif %}
-                                                </option>
-                                                {% endfor %}
-                                            {% else %}
-                                                <option value="" disabled>لا يوجد موظفين متاحين</option>
-                                            {% endif %}
-                                        </select>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-primary btn-sm dropdown-toggle w-100" type="button" 
+                                                    id="employeeDropdown_{{ device.id }}" data-bs-toggle="dropdown" 
+                                                    aria-expanded="false" style="text-align: right;">
+                                                {% if device.employee %}
+                                                    {{ device.employee.name }}
+                                                {% else %}
+                                                    اختر موظف
+                                                {% endif %}
+                                            </button>
+                                            <div class="dropdown-menu p-2" style="min-width: 350px;" aria-labelledby="employeeDropdown_{{ device.id }}">
+                                                <input type="text" class="form-control form-control-sm mb-2" 
+                                                       placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                       onkeyup="filterEmployees(this, {{ device.id }})"
+                                                       onclick="event.stopPropagation();">
+                                                <div class="employee-list" id="employeeList_{{ device.id }}" style="max-height: 200px; overflow-y: auto;">
+                                                    {% if active_employees %}
+                                                        {% for employee in active_employees|sort(attribute='name') %}
+                                                        <a class="dropdown-item employee-item" href="#" 
+                                                           onclick="selectEmployee({{ device.id }}, {{ employee.id }}, '{{ employee.name }}'); return false;"
+                                                           data-employee-name="{{ employee.name|lower }}"
+                                                           data-employee-id="{{ employee.employee_id or '' }}"
+                                                           data-national-id="{{ employee.national_id or '' }}">
+                                                            <div class="d-flex flex-column">
+                                                                <strong>{{ employee.name }}</strong>
+                                                                <small class="text-muted">
+                                                                    {% if employee.employee_id %}رقم الموظف: {{ employee.employee_id }}{% endif %}
+                                                                    {% if employee.national_id %} | الهوية: {{ employee.national_id }}{% endif %}
+                                                                </small>
+                                                                {% if employee.departments %}
+                                                                <small class="text-info">
+                                                                    القسم: {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
+                                                                </small>
+                                                                {% endif %}
+                                                            </div>
+                                                        </a>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <span class="dropdown-item-text text-muted">لا يوجد موظفين متاحين</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
@@ -343,13 +407,51 @@
 </div>
 
 <script>
+// البحث في قائمة الموظفين
+function filterEmployees(searchInput, deviceId) {
+    const searchTerm = searchInput.value.toLowerCase();
+    const employeeList = document.getElementById(`employeeList_${deviceId}`);
+    const items = employeeList.querySelectorAll('.employee-item');
+    
+    items.forEach(item => {
+        const name = item.getAttribute('data-employee-name');
+        const employeeId = item.getAttribute('data-employee-id').toLowerCase();
+        const nationalId = item.getAttribute('data-national-id').toLowerCase();
+        
+        if (name.includes(searchTerm) || 
+            employeeId.includes(searchTerm) || 
+            nationalId.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// اختيار موظف من القائمة
+function selectEmployee(deviceId, employeeId, employeeName) {
+    // تحديث نص الزر
+    const button = document.getElementById(`employeeDropdown_${deviceId}`);
+    button.textContent = employeeName;
+    
+    // إغلاق القائمة المنسدلة
+    const dropdown = bootstrap.Dropdown.getInstance(button);
+    if (dropdown) {
+        dropdown.hide();
+    }
+    
+    // تنفيذ عملية الربط
+    assignDevice(deviceId, employeeId);
+}
+
 function assignDevice(deviceId, employeeId) {
     if (!employeeId) return;
     
     // إظهار مؤشر التحميل
-    const select = document.getElementById(`employee_${deviceId}`);
-    const originalHtml = select.outerHTML;
-    select.disabled = true;
+    const button = document.getElementById(`employeeDropdown_${deviceId}`);
+    const originalText = button.textContent;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري الربط...';
+    button.disabled = true;
     
     // إرسال طلب الربط
     fetch(`/mobile-devices/${deviceId}/assign/${employeeId}`, {
@@ -369,49 +471,11 @@ function assignDevice(deviceId, employeeId) {
     .catch(error => {
         console.error('Error:', error);
         alert('حدث خطأ أثناء ربط الجهاز');
-        // استعادة القائمة المنسدلة
-        select.outerHTML = originalHtml;
+        // استعادة الزر
+        button.textContent = originalText;
+        button.disabled = false;
     });
 }
-
-// إضافة وظيفة البحث في القوائم المنسدلة
-document.addEventListener('DOMContentLoaded', function() {
-    // تحسين القوائم المنسدلة لتدعم البحث
-    const employeeSelects = document.querySelectorAll('.employee-select');
-    
-    employeeSelects.forEach(select => {
-        // إضافة خاصية البحث للقائمة المنسدلة
-        select.addEventListener('focus', function() {
-            this.setAttribute('data-original-options', this.innerHTML);
-        });
-        
-        // إضافة مستمع للبحث أثناء الكتابة
-        select.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter' || e.key === 'Tab' || e.key === 'Escape') return;
-            
-            const searchTerm = e.target.value.toLowerCase();
-            const options = this.querySelectorAll('option');
-            
-            options.forEach(option => {
-                if (option.value === '') return; // لا نخفي الخيار الافتراضي
-                
-                const name = option.getAttribute('data-name')?.toLowerCase() || '';
-                const employeeId = option.getAttribute('data-employee-id')?.toLowerCase() || '';
-                const nationalId = option.getAttribute('data-national-id')?.toLowerCase() || '';
-                const optionText = option.textContent.toLowerCase();
-                
-                if (name.includes(searchTerm) || 
-                    employeeId.includes(searchTerm) || 
-                    nationalId.includes(searchTerm) ||
-                    optionText.includes(searchTerm)) {
-                    option.style.display = 'block';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-        });
-    });
-});
 
 function unassignDevice(deviceId, imei) {
     document.getElementById('deviceImeiUnassign').textContent = imei;
