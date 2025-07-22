@@ -369,7 +369,7 @@ def index():
     employee_id = request.args.get('employee_id', '')
     department_id = request.args.get('department_id', '')
     sponsorship_status = request.args.get('sponsorship_status', '')
-    status_filter = request.args.get('status_filter', '')
+    status_filter = request.args.get('expiring', '')  # Fixed parameter name
     show_all = request.args.get('show_all', 'false')
     
     # Build query
@@ -383,16 +383,18 @@ def index():
         query = query.filter(Document.employee_id == int(employee_id))
     
     # تصفية حسب القسم والكفالة (نحتاج للـ join مع Employee)
-    needs_employee_join = department_id or sponsorship_status
+    if department_id and department_id.isdigit():
+        # فلترة الوثائق للموظفين في قسم محدد
+        dept_employees = Employee.query.join(Employee.departments).filter_by(id=int(department_id)).all()
+        dept_employee_ids = [emp.id for emp in dept_employees]
+        if dept_employee_ids:
+            query = query.filter(Document.employee_id.in_(dept_employee_ids))
+        else:
+            # لا توجد موظفين في هذا القسم
+            query = query.filter(False)
     
-    if needs_employee_join:
-        query = query.join(Employee)
-        
-        if department_id and department_id.isdigit():
-            query = query.filter(Employee.department_id == int(department_id))
-        
-        if sponsorship_status:
-            query = query.filter(Employee.sponsorship_status == sponsorship_status)
+    if sponsorship_status:
+        query = query.join(Employee).filter(Employee.sponsorship_status == sponsorship_status)
     
     # تطبيق فلتر حالة الصلاحية
     today = datetime.now().date()
