@@ -454,15 +454,14 @@ def assign():
         # جلب الموظفين النشطين مع فلترة (active بالإنجليزي أو نشط بالعربي)
         employees_query = Employee.query.filter(Employee.status.in_(['نشط', 'active']))
         
-        # فلترة حسب القسم أولاً (إذا كان محدد)
-        if department_filter and department_filter.isdigit():
-            # الموظفون المرتبطون بالقسم المحدد
+        # تطبيق الفلاتر بحسب ما هو محدد
+        if department_filter and department_filter.isdigit() and not search:
+            # إذا كان فلتر القسم محدد بدون بحث - عرض جميع موظفي القسم
             employees_query = employees_query.join(
                 employee_departments
             ).filter(employee_departments.c.department_id == int(department_filter))
-        
-        # ثم فلترة الموظفين حسب البحث
-        if search:
+        elif search and not department_filter:
+            # إذا كان البحث محدد بدون فلتر قسم - البحث في جميع الموظفين
             employees_query = employees_query.filter(
                 or_(
                     Employee.name.contains(search),
@@ -470,11 +469,24 @@ def assign():
                     Employee.mobile.contains(search)
                 )
             )
+        elif search and department_filter and department_filter.isdigit():
+            # إذا كان كلا الفلترين محددين - البحث في القسم المحدد أولاً
+            employees_query = employees_query.join(
+                employee_departments
+            ).filter(employee_departments.c.department_id == int(department_filter))
+            employees_query = employees_query.filter(
+                or_(
+                    Employee.name.contains(search),
+                    Employee.employee_id.contains(search),
+                    Employee.mobile.contains(search)
+                )
+            )
+        # إذا لم يتم تحديد أي فلتر، عرض جميع الموظفين النشطين
         
         active_employees = employees_query.order_by(Employee.name).all()
         
-        # إذا لم تكن هناك نتائج مع الفلاترين معاً، جرب البحث بدون فلتر القسم
-        if not active_employees and search and department_filter:
+        # إذا لم تكن هناك نتائج مع كلا الفلترين، جرب البحث في جميع الأقسام
+        if not active_employees and search and department_filter and department_filter.isdigit():
             employees_query_fallback = Employee.query.filter(Employee.status.in_(['نشط', 'active']))
             employees_query_fallback = employees_query_fallback.filter(
                 or_(
