@@ -1139,37 +1139,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="row g-2">
                                 <!-- Documents Status -->
                                 <div class="col-12 mb-3">
-                                    <h6>حالة الوثائق</h6>
+                                    <h6>الوثائق المتوفرة</h6>
+                                    {% if employee.documents %}
                                     <ul class="list-group">
-                                        {% set has_national_id = employee.documents|selectattr('document_type', 'eq', 'national_id')|list|length > 0 %}
-                                        {% set has_passport = employee.documents|selectattr('document_type', 'eq', 'passport')|list|length > 0 %}
-                                        {% set has_health_cert = employee.documents|selectattr('document_type', 'eq', 'health_certificate')|list|length > 0 %}
-                                        
+                                        {% for document in employee.documents %}
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            الهوية الوطنية
-                                            {% if has_national_id %}
+                                            {% if document.document_type == 'national_id' %}الهوية الوطنية
+                                            {% elif document.document_type == 'passport' %}جواز السفر
+                                            {% elif document.document_type == 'health_certificate' %}الشهادة الصحية
+                                            {% elif document.document_type == 'work_permit' %}رخصة العمل
+                                            {% elif document.document_type == 'education_certificate' %}الشهادة التعليمية
+                                            {% elif document.document_type == 'driving_license' %}تصريح القيادة
+                                            {% elif document.document_type == 'annual_leave' %}إجازة سنوية
+                                            {% elif document.document_type == 'other' %}أخرى
+                                            {% else %}{{ document.document_type }}{% endif %}
                                             <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
-                                            {% else %}
-                                            <span class="badge-enhanced bg-danger"><i class="fas fa-times"></i></span>
-                                            {% endif %}
                                         </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            جواز السفر
-                                            {% if has_passport %}
-                                            <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
-                                            {% else %}
-                                            <span class="badge-enhanced bg-danger"><i class="fas fa-times"></i></span>
-                                            {% endif %}
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            الشهادة الصحية
-                                            {% if has_health_cert %}
-                                            <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
-                                            {% else %}
-                                            <span class="badge-enhanced bg-danger"><i class="fas fa-times"></i></span>
-                                            {% endif %}
-                                        </li>
+                                        {% endfor %}
                                     </ul>
+                                    {% else %}
+                                    <p class="text-center text-muted my-2">لا توجد وثائق مسجلة</p>
+                                    {% endif %}
                                 </div>
                                 
                                 <!-- Financial Information -->
@@ -1541,8 +1531,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="dashboard-card card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-file-alt me-2"></i>الوثائق (جميع الأنواع)
-                        <small class="text-muted">v2.1</small>
+                        <i class="fas fa-file-alt me-2"></i>الوثائق المسجلة
+                        <small class="text-muted">v2.2</small>
                     </h5>
                     <div>
                         <a href="{{ url_for('documents.export_employee_documents_pdf', employee_id=employee.id) }}" class="btn-enhanced btn-danger-enhanced btn-sm" title="تصدير PDF">
@@ -1554,23 +1544,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- رسالة توضيحية -->
-                    <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>ملاحظة:</strong> يتم عرض جميع أنواع الوثائق (8 أنواع) سواء كانت مسجلة أم لا. 
-                        الوثائق غير المسجلة تظهر برسالة "لا توجد وثيقة" ويمكن إضافتها من زر الإضافة.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    {% set existing_documents = [] %}
+                    {% for doc_type, doc_name in document_types_map.items() %}
+                        {% if documents_by_type[doc_type] %}
+                            {% set _ = existing_documents.append((doc_type, doc_name)) %}
+                        {% endif %}
+                    {% endfor %}
                     
+                    {% if existing_documents %}
                     <div class="row">
-                        {% for doc_type, doc_name in document_types_map.items() %}
+                        {% for doc_type, doc_name in existing_documents %}
                         <div class="col-md-4 mb-3">
-                            <div class="dashboard-card card h-100 {% if documents_by_type[doc_type] %}border-{{ documents_by_type[doc_type].status_class }}{% else %}border-light{% endif %}">
-                                <div class="card-header {% if documents_by_type[doc_type] %}bg-{{ documents_by_type[doc_type].status_class }} text-white{% else %}bg-light{% endif %}">
+                            <div class="dashboard-card card h-100 border-{{ documents_by_type[doc_type].status_class }}">
+                                <div class="card-header bg-{{ documents_by_type[doc_type].status_class }} text-white">
                                     <h6 class="card-title mb-0">{{ doc_name }}</h6>
                                 </div>
                                 <div class="card-body">
-                                    {% if documents_by_type[doc_type] %}
                                     <p class="mb-2"><strong>رقم الوثيقة:</strong> {{ documents_by_type[doc_type].document_number }}</p>
                                     <p class="mb-2"><strong>تاريخ الإصدار:</strong> {{ documents_by_type[doc_type].issue_date.strftime('%d/%m/%Y') }}</p>
                                     <p class="mb-2"><strong>تاريخ الانتهاء:</strong> {{ documents_by_type[doc_type].expiry_date.strftime('%d/%m/%Y') }}</p>
@@ -1581,30 +1570,48 @@ document.addEventListener('DOMContentLoaded', function() {
                                     {% if documents_by_type[doc_type].notes %}
                                     <p class="mb-0"><strong>ملاحظات:</strong> {{ documents_by_type[doc_type].notes }}</p>
                                     {% endif %}
-                                    {% else %}
-                                    <div class="text-center text-muted my-3">
-                                        <i class="fas fa-file-alt fa-2x mb-2 opacity-50"></i>
-                                        <p class="mb-0">لا توجد وثيقة</p>
-                                        <small class="text-muted">قم بإضافة الوثيقة من الزر أدناه</small>
-                                    </div>
-                                    {% endif %}
                                 </div>
                                 <div class="card-footer d-flex justify-content-between">
-                                    {% if documents_by_type[doc_type] %}
                                     <form action="{{ url_for('documents.delete', id=documents_by_type[doc_type].id) }}" method="post" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟');">
                                         <button type="submit" class="btn-enhanced btn-danger-enhanced btn-sm">
                                             <i class="fas fa-trash-alt"></i> حذف
                                         </button>
                                     </form>
-                                    {% endif %}
-                                    <a href="{{ url_for('documents.create', employee_id=employee.id, document_type=doc_type) }}" class="btn-enhanced {% if documents_by_type[doc_type] %}btn-primary-enhanced{% else %}btn-success-enhanced{% endif %} btn-sm">
-                                        <i class="fas fa-{% if documents_by_type[doc_type] %}edit{% else %}plus{% endif %}"></i> 
-                                        {% if documents_by_type[doc_type] %}تعديل{% else %}إضافة{% endif %}
+                                    <a href="{{ url_for('documents.create', employee_id=employee.id, document_type=doc_type) }}" class="btn-enhanced btn-primary-enhanced btn-sm">
+                                        <i class="fas fa-edit"></i> تعديل
                                     </a>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد وثائق مسجلة</h5>
+                        <p class="text-muted">لم يتم رفع أي وثائق لهذا الموظف بعد</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- زر إضافة وثيقة جديدة -->
+                    <div class="text-center mt-4">
+                        <div class="dropdown">
+                            <button class="btn-enhanced btn-success-enhanced dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-plus me-2"></i>إضافة وثيقة جديدة
+                            </button>
+                            <ul class="dropdown-menu">
+                                {% for doc_type, doc_name in document_types_map.items() %}
+                                {% if not documents_by_type[doc_type] %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('documents.create', employee_id=employee.id, document_type=doc_type) }}">
+                                        <i class="fas fa-file-alt me-2"></i>{{ doc_name }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                     </div>
                     
 
