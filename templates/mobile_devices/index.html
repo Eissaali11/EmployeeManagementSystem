@@ -248,13 +248,18 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if device.employee and (device.employee.status != 'نشط' and device.employee.status != 'active') %}
-                                            <span class="badge bg-success">متاح</span>
-                                            <small class="d-block text-muted">الموظف غير نشط</small>
+                                        {% if device.employee %}
+                                            {% if device.employee.status == 'نشط' or device.employee.status == 'active' %}
+                                                <span class="badge bg-primary">مرتبط</span>
+                                                <small class="d-block text-success">موظف نشط</small>
+                                            {% else %}
+                                                <span class="badge bg-warning">مربوطة بموظفين غير نشطين</span>
+                                                <small class="d-block text-muted">الموظف غير نشط</small>
+                                            {% endif %}
                                         {% elif device.status == 'متاح' %}
                                             <span class="badge bg-success">متاح</span>
-                                        {% elif device.status == 'مرتبط' %}
-                                            <span class="badge bg-primary">مرتبط</span>
+                                        {% elif device.status == 'معطل' %}
+                                            <span class="badge bg-danger">معطل</span>
                                         {% else %}
                                             <span class="badge bg-secondary">{{ device.status }}</span>
                                         {% endif %}

@@ -689,7 +689,7 @@ def dashboard():
         inactive_employee_devices = db.session.query(MobileDevice).join(Employee).filter(
             and_(
                 MobileDevice.employee_id.isnot(None),
-                Employee.status != 'نشط'
+                Employee.status.notin_(['active', 'نشط'])
             )
         ).all()
         
