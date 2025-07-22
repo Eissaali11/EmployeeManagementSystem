@@ -209,6 +209,72 @@
                                     <span>الموظفين</span>
                                 </a>
                             </li>
+                            
+                            {# إدارة الأجهزة المحمولة #}
+                            {% if current_user.role == UserRole.ADMIN %}
+                            <li class="nav-item mb-1">
+                                <a
+                                    href="#mobileDevicesSubmenu"
+                                    data-bs-toggle="collapse"
+                                    class="nav-link nav-link-custom {% if '/mobile-devices' in request.path %}active{% endif %}"
+                                    aria-expanded="false"
+                                >
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    <span>الأجهزة المحمولة</span>
+                                    <i class="fas fa-chevron-down ms-auto"></i>
+                                </a>
+                                <ul
+                                    class="collapse {% if '/mobile-devices' in request.path %}show{% endif %} list-unstyled ps-4"
+                                    id="mobileDevicesSubmenu"
+                                >
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.dashboard') }}"
+                                            class="nav-link nav-link-custom {% if '/mobile-devices/dashboard' in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-chart-bar me-2"></i>
+                                            <span>لوحة المعلومات</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.index') }}"
+                                            class="nav-link nav-link-custom {% if '/mobile-devices' in request.path and '/dashboard' not in request.path and '/assign' not in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-list me-2"></i>
+                                            <span>قائمة الأجهزة</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.assign') }}"
+                                            class="nav-link nav-link-custom {% if '/mobile-devices/assign' in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-link me-2"></i>
+                                            <span>ربط الأجهزة</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.create') }}"
+                                            class="nav-link nav-link-custom"
+                                        >
+                                            <i class="fas fa-plus me-2"></i>
+                                            <span>إضافة جهاز</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.import_excel') }}"
+                                            class="nav-link nav-link-custom"
+                                        >
+                                            <i class="fas fa-file-excel me-2"></i>
+                                            <span>استيراد Excel</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            {% endif %}
                             {% endif %} {# التحقق من صلاحيات الأقسام #} {% if
                             current_user.role == UserRole.ADMIN or
                             current_user|check_module_access(Module.DEPARTMENTS)
@@ -409,72 +475,7 @@
                                 </a>
                             </li>
                             {% endif %}
-                            
-                            {# إدارة الأجهزة المحمولة #}
-                            {% if current_user.role == UserRole.ADMIN %}
-                            <li class="nav-item mb-1">
-                                <a
-                                    href="#mobileDevicesSubmenu"
-                                    data-bs-toggle="collapse"
-                                    class="nav-link nav-link-custom {% if '/mobile-devices' in request.path %}active{% endif %}"
-                                    aria-expanded="false"
-                                >
-                                    <i class="fas fa-mobile-alt me-2"></i>
-                                    <span>الأجهزة المحمولة</span>
-                                    <i class="fas fa-chevron-down ms-auto"></i>
-                                </a>
-                                <ul
-                                    class="collapse {% if '/mobile-devices' in request.path %}show{% endif %} list-unstyled ps-4"
-                                    id="mobileDevicesSubmenu"
-                                >
-                                    <li class="nav-item mb-1">
-                                        <a
-                                            href="{{ url_for('mobile_devices.dashboard') }}"
-                                            class="nav-link nav-link-custom {% if '/mobile-devices/dashboard' in request.path %}active{% endif %}"
-                                        >
-                                            <i class="fas fa-chart-bar me-2"></i>
-                                            <span>لوحة المعلومات</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item mb-1">
-                                        <a
-                                            href="{{ url_for('mobile_devices.index') }}"
-                                            class="nav-link nav-link-custom {% if '/mobile-devices' in request.path and '/dashboard' not in request.path and '/assign' not in request.path %}active{% endif %}"
-                                        >
-                                            <i class="fas fa-list me-2"></i>
-                                            <span>قائمة الأجهزة</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item mb-1">
-                                        <a
-                                            href="{{ url_for('mobile_devices.assign') }}"
-                                            class="nav-link nav-link-custom {% if '/mobile-devices/assign' in request.path %}active{% endif %}"
-                                        >
-                                            <i class="fas fa-link me-2"></i>
-                                            <span>ربط الأجهزة</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item mb-1">
-                                        <a
-                                            href="{{ url_for('mobile_devices.create') }}"
-                                            class="nav-link nav-link-custom"
-                                        >
-                                            <i class="fas fa-plus me-2"></i>
-                                            <span>إضافة جهاز</span>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item mb-1">
-                                        <a
-                                            href="{{ url_for('mobile_devices.import_excel') }}"
-                                            class="nav-link nav-link-custom"
-                                        >
-                                            <i class="fas fa-file-excel me-2"></i>
-                                            <span>استيراد Excel</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            {% endif %}
+
                         </ul>
                         <hr />
                         <div class="dropdown">
