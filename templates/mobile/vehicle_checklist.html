@@ -206,6 +206,14 @@ styles %} {{ super() }}
                             const formContainer = document.getElementById('handover-form-container');
                             if (formContainer) {
                                 formContainer.classList.remove('d-none');
+                                
+                                // تفعيل زر الحفظ عند إظهار النموذج
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    console.log('🔧 تم تفعيل زر الحفظ عند إظهار النموذج');
+                                }
+                                
                                 setTimeout(() => {
                                     formContainer.scrollIntoView({ behavior: 'smooth' });
                                 }, 300);
@@ -227,6 +235,14 @@ styles %} {{ super() }}
                             const formContainer = document.getElementById('handover-form-container');
                             if (formContainer) {
                                 formContainer.classList.remove('d-none');
+                                
+                                // تفعيل زر الحفظ للاستلام اليدوي
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    console.log('🔧 تم تفعيل زر الحفظ للاستلام اليدوي');
+                                }
+                                
                                 setTimeout(() => {
                                     formContainer.scrollIntoView({ behavior: 'smooth' });
                                 }, 200);
