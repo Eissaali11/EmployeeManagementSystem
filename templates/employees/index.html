@@ -1453,3 +1453,63 @@ document.documentElement.style.overflowY = 'auto';
 document.body.style.height = 'auto';
 document.body.style.overflowY = 'auto';
 </script>
+
+<!-- إصلاح نهائي لمشكلة التمرير - في نهاية الصفحة -->
+<script>
+// إصلاح مسموع مشكلة التمرير بقوة عالية
+window.addEventListener('DOMContentLoaded', function() {
+    // إزالة جميع القيود على الارتفاع والتمرير
+    const forceScrollFix = () => {
+        const elementsToFix = [
+            document.documentElement,
+            document.body,
+            ...document.querySelectorAll('.container-fluid'),
+            ...document.querySelectorAll('.row'),
+            ...document.querySelectorAll('[class*="col-"]'),
+            ...document.querySelectorAll('.main-content'),
+            ...document.querySelectorAll('.content-wrapper')
+        ];
+        
+        elementsToFix.forEach(el => {
+            if (el) {
+                // إزالة جميع قيود الارتفاع والتمرير
+                el.style.setProperty('height', 'auto', 'important');
+                el.style.setProperty('max-height', 'none', 'important');
+                el.style.setProperty('overflow-y', 'auto', 'important');
+                el.style.setProperty('overflow-x', 'hidden', 'important');
+                el.style.setProperty('position', 'static', 'important');
+                
+                // إضافة مساحة كافية
+                if (el === document.body || el === document.documentElement) {
+                    el.style.setProperty('min-height', '200vh', 'important');
+                }
+            }
+        });
+        
+        // إضافة مساحة إضافية في أسفل الصفحة
+        const footer = document.createElement('div');
+        footer.style.height = '200px';
+        footer.style.visibility = 'hidden';
+        document.body.appendChild(footer);
+        
+        console.log('تم تطبيق الإصلاح النهائي للتمرير - النسخة المطورة');
+    };
+    
+    // تطبيق الإصلاح فوراً
+    forceScrollFix();
+    
+    // إعادة التطبيق بعد التحميل الكامل
+    setTimeout(forceScrollFix, 500);
+    setTimeout(forceScrollFix, 1000);
+    setTimeout(forceScrollFix, 2000);
+    
+    // مراقبة أي تغييرات في DOM
+    const observer = new MutationObserver(forceScrollFix);
+    observer.observe(document.body, { 
+        childList: true, 
+        subtree: true, 
+        attributes: true, 
+        attributeFilter: ['style', 'class'] 
+    });
+});
+</script>
