@@ -35,11 +35,25 @@ https://wa.me/966920000560
 
 شاكرين لك حرصك والتزامك، ونتمنى لك السلامة دائمًا.`;
     
-    // إنشاء رابط wa.me مباشر
-    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    // محاولة استخدام deeplink مباشر للواتساب
+    const whatsappDeepLink = `whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+    const whatsappWebUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     
-    // فتح الرابط في نافذة جديدة
-    window.open(whatsappUrl, '_blank');
+    // تجربة فتح التطبيق مباشرة أولاً
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // على الهاتف: تجربة فتح التطبيق مباشرة
+        window.location.href = whatsappDeepLink;
+        
+        // fallback للويب بعد ثانية واحدة إذا لم يفتح التطبيق
+        setTimeout(() => {
+            window.open(whatsappWebUrl, '_blank');
+        }, 1000);
+    } else {
+        // على سطح المكتب: فتح واتساب ويب مباشرة
+        window.open(whatsappWebUrl, '_blank');
+    }
 }
 
 function openSimpleWhatsAppChat(phone, driverName, plateNumber) {

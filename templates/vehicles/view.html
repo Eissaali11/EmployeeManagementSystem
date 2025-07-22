@@ -593,7 +593,7 @@
                                             مشاهدة سجل التسليم
                                         </a>
                                         {% if current_driver.mobile %}
-                                        <button onclick="openWhatsAppChat('{{ current_driver.mobile }}', '{{ current_driver.name }}', '{{ vehicle.plate_number }}', '{{ current_driver.handover_type_ar }}', '{{ current_driver.formatted_date }}', '{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}', '{% if vehicle.registration_form_image %}{{ request.url_root }}static/{{ vehicle.registration_form_image }}{% endif %}')"
+                                        <button onclick="redirectToWhatsApp('{{ current_driver.mobile }}', '{{ current_driver.name }}', '{{ vehicle.plate_number }}', '{{ current_driver.handover_type_ar }}', '{{ current_driver.formatted_date }}', '{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}', '{% if vehicle.registration_form_image %}{{ request.url_root }}static/{{ vehicle.registration_form_image }}{% endif %}')"
                                            class="btn btn-sm btn-success ms-1"
                                            target="_blank"
                                            title="إرسال رسالة واتساب">
