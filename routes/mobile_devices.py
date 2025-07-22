@@ -84,7 +84,15 @@ def index():
         
         # حساب الإحصائيات
         total_devices = MobileDevice.query.count()
-        assigned_devices = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).count()
+        
+        # الأجهزة المربوطة فعلياً (فقط مع موظفين نشطين)
+        assigned_devices = MobileDevice.query.filter(
+            and_(
+                MobileDevice.employee_id.isnot(None),
+                MobileDevice.employee.has(Employee.status == 'نشط')
+            )
+        ).count()
+        
         # الأجهزة المتاحة: إما غير مربوطة أو مربوطة بموظف غير نشط
         available_devices = MobileDevice.query.filter(
             or_(
@@ -101,6 +109,8 @@ def index():
                 )
             )
         ).count()
+        
+        # الأجهزة المرتبطة بموظفين غير نشطين (للإحصائيات فقط)
         inactive_employee_devices = MobileDevice.query.join(Employee).filter(
             and_(
                 MobileDevice.employee_id.isnot(None),
