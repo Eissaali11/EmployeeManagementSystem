@@ -1541,7 +1541,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="dashboard-card card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-file-alt me-2"></i>الوثائق
+                        <i class="fas fa-file-alt me-2"></i>الوثائق (جميع الأنواع)
+                        <small class="text-muted">v2.1</small>
                     </h5>
                     <div>
                         <a href="{{ url_for('documents.export_employee_documents_pdf', employee_id=employee.id) }}" class="btn-enhanced btn-danger-enhanced btn-sm" title="تصدير PDF">
@@ -1553,7 +1554,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 <div class="card-body">
-
+                    <!-- رسالة توضيحية -->
+                    <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>ملاحظة:</strong> يتم عرض جميع أنواع الوثائق (8 أنواع) سواء كانت مسجلة أم لا. 
+                        الوثائق غير المسجلة تظهر برسالة "لا توجد وثيقة" ويمكن إضافتها من زر الإضافة.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    
                     <div class="row">
                         {% for doc_type, doc_name in document_types_map.items() %}
                         <div class="col-md-4 mb-3">
