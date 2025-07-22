@@ -113,13 +113,12 @@ body {
                     <span class="text-success fw-bold">{{ vehicle.driver_name }}</span>
                     {% if current_driver and current_driver.mobile %}
                     <div class="mt-2">
-                        <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحبا {{ vehicle.driver_name }} - بخصوص المركبة {{ vehicle.plate_number }} - رابط PDF {{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }} - شكرا لك"
-                           class="btn btn-sm btn-success w-100 mt-1"
-                           target="_blank"
-                           title="إرسال رسالة واتساب محسنة">
+                        <button onclick="openWhatsAppChat('{{ current_driver.mobile }}', '{{ vehicle.driver_name }}', '{{ vehicle.plate_number }}', '{{ current_driver.handover_type_ar }}', '{{ current_driver.formatted_date }}', '{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}', '{% if vehicle.registration_form_image %}{{ request.url_root }}static/{{ vehicle.registration_form_image }}{% endif %}')"
+                                class="btn btn-sm btn-success w-100 mt-1"
+                                title="إرسال رسالة واتساب محسنة">
                             <i class="fab fa-whatsapp ms-1"></i>
                             واتساب محسن مع رسائل السلامة
-                        </a>
+                        </button>
                     </div>
                     {% endif %}
                 {% else %}
