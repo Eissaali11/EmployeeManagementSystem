@@ -1,0 +1,93 @@
+/* إجبار التمرير على العمل - قوة قصوى مع تجاوز Bootstrap */
+
+/* تجاوز كامل لإعدادات Bootstrap و CSS الأساسي */
+html {
+    height: auto !important;
+    max-height: none !important;
+    overflow: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+    position: static !important;
+}
+
+body {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100vh !important;
+    overflow: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    position: static !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* تجاوز Bootstrap containers */
+.container-fluid {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    position: static !important;
+}
+
+.row {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+}
+
+[class*="col-"] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+}
+
+/* تجاوز كل العناصر المحتملة التي تحد من التمرير */
+.main-content,
+.content-wrapper,
+.main-card,
+.card,
+.card-body,
+.table-responsive,
+.sidebar {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+}
+
+/* إعدادات خاصة بصفحة الموظفين */
+body.employees-page {
+    min-height: 200vh !important;
+    padding-bottom: 100px !important;
+}
+
+/* تجاوز أي قيود أخرى */
+* {
+    box-sizing: border-box !important;
+}
+
+/* للتأكد من عمل التمرير على الموبايل */
+@media (max-width: 768px) {
+    html, body {
+        height: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        min-height: 200vh !important;
+    }
+    
+    .container-fluid {
+        min-height: 200vh !important;
+        padding-bottom: 150px !important;
+    }
+}
+
+/* إضافة مساحة إضافية للتأكد من وجود محتوى للتمرير */
+.employees-page-spacer {
+    height: 100vh !important;
+    width: 100% !important;
+    visibility: hidden !important;
+}
