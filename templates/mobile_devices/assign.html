@@ -1,0 +1,288 @@
+{% extends "layout.html" %}
+
+{% block title %}ربط الأجهزة بالموظفين{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رأس الصفحة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-6 mb-0">
+                                <i class="fas fa-link me-3"></i>
+                                ربط الأجهزة بالموظفين
+                            </h1>
+                            <p class="mb-0 mt-2 opacity-75">إدارة ربط الأجهزة المحمولة بالموظفين النشطين</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-light btn-lg">
+                                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ملخص الأجهزة -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-mobile-alt text-info fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="mb-1">{{ available_devices|length }}</h3>
+                    <p class="text-muted mb-0">أجهزة متاحة للربط</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-users text-success fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="mb-1">{{ active_employees|length }}</h3>
+                    <p class="text-muted mb-0">موظفين نشطين</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="mb-1">{{ available_devices|selectattr('employee')|list|length }}</h3>
+                    <p class="text-muted mb-0">أجهزة تحتاج إعادة ربط</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة الأجهزة المتاحة للربط -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>الأجهزة المتاحة للربط
+                        <span class="badge bg-primary ms-2">{{ available_devices|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if available_devices %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>رقم الهاتف</th>
+                                    <th>رقم IMEI</th>
+                                    <th>الإيميل</th>
+                                    <th>نوع الجهاز</th>
+                                    <th>الحالة الحالية</th>
+                                    <th>ربط بموظف</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for device in available_devices %}
+                                <tr>
+                                    <td><strong>{{ device.phone_number }}</strong></td>
+                                    <td><code class="text-dark">{{ device.imei }}</code></td>
+                                    <td>
+                                        {% if device.email %}
+                                            <small class="text-muted">{{ device.email }}</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.device_model %}
+                                            {{ device.device_model }}
+                                            {% if device.device_brand %}
+                                                <br><small class="text-muted">{{ device.device_brand }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.employee %}
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-warning me-2">مربوط</span>
+                                                <div>
+                                                    <span>{{ device.employee.name }}</span>
+                                                    {% if device.employee.status != 'نشط' %}
+                                                        <br><small class="text-danger">موظف غير نشط</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-secondary">غير مربوط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" id="employee_{{ device.id }}" 
+                                                onchange="assignDevice({{ device.id }}, this.value)">
+                                            <option value="">اختر موظف</option>
+                                            {% for employee in active_employees %}
+                                            <option value="{{ employee.id }}" 
+                                                    {% if device.employee_id == employee.id %}selected{% endif %}>
+                                                {{ employee.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {% if device.employee_id %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="unassignDevice({{ device.id }}, '{{ device.imei }}')" 
+                                                    title="فك الربط">
+                                                <i class="fas fa-unlink"></i>
+                                            </button>
+                                            {% endif %}
+                                            <a href="{{ url_for('mobile_devices.edit', device_id=device.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-mobile-alt fa-3x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted">لا توجد أجهزة متاحة للربط</h5>
+                        <p class="text-muted">جميع الأجهزة مربوطة أو لا توجد أجهزة في النظام</p>
+                        <a href="{{ url_for('mobile_devices.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>إضافة جهاز جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إرشادات الاستخدام -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-info-circle me-2"></i>إرشادات الاستخدام
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-dark">ربط الأجهزة:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-check text-success me-2"></i>اختر موظف من القائمة المنسدلة</li>
+                                <li><i class="fas fa-check text-success me-2"></i>سيتم الربط تلقائياً عند الاختيار</li>
+                                <li><i class="fas fa-check text-success me-2"></i>يمكن ربط جهاز واحد فقط لكل موظف</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-dark">فك الربط:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-times text-danger me-2"></i>انقر على زر فك الربط</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>سيصبح الجهاز متاحاً للربط بموظف آخر</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>لا يمكن التراجع عن هذا الإجراء</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal فك الربط -->
+<div class="modal fade" id="unassignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد فك الربط</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من فك ربط الجهاز <strong id="deviceImeiUnassign"></strong>؟</p>
+                <p class="text-warning"><small>سيصبح الجهاز متاحاً للربط بموظف آخر.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form method="POST" id="unassignForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">فك الربط</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function assignDevice(deviceId, employeeId) {
+    if (!employeeId) return;
+    
+    // إظهار مؤشر التحميل
+    const select = document.getElementById(`employee_${deviceId}`);
+    const originalHtml = select.outerHTML;
+    select.disabled = true;
+    
+    // إرسال طلب الربط
+    fetch(`/mobile-devices/${deviceId}/assign/${employeeId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // إعادة تحميل الصفحة لعرض التغييرات
+            window.location.reload();
+        } else {
+            throw new Error('فشل في ربط الجهاز');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء ربط الجهاز');
+        // استعادة القائمة المنسدلة
+        select.outerHTML = originalHtml;
+    });
+}
+
+function unassignDevice(deviceId, imei) {
+    document.getElementById('deviceImeiUnassign').textContent = imei;
+    document.getElementById('unassignForm').action = `/mobile-devices/${deviceId}/unassign`;
+    new bootstrap.Modal(document.getElementById('unassignModal')).show();
+}
+
+// إضافة token CSRF للطلبات
+document.addEventListener('DOMContentLoaded', function() {
+    // إنشاء meta tag للCSRF token إذا لم يكن موجوداً
+    if (!document.querySelector('meta[name=csrf-token]')) {
+        const meta = document.createElement('meta');
+        meta.name = 'csrf-token';
+        meta.content = '{{ csrf_token() }}';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,348 @@
+{% extends "layout.html" %}
+
+{% block title %}لوحة معلومات الأجهزة المحمولة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رأس الصفحة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-6 mb-0">
+                                <i class="fas fa-chart-bar me-3"></i>
+                                لوحة معلومات الأجهزة المحمولة
+                            </h1>
+                            <p class="mb-0 mt-2 opacity-75">نظرة شاملة على حالة الأجهزة والربط</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-light btn-lg">
+                                <i class="fas fa-list me-2"></i>إدارة الأجهزة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإحصائيات الرئيسية -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-mobile-alt text-primary fa-3x"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-primary mb-1">{{ total_devices }}</h2>
+                    <p class="text-muted mb-0">إجمالي الأجهزة</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-user-check text-success fa-3x"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-success mb-1">{{ assigned_devices }}</h2>
+                    <p class="text-muted mb-0">الأجهزة المربوطة</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-check-circle text-info fa-3x"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-info mb-1">{{ available_devices }}</h2>
+                    <p class="text-muted mb-0">الأجهزة المتاحة</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-exclamation-triangle text-warning fa-3x"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-warning mb-1">{{ inactive_employee_devices|length }}</h2>
+                    <p class="text-muted mb-0">أجهزة موظفين غير نشطين</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تنبيهات الأجهزة -->
+    <div class="row mb-4">
+        {% if inactive_employee_devices %}
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        أجهزة مربوطة بموظفين غير نشطين
+                        <span class="badge bg-dark ms-2">{{ inactive_employee_devices|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for device in inactive_employee_devices[:5] %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ device.phone_number }}</strong>
+                                <br>
+                                <small class="text-muted">IMEI: {{ device.imei }}</small>
+                                <br>
+                                <small class="text-danger">موظف: {{ device.employee.name if device.employee else 'غير محدد' }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-warning">غير نشط</span>
+                                <br>
+                                <a href="{{ url_for('mobile_devices.assign') }}" class="btn btn-sm btn-outline-primary mt-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if inactive_employee_devices|length > 5 %}
+                        <div class="list-group-item text-center">
+                            <a href="{{ url_for('mobile_devices.assign') }}" class="btn btn-outline-warning">
+                                عرض المزيد ({{ inactive_employee_devices|length - 5 }})
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if unassigned_devices %}
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        أجهزة غير مربوطة
+                        <span class="badge bg-dark ms-2">{{ unassigned_devices|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for device in unassigned_devices[:5] %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ device.phone_number }}</strong>
+                                <br>
+                                <small class="text-muted">IMEI: {{ device.imei }}</small>
+                                {% if device.device_model %}
+                                <br>
+                                <small class="text-info">{{ device.device_model }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-secondary">متاح</span>
+                                <br>
+                                <a href="{{ url_for('mobile_devices.assign') }}" class="btn btn-sm btn-outline-success mt-1">
+                                    <i class="fas fa-link"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if unassigned_devices|length > 5 %}
+                        <div class="list-group-item text-center">
+                            <a href="{{ url_for('mobile_devices.assign') }}" class="btn btn-outline-info">
+                                عرض المزيد ({{ unassigned_devices|length - 5 }})
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- إحصائيات الماركات -->
+    {% if brand_stats %}
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>توزيع الأجهزة حسب الماركة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="brandChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>إحصائيات الماركات
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الماركة</th>
+                                    <th>عدد الأجهزة</th>
+                                    <th>النسبة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for brand, count in brand_stats %}
+                                <tr>
+                                    <td><strong>{{ brand }}</strong></td>
+                                    <td>{{ count }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" style="width: {{ (count / total_devices * 100)|round(1) }}%">
+                                                {{ (count / total_devices * 100)|round(1) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- آخر العمليات -->
+    {% if recent_activities %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>آخر العمليات
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ activity.action }}</h6>
+                                    <p class="mb-1">{{ activity.details }}</p>
+                                </div>
+                                <small class="text-muted">{{ activity.created_at.strftime('%Y-%m-%d %H:%M') if activity.created_at else 'غير محدد' }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- أزرار الإجراءات السريعة -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>إجراءات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('mobile_devices.create') }}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus me-2"></i>إضافة جهاز جديد
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('mobile_devices.assign') }}" class="btn btn-success btn-lg">
+                                    <i class="fas fa-link me-2"></i>ربط الأجهزة
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('mobile_devices.import_excel') }}" class="btn btn-info btn-lg">
+                                    <i class="fas fa-file-excel me-2"></i>استيراد Excel
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('mobile_devices.export_excel') }}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-download me-2"></i>تصدير Excel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if brand_stats %}
+// رسم بياني للماركات
+const ctx = document.getElementById('brandChart').getContext('2d');
+const brandChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for brand, count in brand_stats %}'{{ brand }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for brand, count in brand_stats %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#4BC0C0',
+                '#9966FF',
+                '#FF9F40',
+                '#FF6384',
+                '#C9CBCF'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

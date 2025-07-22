@@ -1472,3 +1472,51 @@ class OperationNotification(db.Model):
     def __repr__(self):
         return f"<OperationNotification {self.title} to {self.user_id}>"
 
+
+class MobileDevice(db.Model):
+    """نموذج لإدارة الأجهزة المحمولة والهواتف"""
+    __tablename__ = 'mobile_devices'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    phone_number = db.Column(db.String(20), nullable=False)  # رقم الهاتف
+    imei = db.Column(db.String(20), unique=True, nullable=False)  # رقم الـ IMEI فريد
+    email = db.Column(db.String(100), nullable=True)  # الإيميل المرتبط بالجهاز
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)  # معرف الموظف
+    device_model = db.Column(db.String(50), nullable=True)  # نوع الجهاز
+    device_brand = db.Column(db.String(50), nullable=True)  # ماركة الجهاز
+    status = db.Column(db.String(20), default='متاح', nullable=False)  # حالة الجهاز: متاح، مرتبط، معطل
+    assigned_date = db.Column(db.DateTime, nullable=True)  # تاريخ الربط
+    notes = db.Column(db.Text, nullable=True)  # ملاحظات إضافية
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    employee = db.relationship('Employee', backref='mobile_devices', lazy=True)
+    
+    def __repr__(self):
+        return f'<MobileDevice {self.imei} - {self.phone_number}>'
+    
+    @property
+    def is_available(self):
+        """تحقق من توفر الجهاز للتخصيص"""
+        if self.status == 'معطل':
+            return False
+        if self.employee_id is None:
+            return True
+        # تحقق من حالة الموظف
+        if self.employee and self.employee.status != 'نشط':
+            return True
+        return False
+    
+    @property
+    def status_class(self):
+        """إرجاع كلاس CSS حسب الحالة"""
+        status_classes = {
+            'متاح': 'success',
+            'مرتبط': 'primary', 
+            'معطل': 'danger'
+        }
+        return status_classes.get(self.status, 'secondary')
+

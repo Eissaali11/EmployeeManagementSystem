@@ -345,6 +345,7 @@ with app.app_context():
     from routes.employee_portal import employee_portal_bp
     from routes.insights import insights_bp
     from routes.external_safety import external_safety_bp
+    from routes.mobile_devices import mobile_devices_bp
     from routes.operations import operations_bp
 
     # تعطيل حماية CSRF لطرق معينة
@@ -370,6 +371,7 @@ with app.app_context():
     app.register_blueprint(employee_portal_bp, url_prefix='/employee-portal')
     app.register_blueprint(insights_bp, url_prefix='/insights')
     app.register_blueprint(external_safety_bp)
+    app.register_blueprint(mobile_devices_bp, url_prefix='/mobile-devices')
     app.register_blueprint(operations_bp, url_prefix='/operations')
 
     # إضافة route لخدمة الصور من مجلد uploads

@@ -1,0 +1,223 @@
+{% extends "layout.html" %}
+
+{% block title %}تعديل بيانات الجهاز المحمول{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- رأس الصفحة -->
+            <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-0">
+                                <i class="fas fa-edit me-3"></i>
+                                تعديل بيانات الجهاز المحمول
+                            </h1>
+                            <p class="mb-0 mt-2 opacity-75">IMEI: {{ device.imei }}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-light">
+                                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نموذج تعديل الجهاز -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>بيانات الجهاز
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <!-- البيانات الأساسية -->
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number" class="form-label">
+                                    رقم الهاتف <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="phone_number" name="phone_number" 
+                                           value="{{ device.phone_number }}" required maxlength="20"
+                                           pattern="[0-9+\-\s]+" title="يسمح بالأرقام والرموز + - ومسافات فقط">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="imei" class="form-label">
+                                    رقم IMEI <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-barcode"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="imei" name="imei" 
+                                           value="{{ device.imei }}" required maxlength="20"
+                                           pattern="[0-9]+" title="الأرقام فقط">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">الإيميل</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ device.email or '' }}" maxlength="100">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">حالة الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-info-circle"></i>
+                                    </span>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="متاح" {% if device.status == 'متاح' %}selected{% endif %}>متاح</option>
+                                        <option value="مرتبط" {% if device.status == 'مرتبط' %}selected{% endif %}>مرتبط</option>
+                                        <option value="معطل" {% if device.status == 'معطل' %}selected{% endif %}>معطل</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- معلومات الجهاز -->
+                            <div class="col-md-6 mb-3">
+                                <label for="device_brand" class="form-label">ماركة الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-tag"></i>
+                                    </span>
+                                    <select class="form-select" id="device_brand" name="device_brand">
+                                        <option value="">اختر الماركة</option>
+                                        <option value="Samsung" {% if device.device_brand == 'Samsung' %}selected{% endif %}>Samsung</option>
+                                        <option value="Apple" {% if device.device_brand == 'Apple' %}selected{% endif %}>Apple</option>
+                                        <option value="Huawei" {% if device.device_brand == 'Huawei' %}selected{% endif %}>Huawei</option>
+                                        <option value="Xiaomi" {% if device.device_brand == 'Xiaomi' %}selected{% endif %}>Xiaomi</option>
+                                        <option value="Oppo" {% if device.device_brand == 'Oppo' %}selected{% endif %}>Oppo</option>
+                                        <option value="Vivo" {% if device.device_brand == 'Vivo' %}selected{% endif %}>Vivo</option>
+                                        <option value="OnePlus" {% if device.device_brand == 'OnePlus' %}selected{% endif %}>OnePlus</option>
+                                        <option value="Nokia" {% if device.device_brand == 'Nokia' %}selected{% endif %}>Nokia</option>
+                                        <option value="Sony" {% if device.device_brand == 'Sony' %}selected{% endif %}>Sony</option>
+                                        <option value="LG" {% if device.device_brand == 'LG' %}selected{% endif %}>LG</option>
+                                        <option value="أخرى" {% if device.device_brand == 'أخرى' %}selected{% endif %}>أخرى</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="device_model" class="form-label">نوع الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="device_model" name="device_model" 
+                                           value="{{ device.device_model or '' }}" maxlength="50">
+                                </div>
+                            </div>
+
+                            <!-- ملاحظات -->
+                            <div class="col-12 mb-3">
+                                <label for="notes" class="form-label">ملاحظات</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </span>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ device.notes or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- معلومات الربط الحالية -->
+                        {% if device.employee %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-user me-2"></i>معلومات الربط الحالية
+                            </h6>
+                            <p class="mb-2">
+                                <strong>الموظف المربوط:</strong> {{ device.employee.name }}
+                            </p>
+                            {% if device.assigned_date %}
+                            <p class="mb-0">
+                                <strong>تاريخ الربط:</strong> {{ device.assigned_date.strftime('%Y-%m-%d') }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- أزرار الإجراءات -->
+                        <hr>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-save me-2"></i>حفظ التغييرات
+                                        </button>
+                                        {% if device.employee_id %}
+                                        <a href="{{ url_for('mobile_devices.assign') }}" class="btn btn-outline-warning btn-lg ms-2">
+                                            <i class="fas fa-unlink me-2"></i>إدارة الربط
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-outline-dark btn-lg">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- معلومات الجهاز -->
+            <div class="card border-0 shadow-sm mt-4" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-info-circle me-2"></i>معلومات الجهاز
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>تاريخ الإضافة:</strong></p>
+                            <p class="text-muted">{{ device.created_at.strftime('%Y-%m-%d %H:%M') if device.created_at else 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>آخر تحديث:</strong></p>
+                            <p class="text-muted">{{ device.updated_at.strftime('%Y-%m-%d %H:%M') if device.updated_at else 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// التحقق من صحة IMEI
+document.getElementById('imei').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, ''); // إزالة غير الأرقام
+    e.target.value = value;
+    
+    if (value.length > 15) {
+        e.target.value = value.substring(0, 15);
+    }
+});
+
+// التحقق من صحة رقم الهاتف
+document.getElementById('phone_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/[^0-9+\-\s]/g, ''); // السماح بالأرقام والرموز المطلوبة فقط
+    e.target.value = value;
+});
+</script>
+{% endblock %}
