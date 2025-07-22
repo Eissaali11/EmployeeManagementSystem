@@ -218,7 +218,10 @@ def edit(device_id):
             db.session.rollback()
             flash(f'حدث خطأ أثناء تحديث الجهاز: {str(e)}', 'danger')
     
-    return render_template('mobile_devices/edit.html', device=device)
+    # جلب قائمة الموظفين النشطين للربط
+    active_employees = Employee.query.filter(Employee.status.in_(['نشط', 'active'])).order_by(Employee.name).all()
+    
+    return render_template('mobile_devices/edit.html', device=device, active_employees=active_employees)
 
 @mobile_devices_bp.route('/<int:device_id>/delete', methods=['POST'])
 @login_required
@@ -560,11 +563,18 @@ def assign_device(device_id, employee_id):
         db.session.add(audit)
         db.session.commit()
         
-        flash(f'تم ربط الجهاز بالموظف {employee.name} بنجاح', 'success')
+        # التحقق من نوع الطلب
+        if request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': True, 'message': f'تم ربط الجهاز بالموظف {employee.name} بنجاح'})
+        else:
+            flash(f'تم ربط الجهاز بالموظف {employee.name} بنجاح', 'success')
         
     except Exception as e:
         db.session.rollback()
-        flash(f'حدث خطأ أثناء ربط الجهاز: {str(e)}', 'danger')
+        if request.headers.get('Content-Type') == 'application/json':
+            return jsonify({'success': False, 'message': f'خطأ: {str(e)}'}), 500
+        else:
+            flash(f'حدث خطأ أثناء ربط الجهاز: {str(e)}', 'danger')
     
     return redirect(url_for('mobile_devices.assign'))
 
@@ -576,8 +586,7 @@ def unassign_device(device_id):
         device = MobileDevice.query.get_or_404(device_id)
         
         if not device.employee_id:
-            flash('الجهاز غير مربوط بأي موظف', 'warning')
-            return redirect(url_for('mobile_devices.assign'))
+            return jsonify({'success': False, 'message': 'الجهاز غير مربوط بأي موظف'}), 400
         
         # حفظ اسم الموظف للتسجيل
         employee = Employee.query.get(device.employee_id)
@@ -603,13 +612,11 @@ def unassign_device(device_id):
         db.session.add(audit)
         db.session.commit()
         
-        flash(f'تم فك ربط الجهاز من الموظف {employee_name} بنجاح', 'success')
+        return jsonify({'success': True, 'message': f'تم فك ربط الجهاز من الموظف {employee_name} بنجاح'})
         
     except Exception as e:
         db.session.rollback()
-        flash(f'حدث خطأ أثناء فك ربط الجهاز: {str(e)}', 'danger')
-    
-    return redirect(url_for('mobile_devices.assign'))
+        return jsonify({'success': False, 'message': f'خطأ: {str(e)}'}), 500
 
 @mobile_devices_bp.route('/dashboard')
 @login_required
