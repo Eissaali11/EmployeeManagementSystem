@@ -43,7 +43,26 @@ def index():
             )
         
         if status_filter:
-            query = query.filter(MobileDevice.status == status_filter)
+            if status_filter == 'متاح':
+                # فلتر الأجهزة المتاحة: إما غير مربوطة أو مربوطة بموظف غير نشط
+                query = query.filter(
+                    or_(
+                        # أجهزة غير مربوطة
+                        and_(
+                            MobileDevice.employee_id.is_(None),
+                            MobileDevice.status == 'متاح'
+                        ),
+                        # أجهزة مربوطة بموظفين غير نشطين
+                        and_(
+                            MobileDevice.employee_id.isnot(None),
+                            MobileDevice.status == 'مرتبط',
+                            MobileDevice.employee.has(Employee.status != 'نشط')
+                        )
+                    )
+                )
+            else:
+                # باقي الفلاتر العادية
+                query = query.filter(MobileDevice.status == status_filter)
             
         if employee_filter and employee_filter.isdigit():
             query = query.filter(MobileDevice.employee_id == int(employee_filter))
