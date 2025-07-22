@@ -372,12 +372,15 @@
 
     /* Horizontal Scroll Enhancement */
     .table-horizontal-scroll {
-        overflow-x: auto;
+        overflow: auto;
+        max-height: 70vh; /* ارتفاع أقصى 70% من شاشة المتصفح */
+        min-height: 400px; /* ارتفاع أدنى 400 بيكسل */
         border-radius: 12px;
         box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
     }
 
     .table-horizontal-scroll::-webkit-scrollbar {
+        width: 8px;
         height: 8px;
     }
 
@@ -779,6 +782,72 @@
 
 .th :hover{
     color:#f1f1f1
+}
+
+/* إصلاح شامل لمشكلة عرض الموظفين والتمرير */
+#employeesTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#employeesTable thead th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    font-weight: bold;
+    text-align: right;
+}
+
+/* تحسين container الجدول لعرض جميع الموظفين */
+.table-responsive.table-horizontal-scroll {
+    max-height: 75vh !important;
+    min-height: 500px !important;
+    overflow: auto !important;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: white;
+}
+
+/* تحسين التمرير للجدول */
+.table-responsive.table-horizontal-scroll::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.table-responsive.table-horizontal-scroll::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.table-responsive.table-horizontal-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 6px;
+}
+
+.table-responsive.table-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+/* تحسين عرض البيانات */
+#employeesTable tbody tr {
+    transition: all 0.3s ease;
+}
+
+#employeesTable tbody tr:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%) !important;
+    transform: translateX(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* تحسين واضح للنصوص */
+#employeesTable tbody td {
+    font-size: 14px;
+    padding: 12px 8px;
+    vertical-align: middle;
 }
 
 </style>
