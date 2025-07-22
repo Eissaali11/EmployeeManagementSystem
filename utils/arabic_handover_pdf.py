@@ -233,7 +233,7 @@ def handover_pdf_public(handover_id):
         
         # جلب بيانات التسليم/الاستلام باستخدام SQL مباشر مع جميع البيانات المطلوبة
         result = db.session.execute(text("""
-            SELECT vh.*, v.plate_number, v.make, v.model, v.year, v.color, v.status,
+            SELECT vh.*, v.plate_number, v.make, v.model, v.year, v.color, v.vehicle_status,
                    e.name as employee_name, e.employee_id as emp_id
             FROM vehicle_handover vh
             LEFT JOIN vehicle v ON vh.vehicle_id = v.id
@@ -262,7 +262,7 @@ def handover_pdf_public(handover_id):
                 'model': result.model or '',
                 'year': result.year or '',
                 'color': result.color or '',
-                'vehicle_status': result.status or 'متاحة'  # حالة المركبة
+                'vehicle_status': result.vehicle_status or 'متاحة'  # حالة المركبة
             }
         }
         
