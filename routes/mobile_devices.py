@@ -714,7 +714,6 @@ def dashboard():
             AuditLog.action,
             AuditLog.details,
             AuditLog.timestamp,
-            AuditLog.created_at,
             Employee.name.label('employee_name'),
             MobileDevice.phone_number,
             MobileDevice.imei
