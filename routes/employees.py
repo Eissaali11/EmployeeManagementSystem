@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality, employee_departments
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality, employee_departments, MobileDevice
 from sqlalchemy import func, or_
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
@@ -500,6 +500,10 @@ def view(id):
     
     # Get vehicle handover records
     vehicle_handovers = VehicleHandover.query.filter_by(employee_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+    
+    # Get mobile devices assigned to this employee
+    mobile_devices = MobileDevice.query.filter_by(employee_id=id).order_by(MobileDevice.assigned_date.desc()).all()
+    
     all_departments = Department.query.order_by(Department.name).all()
     return render_template('employees/view.html', 
                           employee=employee, 
@@ -509,6 +513,7 @@ def view(id):
                           attendances=attendances,
                           salaries=salaries,
                           vehicle_handovers=vehicle_handovers,
+                          mobile_devices=mobile_devices,
                           departments=all_departments
                           )
 
