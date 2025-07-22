@@ -2,6 +2,29 @@
 
 {% block title %}إدارة الأجهزة المحمولة{% endblock %}
 
+{% block extra_css %}
+<style>
+/* تحسين مظهر روابط أسماء الموظفين */
+.employee-link {
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin: -2px -6px;
+}
+
+.employee-link:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.employee-link.text-muted:hover {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #6c757d !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- رأس الصفحة -->
@@ -235,12 +258,20 @@
                                                     <div class="bg-success bg-opacity-10 rounded-circle p-1 me-2">
                                                         <i class="fas fa-user text-success fa-sm"></i>
                                                     </div>
-                                                    <span>{{ device.employee.name }}</span>
+                                                    <a href="{{ url_for('employees.view', id=device.employee.id) }}" 
+                                                       class="text-decoration-none fw-bold text-primary employee-link" 
+                                                       title="عرض تفاصيل الموظف">
+                                                        {{ device.employee.name }}
+                                                    </a>
                                                 {% else %}
                                                     <div class="bg-warning bg-opacity-10 rounded-circle p-1 me-2">
                                                         <i class="fas fa-user text-warning fa-sm"></i>
                                                     </div>
-                                                    <span class="text-muted">{{ device.employee.name }} (غير نشط)</span>
+                                                    <a href="{{ url_for('employees.view', id=device.employee.id) }}" 
+                                                       class="text-decoration-none text-muted employee-link" 
+                                                       title="عرض تفاصيل الموظف">
+                                                        {{ device.employee.name }} (غير نشط)
+                                                    </a>
                                                 {% endif %}
                                             </div>
                                         {% else %}

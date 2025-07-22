@@ -2,6 +2,29 @@
 
 {% block title %}لوحة معلومات الأجهزة المحمولة{% endblock %}
 
+{% block extra_css %}
+<style>
+/* تحسين مظهر روابط أسماء الموظفين */
+.employee-link {
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin: -2px -6px;
+}
+
+.employee-link:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.employee-link.text-success:hover {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754 !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- رأس الصفحة -->
@@ -335,8 +358,12 @@
                                         <small>{{ activity.details or 'غير محدد' }}</small>
                                     </td>
                                     <td>
-                                        {% if activity.employee_name %}
-                                        <strong class="text-success">{{ activity.employee_name }}</strong>
+                                        {% if activity.employee_name and activity.employee_id %}
+                                        <a href="{{ url_for('employees.view', id=activity.employee_id) }}" 
+                                           class="text-decoration-none fw-bold text-success employee-link" 
+                                           title="عرض تفاصيل الموظف">
+                                            {{ activity.employee_name }}
+                                        </a>
                                         {% else %}
                                         <span class="text-muted">غير محدد</span>
                                         {% endif %}

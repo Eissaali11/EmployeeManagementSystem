@@ -759,6 +759,7 @@ def dashboard():
             AuditLog.details,
             AuditLog.timestamp,
             Employee.name.label('employee_name'),
+            Employee.id.label('employee_id'),
             MobileDevice.phone_number,
             MobileDevice.imei
         ).outerjoin(
