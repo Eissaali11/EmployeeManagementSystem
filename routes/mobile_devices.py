@@ -63,24 +63,38 @@ def index():
         
         if status_filter:
             if status_filter == 'متاح':
-                # فلتر الأجهزة المتاحة: إما غير مربوطة أو مربوطة بموظف غير نشط
+                # فلتر الأجهزة المتاحة: فقط الأجهزة غير المربوطة أو المربوطة بموظفين غير نشطين
                 query = query.filter(
                     or_(
-                        # أجهزة غير مربوطة
-                        and_(
-                            MobileDevice.employee_id.is_(None),
-                            MobileDevice.status == 'متاح'
-                        ),
-                        # أجهزة مربوطة بموظفين غير نشطين
+                        # أجهزة غير مربوطة تماماً
+                        MobileDevice.employee_id.is_(None),
+                        # أجهزة مربوطة بموظفين غير نشطين (أو مرحلين أو منتهين)
                         and_(
                             MobileDevice.employee_id.isnot(None),
-                            MobileDevice.status == 'مرتبط',
-                            MobileDevice.employee.has(Employee.status != 'نشط')
+                            MobileDevice.employee.has(
+                                and_(
+                                    Employee.status != 'نشط',
+                                    Employee.status != 'active'
+                                )
+                            )
+                        )
+                    )
+                )
+            elif status_filter == 'مرتبط':
+                # فلتر الأجهزة المرتبطة فقط مع موظفين نشطين
+                query = query.filter(
+                    and_(
+                        MobileDevice.employee_id.isnot(None),
+                        MobileDevice.employee.has(
+                            or_(
+                                Employee.status == 'نشط',
+                                Employee.status == 'active'
+                            )
                         )
                     )
                 )
             else:
-                # باقي الفلاتر العادية
+                # باقي الفلاتر العادية (مثل مربوطة بموظفين غير نشطين)
                 query = query.filter(MobileDevice.status == status_filter)
             
         if employee_filter and employee_filter.isdigit():
@@ -108,32 +122,43 @@ def index():
         assigned_devices = MobileDevice.query.filter(
             and_(
                 MobileDevice.employee_id.isnot(None),
-                MobileDevice.employee.has(Employee.status == 'نشط')
+                MobileDevice.employee.has(
+                    or_(
+                        Employee.status == 'نشط',
+                        Employee.status == 'active'
+                    )
+                )
             )
         ).count()
         
         # الأجهزة المتاحة: إما غير مربوطة أو مربوطة بموظف غير نشط
         available_devices = MobileDevice.query.filter(
             or_(
-                # أجهزة غير مربوطة
-                and_(
-                    MobileDevice.employee_id.is_(None),
-                    MobileDevice.status == 'متاح'
-                ),
+                # أجهزة غير مربوطة تماماً
+                MobileDevice.employee_id.is_(None),
                 # أجهزة مربوطة بموظفين غير نشطين
                 and_(
                     MobileDevice.employee_id.isnot(None),
-                    MobileDevice.status == 'مرتبط',
-                    MobileDevice.employee.has(Employee.status != 'نشط')
+                    MobileDevice.employee.has(
+                        and_(
+                            Employee.status != 'نشط',
+                            Employee.status != 'active'
+                        )
+                    )
                 )
             )
         ).count()
         
-        # الأجهزة المرتبطة بموظفين غير نشطين (للإحصائيات فقط)
-        inactive_employee_devices = MobileDevice.query.join(Employee).filter(
+        # الأجهزة المربوطة بموظفين غير نشطين
+        inactive_employee_devices = MobileDevice.query.filter(
             and_(
                 MobileDevice.employee_id.isnot(None),
-                Employee.status != 'نشط'
+                MobileDevice.employee.has(
+                    and_(
+                        Employee.status != 'نشط',
+                        Employee.status != 'active'
+                    )
+                )
             )
         ).count()
         
