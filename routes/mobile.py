@@ -94,6 +94,59 @@ def log_audit(action, entity_type, entity_id, details=None):
         """تسجيل الإجراء في سجل النظام - تم الانتقال للنظام الجديد"""
         log_activity(action, entity_type, entity_id, details)
 
+@mobile_bp.route('/get_vehicle_driver_info/<int:vehicle_id>')
+@login_required
+def get_vehicle_driver_info(vehicle_id):
+    """إرجاع بيانات السائق الحالي للسيارة المحددة"""
+    try:
+        vehicle = Vehicle.query.get_or_404(vehicle_id)
+        
+        # البحث عن آخر سجل تسليم لهذه السيارة
+        latest_handover = VehicleHandover.query.filter_by(
+            vehicle_id=vehicle_id,
+            handover_type='delivery'
+        ).order_by(VehicleHandover.handover_date.desc()).first()
+        
+        if latest_handover:
+            driver_info = {
+                'name': latest_handover.person_name or '',
+                'employee_id': latest_handover.employee_id or '',
+                'phone': getattr(latest_handover, 'person_phone', '') or '',
+                'national_id': getattr(latest_handover, 'person_national_id', '') or '',
+                'mobile': getattr(latest_handover, 'person_mobile', '') or ''
+            }
+            
+            # إذا كان هناك موظف مرتبط، جلب بياناته
+            if latest_handover.employee_id:
+                employee = Employee.query.get(latest_handover.employee_id)
+                if employee:
+                    driver_info.update({
+                        'name': employee.name or '',
+                        'phone': employee.mobile or employee.phone or '',
+                        'mobile': employee.mobile or '',
+                        'national_id': employee.national_id or ''
+                    })
+            
+            return jsonify({
+                'success': True,
+                'driver_info': driver_info,
+                'message': 'تم العثور على بيانات السائق الحالي'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'لا توجد بيانات سائق حالي لهذه السيارة',
+                'driver_info': None
+            })
+            
+    except Exception as e:
+        print(f"خطأ في جلب بيانات السائق: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في جلب بيانات السائق',
+            'error': str(e)
+        }), 500
+
 # صفحة الـ Splash Screen
 @mobile_bp.route('/splash')
 def splash():
