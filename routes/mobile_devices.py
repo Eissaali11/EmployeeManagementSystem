@@ -663,9 +663,19 @@ def unassign_device(device_id):
 @mobile_devices_bp.route('/dashboard')
 @login_required
 def dashboard():
-    """لوحة معلومات الأجهزة المحمولة"""
+    """لوحة معلومات الأجهزة المحمولة مع فلاتر وبحث"""
     try:
-        # حساب الإحصائيات
+        # معاملات البحث والفلترة
+        search = request.args.get('search', '').strip()
+        employee_filter = request.args.get('employee', '')
+        action_filter = request.args.get('action', '')
+        date_from = request.args.get('date_from', '')
+        date_to = request.args.get('date_to', '')
+        phone_filter = request.args.get('phone', '').strip()
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        
+        # حساب الإحصائيات الأساسية
         total_devices = MobileDevice.query.count()
         assigned_devices = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).count()
         available_devices = MobileDevice.query.filter(
@@ -699,10 +709,92 @@ def dashboard():
             MobileDevice.device_brand.isnot(None)
         ).group_by(MobileDevice.device_brand).all()
         
-        # آخر العمليات
-        recent_activities = AuditLog.query.filter(
-            AuditLog.action.contains('جهاز محمول')
-        ).order_by(AuditLog.timestamp.desc()).limit(10).all()
+        # بناء استعلام العمليات مع الفلاتر
+        activities_query = db.session.query(
+            AuditLog.action,
+            AuditLog.details,
+            AuditLog.timestamp,
+            AuditLog.created_at,
+            Employee.name.label('employee_name'),
+            MobileDevice.phone_number,
+            MobileDevice.imei
+        ).outerjoin(
+            # ربط بالموظف المسجل للعملية
+            Employee, AuditLog.user_id == Employee.id
+        ).outerjoin(
+            # ربط بالجهاز من خلال entity_id
+            MobileDevice, and_(
+                AuditLog.entity_type == 'MobileDevice',
+                AuditLog.entity_id == MobileDevice.id
+            )
+        ).filter(
+            or_(
+                AuditLog.action.contains('جهاز محمول'),
+                AuditLog.action.contains('ربط جهاز'),
+                AuditLog.action.contains('فك ربط'),
+                AuditLog.action.contains('إضافة جهاز'),
+                AuditLog.action.contains('تعديل جهاز'),
+                AuditLog.action.contains('حذف جهاز')
+            )
+        )
+        
+        # تطبيق فلاتر البحث
+        if search:
+            activities_query = activities_query.filter(
+                or_(
+                    AuditLog.details.contains(search),
+                    Employee.name.contains(search),
+                    MobileDevice.phone_number.contains(search),
+                    MobileDevice.imei.contains(search)
+                )
+            )
+        
+        if employee_filter:
+            activities_query = activities_query.filter(Employee.name.contains(employee_filter))
+        
+        if action_filter:
+            activities_query = activities_query.filter(AuditLog.action.contains(action_filter))
+        
+        if phone_filter:
+            activities_query = activities_query.filter(MobileDevice.phone_number.contains(phone_filter))
+        
+        # فلترة التاريخ
+        if date_from:
+            try:
+                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                activities_query = activities_query.filter(
+                    func.date(AuditLog.timestamp) >= date_from_obj.date()
+                )
+            except ValueError:
+                pass
+        
+        if date_to:
+            try:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                activities_query = activities_query.filter(
+                    func.date(AuditLog.timestamp) <= date_to_obj.date()
+                )
+            except ValueError:
+                pass
+        
+        # ترتيب وتطبيق التصفح
+        activities_query = activities_query.order_by(AuditLog.timestamp.desc())
+        activities = activities_query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        # جلب جميع الموظفين للفلترة
+        all_employees = Employee.query.order_by(Employee.name).all()
+        
+        # أنواع الإجراءات المتاحة
+        action_types = [
+            'ربط جهاز محمول',
+            'فك ربط جهاز محمول', 
+            'إضافة جهاز محمول',
+            'تعديل جهاز محمول',
+            'حذف جهاز محمول',
+            'استيراد أجهزة محمولة'
+        ]
         
         return render_template('mobile_devices/dashboard.html',
                              total_devices=total_devices,
@@ -711,7 +803,15 @@ def dashboard():
                              inactive_employee_devices=inactive_employee_devices,
                              unassigned_devices=unassigned_devices,
                              brand_stats=brand_stats,
-                             recent_activities=recent_activities)
+                             activities=activities,
+                             all_employees=all_employees,
+                             action_types=action_types,
+                             search=search,
+                             employee_filter=employee_filter,
+                             action_filter=action_filter,
+                             phone_filter=phone_filter,
+                             date_from=date_from,
+                             date_to=date_to)
                              
     except Exception as e:
         flash(f'حدث خطأ أثناء تحميل لوحة المعلومات: {str(e)}', 'danger')
