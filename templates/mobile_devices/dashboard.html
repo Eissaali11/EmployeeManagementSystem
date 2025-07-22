@@ -286,9 +286,12 @@
                             <button type="submit" class="btn btn-primary me-2">
                                 <i class="fas fa-search me-1"></i>بحث
                             </button>
-                            <a href="{{ url_for('mobile_devices.dashboard') }}" class="btn btn-outline-secondary">
+                            <a href="{{ url_for('mobile_devices.dashboard') }}" class="btn btn-outline-secondary me-2">
                                 <i class="fas fa-times me-1"></i>مسح الفلاتر
                             </a>
+                            <button type="button" class="btn btn-success" onclick="exportFilteredResults()">
+                                <i class="fas fa-file-excel me-1"></i>تصدير النتائج
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -483,6 +486,31 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// دالة تصدير النتائج المفلترة
+function exportFilteredResults() {
+    // جمع قيم الفلاتر الحالية
+    const urlParams = new URLSearchParams(window.location.search);
+    const filters = {
+        search: urlParams.get('search') || '',
+        phone: urlParams.get('phone') || '',
+        employee: urlParams.get('employee') || '',
+        action: urlParams.get('action') || '',
+        date_from: urlParams.get('date_from') || '',
+        date_to: urlParams.get('date_to') || ''
+    };
+    
+    // إنشاء رابط التصدير مع الفلاتر
+    const exportUrl = new URL('{{ url_for("mobile_devices.export_dashboard_excel") }}', window.location.origin);
+    Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+            exportUrl.searchParams.append(key, filters[key]);
+        }
+    });
+    
+    // فتح رابط التصدير
+    window.location.href = exportUrl.toString();
+}
+
 {% if brand_stats %}
 // رسم بياني للماركات
 const ctx = document.getElementById('brandChart').getContext('2d');

@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from sqlalchemy import or_, and_, func
 import pandas as pd
+import io
 from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -14,6 +15,24 @@ from models import MobileDevice, Employee, Department, AuditLog, employee_depart
 
 # إنشاء Blueprint
 mobile_devices_bp = Blueprint('mobile_devices', __name__)
+
+def log_activity(action, entity_type=None, entity_id=None, details=None):
+    """دالة تسجيل العمليات في سجل التدقيق"""
+    try:
+        audit = AuditLog()
+        audit.action = action
+        audit.entity_type = entity_type
+        audit.entity_id = entity_id
+        audit.details = details
+        audit.user_id = current_user.id if current_user.is_authenticated else None
+        audit.timestamp = datetime.utcnow()
+        
+        db.session.add(audit)
+        db.session.commit()
+    except Exception as e:
+        # لا نريد أن تفشل العملية بسبب فشل التسجيل
+        db.session.rollback()
+        pass
 
 @mobile_devices_bp.route('/')
 @login_required
@@ -815,3 +834,157 @@ def dashboard():
     except Exception as e:
         flash(f'حدث خطأ أثناء تحميل لوحة المعلومات: {str(e)}', 'danger')
         return redirect(url_for('mobile_devices.index'))
+
+@mobile_devices_bp.route('/export-dashboard-excel')
+@login_required
+def export_dashboard_excel():
+    """تصدير بيانات العمليات المفلترة من Dashboard إلى Excel"""
+    try:
+        # معاملات البحث والفلترة
+        search = request.args.get('search', '').strip()
+        employee_filter = request.args.get('employee', '')
+        action_filter = request.args.get('action', '')
+        date_from = request.args.get('date_from', '')
+        date_to = request.args.get('date_to', '')
+        phone_filter = request.args.get('phone', '').strip()
+        
+        # بناء استعلام العمليات مع الفلاتر (نفس المنطق من dashboard)
+        activities_query = db.session.query(
+            AuditLog.action,
+            AuditLog.details,
+            AuditLog.timestamp,
+            Employee.name.label('employee_name'),
+            MobileDevice.phone_number,
+            MobileDevice.imei
+        ).outerjoin(
+            Employee, AuditLog.user_id == Employee.id
+        ).outerjoin(
+            MobileDevice, and_(
+                AuditLog.entity_type == 'MobileDevice',
+                AuditLog.entity_id == MobileDevice.id
+            )
+        ).filter(
+            or_(
+                AuditLog.action.contains('جهاز محمول'),
+                AuditLog.action.contains('ربط جهاز'),
+                AuditLog.action.contains('فك ربط'),
+                AuditLog.action.contains('إضافة جهاز'),
+                AuditLog.action.contains('تعديل جهاز'),
+                AuditLog.action.contains('حذف جهاز')
+            )
+        )
+        
+        # تطبيق فلاتر البحث
+        if search:
+            activities_query = activities_query.filter(
+                or_(
+                    AuditLog.details.contains(search),
+                    Employee.name.contains(search),
+                    MobileDevice.phone_number.contains(search),
+                    MobileDevice.imei.contains(search)
+                )
+            )
+        
+        if employee_filter:
+            activities_query = activities_query.filter(Employee.name.contains(employee_filter))
+        
+        if action_filter:
+            activities_query = activities_query.filter(AuditLog.action.contains(action_filter))
+        
+        if phone_filter:
+            activities_query = activities_query.filter(MobileDevice.phone_number.contains(phone_filter))
+        
+        # فلترة التاريخ
+        if date_from:
+            try:
+                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                activities_query = activities_query.filter(
+                    func.date(AuditLog.timestamp) >= date_from_obj.date()
+                )
+            except ValueError:
+                pass
+        
+        if date_to:
+            try:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                activities_query = activities_query.filter(
+                    func.date(AuditLog.timestamp) <= date_to_obj.date()
+                )
+            except ValueError:
+                pass
+        
+        # جلب جميع النتائج
+        activities = activities_query.order_by(AuditLog.timestamp.desc()).all()
+        
+        # إنشاء ملف Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "عمليات الأجهزة المحمولة"
+        
+        # إعداد رؤوس الأعمدة
+        headers = [
+            'نوع العملية',
+            'التفاصيل',
+            'الموظف المنفذ',
+            'رقم الهاتف',
+            'IMEI',
+            'التاريخ والوقت'
+        ]
+        
+        # كتابة الرؤوس
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col)
+            cell.value = header
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+            cell.font = Font(color='FFFFFF', bold=True)
+            cell.alignment = Alignment(horizontal='center')
+        
+        # كتابة البيانات
+        for row, activity in enumerate(activities, 2):
+            ws.cell(row=row, column=1, value=activity.action or 'غير محدد')
+            ws.cell(row=row, column=2, value=activity.details or 'غير محدد')
+            ws.cell(row=row, column=3, value=activity.employee_name or 'غير محدد')
+            ws.cell(row=row, column=4, value=activity.phone_number or '-')
+            ws.cell(row=row, column=5, value=activity.imei or '-')
+            ws.cell(row=row, column=6, value=activity.timestamp.strftime('%Y-%m-%d %H:%M') if activity.timestamp else 'غير محدد')
+        
+        # تنسيق العرض
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # إعداد الاستجابة
+        current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'عمليات_الأجهزة_المحمولة_{current_time}.xlsx'
+        
+        # حفظ الملف في الذاكرة
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # تسجيل العملية
+        log_activity(
+            action='تصدير عمليات الأجهزة المحمولة',
+            entity_type='MobileDevice',
+            details=f'تم تصدير {len(activities)} عملية إلى ملف Excel مع الفلاتر المطبقة'
+        )
+        
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
+        return redirect(url_for('mobile_devices.dashboard'))
