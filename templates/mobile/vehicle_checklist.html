@@ -100,33 +100,116 @@ styles %} {{ super() }}
                         </div>
                         
                         <script>
-                        function handleQuickReturn() {
+                        async function handleQuickReturn() {
                             console.log('تم الضغط على الاستلام السريع');
                             
                             const vehicleSelect = document.getElementById('vehicle_id');
-                            if (!vehicleSelect.value) {
+                            const selectedVehicleId = vehicleSelect.value;
+                            
+                            if (!selectedVehicleId) {
                                 alert('يرجى اختيار سيارة أولاً');
                                 return;
                             }
                             
-                            // تغيير نوع العملية إلى استلام
+                            // تعطيل الزر أثناء التحميل
+                            const button = document.getElementById('quick-return-btn');
+                            button.disabled = true;
+                            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري تحميل بيانات السائق...';
+                            
+                            try {
+                                // جلب بيانات السائق الحالي
+                                const response = await fetch(`/mobile/get_vehicle_driver_info/${selectedVehicleId}`);
+                                
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    console.log('بيانات السائق:', data);
+                                    
+                                    if (data.success && data.driver_info) {
+                                        // تعبئة بيانات السائق تلقائياً
+                                        fillDriverData(data.driver_info);
+                                        
+                                        // تغيير نوع العملية إلى استلام
+                                        setOperationType('return');
+                                        
+                                        // إظهار النموذج
+                                        showForm();
+                                        
+                                        alert('✅ تم تحميل بيانات السائق الحالي بنجاح: ' + data.driver_info.name);
+                                        
+                                    } else {
+                                        // لا توجد بيانات سائق، عرض النموذج فارغ
+                                        setOperationType('return');
+                                        showForm();
+                                        alert('⚠️ لم يتم العثور على بيانات السائق الحالي. يرجى تعبئة البيانات يدوياً.');
+                                    }
+                                } else {
+                                    throw new Error('فشل في الاتصال بالخادم');
+                                }
+                                
+                            } catch (error) {
+                                console.error('خطأ في تحميل بيانات السائق:', error);
+                                
+                                // عرض النموذج حتى في حالة الخطأ
+                                setOperationType('return');
+                                showForm();
+                                alert('حدث خطأ في تحميل البيانات. يرجى تعبئة البيانات يدوياً.');
+                                
+                            } finally {
+                                // إعادة تفعيل الزر
+                                button.disabled = false;
+                                button.innerHTML = '<i class="fas fa-undo me-2"></i> استلام سريع - تحميل بيانات السائق';
+                            }
+                        }
+                        
+                        function fillDriverData(driverInfo) {
+                            console.log('تعبئة بيانات السائق:', driverInfo);
+                            
+                            // تعبئة الحقول الأساسية
+                            const fields = [
+                                { id: 'person_name', value: driverInfo.name || '' },
+                                { id: 'employee_id', value: driverInfo.employee_id || '' },
+                                { name: 'person_phone', value: driverInfo.phone || driverInfo.mobile || '' },
+                                { name: 'person_national_id', value: driverInfo.national_id || '' }
+                            ];
+                            
+                            fields.forEach(field => {
+                                let element = null;
+                                
+                                if (field.id) {
+                                    element = document.getElementById(field.id);
+                                } else if (field.name) {
+                                    element = document.querySelector(`[name="${field.name}"]`);
+                                }
+                                
+                                if (element && field.value) {
+                                    element.value = field.value;
+                                    // تمييز الحقول المعبأة تلقائياً
+                                    element.style.backgroundColor = '#d4edda';
+                                    element.style.border = '2px solid #28a745';
+                                    
+                                    console.log(`تم تعبئة ${field.id || field.name}: ${field.value}`);
+                                }
+                            });
+                        }
+                        
+                        function setOperationType(type) {
                             const handoverType = document.getElementById('handover_type');
                             if (handoverType) {
-                                handoverType.value = 'return';
+                                handoverType.value = type;
                                 handoverType.style.backgroundColor = '#cce5ff';
                                 handoverType.style.border = '2px solid #007bff';
+                                console.log('تم تحديد نوع العملية:', type);
                             }
-                            
-                            // إظهار النموذج
+                        }
+                        
+                        function showForm() {
                             const formContainer = document.getElementById('handover-form-container');
                             if (formContainer) {
                                 formContainer.classList.remove('d-none');
                                 setTimeout(() => {
                                     formContainer.scrollIntoView({ behavior: 'smooth' });
-                                }, 200);
+                                }, 300);
                             }
-                            
-                            alert('✅ تم تحديد العملية كاستلام. يرجى إكمال تعبئة بيانات السائق في النموذج أدناه.');
                         }
                         
                         function handleManualReturn() {
