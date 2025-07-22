@@ -586,7 +586,7 @@ def dashboard():
         # آخر العمليات
         recent_activities = AuditLog.query.filter(
             AuditLog.action.contains('جهاز محمول')
-        ).order_by(AuditLog.created_at.desc()).limit(10).all()
+        ).order_by(AuditLog.timestamp.desc()).limit(10).all()
         
         return render_template('mobile_devices/dashboard.html',
                              total_devices=total_devices,
