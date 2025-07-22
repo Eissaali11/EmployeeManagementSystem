@@ -1262,19 +1262,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p class="mb-1 text-muted">رقم الجوال العمل</p>
                             <p class="fs-5">{{ employee.mobilePersonal or '-' }}</p>
                         </div>
+                        {% if mobile_devices %}
+                        {% set primary_device = mobile_devices[0] %}
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted"><i class="fas fa-mobile-alt me-1 text-success"></i>رقم هاتف الجهاز</p>
+                            <p class="fs-5 fw-bold text-success">{{ primary_device.phone_number }}</p>
+                        </div>
+                        {% endif %}
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">البريد الإلكتروني</p>
                             <p class="fs-5">{{ employee.email or '-' }}</p>
                         </div>
                         {% if mobile_devices %}
-                        {% set primary_device = mobile_devices[0] %}
                         <div class="col-md-6">
-                            <p class="mb-1 text-muted">نوع الموبايل</p>
-                            <p class="fs-5">{{ primary_device.device_brand }} {{ primary_device.device_model or '' }}</p>
+                            <p class="mb-1 text-muted"><i class="fas fa-mobile-alt me-1 text-info"></i>نوع الموبايل</p>
+                            <p class="fs-5 fw-bold text-info">{{ primary_device.device_brand }} {{ primary_device.device_model or '' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="mb-1 text-muted">IMEI</p>
-                            <p class="fs-5 text-primary">{{ primary_device.imei }}</p>
+                            <p class="mb-1 text-muted"><i class="fas fa-barcode me-1 text-primary"></i>IMEI</p>
+                            <p class="fs-5 fw-bold text-primary">{{ primary_device.imei }}</p>
                         </div>
                         {% endif %}
                         <div class="col-md-6">
