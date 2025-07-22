@@ -487,7 +487,7 @@ def admin_external_safety_checks():
     # التحقق من صلاحيات الإدارة
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect('/')
     
     # جلب جميع طلبات فحص السلامة
     safety_checks = VehicleExternalSafetyCheck.query.order_by(
@@ -501,15 +501,21 @@ def admin_view_safety_check(check_id):
     """عرض تفاصيل طلب فحص السلامة"""
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect('/')
     
-    safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    # استخدام العلاقة المحددة مسبقاً لجلب الصور مع فحص السلامة
+    safety_check = VehicleExternalSafetyCheck.query.options(
+        db.selectinload(VehicleExternalSafetyCheck.safety_images)
+    ).get_or_404(check_id)
     
-    # تحديث مسار الصور المحفوظة في قاعدة البيانات
+    current_app.logger.info(f'تم جلب فحص السلامة ID={check_id} مع {len(safety_check.safety_images)} صور')
+    
+    # تحديث مسار الصور المحفوظة في قاعدة البيانات إذا لزم الأمر
     if safety_check.safety_images:
         for img in safety_check.safety_images:
             if img.image_path and not img.image_path.startswith('static/'):
                 img.image_path = 'static/' + img.image_path
+                current_app.logger.info(f'تم تحديث مسار الصورة: {img.image_path}')
     
     db.session.commit()
     
@@ -520,7 +526,7 @@ def reject_safety_check_page(check_id):
     """صفحة رفض طلب فحص السلامة"""
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect('/')
     
     safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
     
