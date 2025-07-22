@@ -998,7 +998,10 @@ def update_status(id):
 def export_excel():
     """Export employees to Excel file"""
     try:
-        employees = Employee.query.all()
+        employees = Employee.query.options(
+            db.joinedload(Employee.departments),
+            db.joinedload(Employee.nationality_rel)
+        ).all()
         output = generate_employee_excel(employees)
         
         # Log the export
