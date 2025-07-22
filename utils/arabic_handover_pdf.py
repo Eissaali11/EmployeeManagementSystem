@@ -107,15 +107,15 @@ def generate_handover_pdf_with_bein(handover_data):
     content.append(Paragraph(format_arabic_text(f"نموذج {title} مركبة"), styles['ArabicTitle']))
     content.append(Spacer(1, 20))
     
-    # معلومات العمل والحالة
-    work_info = [
-        [format_arabic_text("رقم العمل"), format_arabic_text(handover_data.get('work_order_number', ''))],
+    # معلومات الشركة والعمل
+    company_info = [
+        [format_arabic_text("رقم الشركة"), format_arabic_text(handover_data.get('work_order_number', ''))],
         [format_arabic_text("حالة المركبة"), format_arabic_text(handover_data.get('vehicle', {}).get('vehicle_status', 'متاحة'))],
         [format_arabic_text("تاريخ العملية"), format_arabic_text(handover_data.get('handover_date', ''))]
     ]
     
-    work_table = Table(work_info, colWidths=[2*inch, 3*inch])
-    work_table.setStyle(TableStyle([
+    company_table = Table(company_info, colWidths=[2*inch, 3*inch])
+    company_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
         ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
         ('FONTNAME', (0, 0), (-1, -1), 'beIN-Normal'),
@@ -127,8 +127,8 @@ def generate_handover_pdf_with_bein(handover_data):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
     ]))
     
-    content.append(Paragraph(format_arabic_text("معلومات العمل"), styles['ArabicSubtitle']))
-    content.append(work_table)
+    content.append(Paragraph(format_arabic_text("معلومات الشركة"), styles['ArabicSubtitle']))
+    content.append(company_table)
     content.append(Spacer(1, 15))
 
     # معلومات المركبة
