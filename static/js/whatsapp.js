@@ -35,25 +35,13 @@ https://wa.me/966920000560
 
 شاكرين لك حرصك والتزامك، ونتمنى لك السلامة دائمًا.`;
     
-    // محاولة استخدام deeplink مباشر للواتساب
-    const whatsappDeepLink = `whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
-    const whatsappWebUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    // استخدام window.location.href للتوجيه المباشر لتجنب مشاكل api.whatsapp.com
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     
-    // تجربة فتح التطبيق مباشرة أولاً
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log('Redirecting to WhatsApp:', whatsappUrl);
     
-    if (isMobile) {
-        // على الهاتف: تجربة فتح التطبيق مباشرة
-        window.location.href = whatsappDeepLink;
-        
-        // fallback للويب بعد ثانية واحدة إذا لم يفتح التطبيق
-        setTimeout(() => {
-            window.open(whatsappWebUrl, '_blank');
-        }, 1000);
-    } else {
-        // على سطح المكتب: فتح واتساب ويب مباشرة
-        window.open(whatsappWebUrl, '_blank');
-    }
+    // استخدام window.location.href للتوجيه المباشر
+    window.location.href = whatsappUrl;
 }
 
 function openSimpleWhatsAppChat(phone, driverName, plateNumber) {
