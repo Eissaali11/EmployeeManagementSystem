@@ -1,6 +1,29 @@
 {% extends 'layout.html' %}
 
 {% block extra_css %}
+/* إجبار التمرير على العمل - CSS قوة عالية */
+html, body {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: static !important;
+}
+
+.container-fluid, .row, [class*="col-"] {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+}
+
+.main-card, .card-body, .table-responsive {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
 <style>
 
     /* Modern Employee Management Styles */
@@ -785,6 +808,38 @@
 {% endblock %}
 
 {% block content %}
+<script>
+// إصلاح فوري للتمرير - تطبيق مباشر وقوي
+(function() {
+    const fixScroll = () => {
+        document.documentElement.style.setProperty("height", "auto", "important");
+        document.documentElement.style.setProperty("overflow-y", "auto", "important");
+        document.documentElement.style.setProperty("max-height", "none", "important");
+        document.body.style.setProperty("height", "auto", "important");
+        document.body.style.setProperty("overflow-y", "auto", "important");
+        document.body.style.setProperty("min-height", "200vh", "important");
+        
+        const elements = document.querySelectorAll(".container-fluid, .row, [class*="col-"], .main-card, .card-body, .table-responsive");
+        elements.forEach(el => {
+            el.style.setProperty("height", "auto", "important");
+            el.style.setProperty("max-height", "none", "important");
+            el.style.setProperty("overflow", "visible", "important");
+        });
+        console.log("تم إصلاح التمرير");
+    };
+    
+    // تطبيق فوري
+    fixScroll();
+    
+    // إعادة التطبيق عند التحميل
+    document.addEventListener("DOMContentLoaded", fixScroll);
+    window.addEventListener("load", fixScroll);
+    
+    // مراقب للتغييرات
+    const observer = new MutationObserver(fixScroll);
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 <div class="container-fluid">
 
     <div class="page-header">
