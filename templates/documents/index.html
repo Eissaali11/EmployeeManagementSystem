@@ -414,6 +414,9 @@
                 <a href="{{ url_for('documents.expiring') }}" class="btn-enhanced btn-warning-enhanced">
                     <i class="fas fa-exclamation-triangle"></i> الوثائق المنتهية
                 </a>
+                <a href="#" onclick="exportToExcel()" class="btn-enhanced btn-success-enhanced">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                </a>
             </div>
         </div>
     </div>
@@ -749,6 +752,29 @@
                 element.style.display = originalDisplay || 'block';
             });
         }, 100);
+    }
+
+    // دالة تصدير Excel
+    function exportToExcel() {
+        // جمع الفلاتر الحالية
+        const urlParams = new URLSearchParams(window.location.search);
+        const exportUrl = '{{ url_for("documents.export_excel") }}' + '?' + urlParams.toString();
+        
+        // إظهار رسالة تأكيد
+        if (confirm('هل تريد تصدير البيانات الحالية إلى ملف Excel؟')) {
+            // إنشاء رابط للتحميل
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // إظهار رسالة نجاح
+            setTimeout(() => {
+                alert('تم بدء تحميل الملف بنجاح!');
+            }, 500);
+        }
     }
 </script>
 {% endblock %}
