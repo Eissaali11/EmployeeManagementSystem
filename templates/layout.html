@@ -160,64 +160,6 @@
         {% block styles %} {% endblock %}
 
         {% block extra_css%} {% endblock%}
-
-        <!-- إصلاح جذري لمشكلة التمرير - أولوية عالية -->
-        <style>
-            /* إجبار التمرير - أولوية قصوى */
-            html, body {
-                height: auto !important;
-                max-height: none !important;
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-                -webkit-overflow-scrolling: touch !important;
-                position: static !important;
-                min-height: 100vh !important;
-            }
-            
-            .container-fluid, .row, [class*="col-"] {
-                height: auto !important;
-                max-height: none !important;
-                overflow: visible !important;
-                position: static !important;
-            }
-            
-            .main-content, .content-wrapper, .main-card, .card, .card-body, .table-responsive {
-                height: auto !important;
-                max-height: none !important;
-                overflow: visible !important;
-            }
-            
-            /* خاص بصفحة الموظفين */
-            .employees-page {
-                min-height: 200vh !important;
-                padding-bottom: 100px !important;
-            }
-        </style>
-        
-        <script>
-            // إصلاح فوري للتمرير
-            (function() {
-                const forceScroll = () => {
-                    document.documentElement.style.setProperty("height", "auto", "important");
-                    document.documentElement.style.setProperty("overflow-y", "auto", "important");
-                    document.documentElement.style.setProperty("max-height", "none", "important");
-                    document.body.style.setProperty("height", "auto", "important");
-                    document.body.style.setProperty("overflow-y", "auto", "important");
-                    document.body.style.setProperty("min-height", "200vh", "important");
-                    
-                    // إضافة class للتمييز
-                    if (window.location.pathname.includes("/employees")) {
-                        document.body.classList.add("employees-page");
-                    }
-                    
-                    console.log("تم تطبيق إصلاح التمرير الجذري");
-                };
-                
-                forceScroll();
-                document.addEventListener("DOMContentLoaded", forceScroll);
-                window.addEventListener("load", forceScroll);
-            })();
-        </script>
     </head>
     <body>
         <div class="container-fluid">
