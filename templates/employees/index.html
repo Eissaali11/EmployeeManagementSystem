@@ -1413,4 +1413,43 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 </script>
-{% endblock %}
+{% endblock %}<script>
+// إصلاح مشكلة التمرير الرأسي
+const scrollFixStyle = document.createElement('style');
+scrollFixStyle.innerHTML = `
+html, body {
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+    max-height: none !important;
+}
+
+.container-fluid {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+    overflow: visible !important;
+    padding-bottom: 100px !important;
+}
+
+.main-content, .content-wrapper {
+    height: auto !important;
+    overflow: visible !important;
+}
+
+/* إضافة قواعد خاصة للموبايل */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+`;
+document.head.appendChild(scrollFixStyle);
+
+// التأكد من تطبيق الإعدادات
+document.documentElement.style.height = 'auto';
+document.documentElement.style.overflowY = 'auto';
+document.body.style.height = 'auto';
+document.body.style.overflowY = 'auto';
+</script>
