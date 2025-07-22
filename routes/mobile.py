@@ -94,58 +94,7 @@ def log_audit(action, entity_type, entity_id, details=None):
         """تسجيل الإجراء في سجل النظام - تم الانتقال للنظام الجديد"""
         log_activity(action, entity_type, entity_id, details)
 
-@mobile_bp.route('/get_vehicle_driver_info/<int:vehicle_id>')
-@login_required
-def get_vehicle_driver_info(vehicle_id):
-    """إرجاع بيانات السائق الحالي للسيارة المحددة"""
-    try:
-        vehicle = Vehicle.query.get_or_404(vehicle_id)
-        
-        # البحث عن آخر سجل تسليم لهذه السيارة
-        latest_handover = VehicleHandover.query.filter_by(
-            vehicle_id=vehicle_id,
-            handover_type='delivery'
-        ).order_by(VehicleHandover.handover_date.desc()).first()
-        
-        if latest_handover:
-            driver_info = {
-                'name': latest_handover.person_name or '',
-                'employee_id': latest_handover.employee_id or '',
-                'phone': getattr(latest_handover, 'person_phone', '') or '',
-                'national_id': getattr(latest_handover, 'person_national_id', '') or '',
-                'mobile': getattr(latest_handover, 'person_mobile', '') or ''
-            }
-            
-            # إذا كان هناك موظف مرتبط، جلب بياناته
-            if latest_handover.employee_id:
-                employee = Employee.query.get(latest_handover.employee_id)
-                if employee:
-                    driver_info.update({
-                        'name': employee.name or '',
-                        'phone': employee.mobile or employee.phone or '',
-                        'mobile': employee.mobile or '',
-                        'national_id': employee.national_id or ''
-                    })
-            
-            return jsonify({
-                'success': True,
-                'driver_info': driver_info,
-                'message': 'تم العثور على بيانات السائق الحالي'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'لا توجد بيانات سائق حالي لهذه السيارة',
-                'driver_info': None
-            })
-            
-    except Exception as e:
-        print(f"خطأ في جلب بيانات السائق: {e}")
-        return jsonify({
-            'success': False,
-            'message': 'حدث خطأ في جلب بيانات السائق',
-            'error': str(e)
-        }), 500
+
 
 # صفحة الـ Splash Screen
 @mobile_bp.route('/splash')
@@ -4580,10 +4529,10 @@ def get_current_driver_info(vehicle_id):
         
         if last_delivery:
             driver_info = {
-                'name': last_delivery.person_name,
-                'phone': last_delivery.person_phone,
-                'national_id': last_delivery.person_national_id,
-                'employee_id': last_delivery.employee_id
+                'name': last_delivery.person_name or '',
+                'phone': last_delivery.driver_phone_number or '',
+                'national_id': last_delivery.driver_residency_number or '',
+                'employee_id': last_delivery.employee_id or ''
             }
             
             # إذا كان هناك معرف موظف، اجلب معلومات إضافية
@@ -4591,15 +4540,15 @@ def get_current_driver_info(vehicle_id):
                 employee = Employee.query.get(last_delivery.employee_id)
                 if employee:
                     driver_info['name'] = employee.name
-                    driver_info['phone'] = employee.mobile_personal or employee.mobile_work
-                    driver_info['national_id'] = employee.national_id
+                    driver_info['phone'] = employee.mobilePersonal or employee.mobile or ''
+                    driver_info['national_id'] = employee.national_id or ''
                     driver_info['department'] = employee.departments[0].name if employee.departments else 'غير محدد'
             
             return driver_info
     except Exception as e:
         current_app.logger.error(f'خطأ في جلب معلومات السائق الحالي: {str(e)}')
     
-    return {'name': 'غير محدد', 'phone': '', 'national_id': ''}
+    return {'name': '', 'phone': '', 'national_id': '', 'employee_id': ''}
 
 @mobile_bp.route('/vehicles/quick_return', methods=['POST'])
 @login_required
