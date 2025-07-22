@@ -66,10 +66,20 @@ def index():
         # حساب الإحصائيات
         total_devices = MobileDevice.query.count()
         assigned_devices = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).count()
+        # الأجهزة المتاحة: إما غير مربوطة أو مربوطة بموظف غير نشط
         available_devices = MobileDevice.query.filter(
-            and_(
-                MobileDevice.employee_id.is_(None),
-                MobileDevice.status == 'متاح'
+            or_(
+                # أجهزة غير مربوطة
+                and_(
+                    MobileDevice.employee_id.is_(None),
+                    MobileDevice.status == 'متاح'
+                ),
+                # أجهزة مربوطة بموظفين غير نشطين
+                and_(
+                    MobileDevice.employee_id.isnot(None),
+                    MobileDevice.status == 'مرتبط',
+                    MobileDevice.employee.has(Employee.status != 'نشط')
+                )
             )
         ).count()
         inactive_employee_devices = MobileDevice.query.join(Employee).filter(

@@ -231,19 +231,33 @@
                                     <td>
                                         {% if device.employee %}
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-success bg-opacity-10 rounded-circle p-1 me-2">
-                                                    <i class="fas fa-user text-success fa-sm"></i>
-                                                </div>
-                                                <span>{{ device.employee.name }}</span>
+                                                {% if device.employee.status == 'نشط' or device.employee.status == 'active' %}
+                                                    <div class="bg-success bg-opacity-10 rounded-circle p-1 me-2">
+                                                        <i class="fas fa-user text-success fa-sm"></i>
+                                                    </div>
+                                                    <span>{{ device.employee.name }}</span>
+                                                {% else %}
+                                                    <div class="bg-warning bg-opacity-10 rounded-circle p-1 me-2">
+                                                        <i class="fas fa-user text-warning fa-sm"></i>
+                                                    </div>
+                                                    <span class="text-muted">{{ device.employee.name }} (غير نشط)</span>
+                                                {% endif %}
                                             </div>
                                         {% else %}
                                             <span class="text-muted">غير مربوط</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ device.status_class }}">
-                                            {{ device.status }}
-                                        </span>
+                                        {% if device.employee and (device.employee.status != 'نشط' and device.employee.status != 'active') %}
+                                            <span class="badge bg-success">متاح</span>
+                                            <small class="d-block text-muted">الموظف غير نشط</small>
+                                        {% elif device.status == 'متاح' %}
+                                            <span class="badge bg-success">متاح</span>
+                                        {% elif device.status == 'مرتبط' %}
+                                            <span class="badge bg-primary">مرتبط</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ device.status }}</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if device.assigned_date %}
