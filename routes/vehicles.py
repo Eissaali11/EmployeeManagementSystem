@@ -2840,10 +2840,10 @@ def handover_pdf_public(id):
         vehicle = Vehicle.query.get_or_404(handover.vehicle_id)
 
         # استخدام مولد PDF الأصلي مع تحديث خط beIN-Normal
-        from utils.fpdf_handover_pdf import generate_handover_report_pdf_weasyprint
+        from utils.arabic_handover_pdf import handover_pdf_public as generate_pdf_with_work_number
 
         # إنشاء PDF باستخدام WeasyPrint مع خط beIN-Normal
-        pdf_buffer = generate_handover_report_pdf_weasyprint(handover)
+        pdf_buffer = generate_pdf_with_work_number(id)
 
         # التحقق من نجاح إنشاء PDF
         if not pdf_buffer:
