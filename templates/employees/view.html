@@ -1179,50 +1179,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <p class="text-center text-muted my-2">لا توجد معلومات مالية مسجلة</p>
                                     {% endif %}
                                 </div>
-                                
-                                <!-- Mobile Devices Information -->
-                                <div class="col-12 mt-3">
-                                    <h6><i class="fas fa-mobile-alt me-2"></i>الأجهزة المحمولة</h6>
-                                    {% if mobile_devices %}
-                                    {% for device in mobile_devices %}
-                                    <div class="card mb-2 border-info">
-                                        <div class="card-body py-2">
-                                            <div class="row align-items-center">
-                                                <div class="col-md-3">
-                                                    <small class="text-muted">رقم الهاتف:</small>
-                                                    <div class="fw-bold">{{ device.phone_number }}</div>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <small class="text-muted">IMEI:</small>
-                                                    <div class="fw-bold text-primary">{{ device.imei }}</div>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <small class="text-muted">تاريخ الربط:</small>
-                                                    <div>{{ device.assigned_date.strftime('%Y-%m-%d') if device.assigned_date else 'غير محدد' }}</div>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <span class="badge bg-success">{{ device.status }}</span>
-                                                    {% if device.device_brand %}
-                                                    <div class="small text-muted">{{ device.device_brand }} {{ device.device_model or '' }}</div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            {% if device.email %}
-                                            <div class="mt-2">
-                                                <small class="text-muted">الإيميل:</small>
-                                                <span class="ms-2">{{ device.email }}</span>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                    {% else %}
-                                    <div class="text-center text-muted py-3">
-                                        <i class="fas fa-mobile-alt fa-2x mb-2 opacity-50"></i>
-                                        <p class="mb-0">لا توجد أجهزة محمولة مربوطة بهذا الموظف</p>
-                                    </div>
-                                    {% endif %}
-                                </div>
                             </div>
                         </div>
                     </div>
