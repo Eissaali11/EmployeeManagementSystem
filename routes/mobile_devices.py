@@ -137,11 +137,11 @@ def create():
             # تسجيل العملية
             audit = AuditLog()
             audit.action = 'إضافة جهاز محمول'
+            audit.entity_type = 'MobileDevice'
+            audit.entity_id = device.id
             audit.details = f'تم إضافة جهاز جديد: {imei} - {phone_number}'
             audit.user_id = current_user.id if current_user.is_authenticated else None
-            audit.employee_id = None
-            audit.vehicle_id = None
-            audit.created_at = datetime.utcnow()
+            audit.timestamp = datetime.utcnow()
             
             db.session.add(audit)
             db.session.commit()
@@ -202,11 +202,11 @@ def edit(device_id):
             # تسجيل العملية
             audit = AuditLog()
             audit.action = 'تحديث جهاز محمول'
+            audit.entity_type = 'MobileDevice'
+            audit.entity_id = device.id
             audit.details = f'تم تحديث بيانات الجهاز: {imei} - {phone_number}'
             audit.user_id = current_user.id if current_user.is_authenticated else None
-            audit.employee_id = None
-            audit.vehicle_id = None
-            audit.created_at = datetime.utcnow()
+            audit.timestamp = datetime.utcnow()
             
             db.session.add(audit)
             db.session.commit()
@@ -238,11 +238,11 @@ def delete(device_id):
         # تسجيل العملية
         audit = AuditLog()
         audit.action = 'حذف جهاز محمول'
+        audit.entity_type = 'MobileDevice'
+        audit.entity_id = device_id
         audit.details = f'تم حذف الجهاز: {imei} - {phone_number}'
         audit.user_id = current_user.id if current_user.is_authenticated else None
-        audit.employee_id = None
-        audit.vehicle_id = None
-        audit.created_at = datetime.utcnow()
+        audit.timestamp = datetime.utcnow()
         
         db.session.add(audit)
         db.session.commit()
@@ -317,11 +317,10 @@ def import_excel():
                 # تسجيل العملية
                 audit = AuditLog()
                 audit.action = 'استيراد أجهزة محمولة'
+                audit.entity_type = 'MobileDevice'
                 audit.details = f'تم استيراد {imported_count} جهاز من ملف Excel'
                 audit.user_id = current_user.id if current_user.is_authenticated else None
-                audit.employee_id = None
-                audit.vehicle_id = None
-                audit.created_at = datetime.utcnow()
+                audit.timestamp = datetime.utcnow()
                 
                 db.session.add(audit)
                 db.session.commit()
@@ -484,11 +483,11 @@ def assign_device(device_id, employee_id):
             
         audit = AuditLog()
         audit.action = 'ربط جهاز محمول'
+        audit.entity_type = 'MobileDevice'
+        audit.entity_id = device.id
         audit.details = details
         audit.user_id = current_user.id if current_user.is_authenticated else None
-        audit.employee_id = employee_id
-        audit.vehicle_id = None
-        audit.created_at = datetime.utcnow()
+        audit.timestamp = datetime.utcnow()
         
         db.session.add(audit)
         db.session.commit()
@@ -527,11 +526,11 @@ def unassign_device(device_id):
         # تسجيل العملية
         audit = AuditLog()
         audit.action = 'فك ربط جهاز محمول'
+        audit.entity_type = 'MobileDevice'
+        audit.entity_id = device.id
         audit.details = f'تم فك ربط الجهاز {device.imei} من الموظف {employee_name}'
         audit.user_id = current_user.id if current_user.is_authenticated else None
-        audit.employee_id = None
-        audit.vehicle_id = None
-        audit.created_at = datetime.utcnow()
+        audit.timestamp = datetime.utcnow()
         
         db.session.add(audit)
         db.session.commit()
