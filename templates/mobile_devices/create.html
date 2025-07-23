@@ -37,6 +37,29 @@
                     <form method="POST">
                         <div class="row">
                             <!-- البيانات الأساسية -->
+                            {% if imported_numbers %}
+                            <div class="col-md-6 mb-3">
+                                <label for="imported_phone_id" class="form-label">
+                                    اختر من الأرقام المستوردة
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-list"></i>
+                                    </span>
+                                    <select class="form-select" id="imported_phone_id" name="imported_phone_id" onchange="selectImportedPhone()">
+                                        <option value="">اختر رقم من القائمة المستوردة</option>
+                                        {% for number in imported_numbers %}
+                                        <option value="{{ number.id }}" data-phone="{{ number.phone_number }}">
+                                            {{ number.phone_number }}
+                                            {% if number.description %} - {{ number.description }}{% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <small class="form-text text-muted">{{ imported_numbers|length }} رقم متاح من الاستيراد</small>
+                            </div>
+                            {% endif %}
+                            
                             <div class="col-md-6 mb-3">
                                 <label for="phone_number" class="form-label">
                                     رقم الهاتف <span class="text-danger">*</span>
@@ -49,7 +72,7 @@
                                            placeholder="966501234567" required maxlength="20"
                                            pattern="[0-9+\-\s]+" title="يسمح بالأرقام والرموز + - ومسافات فقط">
                                 </div>
-                                <small class="form-text text-muted">مثال: 966501234567</small>
+                                <small class="form-text text-muted">أدخل رقم يدوياً أو اختر من القائمة أعلاه</small>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -184,6 +207,46 @@
 </div>
 
 <script>
+// دالة لاختيار رقم من القائمة المستوردة
+function selectImportedPhone() {
+    const select = document.getElementById('imported_phone_id');
+    const phoneInput = document.getElementById('phone_number');
+    
+    if (select && phoneInput && select.value) {
+        const selectedOption = select.options[select.selectedIndex];
+        const phoneNumber = selectedOption.getAttribute('data-phone');
+        phoneInput.value = phoneNumber;
+        phoneInput.readOnly = true;
+        phoneInput.style.backgroundColor = '#e9ecef';
+    } else if (phoneInput) {
+        phoneInput.value = '';
+        phoneInput.readOnly = false;
+        phoneInput.style.backgroundColor = '';
+    }
+}
+
+// السماح بإلغاء التحديد
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone_number');
+    if (phoneInput) {
+        phoneInput.addEventListener('click', function() {
+            if (this.readOnly) {
+                const confirmClear = confirm('هل تريد إلغاء الرقم المحدد والإدخال يدوياً؟');
+                if (confirmClear) {
+                    const selectElement = document.getElementById('imported_phone_id');
+                    if (selectElement) {
+                        selectElement.value = '';
+                    }
+                    this.value = '';
+                    this.readOnly = false;
+                    this.style.backgroundColor = '';
+                    this.focus();
+                }
+            }
+        });
+    }
+});
+
 // التحقق من صحة IMEI
 document.getElementById('imei').addEventListener('input', function(e) {
     let value = e.target.value.replace(/\D/g, ''); // إزالة غير الأرقام

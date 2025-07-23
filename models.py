@@ -1520,3 +1520,35 @@ class MobileDevice(db.Model):
         }
         return status_classes.get(self.status, 'secondary')
 
+
+class ImportedPhoneNumber(db.Model):
+    """نموذج لتخزين أرقام الهواتف المستوردة من Excel"""
+    __tablename__ = 'imported_phone_numbers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    phone_number = db.Column(db.String(20), nullable=False)  # رقم الهاتف المستورد
+    description = db.Column(db.String(100), nullable=True)  # وصف أو اسم صاحب الرقم
+    is_used = db.Column(db.Boolean, default=False, nullable=False)  # هل تم استخدام الرقم أم لا
+    imported_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)  # المستخدم الذي استورد الرقم
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    user = db.relationship('User', backref='imported_phone_numbers', lazy=True)
+    
+    def __repr__(self):
+        return f'<ImportedPhoneNumber {self.phone_number}>'
+    
+    def mark_as_used(self):
+        """تحديد الرقم كمستخدم"""
+        self.is_used = True
+        self.updated_at = datetime.utcnow()
+        db.session.commit()
+    
+    @staticmethod
+    def get_available_numbers():
+        """جلب الأرقام المتاحة (غير المستخدمة)"""
+        return ImportedPhoneNumber.query.filter_by(is_used=False).order_by(ImportedPhoneNumber.phone_number).all()
+

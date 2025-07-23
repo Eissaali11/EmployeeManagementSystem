@@ -11,7 +11,7 @@ import os
 import uuid
 
 from app import db
-from models import MobileDevice, Employee, Department, AuditLog, employee_departments
+from models import MobileDevice, Employee, Department, AuditLog, employee_departments, ImportedPhoneNumber
 
 # إنشاء Blueprint
 mobile_devices_bp = Blueprint('mobile_devices', __name__)
@@ -187,11 +187,18 @@ def create():
         try:
             # استخراج البيانات من النموذج
             phone_number = request.form.get('phone_number', '').strip()
+            imported_phone_id = request.form.get('imported_phone_id', '')
             imei = request.form.get('imei', '').strip()
             email = request.form.get('email', '').strip()
             device_model = request.form.get('device_model', '').strip()
             device_brand = request.form.get('device_brand', '').strip()
             notes = request.form.get('notes', '').strip()
+            
+            # إذا تم اختيار رقم من الأرقام المستوردة
+            if imported_phone_id and imported_phone_id.isdigit():
+                imported_phone = ImportedPhoneNumber.query.get(int(imported_phone_id))
+                if imported_phone and not imported_phone.is_used:
+                    phone_number = imported_phone.phone_number
             
             # التحقق من البيانات المطلوبة
             if not phone_number or not imei:
@@ -217,17 +224,19 @@ def create():
             db.session.add(device)
             db.session.commit()
             
-            # تسجيل العملية
-            audit = AuditLog()
-            audit.action = 'إضافة جهاز محمول'
-            audit.entity_type = 'MobileDevice'
-            audit.entity_id = device.id
-            audit.details = f'تم إضافة جهاز جديد: {imei} - {phone_number}'
-            audit.user_id = current_user.id if current_user.is_authenticated else None
-            audit.timestamp = datetime.utcnow()
+            # تحديد الرقم المستورد كمستخدم إذا تم استخدامه
+            if imported_phone_id and imported_phone_id.isdigit():
+                imported_phone = ImportedPhoneNumber.query.get(int(imported_phone_id))
+                if imported_phone:
+                    imported_phone.mark_as_used()
             
-            db.session.add(audit)
-            db.session.commit()
+            # تسجيل العملية
+            log_activity(
+                action='إضافة جهاز محمول',
+                entity_type='MobileDevice',
+                entity_id=device.id,
+                details=f'تم إضافة جهاز جديد: {imei} - {phone_number}'
+            )
             
             flash('تم إضافة الجهاز بنجاح', 'success')
             return redirect(url_for('mobile_devices.index'))
@@ -236,7 +245,10 @@ def create():
             db.session.rollback()
             flash(f'حدث خطأ أثناء إضافة الجهاز: {str(e)}', 'danger')
     
-    return render_template('mobile_devices/create.html')
+    # جلب الأرقام المستوردة المتاحة
+    imported_numbers = ImportedPhoneNumber.get_available_numbers()
+    
+    return render_template('mobile_devices/create.html', imported_numbers=imported_numbers)
 
 @mobile_devices_bp.route('/<int:device_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -340,6 +352,104 @@ def delete(device_id):
         flash(f'حدث خطأ أثناء حذف الجهاز: {str(e)}', 'danger')
     
     return redirect(url_for('mobile_devices.index'))
+
+@mobile_devices_bp.route('/import-phone-numbers', methods=['GET', 'POST'])
+@login_required
+def import_phone_numbers():
+    """استيراد أرقام الهواتف من ملف Excel"""
+    if request.method == 'POST':
+        try:
+            file = request.files.get('excel_file')
+            if not file or file.filename == '':
+                flash('الرجاء اختيار ملف Excel', 'danger')
+                return redirect(url_for('mobile_devices.import_phone_numbers'))
+            
+            # قراءة ملف Excel
+            df = pd.read_excel(file)
+            
+            # التحقق من وجود عمود phone_number أو أرقام الهواتف
+            phone_column = None
+            description_column = None
+            
+            # البحث عن العمود المناسب لأرقام الهواتف
+            for col in df.columns:
+                if 'phone' in col.lower() or 'هاتف' in col or 'رقم' in col:
+                    phone_column = col
+                    break
+            
+            # البحث عن عمود الوصف أو الاسم
+            for col in df.columns:
+                if 'name' in col.lower() or 'description' in col.lower() or 'اسم' in col or 'وصف' in col:
+                    description_column = col
+                    break
+            
+            # إذا لم نجد عمود أرقام الهواتف، نستخدم العمود الأول
+            if phone_column is None:
+                phone_column = df.columns[0]
+            
+            imported_count = 0
+            errors = []
+            
+            for index, row in df.iterrows():
+                try:
+                    # استخراج رقم الهاتف
+                    phone_number = str(row[phone_column]).strip()
+                    
+                    # تنظيف رقم الهاتف من المسافات والرموز غير المرغوبة
+                    phone_number = phone_number.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+                    
+                    if not phone_number or phone_number == 'nan':
+                        continue
+                    
+                    # التحقق من عدم تكرار رقم الهاتف
+                    existing_number = ImportedPhoneNumber.query.filter_by(phone_number=phone_number).first()
+                    if existing_number:
+                        continue  # تجاهل الأرقام المكررة
+                    
+                    # استخراج الوصف إذا كان موجوداً
+                    description = ''
+                    if description_column and pd.notna(row.get(description_column)):
+                        description = str(row[description_column]).strip()
+                    
+                    # إنشاء رقم هاتف مستورد جديد
+                    imported_phone = ImportedPhoneNumber()
+                    imported_phone.phone_number = phone_number
+                    imported_phone.description = description if description else None
+                    imported_phone.imported_by = current_user.id if current_user.is_authenticated else None
+                    
+                    db.session.add(imported_phone)
+                    imported_count += 1
+                    
+                except Exception as e:
+                    errors.append(f'الصف {index + 1}: {str(e)}')
+            
+            # حفظ البيانات
+            if imported_count > 0:
+                db.session.commit()
+                
+                # تسجيل العملية
+                log_activity(
+                    action='استيراد أرقام هواتف',
+                    entity_type='ImportedPhoneNumber',
+                    details=f'تم استيراد {imported_count} رقم هاتف من ملف Excel'
+                )
+            
+            # رسائل النتائج
+            if imported_count > 0:
+                flash(f'تم استيراد {imported_count} رقم هاتف بنجاح', 'success')
+            else:
+                flash('لم يتم استيراد أي أرقام جديدة', 'warning')
+            
+            if errors:
+                flash(f'حدثت أخطاء في {len(errors)} سجل', 'warning')
+            
+            return redirect(url_for('mobile_devices.dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء استيراد الملف: {str(e)}', 'danger')
+    
+    return render_template('mobile_devices/import_phone_numbers.html')
 
 @mobile_devices_bp.route('/import', methods=['GET', 'POST'])
 @login_required
