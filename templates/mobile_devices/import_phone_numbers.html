@@ -18,10 +18,32 @@
                             <p class="mb-0 mt-2 opacity-75">قم برفع ملف Excel يحتوي على أرقام الهواتف</p>
                         </div>
                         <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.download_phone_template') }}" class="btn btn-success me-2">
+                                <i class="fas fa-download me-2"></i>تحميل النموذج
+                            </a>
                             <a href="{{ url_for('mobile_devices.dashboard') }}" class="btn btn-light">
                                 <i class="fas fa-arrow-right me-2"></i>العودة للوحة المعلومات
                             </a>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تحميل النموذج -->
+            <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                <div class="card-body text-white text-center">
+                    <h5 class="mb-3">
+                        <i class="fas fa-file-download me-2"></i>تحميل نموذج Excel
+                    </h5>
+                    <p class="mb-3">قم بتحميل النموذج الجاهز الذي يحتوي على مثال لتنسيق البيانات المطلوب</p>
+                    <a href="{{ url_for('mobile_devices.download_phone_template') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-download me-2"></i>تحميل النموذج
+                    </a>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-info-circle me-1"></i>
+                            النموذج يحتوي على 10 أمثلة وورقة تعليمات مفصلة
+                        </small>
                     </div>
                 </div>
             </div>
@@ -102,14 +124,21 @@
                         <div class="col-12">
                             <div class="alert alert-info">
                                 <h6 class="alert-heading">
-                                    <i class="fas fa-lightbulb me-2"></i>نصائح:
+                                    <i class="fas fa-lightbulb me-2"></i>نصائح مهمة:
                                 </h6>
-                                <ul class="mb-0">
+                                <ul class="mb-2">
                                     <li>تأكد من أن أرقام الهواتف في تنسيق صحيح (مثال: 966501234567)</li>
                                     <li>سيتم تجاهل الأرقام المكررة تلقائياً</li>
                                     <li>سيتم تنظيف الأرقام من المسافات والرموز غير المرغوبة</li>
                                     <li>بعد الاستيراد، يمكنك استخدام الأرقام عند إضافة أجهزة جديدة</li>
                                 </ul>
+                                <hr class="my-2">
+                                <div class="text-center">
+                                    <strong>
+                                        <i class="fas fa-star text-warning me-1"></i>
+                                        ننصح بتحميل النموذج أولاً لفهم التنسيق المطلوب
+                                    </strong>
+                                </div>
                             </div>
                         </div>
                     </div>

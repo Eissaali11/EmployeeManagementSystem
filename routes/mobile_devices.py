@@ -7,6 +7,7 @@ import io
 from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from flask import make_response
 import os
 import uuid
 
@@ -450,6 +451,133 @@ def import_phone_numbers():
             flash(f'حدث خطأ أثناء استيراد الملف: {str(e)}', 'danger')
     
     return render_template('mobile_devices/import_phone_numbers.html')
+
+@mobile_devices_bp.route('/download-phone-template')
+@login_required
+def download_phone_template():
+    """تحميل نموذج Excel لاستيراد أرقام الهواتف"""
+    try:
+        # إنشاء Workbook جديد
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "نموذج أرقام الهواتف"
+        
+        # تنسيق الرأس
+        header_fill = PatternFill(start_color="28a745", end_color="28a745", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True, size=12)
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        # رؤوس الأعمدة
+        headers = ['phone_number', 'description']
+        header_names = ['رقم الهاتف', 'الوصف (اختياري)']
+        
+        # إضافة رؤوس الأعمدة الإنجليزية
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+        
+        # إضافة رؤوس الأعمدة العربية
+        for col, header_name in enumerate(header_names, 1):
+            cell = ws.cell(row=2, column=col, value=header_name)
+            cell.fill = PatternFill(start_color="20c997", end_color="20c997", fill_type="solid")
+            cell.font = Font(color="FFFFFF", bold=True, size=11)
+            cell.alignment = header_alignment
+        
+        # إضافة بيانات تجريبية
+        sample_data = [
+            ['966501234567', 'أحمد محمد علي'],
+            ['966522334455', 'فاطمة عبدالله'],
+            ['966533445566', 'خالد السالم'],
+            ['966544556677', 'نورا أحمد'],
+            ['966555667788', 'محمد عبدالله'],
+            ['966566778899', 'سارة محمد'],
+            ['966577889900', 'عبدالرحمن خالد'],
+            ['966588990011', 'مريم يوسف'],
+            ['966599001122', 'عمر الحسن'],
+            ['966500112233', 'هند عبدالعزيز']
+        ]
+        
+        # إضافة البيانات التجريبية
+        for row_idx, data in enumerate(sample_data, 3):
+            for col_idx, value in enumerate(data, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                if col_idx == 1:  # عمود رقم الهاتف
+                    cell.alignment = Alignment(horizontal="center")
+                else:  # عمود الوصف
+                    cell.alignment = Alignment(horizontal="right")
+        
+        # تعديل عرض الأعمدة
+        ws.column_dimensions['A'].width = 20
+        ws.column_dimensions['B'].width = 25
+        
+        # إضافة ورقة تعليمات
+        instructions_sheet = wb.create_sheet("التعليمات")
+        instructions = [
+            "تعليمات استيراد أرقام الهواتف:",
+            "",
+            "1. الأعمدة المطلوبة:",
+            "   - phone_number: رقم الهاتف (مطلوب)",
+            "   - description: الوصف أو اسم صاحب الرقم (اختياري)",
+            "",
+            "2. تنسيق رقم الهاتف:",
+            "   - يجب أن يبدأ برمز الدولة (مثال: 966 للسعودية)",
+            "   - مثال صحيح: 966501234567",
+            "   - مثال صحيح: 966522334455",
+            "",
+            "3. ملاحظات مهمة:",
+            "   - النظام يتجاهل الأرقام المكررة تلقائياً",
+            "   - سيتم تنظيف الأرقام من المسافات والرموز غير المرغوبة",
+            "   - يمكن ترك عمود الوصف فارغاً",
+            "   - الحد الأقصى: 1000 رقم في الملف الواحد",
+            "",
+            "4. أسماء الأعمدة المقبولة:",
+            "   - للهاتف: phone, phone_number, هاتف, رقم",
+            "   - للوصف: name, description, اسم, وصف",
+            "",
+            "5. خطوات الاستيراد:",
+            "   - احذف هذه الصفوف التجريبية",
+            "   - أدخل أرقامك الحقيقية",
+            "   - احفظ الملف",
+            "   - ارفعه في صفحة الاستيراد"
+        ]
+        
+        for row_idx, instruction in enumerate(instructions, 1):
+            cell = instructions_sheet.cell(row=row_idx, column=1, value=instruction)
+            if row_idx == 1:
+                cell.font = Font(bold=True, size=14, color="2c3e50")
+            elif instruction.startswith(("1.", "2.", "3.", "4.", "5.")):
+                cell.font = Font(bold=True, size=12, color="34495e")
+            else:
+                cell.font = Font(size=11, color="2c3e50")
+        
+        instructions_sheet.column_dimensions['A'].width = 60
+        
+        # حفظ في ذاكرة مؤقتة
+        from io import BytesIO
+        excel_buffer = BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        # إنشاء استجابة التحميل
+        response = make_response(excel_buffer.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        # استخدام filename* لدعم الأحرف العربية
+        response.headers['Content-Disposition'] = "attachment; filename*=UTF-8''phone_numbers_template.xlsx"
+        
+        # تسجيل العملية
+        log_activity(
+            action='تحميل نموذج أرقام الهواتف',
+            entity_type='Template',
+            details='تم تحميل نموذج Excel لاستيراد أرقام الهواتف'
+        )
+        
+        return response
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء إنشاء النموذج: {str(e)}', 'danger')
+        return redirect(url_for('mobile_devices.import_phone_numbers'))
 
 @mobile_devices_bp.route('/import', methods=['GET', 'POST'])
 @login_required
