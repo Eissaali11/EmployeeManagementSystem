@@ -579,6 +579,68 @@ def download_phone_template():
         flash(f'حدث خطأ أثناء إنشاء النموذج: {str(e)}', 'danger')
         return redirect(url_for('mobile_devices.import_phone_numbers'))
 
+@mobile_devices_bp.route('/bulk-unlink', methods=['POST'])
+@login_required
+def bulk_unlink():
+    """فك ربط مجموعة من الأجهزة أو الكل"""
+    try:
+        action = request.form.get('action')
+        device_ids = request.form.getlist('device_ids')
+        
+        if action == 'unlink_all':
+            # فك ربط جميع الأجهزة
+            devices = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).all()
+            count = len(devices)
+            
+            for device in devices:
+                device.employee_id = None
+                device.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_activity(
+                action='فك ربط جميع الأجهزة',
+                entity_type='MobileDevice',
+                details=f'تم فك ربط {count} جهاز من الموظفين'
+            )
+            
+            flash(f'تم فك ربط {count} جهاز بنجاح', 'success')
+            
+        elif action == 'unlink_selected' and device_ids:
+            # فك ربط الأجهزة المحددة
+            devices = MobileDevice.query.filter(
+                MobileDevice.id.in_(device_ids),
+                MobileDevice.employee_id.isnot(None)
+            ).all()
+            
+            count = len(devices)
+            device_numbers = []
+            
+            for device in devices:
+                device_numbers.append(device.phone_number)
+                device.employee_id = None
+                device.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_activity(
+                action='فك ربط أجهزة محددة',
+                entity_type='MobileDevice',
+                details=f'تم فك ربط {count} جهاز: {", ".join(device_numbers[:5])}{"..." if count > 5 else ""}'
+            )
+            
+            flash(f'تم فك ربط {count} جهاز محدد بنجاح', 'success')
+        else:
+            flash('يرجى تحديد عملية صحيحة أو اختيار أجهزة للفك', 'warning')
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء فك الربط: {str(e)}', 'danger')
+    
+    return redirect(url_for('mobile_devices.index'))
+
 @mobile_devices_bp.route('/import', methods=['GET', 'POST'])
 @login_required
 def import_excel():
