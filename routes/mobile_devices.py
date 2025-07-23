@@ -319,13 +319,18 @@ def edit(device_id):
     
     return render_template('mobile_devices/edit.html', device=device, active_employees=active_employees)
 
-@mobile_devices_bp.route('/<int:device_id>/delete', methods=['POST'])
+@mobile_devices_bp.route('/<int:device_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(device_id):
-    """حذف الجهاز"""
+    """صفحة تأكيد حذف الجهاز"""
+    device = MobileDevice.query.get_or_404(device_id)
+    
+    if request.method == 'GET':
+        # عرض صفحة التأكيد
+        return render_template('mobile_devices/delete_confirm.html', device=device)
+    
+    # تنفيذ الحذف عند POST
     try:
-        device = MobileDevice.query.get_or_404(device_id)
-        
         # حفظ البيانات للتسجيل
         imei = device.imei
         phone_number = device.phone_number
