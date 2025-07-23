@@ -262,13 +262,17 @@
                                             </button>
                                             <div class="dropdown-menu w-100 p-0" style="max-height: 350px; overflow-y: auto; background: #4a6ba7; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                                                 <div class="p-2" style="background: #4a6ba7; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                                    <input type="text" class="form-control" 
-                                                           placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                    <input type="text" 
+                                                           id="employeeSearchInput"
+                                                           class="form-control" 
+                                                           placeholder="🔍 ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                           oninput="filterEmployees(this)"
                                                            onkeyup="filterEmployees(this)"
                                                            onclick="event.stopPropagation();"
-                                                           style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;"
-                                                           onfocus="this.style.background='rgba(255,255,255,0.2)'"
-                                                           onblur="this.style.background='rgba(255,255,255,0.1)'">
+                                                           autocomplete="off"
+                                                           style="background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; border-radius: 6px; font-size: 14px; padding: 8px 12px;"
+                                                           onfocus="this.style.background='rgba(255,255,255,0.25)'; this.style.borderColor='rgba(255,255,255,0.5)'"
+                                                           onblur="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='rgba(255,255,255,0.3)'">
                                                 </div>
                                                 <div id="employeeList" style="max-height: 280px; overflow-y: auto;">
                                                     {% for employee in active_employees %}
@@ -277,10 +281,21 @@
                                                        data-employee-name="{{ employee.name|lower }}"
                                                        data-employee-id="{{ employee.employee_id or '' }}"
                                                        data-national-id="{{ employee.national_id or '' }}"
-                                                       style="color: white; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: transparent; text-align: right; font-size: 14px; transition: all 0.2s ease;"
-                                                       onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                                                       style="color: white; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: transparent; text-align: right; transition: all 0.2s ease;"
+                                                       onmouseover="this.style.background='rgba(255,255,255,0.15)'"
                                                        onmouseout="this.style.background='transparent'">
-                                                        {{ employee.name }}
+                                                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 2px;">
+                                                            {{ employee.name }}
+                                                        </div>
+                                                        <div style="font-size: 12px; opacity: 0.8;">
+                                                            {% if employee.employee_id %}
+                                                                رقم الموظف: {{ employee.employee_id }}
+                                                            {% endif %}
+                                                            {% if employee.national_id %}
+                                                                {% if employee.employee_id %} | {% endif %}
+                                                                هوية: {{ employee.national_id }}
+                                                            {% endif %}
+                                                        </div>
                                                     </a>
                                                     {% endfor %}
                                                 </div>
@@ -422,25 +437,64 @@ function selectNewEmployee(employeeId, employeeName) {
     }
 }
 
-// دوال البحث
+// دوال البحث المحسنة
 function filterEmployees(input) {
-    const filter = input.value.toLowerCase();
+    const filter = input.value.toLowerCase().trim();
     const employeeList = document.getElementById('employeeList');
     const items = employeeList.getElementsByClassName('employee-item');
+    let visibleCount = 0;
     
+    // إذا كان البحث فارغ، إظهار جميع الموظفين
+    if (filter === '') {
+        for (let i = 0; i < items.length; i++) {
+            items[i].style.display = 'block';
+            visibleCount++;
+        }
+        return;
+    }
+    
+    // البحث في البيانات
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        const name = item.getAttribute('data-employee-name');
-        const employeeId = item.getAttribute('data-employee-id');
-        const nationalId = item.getAttribute('data-national-id');
+        const name = item.getAttribute('data-employee-name') || '';
+        const employeeId = item.getAttribute('data-employee-id') || '';
+        const nationalId = item.getAttribute('data-national-id') || '';
         
-        if (name.includes(filter) || 
-            employeeId.includes(filter) || 
-            nationalId.includes(filter)) {
+        // البحث يدعم الأجزاء المنفصلة من النص
+        const searchTerms = filter.split(' ');
+        let matches = false;
+        
+        for (let term of searchTerms) {
+            if (term.length > 0 && (
+                name.includes(term) || 
+                employeeId.includes(term) || 
+                nationalId.includes(term)
+            )) {
+                matches = true;
+                break;
+            }
+        }
+        
+        if (matches) {
             item.style.display = 'block';
+            visibleCount++;
         } else {
             item.style.display = 'none';
         }
+    }
+    
+    // إضافة رسالة إذا لم توجد نتائج
+    const existingNoResults = employeeList.querySelector('.no-results-message');
+    if (existingNoResults) {
+        existingNoResults.remove();
+    }
+    
+    if (visibleCount === 0) {
+        const noResultsDiv = document.createElement('div');
+        noResultsDiv.className = 'no-results-message';
+        noResultsDiv.style.cssText = 'color: rgba(255,255,255,0.7); padding: 20px; text-align: center; font-style: italic;';
+        noResultsDiv.innerHTML = '🔍 لا توجد نتائج مطابقة للبحث "' + filter + '"';
+        employeeList.appendChild(noResultsDiv);
     }
 }
 
