@@ -180,13 +180,13 @@
                                         <h6>تغيير ربط الجهاز لموظف آخر:</h6>
                                         <div class="row">
                                             <div class="col-md-8">
-                                                <div class="dropdown">
+                                                <div class="dropup">
                                                     <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" 
                                                             type="button" id="newEmployeeDropdown" 
                                                             data-bs-toggle="dropdown" aria-expanded="false">
                                                         <span id="selectedNewEmployee">اختر موظف جديد</span>
                                                     </button>
-                                                    <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto; transform: translateY(-100%);"
                                                         <input type="text" class="form-control mb-2" 
                                                                placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
                                                                onkeyup="filterNewEmployees(this)"
@@ -241,13 +241,13 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <label for="employeeSelect" class="form-label">ربط الجهاز بموظف:</label>
-                                        <div class="dropdown">
+                                        <div class="dropup">
                                             <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" 
                                                     type="button" id="employeeDropdown" 
                                                     data-bs-toggle="dropdown" aria-expanded="false">
                                                 <span id="selectedEmployee">اختر موظف</span>
                                             </button>
-                                            <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
+                                            <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto; transform: translateY(-100%);"
                                                 <input type="text" class="form-control mb-2" 
                                                        placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
                                                        onkeyup="filterEmployees(this)"
@@ -333,6 +333,21 @@
         </div>
     </div>
 </div>
+
+<style>
+/* تنسيق القوائم المنسدلة لتظهر لأعلى */
+.dropup .dropdown-menu {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 2px !important;
+    transform: none !important;
+}
+
+.dropup .dropdown-toggle::after {
+    border-top: 0;
+    border-bottom: 0.3em solid;
+}
+</style>
 
 <script>
 // التحقق من صحة IMEI
