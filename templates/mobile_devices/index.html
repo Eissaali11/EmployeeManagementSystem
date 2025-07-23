@@ -129,21 +129,7 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="col-md-4 text-end">
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown">
-                                    <i class="fas fa-unlink me-2"></i>فك الربط
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" onclick="confirmUnlinkAll()">
-                                        <i class="fas fa-unlink me-2"></i>فك ربط جميع الأجهزة
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="confirmUnlinkSelected()">
-                                        <i class="fas fa-check-square me-2"></i>فك ربط الأجهزة المحددة
-                                    </a></li>
-                                </ul>
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -218,6 +204,21 @@
                         <i class="fas fa-list me-2"></i>قائمة الأجهزة
                         <span class="badge bg-primary ms-2">{{ devices.total }} جهاز</span>
                     </h5>
+                    <div class="col-md-4 text-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-unlink me-2"></i>فك الربط
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="confirmUnlinkAll()">
+                                    <i class="fas fa-unlink me-2"></i>فك ربط جميع الأجهزة
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="confirmUnlinkSelected()">
+                                    <i class="fas fa-check-square me-2"></i>فك ربط الأجهزة المحددة
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     {% if devices.items %}
