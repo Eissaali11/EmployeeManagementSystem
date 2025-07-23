@@ -814,7 +814,7 @@ def assign():
     try:
         # معاملات البحث والفلترة
         search = request.args.get('search', '').strip()
-        department_filter = request.args.get('department', '')
+        department_filter = request.args.get('department', '').strip()
         device_search = request.args.get('device_search', '').strip()
         
         # جلب الأجهزة غير المربوطة أو المربوطة بموظفين غير نشطين
@@ -837,58 +837,30 @@ def assign():
         
         available_devices = devices_query.all()
         
-        # جلب الموظفين النشطين مع فلترة (active بالإنجليزي أو نشط بالعربي)
+        # جلب الموظفين النشطين
         employees_query = Employee.query.filter(Employee.status.in_(['نشط', 'active']))
         
-        # تطبيق الفلاتر بحسب ما هو محدد
-        if department_filter and department_filter.isdigit() and not search:
-            # إذا كان فلتر القسم محدد بدون بحث - عرض جميع موظفي القسم
-            employees_query = employees_query.join(
-                employee_departments
-            ).filter(employee_departments.c.department_id == int(department_filter))
-        elif search and not department_filter:
-            # إذا كان البحث محدد بدون فلتر قسم - البحث في جميع الموظفين
+        # تطبيق فلتر القسم أولاً إذا كان محدداً
+        if department_filter and department_filter.isdigit():
+            employees_query = employees_query.join(employee_departments).filter(
+                employee_departments.c.department_id == int(department_filter)
+            )
+        
+        # تطبيق البحث النصي إذا كان محدداً
+        if search:
             employees_query = employees_query.filter(
                 or_(
                     Employee.name.contains(search),
-                    Employee.employee_id.contains(search),
+                    Employee.employee_id.contains(search), 
                     Employee.national_id.contains(search),
                     Employee.mobile.contains(search)
                 )
             )
-        elif search and department_filter and department_filter.isdigit():
-            # إذا كان كلا الفلترين محددين - البحث في القسم المحدد أولاً
-            employees_query = employees_query.join(
-                employee_departments
-            ).filter(employee_departments.c.department_id == int(department_filter))
-            employees_query = employees_query.filter(
-                or_(
-                    Employee.name.contains(search),
-                    Employee.employee_id.contains(search),
-                    Employee.national_id.contains(search),
-                    Employee.mobile.contains(search)
-                )
-            )
-        # إذا لم يتم تحديد أي فلتر، عرض جميع الموظفين النشطين
         
         active_employees = employees_query.order_by(Employee.name).all()
         
-        # إذا لم تكن هناك نتائج مع كلا الفلترين، جرب البحث في جميع الأقسام
-        if not active_employees and search and department_filter and department_filter.isdigit():
-            employees_query_fallback = Employee.query.filter(Employee.status.in_(['نشط', 'active']))
-            employees_query_fallback = employees_query_fallback.filter(
-                or_(
-                    Employee.name.contains(search),
-                    Employee.employee_id.contains(search),
-                    Employee.national_id.contains(search),
-                    Employee.mobile.contains(search)
-                )
-            )
-            active_employees = employees_query_fallback.order_by(Employee.name).all()
-        
         # جلب جميع الأقسام للفلترة
         departments = Department.query.order_by(Department.name).all()
-        
         
         return render_template('mobile_devices/assign.html',
                              available_devices=available_devices,
