@@ -12,11 +12,9 @@
 }
 
 .dropdown {
-position: relative;
+    position: relative;
     z-index: 99;
 }
-
-    .dropdown-menu
 
 .employee-item:hover {
     background-color: #f8f9fa !important;
@@ -27,8 +25,15 @@ position: relative;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     border: none;
     border-radius: 12px;
-    z-index:1000;
-    inset: 0px 0px auto auto !important;
+    z-index: 1000;
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 5px !important;
+}
+
+.dropup .dropdown-toggle::after {
+    border-top: 0;
+    border-bottom: 0.3em solid;
 }
 
 .employee-list {
