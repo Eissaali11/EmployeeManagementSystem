@@ -180,14 +180,45 @@
                                         <h6>تغيير ربط الجهاز لموظف آخر:</h6>
                                         <div class="row">
                                             <div class="col-md-8">
-                                                <select class="form-select" id="newEmployeeSelect">
-                                                    <option value="">اختر موظف جديد</option>
-                                                    {% for employee in active_employees %}
-                                                    {% if employee.id != device.employee_id %}
-                                                    <option value="{{ employee.id }}">{{ employee.name }}</option>
-                                                    {% endif %}
-                                                    {% endfor %}
-                                                </select>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" 
+                                                            type="button" id="newEmployeeDropdown" 
+                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <span id="selectedNewEmployee">اختر موظف جديد</span>
+                                                    </button>
+                                                    <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
+                                                        <input type="text" class="form-control mb-2" 
+                                                               placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                               onkeyup="filterNewEmployees(this)"
+                                                               onclick="event.stopPropagation();">
+                                                        <div id="newEmployeeList">
+                                                            {% for employee in active_employees %}
+                                                            {% if employee.id != device.employee_id %}
+                                                            <a class="dropdown-item employee-item" href="#" 
+                                                               onclick="selectNewEmployee({{ employee.id }}, '{{ employee.name|replace("'", "\\'") }}'); return false;"
+                                                               data-employee-name="{{ employee.name|lower }}"
+                                                               data-employee-id="{{ employee.employee_id or '' }}"
+                                                               data-national-id="{{ employee.national_id or '' }}"
+                                                               style="white-space: normal; padding: 8px 12px;">
+                                                                <div class="d-flex flex-column">
+                                                                    <strong>{{ employee.name }}</strong>
+                                                                    <small class="text-muted">
+                                                                        {% if employee.employee_id %}رقم الموظف: {{ employee.employee_id }}{% endif %}
+                                                                        {% if employee.national_id %} | الهوية: {{ employee.national_id }}{% endif %}
+                                                                    </small>
+                                                                    {% if employee.departments %}
+                                                                    <small class="text-info">
+                                                                        القسم: {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
+                                                                    </small>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </a>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" id="newEmployeeSelect" value="">
+                                                </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <button type="button" class="btn btn-success" onclick="confirmChangeAssignment()">
@@ -210,12 +241,43 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <label for="employeeSelect" class="form-label">ربط الجهاز بموظف:</label>
-                                        <select class="form-select" id="employeeSelect">
-                                            <option value="">اختر موظف</option>
-                                            {% for employee in active_employees %}
-                                            <option value="{{ employee.id }}">{{ employee.name }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" 
+                                                    type="button" id="employeeDropdown" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                <span id="selectedEmployee">اختر موظف</span>
+                                            </button>
+                                            <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto;">
+                                                <input type="text" class="form-control mb-2" 
+                                                       placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                       onkeyup="filterEmployees(this)"
+                                                       onclick="event.stopPropagation();">
+                                                <div id="employeeList">
+                                                    {% for employee in active_employees %}
+                                                    <a class="dropdown-item employee-item" href="#" 
+                                                       onclick="selectEmployee({{ employee.id }}, '{{ employee.name|replace("'", "\\'") }}'); return false;"
+                                                       data-employee-name="{{ employee.name|lower }}"
+                                                       data-employee-id="{{ employee.employee_id or '' }}"
+                                                       data-national-id="{{ employee.national_id or '' }}"
+                                                       style="white-space: normal; padding: 8px 12px;">
+                                                        <div class="d-flex flex-column">
+                                                            <strong>{{ employee.name }}</strong>
+                                                            <small class="text-muted">
+                                                                {% if employee.employee_id %}رقم الموظف: {{ employee.employee_id }}{% endif %}
+                                                                {% if employee.national_id %} | الهوية: {{ employee.national_id }}{% endif %}
+                                                            </small>
+                                                            {% if employee.departments %}
+                                                            <small class="text-info">
+                                                                القسم: {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
+                                                            </small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </a>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="employeeSelect" value="">
+                                        </div>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">&nbsp;</label>
@@ -288,6 +350,72 @@ document.getElementById('phone_number').addEventListener('input', function(e) {
     let value = e.target.value.replace(/[^0-9+\-\s]/g, ''); // السماح بالأرقام والرموز المطلوبة فقط
     e.target.value = value;
 });
+
+// دوال اختيار الموظف مع البحث
+function selectEmployee(employeeId, employeeName) {
+    document.getElementById('employeeSelect').value = employeeId;
+    document.getElementById('selectedEmployee').textContent = employeeName;
+    
+    // إغلاق الـ dropdown
+    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('employeeDropdown'));
+    if (dropdown) {
+        dropdown.hide();
+    }
+}
+
+function selectNewEmployee(employeeId, employeeName) {
+    document.getElementById('newEmployeeSelect').value = employeeId;
+    document.getElementById('selectedNewEmployee').textContent = employeeName;
+    
+    // إغلاق الـ dropdown
+    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('newEmployeeDropdown'));
+    if (dropdown) {
+        dropdown.hide();
+    }
+}
+
+// دوال البحث
+function filterEmployees(input) {
+    const filter = input.value.toLowerCase();
+    const employeeList = document.getElementById('employeeList');
+    const items = employeeList.getElementsByClassName('employee-item');
+    
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const name = item.getAttribute('data-employee-name');
+        const employeeId = item.getAttribute('data-employee-id');
+        const nationalId = item.getAttribute('data-national-id');
+        
+        if (name.includes(filter) || 
+            employeeId.includes(filter) || 
+            nationalId.includes(filter)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    }
+}
+
+function filterNewEmployees(input) {
+    const filter = input.value.toLowerCase();
+    const employeeList = document.getElementById('newEmployeeList');
+    const items = employeeList.getElementsByClassName('employee-item');
+    
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const name = item.getAttribute('data-employee-name');
+        const employeeId = item.getAttribute('data-employee-id');
+        const nationalId = item.getAttribute('data-national-id');
+        
+        if (name.includes(filter) || 
+            employeeId.includes(filter) || 
+            nationalId.includes(filter)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    }
+}
 
 // وظائف إدارة الربط
 function changeAssignment() {
