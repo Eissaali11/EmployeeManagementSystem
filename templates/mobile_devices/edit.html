@@ -186,12 +186,17 @@
                                                             data-bs-toggle="dropdown" aria-expanded="false">
                                                         <span id="selectedNewEmployee">اختر موظف جديد</span>
                                                     </button>
-                                                    <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto; transform: translateY(-100%);"
-                                                        <input type="text" class="form-control mb-2" 
-                                                               placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
-                                                               onkeyup="filterNewEmployees(this)"
-                                                               onclick="event.stopPropagation();">
-                                                        <div id="newEmployeeList">
+                                                    <div class="dropdown-menu w-100 p-0" style="max-height: 350px; overflow-y: auto; background: #4a6ba7; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                                        <div class="p-2" style="background: #4a6ba7; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                            <input type="text" class="form-control" 
+                                                                   placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                                   onkeyup="filterNewEmployees(this)"
+                                                                   onclick="event.stopPropagation();"
+                                                                   style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;"
+                                                                   onfocus="this.style.background='rgba(255,255,255,0.2)'"
+                                                                   onblur="this.style.background='rgba(255,255,255,0.1)'">
+                                                        </div>
+                                                        <div id="newEmployeeList" style="max-height: 280px; overflow-y: auto;">
                                                             {% for employee in active_employees %}
                                                             {% if employee.id != device.employee_id %}
                                                             <a class="dropdown-item employee-item" href="#" 
@@ -199,19 +204,10 @@
                                                                data-employee-name="{{ employee.name|lower }}"
                                                                data-employee-id="{{ employee.employee_id or '' }}"
                                                                data-national-id="{{ employee.national_id or '' }}"
-                                                               style="white-space: normal; padding: 8px 12px;">
-                                                                <div class="d-flex flex-column">
-                                                                    <strong>{{ employee.name }}</strong>
-                                                                    <small class="text-muted">
-                                                                        {% if employee.employee_id %}رقم الموظف: {{ employee.employee_id }}{% endif %}
-                                                                        {% if employee.national_id %} | الهوية: {{ employee.national_id }}{% endif %}
-                                                                    </small>
-                                                                    {% if employee.departments %}
-                                                                    <small class="text-info">
-                                                                        القسم: {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
-                                                                    </small>
-                                                                    {% endif %}
-                                                                </div>
+                                                               style="color: white; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: transparent; text-align: right; font-size: 14px; transition: all 0.2s ease;"
+                                                               onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                                                               onmouseout="this.style.background='transparent'">
+                                                                {{ employee.name }}
                                                             </a>
                                                             {% endif %}
                                                             {% endfor %}
@@ -247,31 +243,27 @@
                                                     data-bs-toggle="dropdown" aria-expanded="false">
                                                 <span id="selectedEmployee">اختر موظف</span>
                                             </button>
-                                            <div class="dropdown-menu w-100 p-2" style="max-height: 300px; overflow-y: auto; transform: translateY(-100%);"
-                                                <input type="text" class="form-control mb-2" 
-                                                       placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
-                                                       onkeyup="filterEmployees(this)"
-                                                       onclick="event.stopPropagation();">
-                                                <div id="employeeList">
+                                            <div class="dropdown-menu w-100 p-0" style="max-height: 350px; overflow-y: auto; background: #4a6ba7; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                                <div class="p-2" style="background: #4a6ba7; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                    <input type="text" class="form-control" 
+                                                           placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                           onkeyup="filterEmployees(this)"
+                                                           onclick="event.stopPropagation();"
+                                                           style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;"
+                                                           onfocus="this.style.background='rgba(255,255,255,0.2)'"
+                                                           onblur="this.style.background='rgba(255,255,255,0.1)'">
+                                                </div>
+                                                <div id="employeeList" style="max-height: 280px; overflow-y: auto;">
                                                     {% for employee in active_employees %}
                                                     <a class="dropdown-item employee-item" href="#" 
                                                        onclick="selectEmployee({{ employee.id }}, '{{ employee.name|replace("'", "\\'") }}'); return false;"
                                                        data-employee-name="{{ employee.name|lower }}"
                                                        data-employee-id="{{ employee.employee_id or '' }}"
                                                        data-national-id="{{ employee.national_id or '' }}"
-                                                       style="white-space: normal; padding: 8px 12px;">
-                                                        <div class="d-flex flex-column">
-                                                            <strong>{{ employee.name }}</strong>
-                                                            <small class="text-muted">
-                                                                {% if employee.employee_id %}رقم الموظف: {{ employee.employee_id }}{% endif %}
-                                                                {% if employee.national_id %} | الهوية: {{ employee.national_id }}{% endif %}
-                                                            </small>
-                                                            {% if employee.departments %}
-                                                            <small class="text-info">
-                                                                القسم: {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
-                                                            </small>
-                                                            {% endif %}
-                                                        </div>
+                                                       style="color: white; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: transparent; text-align: right; font-size: 14px; transition: all 0.2s ease;"
+                                                       onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                                                       onmouseout="this.style.background='transparent'">
+                                                        {{ employee.name }}
                                                     </a>
                                                     {% endfor %}
                                                 </div>
@@ -346,6 +338,30 @@
 .dropup .dropdown-toggle::after {
     border-top: 0;
     border-bottom: 0.3em solid;
+}
+
+/* تنسيق حقل البحث داخل القائمة */
+.dropdown-menu input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* تنسيق شريط التمرير */
+.dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
 }
 </style>
 
