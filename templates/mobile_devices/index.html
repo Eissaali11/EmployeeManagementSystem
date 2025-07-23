@@ -332,7 +332,7 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                    onclick="window.location.href='{{ url_for('mobile_devices.delete', device_id=device.id) }}'" title="حذف">
+                                                    onclick="confirmDelete({{ device.id }}, '{{ device.imei }}')" title="حذف">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -400,6 +400,34 @@
     </div>
 </div>
 
+<!-- Modal حذف الجهاز -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف الجهاز <strong id="deviceImei"></strong>؟</p>
+                <p class="text-danger"><small>هذا الإجراء لا يمكن التراجع عنه.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form method="POST" id="deleteForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">حذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(deviceId, imei) {
+    document.getElementById('deviceImei').textContent = imei;
+    document.getElementById('deleteForm').action = '/mobile-devices/' + deviceId + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
 
 // وظائف فك الربط الجماعي
 function toggleSelectAll() {
