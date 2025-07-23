@@ -281,21 +281,30 @@
                                                     اختر موظف
                                                 {% endif %}
                                             </button>
-                                            <div class="dropdown-menu p-2" style="min-width: 350px;" aria-labelledby="employeeDropdown_{{ device.id }}">
+                                            <div class="dropdown-menu p-2" style="min-width: 400px; max-height: 300px; overflow-y: auto;" aria-labelledby="employeeDropdown_{{ device.id }}">
                                                 <input type="text" class="form-control form-control-sm mb-2" 
                                                        placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
                                                        onkeyup="filterEmployees(this, {{ device.id }})"
                                                        onclick="event.stopPropagation();">
                                                 <div class="employee-list" id="employeeList_{{ device.id }}" style="max-height: 200px; overflow-y: auto;">
+                                                    <!-- Debug info -->
+                                                    <div class="dropdown-item-text text-info small">
+                                                        عدد الموظفين: {{ active_employees|length }}
+                                                        {% if search %} | البحث: {{ search }}{% endif %}
+                                                        {% if department_filter %} | القسم: {{ department_filter }}{% endif %}
+                                                    </div>
+                                                    <div class="dropdown-divider"></div>
+                                                    
                                                     {% if active_employees %}
                                                         {% for employee in active_employees|sort(attribute='name') %}
                                                         <a class="dropdown-item employee-item" href="#" 
-                                                           onclick="selectEmployee({{ device.id }}, {{ employee.id }}, '{{ employee.name }}'); return false;"
+                                                           onclick="selectEmployee({{ device.id }}, {{ employee.id }}, '{{ employee.name|replace("'", "\\'") }}'); return false;"
                                                            data-employee-name="{{ employee.name|lower }}"
                                                            data-employee-id="{{ employee.employee_id or '' }}"
-                                                           data-national-id="{{ employee.national_id or '' }}">
+                                                           data-national-id="{{ employee.national_id or '' }}"
+                                                           style="white-space: normal; padding: 8px 12px;">
                                                             <div class="d-flex flex-column">
-                                                                <strong>{{ employee.name }}</strong>
+                                                                <strong style="color: #212529;">{{ employee.name }}</strong>
                                                                 <small class="text-muted">
                                                                     {% if employee.employee_id %}رقم الموظف: {{ employee.employee_id }}{% endif %}
                                                                     {% if employee.national_id %} | الهوية: {{ employee.national_id }}{% endif %}
@@ -309,7 +318,7 @@
                                                         </a>
                                                         {% endfor %}
                                                     {% else %}
-                                                        <span class="dropdown-item-text text-muted">لا يوجد موظفين متاحين</span>
+                                                        <span class="dropdown-item-text text-muted">لا يوجد موظفين متاحين مع الفلاتر الحالية</span>
                                                     {% endif %}
                                                 </div>
                                             </div>
