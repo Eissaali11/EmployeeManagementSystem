@@ -1377,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                                     <div class="d-flex align-items-center">
                                                                         <i class="fas fa-tablet-alt me-2 text-primary"></i>
                                                                         <div>
-                                                                            <p class="mb-0 fw-bold text-primary">{{ assignment.device.brand }} {{ assignment.device.model }}</p>
+                                                                            <p class="mb-0 fw-bold text-primary">{{ assignment.device.device_brand }} {{ assignment.device.device_model }}</p>
                                                                             <small class="text-muted">IMEI: {{ assignment.device.imei }}</small>
                                                                         </div>
                                                                     </div>
@@ -1389,7 +1389,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                                         <i class="fas fa-sim-card me-2 text-success"></i>
                                                                         <div>
                                                                             <p class="mb-0 fw-bold text-success">{{ assignment.sim_card.phone_number }}</p>
-                                                                            <small class="text-muted">{{ assignment.sim_card.carrier }} - {{ assignment.sim_card.plan_type }}</small>
+                                                                            <small class="text-muted">رقم مستورد{% if assignment.sim_card.description %} - {{ assignment.sim_card.description }}{% endif %}</small>
                                                                         </div>
                                                                     </div>
                                                                 </div>
