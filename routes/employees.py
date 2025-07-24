@@ -182,6 +182,10 @@ def create():
             mobile_type = request.form.get('mobile_type', '') if has_mobile_custody else None
             mobile_imei = request.form.get('mobile_imei', '') if has_mobile_custody else None
             
+            # حقول الكفالة الجديدة
+            sponsorship_status = request.form.get('sponsorship_status', 'inside')
+            current_sponsor_name = request.form.get('current_sponsor_name', '')
+            
             selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
             
             # Convert empty department_id to None
@@ -209,7 +213,9 @@ def create():
                 employee_type=employee_type,
                 has_mobile_custody=has_mobile_custody,
                 mobile_type=mobile_type,
-                mobile_imei=mobile_imei
+                mobile_imei=mobile_imei,
+                sponsorship_status=sponsorship_status,
+                current_sponsor_name=current_sponsor_name
             )
             if selected_dept_ids:
                 departments_to_assign = Department.query.filter(Department.id.in_(selected_dept_ids)).all()

@@ -38,7 +38,31 @@
                     <div class="col-md-3">
                         <div class="form-group mb-3">
                             <label for="mobile" class="form-label required-field">جوال العمل</label>
-                            <input type="text" class="form-control" id="mobile" name="mobile" required>
+                            <div class="mobile-dropdown-container" style="position: relative;">
+                                <!-- حقل البحث -->
+                                <input type="text" class="form-control" id="mobile_search" 
+                                       placeholder="ابحث عن رقم الجوال أو اكتب رقم جديد..." 
+                                       autocomplete="off">
+                                
+                                <!-- القائمة المخفية للأرقام المتاحة -->
+                                <div class="mobile-dropdown-list" id="mobile_dropdown_list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                    {% for phone in available_phone_numbers %}
+                                    <div class="mobile-dropdown-item" data-value="{{ phone.phone_number }}" 
+                                         style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                        <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ phone.phone_number }}</div>
+                                        {% if phone.carrier or phone.plan_type %}
+                                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                            {% if phone.carrier %}{{ phone.carrier }}{% endif %}
+                                            {% if phone.plan_type %} - {{ phone.plan_type }}{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- الحقل المخفي لحفظ القيمة -->
+                                <input type="hidden" id="mobile" name="mobile" required>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -69,6 +93,33 @@
                                 {% for nat in nationalities %}
                                 <option value="{{ nat.id }}">{{ nat.name_ar }}</option>
                                 {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="contract_status" class="form-label">حالة العقد</label>
+                            <select class="form-select" id="contract_status" name="contract_status">
+                                <option value="">- غير محدد -</option>
+                                <option value="Active" selected>ساري</option>
+                                <option value="Expired">منتهي</option>
+                                <option value="Probation">فترة تجربة</option>
+                                <option value="Terminated">منهى</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- عمود حالة الرخصة (جديد) -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="license_status" class="form-label">حالة الرخصة</label>
+                            <select class="form-select" id="license_status" name="license_status">
+                                <option value="">- غير محدد -</option>
+                                <option value="Valid">سارية</option>
+                                <option value="Expired">منتهية</option>
+                                <option value="Suspended">موقوفة</option>
+                                <option value="Not-Applicable" selected>لا تنطبق</option>
                             </select>
                         </div>
                     </div>
@@ -215,16 +266,66 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group mb-3">
-                            <label for="department_id" class="form-label">القسم</label>
-                            <select class="form-select" id="department_id" name="department_id">
-                                <option value="">- بدون قسم -</option>
-                                {% for department in departments %}
-                                <option value="{{ department.id }}">{{ department.name }}</option>
-                                {% endfor %}
-                            </select>
+
+                    <!-- قسم معلومات الكفالة -->
+                    <div class="col-12">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>معلومات الكفالة</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="sponsorship_status" class="form-label">حالة الكفالة</label>
+                                            <select class="form-select" id="sponsorship_status" name="sponsorship_status" onchange="toggleSponsorNameField()">
+                                                <option value="inside" selected>على الكفالة</option>
+                                                <option value="outside">خارج الكفالة</option>
+                                            </select>
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                اختر "على الكفالة" إذا كان الموظف لا يزال على كفالة الشركة أو كفيل آخر
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3" id="sponsor-name-field">
+                                            <label for="current_sponsor_name" class="form-label">اسم الكفيل الحالي</label>
+                                            <input type="text" class="form-control" id="current_sponsor_name" name="current_sponsor_name" 
+                                                   placeholder="اختياري - اسم الكفيل أو الشركة الكافلة">
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                يمكن تركه فارغاً إذا كان غير معروف أو غير محدد
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- القسم الجديد لاختيار عدة أقسام -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الأقسام المرتبط بها الموظف</label>
+                        <div class="department-pills-container p-2 rounded" style="border: 1px solid var(--bs-border-color-translucent);">
+                            <!-- التحقق من وجود أقسام لعرضها -->
+                            {% if departments %}
+                                {% for dept in departments %}
+                                <!-- مربع اختيار مخفي فعليًا، لإرسال البيانات فقط -->
+                                <div class="d-none">
+                                    <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ dept.id }}" id="dept-create-{{ dept.id }}">
+                                </div>
+                                <!-- الشارة التفاعلية التي يراها المستخدم وينقر عليها -->
+                                <span class="badge department-pill" data-target-id="dept-create-{{ dept.id }}">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    {{ dept.name }}
+                                </span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted small m-1">لا توجد أقسام معرفة في النظام لتعيينها.</p>
+                            {% endif %}
+                        </div>
+                        <div class="form-text mt-2">انقر على اسم القسم لتحديده أو إلغاء تحديده.</div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group mb-3">
@@ -313,7 +414,117 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleCustodyFields();
     initializeImeiDropdown();
     initializePhoneDropdown();
+    initializeMobileDropdown();
+    initializeDepartmentPills();
 });
+
+// دالة إعداد الشارات التفاعلية للأقسام
+function initializeDepartmentPills() {
+    const departmentPills = document.querySelectorAll('.department-pill');
+    
+    departmentPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target-id');
+            const targetCheckbox = document.getElementById(targetId);
+            
+            if (targetCheckbox) {
+                // تبديل حالة الـ checkbox
+                targetCheckbox.checked = !targetCheckbox.checked;
+                
+                // تبديل ظهور الشارة
+                if (targetCheckbox.checked) {
+                    this.classList.add('active');
+                    this.style.backgroundColor = '#28a745';
+                    this.style.borderColor = '#28a745';
+                } else {
+                    this.classList.remove('active');
+                    this.style.backgroundColor = '#6c757d';
+                    this.style.borderColor = '#6c757d';
+                }
+            }
+        });
+    });
+}
+
+// دالة إظهار/إخفاء حقل اسم الكفيل
+function toggleSponsorNameField() {
+    const sponsorshipStatus = document.getElementById('sponsorship_status').value;
+    const sponsorNameField = document.getElementById('sponsor-name-field');
+    
+    if (sponsorshipStatus === 'outside') {
+        sponsorNameField.style.display = 'none';
+    } else {
+        sponsorNameField.style.display = 'block';
+    }
+}
+
+// دالة إعداد القائمة المنسدلة القابلة للبحث للهاتف الأساسي (العمل)
+function initializeMobileDropdown() {
+    const searchInput = document.getElementById('mobile_search');
+    const dropdownList = document.getElementById('mobile_dropdown_list');
+    const hiddenInput = document.getElementById('mobile');
+    const dropdownItems = document.querySelectorAll('.mobile-dropdown-item');
+    
+    if (!searchInput || !dropdownList || !hiddenInput) return;
+    
+    // إظهار القائمة عند التركيز على حقل البحث
+    searchInput.addEventListener('focus', function() {
+        dropdownList.style.display = 'block';
+        filterMobileDropdownItems('');
+    });
+    
+    // البحث في الأرقام أثناء الكتابة
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        filterMobileDropdownItems(searchTerm);
+        dropdownList.style.display = 'block';
+        
+        // تحديث القيمة المخفية
+        hiddenInput.value = searchTerm;
+    });
+    
+    // إخفاء القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdownList.contains(e.target)) {
+            dropdownList.style.display = 'none';
+        }
+    });
+    
+    // التعامل مع اختيار عنصر من القائمة
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            searchInput.value = value;
+            hiddenInput.value = value;
+            dropdownList.style.display = 'none';
+        });
+        
+        // تأثيرات التمرير
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#e3f2fd';
+            this.style.color = '#1976d2';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#ffffff';
+            this.style.color = '#333';
+        });
+    });
+    
+    // دالة فلترة العناصر
+    function filterMobileDropdownItems(searchTerm) {
+        dropdownItems.forEach(item => {
+            const phoneNumber = item.dataset.value;
+            const text = item.textContent.toLowerCase();
+            
+            if (phoneNumber.includes(searchTerm) || text.includes(searchTerm.toLowerCase())) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+}
 
 // دالة إعداد القائمة المنسدلة القابلة للبحث للهاتف
 function initializePhoneDropdown() {
@@ -454,29 +665,74 @@ function initializeImeiDropdown() {
 // إضافة CSS محسن للقوائم المنسدلة
 const dropdownCSS = document.createElement('style');
 dropdownCSS.textContent = `
-    .phone-dropdown-list, .imei-dropdown-list {
+    .mobile-dropdown-list, .phone-dropdown-list, .imei-dropdown-list {
         border: 1px solid #bdc3c7 !important;
         background: #ffffff !important;
         color: #2c3e50 !important;
     }
     
-    .phone-dropdown-item, .imei-dropdown-item {
+    .mobile-dropdown-item, .phone-dropdown-item, .imei-dropdown-item {
         color: #2c3e50 !important;
         background: #ffffff !important;
         transition: all 0.2s ease;
     }
     
-    .phone-dropdown-item:hover, .imei-dropdown-item:hover {
+    .mobile-dropdown-item:hover, .phone-dropdown-item:hover, .imei-dropdown-item:hover {
         background: #e3f2fd !important;
         color: #1976d2 !important;
     }
     
-    .phone-dropdown-item div, .imei-dropdown-item div {
+    .mobile-dropdown-item div, .phone-dropdown-item div, .imei-dropdown-item div {
         color: inherit !important;
     }
     
-    .phone-dropdown-item:last-child, .imei-dropdown-item:last-child {
+    .mobile-dropdown-item:last-child, .phone-dropdown-item:last-child, .imei-dropdown-item:last-child {
         border-bottom: none !important;
+    }
+    
+    /* تصميم الأقسام التفاعلية */
+    .department-pills-container {
+        background: #f8f9fa;
+        min-height: 50px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: flex-start;
+        align-content: flex-start;
+    }
+    
+    .department-pill {
+        font-size: 13px;
+        padding: 8px 15px;
+        margin: 3px;
+        cursor: pointer;
+        border: 2px solid #6c757d;
+        background-color: #6c757d;
+        color: white;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        user-select: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .department-pill:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .department-pill.active {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+        color: white;
+    }
+    
+    .department-pill i {
+        transition: transform 0.2s ease;
+    }
+    
+    .department-pill.active i {
+        transform: scale(1.1);
     }
 `;
 document.head.appendChild(dropdownCSS);
