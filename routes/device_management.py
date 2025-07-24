@@ -70,7 +70,9 @@ def index():
         # ترتيب وصفحة
         devices = query.order_by(MobileDevice.created_at.desc()).all()
         
-        # إضافة معلومات الربط لكل جهاز
+        # إضافة معلومات الربط لكل جهاز والتحقق من حالة الموظف
+        inactive_assignments_to_remove = []
+        
         for device in devices:
             # البحث عن الربط النشط للجهاز
             active_assignment = DeviceAssignment.query.filter_by(
@@ -79,15 +81,66 @@ def index():
             ).first()
             
             if active_assignment:
-                device.current_assignment = active_assignment
-                device.assigned_employee = active_assignment.employee
-                device.assigned_sim = active_assignment.sim_card
-                device.is_assigned = True
+                # التحقق من حالة الموظف المرتبط
+                if active_assignment.employee and active_assignment.employee.status != 'نشط':
+                    # الموظف غير نشط - إلغاء الربط تلقائياً
+                    print(f"DEBUG: الموظف {active_assignment.employee.name} غير نشط - إلغاء الربط تلقائياً")
+                    inactive_assignments_to_remove.append(active_assignment)
+                    
+                    # إعداد الجهاز كمتاح
+                    device.current_assignment = None
+                    device.assigned_employee = None
+                    device.assigned_sim = None
+                    device.is_assigned = False
+                else:
+                    # الموظف نشط - عرض الربط
+                    device.current_assignment = active_assignment
+                    device.assigned_employee = active_assignment.employee
+                    device.assigned_sim = active_assignment.sim_card
+                    device.is_assigned = True
             else:
                 device.current_assignment = None
                 device.assigned_employee = None
                 device.assigned_sim = None
                 device.is_assigned = False
+        
+        # إلغاء الربطات للموظفين غير النشطين
+        if inactive_assignments_to_remove:
+            for assignment in inactive_assignments_to_remove:
+                employee_name = assignment.employee.name if assignment.employee else 'غير معروف'
+                print(f"DEBUG: إلغاء ربط الجهاز {assignment.device_id} من الموظف غير النشط {employee_name}")
+                
+                # إلغاء الربط
+                assignment.is_active = False
+                assignment.unassigned_date = datetime.utcnow()
+                assignment.unassigned_by = None  # إلغاء تلقائي
+                
+                # فك ربط الرقم إذا وُجد
+                if assignment.sim_card_id:
+                    sim_card = ImportedPhoneNumber.query.get(assignment.sim_card_id)
+                    if sim_card:
+                        sim_card.employee_id = None
+                        sim_card.is_used = False
+                
+                # تحديث الجهاز
+                device_to_update = MobileDevice.query.get(assignment.device_id)
+                if device_to_update:
+                    device_to_update.employee_id = None
+                    device_to_update.status = 'متاح'
+                    device_to_update.updated_at = datetime.utcnow()
+                
+                # تسجيل العملية
+                from utils.audit_logger import log_activity
+                log_activity(
+                    action='auto_device_unassigned',
+                    entity_type='DeviceAssignment',
+                    entity_id=assignment.device_id,
+                    details=f'تم إلغاء ربط الجهاز تلقائياً من الموظف غير النشط {employee_name}'
+                )
+            
+            # حفظ التغييرات
+            db.session.commit()
+            print(f"DEBUG: تم إلغاء {len(inactive_assignments_to_remove)} ربط تلقائياً للموظفين غير النشطين")
         
         # حساب الإحصائيات من جدول DeviceAssignment
         total_devices = MobileDevice.query.count()
