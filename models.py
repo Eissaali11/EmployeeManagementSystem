@@ -1478,7 +1478,7 @@ class MobileDevice(db.Model):
     __tablename__ = 'mobile_devices'
     
     id = db.Column(db.Integer, primary_key=True)
-    phone_number = db.Column(db.String(20), nullable=False)  # رقم الهاتف
+    phone_number = db.Column(db.String(20), nullable=True)  # رقم الهاتف
     imei = db.Column(db.String(20), unique=True, nullable=False)  # رقم الـ IMEI فريد
     email = db.Column(db.String(100), nullable=True)  # الإيميل المرتبط بالجهاز
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)  # معرف الموظف
@@ -1579,7 +1579,7 @@ class ImportedPhoneNumber(db.Model):
     __tablename__ = 'imported_phone_numbers'
     
     id = db.Column(db.Integer, primary_key=True)
-    phone_number = db.Column(db.String(20), nullable=False)  # رقم الهاتف المستورد
+    phone_number = db.Column(db.String(20), nullable=True)  # رقم الهاتف المستورد
     description = db.Column(db.String(100), nullable=True)  # وصف أو اسم صاحب الرقم
     is_used = db.Column(db.Boolean, default=False, nullable=False)  # هل تم استخدام الرقم أم لا
     imported_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)  # المستخدم الذي استورد الرقم
