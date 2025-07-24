@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
 from sqlalchemy import func, and_, or_
-from models import db, MobileDevice, Employee, Department
+from models import db, MobileDevice, Employee, Department, DeviceAssignment, ImportedPhoneNumber
 from datetime import datetime
 import io
 import pandas as pd
@@ -52,10 +52,30 @@ def index():
         # ترتيب وصفحة
         devices = query.order_by(MobileDevice.created_at.desc()).all()
         
-        # حساب الإحصائيات
+        # إضافة معلومات الربط لكل جهاز
+        for device in devices:
+            # البحث عن الربط النشط للجهاز
+            active_assignment = DeviceAssignment.query.filter_by(
+                device_id=device.id, 
+                is_active=True
+            ).first()
+            
+            if active_assignment:
+                device.current_assignment = active_assignment
+                device.assigned_employee = active_assignment.employee
+                device.assigned_sim = active_assignment.sim_card
+                device.is_assigned = True
+            else:
+                device.current_assignment = None
+                device.assigned_employee = None
+                device.assigned_sim = None
+                device.is_assigned = False
+        
+        # حساب الإحصائيات من جدول DeviceAssignment
         total_devices = MobileDevice.query.count()
-        available_devices = MobileDevice.query.filter(MobileDevice.employee_id.is_(None)).count()
-        assigned_devices = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).count()
+        assigned_assignments = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).count()
+        available_devices = total_devices - assigned_assignments
+        assigned_devices = assigned_assignments
         
         # إحصائيات الأرقام
         devices_with_phone = MobileDevice.query.filter(and_(MobileDevice.phone_number.isnot(None), MobileDevice.phone_number != '')).count()

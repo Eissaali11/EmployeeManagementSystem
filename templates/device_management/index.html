@@ -215,25 +215,38 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if device.phone_number %}
-                                            <span class="badge bg-info">{{ device.phone_number }}</span>
+                                        {% if device.assigned_sim and device.assigned_sim.phone_number %}
+                                            <span class="badge bg-info">{{ device.assigned_sim.phone_number }}</span>
+                                        {% elif device.phone_number %}
+                                            <span class="badge bg-secondary">{{ device.phone_number }}</span>
                                         {% else %}
                                             <span class="text-muted">غير محدد</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if device.employee_id %}
+                                        {% if device.is_assigned %}
                                             <span class="status-assigned">مربوط</span>
                                         {% else %}
                                             <span class="status-available">متاح</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if device.employee %}
-                                            <strong>{{ device.employee.name }}</strong>
-                                            <div class="device-info">{{ device.employee.employee_id }}</div>
-                                            {% if device.assigned_date %}
-                                            <div class="device-info">منذ: {{ device.assigned_date.strftime('%Y-%m-%d') }}</div>
+                                        {% if device.assigned_employee %}
+                                            <strong>{{ device.assigned_employee.name }}</strong>
+                                            <div class="device-info">{{ device.assigned_employee.employee_id }}</div>
+                                            {% if device.current_assignment.assignment_date %}
+                                            <div class="device-info">منذ: {{ device.current_assignment.assignment_date.strftime('%Y-%m-%d') }}</div>
+                                            {% endif %}
+                                            {% if device.current_assignment.assignment_type %}
+                                            <div class="device-info">
+                                                {% if device.current_assignment.assignment_type == 'device_only' %}
+                                                    <span class="badge bg-warning">جهاز فقط</span>
+                                                {% elif device.current_assignment.assignment_type == 'sim_only' %}
+                                                    <span class="badge bg-info">رقم فقط</span>
+                                                {% elif device.current_assignment.assignment_type == 'device_and_sim' %}
+                                                    <span class="badge bg-success">جهاز ورقم</span>
+                                                {% endif %}
+                                            </div>
                                             {% endif %}
                                         {% else %}
                                             <span class="text-muted">غير مربوط</span>
@@ -246,7 +259,7 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             
-                                            {% if device.employee_id %}
+                                            {% if device.is_assigned %}
                                                 <!-- فك الربط -->
                                                 <form method="POST" action="{{ url_for('device_management.unassign_from_employee', device_id=device.id) }}" 
                                                       style="display: inline;" onsubmit="return confirm('هل أنت متأكد من فك ربط هذا الجهاز؟')">
@@ -265,7 +278,7 @@
                                             <form method="POST" action="{{ url_for('device_management.delete', device_id=device.id) }}" 
                                                   style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الجهاز؟')">
                                                 <button type="submit" class="btn btn-outline-danger btn-sm" title="حذف"
-                                                        {% if device.employee_id %}disabled{% endif %}>
+                                                        {% if device.is_assigned %}disabled{% endif %}>
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
@@ -273,7 +286,7 @@
                                     </td>
                                 </tr>
                                 
-                                {% if not device.employee_id %}
+                                {% if not device.is_assigned %}
                                 <!-- Modal ربط الجهاز بموظف -->
                                 <div class="modal fade" id="assignModal{{ device.id }}" tabindex="-1">
                                     <div class="modal-dialog">
