@@ -487,8 +487,32 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('drop', function(e) {
             e.preventDefault();
             this.classList.remove('drag-over');
-            const containerId = this.id.includes('before') ? 'before-preview' : 'after-preview';
-            previewImages(this, containerId);
+            
+            // تحديد containerId بناءً على نوع الحقل
+            let containerId;
+            if (this.id.includes('before')) {
+                containerId = 'before-preview';
+            } else if (this.id.includes('after')) {
+                containerId = 'after-preview';
+            } else if (this.id.includes('delivery_images')) {
+                containerId = 'delivery-preview';
+            } else if (this.id.includes('pickup_images')) {
+                containerId = 'pickup-preview';
+            } else if (this.id.includes('notes_images')) {
+                containerId = 'notes-preview';
+            } else if (this.id.includes('delivery_receipt')) {
+                containerId = 'delivery-receipt-preview';
+            } else if (this.id.includes('pickup_receipt')) {
+                containerId = 'pickup-receipt-preview';
+            }
+            
+            if (containerId) {
+                if (this.id.includes('receipt')) {
+                    previewReceiptFile(this, containerId);
+                } else {
+                    previewImages(this, containerId);
+                }
+            }
         });
     });
 });
