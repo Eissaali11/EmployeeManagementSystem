@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
+from flask_login import current_user
 from sqlalchemy import func, and_, or_
 from models import db, MobileDevice, Employee, Department, DeviceAssignment, ImportedPhoneNumber
 from datetime import datetime
@@ -6,7 +7,6 @@ import io
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
-# from utils.audit_logger import audit_log
 
 device_management_bp = Blueprint('device_management', __name__)
 
@@ -271,16 +271,32 @@ def assign_to_employee(device_id):
             flash('الجهاز مربوط بموظف آخر بالفعل', 'error')
             return redirect(url_for('device_management.index'))
         
+        # إنشاء سجل جديد في DeviceAssignment
+        assignment = DeviceAssignment()
+        assignment.device_id = device_id
+        assignment.employee_id = employee_id
+        assignment.assigned_date = datetime.utcnow()
+        assignment.assigned_by = current_user.id if current_user.is_authenticated else None
+        assignment.is_active = True
+        assignment.assignment_type = 'مباشر'  # ربط مباشر من صفحة إدارة الأجهزة
+        
         # ربط الجهاز
         device.employee_id = employee_id
         device.status = 'مرتبط'
         device.assigned_date = datetime.utcnow()
         device.updated_at = datetime.utcnow()
         
+        db.session.add(assignment)
         db.session.commit()
         
         # تسجيل العملية
-        # audit_log('device_assigned', f'تم ربط الجهاز {device.device_brand} {device.device_model} بالموظف {employee.name}')
+        from utils.audit_logger import log_activity
+        log_activity(
+            action='device_assigned',
+            entity_type='DeviceAssignment',
+            entity_id=assignment.id,
+            details=f'تم ربط الجهاز {device.device_brand} {device.device_model} بالموظف {employee.name}'
+        )
         
         flash(f'تم ربط الجهاز بالموظف {employee.name} بنجاح', 'success')
         
@@ -302,7 +318,25 @@ def unassign_from_employee(device_id):
         
         employee_name = device.employee.name if device.employee else 'غير معروف'
         
-        # فك الربط
+        # العثور على جميع الربطات النشطة لهذا الجهاز وإلغاؤها
+        active_assignments = DeviceAssignment.query.filter(
+            DeviceAssignment.device_id == device_id,
+            DeviceAssignment.is_active == True
+        ).all()
+        
+        for assignment in active_assignments:
+            assignment.is_active = False
+            assignment.unassigned_date = datetime.utcnow()
+            assignment.unassigned_by = current_user.id if current_user.is_authenticated else None
+            
+            # إذا كان هناك رقم مربوط، قم بفك ربطه أيضاً
+            if assignment.sim_card_id:
+                sim_card = ImportedPhoneNumber.query.get(assignment.sim_card_id)
+                if sim_card:
+                    sim_card.employee_id = None
+                    sim_card.is_used = False
+        
+        # فك ربط الجهاز
         device.employee_id = None
         device.status = 'متاح'
         device.updated_at = datetime.utcnow()
@@ -310,7 +344,13 @@ def unassign_from_employee(device_id):
         db.session.commit()
         
         # تسجيل العملية
-        # audit_log('device_unassigned', f'تم فك ربط الجهاز {device.device_brand} {device.device_model} من الموظف {employee_name}')
+        from utils.audit_logger import log_activity
+        log_activity(
+            action='device_unassigned',
+            entity_type='DeviceAssignment',
+            entity_id=device_id,
+            details=f'تم فك ربط الجهاز {device.device_brand} {device.device_model} من الموظف {employee_name}'
+        )
         
         flash(f'تم فك ربط الجهاز من الموظف {employee_name} بنجاح', 'success')
         
