@@ -101,7 +101,7 @@
                                     <i class="fas fa-file-import me-1"></i>
                                     استيراد Excel
                                 </a>
-                                <a href="{{ url_for('device_management.export_excel') }}" class="btn btn-warning btn-sm">
+                                <a href="{{ url_for('device_management.export_excel', department=department_filter, brand=brand_filter, status=status_filter, search=search_term) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-file-export me-1"></i>
                                     تصدير Excel
                                 </a>

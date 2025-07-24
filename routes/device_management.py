@@ -322,15 +322,83 @@ def unassign_from_employee(device_id):
 
 @device_management_bp.route('/export-excel')
 def export_excel():
-    """تصدير بيانات الأجهزة إلى Excel"""
+    """تصدير بيانات الأجهزة إلى Excel بناءً على الفلاتر المطبقة"""
     try:
+        # جلب الفلاتر من parameters
+        department_filter = request.args.get('department', '')
+        brand_filter = request.args.get('brand', '')
+        status_filter = request.args.get('status', '')
+        search_term = request.args.get('search', '')
+        
+        # بناء الاستعلام مع نفس منطق الفلترة من دالة index
+        query = MobileDevice.query
+        
+        # فلتر القسم
+        if department_filter:
+            # جلب موظفي القسم المحدد
+            employees_in_dept = Employee.query.join(Employee.departments).filter(Department.id == department_filter).all()
+            employee_ids = [emp.id for emp in employees_in_dept]
+            
+            # فلترة الأجهزة المربوطة بموظفي هذا القسم
+            if employee_ids:
+                assigned_device_ids = [assignment.device_id for assignment in 
+                                     DeviceAssignment.query.filter_by(is_active=True)
+                                     .filter(DeviceAssignment.employee_id.in_(employee_ids))
+                                     .filter(DeviceAssignment.device_id.isnot(None)).all()]
+                if assigned_device_ids:
+                    query = query.filter(MobileDevice.id.in_(assigned_device_ids))
+                else:
+                    query = query.filter(MobileDevice.id == -1)  # فلتر فارغ
+            else:
+                query = query.filter(MobileDevice.id == -1)  # فلتر فارغ
+        
+        # فلتر العلامة التجارية
+        if brand_filter:
+            query = query.filter(MobileDevice.device_brand.like(f'%{brand_filter}%'))
+        
+        # فلتر الحالة
+        if status_filter:
+            if status_filter == 'assigned':
+                # الأجهزة المربوطة
+                assigned_assignments = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).all()
+                device_ids_assigned = [assignment.device_id for assignment in assigned_assignments]
+                if device_ids_assigned:
+                    query = query.filter(MobileDevice.id.in_(device_ids_assigned))
+                else:
+                    query = query.filter(MobileDevice.id == -1)
+                    
+            elif status_filter == 'available':
+                # الأجهزة المتاحة
+                assigned_assignments = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).all()
+                device_ids_assigned = [assignment.device_id for assignment in assigned_assignments]
+                if device_ids_assigned:
+                    query = query.filter(~MobileDevice.id.in_(device_ids_assigned))
+                    
+            elif status_filter == 'no_phone':
+                query = query.filter(or_(MobileDevice.phone_number.is_(None), MobileDevice.phone_number == ''))
+            elif status_filter == 'with_phone':
+                query = query.filter(and_(MobileDevice.phone_number.isnot(None), MobileDevice.phone_number != ''))
+        
+        # فلتر البحث
+        if search_term:
+            search_filter = or_(
+                MobileDevice.imei.like(f'%{search_term}%'),
+                MobileDevice.device_brand.like(f'%{search_term}%'),
+                MobileDevice.device_model.like(f'%{search_term}%'),
+                MobileDevice.phone_number.like(f'%{search_term}%')
+            )
+            query = query.filter(search_filter)
+        
+        # تنفيذ الاستعلام
+        devices = query.order_by(MobileDevice.created_at.desc()).all()
+        
         # إنشاء workbook
         wb = Workbook()
         ws = wb.active
         ws.title = "الأجهزة المحمولة"
         
         # إعداد الرؤوس
-        headers = ['IMEI', 'العلامة التجارية', 'الموديل', 'رقم الهاتف', 'الحالة', 'الموظف المرتبط', 'تاريخ الربط', 'ملاحظات']
+        headers = ['IMEI', 'العلامة التجارية', 'الموديل', 'رقم الهاتف', 'الحالة', 'الموظف المرتبط', 'القسم', 'نوع الربط', 'تاريخ الربط', 'ملاحظات']
         ws.append(headers)
         
         # تنسيق الرؤوس
@@ -342,26 +410,56 @@ def export_excel():
             cell.fill = header_fill
             cell.alignment = Alignment(horizontal='center')
         
-        # جلب البيانات وإضافتها
-        devices = MobileDevice.query.all()
+        # إضافة البيانات
         for device in devices:
-            employee_name = device.employee.name if device.employee else ''
-            assigned_date = device.assigned_date.strftime('%Y-%m-%d') if device.assigned_date else ''
+            # إضافة معلومات الربط النشط
+            current_assignment = DeviceAssignment.query.filter_by(
+                device_id=device.id, is_active=True
+            ).first()
+            
+            employee_name = ''
+            department_name = ''
+            assignment_type = ''
+            assigned_date = ''
+            status = 'متاح'
+            
+            if current_assignment:
+                status = 'مربوط'
+                assigned_date = current_assignment.assignment_date.strftime('%Y-%m-%d') if current_assignment.assignment_date else ''
+                
+                if current_assignment.assignment_target_type == 'employee' and current_assignment.employee:
+                    employee_name = current_assignment.employee.name
+                    # جلب أقسام الموظف
+                    departments = [dept.name for dept in current_assignment.employee.departments]
+                    department_name = ', '.join(departments) if departments else ''
+                elif current_assignment.assignment_target_type == 'department' and current_assignment.department:
+                    department_name = current_assignment.department.name
+                    employee_name = f'قسم: {department_name}'
+                
+                # نوع الربط
+                if current_assignment.assignment_type == 'device_only':
+                    assignment_type = 'جهاز فقط'
+                elif current_assignment.assignment_type == 'sim_only':
+                    assignment_type = 'رقم فقط'
+                elif current_assignment.assignment_type == 'device_and_sim':
+                    assignment_type = 'جهاز ورقم'
             
             row_data = [
                 device.imei,
                 device.device_brand or '',
                 device.device_model or '',
                 device.phone_number or '',
-                device.status,
+                status,
                 employee_name,
+                department_name,
+                assignment_type,
                 assigned_date,
                 device.notes or ''
             ]
             ws.append(row_data)
         
         # ضبط عرض الأعمدة
-        column_widths = [20, 15, 20, 15, 12, 20, 15, 30]
+        column_widths = [20, 15, 20, 15, 12, 20, 15, 12, 15, 30]
         for i, width in enumerate(column_widths, 1):
             ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = width
         
@@ -370,13 +468,29 @@ def export_excel():
         wb.save(output)
         output.seek(0)
         
-        # تسجيل العملية
-        # audit_log('devices_exported', f'تم تصدير {len(devices)} جهاز إلى Excel')
+        # إنشاء اسم الملف بناءً على الفلاتر
+        filename = "mobile_devices"
+        if department_filter:
+            dept = Department.query.get(department_filter)
+            if dept:
+                filename += f"_{dept.name}"
+        if brand_filter:
+            filename += f"_{brand_filter}"
+        if status_filter:
+            status_names = {
+                'assigned': 'مربوط',
+                'available': 'متاح',
+                'no_phone': 'بدون_رقم',
+                'with_phone': 'مع_رقم'
+            }
+            filename += f"_{status_names.get(status_filter, status_filter)}"
+        
+        filename += ".xlsx"
         
         return Response(
             output.getvalue(),
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            headers={'Content-Disposition': 'attachment; filename=mobile_devices.xlsx'}
+            headers={'Content-Disposition': f'attachment; filename={filename}'}
         )
         
     except Exception as e:
