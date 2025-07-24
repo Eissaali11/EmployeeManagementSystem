@@ -467,6 +467,103 @@ def department_management():
         flash('حدث خطأ في تحميل البيانات', 'danger')
         return redirect(url_for('device_assignment.index'))
 
+@device_assignment_bp.route('/assign-device/<int:device_id>')
+@login_required
+def assign_device(device_id):
+    """صفحة ربط جهاز بموظف"""
+    try:
+        # جلب الجهاز
+        device = MobileDevice.query.get_or_404(device_id)
+        
+        # التحقق من أن الجهاز غير مربوط
+        if device.is_assigned:
+            flash('هذا الجهاز مربوط بالفعل بموظف آخر', 'warning')
+            return redirect(url_for('device_management.index'))
+        
+        # جلب جميع الأقسام للفلترة
+        departments = Department.query.order_by(Department.name).all()
+        
+        # جلب الموظفين النشطين
+        employees = Employee.query.order_by(Employee.name).all()
+        
+        # جلب الأرقام المتاحة
+        available_sims = ImportedPhoneNumber.query.filter_by(is_used=False, employee_id=None).all()
+        
+        return render_template('device_assignment/assign_device.html',
+                             device=device,
+                             departments=departments,
+                             employees=employees,
+                             available_sims=available_sims)
+                             
+    except Exception as e:
+        current_app.logger.error(f"Error in assign device: {str(e)}")
+        flash('حدث خطأ في تحميل الصفحة', 'danger')
+        return redirect(url_for('device_management.index'))
+
+@device_assignment_bp.route('/assign-device/<int:device_id>', methods=['POST'])
+@login_required
+def process_assign_device(device_id):
+    """معالجة ربط الجهاز بموظف"""
+    try:
+        device = MobileDevice.query.get_or_404(device_id)
+        
+        # جلب بيانات النموذج
+        employee_id = request.form.get('employee_id')
+        assignment_type = request.form.get('assignment_type')
+        sim_card_id = request.form.get('sim_card_id')
+        notes = request.form.get('notes', '')
+        
+        if not employee_id:
+            flash('يجب اختيار موظف', 'error')
+            return redirect(url_for('device_assignment.assign_device', device_id=device_id))
+        
+        employee = Employee.query.get(employee_id)
+        if not employee:
+            flash('الموظف المحدد غير موجود', 'error')
+            return redirect(url_for('device_assignment.assign_device', device_id=device_id))
+        
+        # إنشاء عملية ربط جديدة
+        assignment = DeviceAssignment()
+        assignment.employee_id = employee_id
+        assignment.device_id = device_id
+        assignment.assignment_type = assignment_type
+        assignment.assignment_date = datetime.utcnow()
+        assignment.is_active = True
+        assignment.notes = notes
+        assignment.assigned_by = current_user.id
+        
+        # ربط الرقم إذا تم اختياره
+        if sim_card_id and assignment_type in ['sim_only', 'device_and_sim']:
+            sim_card = ImportedPhoneNumber.query.get(sim_card_id)
+            if sim_card and not sim_card.is_used:
+                assignment.sim_card_id = sim_card_id
+                sim_card.employee_id = employee_id
+                sim_card.is_used = True
+        
+        # تحديث بيانات الجهاز
+        device.employee_id = employee_id
+        device.status = 'مربوط'
+        device.updated_at = datetime.utcnow()
+        
+        db.session.add(assignment)
+        db.session.commit()
+        
+        # تسجيل العملية
+        log_activity(
+            action='device_assigned',
+            description=f'تم ربط الجهاز {device.device_brand} {device.device_model} بالموظف {employee.name}',
+            user_id=current_user.id
+        )
+        
+        flash(f'تم ربط الجهاز بالموظف {employee.name} بنجاح', 'success')
+        return redirect(url_for('device_management.index'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error processing device assignment: {str(e)}")
+        flash(f'حدث خطأ في ربط الجهاز: {str(e)}', 'error')
+        return redirect(url_for('device_assignment.assign_device', device_id=device_id))
+
 @device_assignment_bp.route('/assign-to-department', methods=['POST'])
 @login_required
 def assign_to_department():

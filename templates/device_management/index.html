@@ -269,10 +269,10 @@
                                                 </form>
                                             {% else %}
                                                 <!-- ربط بموظف -->
-                                                <button type="button" class="btn btn-outline-success btn-sm" 
-                                                        data-bs-toggle="modal" data-bs-target="#assignModal{{ device.id }}" title="ربط بموظف">
+                                                <a href="{{ url_for('device_assignment.assign_device', device_id=device.id) }}" 
+                                                   class="btn btn-outline-success btn-sm" title="ربط بموظف">
                                                     <i class="fas fa-link"></i>
-                                                </button>
+                                                </a>
                                             {% endif %}
                                             
                                             <form method="POST" action="{{ url_for('device_management.delete', device_id=device.id) }}" 
