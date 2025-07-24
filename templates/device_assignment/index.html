@@ -1,0 +1,428 @@
+{% extends "layout.html" %}
+
+{% block title %}ربط الأجهزة والموظفين{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .assignment-card {
+        border: 1px solid #dee2e6;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .assignment-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .device-status-available { color: #28a745; font-weight: bold; }
+    .device-status-assigned { color: #dc3545; font-weight: bold; }
+    
+    .search-filters {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .assignment-form {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .form-control, .form-select {
+        margin-bottom: 10px;
+    }
+    
+    .active-assignments {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-link me-2"></i>
+                ربط الأجهزة والموظفين
+            </h2>
+            
+            <!-- الإحصائيات -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.total_devices or 0 }}</h4>
+                        <p class="mb-0">إجمالي الأجهزة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.available_devices or 0 }}</h4>
+                        <p class="mb-0">أجهزة متاحة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.total_sims or 0 }}</h4>
+                        <p class="mb-0">إجمالي SIM</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.available_sims or 0 }}</h4>
+                        <p class="mb-0">SIM متاحة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ active_assignments|length }}</h4>
+                        <p class="mb-0">ربطات نشطة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="text-center">
+                        <a href="{{ url_for('device_assignment.history') }}" class="btn btn-info btn-lg">
+                            <i class="fas fa-history me-2"></i>
+                            التاريخ
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- نموذج الربط الجديد -->
+            <div class="assignment-form">
+                <h4 class="mb-3">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    إنشاء ربط جديد
+                </h4>
+                
+                <form method="POST" action="{{ url_for('device_assignment.assign') }}">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">نوع الربط</label>
+                            <select name="assignment_type" class="form-select" id="assignment_type" required>
+                                <option value="">-- اختر النوع --</option>
+                                <option value="device_only">جهاز فقط</option>
+                                <option value="sim_only">رقم SIM فقط</option>
+                                <option value="device_and_sim">جهاز + رقم SIM</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">الموظف</label>
+                            <select name="employee_id" class="form-select" required>
+                                <option value="">-- اختر موظف --</option>
+                                {% for employee in employees %}
+                                    <option value="{{ employee.id }}">
+                                        {{ employee.name }} ({{ employee.employee_id }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3" id="device_select" style="display: none;">
+                            <label class="form-label">الجهاز</label>
+                            <select name="device_id" class="form-select">
+                                <option value="">-- اختر جهاز --</option>
+                                {% for device in available_devices %}
+                                    {% if not device.is_assigned %}
+                                        <option value="{{ device.id }}">
+                                            {{ device.phone_number }} ({{ device.device_brand }} {{ device.device_model }})
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3" id="sim_select" style="display: none;">
+                            <label class="form-label">رقم SIM</label>
+                            <select name="sim_id" class="form-select">
+                                <option value="">-- اختر رقم --</option>
+                                {% for sim in available_sims %}
+                                    {% if not sim.employee_id %}
+                                        <option value="{{ sim.id }}">
+                                            {{ sim.phone_number }} ({{ sim.carrier }})
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-9">
+                            <label class="form-label">ملاحظات</label>
+                            <input type="text" name="notes" class="form-control" placeholder="ملاحظات إضافية (اختياري)">
+                        </div>
+                        
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-link me-2"></i>إنشاء الربط
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="row">
+                <!-- قائمة الربطات النشطة -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-link me-2"></i>
+                                الربطات النشطة ({{ active_assignments|length }})
+                            </h5>
+                        </div>
+                        <div class="card-body active-assignments">
+                            {% if active_assignments %}
+                                {% for assignment in active_assignments %}
+                                <div class="assignment-card">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="text-primary">{{ assignment.employee.name }}</h6>
+                                            <small class="text-muted">{{ assignment.employee.employee_id }}</small>
+                                            
+                                            <div class="mt-2">
+                                                {% if assignment.device %}
+                                                    <div class="mb-1">
+                                                        <i class="fas fa-mobile-alt text-success me-2"></i>
+                                                        <strong>الجهاز:</strong> {{ assignment.device.phone_number }}
+                                                        <br><small class="text-muted ms-4">{{ assignment.device.device_brand }} {{ assignment.device.device_model }}</small>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                {% if assignment.sim_card %}
+                                                    <div class="mb-1">
+                                                        <i class="fas fa-sim-card text-info me-2"></i>
+                                                        <strong>SIM:</strong> {{ assignment.sim_card.phone_number }}
+                                                        <br><small class="text-muted ms-4">{{ assignment.sim_card.carrier }}</small>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ assignment.assignment_date.strftime('%Y-%m-%d') if assignment.assignment_date }}
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                    type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <button class="dropdown-item text-danger" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#unassignModal{{ assignment.id }}">
+                                                        <i class="fas fa-unlink me-2"></i>فك الربط
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Modal فك الربط -->
+                                <div class="modal fade" id="unassignModal{{ assignment.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">فك الربط</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('device_assignment.unassign', assignment_id=assignment.id) }}">
+                                                <div class="modal-body">
+                                                    <p>هل أنت متأكد من فك ربط الأجهزة من الموظف <strong>{{ assignment.employee.name }}</strong>؟</p>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="form-label">سبب فك الربط</label>
+                                                        <textarea name="reason" class="form-control" rows="3" placeholder="اذكر سبب فك الربط..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                    <button type="submit" class="btn btn-danger">فك الربط</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-link fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">لا توجد ربطات نشطة حالياً</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- معلومات الأجهزة والأرقام المتاحة -->
+                <div class="col-md-6">
+                    <div class="row">
+                        <!-- الأجهزة المتاحة -->
+                        <div class="col-12 mb-3">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-mobile-alt me-2"></i>
+                                        الأجهزة المتاحة ({{ available_devices|selectattr('is_assigned', 'equalto', false)|list|length }})
+                                    </h6>
+                                </div>
+                                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                    {% set available_devices_list = available_devices|selectattr('is_assigned', 'equalto', false)|list %}
+                                    {% if available_devices_list %}
+                                        {% for device in available_devices_list[:5] %}
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <strong>{{ device.phone_number }}</strong><br>
+                                                <small class="text-muted">{{ device.device_brand }} {{ device.device_model }}</small>
+                                            </div>
+                                            <span class="badge bg-success">متاح</span>
+                                        </div>
+                                        {% endfor %}
+                                        {% if available_devices_list|length > 5 %}
+                                            <small class="text-muted">و {{ available_devices_list|length - 5 }} أجهزة أخرى...</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0 text-center">لا توجد أجهزة متاحة</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- أرقام SIM المتاحة -->
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-sim-card me-2"></i>
+                                        أرقام SIM المتاحة ({{ available_sims|selectattr('employee_id', 'none')|list|length }})
+                                    </h6>
+                                </div>
+                                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                    {% set available_sims_list = available_sims|selectattr('employee_id', 'none')|list %}
+                                    {% if available_sims_list %}
+                                        {% for sim in available_sims_list[:5] %}
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <strong>{{ sim.phone_number }}</strong><br>
+                                                <small class="text-muted">{{ sim.carrier }} - {{ sim.plan_type or 'غير محدد' }}</small>
+                                            </div>
+                                            <span class="badge bg-success">متاح</span>
+                                        </div>
+                                        {% endfor %}
+                                        {% if available_sims_list|length > 5 %}
+                                            <small class="text-muted">و {{ available_sims_list|length - 5 }} أرقام أخرى...</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0 text-center">لا توجد أرقام متاحة</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // إظهار/إخفاء حقول الاختيار حسب نوع الربط
+    $('#assignment_type').on('change', function() {
+        const assignmentType = $(this).val();
+        const deviceSelect = $('#device_select');
+        const simSelect = $('#sim_select');
+        
+        // إخفاء جميع الحقول أولاً
+        deviceSelect.hide();
+        simSelect.hide();
+        
+        // إظهار الحقول المطلوبة
+        if (assignmentType === 'device_only' || assignmentType === 'device_and_sim') {
+            deviceSelect.show();
+            deviceSelect.find('select').prop('required', true);
+        } else {
+            deviceSelect.find('select').prop('required', false);
+        }
+        
+        if (assignmentType === 'sim_only' || assignmentType === 'device_and_sim') {
+            simSelect.show();
+            simSelect.find('select').prop('required', true);
+        } else {
+            simSelect.find('select').prop('required', false);
+        }
+    });
+    
+    // التحقق من صحة النموذج
+    $('form').on('submit', function(e) {
+        const assignmentType = $('#assignment_type').val();
+        const employeeId = $('select[name="employee_id"]').val();
+        const deviceId = $('select[name="device_id"]').val();
+        const simId = $('select[name="sim_id"]').val();
+        
+        if (!assignmentType) {
+            e.preventDefault();
+            alert('يرجى اختيار نوع الربط');
+            return false;
+        }
+        
+        if (!employeeId) {
+            e.preventDefault();
+            alert('يرجى اختيار الموظف');
+            return false;
+        }
+        
+        if (assignmentType === 'device_only' && !deviceId) {
+            e.preventDefault();
+            alert('يرجى اختيار الجهاز');
+            return false;
+        }
+        
+        if (assignmentType === 'sim_only' && !simId) {
+            e.preventDefault();
+            alert('يرجى اختيار رقم SIM');
+            return false;
+        }
+        
+        if (assignmentType === 'device_and_sim' && (!deviceId || !simId)) {
+            e.preventDefault();
+            alert('يرجى اختيار الجهاز ورقم SIM');
+            return false;
+        }
+    });
+    
+    // تحسينات بصرية
+    $('.assignment-card').hover(function() {
+        $(this).addClass('shadow-sm');
+    }, function() {
+        $(this).removeClass('shadow-sm');
+    });
+});
+</script>
+{% endblock %}
