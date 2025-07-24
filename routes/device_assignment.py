@@ -7,6 +7,63 @@ from utils.audit_logger import log_activity
 
 device_assignment_bp = Blueprint('device_assignment', __name__)
 
+@device_assignment_bp.route('/departments')
+@login_required
+def departments_view():
+    """صفحة عرض الأجهزة والأرقام حسب الأقسام"""
+    try:
+        # جلب جميع الأقسام
+        departments = Department.query.order_by(Department.name).all()
+        
+        # إضافة إحصائيات لكل قسم
+        for department in departments:
+            # عدد الموظفين في القسم
+            department.employee_count = len(department.employees)
+            
+            # حساب عدد الأجهزة والأرقام لموظفي القسم
+            device_count = 0
+            sim_count = 0
+            
+            for employee in department.employees:
+                # عدد الأجهزة المحمولة
+                devices = MobileDevice.query.filter_by(employee_id=employee.id).all()
+                device_count += len(devices)
+                
+                # عدد أرقام SIM
+                sims = SimCard.query.filter_by(employee_id=employee.id).all()
+                sim_count += len(sims)
+                
+                # إضافة الأجهزة والأرقام للموظف للعرض
+                employee.mobile_devices = devices
+                employee.sim_cards = sims
+            
+            department.device_count = device_count
+            department.sim_count = sim_count
+            
+            # حساب نسب التغطية
+            if department.employee_count > 0:
+                department.device_coverage = round((device_count / department.employee_count) * 100, 1)
+                department.sim_coverage = round((sim_count / department.employee_count) * 100, 1)
+            else:
+                department.device_coverage = 0
+                department.sim_coverage = 0
+        
+        # إحصائيات عامة
+        stats = {
+            'total_departments': len(departments),
+            'total_devices': MobileDevice.query.count(),
+            'total_sims': SimCard.query.count(),
+            'total_employees': Employee.query.count(),
+        }
+        
+        return render_template('device_assignment/departments_view.html',
+                             departments=departments,
+                             stats=stats)
+        
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تحميل البيانات: {str(e)}', 'danger')
+        return redirect(url_for('device_assignment.index'))
+
 @device_assignment_bp.route('/')
 @login_required
 def index():
