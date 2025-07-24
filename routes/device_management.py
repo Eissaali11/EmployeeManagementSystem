@@ -31,11 +31,29 @@ def index():
         if brand_filter:
             query = query.filter(MobileDevice.device_brand.like(f'%{brand_filter}%'))
         
+        # تطبيق فلتر الحالة بناءً على جدول DeviceAssignment
+        device_ids_assigned = []
+        device_ids_available = []
+        
         if status_filter:
-            if status_filter == 'available':
-                query = query.filter(MobileDevice.employee_id.is_(None))
-            elif status_filter == 'assigned':
-                query = query.filter(MobileDevice.employee_id.isnot(None))
+            if status_filter == 'assigned':
+                # الحصول على معرفات الأجهزة المربوطة
+                assigned_assignments = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).all()
+                device_ids_assigned = [assignment.device_id for assignment in assigned_assignments]
+                if device_ids_assigned:
+                    query = query.filter(MobileDevice.id.in_(device_ids_assigned))
+                else:
+                    # لا توجد أجهزة مربوطة
+                    query = query.filter(MobileDevice.id == -1)  # فلتر فارغ
+                    
+            elif status_filter == 'available':
+                # الحصول على معرفات الأجهزة المربوطة لاستبعادها
+                assigned_assignments = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).all()
+                device_ids_assigned = [assignment.device_id for assignment in assigned_assignments]
+                if device_ids_assigned:
+                    query = query.filter(~MobileDevice.id.in_(device_ids_assigned))
+                # إذا لم توجد أجهزة مربوطة، فجميع الأجهزة متاحة
+                    
             elif status_filter == 'no_phone':
                 query = query.filter(or_(MobileDevice.phone_number.is_(None), MobileDevice.phone_number == ''))
             elif status_filter == 'with_phone':
