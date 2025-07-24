@@ -214,13 +214,42 @@ def approve_operation(operation_id):
         
         db.session.commit()
         
-        # تحديث السائق الحالي إذا كانت العملية من نوع handover
+        # تحديث السائق الحالي وحالة السيارة إذا كانت العملية من نوع handover
         if operation.operation_type == 'handover' and operation.vehicle_id:
             try:
                 from utils.vehicle_driver_utils import update_vehicle_driver_approved
                 update_vehicle_driver_approved(operation.vehicle_id)
+                
+                # تحديث حالة السيارة بناءً على نوع التسليم/الاستلام
+                handover_record = VehicleHandover.query.get(operation.related_record_id)
+                if handover_record:
+                    vehicle = Vehicle.query.get(operation.vehicle_id)
+                    if vehicle and handover_record.handover_type:
+                        old_status = vehicle.status
+                        
+                        # تحديد الحالة الجديدة بناءً على نوع العملية
+                        if handover_record.handover_type == 'return':  # استلام السيارة
+                            new_status = 'متاحة'
+                        elif handover_record.handover_type == 'delivery':  # تسليم السيارة
+                            new_status = 'في المشروع'
+                        else:
+                            new_status = None
+                        
+                        if new_status and old_status != new_status:
+                            vehicle.status = new_status
+                            db.session.add(vehicle)
+                            
+                            # تسجيل تغيير الحالة
+                            action_type = 'الاستلام' if handover_record.handover_type == 'return' else 'التسليم'
+                            log_audit(current_user.id, 'update', 'vehicle_status', vehicle.id,
+                                     f'تم تحديث حالة السيارة {vehicle.plate_number} إلى "{new_status}" بعد الموافقة على عملية {action_type}')
+                            
+                            print(f"تم تحديث حالة السيارة {vehicle.plate_number} من '{old_status}' إلى '{new_status}' بعد الموافقة على عملية {action_type}")
+                        
             except Exception as e:
-                print(f"خطأ في تحديث السائق بعد الموافقة: {e}")
+                print(f"خطأ في تحديث السائق وحالة السيارة بعد الموافقة: {e}")
+                import traceback
+                traceback.print_exc()
         
         # تسجيل العملية
         log_audit(current_user.id, 'approve', 'operation_request', operation.id, 
