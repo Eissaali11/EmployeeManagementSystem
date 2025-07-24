@@ -2290,6 +2290,41 @@ def create_handover_mobile(handover_id=None):
                 log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} (موبايل) للسيارة: {vehicle.plate_number}')
                 flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
             
+
+            # إنشاء طلب عملية تلقائياً لإدارة العمليات
+            try:
+                operation_title = f"طلب موافقة على {action_type} مركبة {vehicle.plate_number}"
+                operation_description = f"تم إنشاء {action_type} للمركبة {vehicle.plate_number} من قبل {current_user.username} ويحتاج للموافقة الإدارية"
+                
+                operation = create_operation_request(
+                    operation_type="handover",
+                    related_record_id=handover.id,
+                    vehicle_id=vehicle.id,
+                    title=operation_title,
+                    description=operation_description,
+                    requested_by=current_user.id,
+                    priority="normal"
+                )
+                
+                # حفظ طلب العملية والإشعارات
+                db.session.commit()
+                
+                print(f"تم تسجيل عملية {action_type} بنجاح: {operation.id}")
+                current_app.logger.debug(f"تم إنشاء طلب عملية للتسليم والاستلام: {handover.id} برقم عملية: {operation.id}")
+                
+                # التحقق من وجود العملية في قاعدة البيانات
+                saved_operation = OperationRequest.query.get(operation.id)
+                if saved_operation:
+                    print(f"تأكيد: عملية {action_type} {operation.id} محفوظة في قاعدة البيانات")
+                else:
+                    print(f"تحذير: عملية {action_type} {operation.id} غير موجودة في قاعدة البيانات!")
+                
+            except Exception as e:
+                print(f"خطأ في إنشاء طلب العملية للتسليم والاستلام: {str(e)}")
+                current_app.logger.error(f"خطأ في إنشاء طلب العملية للتسليم والاستلام: {str(e)}")
+                import traceback
+                current_app.logger.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
+                # لا نوقف العملية إذا فشل إنشاء طلب العملية
             return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
 
         except Exception as e:
