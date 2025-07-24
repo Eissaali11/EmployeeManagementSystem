@@ -226,10 +226,84 @@
     </div>
     
     <script>
-        // إغلاق النافذة تلقائياً بعد 10 ثوان
-        setTimeout(() => {
-            window.close();
-        }, 10000);
+        // التحقق من حالة الطلب كل 30 ثانية
+        let checkInterval;
+        let safetyCheckId = {{ safety_check.id }};
+        
+        function checkStatus() {
+            fetch(`/external-safety/status/${safetyCheckId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.type === 'success') {
+                        // تم اعتماد الطلب
+                        showStatusMessage(data.title, data.text, 'success');
+                        clearInterval(checkInterval);
+                    } else if (data.type === 'error') {
+                        // تم رفض الطلب
+                        showStatusMessage(data.title, data.text, 'error');
+                        clearInterval(checkInterval);
+                    }
+                    // إذا كان pending، استمر في التحقق
+                })
+                .catch(error => {
+                    console.log('خطأ في التحقق من الحالة:', error);
+                });
+        }
+        
+        function showStatusMessage(title, text, type) {
+            const container = document.querySelector('.success-container');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} mt-4`;
+            statusDiv.style.cssText = `
+                padding: 20px;
+                border-radius: 10px;
+                font-size: 1.2rem;
+                font-weight: bold;
+                text-align: center;
+                animation: fadeInUp 0.5s ease;
+            `;
+            
+            statusDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                <h4>${title}</h4>
+                <p style="margin: 10px 0 0 0; white-space: pre-line;">${text}</p>
+            `;
+            
+            // إدراج الرسالة قبل الأزرار
+            const button = container.querySelector('.btn-primary');
+            container.insertBefore(statusDiv, button);
+            
+            // تحديث العنوان الرئيسي
+            const mainTitle = document.querySelector('.success-title');
+            mainTitle.textContent = title;
+            
+            // تحديث الأيقونة الرئيسية
+            const mainIcon = document.querySelector('.success-icon i');
+            mainIcon.className = `fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}`;
+            mainIcon.style.color = type === 'success' ? '#28a745' : '#dc3545';
+        }
+        
+        // بدء التحقق من الحالة
+        checkInterval = setInterval(checkStatus, 30000); // كل 30 ثانية
+        
+        // التحقق الأول بعد 5 ثوان
+        setTimeout(checkStatus, 5000);
+        
+        // إضافة CSS للأنيميشن
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

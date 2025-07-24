@@ -516,12 +516,47 @@ def handle_safety_check_submission(vehicle):
         
         current_app.logger.info(f'تم إنشاء طلب فحص السلامة بنجاح: ID={safety_check.id}, Vehicle={vehicle.plate_number}')
         
-        return jsonify({'success': True, 'message': 'تم إرسال طلب فحص السلامة بنجاح'}), 200
+        # توجيه المستخدم لصفحة التأكيد المميزة
+        return redirect(url_for('external_safety.success_page', safety_check_id=safety_check.id))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f'خطأ في معالجة طلب فحص السلامة: {str(e)}')
-        return jsonify({'error': 'حدث خطأ أثناء معالجة الطلب'}), 500
+        flash('حدث خطأ أثناء معالجة الطلب', 'danger')
+        return redirect(url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id))
+
+@external_safety_bp.route('/success/<int:safety_check_id>')
+def success_page(safety_check_id):
+    """صفحة تأكيد إرسال طلب فحص السلامة"""
+    safety_check = VehicleExternalSafetyCheck.query.get_or_404(safety_check_id)
+    return render_template('external_safety_success.html', safety_check=safety_check)
+
+@external_safety_bp.route('/status/<int:safety_check_id>')
+def check_status(safety_check_id):
+    """التحقق من حالة طلب فحص السلامة - للإشعارات"""
+    safety_check = VehicleExternalSafetyCheck.query.get_or_404(safety_check_id)
+    
+    # إنشاء رسالة حسب الحالة
+    if safety_check.approval_status == 'approved':
+        message = {
+            'type': 'success',
+            'title': 'تم اعتماد الطلب',
+            'text': 'تم اعتماد طلب فحص السلامة بنجاح من قبل الإدارة.'
+        }
+    elif safety_check.approval_status == 'rejected':
+        message = {
+            'type': 'error',
+            'title': 'تم رفض الطلب',
+            'text': f'نرجو المحاولة مرة أخرى. تم رفض الطلب.\nسبب الرفض: {safety_check.rejection_reason or "لم يتم تحديد السبب"}'
+        }
+    else:
+        message = {
+            'type': 'pending',
+            'title': 'قيد المراجعة',
+            'text': 'طلبك قيد المراجعة من قبل الإدارة المختصة.'
+        }
+    
+    return jsonify(message)
 
 
 
