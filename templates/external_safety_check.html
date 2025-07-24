@@ -780,7 +780,7 @@ function uploadImage(dataURL) {
             
             try {
                 console.log('Verifying employee with ID:', nationalId);
-                const response = await fetch(`/api/verify-employee/${nationalId}`, {
+                const response = await fetch(`/external-safety/api/verify-employee/${nationalId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
