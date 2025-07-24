@@ -609,6 +609,8 @@ class VehicleWorkshop(db.Model):
     technician_name = db.Column(db.String(100))  # اسم الفني المسؤول
     delivery_link = db.Column(db.String(255))  # رابط تسليم ورشة
     reception_link = db.Column(db.String(255))  # رابط استلام من ورشة
+    delivery_receipt = db.Column(db.String(255))  # ملف إيصال تسليم الورشة
+    pickup_receipt = db.Column(db.String(255))  # ملف إيصال استلام من الورشة
     notes = db.Column(db.Text)  # ملاحظات
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

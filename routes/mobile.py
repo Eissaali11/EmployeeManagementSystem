@@ -4159,6 +4159,64 @@ def edit_workshop_record(workshop_id):
                                 current_app.logger.error(f"خطأ في رفع {type_name}: {str(e)}")
                 return uploaded_count
 
+            # دالة مساعدة لرفع الإيصالات (PDF وصور)
+            def save_receipt_file(file, field_name, type_name):
+                """رفع وحفظ إيصال (PDF أو صورة)"""
+                if file and file.filename:
+                    try:
+                        # التحقق من نوع الملف
+                        allowed_extensions = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+                        file_ext = secure_filename(file.filename).rsplit('.', 1)[1].lower()
+                        
+                        if file_ext in allowed_extensions:
+                            # إنشاء اسم ملف فريد
+                            filename = f"receipt_{field_name}_{workshop_record.id}_{uuid.uuid4().hex[:8]}.{file_ext}"
+                            
+                            # إنشاء المجلد إذا لم يكن موجوداً
+                            upload_dir = os.path.join('static', 'uploads', 'workshop', 'receipts')
+                            os.makedirs(upload_dir, exist_ok=True)
+                            
+                            # حفظ الملف
+                            file_path = os.path.join(upload_dir, filename)
+                            file.save(file_path)
+                            
+                            # ضغط الصورة إذا كانت صورة وكبيرة
+                            if file_ext in {'png', 'jpg', 'jpeg', 'gif'}:
+                                try:
+                                    with Image.open(file_path) as img:
+                                        if img.width > 1200 or img.height > 1200:
+                                            img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                                            img.save(file_path, optimize=True, quality=85)
+                                except Exception as e:
+                                    current_app.logger.warning(f"تعذر ضغط الصورة {filename}: {str(e)}")
+                            
+                            return f"uploads/workshop/receipts/{filename}"
+                        
+                    except Exception as e:
+                        current_app.logger.error(f"خطأ في رفع {type_name}: {str(e)}")
+                        flash(f'خطأ في رفع {type_name}: {str(e)}', 'warning')
+                
+                return None
+
+            # معالجة إيصالات التسليم والاستلام
+            receipt_updates = []
+            
+            # إيصال تسليم الورشة
+            if 'delivery_receipt' in request.files:
+                delivery_receipt_file = request.files['delivery_receipt']
+                delivery_receipt_path = save_receipt_file(delivery_receipt_file, 'delivery', 'إيصال تسليم الورشة')
+                if delivery_receipt_path:
+                    workshop_record.delivery_receipt = delivery_receipt_path
+                    receipt_updates.append('إيصال تسليم الورشة')
+            
+            # إيصال استلام من الورشة
+            if 'pickup_receipt' in request.files:
+                pickup_receipt_file = request.files['pickup_receipt']
+                pickup_receipt_path = save_receipt_file(pickup_receipt_file, 'pickup', 'إيصال استلام من الورشة')
+                if pickup_receipt_path:
+                    workshop_record.pickup_receipt = pickup_receipt_path
+                    receipt_updates.append('إيصال استلام من الورشة')
+
             # معالجة الصور الجديدة
             delivery_count = 0
             pickup_count = 0
@@ -4234,6 +4292,13 @@ def edit_workshop_record(workshop_id):
                 # لا نوقف العملية إذا فشل إنشاء طلب العملية
 
             success_message = f'تم تحديث سجل الورشة بنجاح!'
+            
+            # إضافة تفاصيل الملفات المرفوعة
+            updates = []
+            
+            # إضافة الإيصالات المرفوعة
+            if receipt_updates:
+                updates.extend(receipt_updates)
             if uploaded_images:
 
 
