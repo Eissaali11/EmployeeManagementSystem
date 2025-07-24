@@ -2,6 +2,26 @@
 
 {% block title %}ربط جهاز بموظف{% endblock %}
 
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<style>
+.select2-container--bootstrap-5 .select2-selection {
+    min-height: 38px;
+}
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+}
+.select2-dropdown {
+    direction: rtl;
+}
+.select2-results__option {
+    text-align: right;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- صف العنوان -->
@@ -156,48 +176,162 @@
     </div>
 </div>
 
+{% block extra_js %}
+<!-- Select2 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
+
 <script>
-// فلترة الموظفين حسب القسم
-function filterEmployees() {
-    const departmentFilter = document.getElementById('department_filter').value;
-    const employeeSelect = document.getElementById('employee_id');
-    const options = employeeSelect.querySelectorAll('option');
-    
-    options.forEach(option => {
-        if (option.value === '') {
-            option.style.display = 'block';
-            return;
-        }
-        
-        const employeeDepartments = option.getAttribute('data-departments').split(',');
-        
-        if (!departmentFilter || employeeDepartments.includes(departmentFilter)) {
-            option.style.display = 'block';
-        } else {
-            option.style.display = 'none';
+// تهيئة Select2 للموظفين
+$(document).ready(function() {
+    $('#employee_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'اختر الموظف',
+        allowClear: true,
+        dir: 'rtl',
+        language: {
+            noResults: function() {
+                return 'لا توجد نتائج';
+            },
+            searching: function() {
+                return 'جاري البحث...';
+            }
+        },
+        templateResult: function(employee) {
+            if (!employee.id) {
+                return employee.text;
+            }
+            
+            var $employee = $(
+                '<div class="d-flex justify-content-between align-items-center">' +
+                    '<div>' +
+                        '<div class="fw-bold">' + employee.text.split(' (')[0] + '</div>' +
+                        '<small class="text-muted">رقم الموظف: ' + $(employee.element).data('employee-id') + '</small>' +
+                    '</div>' +
+                    '<div class="text-end">' +
+                        '<small class="text-info">' + $(employee.element).data('mobile') + '</small>' +
+                    '</div>' +
+                '</div>'
+            );
+            return $employee;
+        },
+        templateSelection: function(employee) {
+            if (!employee.id) {
+                return employee.text;
+            }
+            return employee.text;
         }
     });
     
-    // إعادة تعيين اختيار الموظف
-    employeeSelect.value = '';
-    document.getElementById('employee_info').innerHTML = '';
-}
-
-// عرض معلومات الموظف عند الاختيار
-document.getElementById('employee_id').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const infoDiv = document.getElementById('employee_info');
-    
-    if (selectedOption.value) {
-        const mobile = selectedOption.getAttribute('data-mobile');
-        const employeeId = selectedOption.getAttribute('data-employee-id');
+    // تحديث معلومات الموظف عند الاختيار
+    $('#employee_id').on('select2:select', function(e) {
+        var data = e.params.data;
+        var selectedOption = $(data.element);
+        var infoDiv = document.getElementById('employee_info');
         
-        infoDiv.innerHTML = `<i class="fas fa-info-circle me-1"></i>رقم الموظف: ${employeeId} | الجوال: ${mobile}`;
-        infoDiv.className = 'form-text text-info';
-    } else {
-        infoDiv.innerHTML = '';
-    }
+        if (selectedOption.val()) {
+            var mobile = selectedOption.data('mobile');
+            var employeeId = selectedOption.data('employee-id');
+            
+            infoDiv.innerHTML = `<i class="fas fa-info-circle me-1"></i>رقم الموظف: ${employeeId} | الجوال: ${mobile}`;
+            infoDiv.className = 'form-text text-info';
+        } else {
+            infoDiv.innerHTML = '';
+        }
+    });
+    
+    // مسح معلومات الموظف عند إلغاء الاختيار
+    $('#employee_id').on('select2:clear', function(e) {
+        document.getElementById('employee_info').innerHTML = '';
+    });
 });
+
+// فلترة الموظفين حسب القسم
+function filterEmployees() {
+    const departmentFilter = document.getElementById('department_filter').value;
+    const employeeSelect = $('#employee_id');
+    
+    // مسح الاختيار الحالي
+    employeeSelect.val(null).trigger('change');
+    document.getElementById('employee_info').innerHTML = '';
+    
+    // إخفاء/إظهار الخيارات بناءً على القسم المختار
+    employeeSelect.find('option').each(function() {
+        const option = $(this);
+        if (option.val() === '') {
+            return; // تخطي الخيار الفارغ
+        }
+        
+        const employeeDepartments = option.data('departments').toString().split(',');
+        
+        if (!departmentFilter || employeeDepartments.includes(departmentFilter)) {
+            option.show();
+        } else {
+            option.hide();
+        }
+    });
+    
+    // إعادة تهيئة Select2 لتطبيق الفلتر
+    employeeSelect.select2('destroy').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'اختر الموظف',
+        allowClear: true,
+        dir: 'rtl',
+        language: {
+            noResults: function() {
+                return 'لا توجد نتائج';
+            },
+            searching: function() {
+                return 'جاري البحث...';
+            }
+        },
+        templateResult: function(employee) {
+            if (!employee.id) {
+                return employee.text;
+            }
+            
+            var $employee = $(
+                '<div class="d-flex justify-content-between align-items-center">' +
+                    '<div>' +
+                        '<div class="fw-bold">' + employee.text.split(' (')[0] + '</div>' +
+                        '<small class="text-muted">رقم الموظف: ' + $(employee.element).data('employee-id') + '</small>' +
+                    '</div>' +
+                    '<div class="text-end">' +
+                        '<small class="text-info">' + $(employee.element).data('mobile') + '</small>' +
+                    '</div>' +
+                '</div>'
+            );
+            return $employee;
+        },
+        templateSelection: function(employee) {
+            if (!employee.id) {
+                return employee.text;
+            }
+            return employee.text;
+        }
+    });
+    
+    // إعادة ربط الأحداث
+    employeeSelect.on('select2:select', function(e) {
+        var data = e.params.data;
+        var selectedOption = $(data.element);
+        var infoDiv = document.getElementById('employee_info');
+        
+        if (selectedOption.val()) {
+            var mobile = selectedOption.data('mobile');
+            var employeeId = selectedOption.data('employee-id');
+            
+            infoDiv.innerHTML = `<i class="fas fa-info-circle me-1"></i>رقم الموظف: ${employeeId} | الجوال: ${mobile}`;
+            infoDiv.className = 'form-text text-info';
+        } else {
+            infoDiv.innerHTML = '';
+        }
+    });
+    
+    employeeSelect.on('select2:clear', function(e) {
+        document.getElementById('employee_info').innerHTML = '';
+    });
+}
 
 // إظهار/إخفاء اختيار الرقم حسب نوع الربط
 document.getElementById('assignment_type').addEventListener('change', function() {
