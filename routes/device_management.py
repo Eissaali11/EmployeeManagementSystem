@@ -319,8 +319,11 @@ def assign_to_employee(device_id):
         
         employee = Employee.query.get_or_404(employee_id)
         
+        print(f"DEBUG: محاولة ربط الجهاز {device_id} بالموظف {employee.name} - حالة الموظف: {employee.status}")
+        
         # التحقق من حالة الموظف أولاً
         if employee.status != 'نشط':
+            print(f"DEBUG: تم رفض الربط - الموظف {employee.name} غير نشط")
             flash(f'لا يمكن ربط الجهاز بالموظف {employee.name} لأن حالته غير نشطة', 'warning')
             return redirect(url_for('device_management.index'))
         
