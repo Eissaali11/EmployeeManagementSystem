@@ -1,0 +1,196 @@
+{% extends "layout.html" %}
+
+{% block title %}استيراد الأجهزة من Excel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-excel text-success me-2"></i>
+                        استيراد الأجهزة من Excel
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('device_management.index') }}">الأجهزة المحمولة</a></li>
+                            <li class="breadcrumb-item active">استيراد Excel</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="{{ url_for('device_management.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                            <pre style="white-space: pre-wrap;">{{ message }}</pre>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Instructions Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        تعليمات الاستيراد
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6><i class="fas fa-list-ol me-2"></i>خطوات الاستيراد:</h6>
+                    <ol>
+                        <li>تحضير ملف Excel بالأعمدة التالية (بالضبط):</li>
+                        <ul class="mt-2">
+                            <li><strong>IMEI</strong> - رقم الجهاز (15 رقم - إلزامي)</li>
+                            <li><strong>العلامة التجارية</strong> - مثل iPhone, Samsung (إلزامي)</li>
+                            <li><strong>الموديل</strong> - مثل iPhone 13 Pro (إلزامي)</li>
+                            <li><strong>رقم الهاتف</strong> - رقم الهاتف المرفق (اختياري)</li>
+                            <li><strong>الوصف</strong> - ملاحظات إضافية (اختياري)</li>
+                        </ul>
+                        <li class="mt-2">تأكد من أن رقم IMEI فريد لكل جهاز</li>
+                        <li>احفظ الملف بصيغة .xlsx</li>
+                        <li>اختر الملف وانقر "استيراد"</li>
+                    </ol>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>ملاحظة:</strong> سيتم تخطي الأجهزة التي تحتوي على رقم IMEI موجود مسبقاً في النظام.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        رفع ملف Excel
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <div class="mb-4">
+                            <label for="excel_file" class="form-label">
+                                <i class="fas fa-file-excel me-2"></i>
+                                اختر ملف Excel
+                            </label>
+                            <input type="file" class="form-control" id="excel_file" name="excel_file" 
+                                   accept=".xlsx,.xls" required>
+                            <div class="form-text">الصيغ المدعومة: .xlsx, .xls</div>
+                            <div class="invalid-feedback">يرجى اختيار ملف Excel</div>
+                        </div>
+                        
+                        <!-- File Info Display -->
+                        <div id="file-info" class="alert alert-info d-none">
+                            <i class="fas fa-file-excel me-2"></i>
+                            <span id="file-name"></span>
+                            <span id="file-size" class="text-muted ms-2"></span>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('device_management.index') }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success" id="import-btn">
+                                <i class="fas fa-upload me-2"></i>
+                                استيراد الأجهزة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sample Template -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-download me-2"></i>
+                        تحميل نموذج
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">لتسهيل عملية الاستيراد، يمكنك تحميل نموذج Excel جاهز:</p>
+                    <button class="btn btn-outline-primary" onclick="downloadTemplate()">
+                        <i class="fas fa-download me-2"></i>
+                        تحميل نموذج Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// File input change handler
+document.getElementById('excel_file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    
+    if (file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+        fileInfo.classList.remove('d-none');
+    } else {
+        fileInfo.classList.add('d-none');
+    }
+});
+
+// Bootstrap form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+                
+                // Show loading state
+                const btn = document.getElementById('import-btn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الاستيراد...';
+                btn.disabled = true;
+            }, false);
+        });
+    }, false);
+})();
+
+// Generate Excel template
+function downloadTemplate() {
+    // Create sample data
+    const data = [
+        ['IMEI', 'العلامة التجارية', 'الموديل', 'رقم الهاتف', 'الوصف'],
+        ['123456789012345', 'iPhone', 'iPhone 13 Pro', '0501234567', 'جهاز جديد'],
+        ['987654321098765', 'Samsung', 'Galaxy S21', '0507654321', 'جهاز للإدارة']
+    ];
+    
+    // Convert to CSV format (Excel will open it correctly)
+    const csvContent = data.map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'نموذج_الأجهزة_المحمولة.csv';
+    link.click();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,354 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة الأجهزة المحمولة{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .brand-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .brand-iphone { background-color: #007bff; color: white; }
+    .brand-samsung { background-color: #28a745; color: white; }
+    .brand-huawei { background-color: #dc3545; color: white; }
+    .brand-other { background-color: #6c757d; color: white; }
+    
+    .status-available { color: #28a745; font-weight: bold; }
+    .status-assigned { color: #dc3545; font-weight: bold; }
+    
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+    
+    .search-filters {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .device-info {
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-mobile-alt me-2"></i>
+                إدارة الأجهزة المحمولة
+            </h2>
+            
+            <!-- الإحصائيات -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h3>{{ stats.total_devices or 0 }}</h3>
+                        <p class="mb-0">إجمالي الأجهزة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h3>{{ stats.available_devices or 0 }}</h3>
+                        <p class="mb-0">متاحة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h3>{{ stats.assigned_devices or 0 }}</h3>
+                        <p class="mb-0">مربوطة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h3>{{ stats.iphone_count or 0 }}</h3>
+                        <p class="mb-0">iPhone</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h3>{{ stats.samsung_count or 0 }}</h3>
+                        <p class="mb-0">Samsung</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="text-center">
+                        <div class="btn-group-vertical d-grid gap-2">
+                            <a href="{{ url_for('device_management.create') }}" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة جهاز جديد
+                            </a>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('device_management.import_excel') }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-file-import me-1"></i>
+                                    استيراد Excel
+                                </a>
+                                <a href="{{ url_for('device_management.export_excel') }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-file-export me-1"></i>
+                                    تصدير Excel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- فلاتر البحث -->
+            <div class="search-filters">
+                <form method="GET" class="row">
+                    <div class="col-md-2">
+                        <label class="form-label">القسم</label>
+                        <select name="department" class="form-select">
+                            <option value="">جميع الأقسام</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" {{ 'selected' if department_filter == dept.id|string }}>{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">العلامة التجارية</label>
+                        <select name="brand" class="form-select">
+                            <option value="">جميع العلامات</option>
+                            <option value="iPhone" {{ 'selected' if brand_filter == 'iPhone' }}>iPhone</option>
+                            <option value="Samsung" {{ 'selected' if brand_filter == 'Samsung' }}>Samsung</option>
+                            <option value="Huawei" {{ 'selected' if brand_filter == 'Huawei' }}>Huawei</option>
+                            <option value="Xiaomi" {{ 'selected' if brand_filter == 'Xiaomi' }}>Xiaomi</option>
+                            <option value="OPPO" {{ 'selected' if brand_filter == 'OPPO' }}>OPPO</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">الحالة</label>
+                        <select name="status" class="form-select">
+                            <option value="">جميع الحالات</option>
+                            <option value="available" {{ 'selected' if status_filter == 'available' }}>متاح</option>
+                            <option value="assigned" {{ 'selected' if status_filter == 'assigned' }}>مربوط</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">البحث (IMEI أو رقم الهاتف)</label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="ادخل IMEI أو رقم الهاتف..." value="{{ search_term }}">
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                        <a href="{{ url_for('device_management.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- الجدول -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة الأجهزة المحمولة ({{ devices|length }} جهاز)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if devices %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>IMEI</th>
+                                    <th>العلامة التجارية</th>
+                                    <th>الموديل</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>الحالة</th>
+                                    <th>الموظف المرتبط</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for device in devices %}
+                                <tr>
+                                    <td>
+                                        <code>{{ device.imei }}</code>
+                                        {% if device.serial_number %}
+                                        <div class="device-info">S/N: {{ device.serial_number }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set brand_lower = (device.device_brand or '').lower() %}
+                                        {% if 'iphone' in brand_lower %}
+                                            <span class="brand-badge brand-iphone">{{ device.device_brand }}</span>
+                                        {% elif 'samsung' in brand_lower %}
+                                            <span class="brand-badge brand-samsung">{{ device.device_brand }}</span>
+                                        {% elif 'huawei' in brand_lower %}
+                                            <span class="brand-badge brand-huawei">{{ device.device_brand }}</span>
+                                        {% else %}
+                                            <span class="brand-badge brand-other">{{ device.device_brand }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ device.device_model }}</strong>
+                                        {% if device.assigned_date %}
+                                        <div class="device-info">تاريخ الربط: {{ device.assigned_date.strftime('%Y-%m-%d') }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.phone_number %}
+                                            <span class="badge bg-info">{{ device.phone_number }}</span>
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.employee_id %}
+                                            <span class="status-assigned">مربوط</span>
+                                        {% else %}
+                                            <span class="status-available">متاح</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.employee %}
+                                            <strong>{{ device.employee.name }}</strong>
+                                            <div class="device-info">{{ device.employee.employee_id }}</div>
+                                            {% if device.assigned_date %}
+                                            <div class="device-info">منذ: {{ device.assigned_date.strftime('%Y-%m-%d') }}</div>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">غير مربوط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('device_management.edit', device_id=device.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            {% if device.employee_id %}
+                                                <!-- فك الربط -->
+                                                <form method="POST" action="{{ url_for('device_management.unassign_from_employee', device_id=device.id) }}" 
+                                                      style="display: inline;" onsubmit="return confirm('هل أنت متأكد من فك ربط هذا الجهاز؟')">
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="فك الربط">
+                                                        <i class="fas fa-unlink"></i>
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <!-- ربط بموظف -->
+                                                <button type="button" class="btn btn-outline-success btn-sm" 
+                                                        data-bs-toggle="modal" data-bs-target="#assignModal{{ device.id }}" title="ربط بموظف">
+                                                    <i class="fas fa-link"></i>
+                                                </button>
+                                            {% endif %}
+                                            
+                                            <form method="POST" action="{{ url_for('device_management.delete', device_id=device.id) }}" 
+                                                  style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الجهاز؟')">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="حذف"
+                                                        {% if device.employee_id %}disabled{% endif %}>
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                {% if not device.employee_id %}
+                                <!-- Modal ربط الجهاز بموظف -->
+                                <div class="modal fade" id="assignModal{{ device.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">ربط الجهاز بموظف</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('device_management.assign_to_employee', device_id=device.id) }}">
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">الجهاز</label>
+                                                        <input type="text" class="form-control" 
+                                                               value="{{ device.device_brand }} {{ device.device_model }} - IMEI: {{ device.imei }}" readonly>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">اختيار الموظف</label>
+                                                        <select name="employee_id" class="form-select" required>
+                                                            <option value="">-- اختر موظف --</option>
+                                                            {% for emp in employees %}
+                                                            <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.employee_id }})</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                    <button type="submit" class="btn btn-success">ربط الجهاز</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-mobile-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد أجهزة محمولة</h5>
+                        <p class="text-muted">ابدأ بإضافة أجهزة جديدة للنظام</p>
+                        <a href="{{ url_for('device_management.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            إضافة جهاز جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// جلب قائمة الموظفين عند فتح modal الربط
+document.addEventListener('DOMContentLoaded', function() {
+    const assignModals = document.querySelectorAll('[id^="assignModal"]');
+    
+    assignModals.forEach(modal => {
+        modal.addEventListener('show.bs.modal', function() {
+            const select = this.querySelector('select[name="employee_id"]');
+            if (select.children.length <= 1) {
+                // جلب قائمة الموظفين
+                fetch('/employees/api/list')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.employees.forEach(emp => {
+                                const option = document.createElement('option');
+                                option.value = emp.id;
+                                option.textContent = `${emp.name} (${emp.employee_id})`;
+                                select.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error loading employees:', error));
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

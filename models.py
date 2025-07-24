@@ -1605,6 +1605,7 @@ class ImportedPhoneNumber(db.Model):
         """جلب الأرقام المتاحة (غير المستخدمة)"""
         return ImportedPhoneNumber.query.filter_by(is_used=False).order_by(ImportedPhoneNumber.phone_number).all()
 
+
 # نموذج ربط الأجهزة والأرقام بالموظفين
 class DeviceAssignment(db.Model):
     """نموذج لتسجيل عمليات ربط الأجهزة والأرقام بالموظفين"""

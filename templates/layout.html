@@ -257,6 +257,15 @@
                                     </li>
                                     <li class="nav-item mb-1">
                                         <a
+                                            href="{{ url_for('device_management.index') }}"
+                                            class="nav-link nav-link-custom {% if '/device-management' in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-tablet me-2"></i>
+                                            <span>إدارة الأجهزة</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-1">
+                                        <a
                                             href="{{ url_for('sim_management.index') }}"
                                             class="nav-link nav-link-custom {% if '/sim-management' in request.path %}active{% endif %}"
                                         >

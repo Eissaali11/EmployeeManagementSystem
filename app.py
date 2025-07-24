@@ -360,6 +360,7 @@ with app.app_context():
     from routes.mobile_devices import mobile_devices_bp
     from routes.operations import operations_bp
     from routes.sim_management import sim_management_bp
+    from routes.device_management import device_management_bp
     from routes.device_assignment import device_assignment_bp
 
     # تعطيل حماية CSRF لطرق معينة
@@ -388,6 +389,7 @@ with app.app_context():
     app.register_blueprint(mobile_devices_bp, url_prefix='/mobile-devices')
     app.register_blueprint(operations_bp, url_prefix='/operations')
     app.register_blueprint(sim_management_bp, url_prefix='/sim-management')
+    app.register_blueprint(device_management_bp, url_prefix='/device-management')
     app.register_blueprint(device_assignment_bp, url_prefix='/device-assignment')
 
     # إضافة route لخدمة الصور من مجلد uploads

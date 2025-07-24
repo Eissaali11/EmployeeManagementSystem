@@ -382,9 +382,9 @@ def export_excel():
     """تصدير أرقام SIM إلى ملف Excel"""
     try:
         # جلب جميع أرقام SIM مع معلومات الموظفين
-        sim_cards = db.session.query(SimCard, Employee).outerjoin(
-            Employee, SimCard.employee_id == Employee.id
-        ).order_by(SimCard.id).all()
+        sim_cards = db.session.query(ImportedPhoneNumber, Employee).outerjoin(
+            Employee, ImportedPhoneNumber.employee_id == Employee.id
+        ).order_by(ImportedPhoneNumber.id).all()
         
         # إعداد البيانات للتصدير
         data = []
@@ -497,13 +497,13 @@ def import_excel():
                         continue
                     
                     # التحقق من وجود الرقم
-                    existing_sim = SimCard.query.filter_by(phone_number=phone_number).first()
+                    existing_sim = ImportedPhoneNumber.query.filter_by(phone_number=phone_number).first()
                     if existing_sim:
                         skipped_count += 1
                         continue
                     
                     # إنشاء رقم جديد
-                    new_sim = SimCard(
+                    new_sim = ImportedPhoneNumber(
                         phone_number=phone_number,
                         carrier=carrier,
                         plan_type=str(row.get('نوع الخطة', '')).strip() if pd.notna(row.get('نوع الخطة')) else None,

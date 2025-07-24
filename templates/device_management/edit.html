@@ -1,0 +1,302 @@
+{% extends "layout.html" %}
+
+{% block title %}تعديل جهاز محمول{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-custom {
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .device-info {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-edit me-2"></i>
+                    تعديل جهاز محمول
+                </h2>
+                <a href="{{ url_for('device_management.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+            
+            <div class="form-card">
+                <!-- معلومات الجهاز الحالية -->
+                <div class="device-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>معلومات الجهاز الحالية</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>IMEI:</strong> {{ device.imei }}<br>
+                            <strong>العلامة:</strong> {{ device.device_brand }}<br>
+                            <strong>الموديل:</strong> {{ device.device_model }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>الحالة:</strong> 
+                            {% if device.employee_id %}
+                                <span class="badge bg-danger">مربوط</span>
+                            {% else %}
+                                <span class="badge bg-success">متاح</span>
+                            {% endif %}<br>
+                            {% if device.employee %}
+                                <strong>مربوط بـ:</strong> {{ device.employee.name }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" id="deviceForm">
+                    <div class="row">
+                        <!-- معلومات أساسية -->
+                        <div class="col-12 mb-4">
+                            <h5>
+                                <i class="fas fa-info-circle me-2"></i>
+                                المعلومات الأساسية
+                            </h5>
+                            <hr class="text-white">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="imei" class="form-label">
+                                <i class="fas fa-barcode me-2"></i>
+                                رقم IMEI *
+                            </label>
+                            <input type="text" class="form-control" id="imei" name="imei" 
+                                   value="{{ device.imei }}" required maxlength="15" minlength="15">
+                            <div class="form-text text-light">رقم IMEI يجب أن يكون 15 رقم</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="brand" class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                العلامة التجارية *
+                            </label>
+                            <select class="form-select" id="brand" name="brand" required>
+                                <option value="">-- اختر العلامة التجارية --</option>
+                                <option value="iPhone" {{ 'selected' if device.device_brand == 'iPhone' }}>iPhone</option>
+                                <option value="Samsung" {{ 'selected' if device.device_brand == 'Samsung' }}>Samsung</option>
+                                <option value="Huawei" {{ 'selected' if device.device_brand == 'Huawei' }}>Huawei</option>
+                                <option value="Xiaomi" {{ 'selected' if device.device_brand == 'Xiaomi' }}>Xiaomi</option>
+                                <option value="OPPO" {{ 'selected' if device.device_brand == 'OPPO' }}>OPPO</option>
+                                <option value="Vivo" {{ 'selected' if device.device_brand == 'Vivo' }}>Vivo</option>
+                                <option value="OnePlus" {{ 'selected' if device.device_brand == 'OnePlus' }}>OnePlus</option>
+                                <option value="Nokia" {{ 'selected' if device.device_brand == 'Nokia' }}>Nokia</option>
+                                <option value="Sony" {{ 'selected' if device.device_brand == 'Sony' }}>Sony</option>
+                                <option value="LG" {{ 'selected' if device.device_brand == 'LG' }}>LG</option>
+                                {% if device.device_brand and device.device_brand not in ['iPhone', 'Samsung', 'Huawei', 'Xiaomi', 'OPPO', 'Vivo', 'OnePlus', 'Nokia', 'Sony', 'LG'] %}
+                                <option value="{{ device.device_brand }}" selected>{{ device.device_brand }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="model" class="form-label">
+                                <i class="fas fa-mobile-alt me-2"></i>
+                                الموديل *
+                            </label>
+                            <input type="text" class="form-control" id="model" name="model" 
+                                   value="{{ device.device_model }}" placeholder="مثال: iPhone 13 Pro, Galaxy S21" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="phone_number" class="form-label">
+                                <i class="fas fa-phone me-2"></i>
+                                رقم الهاتف
+                            </label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" 
+                                   value="{{ device.phone_number or '' }}" placeholder="05xxxxxxxx" pattern="^05[0-9]{8}$">
+                            <div class="form-text text-light">رقم الهاتف السعودي (اختياري)</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="serial_number" class="form-label">
+                                <i class="fas fa-hashtag me-2"></i>
+                                الرقم التسلسلي
+                            </label>
+                            <input type="text" class="form-control" id="serial_number" name="serial_number" 
+                                   value="" placeholder="رقم تسلسلي للجهاز (اختياري)">
+                        </div>
+                        
+                        <!-- معلومات الضمان والشراء -->
+                        <div class="col-12 mb-4 mt-4">
+                            <h5>
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                معلومات الضمان والشراء
+                            </h5>
+                            <hr class="text-white">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="purchase_date" class="form-label">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                تاريخ الشراء
+                            </label>
+                            <input type="date" class="form-control" id="purchase_date" name="purchase_date"
+                                   value="{{ device.assigned_date.strftime('%Y-%m-%d') if device.assigned_date else '' }}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="warranty_expiry" class="form-label">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                انتهاء الضمان
+                            </label>
+                            <input type="date" class="form-control" id="warranty_expiry" name="warranty_expiry" value="">
+                        </div>
+                        
+                        <!-- ملاحظات إضافية -->
+                        <div class="col-12 mb-4 mt-4">
+                            <h5>
+                                <i class="fas fa-sticky-note me-2"></i>
+                                ملاحظات إضافية
+                            </h5>
+                            <hr class="text-white">
+                        </div>
+                        
+                        <div class="col-12 mb-4">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-comment me-2"></i>
+                                الوصف أو الملاحظات
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="أي ملاحظات إضافية حول الجهاز...">{{ device.notes or '' }}</textarea>
+                        </div>
+                        
+                        <!-- أزرار التحكم -->
+                        <div class="col-12 text-center">
+                            <button type="submit" class="btn btn-success btn-custom me-3">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ التغييرات
+                            </button>
+                            <a href="{{ url_for('device_management.index') }}" class="btn btn-light btn-custom">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('deviceForm');
+    const imeiInput = document.getElementById('imei');
+    const phoneInput = document.getElementById('phone_number');
+    
+    // التحقق من صحة IMEI
+    imeiInput.addEventListener('input', function() {
+        const imei = this.value.replace(/\D/g, ''); // إزالة الأحرف غير الرقمية
+        this.value = imei;
+        
+        if (imei.length === 15) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else if (imei.length > 0) {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-valid', 'is-invalid');
+        }
+    });
+    
+    // التحقق من صحة رقم الهاتف
+    phoneInput.addEventListener('input', function() {
+        const phone = this.value.replace(/\D/g, ''); // إزالة الأحرف غير الرقمية
+        this.value = phone;
+        
+        if (phone.length === 0) {
+            this.classList.remove('is-valid', 'is-invalid');
+        } else if (phone.length === 10 && phone.startsWith('05')) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+    
+    // التحقق من النموذج قبل الإرسال  
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // التحقق من IMEI
+        const imei = imeiInput.value.trim();
+        if (imei.length !== 15) {
+            e.preventDefault();
+            imeiInput.classList.add('is-invalid');
+            alert('رقم IMEI يجب أن يكون 15 رقم بالضبط');
+            isValid = false;
+        }
+        
+        // التحقق من رقم الهاتف (إذا تم إدخاله)
+        const phone = phoneInput.value.trim();
+        if (phone && (phone.length !== 10 || !phone.startsWith('05'))) {
+            e.preventDefault();
+            phoneInput.classList.add('is-invalid');
+            alert('رقم الهاتف يجب أن يكون 10 أرقام ويبدأ بـ 05');
+            isValid = false;
+        }
+        
+        if (isValid) {
+            // إضافة مؤشر التحميل
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الحفظ...';
+        }
+    });
+    
+    // تحسين تجربة المستخدم مع التواريخ
+    const purchaseDate = document.getElementById('purchase_date');
+    const warrantyDate = document.getElementById('warranty_expiry');
+    
+    purchaseDate.addEventListener('change', function() {
+        if (this.value && !warrantyDate.value) {
+            // اقتراح تاريخ انتهاء ضمان (سنة واحدة من تاريخ الشراء)
+            const purchaseDate = new Date(this.value);
+            purchaseDate.setFullYear(purchaseDate.getFullYear() + 1);
+            warrantyDate.value = purchaseDate.toISOString().split('T')[0];
+        }
+    });
+});
+</script>
+{% endblock %}
