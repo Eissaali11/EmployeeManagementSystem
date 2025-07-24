@@ -54,8 +54,6 @@ def get_all_current_driversWithEmil():
         subq, VehicleHandover.id == subq.c.id
     ).join(
         Employee, VehicleHandover.employee_id == Employee.id  # الربط باستخدام جدول Employee
-    ).options(
-        contains_eager(VehicleHandover.driver_employee) # جلب بيانات الموظف في نفس الاستعلام
     ).where(subq.c.row_num == 1)
 
     # 4. تنفيذ الاستعلام وجلب النتائج
@@ -995,7 +993,8 @@ def edit_safety_check(check_id):
         try:
             # تحديث البيانات
             safety_check.current_delegate = request.form.get('current_delegate', '')
-            safety_check.inspection_date = datetime.fromisoformat(request.form.get('inspection_date'))
+            inspection_date_str = request.form.get('inspection_date')
+            safety_check.inspection_date = datetime.fromisoformat(inspection_date_str) if inspection_date_str else datetime.now()
             safety_check.driver_name = request.form.get('driver_name', '')
             safety_check.driver_national_id = request.form.get('driver_national_id', '')
             safety_check.driver_department = request.form.get('driver_department', '')
