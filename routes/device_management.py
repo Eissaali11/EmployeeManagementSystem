@@ -310,21 +310,29 @@ def assign_to_employee(device_id):
 def unassign_from_employee(device_id):
     """فك ربط الجهاز من الموظف"""
     try:
+        print(f"DEBUG: بدء عملية فك ربط الجهاز {device_id}")
         device = MobileDevice.query.get_or_404(device_id)
         
-        if not device.employee_id:
-            flash('الجهاز غير مربوط بأي موظف', 'error')
-            return redirect(url_for('device_management.index'))
-        
-        employee_name = device.employee.name if device.employee else 'غير معروف'
-        
-        # العثور على جميع الربطات النشطة لهذا الجهاز وإلغاؤها
+        # العثور على جميع الربطات النشطة لهذا الجهاز
         active_assignments = DeviceAssignment.query.filter(
             DeviceAssignment.device_id == device_id,
             DeviceAssignment.is_active == True
         ).all()
         
+        print(f"DEBUG: عدد الربطات النشطة الموجودة: {len(active_assignments)}")
+        
+        if not active_assignments:
+            flash('الجهاز غير مربوط بأي موظف', 'warning')
+            return redirect(url_for('device_management.index'))
+        
+        employee_name = 'غير معروف'
+        
+        # إلغاء جميع الربطات النشطة
         for assignment in active_assignments:
+            if assignment.employee:
+                employee_name = assignment.employee.name
+            
+            print(f"DEBUG: إلغاء الربط {assignment.id} للموظف {employee_name}")
             assignment.is_active = False
             assignment.unassigned_date = datetime.utcnow()
             assignment.unassigned_by = current_user.id if current_user.is_authenticated else None
@@ -335,13 +343,16 @@ def unassign_from_employee(device_id):
                 if sim_card:
                     sim_card.employee_id = None
                     sim_card.is_used = False
+                    print(f"DEBUG: تم فك ربط الرقم {sim_card.phone_number}")
         
-        # فك ربط الجهاز
+        # فك ربط الجهاز في الجدول الأساسي
         device.employee_id = None
         device.status = 'متاح'
         device.updated_at = datetime.utcnow()
+        print(f"DEBUG: تم تحديث حالة الجهاز إلى متاح")
         
         db.session.commit()
+        print(f"DEBUG: تم حفظ التغييرات في قاعدة البيانات")
         
         # تسجيل العملية
         from utils.audit_logger import log_activity
@@ -356,6 +367,7 @@ def unassign_from_employee(device_id):
         
     except Exception as e:
         db.session.rollback()
+        print(f"DEBUG: خطأ في فك الربط: {str(e)}")
         flash(f'حدث خطأ في فك ربط الجهاز: {str(e)}', 'error')
     
     return redirect(url_for('device_management.index'))
