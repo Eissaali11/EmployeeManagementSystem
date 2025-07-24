@@ -564,6 +564,14 @@
                                     <i class="fas fa-times"></i>
                                 </a>
                                 {% endif %}
+                                
+                                <!-- زر الحذف الفردي -->
+                                <a href="{{ url_for('external_safety.delete_safety_check_page', check_id=safety_check.id) }}" 
+                                   class="btn btn-action-enhanced" 
+                                   style="background: var(--rejected-gradient); color: white;" 
+                                   title="حذف الطلب">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
