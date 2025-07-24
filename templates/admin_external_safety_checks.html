@@ -457,7 +457,7 @@
     <!-- Enhanced Filter Section -->
     <div class="filter-card-enhanced">
         <div class="row">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <select class="form-control filter-input-enhanced" id="statusFilter">
                     <option value="">جميع الحالات</option>
                     <option value="pending">قيد المراجعة</option>
@@ -465,14 +465,22 @@
                     <option value="rejected">مرفوضة</option>
                 </select>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <input type="text" class="form-control filter-input-enhanced" id="searchFilter" 
                        placeholder="البحث برقم اللوحة أو اسم السائق...">
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <button class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
                         onclick="clearFilters()">
                     <i class="fas fa-times"></i> مسح الفلاتر
+                </button>
+            </div>
+            <div class="col-md-3 mb-3">
+                <button class="btn btn-action-enhanced btn-reject" 
+                        id="bulkDeleteBtn" 
+                        onclick="bulkDelete()" 
+                        style="display: none;">
+                    <i class="fas fa-trash-alt"></i> حذف المحدد (<span id="selectedCount">0</span>)
                 </button>
             </div>
         </div>
@@ -490,6 +498,9 @@
             <table class="table table-enhanced table-hover" id="safetyChecksTable">
                 <thead>
                     <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="form-check-input">
+                        </th>
                         <th>#</th>
                         <th>رقم اللوحة</th>
                         <th>نوع السيارة</th>
@@ -505,6 +516,11 @@
                 <tbody>
                     {% for safety_check in safety_checks %}
                     <tr data-status="{{ safety_check.approval_status }}">
+                        <td>
+                            <input type="checkbox" class="row-checkbox form-check-input" 
+                                   value="{{ safety_check.id }}" 
+                                   onchange="updateBulkDeleteButton()">
+                        </td>
                         <td>{{ safety_check.id }}</td>
                         <td>{{ safety_check.vehicle_plate_number }}</td>
                         <td>{{ safety_check.vehicle_make_model }}</td>
@@ -700,5 +716,104 @@
         form.action = `/admin/external-safety-check/${checkId}/reject`;
         $('#rejectModal').modal('show');
     }
+
+    // دوال التحديد الجماعي
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        const visibleCheckboxes = Array.from(checkboxes).filter(cb => cb.closest('tr').style.display !== 'none');
+        
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+        
+        updateBulkDeleteButton();
+    }
+
+    function updateBulkDeleteButton() {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        if (checkboxes.length > 0) {
+            bulkDeleteBtn.style.display = 'inline-block';
+            selectedCount.textContent = checkboxes.length;
+        } else {
+            bulkDeleteBtn.style.display = 'none';
+        }
+        
+        // تحديث حالة "تحديد الكل"
+        const allCheckboxes = document.querySelectorAll('.row-checkbox');
+        const visibleCheckboxes = Array.from(allCheckboxes).filter(cb => cb.closest('tr').style.display !== 'none');
+        const checkedVisibleBoxes = visibleCheckboxes.filter(cb => cb.checked);
+        
+        const selectAll = document.getElementById('selectAll');
+        if (visibleCheckboxes.length === 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        } else if (checkedVisibleBoxes.length === visibleCheckboxes.length) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else if (checkedVisibleBoxes.length > 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = true;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        }
+    }
+
+    function bulkDelete() {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            showNotification('لم يتم تحديد أي عناصر للحذف', 'warning');
+            return;
+        }
+        
+        const confirmMessage = `هل أنت متأكد من حذف ${selectedIds.length} طلب فحص سلامة؟\n\nهذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع الصور المرفقة أيضاً.`;
+        
+        if (confirm(confirmMessage)) {
+            // إنشاء نموذج مخفي لإرسال البيانات
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("external_safety.bulk_delete_safety_checks") }}';
+            
+            // إضافة CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrf_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            // إضافة المعرفات المحددة
+            selectedIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'check_ids';
+                input.value = id;
+                form.appendChild(input);
+            });
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // إضافة مستمع الأحداث لتحديث أزرار التحديد عند تطبيق الفلاتر
+    document.addEventListener('DOMContentLoaded', function() {
+        // إعادة تعريف clearFilters في النطاق العام
+        window.clearFilters = function() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            filterTable();
+            showNotification('تم مسح جميع الفلاتر', 'info');
+            updateBulkDeleteButton(); // تحديث أزرار التحديد بعد مسح الفلاتر
+        };
+        
+        // تحديث أزرار التحديد عند تحميل الصفحة
+        updateBulkDeleteButton();
+    });
 </script>
 {% endblock %}

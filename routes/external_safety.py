@@ -1455,3 +1455,96 @@ def export_safety_check_pdf(check_id):
         current_app.logger.error(f"خطأ في تصدير طلب فحص السلامة كـ PDF: {str(e)}")
         flash('حدث خطأ في تصدير الطلب', 'error')
         return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+
+@external_safety_bp.route('/admin/bulk-delete-safety-checks', methods=['POST'])
+def bulk_delete_safety_checks():
+    """حذف عدة طلبات فحص سلامة جماعياً"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect(url_for('main.index'))
+    
+    try:
+        # الحصول على معرفات الطلبات المحددة
+        check_ids = request.form.getlist('check_ids')
+        
+        if not check_ids:
+            flash('لم يتم تحديد أي طلبات للحذف', 'warning')
+            return redirect(url_for('external_safety.admin_external_safety_checks'))
+        
+        # تحويل المعرفات إلى أرقام صحيحة
+        try:
+            check_ids = [int(check_id) for check_id in check_ids]
+        except ValueError:
+            flash('معرفات الطلبات غير صحيحة', 'error')
+            return redirect(url_for('external_safety.admin_external_safety_checks'))
+        
+        # جلب جميع الطلبات المحددة
+        safety_checks = VehicleExternalSafetyCheck.query.filter(
+            VehicleExternalSafetyCheck.id.in_(check_ids)
+        ).all()
+        
+        if not safety_checks:
+            flash('لم يتم العثور على الطلبات المحددة', 'warning')
+            return redirect(url_for('external_safety.admin_external_safety_checks'))
+        
+        deleted_count = 0
+        deleted_plates = []
+        
+        # حذف كل طلب مع صوره
+        for safety_check in safety_checks:
+            try:
+                # حذف الصور المرفقة من الخادم
+                images_deleted = 0
+                for image in safety_check.safety_images:
+                    if image.image_path:
+                        image_full_path = os.path.join(current_app.root_path, image.image_path)
+                        if os.path.exists(image_full_path):
+                            os.remove(image_full_path)
+                            images_deleted += 1
+                            current_app.logger.info(f"تم حذف الصورة: {image_full_path}")
+                
+                # تسجيل العملية قبل الحذف
+                log_audit(
+                    user_id=current_user.id,
+                    action='bulk_delete',
+                    entity_type='VehicleExternalSafetyCheck',
+                    entity_id=safety_check.id,
+                    details=f'تم حذف طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number} - السائق: {safety_check.driver_name} (ضمن حذف جماعي لـ {len(check_ids)} طلب)'
+                )
+                
+                # حذف السجل من قاعدة البيانات
+                plate_number = safety_check.vehicle_plate_number
+                deleted_plates.append(plate_number)
+                db.session.delete(safety_check)
+                deleted_count += 1
+                
+                current_app.logger.info(f"تم حذف طلب فحص السلامة رقم {safety_check.id} للسيارة {plate_number} مع {images_deleted} صورة")
+                
+            except Exception as e:
+                current_app.logger.error(f"خطأ في حذف طلب فحص السلامة رقم {safety_check.id}: {str(e)}")
+                continue
+        
+        # حفظ التغييرات
+        db.session.commit()
+        
+        # تسجيل العملية الجماعية
+        log_audit(
+            user_id=current_user.id,
+            action='bulk_delete_completed',
+            entity_type='VehicleExternalSafetyCheck',
+            entity_id=0,  # للحذف الجماعي
+            details=f'تم حذف {deleted_count} طلب فحص سلامة بنجاح من أصل {len(check_ids)} طلب محدد. السيارات: {", ".join(deleted_plates[:5])}{"..." if len(deleted_plates) > 5 else ""}'
+        )
+        
+        if deleted_count > 0:
+            flash(f'تم حذف {deleted_count} طلب فحص سلامة بنجاح مع جميع الصور المرفقة', 'success')
+        else:
+            flash('لم يتم حذف أي طلبات. قد تكون هناك مشكلة في البيانات المحددة', 'warning')
+        
+        return redirect(url_for('external_safety.admin_external_safety_checks'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في الحذف الجماعي لطلبات فحص السلامة: {str(e)}")
+        flash('حدث خطأ في عملية الحذف الجماعي. يرجى المحاولة مرة أخرى', 'error')
+        return redirect(url_for('external_safety.admin_external_safety_checks'))
