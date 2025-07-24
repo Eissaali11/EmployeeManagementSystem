@@ -115,6 +115,21 @@
         color: #6c757d;
         font-style: italic;
     }
+    
+    /* تنسيق الأجهزة والSIM المنسدلة */
+    .device-dropdown-item:hover,
+    .sim-dropdown-item:hover {
+        background-color: #f8f9fa !important;
+        color: #2c3e50 !important;
+    }
+    .device-dropdown-item:last-child,
+    .sim-dropdown-item:last-child {
+        border-bottom: none !important;
+    }
+    .device-dropdown-item div,
+    .sim-dropdown-item div {
+        color: inherit !important;
+    }
 </style>
 {% endblock %}
 
@@ -215,30 +230,59 @@
                         
                         <div class="col-md-3" id="device_select" style="display: none;">
                             <label class="form-label">الجهاز</label>
-                            <select name="device_id" class="form-select">
-                                <option value="">-- اختر جهاز --</option>
-                                {% for device in available_devices %}
-                                    {% if device.employee_id is none %}
-                                        <option value="{{ device.id }}">
-                                            ({{ device.device_brand or 'None' }} {{ device.device_model or 'None' }}) {{ device.imei }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
+                            <div class="device-search-container" style="position: relative;">
+                                <input type="text" 
+                                       class="form-control device-search-input" 
+                                       id="device-search"
+                                       placeholder="ابحث عن IMEI أو اكتب رقم جديد..." 
+                                       autocomplete="off">
+                                <input type="hidden" name="device_id" id="selected-device-id">
+                                
+                                <div class="device-dropdown" id="device-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                    {% for device in available_devices %}
+                                        {% if device.employee_id is none %}
+                                        <div class="device-dropdown-item" data-id="{{ device.id }}" data-imei="{{ device.imei }}" 
+                                             style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                            <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ device.imei }}</div>
+                                            {% if device.device_brand or device.device_model %}
+                                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                                {{ device.device_brand or 'غير محدد' }} {{ device.device_model or 'غير محدد' }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="col-md-3" id="sim_select" style="display: none;">
                             <label class="form-label">رقم SIM</label>
-                            <select name="sim_id" class="form-select">
-                                <option value="">-- اختر رقم --</option>
-                                {% for sim in available_sims %}
-                                    {% if not sim.employee_id %}
-                                        <option value="{{ sim.id }}">
-                                            {{ sim.phone_number }} ({{ sim.carrier }})
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
+                            <div class="sim-search-container" style="position: relative;">
+                                <input type="text" 
+                                       class="form-control sim-search-input" 
+                                       id="sim-search"
+                                       placeholder="ابحث عن رقم الهاتف أو اكتب رقم جديد..." 
+                                       autocomplete="off">
+                                <input type="hidden" name="sim_id" id="selected-sim-id">
+                                
+                                <div class="sim-dropdown" id="sim-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                    {% for sim in available_sims %}
+                                        {% if not sim.employee_id %}
+                                        <div class="sim-dropdown-item" data-id="{{ sim.id }}" data-number="{{ sim.phone_number }}" 
+                                             style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                            <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ sim.phone_number }}</div>
+                                            {% if sim.carrier or sim.plan_type %}
+                                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                                {% if sim.carrier %}{{ sim.carrier }}{% endif %}
+                                                {% if sim.plan_type %} - {{ sim.plan_type }}{% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -590,6 +634,12 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSelection = -1;
     }
     
+    // إعداد البحث في الأجهزة
+    initializeDeviceSearch();
+    
+    // إعداد البحث في SIM
+    initializeSimSearch();
+    
     // JavaScript لإظهار/إخفاء حقول الجهاز والرقم حسب نوع الربط
     document.getElementById('assignment_type').addEventListener('change', function() {
         const deviceSelect = document.getElementById('device_select');
@@ -599,26 +649,18 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'device_only':
                 deviceSelect.style.display = 'block';
                 simSelect.style.display = 'none';
-                deviceSelect.querySelector('select').required = true;
-                simSelect.querySelector('select').required = false;
                 break;
             case 'sim_only':
                 deviceSelect.style.display = 'none';
                 simSelect.style.display = 'block';
-                deviceSelect.querySelector('select').required = false;
-                simSelect.querySelector('select').required = true;
                 break;
             case 'device_and_sim':
                 deviceSelect.style.display = 'block';
                 simSelect.style.display = 'block';
-                deviceSelect.querySelector('select').required = true;
-                simSelect.querySelector('select').required = true;
                 break;
             default:
                 deviceSelect.style.display = 'none';
                 simSelect.style.display = 'none';
-                deviceSelect.querySelector('select').required = false;
-                simSelect.querySelector('select').required = false;
         }
     });
     
@@ -631,6 +673,130 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('يرجى اختيار موظف من القائمة');
                 employeeSearchInput.focus();
                 return false;
+            }
+        });
+    }
+    
+    // دالة إعداد البحث في الأجهزة
+    function initializeDeviceSearch() {
+        const deviceSearchInput = document.getElementById('device-search');
+        const deviceDropdown = document.getElementById('device-dropdown');
+        const selectedDeviceId = document.getElementById('selected-device-id');
+        
+        if (!deviceSearchInput || !deviceDropdown || !selectedDeviceId) return;
+        
+        // عرض القائمة عند التركيز
+        deviceSearchInput.addEventListener('focus', function() {
+            deviceDropdown.style.display = 'block';
+        });
+        
+        // البحث أثناء الكتابة
+        deviceSearchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            const items = deviceDropdown.querySelectorAll('.device-dropdown-item');
+            let hasVisible = false;
+            
+            items.forEach(item => {
+                const imei = item.dataset.imei.toLowerCase();
+                const text = item.textContent.toLowerCase();
+                
+                if (imei.includes(searchValue) || text.includes(searchValue)) {
+                    item.style.display = 'block';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            deviceDropdown.style.display = hasVisible ? 'block' : 'none';
+            
+            // إذا كان النص مختلف عن المحدد حالياً، امسح القيمة المخفية
+            const selectedItem = deviceDropdown.querySelector('[data-imei="' + searchValue + '"]');
+            if (!selectedItem) {
+                selectedDeviceId.value = '';
+            }
+        });
+        
+        // اختيار عنصر من القائمة
+        deviceDropdown.addEventListener('click', function(e) {
+            const item = e.target.closest('.device-dropdown-item');
+            if (item) {
+                deviceSearchInput.value = item.dataset.imei;
+                selectedDeviceId.value = item.dataset.id;
+                deviceDropdown.style.display = 'none';
+                deviceSearchInput.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    deviceSearchInput.style.backgroundColor = '';
+                }, 1000);
+            }
+        });
+        
+        // إخفاء القائمة عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            if (!deviceSearchInput.contains(e.target) && !deviceDropdown.contains(e.target)) {
+                deviceDropdown.style.display = 'none';
+            }
+        });
+    }
+    
+    // دالة إعداد البحث في أرقام SIM
+    function initializeSimSearch() {
+        const simSearchInput = document.getElementById('sim-search');
+        const simDropdown = document.getElementById('sim-dropdown');
+        const selectedSimId = document.getElementById('selected-sim-id');
+        
+        if (!simSearchInput || !simDropdown || !selectedSimId) return;
+        
+        // عرض القائمة عند التركيز
+        simSearchInput.addEventListener('focus', function() {
+            simDropdown.style.display = 'block';
+        });
+        
+        // البحث أثناء الكتابة
+        simSearchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            const items = simDropdown.querySelectorAll('.sim-dropdown-item');
+            let hasVisible = false;
+            
+            items.forEach(item => {
+                const number = item.dataset.number.toLowerCase();
+                const text = item.textContent.toLowerCase();
+                
+                if (number.includes(searchValue) || text.includes(searchValue)) {
+                    item.style.display = 'block';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            simDropdown.style.display = hasVisible ? 'block' : 'none';
+            
+            // إذا كان النص مختلف عن المحدد حالياً، امسح القيمة المخفية
+            const selectedItem = simDropdown.querySelector('[data-number="' + searchValue + '"]');
+            if (!selectedItem) {
+                selectedSimId.value = '';
+            }
+        });
+        
+        // اختيار عنصر من القائمة
+        simDropdown.addEventListener('click', function(e) {
+            const item = e.target.closest('.sim-dropdown-item');
+            if (item) {
+                simSearchInput.value = item.dataset.number;
+                selectedSimId.value = item.dataset.id;
+                simDropdown.style.display = 'none';
+                simSearchInput.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    simSearchInput.style.backgroundColor = '';
+                }, 1000);
+            }
+        });
+        
+        // إخفاء القائمة عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            if (!simSearchInput.contains(e.target) && !simDropdown.contains(e.target)) {
+                simDropdown.style.display = 'none';
             }
         });
     }
