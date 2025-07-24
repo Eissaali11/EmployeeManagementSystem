@@ -208,7 +208,12 @@ def assign():
         # التحقق من الجهاز إذا تم تحديده
         if device_id:
             device = MobileDevice.query.get_or_404(device_id)
-            if device.is_assigned:
+            # فحص إذا كان الجهاز مربوط حالياً في DeviceAssignment
+            existing_assignment = DeviceAssignment.query.filter_by(
+                device_id=device_id, 
+                is_active=True
+            ).first()
+            if existing_assignment:
                 flash('هذا الجهاز مربوط بموظف آخر بالفعل', 'danger')
                 return redirect(url_for('device_assignment.index'))
         
@@ -233,11 +238,10 @@ def assign():
         
         db.session.add(assignment)
         
-        # تحديث حالة الجهاز
+        # تحديث حالة الجهاز (للتوافق مع النظام القديم)
         if device:
-            device.is_assigned = True
-            device.assigned_to = employee_id
-            device.assignment_date = datetime.now()
+            device.employee_id = employee_id
+            device.status = 'مربوط'
         
         # تحديث حالة الرقم
         if sim_card:
@@ -250,7 +254,7 @@ def assign():
         # تسجيل العملية
         action_details = []
         if device:
-            action_details.append(f"جهاز: {device.phone_number}")
+            action_details.append(f"جهاز: {device.imei}")
         if sim_card:
             action_details.append(f"رقم: {sim_card.phone_number}")
         
@@ -263,9 +267,9 @@ def assign():
         
         success_message = f"تم ربط "
         if device and sim_card:
-            success_message += f"الجهاز {device.phone_number} والرقم {sim_card.phone_number}"
+            success_message += f"الجهاز {device.imei} والرقم {sim_card.phone_number}"
         elif device:
-            success_message += f"الجهاز {device.phone_number}"
+            success_message += f"الجهاز {device.imei}"
         elif sim_card:
             success_message += f"الرقم {sim_card.phone_number}"
         success_message += f" بالموظف {employee.name} بنجاح"
