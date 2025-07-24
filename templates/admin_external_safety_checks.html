@@ -677,13 +677,14 @@
         document.getElementById('statusFilter').addEventListener('change', filterTable);
         document.getElementById('searchFilter').addEventListener('input', filterTable);
         
-        // Clear filters
-        function clearFilters() {
+        // Make clearFilters globally accessible
+        window.clearFilters = function() {
             document.getElementById('statusFilter').value = '';
             document.getElementById('searchFilter').value = '';
             filterTable();
             showNotification('تم مسح جميع الفلاتر', 'info');
-        }
+            updateBulkDeleteButton(); // تحديث أزرار التحديد بعد مسح الفلاتر
+        };
         
         // Enhanced notification system
         function showNotification(message, type) {
@@ -743,11 +744,15 @@
         const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
         const selectedCount = document.getElementById('selectedCount');
         
+        console.log('تحديث زر الحذف الجماعي:', checkboxes.length, 'عنصر محدد');
+        
         if (checkboxes.length > 0) {
             bulkDeleteBtn.style.display = 'inline-block';
             selectedCount.textContent = checkboxes.length;
+            console.log('إظهار زر الحذف الجماعي');
         } else {
             bulkDeleteBtn.style.display = 'none';
+            console.log('إخفاء زر الحذف الجماعي');
         }
         
         // تحديث حالة "تحديد الكل"
