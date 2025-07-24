@@ -81,8 +81,8 @@
                 </div>
                 <div class="col-md-2">
                     <div class="stats-card text-center">
-                        <h3>{{ stats.samsung_count or 0 }}</h3>
-                        <p class="mb-0">Samsung</p>
+                        <h3>{{ stats.devices_without_phone or 0 }}</h3>
+                        <p class="mb-0">بدون أرقام</p>
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -91,6 +91,10 @@
                             <a href="{{ url_for('device_management.create') }}" class="btn btn-success">
                                 <i class="fas fa-plus me-2"></i>
                                 إضافة جهاز جديد
+                            </a>
+                            <a href="{{ url_for('device_management.devices_only') }}" class="btn btn-warning">
+                                <i class="fas fa-mobile-alt me-2"></i>
+                                الأجهزة بدون أرقام
                             </a>
                             <div class="btn-group" role="group">
                                 <a href="{{ url_for('device_management.import_excel') }}" class="btn btn-info btn-sm">
@@ -138,6 +142,8 @@
                             <option value="">جميع الحالات</option>
                             <option value="available" {{ 'selected' if status_filter == 'available' }}>متاح</option>
                             <option value="assigned" {{ 'selected' if status_filter == 'assigned' }}>مربوط</option>
+                            <option value="no_phone" {{ 'selected' if status_filter == 'no_phone' }}>بدون أرقام</option>
+                            <option value="with_phone" {{ 'selected' if status_filter == 'with_phone' }}>مع أرقام</option>
                         </select>
                     </div>
                     

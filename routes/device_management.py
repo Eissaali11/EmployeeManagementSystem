@@ -36,6 +36,10 @@ def index():
                 query = query.filter(MobileDevice.employee_id.is_(None))
             elif status_filter == 'assigned':
                 query = query.filter(MobileDevice.employee_id.isnot(None))
+            elif status_filter == 'no_phone':
+                query = query.filter(or_(MobileDevice.phone_number.is_(None), MobileDevice.phone_number == ''))
+            elif status_filter == 'with_phone':
+                query = query.filter(and_(MobileDevice.phone_number.isnot(None), MobileDevice.phone_number != ''))
         
         if search_term:
             query = query.filter(
@@ -53,6 +57,10 @@ def index():
         available_devices = MobileDevice.query.filter(MobileDevice.employee_id.is_(None)).count()
         assigned_devices = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).count()
         
+        # إحصائيات الأرقام
+        devices_with_phone = MobileDevice.query.filter(and_(MobileDevice.phone_number.isnot(None), MobileDevice.phone_number != '')).count()
+        devices_without_phone = MobileDevice.query.filter(or_(MobileDevice.phone_number.is_(None), MobileDevice.phone_number == '')).count()
+        
         # إحصائيات العلامات التجارية
         iphone_count = MobileDevice.query.filter(MobileDevice.device_brand.like('%iPhone%')).count()
         samsung_count = MobileDevice.query.filter(MobileDevice.device_brand.like('%Samsung%')).count()
@@ -61,6 +69,8 @@ def index():
             'total_devices': total_devices,
             'available_devices': available_devices,
             'assigned_devices': assigned_devices,
+            'devices_with_phone': devices_with_phone,
+            'devices_without_phone': devices_without_phone,
             'iphone_count': iphone_count,
             'samsung_count': samsung_count
         }
@@ -334,6 +344,45 @@ def export_excel():
         
     except Exception as e:
         flash(f'حدث خطأ في تصدير البيانات: {str(e)}', 'error')
+        return redirect(url_for('device_management.index'))
+
+@device_management_bp.route('/devices-only')
+def devices_only():
+    """صفحة الأجهزة بدون أرقام هاتف فقط"""
+    try:
+        # جلب جميع الأجهزة بدون أرقام هاتف
+        devices = MobileDevice.query.filter(
+            or_(MobileDevice.phone_number.is_(None), MobileDevice.phone_number == '')
+        ).order_by(MobileDevice.created_at.desc()).all()
+        
+        # جلب الأقسام للفلاتر
+        departments = Department.query.order_by(Department.name).all()
+        
+        # إحصائيات خاصة بالأجهزة بدون أرقام
+        total_devices_only = len(devices)
+        available_devices_only = len([d for d in devices if d.employee_id is None])
+        assigned_devices_only = len([d for d in devices if d.employee_id is not None])
+        
+        # إحصائيات العلامات التجارية للأجهزة بدون أرقام
+        iphone_count = len([d for d in devices if d.device_brand and 'iPhone' in d.device_brand])
+        samsung_count = len([d for d in devices if d.device_brand and 'Samsung' in d.device_brand])
+        
+        stats = {
+            'total_devices': total_devices_only,
+            'available_devices': available_devices_only,
+            'assigned_devices': assigned_devices_only,
+            'iphone_count': iphone_count,
+            'samsung_count': samsung_count
+        }
+        
+        return render_template('device_management/devices_only.html',
+                             devices=devices,
+                             departments=departments,
+                             stats=stats)
+                             
+    except Exception as e:
+        print(f"Error in devices_only: {str(e)}")
+        flash('حدث خطأ في تحميل البيانات', 'error')
         return redirect(url_for('device_management.index'))
 
 @device_management_bp.route('/import-excel', methods=['GET', 'POST'])
