@@ -4163,6 +4163,30 @@ def edit_workshop_record(workshop_id):
                 details=f'تم تعديل سجل دخول الورشة للسيارة: {vehicle.plate_number} من الجوال وإضافة {len(uploaded_images)} صورة'
             )
 
+            # إنشاء طلب عملية تلقائياً لإدارة العمليات
+            try:
+                operation_title = f"تحديث ورشة - {vehicle.plate_number}"
+                operation_description = f"تم تحديث سجل الورشة: {workshop_record.reason} - {workshop_record.description}"
+                
+                operation = create_operation_request(
+                    operation_type="workshop_update",
+                    related_record_id=workshop_record.id,
+                    vehicle_id=vehicle.id,
+                    title=operation_title,
+                    description=operation_description,
+                    requested_by=current_user.id,
+                    priority="normal"
+                )
+                
+                # حفظ طلب العملية والإشعارات
+                db.session.commit()
+                
+                current_app.logger.debug(f"تم إنشاء طلب عملية لتحديث الورشة: {workshop_record.id} برقم عملية: {operation.id}")
+                
+            except Exception as e:
+                current_app.logger.error(f"خطأ في إنشاء طلب العملية لتحديث الورشة: {str(e)}")
+                # لا نوقف العملية إذا فشل إنشاء طلب العملية
+
             success_message = f'تم تحديث سجل الورشة بنجاح!'
             if uploaded_images:
 
