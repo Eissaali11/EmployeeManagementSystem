@@ -551,8 +551,9 @@ def process_assign_device(device_id):
         # تسجيل العملية
         log_activity(
             action='device_assigned',
-            description=f'تم ربط الجهاز {device.device_brand} {device.device_model} بالموظف {employee.name}',
-            user_id=current_user.id
+            entity_type='DeviceAssignment',
+            entity_id=assignment.id,
+            details=f'تم ربط الجهاز {device.device_brand} {device.device_model} بالموظف {employee.name}'
         )
         
         flash(f'تم ربط الجهاز بالموظف {employee.name} بنجاح', 'success')
