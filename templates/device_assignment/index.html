@@ -240,7 +240,7 @@
                                 
                                 <div class="device-dropdown" id="device-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
                                     {% for device in available_devices %}
-                                        {% if device.employee_id is none %}
+                                        {% if not device.is_assigned %}
                                         <div class="device-dropdown-item" data-id="{{ device.id }}" data-imei="{{ device.imei }}" 
                                              style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
                                             <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ device.imei }}</div>
@@ -416,8 +416,8 @@
                                         {% for device in available_devices_list[:5] %}
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <div>
-                                                <strong>{{ device.phone_number }}</strong><br>
-                                                <small class="text-muted">{{ device.device_brand }} {{ device.device_model }}</small>
+                                                <strong>{{ device.imei or 'غير محدد' }}</strong><br>
+                                                <small class="text-muted">{{ device.device_brand or 'غير محدد' }} {{ device.device_model or 'غير محدد' }}</small>
                                             </div>
                                             <span class="badge bg-success">متاح</span>
                                         </div>
