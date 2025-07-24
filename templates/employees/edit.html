@@ -48,13 +48,13 @@
                                        autocomplete="off">
                                 
                                 <!-- القائمة المخفية للأرقام المتاحة -->
-                                <div class="mobile-dropdown-list" id="mobile_dropdown_list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; background: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div class="mobile-dropdown-list" id="mobile_dropdown_list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
                                     {% for phone in available_phone_numbers %}
                                     <div class="mobile-dropdown-item" data-value="{{ phone.phone_number }}" 
-                                         style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;">
-                                        <div style="font-weight: bold;">{{ phone.phone_number }}</div>
+                                         style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                        <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ phone.phone_number }}</div>
                                         {% if phone.carrier or phone.plan_type %}
-                                        <div style="font-size: 0.85em; color: #666;">
+                                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
                                             {% if phone.carrier %}{{ phone.carrier }}{% endif %}
                                             {% if phone.plan_type %} - {{ phone.plan_type }}{% endif %}
                                         </div>
@@ -475,11 +475,13 @@ function initializeMobileDropdown() {
         
         // تأثيرات التمرير
         item.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#f8f9fa';
+            this.style.backgroundColor = '#e3f2fd';
+            this.style.color = '#1976d2';
         });
         
         item.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = 'white';
+            this.style.backgroundColor = '#ffffff';
+            this.style.color = '#333';
         });
     });
     
@@ -497,6 +499,36 @@ function initializeMobileDropdown() {
         });
     }
 }
+
+// إضافة CSS محسن للقائمة المنسدلة
+const mobileDropdownCSS = document.createElement('style');
+mobileDropdownCSS.textContent = `
+    .mobile-dropdown-list {
+        border: 1px solid #bdc3c7 !important;
+        background: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    
+    .mobile-dropdown-item {
+        color: #2c3e50 !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-dropdown-item:hover {
+        background: #e3f2fd !important;
+        color: #1976d2 !important;
+    }
+    
+    .mobile-dropdown-item div {
+        color: inherit !important;
+    }
+    
+    .mobile-dropdown-item:last-child {
+        border-bottom: none !important;
+    }
+`;
+document.head.appendChild(mobileDropdownCSS);
 
 
 </script>
