@@ -4181,10 +4181,21 @@ def edit_workshop_record(workshop_id):
                 # حفظ طلب العملية والإشعارات
                 db.session.commit()
                 
+                print(f"تم تسجيل عملية التحديث بنجاح: {operation.id}")
                 current_app.logger.debug(f"تم إنشاء طلب عملية لتحديث الورشة: {workshop_record.id} برقم عملية: {operation.id}")
                 
+                # التحقق من وجود العملية في قاعدة البيانات
+                saved_operation = OperationRequest.query.get(operation.id)
+                if saved_operation:
+                    print(f"تأكيد: عملية التحديث {operation.id} محفوظة في قاعدة البيانات")
+                else:
+                    print(f"تحذير: عملية التحديث {operation.id} غير موجودة في قاعدة البيانات!")
+                
             except Exception as e:
+                print(f"خطأ في إنشاء طلب العملية لتحديث الورشة: {str(e)}")
                 current_app.logger.error(f"خطأ في إنشاء طلب العملية لتحديث الورشة: {str(e)}")
+                import traceback
+                current_app.logger.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
                 # لا نوقف العملية إذا فشل إنشاء طلب العملية
 
             success_message = f'تم تحديث سجل الورشة بنجاح!'
