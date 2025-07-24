@@ -435,13 +435,17 @@ document.addEventListener('DOMContentLoaded', function() {
         {% for employee in employees %}
         {
             id: {{ employee.id }},
-            name: "{{ employee.name }}",
-            employee_id: "{{ employee.employee_id }}",
-            national_id: "{{ employee.national_id or '' }}",
-            departments: "{% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}, {% endif %}{% endfor %}"
+            name: "{{ employee.name|e }}",
+            employee_id: "{{ employee.employee_id|e }}",
+            national_id: "{{ employee.national_id|e if employee.national_id else '' }}",
+            departments: "{% for dept in employee.departments %}{{ dept.name|e }}{% if not loop.last %}, {% endif %}{% endfor %}"
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
+    
+    // تشخيص البيانات
+    console.log('Employee data loaded:', employees);
+    console.log('Total employees:', employees.length);
     
     const employeeSearchInput = document.getElementById('employee-search');
     const employeeDropdown = document.getElementById('employee-dropdown');
@@ -515,6 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function displayEmployees(employeeList) {
+        console.log('Displaying employees:', employeeList);
         employeeDropdown.innerHTML = '';
         
         if (employeeList.length === 0) {
@@ -527,12 +532,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const option = document.createElement('div');
             option.className = 'employee-option';
             option.setAttribute('data-employee-id', employee.id);
+            
+            // تشخيص البيانات لكل موظف
+            console.log('Employee data:', employee);
+            
+            const employeeName = employee.name || 'غير محدد';
+            const employeeId = employee.employee_id || 'غير محدد';
+            const nationalId = employee.national_id || '';
+            const departments = employee.departments || '';
+            
             option.innerHTML = `
-                <div class="employee-name">${employee.name}</div>
+                <div class="employee-name">${employeeName}</div>
                 <div class="employee-details">
-                    رقم الموظف: ${employee.employee_id}
-                    ${employee.national_id ? ' • الهوية: ' + employee.national_id : ''}
-                    ${employee.departments ? ' • القسم: ' + employee.departments : ''}
+                    رقم الموظف: ${employeeId}
+                    ${nationalId ? ' • الهوية: ' + nationalId : ''}
+                    ${departments ? ' • القسم: ' + departments : ''}
                 </div>
             `;
             
