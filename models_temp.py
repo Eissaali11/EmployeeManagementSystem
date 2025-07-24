@@ -32,12 +32,16 @@ class Department(db.Model):
     
     # Relationships
     employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments')
+    # employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments', lazy='dynamic')
 
+    manager_id = db.Column(
+        db.Integer,
+        db.ForeignKey('employee.id', name='fk_department_manager', ondelete='SET NULL', use_alter=True),
+        nullable=True
+    )
     accessible_users = db.relationship('User', 
                                        secondary=user_accessible_departments,
                                        back_populates='departments')
-    mobile_devices = db.relationship('MobileDevice', backref='department', lazy=True)
-    device_assignments = db.relationship('DeviceAssignment', foreign_keys='DeviceAssignment.department_id', backref='assigned_department', lazy=True)
     
     def __repr__(self):
         return f'<Department {self.name}>'
@@ -1494,7 +1498,8 @@ class MobileDevice(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # العلاقات
-    employee = db.relationship('Employee', backref='assigned_mobile_devices', lazy=True)
+    employee = db.relationship('Employee', backref='mobile_devices', lazy=True)
+    department = db.relationship('Department', back_populates='mobile_devices')
     
     def __repr__(self):
         return f'<MobileDevice {self.imei} - {self.phone_number}>'
@@ -1635,7 +1640,8 @@ class DeviceAssignment(db.Model):
     
     # العلاقات
     employee = db.relationship('Employee', backref='device_assignments', lazy=True)
-    device = db.relationship('MobileDevice', backref='assignments', lazy=True)
+    department = db.relationship('Department', backref='device_assignments', lazy=True)  # علاقة جديدة مع الأقسام
+    device = db.relationship('MobileDevice', back_populates='device_assignments', lazy=True)
     sim_card = db.relationship('ImportedPhoneNumber', backref='assignments', lazy=True)
     assigned_by_user = db.relationship('User', backref='assigned_devices', lazy=True)
     

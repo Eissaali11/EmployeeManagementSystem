@@ -440,3 +440,153 @@ def api_employee_assignments(employee_id):
             'success': False,
             'message': 'حدث خطأ أثناء جلب البيانات'
         }), 500
+
+@device_assignment_bp.route('/department-management')
+@login_required
+def department_management():
+    """صفحة إدارة ربط الأجهزة والأرقام بالأقسام مباشرة"""
+    try:
+        departments = Department.query.all()
+        
+        # جلب الأجهزة المتاحة (غير مربوطة بموظف أو قسم)
+        available_devices = MobileDevice.query.filter(
+            MobileDevice.employee_id.is_(None),
+            MobileDevice.department_id.is_(None)
+        ).all()
+        
+        # جلب الأرقام المتاحة (غير مربوطة بموظف)
+        available_sims = ImportedPhoneNumber.query.filter_by(employee_id=None).all()
+        
+        return render_template('device_assignment/department_management.html',
+                             departments=departments,
+                             available_devices=available_devices,
+                             available_sims=available_sims)
+    
+    except Exception as e:
+        current_app.logger.error(f"Error in department management: {str(e)}")
+        flash('حدث خطأ في تحميل البيانات', 'danger')
+        return redirect(url_for('device_assignment.index'))
+
+@device_assignment_bp.route('/assign-to-department', methods=['POST'])
+@login_required
+def assign_to_department():
+    """ربط جهاز و/أو رقم بقسم مباشرة"""
+    try:
+        assignment_type = request.form.get('assignment_type')
+        department_id = request.form.get('department_id')
+        device_id = request.form.get('device_id') if request.form.get('device_id') else None
+        sim_id = request.form.get('sim_id') if request.form.get('sim_id') else None
+        notes = request.form.get('notes', '').strip()
+        
+        # التحقق من البيانات المطلوبة
+        if not assignment_type or not department_id:
+            flash('يرجى اختيار نوع الربط والقسم', 'danger')
+            return redirect(url_for('device_assignment.department_management'))
+        
+        department = Department.query.get_or_404(department_id)
+        
+        # التحقق من نوع الربط والمعلومات المطلوبة
+        if assignment_type == 'device_only' and not device_id:
+            flash('يرجى اختيار جهاز للربط', 'danger')
+            return redirect(url_for('device_assignment.department_management'))
+        elif assignment_type == 'sim_only' and not sim_id:
+            flash('يرجى اختيار رقم للربط', 'danger')
+            return redirect(url_for('device_assignment.department_management'))
+        elif assignment_type == 'device_and_sim' and (not device_id or not sim_id):
+            flash('يرجى اختيار جهاز ورقم للربط', 'danger')
+            return redirect(url_for('device_assignment.department_management'))
+        
+        # ربط الجهاز بالقسم
+        if device_id:
+            device = MobileDevice.query.get_or_404(device_id)
+            if device.employee_id or device.department_id:
+                flash('هذا الجهاز مربوط بالفعل', 'danger')
+                return redirect(url_for('device_assignment.department_management'))
+            
+            device.department_id = department_id
+            device.department_assignment_date = datetime.now()
+            device.assignment_type = 'department'
+            device.status = 'مرتبط'
+            if notes:
+                device.notes = notes
+        
+        # ربط الرقم (نحتاج لإنشاء DeviceAssignment)
+        if sim_id:
+            sim_card = ImportedPhoneNumber.query.get_or_404(sim_id)
+            if sim_card.employee_id:
+                flash('هذا الرقم مربوط بموظف آخر بالفعل', 'danger')
+                return redirect(url_for('device_assignment.department_management'))
+            
+            # إنشاء سجل ربط للقسم
+            assignment = DeviceAssignment(
+                department_id=department_id,
+                device_id=device_id,
+                sim_card_id=sim_id,
+                assignment_date=datetime.now(),
+                assignment_type=assignment_type,
+                notes=notes,
+                assigned_by=current_user.id,
+                is_active=True
+            )
+            db.session.add(assignment)
+            
+            sim_card.status = 'مربوط'
+        
+        db.session.commit()
+        
+        # رسالة النجاح
+        success_message = f"تم ربط "
+        if device_id and sim_id:
+            success_message += f"الجهاز والرقم"
+        elif device_id:
+            success_message += f"الجهاز"
+        elif sim_id:
+            success_message += f"الرقم"
+        success_message += f" بقسم {department.name} بنجاح"
+        
+        flash(success_message, 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in department assignment: {str(e)}")
+        flash('حدث خطأ أثناء عملية الربط', 'danger')
+    
+    return redirect(url_for('device_assignment.department_management'))
+
+@device_assignment_bp.route('/unassign-from-department/<int:device_id>', methods=['POST'])
+@login_required
+def unassign_from_department(device_id):
+    """فك ربط جهاز من قسم"""
+    try:
+        device = MobileDevice.query.get_or_404(device_id)
+        
+        if not device.department_id:
+            flash('هذا الجهاز غير مربوط بأي قسم', 'danger')
+            return redirect(url_for('device_assignment.department_management'))
+        
+        department_name = device.department.name if device.department else "غير محدد"
+        
+        # فك الربط
+        device.department_id = None
+        device.department_assignment_date = None
+        device.assignment_type = 'employee'
+        device.status = 'متاح'
+        
+        # فك ربط أي سجلات DeviceAssignment مرتبطة
+        assignments = DeviceAssignment.query.filter_by(device_id=device_id, is_active=True).all()
+        for assignment in assignments:
+            if assignment.department_id:
+                assignment.is_active = False
+                if assignment.sim_card:
+                    assignment.sim_card.status = 'متاح'
+        
+        db.session.commit()
+        
+        flash(f'تم فك ربط الجهاز من قسم {department_name} بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in department unassignment: {str(e)}")
+        flash('حدث خطأ أثناء فك الربط', 'danger')
+    
+    return redirect(url_for('device_assignment.department_management'))
