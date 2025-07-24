@@ -1521,6 +1521,59 @@ class MobileDevice(db.Model):
         return status_classes.get(self.status, 'secondary')
 
 
+class SimCard(db.Model):
+    """نموذج لإدارة بطائق SIM والأرقام"""
+    __tablename__ = 'sim_cards'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    phone_number = db.Column(db.String(20), nullable=False, unique=True)  # رقم الهاتف
+    carrier = db.Column(db.String(50), nullable=False)  # شركة الاتصالات: STC, موبايلي, زين
+    status = db.Column(db.String(20), default='متاحة', nullable=False)  # متاحة، نشطة، موقوفة، مرتبطة
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)
+    device_id = db.Column(db.Integer, db.ForeignKey('mobile_devices.id', ondelete='SET NULL'), nullable=True)
+    
+    # معلومات إضافية
+    description = db.Column(db.String(200), nullable=True)  # وصف الرقم
+    activation_date = db.Column(db.Date, nullable=True)  # تاريخ التفعيل
+    monthly_cost = db.Column(db.Float, default=0.0)  # التكلفة الشهرية
+    plan_type = db.Column(db.String(100), nullable=True)  # نوع الباقة
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    assigned_date = db.Column(db.DateTime, nullable=True)  # تاريخ الربط
+    
+    # العلاقات
+    employee = db.relationship('Employee', backref='sim_cards', lazy=True)
+    device = db.relationship('MobileDevice', backref='sim_cards', lazy=True)
+    
+    def __repr__(self):
+        return f'<SimCard {self.phone_number} - {self.carrier}>'
+    
+    @property
+    def is_available(self):
+        """تحقق من توفر الرقم للتخصيص"""
+        if self.status in ['موقوفة', 'معطلة']:
+            return False
+        if self.employee_id is None and self.device_id is None:
+            return True
+        # تحقق من حالة الموظف إذا كان مربوط
+        if self.employee and self.employee.status != 'نشط':
+            return True
+        return False
+    
+    @property
+    def status_class(self):
+        """إرجاع كلاس CSS حسب الحالة"""
+        status_classes = {
+            'متاحة': 'success',
+            'نشطة': 'primary',
+            'موقوفة': 'warning',
+            'مرتبطة': 'info',
+            'معطلة': 'danger'
+        }
+        return status_classes.get(self.status, 'secondary')
+
 class ImportedPhoneNumber(db.Model):
     """نموذج لتخزين أرقام الهواتف المستوردة من Excel"""
     __tablename__ = 'imported_phone_numbers'
@@ -1551,4 +1604,54 @@ class ImportedPhoneNumber(db.Model):
     def get_available_numbers():
         """جلب الأرقام المتاحة (غير المستخدمة)"""
         return ImportedPhoneNumber.query.filter_by(is_used=False).order_by(ImportedPhoneNumber.phone_number).all()
+
+# نموذج ربط الأجهزة والأرقام بالموظفين
+class DeviceAssignment(db.Model):
+    """نموذج لتسجيل عمليات ربط الأجهزة والأرقام بالموظفين"""
+    __tablename__ = 'device_assignments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=False)
+    device_id = db.Column(db.Integer, db.ForeignKey('mobile_devices.id', ondelete='SET NULL'), nullable=True)
+    sim_id = db.Column(db.Integer, db.ForeignKey('sim_cards.id', ondelete='SET NULL'), nullable=True)
+    
+    # معلومات الربط
+    assignment_type = db.Column(db.String(50), nullable=False)  # device_only, sim_only, device_and_sim
+    assignment_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    unassignment_date = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    
+    # معلومات إضافية
+    assigned_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    reason = db.Column(db.String(200), nullable=True)  # سبب الربط أو فك الربط
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    employee = db.relationship('Employee', backref='device_assignments', lazy=True)
+    device = db.relationship('MobileDevice', backref='assignments', lazy=True)
+    sim_card = db.relationship('SimCard', backref='assignments', lazy=True)
+    assigned_by_user = db.relationship('User', backref='assigned_devices', lazy=True)
+    
+    def __repr__(self):
+        return f'<DeviceAssignment {self.employee_id} - {self.assignment_type}>'
+    
+    def unassign(self, reason=None):
+        """فك ربط الجهاز/الرقم"""
+        self.is_active = False
+        self.unassignment_date = datetime.utcnow()
+        self.reason = reason
+        self.updated_at = datetime.utcnow()
+        
+        # تحديث حالة الجهاز والرقم
+        if self.device:
+            self.device.employee_id = None
+            self.device.status = 'متاح'
+        if self.sim_card:
+            self.sim_card.employee_id = None
+            self.sim_card.device_id = None
+            self.sim_card.status = 'متاحة'
 
