@@ -53,6 +53,25 @@
         overflow-y: auto;
     }
     
+    /* إصلاح backdrop الـ modal */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 1040 !important;
+    }
+    
+    .modal {
+        z-index: 1050 !important;
+    }
+    
+    .modal.show {
+        display: block !important;
+    }
+    
     /* تنسيق قائمة البحث المنسدلة */
     .employee-search-container {
         position: relative;
@@ -363,8 +382,8 @@
                                 </div>
                                 
                                 <!-- Modal فك الربط -->
-                                <div class="modal fade" id="unassignModal{{ assignment.id }}" tabindex="-1">
-                                    <div class="modal-dialog">
+                                <div class="modal fade" id="unassignModal{{ assignment.id }}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                                    <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">فك الربط</h5>
