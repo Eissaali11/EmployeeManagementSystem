@@ -370,42 +370,16 @@
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li>
-                                                    <button class="dropdown-item text-danger" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#unassignModal{{ assignment.id }}">
+                                                    <a class="dropdown-item text-danger" 
+                                                       href="{{ url_for('device_assignment.confirm_unassign', assignment_id=assignment.id) }}">
                                                         <i class="fas fa-unlink me-2"></i>فك الربط
-                                                    </button>
+                                                    </a>
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Modal فك الربط -->
-                                <div class="modal fade" id="unassignModal{{ assignment.id }}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">فك الربط</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form method="POST" action="{{ url_for('device_assignment.unassign', assignment_id=assignment.id) }}">
-                                                <div class="modal-body">
-                                                    <p>هل أنت متأكد من فك ربط الأجهزة من الموظف <strong>{{ assignment.employee.name }}</strong>؟</p>
-                                                    
-                                                    <div class="mb-3">
-                                                        <label class="form-label">سبب فك الربط</label>
-                                                        <textarea name="reason" class="form-control" rows="3" placeholder="اذكر سبب فك الربط..."></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                    <button type="submit" class="btn btn-danger">فك الربط</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+
                                 {% endfor %}
                             {% else %}
                                 <div class="text-center py-4">

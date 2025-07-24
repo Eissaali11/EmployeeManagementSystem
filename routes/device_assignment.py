@@ -300,11 +300,10 @@ def unassign(assignment_id):
         device = assignment.device
         sim_card = assignment.sim_card
         
-        # فك ربط الجهاز
+        # فك ربط الجهاز (عكس التحديثات السابقة)
         if device:
-            device.is_assigned = False
-            device.assigned_to = None
-            device.assignment_date = None
+            device.employee_id = None
+            device.status = 'متاح'
         
         # فك ربط الرقم
         if sim_card:
@@ -323,7 +322,7 @@ def unassign(assignment_id):
         # تسجيل العملية
         action_details = []
         if device:
-            action_details.append(f"جهاز: {device.phone_number}")
+            action_details.append(f"جهاز: {device.imei}")
         if sim_card:
             action_details.append(f"رقم: {sim_card.phone_number}")
         
@@ -342,6 +341,25 @@ def unassign(assignment_id):
         flash('حدث خطأ أثناء فك الربط', 'danger')
     
     return redirect(url_for('device_assignment.index'))
+
+@device_assignment_bp.route('/confirm-unassign/<int:assignment_id>')
+@login_required
+def confirm_unassign(assignment_id):
+    """صفحة تأكيد فك الربط"""
+    try:
+        assignment = DeviceAssignment.query.get_or_404(assignment_id)
+        
+        # التأكد من أن الربط نشط
+        if not assignment.is_active:
+            flash('هذا الربط غير نشط بالفعل', 'warning')
+            return redirect(url_for('device_assignment.index'))
+            
+        return render_template('device_assignment/confirm_unassign.html', assignment=assignment)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in confirm_unassign: {str(e)}")
+        flash('حدث خطأ أثناء تحميل صفحة التأكيد', 'danger')
+        return redirect(url_for('device_assignment.index'))
 
 @device_assignment_bp.route('/history')
 @login_required
