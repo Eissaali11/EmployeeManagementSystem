@@ -278,7 +278,11 @@ def edit(id):
             employee.name = new_name
             employee.employee_id = new_employee_id
             employee.national_id = new_national_id
-            employee.mobile = request.form.get('mobile', '')
+            # معالجة رقم الجوال مع دعم الإدخال المخصص
+            mobile_value = request.form.get('mobile', '')
+            if mobile_value == 'custom':
+                mobile_value = request.form.get('mobile_custom', '')
+            employee.mobile = mobile_value
             employee.status = request.form.get('status', 'active')
             employee.job_title = request.form.get('job_title', '')
             employee.location = request.form.get('location', '')
@@ -365,8 +369,22 @@ def edit(id):
     # في حالة GET request (عند فتح الصفحة لأول مرة)
     all_departments = Department.query.order_by(Department.name).all()
     all_nationalities = Nationality.query.order_by(Nationality.name_ar).all() # جلب كل الجنسيات
+    
+    # جلب الأرقام المتاحة من إدارة SIM
+    from models import ImportedPhoneNumber
+    available_phone_numbers = ImportedPhoneNumber.query.filter(
+        db.or_(
+            ImportedPhoneNumber.employee_id.is_(None),  # الأرقام غير المرتبطة
+            ImportedPhoneNumber.employee_id == employee.id  # أو الرقم المرتبط بهذا الموظف حالياً
+        )
+    ).order_by(ImportedPhoneNumber.phone_number).all()
+    
     print(f"Passing {len(all_nationalities)} nationalities to the template.")
-    return render_template('employees/edit.html', employee=employee, nationalities=all_nationalities, departments=all_departments)
+    return render_template('employees/edit.html', 
+                         employee=employee, 
+                         nationalities=all_nationalities, 
+                         departments=all_departments,
+                         available_phone_numbers=available_phone_numbers)
 
 
 

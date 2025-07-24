@@ -40,7 +40,28 @@
                     <div class="col-md-3">
                         <div class="form-group mb-3">
                             <label for="mobile" class="form-label required-field">جوال العمل</label>
-                            <input type="text" class="form-control" id="mobile" name="mobile" value="{{ employee.mobile }}" required>
+                            <select class="form-select" id="mobile" name="mobile" required>
+                                <option value="">-- اختر رقم الجوال --</option>
+                                {% for phone in available_phone_numbers %}
+                                <option value="{{ phone.phone_number }}" 
+                                        {% if employee.mobile == phone.phone_number %}selected{% endif %}
+                                        data-carrier="{{ phone.carrier or '' }}"
+                                        data-plan="{{ phone.plan_type or '' }}">
+                                    {{ phone.phone_number }}
+                                    {% if phone.carrier %} - {{ phone.carrier }}{% endif %}
+                                    {% if phone.plan_type %} ({{ phone.plan_type }}){% endif %}
+                                </option>
+                                {% endfor %}
+                                <!-- خيار للإدخال اليدوي -->
+                                <option value="custom" {% if employee.mobile and employee.mobile not in available_phone_numbers|map(attribute='phone_number')|list %}selected{% endif %}>
+                                    إدخال رقم مخصص
+                                </option>
+                            </select>
+                            <!-- حقل الإدخال اليدوي المخفي -->
+                            <input type="text" class="form-control mt-2" id="mobile_custom" name="mobile_custom" 
+                                   placeholder="أدخل رقم الجوال يدوياً" 
+                                   value="{% if employee.mobile and employee.mobile not in available_phone_numbers|map(attribute='phone_number')|list %}{{ employee.mobile }}{% endif %}"
+                                   style="display: {% if employee.mobile and employee.mobile not in available_phone_numbers|map(attribute='phone_number')|list %}block{% else %}none{% endif %};">
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -402,6 +423,97 @@ document.addEventListener('DOMContentLoaded', function() {
     // إعداد الحالة الافتراضية للحقول الشرطية عند تحميل الصفحة
     toggleCustodyFields();
     toggleSponsorNameField();
+    
+    // إعداد searchable dropdown للجوال العمل
+    initializeMobileDropdown();
+});
+
+// دالة إعداد القائمة المنسدلة القابلة للبحث لجوال العمل
+function initializeMobileDropdown() {
+    const mobileSelect = document.getElementById('mobile');
+    const mobileCustom = document.getElementById('mobile_custom');
+    
+    if (mobileSelect && mobileCustom) {
+        // التعامل مع تغيير القائمة المنسدلة
+        mobileSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                mobileCustom.style.display = 'block';
+                mobileCustom.required = true;
+                // تركيز على حقل الإدخال اليدوي
+                setTimeout(() => mobileCustom.focus(), 100);
+            } else {
+                mobileCustom.style.display = 'none';
+                mobileCustom.required = false;
+                mobileCustom.value = '';
+            }
+        });
+        
+        // التعديل على القيمة المرسلة عند إرسال النموذج
+        const form = mobileSelect.closest('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (mobileSelect.value === 'custom' && mobileCustom.value.trim()) {
+                    // إنشاء input مخفي لإرسال القيمة المخصصة
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'mobile';
+                    hiddenInput.value = mobileCustom.value.trim();
+                    form.appendChild(hiddenInput);
+                    
+                    // تعطيل القائمة المنسدلة لمنع إرسال قيمة 'custom'
+                    mobileSelect.disabled = true;
+                }
+            });
+        }
+    }
+}
+
+// جعل القائمة المنسدلة قابلة للبحث باستخدام Select2
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة CSS للتصميم المحسن
+    const style = document.createElement('style');
+    style.textContent = `
+        .mobile-dropdown-search {
+            position: relative;
+        }
+        
+        .mobile-dropdown-search input[type="text"] {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .mobile-dropdown-options {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-top: none;
+            background: white;
+            position: absolute;
+            width: 100%;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .mobile-dropdown-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .mobile-dropdown-option:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .mobile-dropdown-option.selected {
+            background-color: #007bff;
+            color: white;
+        }
+    `;
+    document.head.appendChild(style);
 });
 </script>
 
