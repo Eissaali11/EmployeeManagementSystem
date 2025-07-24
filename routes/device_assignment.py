@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
-from models import MobileDevice, SimCard, Employee, Department, db, UserRole, DeviceAssignment
+from models import MobileDevice, SimCard, Employee, Department, db, UserRole, DeviceAssignment, ImportedPhoneNumber
 from datetime import datetime
 import logging
 from utils.audit_logger import log_activity
@@ -29,13 +29,13 @@ def departments_view():
                 devices = MobileDevice.query.filter_by(employee_id=employee.id).all()
                 device_count += len(devices)
                 
-                # عدد أرقام SIM
-                sims = SimCard.query.filter_by(employee_id=employee.id).all()
+                # عدد أرقام SIM من ImportedPhoneNumber
+                sims = ImportedPhoneNumber.query.filter_by(employee_id=employee.id).all()
                 sim_count += len(sims)
                 
                 # إضافة الأجهزة والأرقام للموظف للعرض
                 employee.mobile_devices = devices
-                employee.sim_cards = sims
+                employee.imported_phone_numbers = sims
             
             department.device_count = device_count
             department.sim_count = sim_count
@@ -52,7 +52,7 @@ def departments_view():
         stats = {
             'total_departments': len(departments),
             'total_devices': MobileDevice.query.count(),
-            'total_sims': SimCard.query.count(),
+            'total_sims': ImportedPhoneNumber.query.count(),
             'total_employees': Employee.query.count(),
         }
         

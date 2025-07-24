@@ -153,19 +153,19 @@
                                                                 <i class="fas fa-mobile-alt"></i> {{ employee.mobile_devices|length }}
                                                             </span>
                                                         {% endif %}
-                                                        {% if employee.sim_cards %}
+                                                        {% if employee.imported_phone_numbers %}
                                                             <span class="badge bg-info">
-                                                                <i class="fas fa-sim-card"></i> {{ employee.sim_cards|length }}
+                                                                <i class="fas fa-sim-card"></i> {{ employee.imported_phone_numbers|length }}
                                                             </span>
                                                         {% endif %}
-                                                        {% if not employee.mobile_devices and not employee.sim_cards %}
+                                                        {% if not employee.mobile_devices and not employee.imported_phone_numbers %}
                                                             <span class="badge bg-secondary">بدون أجهزة</span>
                                                         {% endif %}
                                                     </div>
                                                 </div>
                                                 
                                                 <!-- تفاصيل الأجهزة -->
-                                                {% if employee.mobile_devices or employee.sim_cards %}
+                                                {% if employee.mobile_devices or employee.imported_phone_numbers %}
                                                 <div class="mt-2 pt-2 border-top">
                                                     {% for device in employee.mobile_devices %}
                                                     <div class="mb-1">
@@ -178,7 +178,7 @@
                                                     </div>
                                                     {% endfor %}
                                                     
-                                                    {% for sim in employee.sim_cards %}
+                                                    {% for sim in employee.imported_phone_numbers %}
                                                     <div class="mb-1">
                                                         <i class="fas fa-sim-card text-info me-1"></i>
                                                         <small>{{ sim.phone_number }} ({{ sim.carrier or 'غير محدد' }})</small>
