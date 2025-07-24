@@ -102,7 +102,7 @@
                                     <option value="">اختر الموظف</option>
                                     {% for employee in employees %}
                                     <option value="{{ employee.id }}" 
-                                            data-departments="{{ [dept.id for dept in employee.departments]|join(',') }}"
+                                            data-departments="{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}"
                                             data-mobile="{{ employee.mobile }}"
                                             data-employee-id="{{ employee.employee_id }}">
                                         {{ employee.name }} ({{ employee.employee_id }})
