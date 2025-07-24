@@ -551,6 +551,16 @@ def view(id):
     # Get mobile devices assigned to this employee
     mobile_devices = MobileDevice.query.filter_by(employee_id=id).order_by(MobileDevice.assigned_date.desc()).all()
     
+    # Get device assignments for this employee
+    from models import DeviceAssignment
+    device_assignments = DeviceAssignment.query.filter_by(
+        employee_id=id, 
+        status='نشط'
+    ).options(
+        db.joinedload(DeviceAssignment.device),
+        db.joinedload(DeviceAssignment.sim_card)
+    ).all()
+    
     all_departments = Department.query.order_by(Department.name).all()
     return render_template('employees/view.html', 
                           employee=employee, 
@@ -561,6 +571,7 @@ def view(id):
                           salaries=salaries,
                           vehicle_handovers=vehicle_handovers,
                           mobile_devices=mobile_devices,
+                          device_assignments=device_assignments,
                           departments=all_departments
                           )
 
