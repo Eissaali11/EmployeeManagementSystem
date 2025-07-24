@@ -1113,6 +1113,7 @@
 - **Brand and Status Filtering**: Advanced filtering by device brand and assignment status
 - **Excel Import/Export**: Bulk operations for device data management
 - **Employee Assignment**: Assign/unassign devices to employees with full tracking
+- **Advanced Employee Search**: Interactive dropdown search supporting employee name, ID, national ID, and department
 - **Arabic Interface**: Complete RTL support with Arabic labels and messages
 
 ## Deployment Strategy

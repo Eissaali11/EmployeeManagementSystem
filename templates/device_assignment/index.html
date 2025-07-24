@@ -205,7 +205,7 @@
                                 <input type="text" 
                                        class="employee-search-input form-control" 
                                        id="employee-search"
-                                       placeholder="ابحث عن موظف..." 
+                                       placeholder="ابحث بالاسم أو رقم الموظف أو رقم الهوية أو القسم..." 
                                        autocomplete="off">
                                 <input type="hidden" name="employee_id" id="selected-employee-id" required>
                                 <div class="employee-dropdown" id="employee-dropdown">
@@ -437,6 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
             id: {{ employee.id }},
             name: "{{ employee.name }}",
             employee_id: "{{ employee.employee_id }}",
+            national_id: "{{ employee.national_id or '' }}",
             departments: "{% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}, {% endif %}{% endfor %}"
         }{% if not loop.last %},{% endif %}
         {% endfor %}
@@ -467,10 +468,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // فلترة الموظفين بناءً على الاسم أو رقم الموظف أو القسم
+        // فلترة الموظفين بناءً على الاسم أو رقم الموظف أو رقم الهوية أو القسم
         filteredEmployees = employees.filter(emp => 
             emp.name.toLowerCase().includes(searchTerm) ||
             emp.employee_id.toLowerCase().includes(searchTerm) ||
+            emp.national_id.toLowerCase().includes(searchTerm) ||
             emp.departments.toLowerCase().includes(searchTerm)
         );
         
@@ -529,6 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="employee-name">${employee.name}</div>
                 <div class="employee-details">
                     رقم الموظف: ${employee.employee_id}
+                    ${employee.national_id ? ' • الهوية: ' + employee.national_id : ''}
                     ${employee.departments ? ' • القسم: ' + employee.departments : ''}
                 </div>
             `;
