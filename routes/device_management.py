@@ -120,13 +120,12 @@ def create():
                 return render_template('device_management/create.html')
             
             # إنشاء الجهاز الجديد
-            device = MobileDevice(
-                imei=imei,
-                device_brand=brand,
-                device_model=model,
-                phone_number=phone_number or None,
-                notes=description
-            )
+            device = MobileDevice()
+            device.imei = imei
+            device.device_brand = brand
+            device.device_model = model
+            device.phone_number = phone_number or None
+            device.notes = description
             
             # إضافة التواريخ إذا تم إدخالها
             if purchase_date:
@@ -431,13 +430,12 @@ def import_excel():
                         continue
                     
                     # إنشاء الجهاز الجديد
-                    device = MobileDevice(
-                        imei=imei,
-                        device_brand=brand,
-                        device_model=model,
-                        phone_number=phone_number if phone_number and phone_number != 'nan' else None,
-                        notes=description if description and description != 'nan' else None
-                    )
+                    device = MobileDevice()
+                    device.imei = imei
+                    device.device_brand = brand
+                    device.device_model = model
+                    device.phone_number = phone_number if phone_number and phone_number != 'nan' else None
+                    device.notes = description if description and description != 'nan' else None
                     
                     db.session.add(device)
                     imported_count += 1

@@ -1105,6 +1105,16 @@
 - **sendgrid 6.11.0**: Email services
 - **Firebase SDK**: Authentication and storage
 
+## Mobile Device Management System
+- **Comprehensive Mobile Device Management**: Full CRUD operations for mobile devices with IMEI tracking
+- **Optional Phone Number Support**: Devices can be created without phone numbers for device-only management
+- **Dedicated Devices-Only View**: Separate page for managing devices without phone numbers
+- **Department-based Filtering**: Filter devices by employee departments
+- **Brand and Status Filtering**: Advanced filtering by device brand and assignment status
+- **Excel Import/Export**: Bulk operations for device data management
+- **Employee Assignment**: Assign/unassign devices to employees with full tracking
+- **Arabic Interface**: Complete RTL support with Arabic labels and messages
+
 ## Deployment Strategy
 
 ### Environment Support
