@@ -26,7 +26,7 @@
             </h6>
         </div>
         <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
+            <form id="workshopForm" method="POST" enctype="multipart/form-data" action="{{ url_for('mobile.edit_workshop_record', workshop_id=workshop_record.id) }}">
                 {{ csrf_token() }}
                 
                 <div class="row">
@@ -192,7 +192,7 @@
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success flex-fill">
+                    <button type="submit" id="saveButton" class="btn btn-success flex-fill">
                         <i class="fas fa-save ms-1"></i>
                         تحديث السجل وحفظ الصور
                     </button>
@@ -485,25 +485,49 @@ function removeReceiptFile(inputId, containerId) {
 
 // تحسين تجربة المستخدم
 document.addEventListener('DOMContentLoaded', function() {
-    // إضافة معالج للنموذج لتشخيص المشكلة
-    const form = document.querySelector('form');
-    if (form) {
+    // إضافة معالج للنموذج لضمان الإرسال
+    const form = document.getElementById('workshopForm');
+    const saveButton = document.getElementById('saveButton');
+    
+    if (form && saveButton) {
+        // إضافة معالج للنموذج
         form.addEventListener('submit', function(e) {
-            console.log('Form submission detected');
-            console.log('Form data:', new FormData(this));
-            console.log('Files in form:');
+            console.log('Form submission started');
             
-            // فحص جميع حقول الملفات
-            const fileInputs = this.querySelectorAll('input[type="file"]');
-            fileInputs.forEach(input => {
-                console.log(`${input.name}: ${input.files.length} files`);
-                Array.from(input.files).forEach((file, index) => {
-                    console.log(`  File ${index}: ${file.name} (${file.size} bytes)`);
-                });
-            });
+            // تعطيل الزر أثناء الإرسال
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جارٍ الحفظ...';
             
-            // لا نمنع الإرسال - دعه يحدث
-            console.log('Allowing form submission...');
+            // فحص البيانات
+            const formData = new FormData(this);
+            console.log('Form data entries:');
+            for (let pair of formData.entries()) {
+                if (pair[1] instanceof File) {
+                    console.log(pair[0] + ': ' + pair[1].name + ' (' + pair[1].size + ' bytes)');
+                } else {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+            }
+            
+            console.log('Submitting form to:', this.action);
+            return true; // السماح بالإرسال
+        });
+        
+        // إضافة معالج للزر للتأكد من عمله
+        saveButton.addEventListener('click', function(e) {
+            console.log('Save button clicked');
+            e.preventDefault(); // منع الإرسال الافتراضي
+            
+            // فحص صحة النموذج
+            if (!form.checkValidity()) {
+                console.log('Form is invalid');
+                form.reportValidity();
+                return false;
+            }
+            
+            console.log('Form is valid, submitting manually...');
+            // إرسال النموذج يدوياً
+            form.submit();
         });
     }
     
