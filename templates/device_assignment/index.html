@@ -208,9 +208,9 @@
                             <select name="device_id" class="form-select">
                                 <option value="">-- اختر جهاز --</option>
                                 {% for device in available_devices %}
-                                    {% if not device.is_assigned %}
+                                    {% if device.employee_id is none %}
                                         <option value="{{ device.id }}">
-                                            {{ device.phone_number }} ({{ device.device_brand }} {{ device.device_model }})
+                                            ({{ device.device_brand or 'None' }} {{ device.device_model or 'None' }}) {{ device.imei }}
                                         </option>
                                     {% endif %}
                                 {% endfor %}
@@ -270,8 +270,8 @@
                                                 {% if assignment.device %}
                                                     <div class="mb-1">
                                                         <i class="fas fa-mobile-alt text-success me-2"></i>
-                                                        <strong>الجهاز:</strong> {{ assignment.device.phone_number }}
-                                                        <br><small class="text-muted ms-4">{{ assignment.device.device_brand }} {{ assignment.device.device_model }}</small>
+                                                        <strong>الجهاز:</strong> {{ assignment.device.imei }}
+                                                        <br><small class="text-muted ms-4">{{ assignment.device.device_brand or 'غير محدد' }} {{ assignment.device.device_model or 'غير محدد' }}</small>
                                                     </div>
                                                 {% endif %}
                                                 

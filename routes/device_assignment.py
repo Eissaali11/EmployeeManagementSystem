@@ -32,13 +32,13 @@ def index():
             )
         employees = employees_query.order_by(Employee.name).all()
         
-        # الأجهزة المتاحة
-        available_devices_query = MobileDevice.query
+        # الأجهزة المتاحة فقط (غير مرتبطة بموظف)
+        available_devices_query = MobileDevice.query.filter(MobileDevice.employee_id.is_(None))
         if device_status == 'available':
-            available_devices_query = available_devices_query.filter(MobileDevice.is_assigned == False)
+            available_devices_query = available_devices_query.filter(MobileDevice.employee_id.is_(None))
         elif device_status == 'assigned':
-            available_devices_query = available_devices_query.filter(MobileDevice.is_assigned == True)
-        available_devices = available_devices_query.order_by(MobileDevice.phone_number).all()
+            available_devices_query = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None))
+        available_devices = available_devices_query.order_by(MobileDevice.device_brand, MobileDevice.device_model).all()
         
         # الأرقام المتاحة
         available_sims_query = SimCard.query
