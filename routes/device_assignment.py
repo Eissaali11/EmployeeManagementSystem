@@ -820,7 +820,7 @@ def export_available_sims():
         ws.title = "الأرقام المتاحة"
         
         # إعداد العناوين
-        headers = ['رقم الهاتف', 'نوع الخدمة', 'حالة الرقم', 'تاريخ الإضافة', 'ملاحظات']
+        headers = ['رقم الهاتف', 'الوصف', 'حالة الاستخدام', 'تاريخ الإضافة', 'المرتبط بموظف']
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=1, column=col, value=header)
             cell.font = Font(bold=True, name='Arial')
@@ -831,10 +831,10 @@ def export_available_sims():
         # إضافة البيانات
         for row, sim in enumerate(available_sims, 2):
             ws.cell(row=row, column=1, value=sim.phone_number)
-            ws.cell(row=row, column=2, value=sim.service_type or 'غير محدد')
-            ws.cell(row=row, column=3, value=sim.status or 'متاح')
+            ws.cell(row=row, column=2, value=sim.description or 'غير محدد')
+            ws.cell(row=row, column=3, value='مستخدم' if sim.is_used else 'متاح')
             ws.cell(row=row, column=4, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
-            ws.cell(row=row, column=5, value=sim.notes or '')
+            ws.cell(row=row, column=5, value=sim.employee.name if sim.employee else 'غير مرتبط')
         
         # حفظ الملف
         output = io.BytesIO()
@@ -949,7 +949,7 @@ def export_available_combined():
         ws2 = wb.create_sheet(title="الأرقام المتاحة")
         
         # عناوين الأرقام
-        sim_headers = ['رقم الهاتف', 'نوع الخدمة', 'حالة الرقم', 'تاريخ الإضافة', 'ملاحظات']
+        sim_headers = ['رقم الهاتف', 'الوصف', 'حالة الاستخدام', 'تاريخ الإضافة', 'المرتبط بموظف']
         for col, header in enumerate(sim_headers, 1):
             cell = ws2.cell(row=1, column=col, value=header)
             cell.font = Font(bold=True, name='Arial')
@@ -960,10 +960,10 @@ def export_available_combined():
         # بيانات الأرقام
         for row, sim in enumerate(available_sims, 2):
             ws2.cell(row=row, column=1, value=sim.phone_number)
-            ws2.cell(row=row, column=2, value=sim.service_type or 'غير محدد')
-            ws2.cell(row=row, column=3, value=sim.status or 'متاح')
+            ws2.cell(row=row, column=2, value=sim.description or 'غير محدد')
+            ws2.cell(row=row, column=3, value='مستخدم' if sim.is_used else 'متاح')
             ws2.cell(row=row, column=4, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
-            ws2.cell(row=row, column=5, value=sim.notes or '')
+            ws2.cell(row=row, column=5, value=sim.employee.name if sim.employee else 'غير مرتبط')
         
         # ورقة الإحصائيات
         ws3 = wb.create_sheet(title="ملخص الإحصائيات")
