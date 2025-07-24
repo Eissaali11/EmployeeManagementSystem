@@ -89,13 +89,34 @@ def index():
             )
         employees = employees_query.order_by(Employee.name).all()
         
-        # الأجهزة المتاحة فقط (غير مرتبطة بموظف)
-        available_devices_query = MobileDevice.query.filter(MobileDevice.employee_id.is_(None))
+        # الأجهزة المتاحة (غير مرتبطة في DeviceAssignment نشط)
+        # جلب IDs الأجهزة المربوطة حالياً
+        assigned_device_ids = db.session.query(DeviceAssignment.device_id).filter(
+            DeviceAssignment.is_active == True,
+            DeviceAssignment.device_id.isnot(None)
+        ).distinct().all()
+        assigned_device_ids = [id[0] for id in assigned_device_ids]
+        
+        available_devices_query = MobileDevice.query
         if device_status == 'available':
-            available_devices_query = available_devices_query.filter(MobileDevice.employee_id.is_(None))
+            # الأجهزة غير المربوطة
+            if assigned_device_ids:
+                available_devices_query = available_devices_query.filter(~MobileDevice.id.in_(assigned_device_ids))
         elif device_status == 'assigned':
-            available_devices_query = MobileDevice.query.filter(MobileDevice.employee_id.isnot(None))
+            # الأجهزة المربوطة
+            if assigned_device_ids:
+                available_devices_query = available_devices_query.filter(MobileDevice.id.in_(assigned_device_ids))
+            else:
+                available_devices_query = available_devices_query.filter(False)  # لا توجد أجهزة مربوطة
+        else:
+            # عرض جميع الأجهزة مع تمييز المربوطة
+            pass
+            
         available_devices = available_devices_query.order_by(MobileDevice.device_brand, MobileDevice.device_model).all()
+        
+        # إضافة معلومة هل الجهاز مربوط أم لا
+        for device in available_devices:
+            device.is_assigned = device.id in assigned_device_ids
         
         # الأرقام المتاحة
         available_sims_query = SimCard.query
@@ -110,11 +131,11 @@ def index():
             DeviceAssignment.is_active == True
         ).order_by(DeviceAssignment.assignment_date.desc()).limit(10).all()
         
-        # إحصائيات
+        # إحصائيات محدثة تعتمد على DeviceAssignment
         stats = {
             'total_devices': MobileDevice.query.count(),
-            'available_devices': MobileDevice.query.filter(MobileDevice.employee_id.is_(None)).count(),
-            'assigned_devices': MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).count(),
+            'available_devices': MobileDevice.query.count() - len(assigned_device_ids),
+            'assigned_devices': len(assigned_device_ids),
             'total_sims': SimCard.query.count(),
             'available_sims': SimCard.query.filter(SimCard.employee_id.is_(None)).count(),
             'assigned_sims': SimCard.query.filter(SimCard.employee_id.isnot(None)).count(),
