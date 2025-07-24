@@ -555,7 +555,7 @@ def view(id):
     from models import DeviceAssignment
     device_assignments = DeviceAssignment.query.filter_by(
         employee_id=id, 
-        status='نشط'
+        is_active=True
     ).options(
         db.joinedload(DeviceAssignment.device),
         db.joinedload(DeviceAssignment.sim_card)
