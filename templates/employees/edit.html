@@ -183,7 +183,32 @@
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="mobile_imei" class="form-label">رقم IMEI</label>
-                                            <input type="text" class="form-control" id="mobile_imei" name="mobile_imei" value="{{ employee.mobile_imei or '' }}" placeholder="15 رقم" maxlength="15">
+                                            <div class="imei-dropdown-container" style="position: relative;">
+                                                <!-- حقل البحث -->
+                                                <input type="text" class="form-control" id="imei_search" 
+                                                       placeholder="ابحث عن رقم IMEI أو اكتب رقم جديد..." 
+                                                       value="{{ employee.mobile_imei or '' }}"
+                                                       autocomplete="off" maxlength="15">
+                                                
+                                                <!-- القائمة المخفية للأرقام المتاحة -->
+                                                <div class="imei-dropdown-list" id="imei_dropdown_list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                                    {% for device in available_imei_numbers %}
+                                                    <div class="imei-dropdown-item" data-value="{{ device.imei }}" 
+                                                         style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                                        <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ device.imei }}</div>
+                                                        {% if device.brand or device.model %}
+                                                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                                            {% if device.brand %}{{ device.brand }}{% endif %}
+                                                            {% if device.model %} {{ device.model }}{% endif %}
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                                
+                                                <!-- الحقل المخفي لحفظ القيمة -->
+                                                <input type="hidden" id="mobile_imei" name="mobile_imei" value="{{ employee.mobile_imei or '' }}">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -430,6 +455,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // إعداد searchable dropdown للجوال العمل
     initializeMobileDropdown();
+    
+    // إعداد searchable dropdown لرقم IMEI
+    initializeImeiDropdown();
 });
 
 // دالة إعداد القائمة المنسدلة القابلة للبحث لجوال العمل
@@ -529,6 +557,104 @@ mobileDropdownCSS.textContent = `
     }
 `;
 document.head.appendChild(mobileDropdownCSS);
+
+// دالة إعداد القائمة المنسدلة القابلة للبحث لرقم IMEI
+function initializeImeiDropdown() {
+    const searchInput = document.getElementById('imei_search');
+    const dropdownList = document.getElementById('imei_dropdown_list');
+    const hiddenInput = document.getElementById('mobile_imei');
+    const dropdownItems = document.querySelectorAll('.imei-dropdown-item');
+    
+    if (!searchInput || !dropdownList || !hiddenInput) return;
+    
+    // إظهار القائمة عند التركيز على حقل البحث
+    searchInput.addEventListener('focus', function() {
+        dropdownList.style.display = 'block';
+        filterImeiDropdownItems('');
+    });
+    
+    // البحث في الأرقام أثناء الكتابة
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        filterImeiDropdownItems(searchTerm);
+        dropdownList.style.display = 'block';
+        
+        // تحديث القيمة المخفية
+        hiddenInput.value = searchTerm;
+    });
+    
+    // إخفاء القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdownList.contains(e.target)) {
+            dropdownList.style.display = 'none';
+        }
+    });
+    
+    // التعامل مع اختيار عنصر من القائمة
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            searchInput.value = value;
+            hiddenInput.value = value;
+            dropdownList.style.display = 'none';
+        });
+        
+        // تأثيرات التمرير
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#e3f2fd';
+            this.style.color = '#1976d2';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#ffffff';
+            this.style.color = '#333';
+        });
+    });
+    
+    // دالة فلترة العناصر
+    function filterImeiDropdownItems(searchTerm) {
+        dropdownItems.forEach(item => {
+            const imeiNumber = item.dataset.value;
+            const text = item.textContent.toLowerCase();
+            
+            if (imeiNumber.includes(searchTerm) || text.includes(searchTerm.toLowerCase())) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+}
+
+// إضافة CSS محسن للقائمة المنسدلة لـ IMEI
+const imeiDropdownCSS = document.createElement('style');
+imeiDropdownCSS.textContent = `
+    .imei-dropdown-list {
+        border: 1px solid #bdc3c7 !important;
+        background: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    
+    .imei-dropdown-item {
+        color: #2c3e50 !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease;
+    }
+    
+    .imei-dropdown-item:hover {
+        background: #e3f2fd !important;
+        color: #1976d2 !important;
+    }
+    
+    .imei-dropdown-item div {
+        color: inherit !important;
+    }
+    
+    .imei-dropdown-item:last-child {
+        border-bottom: none !important;
+    }
+`;
+document.head.appendChild(imeiDropdownCSS);
 
 
 </script>

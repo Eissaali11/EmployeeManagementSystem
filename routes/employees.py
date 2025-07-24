@@ -247,10 +247,18 @@ def create():
         ImportedPhoneNumber.employee_id.is_(None)  # الأرقام المتاحة فقط
     ).order_by(ImportedPhoneNumber.phone_number).all()
     
+    # جلب أرقام IMEI المتاحة من إدارة الأجهزة
+    from models import MobileDevice
+    available_imei_numbers = MobileDevice.query.filter(
+        MobileDevice.status == 'متاح',  # الأجهزة المتاحة فقط
+        MobileDevice.employee_id.is_(None)  # غير مربوطة بموظف
+    ).order_by(MobileDevice.imei).all()
+    
     return render_template('employees/create.html', 
                          departments=departments,
                          nationalities=nationalities,
-                         available_phone_numbers=available_phone_numbers)
+                         available_phone_numbers=available_phone_numbers,
+                         available_imei_numbers=available_imei_numbers)
 
 
 
@@ -386,12 +394,20 @@ def edit(id):
         ImportedPhoneNumber.employee_id.is_(None)  # الأرقام المتاحة فقط
     ).order_by(ImportedPhoneNumber.phone_number).all()
     
+    # جلب أرقام IMEI المتاحة من إدارة الأجهزة
+    from models import MobileDevice
+    available_imei_numbers = MobileDevice.query.filter(
+        MobileDevice.status == 'متاح',  # الأجهزة المتاحة فقط
+        MobileDevice.employee_id.is_(None)  # غير مربوطة بموظف
+    ).order_by(MobileDevice.imei).all()
+    
     print(f"Passing {len(all_nationalities)} nationalities to the template.")
     return render_template('employees/edit.html', 
                          employee=employee, 
                          nationalities=all_nationalities, 
                          departments=all_departments,
-                         available_phone_numbers=available_phone_numbers)
+                         available_phone_numbers=available_phone_numbers,
+                         available_imei_numbers=available_imei_numbers)
 
 
 
