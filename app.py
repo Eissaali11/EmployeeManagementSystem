@@ -385,7 +385,7 @@ with app.app_context():
     # app.register_blueprint(workshop_reports_bp, url_prefix='/workshop-reports')
     app.register_blueprint(employee_portal_bp, url_prefix='/employee-portal')
     app.register_blueprint(insights_bp, url_prefix='/insights')
-    app.register_blueprint(external_safety_bp)
+    app.register_blueprint(external_safety_bp, url_prefix='/external-safety')
     app.register_blueprint(mobile_devices_bp, url_prefix='/mobile-devices')
     app.register_blueprint(operations_bp, url_prefix='/operations')
     app.register_blueprint(sim_management_bp, url_prefix='/sim-management')
