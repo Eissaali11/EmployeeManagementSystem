@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
-from models import MobileDevice, ImportedPhoneNumber, Employee, Department, db, UserRole, DeviceAssignment
+from models import MobileDevice, SimCard, Employee, Department, db, UserRole, DeviceAssignment
 from datetime import datetime
 import logging
 from utils.audit_logger import log_activity
@@ -41,12 +41,12 @@ def index():
         available_devices = available_devices_query.order_by(MobileDevice.phone_number).all()
         
         # الأرقام المتاحة
-        available_sims_query = ImportedPhoneNumber.query
+        available_sims_query = SimCard.query
         if sim_status == 'available':
-            available_sims_query = available_sims_query.filter(ImportedPhoneNumber.employee_id.is_(None))
+            available_sims_query = available_sims_query.filter(SimCard.employee_id.is_(None))
         elif sim_status == 'assigned':
-            available_sims_query = available_sims_query.filter(ImportedPhoneNumber.employee_id.isnot(None))
-        available_sims = available_sims_query.order_by(ImportedPhoneNumber.phone_number).all()
+            available_sims_query = available_sims_query.filter(SimCard.employee_id.isnot(None))
+        available_sims = available_sims_query.order_by(SimCard.phone_number).all()
         
         # عمليات الربط النشطة
         active_assignments = DeviceAssignment.query.filter(
@@ -56,11 +56,11 @@ def index():
         # إحصائيات
         stats = {
             'total_devices': MobileDevice.query.count(),
-            'available_devices': MobileDevice.query.filter(MobileDevice.is_assigned == False).count(),
-            'assigned_devices': MobileDevice.query.filter(MobileDevice.is_assigned == True).count(),
-            'total_sims': ImportedPhoneNumber.query.count(),
-            'available_sims': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.employee_id.is_(None)).count(),
-            'assigned_sims': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.employee_id.isnot(None)).count(),
+            'available_devices': MobileDevice.query.filter(MobileDevice.employee_id.is_(None)).count(),
+            'assigned_devices': MobileDevice.query.filter(MobileDevice.employee_id.isnot(None)).count(),
+            'total_sims': SimCard.query.count(),
+            'available_sims': SimCard.query.filter(SimCard.employee_id.is_(None)).count(),
+            'assigned_sims': SimCard.query.filter(SimCard.employee_id.isnot(None)).count(),
         }
         
         return render_template('device_assignment/index.html',

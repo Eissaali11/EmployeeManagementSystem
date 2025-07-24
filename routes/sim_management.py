@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
-from models import ImportedPhoneNumber, Employee, Department, db, UserRole
+from models import SimCard, ImportedPhoneNumber, Employee, Department, db, UserRole
 from datetime import datetime
 import logging
 from utils.audit_logger import log_activity
@@ -19,34 +19,34 @@ def index():
         search_term = request.args.get('search', '')
         
         # استعلام أساسي
-        query = ImportedPhoneNumber.query
+        query = SimCard.query
         
         # تطبيق فلاتر
         if search_term:
-            query = query.filter(ImportedPhoneNumber.phone_number.contains(search_term))
+            query = query.filter(SimCard.phone_number.contains(search_term))
         
         if carrier_filter:
-            query = query.filter(ImportedPhoneNumber.carrier == carrier_filter)
+            query = query.filter(SimCard.carrier == carrier_filter)
             
         if status_filter == 'available':
-            query = query.filter(ImportedPhoneNumber.employee_id.is_(None))
+            query = query.filter(SimCard.employee_id.is_(None))
         elif status_filter == 'assigned':
-            query = query.filter(ImportedPhoneNumber.employee_id.isnot(None))
+            query = query.filter(SimCard.employee_id.isnot(None))
         
         # ترتيب البيانات
-        sim_cards = query.order_by(ImportedPhoneNumber.id.desc()).all()
+        sim_cards = query.order_by(SimCard.id.desc()).all()
         
         # الحصول على قائمة الأقسام للفلترة
         departments = Department.query.order_by(Department.name).all()
         
         # إحصائيات
         stats = {
-            'total_sims': ImportedPhoneNumber.query.count(),
-            'available_sims': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.employee_id.is_(None)).count(),
-            'assigned_sims': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.employee_id.isnot(None)).count(),
-            'stc_count': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.carrier == 'STC').count(),
-            'mobily_count': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.carrier == 'موبايلي').count(),
-            'zain_count': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.carrier == 'زين').count(),
+            'total_sims': SimCard.query.count(),
+            'available_sims': SimCard.query.filter(SimCard.employee_id.is_(None)).count(),
+            'assigned_sims': SimCard.query.filter(SimCard.employee_id.isnot(None)).count(),
+            'stc_count': SimCard.query.filter(SimCard.carrier == 'STC').count(),
+            'mobily_count': SimCard.query.filter(SimCard.carrier == 'موبايلي').count(),
+            'zain_count': SimCard.query.filter(SimCard.carrier == 'زين').count(),
         }
         
         return render_template('sim_management/index.html', 
