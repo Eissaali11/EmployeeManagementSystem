@@ -485,6 +485,28 @@ function removeReceiptFile(inputId, containerId) {
 
 // تحسين تجربة المستخدم
 document.addEventListener('DOMContentLoaded', function() {
+    // إضافة معالج للنموذج لتشخيص المشكلة
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submission detected');
+            console.log('Form data:', new FormData(this));
+            console.log('Files in form:');
+            
+            // فحص جميع حقول الملفات
+            const fileInputs = this.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                console.log(`${input.name}: ${input.files.length} files`);
+                Array.from(input.files).forEach((file, index) => {
+                    console.log(`  File ${index}: ${file.name} (${file.size} bytes)`);
+                });
+            });
+            
+            // لا نمنع الإرسال - دعه يحدث
+            console.log('Allowing form submission...');
+        });
+    }
+    
     // إضافة تأثيرات التفاعل
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => {
