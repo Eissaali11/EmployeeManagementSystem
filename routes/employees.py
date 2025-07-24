@@ -239,8 +239,18 @@ def create():
     
     # Get all departments for the dropdown
     departments = Department.query.all()
-    nationalities = Nationality.query.order_by(Nationality.name_ar).all() 
-    return render_template('employees/create.html', departments=departments,nationalities=nationalities)
+    nationalities = Nationality.query.order_by(Nationality.name_ar).all()
+    
+    # جلب الأرقام المتاحة فقط (غير المربوطة بأي موظف)
+    from models import ImportedPhoneNumber
+    available_phone_numbers = ImportedPhoneNumber.query.filter(
+        ImportedPhoneNumber.employee_id.is_(None)  # الأرقام المتاحة فقط
+    ).order_by(ImportedPhoneNumber.phone_number).all()
+    
+    return render_template('employees/create.html', 
+                         departments=departments,
+                         nationalities=nationalities,
+                         available_phone_numbers=available_phone_numbers)
 
 
 
@@ -370,13 +380,10 @@ def edit(id):
     all_departments = Department.query.order_by(Department.name).all()
     all_nationalities = Nationality.query.order_by(Nationality.name_ar).all() # جلب كل الجنسيات
     
-    # جلب الأرقام المتاحة من إدارة SIM
+    # جلب الأرقام المتاحة فقط (غير المربوطة بأي موظف)
     from models import ImportedPhoneNumber
     available_phone_numbers = ImportedPhoneNumber.query.filter(
-        db.or_(
-            ImportedPhoneNumber.employee_id.is_(None),  # الأرقام غير المرتبطة
-            ImportedPhoneNumber.employee_id == employee.id  # أو الرقم المرتبط بهذا الموظف حالياً
-        )
+        ImportedPhoneNumber.employee_id.is_(None)  # الأرقام المتاحة فقط
     ).order_by(ImportedPhoneNumber.phone_number).all()
     
     print(f"Passing {len(all_nationalities)} nationalities to the template.")
