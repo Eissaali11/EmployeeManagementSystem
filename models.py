@@ -1589,6 +1589,7 @@ class ImportedPhoneNumber(db.Model):
     description = db.Column(db.String(100), nullable=True)  # وصف أو اسم صاحب الرقم
     is_used = db.Column(db.Boolean, default=False, nullable=False)  # هل تم استخدام الرقم أم لا
     imported_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)  # المستخدم الذي استورد الرقم
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)  # معرف الموظف المرتبط
     
     # تواريخ النظام
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1596,6 +1597,7 @@ class ImportedPhoneNumber(db.Model):
     
     # العلاقات
     user = db.relationship('User', backref='imported_phone_numbers', lazy=True)
+    employee = db.relationship('Employee', backref='imported_phone_numbers', lazy=True)
     
     def __repr__(self):
         return f'<ImportedPhoneNumber {self.phone_number}>'
