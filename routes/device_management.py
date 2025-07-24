@@ -468,29 +468,38 @@ def export_excel():
         wb.save(output)
         output.seek(0)
         
-        # إنشاء اسم الملف بناءً على الفلاتر
+        # إنشاء اسم الملف بناءً على الفلاتر (بالإنجليزية لتجنب مشاكل الترميز)
         filename = "mobile_devices"
         if department_filter:
             dept = Department.query.get(department_filter)
             if dept:
-                filename += f"_{dept.name}"
+                # تحويل الاسم العربي إلى شكل آمن
+                safe_name = dept.name.replace(' ', '_').replace('/', '_')
+                filename += f"_dept_{dept.id}"
         if brand_filter:
-            filename += f"_{brand_filter}"
+            safe_brand = brand_filter.replace(' ', '_').replace('/', '_')
+            filename += f"_{safe_brand}"
         if status_filter:
             status_names = {
-                'assigned': 'مربوط',
-                'available': 'متاح',
-                'no_phone': 'بدون_رقم',
-                'with_phone': 'مع_رقم'
+                'assigned': 'assigned',
+                'available': 'available', 
+                'no_phone': 'no_phone',
+                'with_phone': 'with_phone'
             }
             filename += f"_{status_names.get(status_filter, status_filter)}"
         
         filename += ".xlsx"
         
+        # ترميز اسم الملف بشكل آمن للمتصفحات
+        from urllib.parse import quote
+        safe_filename = quote(filename.encode('utf-8'))
+        
         return Response(
             output.getvalue(),
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            headers={'Content-Disposition': f'attachment; filename={filename}'}
+            headers={
+                'Content-Disposition': f'attachment; filename*=UTF-8\'\'{safe_filename}'
+            }
         )
         
     except Exception as e:
