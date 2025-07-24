@@ -37,7 +37,7 @@ class Department(db.Model):
                                        secondary=user_accessible_departments,
                                        back_populates='departments')
     mobile_devices = db.relationship('MobileDevice', backref='department', lazy=True)
-    device_assignments = db.relationship('DeviceAssignment', foreign_keys='DeviceAssignment.department_id', backref='assigned_department', lazy=True)
+
     
     def __repr__(self):
         return f'<Department {self.name}>'
@@ -1642,9 +1642,20 @@ class DeviceAssignment(db.Model):
     
     # العلاقات
     employee = db.relationship('Employee', backref='device_assignments', lazy=True)
+    department = db.relationship('Department', backref='dept_device_assignments', lazy=True)
     device = db.relationship('MobileDevice', backref='assignments', lazy=True)
     sim_card = db.relationship('ImportedPhoneNumber', backref='assignments', lazy=True)
     assigned_by_user = db.relationship('User', backref='assigned_devices', lazy=True)
+    
+    @property
+    def assignment_target_type(self):
+        """تحديد نوع الهدف (موظف أو قسم)"""
+        if self.employee_id:
+            return 'employee'
+        elif self.department_id:
+            return 'department'
+        else:
+            return None
     
     def __repr__(self):
         target = self.employee.name if self.employee else self.department.name if self.department else "غير محدد"
