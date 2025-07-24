@@ -1489,6 +1489,11 @@ class MobileDevice(db.Model):
     department_assignment_date = db.Column(db.DateTime, nullable=True)  # تاريخ الربط بالقسم
     assignment_type = db.Column(db.String(20), default='employee', nullable=False)  # نوع الربط: employee/department
     
+    # حقول إضافية للربط
+    is_assigned = db.Column(db.Boolean, default=False, nullable=False)  # هل الجهاز مرتبط
+    assigned_to = db.Column(db.Integer, nullable=True)  # معرف المستخدم أو القسم المرتبط
+    assignment_date = db.Column(db.DateTime, nullable=True)  # تاريخ الربط الفعلي
+    
     # تواريخ النظام
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
