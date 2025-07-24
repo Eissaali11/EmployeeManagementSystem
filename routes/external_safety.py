@@ -936,6 +936,52 @@ def reject_safety_check(check_id):
         flash('حدث خطأ في رفض الطلب', 'error')
         return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
 
+@external_safety_bp.route('/admin/external-safety-check/<int:check_id>/delete', methods=['GET', 'POST'])
+def delete_external_safety_check(check_id):
+    """حذف طلب فحص السلامة"""
+    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+        return redirect('/')
+    
+    safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    
+    if request.method == 'GET':
+        # عرض صفحة تأكيد الحذف
+        return render_template('admin_delete_safety_check.html', safety_check=safety_check)
+    
+    if request.method == 'POST':
+        try:
+            # حذف الصور المرتبطة من الخادم
+            import os
+            for image in safety_check.safety_images:
+                if image.image_path:
+                    image_full_path = os.path.join(current_app.root_path, image.image_path)
+                    if os.path.exists(image_full_path):
+                        os.remove(image_full_path)
+                        current_app.logger.info(f"تم حذف الصورة: {image_full_path}")
+            
+            # تسجيل العملية قبل الحذف
+            log_audit(
+                user_id=current_user.id,
+                action='delete',
+                entity_type='VehicleExternalSafetyCheck',
+                entity_id=safety_check.id,
+                details=f'تم حذف طلب فحص السلامة للسيارة {safety_check.vehicle_plate_number} - السائق: {safety_check.driver_name}'
+            )
+            
+            # حذف السجل من قاعدة البيانات
+            db.session.delete(safety_check)
+            db.session.commit()
+            
+            flash('تم حذف طلب فحص السلامة بنجاح', 'success')
+            return redirect(url_for('external_safety.admin_external_safety_checks'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطأ في حذف طلب فحص السلامة: {str(e)}")
+            flash('حدث خطأ في حذف الطلب', 'error')
+            return redirect(url_for('external_safety.admin_view_safety_check', check_id=check_id))
+
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/edit', methods=['GET', 'POST'])
 def edit_safety_check(check_id):
     """تعديل طلب فحص السلامة"""
