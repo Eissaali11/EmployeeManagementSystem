@@ -4342,7 +4342,7 @@ def edit_workshop_record(workshop_id):
         ('pending_approval', 'بانتظار الموافقة')
     ]
 
-    return render_template('mobile/edit_workshop_record.html',
+    return render_template('mobile/edit_workshop_record_simple.html',
                            workshop_record=workshop_record,
                            vehicle=vehicle,
                            workshop_reasons=workshop_reasons,
