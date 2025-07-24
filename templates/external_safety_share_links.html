@@ -457,7 +457,7 @@
                                     <!-- Copy Button -->
                                     <button type="button" class="copy-btn" 
                                             title="نسخ رابط النموذج"
-                                            onclick="copyToClipboard('{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}', this)">
+                                            onclick="copyToClipboard(window.location.origin + '{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}', this)">
                                         <span class="icon-copy">
                                             <i class="fas fa-copy"></i>
                                         </span>
@@ -517,6 +517,15 @@
                                     <i class="fas fa-external-link-alt ms-1"></i>
                                     فتح النموذج
                                 </a>
+                                    <!-- Email Button -->
+                                    <button class="btn btn-success-enhanced btn-sm"
+                                            title="إرسال طلب الفحص عبر البريد"
+                                            onclick="sendSafetyCheckEmail(this, '{{ vehicle.id }}' , '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+                                        <i class="fas fa-envelope"></i>
+                                        <span class="d-none d-md-inline">إرسال</span>
+                                    </button>
+
+                   
                             </td>
                         </tr>
                         {% endfor %}
