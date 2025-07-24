@@ -4,6 +4,11 @@ from models import SimCard, ImportedPhoneNumber, Employee, Department, db, UserR
 from datetime import datetime
 import logging
 from utils.audit_logger import log_activity
+import pandas as pd
+from flask import send_file
+import os
+import tempfile
+from werkzeug.utils import secure_filename
 
 sim_management_bp = Blueprint('sim_management', __name__)
 
@@ -370,3 +375,175 @@ def api_available_sims():
             'success': False,
             'message': 'حدث خطأ أثناء جلب البيانات'
         }), 500
+
+@sim_management_bp.route('/export-excel')
+@login_required
+def export_excel():
+    """تصدير أرقام SIM إلى ملف Excel"""
+    try:
+        # جلب جميع أرقام SIM مع معلومات الموظفين
+        sim_cards = db.session.query(SimCard, Employee).outerjoin(
+            Employee, SimCard.employee_id == Employee.id
+        ).order_by(SimCard.id).all()
+        
+        # إعداد البيانات للتصدير
+        data = []
+        for sim_card, employee in sim_cards:
+            data.append({
+                'رقم الهاتف': sim_card.phone_number,
+                'شركة الاتصالات': sim_card.carrier,
+                'نوع الخطة': sim_card.plan_type or '',
+                'التكلفة الشهرية': sim_card.monthly_cost or 0,
+                'الحالة': 'مربوط' if sim_card.employee_id else 'متاح',
+                'اسم الموظف': employee.name if employee else '',
+                'رقم الموظف': employee.employee_id if employee else '',
+                'القسم': ', '.join([dept.name for dept in employee.departments]) if employee and employee.departments else '',
+                'تاريخ الاستيراد': sim_card.import_date.strftime('%Y-%m-%d') if sim_card.import_date else '',
+                'تاريخ الربط': sim_card.assignment_date.strftime('%Y-%m-%d') if sim_card.assignment_date else '',
+                'الوصف': sim_card.description or ''
+            })
+        
+        # إنشاء DataFrame
+        df = pd.DataFrame(data)
+        
+        # إنشاء ملف مؤقت
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
+        temp_filename = temp_file.name
+        temp_file.close()
+        
+        # كتابة البيانات إلى Excel
+        with pd.ExcelWriter(temp_filename, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='أرقام SIM', index=False, encoding='utf-8')
+            
+            # تنسيق الورقة
+            worksheet = writer.sheets['أرقام SIM']
+            
+            # تعديل عرض الأعمدة
+            for column in worksheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        # تسجيل العملية
+        log_activity(
+            action="export",
+            entity_type="SIM",
+            details=f"تصدير {len(data)} رقم SIM إلى Excel"
+        )
+        
+        # إرسال الملف
+        return send_file(
+            temp_filename,
+            as_attachment=True,
+            download_name=f'sim_cards_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error exporting SIM cards: {str(e)}")
+        flash('حدث خطأ أثناء تصدير البيانات', 'danger')
+        return redirect(url_for('sim_management.index'))
+
+@sim_management_bp.route('/import-excel', methods=['GET', 'POST'])
+@login_required
+def import_excel():
+    """استيراد أرقام SIM من ملف Excel"""
+    if request.method == 'POST':
+        try:
+            # التحقق من وجود الملف
+            if 'excel_file' not in request.files:
+                flash('يرجى اختيار ملف Excel', 'danger')
+                return render_template('sim_management/import_excel.html')
+            
+            file = request.files['excel_file']
+            if file.filename == '':
+                flash('يرجى اختيار ملف', 'danger')
+                return render_template('sim_management/import_excel.html')
+            
+            # التحقق من نوع الملف
+            if not file.filename.lower().endswith(('.xlsx', '.xls')):
+                flash('يرجى اختيار ملف Excel صحيح (.xlsx أو .xls)', 'danger')
+                return render_template('sim_management/import_excel.html')
+            
+            # قراءة الملف
+            df = pd.read_excel(file)
+            
+            # التحقق من وجود الأعمدة المطلوبة
+            required_columns = ['رقم الهاتف', 'شركة الاتصالات']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                flash(f'الأعمدة التالية مفقودة: {", ".join(missing_columns)}', 'danger')
+                return render_template('sim_management/import_excel.html')
+            
+            imported_count = 0
+            skipped_count = 0
+            errors = []
+            
+            for index, row in df.iterrows():
+                try:
+                    phone_number = str(row['رقم الهاتف']).strip()
+                    carrier = str(row['شركة الاتصالات']).strip()
+                    
+                    # تخطي الصفوف الفارغة
+                    if not phone_number or phone_number == 'nan':
+                        continue
+                    
+                    # التحقق من وجود الرقم
+                    existing_sim = SimCard.query.filter_by(phone_number=phone_number).first()
+                    if existing_sim:
+                        skipped_count += 1
+                        continue
+                    
+                    # إنشاء رقم جديد
+                    new_sim = SimCard(
+                        phone_number=phone_number,
+                        carrier=carrier,
+                        plan_type=str(row.get('نوع الخطة', '')).strip() if pd.notna(row.get('نوع الخطة')) else None,
+                        monthly_cost=float(row.get('التكلفة الشهرية', 0)) if pd.notna(row.get('التكلفة الشهرية')) else 0.0,
+                        description=str(row.get('الوصف', '')).strip() if pd.notna(row.get('الوصف')) else None,
+                        import_date=datetime.now(),
+                        status='متاح'
+                    )
+                    
+                    db.session.add(new_sim)
+                    imported_count += 1
+                    
+                except Exception as e:
+                    errors.append(f"صف {index + 2}: {str(e)}")
+                    continue
+            
+            # حفظ التغييرات
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_activity(
+                action="import",
+                entity_type="SIM",
+                details=f"استيراد {imported_count} رقم SIM من Excel، تم تخطي {skipped_count} رقم موجود مسبقاً"
+            )
+            
+            # إعداد رسالة النتيجة
+            if imported_count > 0:
+                flash(f'تم استيراد {imported_count} رقم بنجاح', 'success')
+            if skipped_count > 0:
+                flash(f'تم تخطي {skipped_count} رقم موجود مسبقاً', 'info')
+            if errors:
+                flash(f'حدثت أخطاء في {len(errors)} صف', 'warning')
+            
+            return redirect(url_for('sim_management.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error importing SIM cards: {str(e)}")
+            flash('حدث خطأ أثناء استيراد البيانات', 'danger')
+            return render_template('sim_management/import_excel.html')
+    
+    return render_template('sim_management/import_excel.html')

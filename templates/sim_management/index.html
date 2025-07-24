@@ -69,10 +69,22 @@
                 </div>
                 <div class="col-md-3">
                     <div class="text-center">
-                        <a href="{{ url_for('sim_management.create') }}" class="btn btn-success btn-lg">
-                            <i class="fas fa-plus me-2"></i>
-                            إضافة رقم جديد
-                        </a>
+                        <div class="btn-group-vertical d-grid gap-2">
+                            <a href="{{ url_for('sim_management.create') }}" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة رقم جديد
+                            </a>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('sim_management.import_excel') }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-file-import me-1"></i>
+                                    استيراد Excel
+                                </a>
+                                <a href="{{ url_for('sim_management.export_excel') }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-file-export me-1"></i>
+                                    تصدير Excel
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
