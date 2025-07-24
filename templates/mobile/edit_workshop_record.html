@@ -417,8 +417,22 @@ function removeImage(button, inputId, index) {
     input.files = dt.files;
     
     // إعادة عرض المعاينة
-    const containerId = inputId.includes('before') ? 'before-preview' : 'after-preview';
-    previewImages(input, containerId);
+    let containerId;
+    if (inputId.includes('before')) {
+        containerId = 'before-preview';
+    } else if (inputId.includes('after')) {
+        containerId = 'after-preview';
+    } else if (inputId.includes('delivery_images')) {
+        containerId = 'delivery-preview';
+    } else if (inputId.includes('pickup_images')) {
+        containerId = 'pickup-preview';
+    } else if (inputId.includes('notes_images')) {
+        containerId = 'notes-preview';
+    }
+    
+    if (containerId) {
+        previewImages(input, containerId);
+    }
 }
 
 // دالة معاينة الإيصالات (صور وملفات PDF)
