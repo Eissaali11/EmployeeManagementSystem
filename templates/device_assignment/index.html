@@ -52,6 +52,80 @@
         max-height: 400px;
         overflow-y: auto;
     }
+    
+    /* تنسيق قائمة البحث المنسدلة */
+    .employee-search-container {
+        position: relative;
+    }
+    
+    .employee-search-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+    
+    .employee-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .employee-dropdown.show {
+        display: block;
+    }
+    
+    .employee-option {
+        padding: 10px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f8f9fa;
+        transition: background-color 0.2s;
+    }
+    
+    .employee-option:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .employee-option:last-child {
+        border-bottom: none;
+    }
+    
+    .employee-option.selected {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .employee-name {
+        font-weight: bold;
+        margin-bottom: 2px;
+    }
+    
+    .employee-details {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .employee-option.selected .employee-details {
+        color: #e9ecef;
+    }
+    
+    .no-results {
+        padding: 15px;
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+    }
 </style>
 {% endblock %}
 
@@ -127,14 +201,17 @@
                         
                         <div class="col-md-3">
                             <label class="form-label">الموظف</label>
-                            <select name="employee_id" class="form-select" required>
-                                <option value="">-- اختر موظف --</option>
-                                {% for employee in employees %}
-                                    <option value="{{ employee.id }}">
-                                        {{ employee.name }} ({{ employee.employee_id }})
-                                    </option>
-                                {% endfor %}
-                            </select>
+                            <div class="employee-search-container">
+                                <input type="text" 
+                                       class="employee-search-input form-control" 
+                                       id="employee-search"
+                                       placeholder="ابحث عن موظف..." 
+                                       autocomplete="off">
+                                <input type="hidden" name="employee_id" id="selected-employee-id" required>
+                                <div class="employee-dropdown" id="employee-dropdown">
+                                    <!-- سيتم ملؤها ديناميكياً -->
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="col-md-3" id="device_select" style="display: none;">
@@ -352,77 +429,201 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // إظهار/إخفاء حقول الاختيار حسب نوع الربط
-    $('#assignment_type').on('change', function() {
-        const assignmentType = $(this).val();
-        const deviceSelect = $('#device_select');
-        const simSelect = $('#sim_select');
-        
-        // إخفاء جميع الحقول أولاً
-        deviceSelect.hide();
-        simSelect.hide();
-        
-        // إظهار الحقول المطلوبة
-        if (assignmentType === 'device_only' || assignmentType === 'device_and_sim') {
-            deviceSelect.show();
-            deviceSelect.find('select').prop('required', true);
-        } else {
-            deviceSelect.find('select').prop('required', false);
-        }
-        
-        if (assignmentType === 'sim_only' || assignmentType === 'device_and_sim') {
-            simSelect.show();
-            simSelect.find('select').prop('required', true);
-        } else {
-            simSelect.find('select').prop('required', false);
+document.addEventListener('DOMContentLoaded', function() {
+    // قائمة الموظفين للبحث
+    const employees = [
+        {% for employee in employees %}
+        {
+            id: {{ employee.id }},
+            name: "{{ employee.name }}",
+            employee_id: "{{ employee.employee_id }}",
+            departments: "{% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}, {% endif %}{% endfor %}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    const employeeSearchInput = document.getElementById('employee-search');
+    const employeeDropdown = document.getElementById('employee-dropdown');
+    const selectedEmployeeId = document.getElementById('selected-employee-id');
+    
+    let currentSelection = -1;
+    let filteredEmployees = [];
+    
+    // عرض جميع الموظفين عند النقر على حقل البحث
+    employeeSearchInput.addEventListener('focus', function() {
+        if (this.value === '' && selectedEmployeeId.value === '') {
+            showAllEmployees();
         }
     });
     
-    // التحقق من صحة النموذج
-    $('form').on('submit', function(e) {
-        const assignmentType = $('#assignment_type').val();
-        const employeeId = $('select[name="employee_id"]').val();
-        const deviceId = $('select[name="device_id"]').val();
-        const simId = $('select[name="sim_id"]').val();
+    // البحث أثناء الكتابة
+    employeeSearchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
         
-        if (!assignmentType) {
-            e.preventDefault();
-            alert('يرجى اختيار نوع الربط');
-            return false;
+        if (searchTerm === '') {
+            showAllEmployees();
+            selectedEmployeeId.value = '';
+            this.classList.remove('is-valid');
+            return;
         }
         
-        if (!employeeId) {
-            e.preventDefault();
-            alert('يرجى اختيار الموظف');
-            return false;
-        }
+        // فلترة الموظفين بناءً على الاسم أو رقم الموظف أو القسم
+        filteredEmployees = employees.filter(emp => 
+            emp.name.toLowerCase().includes(searchTerm) ||
+            emp.employee_id.toLowerCase().includes(searchTerm) ||
+            emp.departments.toLowerCase().includes(searchTerm)
+        );
         
-        if (assignmentType === 'device_only' && !deviceId) {
-            e.preventDefault();
-            alert('يرجى اختيار الجهاز');
-            return false;
-        }
+        displayEmployees(filteredEmployees);
+        currentSelection = -1;
+    });
+    
+    // التنقل بالمفاتيح
+    employeeSearchInput.addEventListener('keydown', function(e) {
+        const visibleOptions = employeeDropdown.querySelectorAll('.employee-option');
         
-        if (assignmentType === 'sim_only' && !simId) {
+        if (e.key === 'ArrowDown') {
             e.preventDefault();
-            alert('يرجى اختيار رقم SIM');
-            return false;
-        }
-        
-        if (assignmentType === 'device_and_sim' && (!deviceId || !simId)) {
+            currentSelection = Math.min(currentSelection + 1, visibleOptions.length - 1);
+            updateSelection(visibleOptions);
+        } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            alert('يرجى اختيار الجهاز ورقم SIM');
-            return false;
+            currentSelection = Math.max(currentSelection - 1, -1);
+            updateSelection(visibleOptions);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentSelection >= 0 && visibleOptions[currentSelection]) {
+                selectEmployee(visibleOptions[currentSelection]);
+            }
+        } else if (e.key === 'Escape') {
+            hideDropdown();
         }
     });
     
-    // تحسينات بصرية
-    $('.assignment-card').hover(function() {
-        $(this).addClass('shadow-sm');
-    }, function() {
-        $(this).removeClass('shadow-sm');
+    // إخفاء القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!employeeSearchInput.contains(e.target) && !employeeDropdown.contains(e.target)) {
+            hideDropdown();
+        }
     });
+    
+    function showAllEmployees() {
+        filteredEmployees = employees;
+        displayEmployees(filteredEmployees);
+    }
+    
+    function displayEmployees(employeeList) {
+        employeeDropdown.innerHTML = '';
+        
+        if (employeeList.length === 0) {
+            employeeDropdown.innerHTML = '<div class="no-results">لا توجد نتائج مطابقة</div>';
+            employeeDropdown.classList.add('show');
+            return;
+        }
+        
+        employeeList.forEach((employee, index) => {
+            const option = document.createElement('div');
+            option.className = 'employee-option';
+            option.setAttribute('data-employee-id', employee.id);
+            option.innerHTML = `
+                <div class="employee-name">${employee.name}</div>
+                <div class="employee-details">
+                    رقم الموظف: ${employee.employee_id}
+                    ${employee.departments ? ' • القسم: ' + employee.departments : ''}
+                </div>
+            `;
+            
+            option.addEventListener('click', function() {
+                selectEmployee(this);
+            });
+            
+            employeeDropdown.appendChild(option);
+        });
+        
+        employeeDropdown.classList.add('show');
+        currentSelection = -1;
+    }
+    
+    function updateSelection(options) {
+        options.forEach((option, index) => {
+            option.classList.toggle('selected', index === currentSelection);
+        });
+        
+        // تمرير العنصر المحدد إلى المنظور
+        if (currentSelection >= 0 && options[currentSelection]) {
+            options[currentSelection].scrollIntoView({
+                block: 'nearest',
+                behavior: 'smooth'
+            });
+        }
+    }
+    
+    function selectEmployee(option) {
+        const employeeId = option.getAttribute('data-employee-id');
+        const employeeName = option.querySelector('.employee-name').textContent;
+        const employeeDetails = option.querySelector('.employee-details').textContent;
+        
+        employeeSearchInput.value = employeeName + ' (' + employeeDetails.split('رقم الموظف: ')[1].split(' •')[0] + ')';
+        selectedEmployeeId.value = employeeId;
+        
+        hideDropdown();
+        
+        // إضافة تأثير بصري للتأكيد
+        employeeSearchInput.classList.add('is-valid');
+        setTimeout(() => {
+            employeeSearchInput.classList.remove('is-valid');
+        }, 2000);
+    }
+    
+    function hideDropdown() {
+        employeeDropdown.classList.remove('show');
+        currentSelection = -1;
+    }
+    
+    // JavaScript لإظهار/إخفاء حقول الجهاز والرقم حسب نوع الربط
+    document.getElementById('assignment_type').addEventListener('change', function() {
+        const deviceSelect = document.getElementById('device_select');
+        const simSelect = document.getElementById('sim_select');
+        
+        switch(this.value) {
+            case 'device_only':
+                deviceSelect.style.display = 'block';
+                simSelect.style.display = 'none';
+                deviceSelect.querySelector('select').required = true;
+                simSelect.querySelector('select').required = false;
+                break;
+            case 'sim_only':
+                deviceSelect.style.display = 'none';
+                simSelect.style.display = 'block';
+                deviceSelect.querySelector('select').required = false;
+                simSelect.querySelector('select').required = true;
+                break;
+            case 'device_and_sim':
+                deviceSelect.style.display = 'block';
+                simSelect.style.display = 'block';
+                deviceSelect.querySelector('select').required = true;
+                simSelect.querySelector('select').required = true;
+                break;
+            default:
+                deviceSelect.style.display = 'none';
+                simSelect.style.display = 'none';
+                deviceSelect.querySelector('select').required = false;
+                simSelect.querySelector('select').required = false;
+        }
+    });
+    
+    // التحقق من صحة النموذج قبل الإرسال
+    const assignmentForm = document.querySelector('form[action*="assign"]');
+    if (assignmentForm) {
+        assignmentForm.addEventListener('submit', function(e) {
+            if (!selectedEmployeeId.value) {
+                e.preventDefault();
+                alert('يرجى اختيار موظف من القائمة');
+                employeeSearchInput.focus();
+                return false;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
