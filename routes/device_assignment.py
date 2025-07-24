@@ -743,3 +743,262 @@ def unassign_from_department(device_id):
         flash('حدث خطأ أثناء فك الربط', 'danger')
     
     return redirect(url_for('device_assignment.department_management'))
+
+# مسارات التقارير والتصدير
+@device_assignment_bp.route('/reports')
+@login_required
+def reports():
+    """صفحة التقارير والإحصائيات"""
+    try:
+        # إحصائيات الأجهزة
+        total_devices = MobileDevice.query.count()
+        assigned_devices = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).count()
+        available_devices = total_devices - assigned_devices
+        
+        # إحصائيات الأرقام
+        total_sims = ImportedPhoneNumber.query.count()
+        assigned_sims = ImportedPhoneNumber.query.filter(ImportedPhoneNumber.employee_id.isnot(None)).count()
+        available_sims = total_sims - assigned_sims
+        
+        # إحصائيات الأقسام
+        departments = Department.query.all()
+        department_stats = []
+        
+        for dept in departments:
+            # أجهزة مربوطة بموظفين في هذا القسم
+            dept_devices = db.session.query(DeviceAssignment).join(Employee).filter(
+                DeviceAssignment.is_active == True,
+                DeviceAssignment.device_id.isnot(None),
+                Employee.departments.any(Department.id == dept.id)
+            ).count()
+            
+            # أرقام مربوطة بموظفين في هذا القسم
+            dept_sims = db.session.query(ImportedPhoneNumber).join(Employee).filter(
+                ImportedPhoneNumber.employee_id.isnot(None),
+                Employee.departments.any(Department.id == dept.id)
+            ).count()
+            
+            # أجهزة مربوطة بالقسم مباشرة
+            direct_devices = MobileDevice.query.filter_by(department_id=dept.id).count()
+            
+            department_stats.append({
+                'name': dept.name,
+                'devices': dept_devices + direct_devices,
+                'sims': dept_sims
+            })
+        
+        return render_template('device_assignment/reports.html',
+                             total_devices=total_devices,
+                             assigned_devices=assigned_devices,
+                             available_devices=available_devices,
+                             total_sims=total_sims,
+                             assigned_sims=assigned_sims,
+                             available_sims=available_sims,
+                             department_stats=department_stats)
+    
+    except Exception as e:
+        current_app.logger.error(f"Error in reports: {str(e)}")
+        flash('حدث خطأ في تحميل التقارير', 'danger')
+        return redirect(url_for('device_assignment.index'))
+
+@device_assignment_bp.route('/export/available-sims')
+@login_required
+def export_available_sims():
+    """تصدير الأرقام المتاحة إلى Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+        from flask import make_response
+        import io
+        
+        # جلب الأرقام المتاحة
+        available_sims = ImportedPhoneNumber.query.filter_by(employee_id=None).all()
+        
+        # إنشاء ملف Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "الأرقام المتاحة"
+        
+        # إعداد العناوين
+        headers = ['رقم الهاتف', 'نوع الخدمة', 'حالة الرقم', 'تاريخ الإضافة', 'ملاحظات']
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True, name='Arial')
+            cell.alignment = Alignment(horizontal='center')
+            cell.fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+            cell.font = Font(bold=True, color='FFFFFF', name='Arial')
+        
+        # إضافة البيانات
+        for row, sim in enumerate(available_sims, 2):
+            ws.cell(row=row, column=1, value=sim.phone_number)
+            ws.cell(row=row, column=2, value=sim.service_type or 'غير محدد')
+            ws.cell(row=row, column=3, value=sim.status or 'متاح')
+            ws.cell(row=row, column=4, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
+            ws.cell(row=row, column=5, value=sim.notes or '')
+        
+        # حفظ الملف
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = 'attachment; filename=available_sims.xlsx'
+        
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error exporting available sims: {str(e)}")
+        flash('حدث خطأ أثناء تصدير الأرقام المتاحة', 'danger')
+        return redirect(url_for('device_assignment.reports'))
+
+@device_assignment_bp.route('/export/available-devices')
+@login_required
+def export_available_devices():
+    """تصدير الأجهزة المتاحة إلى Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+        from flask import make_response
+        import io
+        
+        # جلب الأجهزة المتاحة (غير مربوطة)
+        assigned_device_ids = db.session.query(DeviceAssignment.device_id).filter_by(is_active=True).subquery()
+        available_devices = MobileDevice.query.filter(~MobileDevice.id.in_(assigned_device_ids)).all()
+        
+        # إنشاء ملف Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "الأجهزة المتاحة"
+        
+        # إعداد العناوين
+        headers = ['IMEI', 'ماركة الجهاز', 'موديل الجهاز', 'حالة الجهاز', 'تاريخ الإضافة', 'ملاحظات']
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True, name='Arial')
+            cell.alignment = Alignment(horizontal='center')
+            cell.fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+            cell.font = Font(bold=True, color='FFFFFF', name='Arial')
+        
+        # إضافة البيانات
+        for row, device in enumerate(available_devices, 2):
+            ws.cell(row=row, column=1, value=device.imei)
+            ws.cell(row=row, column=2, value=device.device_brand or 'غير محدد')
+            ws.cell(row=row, column=3, value=device.device_model or 'غير محدد')
+            ws.cell(row=row, column=4, value=device.status or 'متاح')
+            ws.cell(row=row, column=5, value=device.created_at.strftime('%Y-%m-%d') if device.created_at else '')
+            ws.cell(row=row, column=6, value=device.notes or '')
+        
+        # حفظ الملف
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = 'attachment; filename=available_devices.xlsx'
+        
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error exporting available devices: {str(e)}")
+        flash('حدث خطأ أثناء تصدير الأجهزة المتاحة', 'danger')
+        return redirect(url_for('device_assignment.reports'))
+
+@device_assignment_bp.route('/export/available-combined')
+@login_required
+def export_available_combined():
+    """تصدير الأجهزة والأرقام المتاحة معاً إلى Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill
+        from flask import make_response
+        import io
+        
+        # جلب البيانات المتاحة
+        assigned_device_ids = db.session.query(DeviceAssignment.device_id).filter_by(is_active=True).subquery()
+        available_devices = MobileDevice.query.filter(~MobileDevice.id.in_(assigned_device_ids)).all()
+        available_sims = ImportedPhoneNumber.query.filter_by(employee_id=None).all()
+        
+        # إنشاء ملف Excel
+        wb = Workbook()
+        
+        # ورقة الأجهزة المتاحة
+        ws1 = wb.active
+        ws1.title = "الأجهزة المتاحة"
+        
+        # عناوين الأجهزة
+        device_headers = ['IMEI', 'ماركة الجهاز', 'موديل الجهاز', 'حالة الجهاز', 'تاريخ الإضافة', 'ملاحظات']
+        for col, header in enumerate(device_headers, 1):
+            cell = ws1.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True, name='Arial')
+            cell.alignment = Alignment(horizontal='center')
+            cell.fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+            cell.font = Font(bold=True, color='FFFFFF', name='Arial')
+        
+        # بيانات الأجهزة
+        for row, device in enumerate(available_devices, 2):
+            ws1.cell(row=row, column=1, value=device.imei)
+            ws1.cell(row=row, column=2, value=device.device_brand or 'غير محدد')
+            ws1.cell(row=row, column=3, value=device.device_model or 'غير محدد')
+            ws1.cell(row=row, column=4, value=device.status or 'متاح')
+            ws1.cell(row=row, column=5, value=device.created_at.strftime('%Y-%m-%d') if device.created_at else '')
+            ws1.cell(row=row, column=6, value=device.notes or '')
+        
+        # ورقة الأرقام المتاحة
+        ws2 = wb.create_sheet(title="الأرقام المتاحة")
+        
+        # عناوين الأرقام
+        sim_headers = ['رقم الهاتف', 'نوع الخدمة', 'حالة الرقم', 'تاريخ الإضافة', 'ملاحظات']
+        for col, header in enumerate(sim_headers, 1):
+            cell = ws2.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True, name='Arial')
+            cell.alignment = Alignment(horizontal='center')
+            cell.fill = PatternFill(start_color='28a745', end_color='28a745', fill_type='solid')
+            cell.font = Font(bold=True, color='FFFFFF', name='Arial')
+        
+        # بيانات الأرقام
+        for row, sim in enumerate(available_sims, 2):
+            ws2.cell(row=row, column=1, value=sim.phone_number)
+            ws2.cell(row=row, column=2, value=sim.service_type or 'غير محدد')
+            ws2.cell(row=row, column=3, value=sim.status or 'متاح')
+            ws2.cell(row=row, column=4, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
+            ws2.cell(row=row, column=5, value=sim.notes or '')
+        
+        # ورقة الإحصائيات
+        ws3 = wb.create_sheet(title="ملخص الإحصائيات")
+        
+        # إحصائيات عامة
+        stats_data = [
+            ['البيان', 'العدد'],
+            ['إجمالي الأجهزة المتاحة', len(available_devices)],
+            ['إجمالي الأرقام المتاحة', len(available_sims)],
+            ['تاريخ التقرير', datetime.now().strftime('%Y-%m-%d %H:%M')]
+        ]
+        
+        for row, data in enumerate(stats_data, 1):
+            for col, value in enumerate(data, 1):
+                cell = ws3.cell(row=row, column=col, value=value)
+                if row == 1:  # رأس الجدول
+                    cell.font = Font(bold=True, name='Arial')
+                    cell.fill = PatternFill(start_color='dc3545', end_color='dc3545', fill_type='solid')
+                    cell.font = Font(bold=True, color='FFFFFF', name='Arial')
+                    cell.alignment = Alignment(horizontal='center')
+                else:
+                    cell.alignment = Alignment(horizontal='center')
+        
+        # حفظ الملف
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = 'attachment; filename=available_devices_and_sims.xlsx'
+        
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error exporting combined data: {str(e)}")
+        flash('حدث خطأ أثناء تصدير البيانات المجمعة', 'danger')
+        return redirect(url_for('device_assignment.reports'))
