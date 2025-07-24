@@ -165,6 +165,11 @@ def assign():
         
         employee = Employee.query.get_or_404(employee_id)
         
+        # التحقق من حالة الموظف أولاً
+        if employee.status != 'نشط':
+            flash(f'لا يمكن ربط أجهزة أو أرقام بالموظف {employee.name} لأن حالته غير نشطة', 'warning')
+            return redirect(url_for('device_assignment.index'))
+        
         # التحقق من نوع الربط والمعلومات المطلوبة
         if assignment_type == 'device_only' and not device_id:
             flash('يرجى اختيار جهاز للربط', 'danger')

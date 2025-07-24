@@ -319,6 +319,11 @@ def assign_to_employee(device_id):
         
         employee = Employee.query.get_or_404(employee_id)
         
+        # التحقق من حالة الموظف أولاً
+        if employee.status != 'نشط':
+            flash(f'لا يمكن ربط الجهاز بالموظف {employee.name} لأن حالته غير نشطة', 'warning')
+            return redirect(url_for('device_management.index'))
+        
         # التحقق من أن الجهاز متاح
         if device.employee_id:
             flash('الجهاز مربوط بموظف آخر بالفعل', 'error')
