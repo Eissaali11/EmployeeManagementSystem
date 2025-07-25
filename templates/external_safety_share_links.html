@@ -612,7 +612,7 @@
                     driver_name: driver.name,
                     plate_number: plateNumber,
                     vehicle_model: vehicleModel,
-                    form_url: `${window.location.origin.includes('replit.dev') ? 'https://eissa.site' : window.location.origin}/external-safety-check/${vehicleId}`
+                    form_url: `${window.location.origin.includes('replit.dev') ? 'https://eissa.site' : window.location.origin}/external-safety/external-safety-check/${vehicleId}`
                 })
             });
 
@@ -656,7 +656,7 @@
                     driver_name: driver.name,
                     plate_number: plateNumber,
                     vehicle_model: vehicleModel,
-                    form_url: `${window.location.origin.includes('replit.dev') ? 'https://eissa.site' : window.location.origin}/external-safety-check/${vehicleId}`
+                    form_url: `${window.location.origin.includes('replit.dev') ? 'https://eissa.site' : window.location.origin}/external-safety/external-safety-check/${vehicleId}`
                 })
             });
 
@@ -689,7 +689,7 @@
             baseUrl = 'https://eissa.site';
         }
         
-        const formUrl = baseUrl + '/external-safety-check/' + vehicleId;
+        const formUrl = baseUrl + '/external-safety/external-safety-check/' + vehicleId;
         const driver_name = allDriversData[vehicleId] || 'زميلنا العزيز';
 
         const fullMessageText = `مرحباً ${driver_name} 👋
