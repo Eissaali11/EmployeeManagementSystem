@@ -260,6 +260,12 @@
                     onclick="sendSafetyCheckEmail(this, '{{ vehicle.id }}' , '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
                 <i class="fas fa-envelope ms-1"></i> إرسال بالبريد
             </button>
+
+            <button class="btn btn-sm" style="background-color: #25D366; color: white;"
+        title="إرسال طلب الفحص عبر واتساب"
+        onclick="sendSafetyCheckWhatsApp(this, '{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+    <i class="fab fa-whatsapp ms-1"></i> إرسال واتساب
+</button>
                                 <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
                                    class="btn btn-success btn-sm ms-1" target="_blank">
                                     <i class="fas fa-external-link-alt ms-1"></i>
@@ -337,6 +343,59 @@ function showToast(message, type = 'info') {
     }
 }
 
+
+
+// أضف هذه الدالة الجديدة
+
+async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, vehicleModel) {
+    // 1. استخراج بيانات السائق. تأكد أن لديك بيانات الهاتف في قاموس مشابه
+    // يجب تعديل get_all_current_drivers في بايثون لتوفر أرقام الهواتف
+    const driver = allDriversDataWithEmil[vehicleId]; // افترض أن هذا القاموس يحتوي الآن على driver.phone
+
+    if (!driver || !driver.phone) {
+        showToast("خطأ: لا يوجد سائق أو رقم هاتف واتساب مسجل لهذه المركبة.", 'danger');
+        return;
+    }
+
+    // 2. توليد رابط النموذج (نفس الكود السابق)
+    const formUrl = `${window.location.origin}/external-safety-check/${vehicleId}`;
+
+    // 3. تغيير حالة الزر
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+    
+    try {
+        // 4. إرسال طلب إلى الـ endpoint الجديد
+        const response = await fetch('/api/send-whatsapp', { // <-- الـ endpoint الجديد
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                driver_phone: driver.phone, // <-- إرسال رقم الهاتف
+                driver_name: driver.name,
+                plate_number: plateNumber,
+                vehicle_model: vehicleModel,
+                form_url: formUrl
+            })
+        });
+        
+        const result = await response.json();
+        
+        // 5. معالجة الاستجابة
+        if (response.ok && result.success) {
+            showToast(result.message, 'success');
+        } else {
+            showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
+        }
+
+    } catch (error) {
+        console.error('فشل الاتصال بالخادم:', error);
+        showToast('فشل الاتصال بالخادم.', 'danger');
+    } finally {
+        // 6. إعادة الزر إلى حالته الأصلية
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = '<i class="fab fa-whatsapp ms-1"></i> إرسال واتساب';
+    }
+}
 
 /**
  * الدالة الكاملة والنهائية لإرسال طلب فحص السلامة عبر البريد.

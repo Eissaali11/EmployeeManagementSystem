@@ -21,7 +21,8 @@ import resend
 load_dotenv()
 # قم بإعداد مفتاح Resend مرة واحدة عند بدء التطبيق
 resend.api_key = os.environ.get("RESEND_API_KEY")
-
+supervisor_email = os.environ.get("SAFETY_CHECK_SUPERVISOR_EMAIL")
+company_name = os.environ.get("COMPANY_NAME")
 external_safety_bp = Blueprint('external_safety', __name__)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -65,7 +66,8 @@ def get_all_current_driversWithEmil():
         record.vehicle_id: {
             'name': record.driver_employee.name,
             'email': record.driver_employee.email,
-            'mobile': record.driver_employee.mobile
+            'mobile': record.driver_employee.mobile,
+            'phone' : record.driver_employee.mobile
         }
         for record in latest_handovers_with_drivers if record.driver_employee # نتأكد من وجود سائق
     }
@@ -73,6 +75,88 @@ def get_all_current_driversWithEmil():
     return current_drivers_map
 
 
+
+# في نفس ملف الراوت external_safety_bp
+
+from whatsapp_client import WhatsAppWrapper # <-- استيراد الكلاس
+
+# قم بإنشاء نسخة واحدة من الكلاس على مستوى الـ Blueprint أو التطبيق
+# من الأفضل وضعها في __init__.py الخاص بالتطبيق و استيرادها
+whatsapp_service = WhatsAppWrapper() 
+
+# ----- أضف هذه الدالة الجديدة بجانب دالة send_vehicle_email -----
+
+@external_safety_bp.route('/api/send-whatsapp', methods=['POST'])
+def send_vehicle_whatsapp():
+    """
+    نقطة نهاية (API endpoint) لإرسال طلب فحص المركبة عبر واتساب.
+    """
+    # 1. استلام البيانات من الطلب (نفس بيانات البريد الإلكتروني)
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'الطلب فارغ'}), 400
+
+    # استخراج البيانات. لاحظ أننا نحتاج رقم هاتف السائق بدلاً من البريد
+    driver_phone = data.get('driver_phone') # <-- أهم معلومة جديدة
+    driver_name = data.get('driver_name', 'زميلنا العزيز')
+    plate_number = data.get('plate_number')
+    vehicle_model = data.get('vehicle_model')
+    form_url = data.get('form_url')
+
+    # التحقق من وجود البيانات الضرورية
+    if not all([driver_phone, plate_number, vehicle_model, form_url]):
+        error_message = "بيانات ناقصة. تأكد من إرسال: driver_phone, driver_name, plate_number, vehicle_model, form_url."
+        return jsonify({'success': False, 'error': error_message}), 400
+
+    # 2. تجهيز مكونات قالب واتساب
+    template_name = "vehicle_safety_check_request" # <-- اسم القالب الذي وافقت عليه Meta
+
+    # ترتيب المتغيرات مهم جداً ويجب أن يطابق ترتيبها في القالب
+    components = [
+        {
+            "type": "body",
+            "parameters": [
+                {"type": "text", "text": driver_name},     # يحل محل {{1}}
+                {"type": "text", "text": plate_number},    # يحل محل {{2}}
+                {"type": "text", "text": vehicle_model},   # يحل محل {{3}}
+                {"type": "text", "text": form_url},        # يحل محل {{4}} في الجسم
+            ]
+         }
+        #  ,
+        # # إذا كان زر الرابط ديناميكياً، نضيف له مكوناً أيضاً
+        # {
+        #     "type": "button",
+        #     "sub_type": "url",
+        #     "index": "0",  # رقم الزر (يبدأ من 0)
+        #     "parameters": [
+        #         {"type": "text", "text": form_url.split('/')[-1]} # الرابط يجب أن يكون الجزء الأخير بعد /
+        #                                                         # مثال: "external_safety_check/vehicle_id"
+        #     ]
+        # }
+    ]
+
+    # ملاحظة على رابط الزر: واتساب يتطلب أن يكون الجزء المتغير من الرابط
+    # فقط. الرابط الأساسي (e.g. https://nuzum.sa) تضعه عند تصميم القالب.
+
+    # 3. استدعاء خدمة واتساب للإرسال
+    try:
+        response = whatsapp_service.send_template_message(
+            recipient_number=driver_phone, # رقم السائق مع رمز الدولة
+            template_name=template_name,
+            language_code="ar",
+            components=components
+        )
+        
+        if response:
+            return jsonify({'success': True, 'message': f"تم إرسال رسالة واتساب بنجاح إلى {driver_name}"})
+        else:
+            # إذا فشلت دالتنا في الإرسال (مثلاً خطأ في الاتصال)
+            return jsonify({'success': False, 'error': 'فشل إرسال رسالة واتساب من الخادم'}), 500
+
+    except Exception as e:
+        # لأي خطأ آخر غير متوقع
+        print(f"Error sending WhatsApp message: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 def get_all_current_drivers():
     """
@@ -133,6 +217,187 @@ def compress_image(image_path, max_size=1200, quality=85):
         current_app.logger.error(f"خطأ في ضغط الصورة: {str(e)}")
         return False
 
+
+def send_supervisor_notification_email(safety_check):
+    """
+    تقوم ببناء وإرسال بريد إلكتروني لإشعار المشرف بوجود طلب فحص جديد.
+    """
+    # --- !! هام: قم بتعديل هذه المتغيرات !! ---
+    # الخيار الأفضل: اقرأ هذا من إعدادات التطبيق (config file)
+    # SUPERVISOR_EMAIL = current_app.config.get('SAFETY_CHECK_SUPERVISOR_EMAIL')
+    # supervisor_email = "ferasswed2022@gmail.com"  # <--- ضع بريد المشرف هنا
+    # company_name = "نُــظــم لإدارة الأساطيل"
+    # ----------------------------------------------
+    
+    # توليد الرابط الخاص بمراجعة الطلب في لوحة التحكم
+    # تأكد من أن اسم الـ blueprint والنقطة النهائية صحيحين. قد يكون 'admin.view_check' أو ما شابه
+    logo_url = "https://i.postimg.cc/LXzD6b0N/logo.png" # <--- رابط الشعار العام
+    try:
+        review_url = url_for('external_safety_bp.admin_view_safety_check', # <--- تأكد من هذا المسار
+                             check_id=safety_check.id, 
+                             _external=True)
+    except Exception as e:
+        # حل احتياطي في حال حدوث خطأ، لكن يجب إصلاح المسار أعلاه
+        review_url = f"http://127.0.0.1:4032//admin/external-safety-check/{safety_check.id}"
+        current_app.logger.error(f"Failed to generate review URL, using fallback. Error: {e}")
+
+    # بناء قالب HTML احترافي للإشعار
+
+    email_html_content = f"""
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+            body {{
+                margin: 0;
+                padding: 0;
+                background-color: #e9ecef; /* خلفية رمادية فاتحة جدا */
+                font-family: 'Tajawal', sans-serif;
+            }}
+            .email-wrapper {{
+                max-width: 680px;
+                margin: 40px auto;
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+            }}
+            .email-header {{
+                background: linear-gradient(135deg, #182551 10%, #425359 100%);
+                border-radius: 12px 12px 0 0;
+                padding: 25px;
+                text-align: center;
+            }}
+            .email-header img {{
+                max-height: 50px; /* حجم مناسب للشعار */
+                margin-bottom: 15px;
+            }}
+            .email-header h1 {{
+                margin: 0;
+                color: #ffffff;
+                font-size: 26px;
+                font-weight: 700;
+            }}
+            .email-body {{
+                padding: 25px 35px;
+                text-align: right;
+            }}
+            .greeting {{
+                font-size: 20px;
+                color: #2c3e50;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }}
+            .main-message {{
+                font-size: 16px;
+                color: #555;
+                line-height: 1.7;
+            }}
+            .details-card {{
+                background-color: #f8f9fa;
+                border: 1px dashed #ced4da;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 25px 0;
+            }}
+            .details-card h3 {{
+                margin-top: 0;
+                color: #343a40;
+                border-bottom: 2px solid #dee2e6;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }}
+            .details-card p {{
+                margin: 8px 0;
+                font-size: 16px;
+            }}
+            .details-card p strong {{
+                color: #495057;
+                display: inline-block;
+                width: 110px;
+            }}
+            .action-button-container {{
+                text-align: center;
+                margin: 30px 0;
+            }}
+            .action-button {{
+                background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+                color: #ffffff !important;
+                padding: 14px 40px;
+                text-decoration: none;
+                border-radius: 50px;
+                font-weight: 700;
+                font-size: 18px;
+                box-shadow: 0 5px 15px rgba(52,152,219,0.3);
+                transition: all 0.3s ease;
+            }}
+            .action-button:hover {{
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(52,152,219,0.4);
+            }}
+            .email-footer {{
+                padding: 20px;
+                text-align: center;
+                font-size: 13px;
+                color: #888;
+                background-color: #f8f9fa;
+                border-top: 1px solid #dee2e6;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="email-wrapper">
+            <div class="email-header">
+                <img src="{logo_url}" alt="{company_name} Logo">
+                <h1>إشعار بفحص جديد</h1>
+            </div>
+            <div class="email-body">
+                <p class="greeting">مرحباً أيها المشرف،</p>
+                <p class="main-message">تم استلام طلب فحص سلامة جديد وهو في انتظار مراجعتكم لاتخاذ الإجراء المناسب. يرجى الاطلاع على التفاصيل أدناه.</p>
+                
+                <div class="details-card">
+                    <h3>تفاصيل الطلب</h3>
+                    <p><strong>رقم الطلب:</strong> #{safety_check.id}</p>
+                    <p><strong>المركبة:</strong> {safety_check.vehicle_plate_number} ({safety_check.vehicle_make_model})</p>
+                    <p><strong>السائق:</strong> {safety_check.driver_name}</p>
+                    <p><strong>التاريخ:</strong> {safety_check.inspection_date.strftime('%d-%m-%Y %I:%M %p')}</p>
+                </div>
+
+                <p class="main-message">اضغط على الزر أدناه للانتقال مباشرة إلى صفحة المراجعة:</p>
+
+                <div class="action-button-container">
+                    <a href="{review_url}" class="action-button">مراجعة طلب الفحص</a>
+                </div>
+            </div>
+            <div class="email-footer">
+                <p>© {datetime.now().year} {company_name}. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    
+
+    # إرسال البريد الإلكتروني عبر Resend
+    try:
+        params = {
+            "from": f"{company_name} <notifications@resend.dev>",
+            "to": [supervisor_email],
+            "subject": f"طلب فحص جديد للمركبة {safety_check.vehicle_plate_number} بحاجة لمراجعة",
+            "html": email_html_content,
+        }
+        resend.Emails.send(params)
+        current_app.logger.info(f"تم إرسال إشعار للمشرف بنجاح بخصوص فحص ID: {safety_check.id}")
+    except Exception as e:
+        current_app.logger.error(f"فشل إرسال إشعار للمشرف بخصوص فحص ID: {safety_check.id}. الخطأ: {e}")
+
+
+
+
+
 @external_safety_bp.route('/external-safety-check/<int:vehicle_id>', methods=['GET', 'POST'])
 def external_safety_check_form(vehicle_id):
     """عرض نموذج فحص السلامة الخارجي للسيارة أو معالجة البيانات المرسلة"""
@@ -142,6 +407,8 @@ def external_safety_check_form(vehicle_id):
         return handle_safety_check_submission(vehicle)
     
     return render_template('external_safety_check.html', vehicle=vehicle)
+
+
 
 def handle_safety_check_submission(vehicle):
     """معالجة إرسال بيانات فحص السلامة"""
@@ -212,6 +479,9 @@ def handle_safety_check_submission(vehicle):
         
         # حفظ جميع التغييرات
         db.session.commit()
+
+        send_supervisor_notification_email(safety_check)
+
         
         # تسجيل العملية في سجل المراجعة
         log_audit(
@@ -318,7 +588,7 @@ def send_vehicle_email():
         return jsonify({'success': False, 'error': error_message}), 400
 
     # 2. إعداد المتغيرات الخاصة بالرسالة (الشعار والاسم)
-    company_name = "شركة رأس السعودية المحدوده"  # <--- يمكنك تغيير هذا
+    # company_name = "شركة رأس السعودية المحدوده"  # <--- يمكنك تغيير هذا
     # تأكد من أن مسار الشعار صحيح. _external=True ضروري لتوليد رابط كامل.
     logo_path = 'images/logo.png' # <--- يمكنك تغيير هذا
     try:
@@ -424,6 +694,7 @@ def send_vehicle_email():
         # في حال حدوث خطأ من Resend أو غيره
         print(f"Error sending email with Resend: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 @external_safety_bp.route('/api/verify-employee/<national_id>')
